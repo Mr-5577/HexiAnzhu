@@ -352,7 +352,6 @@ onMounted(() => {
       }
     }
   }
-
   .content-section {
     flex: 1;
     display: flex;
@@ -381,7 +380,6 @@ onMounted(() => {
           color: #2c3e50;
         }
       }
-
       .role-content {
         flex: 1;
         min-height: 0;
@@ -404,7 +402,6 @@ onMounted(() => {
             background: #94a3b8;
           }
         }
-
         .role-item {
           display: flex;
           align-items: center;
@@ -421,13 +418,11 @@ onMounted(() => {
             box-shadow: 0 4px 12px rgba(74, 222, 128, 0.15);
             transform: translateY(-2px);
           }
-
           &.active {
             border-color: #3b82f6;
             background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
           }
-
           .role-avatar {
             width: 30px;
             height: 30px;
@@ -444,7 +439,6 @@ onMounted(() => {
               color: white;
             }
           }
-
           .role-info {
             flex: 1;
             min-width: 0;
@@ -475,7 +469,6 @@ onMounted(() => {
                   background: #ecfdf5;
                   border: 1px solid #cdedde;
                 }
-
                 &:not(.enable) {
                   color: #8f959e;
                   background: #f7f8fa;
@@ -483,7 +476,6 @@ onMounted(() => {
                 }
               }
             }
-
             .role-desc {
               margin-top: 2px;
               font-size: 12px;
@@ -493,7 +485,6 @@ onMounted(() => {
               white-space: nowrap;
             }
           }
-
           .role-operate {
             flex-shrink: 0;
             display: flex;
@@ -511,12 +502,10 @@ onMounted(() => {
                 font-size: 14px;
               }
             }
-
             .edit-btn {
               color: #3b82f6;
               background-color: #d9e3f3;
             }
-
             .delete-btn {
               color: #ef4444;
               background-color: #ebe8e8;
@@ -525,7 +514,6 @@ onMounted(() => {
         }
       }
     }
-
     .detail-card {
       flex: 1;
       min-width: 0;
@@ -558,7 +546,6 @@ onMounted(() => {
               flex: 1;
             }
           }
-
           .form-group {
             margin-bottom: 8px;
             display: flex;
@@ -591,13 +578,8 @@ onMounted(() => {
     }
   }
 }
-
 .secondary-btn {
   border: 1px solid #e2e8f0;
   color: #64748b;
-  //   &:hover {
-  //     border-color: #cbd5e1;
-  //     background: #f8fafc;
-  //   }
 }
 </style>

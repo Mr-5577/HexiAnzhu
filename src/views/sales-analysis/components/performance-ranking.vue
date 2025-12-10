@@ -22,7 +22,7 @@
               个人月度业绩排名
             </el-button>
           </div>
-          <div class="table-list">
+          <div class="performance-ranking-table-list">
             <base-table
               :pagination="false"
               :columns="columns"
@@ -46,7 +46,7 @@
 
 <script setup lang="ts">
 import ChartBox from "@/components/chart-box.vue";
-import BaseTable from "@/components/base-table.vue";
+import BaseTable, { TableColumnItem } from "@/components/base-table.vue";
 import { ref, onMounted, onUnmounted, nextTick } from "vue";
 
 // 响应式数据
@@ -62,26 +62,33 @@ const dictData = {
     { value: 2, label: "女" },
   ],
 };
-const columns = ref([
+const columns: TableColumnItem[] = [
   {
-    type: "index",
-    label: "序号",
+    prop: "name",
+    label: "排名",
     width: "60",
   },
   {
     prop: "name",
-    label: "姓名",
+    label: "项目名称",
   },
   {
     prop: "age",
-    label: "年龄",
+    label: "签约(套)",
   },
   {
-    prop: "gender",
-    label: "性别",
-    dict: "gender",
+    prop: "age",
+    label: "认购(套)",
   },
-]);
+  {
+    prop: "age",
+    label: "回款(万)",
+  },
+  {
+    prop: "age",
+    label: "完成率",
+  },
+];
 const tableData = ref([
   { id: 1, name: "zs", age: "18", gender: 1 },
   { id: 2, name: "zs", age: "18", gender: 2 },
@@ -122,7 +129,7 @@ onUnmounted(() => {});
 <style lang="scss" scoped>
 .ranking-page {
   width: 100%;
-  height: 33%;
+  height: 34%;
   .rankingContent {
     width: 100%;
     flex: 1;
@@ -148,7 +155,7 @@ onUnmounted(() => {});
         font-weight: 700;
       }
     }
-    .table-list {
+    .performance-ranking-table-list {
       width: 100%;
       flex: 1;
       // 确保表格容器正确显示滚动条
@@ -180,7 +187,6 @@ onUnmounted(() => {});
         .el-table__body-wrapper {
           overflow-x: hidden;
           overflow-y: auto;
-
           .el-table__body {
             tr {
               background-color: transparent !important;
@@ -199,6 +205,11 @@ onUnmounted(() => {});
             td {
               background-color: inherit !important;
             }
+          }
+          .el-scrollbar {
+            --el-scrollbar-opacity: 0.4;
+            --el-scrollbar-bg-color: #f7f8fb;
+            --el-scrollbar-hover-bg-color: #f7f8fb;
           }
         }
       }

@@ -28,7 +28,7 @@
             />
           </template>
           <template #default>
-            <div class="logout-btn" @click="logout">退出登录</div>
+            <el-button text  @click="logout">退出登录</el-button>
           </template>
         </el-popover>
       </div>
@@ -41,7 +41,7 @@ import { ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import { extractModules, getFirstRoutePath } from "@/utils/menu-util";
 import { useMenuStore } from "@/stores/menu-store";
-import { ElMessageBox } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { userApi } from "@/api/user-api";
 
 const menuStore = useMenuStore();
@@ -95,24 +95,42 @@ const handleNavClick = (module: any) => {
 };
 
 const logout = () => {
-  ElMessageBox.confirm("确定现在退出系统吗?", "提示", {
+  ElMessageBox.confirm("确定现在退出系统吗?", "退出", {
     confirmButtonText: "确认",
     cancelButtonText: "取消",
     type: "warning",
-  })
-    .then(async () => {
-      const res = await userApi.logout("00001");
-      if (res.code === 200) {
-        localStorage.clear();
-        sessionStorage.clear();
-        // 跳转到登录页并刷新
-        router.push("/login").then(() => {
-          // 在导航完成后刷新页面
-          window.location.reload();
-        });
+    // 添加 beforeClose 钩子
+    beforeClose: async (action, instance, done) => {
+      if (action === "confirm") {
+        // 设置按钮为加载状态
+        instance.confirmButtonLoading = true;
+        try {
+          const res = await userApi.logout({ username: "00001" });
+          if (res.code === 200) {
+            localStorage.clear();
+            sessionStorage.clear();
+            // 关闭弹窗
+            done();
+            // 跳转到登录页并刷新
+            router.push("/login").then(() => {
+              window.location.reload();
+            });
+          } else {
+            ElMessage.error("退出失败");
+          }
+        } catch (error) {
+          // ElMessage.error("请求失败，请重试");
+        } finally {
+          instance.confirmButtonLoading = false;
+        }
+      } else {
+        // 用户点击取消，直接关闭弹窗
+        done();
       }
-    })
-    .catch(() => {});
+    },
+  }).catch(() => {
+    // 这里处理取消的情况，但已经通过 beforeClose 处理了
+  });
 };
 </script>
 
@@ -226,14 +244,6 @@ const logout = () => {
         cursor: pointer;
       }
     }
-  }
-
-  .logout-btn {
-    color: #333;
-    cursor: pointer;
-    font-size: 15px;
-    display: flex;
-    justify-content: center;
   }
 }
 </style>

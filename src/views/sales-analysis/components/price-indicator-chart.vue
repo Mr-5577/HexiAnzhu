@@ -176,7 +176,7 @@ onUnmounted(() => {
     flex-direction: column;
     justify-content: space-around;
     .statistics-item {
-      width: 90%;
+      width: 100%;
       height: 50px;
       background: linear-gradient(
         to right,

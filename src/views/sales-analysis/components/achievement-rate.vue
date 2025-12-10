@@ -3,28 +3,59 @@
   <div class="rate-page">
     <div class="inventory-content">
       <div class="inventory-item">
-        <img class="item-img" src="@/assets/imgs/largeScreenImg/kucun.png" alt="" />
+        <img
+          class="item-img"
+          src="@/assets/imgs/largeScreenImg/kucun.png"
+          alt=""
+        />
         <div class="desc">
           <div class="title">库存住宅</div>
           <div class="num">500套/3.2亿</div>
         </div>
       </div>
       <div class="inventory-item">
-        <img class="item-img" src="@/assets/imgs/largeScreenImg/quhua.png" alt="" />
+        <img
+          class="item-img"
+          src="@/assets/imgs/largeScreenImg/quhua.png"
+          alt=""
+        />
         <div class="desc">
           <div class="title">月均去化</div>
           <div class="num2">200套/1.2亿</div>
         </div>
       </div>
       <div class="inventory-item">
-        <img class="item-img" src="@/assets/imgs/largeScreenImg/proportion.png" alt="" />
+        <img
+          class="item-img"
+          src="@/assets/imgs/largeScreenImg/proportion.png"
+          alt=""
+        />
         <div class="desc">
           <div class="title">存销比</div>
           <div class="num3">2.5</div>
         </div>
       </div>
     </div>
-    <div class="achieve-rate">
+    <div
+      class="achieve-rate"
+      v-loading="loading"
+      :element-loading-text="'数据加载中...'"
+      :element-loading-background="'rgba(0, 0, 0, 0.2)'"
+    >
+      <div class="data-switch">
+        <el-radio-group
+          v-model="typeVal"
+          size="small"
+          text-color="#626aef"
+          fill="rgb(239, 240, 253)"
+          @change="handleChange()"
+        >
+          <el-radio-button label="年" :value="0" />
+          <el-radio-button label="月" :value="1" />
+          <el-radio-button label="周" :value="2" />
+          <el-radio-button label="日" :value="3" />
+        </el-radio-group>
+      </div>
       <!-- 动画部分 -->
       <canvas class="rain"></canvas>
       <canvas class="dashed"></canvas>
@@ -33,7 +64,7 @@
         <div class="sphere-bg"></div>
         <div class="sum">
           <span>综合达成率</span>
-          <p>99.99%</p>
+          <p>{{ formatPercent(saleData.totalRate) }}%</p>
         </div>
       </div>
       <!-- 旋转圆圈 -->
@@ -44,19 +75,19 @@
       <div class="cicle7"></div>
       <!-- 数据指标圆圈 -->
       <div class="cicle8">
-        <span>99%</span>
+        <span>{{ formatPercent(saleData.orderRate) }}%</span>
         <p>认购达成率</p>
       </div>
       <div class="cicle9">
-        <span>88%</span>
+        <span>{{ formatPercent(saleData.signRate) }}%</span>
         <p>签约达成率</p>
       </div>
       <div class="cicle10">
-        <span>77%</span>
+        <span>{{ formatPercent(saleData.collectRate) }}%</span>
         <p>回款达成率</p>
       </div>
       <div class="cicle11">
-        <span>66%</span>
+        <span>{{ formatPercent(saleData.premiumRate) }}%</span>
         <p>溢价率</p>
       </div>
     </div>
@@ -64,8 +95,77 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, nextTick } from "vue";
+import { ref, onMounted, onUnmounted, nextTick, watch } from "vue";
+import { largeScreenApi } from "@/api/large-screen-api";
 
+interface Props {
+  data: string;
+  department: number[];
+}
+const props = withDefaults(defineProps<Props>(), {
+  data: "",
+  department: () => [],
+});
+
+const typeVal = ref(0);
+const loading = ref(false);
+const saleData = ref({
+  orderRate: 0, // 认购达成率
+  signRate: 0, // 签约达成率
+  collectRate: 0, // 回款达成率
+  totalRate: 0, // 综合达成率
+  premiumRate: 0, // 总溢价率
+});
+// 防止重复请求
+let isRequesting = false;
+
+// 格式化百分比函数
+const formatPercent = (value: any) => {
+  if (value === undefined || value === null) return "-";
+  return (value * 100).toFixed(0);
+};
+
+const initData = async () => {
+  // 检查是否已有请求在进行
+  if (isRequesting) return;
+
+  const params = {
+    projIds: props.department,
+    type: typeVal.value,
+    day: props.data + " 23:59:59",
+  };
+  try {
+    isRequesting = true;
+    loading.value = true;
+    const res = await largeScreenApi.getSaleInfo(params);
+    if (res.code === 200) {
+      saleData.value = res.data;
+    }
+    const res2 = await largeScreenApi.getPremiumInfo(params);
+    if (res2.code === 200) {
+      saleData.value.premiumRate = res2.data?.premiumRate;
+    }
+  } finally {
+    isRequesting = false;
+    loading.value = false;
+  }
+};
+const handleChange = () => {
+  nextTick(() => {
+    initData();
+  });
+};
+watch(
+  () => [props.data, props.department],
+  ([data, department]) => {
+    if (department) {
+      nextTick(() => {
+        initData();
+      });
+    }
+  },
+  { immediate: true }
+);
 // 生命周期
 onMounted(() => {
   nextTick(() => {});

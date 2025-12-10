@@ -49,16 +49,11 @@ export default defineConfig(({ mode }) => {
       hmr: true, // 热更新
       proxy: isDev
         ? {
-            "/auth": {
+            "/api": {
               target: env.VITE_API_BASE_URL || "http://localhost:8080",
               changeOrigin: true, // 允许跨域
-              rewrite: (path) => path,  // 保持路径不变
-              // rewrite: (path) => path.replace(/^\/api/, ""),
-            },
-            "/emp": {
-              target: env.VITE_API_BASE_URL,
-              changeOrigin: true,
-              rewrite: (path) => path,
+              // rewrite: (path) => path,  // 保持路径不变
+              rewrite: (path) => path.replace(/^\/api/, ""), // 去掉/api
             },
           }
         : undefined,

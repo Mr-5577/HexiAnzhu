@@ -16,8 +16,8 @@ export const userApi = {
     return http.get<UserInfo>("/user/info");
   },
   // 退出登录
-  logout: (username: string) => {
-    return http.post(`/auth/logout?username=${username}`);
+  logout: (data: any) => {
+    return http.post(`/auth/logout`,data);
   },
   // 获取当前用户的菜单数据
   getUserMenuPowerList: async () => {

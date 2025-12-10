@@ -2,25 +2,26 @@
   <div class="homePage">
     <el-header class="header-box">
       <div class="header-left">
-        <el-select
-          v-model="selectValue"
+        <el-cascader
+          class="custom-cascader"
+          v-model="departmentVal"
           placeholder="请选择"
-          style="width: 120px"
-          class="custom-company-select"
-        >
-          <el-option
-            v-for="item in options"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
-        </el-select>
+          :options="options"
+          :props="cascaderProps"
+          collapse-tags
+          collapse-tags-tooltip
+          clearable
+          :show-all-levels="false"
+          :max-collapse-tags="1"
+        ></el-cascader>
         <el-date-picker
-          v-model="dataValue"
+          v-model="dataVal"
           type="date"
           size="default"
           placeholder="选择日期"
-          style="width: 140px; margin-left: 10px"
+          format="YYYY-MM-DD"
+          value-format="YYYY-MM-DD"
+          style="width: 120px; margin-left: 10px"
           :clearable="false"
           class="custom-data-picker"
         ></el-date-picker>
@@ -36,12 +37,18 @@
     </el-header>
     <el-main class="main-box">
       <div class="main-left">
-        <goal-achieved></goal-achieved>
-        <price-indicator-chart></price-indicator-chart>
+        <goal-achieved
+          :data="dataVal"
+          :department="departmentVal"
+        ></goal-achieved>
+        <!-- <price-indicator-chart></price-indicator-chart> -->
         <performance-ranking></performance-ranking>
       </div>
       <div class="main-middle">
-        <achievement-rate></achievement-rate>
+        <achievement-rate
+          :data="dataVal"
+          :department="departmentVal"
+        ></achievement-rate>
         <performance-trend-chart></performance-trend-chart>
       </div>
       <div class="main-right">
@@ -63,19 +70,21 @@ import ConversionMetricsChart from "./components/conversion-metrics-chart.vue";
 import FinancialStatistics from "./components/financial-statistics.vue";
 import StructuralStatisticsChart from "./components/structural-statistics-chart.vue";
 import PerformanceRanking from "./components/performance-ranking.vue";
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, computed } from "vue";
 import { formatToDateTime, formatToDate } from "@/utils/date-util";
+import { largeScreenApi } from "@/api/large-screen-api";
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
-  name: 'large-screen'
+  name: "large-screen",
 });
 
 const yearMonthDay = ref("");
 const time = ref("");
 const week = ref("");
-const selectValue = ref("1");
-const dataValue = ref("");
+const departmentVal = ref([]);
+const dataVal = ref("");
+const options = ref<any[]>([]);
 
 let timer: string | number | NodeJS.Timeout | null | undefined = null;
 const updateTime = () => {
@@ -85,27 +94,36 @@ const updateTime = () => {
   week.value = formatToDateTime(newDate, "dddd");
 };
 
-const options = [
-  {
-    value: "1",
-    label: "全集团",
+const getProjList = async () => {
+  const res = await largeScreenApi.getProjTree();
+  if (res.code === 200) {
+    options.value = res.data || [];
+  }
+};
+
+const cascaderProps = computed(() => ({
+  value: "id",
+  label: "projName",
+  multiple: true,
+  emitPath: false,
+  checkStrictly: true, // 可选：是否严格选择模式
+  expandTrigger: "hover", // 可选：展开方式
+
+  // 关键：根据 projType 设置 disabled
+  disabled: (data: any, node: any) => {
+    // projType !== 1 的项目禁用
+    return data.projType !== 1;
   },
-  {
-    value: "2",
-    label: "子公司1",
-  },
-  {
-    value: "3",
-    label: "子公司2",
-  },
-];
+}));
 
 onMounted(() => {
   console.log("项目环境配置config", config);
-  dataValue.value = formatToDate(new Date());
+  dataVal.value = formatToDate(new Date());
   updateTime();
   timer = setInterval(updateTime, 1000);
+  getProjList();
 });
+
 onUnmounted(() => {
   if (timer) {
     clearInterval(timer);
@@ -144,16 +162,20 @@ onUnmounted(() => {
       flex-wrap: nowrap;
       align-items: flex-end;
       justify-content: flex-start;
-      padding-left: 3rem;
+      padding-left: 2rem;
       box-sizing: border-box;
-      .custom-company-select {
-        :deep(.el-select__wrapper) {
-          background-color: #0f3b56 !important;
-          border: 1px solid #0f3b56 !important;
-          box-shadow: 0 0 0 1px #1c5e85 inset;
+      :deep(.custom-cascader) {
+        height: 32px;
+        .el-input__wrapper {
+          padding: 0 11px;
         }
-        :deep(.el-select__selected-item) {
-          color: #dbe9ef !important;
+        .el-cascader__tags {
+          display: flex;
+          flex-wrap: nowrap;
+          .el-tag {
+            color: #d1e0e7;
+            background-color: transparent !important;
+          }
         }
       }
       :deep(.el-input__wrapper) {
