@@ -339,12 +339,13 @@ const emit = defineEmits<Emits>();
 
 const tableRef = ref<TableInstance>();
 const selectedRows = ref<any[]>([]);
-const columnSettings = ref<TableColumnItem[]>(
-  props.columns.map((col) => ({
+
+const columnSettings = computed(() => {
+  return props.columns.map((col) => ({
     ...col,
     visible: col.visible !== false,
-  }))
-);
+  }));
+});
 
 // 计算表格高度
 const tableHeight = ref<number | string | null>(null);
