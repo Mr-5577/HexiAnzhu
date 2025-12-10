@@ -21,7 +21,7 @@ declare module "axios" {
 }
 // 创建 Axios 实例
 const service = axios.create({
-  baseURL: import.meta.env.PROD ? import.meta.env.VITE_APP_BASE_API : "/", // url地址
+  baseURL: import.meta.env.PROD ? import.meta.env.VITE_APP_BASE_API : "/api", // url地址
   timeout: 5000, // 超时时间
   withCredentials: true, // 所有通过这个实例的请求都会自动携带 Cookie
 });
@@ -93,10 +93,10 @@ service.interceptors.request.use(
 
     // 检查并取消重复请求
     const requestKey = generateRequestKey(config);
-    if (pendingRequests.has(requestKey)) {
-      pendingRequests.get(requestKey)!("取消重复请求");
-      pendingRequests.delete(requestKey);
-    }
+    // if (pendingRequests.has(requestKey)) {
+    //   pendingRequests.get(requestKey)!("取消重复请求");
+    //   pendingRequests.delete(requestKey);
+    // }
 
     config.cancelToken = new axios.CancelToken((cancel) => {
       pendingRequests.set(requestKey, cancel);
