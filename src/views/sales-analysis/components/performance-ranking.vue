@@ -1,7 +1,12 @@
 <!-- 业绩排名列表-组件 -->
 <template>
   <div class="ranking-page">
-    <ChartBox title="业绩排名统计">
+    <ChartBox
+      title="业绩排名统计"
+      v-loading="loading"
+      :element-loading-text="'数据加载中...'"
+      :element-loading-background="'rgba(0, 0, 0, 0.2)'"
+    >
       <template #content>
         <div class="rankingContent">
           <div class="chart-controls">
@@ -24,19 +29,20 @@
           </div>
           <div class="performance-ranking-table-list">
             <base-table
+              :key="chartType"
               :pagination="false"
-              :columns="columns"
+              :columns="tableColumn"
               :tableData="tableData"
-              :loading="loading"
               :total="total"
               :current-page="currentPage"
               :page-size="pageSize"
-              :dictData="dictData"
               :size="'small'"
               @pagination-change="handlePaginationChange"
-              @refresh="handleRefresh"
-              @selection-change="handleSelectionChange"
-            ></base-table>
+            >
+              <template #empty>
+                <div>暂无数据</div>
+              </template>
+            </base-table>
           </div>
         </div>
       </template>
@@ -46,62 +52,99 @@
 
 <script setup lang="ts">
 import ChartBox from "@/components/chart-box.vue";
-import BaseTable, { TableColumnItem } from "@/components/base-table.vue";
-import { ref, onMounted, onUnmounted, nextTick } from "vue";
+import BaseTable from "@/components/base-table.vue";
+import { ref, onMounted, onUnmounted, nextTick, watch, computed } from "vue";
+import { dateUtil } from "@/utils/date-util";
+import { largeScreenApi } from "@/api/large-screen-api";
 
+interface Props {
+  data: string;
+  department: number[];
+}
+const props = withDefaults(defineProps<Props>(), {
+  data: "",
+  department: () => [],
+});
+// 定义一个需要暴露的方法
+const refreshData = () => {
+  getTableList();
+};
+// 暴露方法给父组件
+defineExpose({
+  refreshData,
+});
+
+// 防止重复请求
+let isRequesting = false;
 // 响应式数据
 const chartType = ref("1");
 const loading = ref(false);
 const currentPage = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
-// 字典数据
-const dictData = {
-  gender: [
-    { value: 1, label: "男" },
-    { value: 2, label: "女" },
-  ],
-};
-const columns: TableColumnItem[] = [
-  {
-    prop: "name",
-    label: "排名",
-    width: "60",
-  },
-  {
-    prop: "name",
-    label: "项目名称",
-  },
-  {
-    prop: "age",
-    label: "签约(套)",
-  },
-  {
-    prop: "age",
-    label: "认购(套)",
-  },
-  {
-    prop: "age",
-    label: "回款(万)",
-  },
-  {
-    prop: "age",
-    label: "完成率",
-  },
-];
-const tableData = ref([
-  { id: 1, name: "zs", age: "18", gender: 1 },
-  { id: 2, name: "zs", age: "18", gender: 2 },
-  { id: 3, name: "zs", age: "18", gender: 1 },
-  { id: 4, name: "zs", age: "18", gender: 1 },
-  { id: 5, name: "zs", age: "18", gender: 1 },
-  { id: 6, name: "zs", age: "18", gender: 1 },
-  { id: 7, name: "zs", age: "18", gender: 1 },
-]);
+
+const tableColumn = computed(() => {
+  return chartType.value === "1"
+    ? [
+        {
+          prop: "sort",
+          label: "排名",
+          width: "55",
+        },
+        {
+          prop: "projName",
+          label: "项目名称",
+        },
+        {
+          prop: "signNum",
+          label: "签约(套)",
+        },
+        {
+          prop: "orderNum",
+          label: "认购(套)",
+        },
+        {
+          prop: "payMoney",
+          label: "回款(万)",
+        },
+        {
+          prop: "totalRate",
+          label: "完成率",
+          // 使用 formatter 格式化
+          formatter: (row: any, column: any, index: number) => {
+            const value = row.totalRate;
+            if (value === null || value === undefined) return "-";
+            // 转换为百分数，保留2位小数
+            return `${(value * 100).toFixed(2)}%`;
+          },
+        },
+      ]
+    : [
+        {
+          prop: "sort",
+          label: "集团排名",
+        },
+        {
+          prop: "sortProj",
+          label: "项目排名",
+        },
+        {
+          prop: "projName",
+          label: "项目名称",
+        },
+        {
+          prop: "salerName",
+          label: "置业顾问",
+        },
+      ];
+});
+
+const tableData = ref([]);
 
 // 切换图表类型
 const switchChartType = (type: string) => {
   chartType.value = type;
+  getTableList();
 };
 
 // 分页变化
@@ -109,17 +152,50 @@ const handlePaginationChange = (params: any) => {
   currentPage.value = params.currentPage;
   pageSize.value = params.pageSize;
 };
+const getTableList = async () => {
+  // 检查是否已有请求在进行
+  if (isRequesting) return;
 
-// 刷新
-const handleRefresh = () => {};
+  const data = `${props.data} 00:00:00`;
+  const params = {
+    projIds: props.department,
+    type: 1, // 1:月  0:年
+    day: dateUtil(data).subtract(1, "month").format("YYYY-MM-DD HH:mm:ss"),
+  };
+  try {
+    isRequesting = true;
+    loading.value = true;
+    tableData.value = [];
+    const interfaceApi =
+      chartType.value === "1"
+        ? largeScreenApi.getSaleProjInfo
+        : largeScreenApi.getSaleProjSalerInfo;
 
-// 多选
-const handleSelectionChange = (selection: any) => {
-  console.log("选中的数据:", selection);
+    const res = await interfaceApi(params);
+    if (res.code === 200) {
+      tableData.value = res.data || [];
+    }
+  } finally {
+    isRequesting = false;
+    loading.value = false;
+  }
 };
+
+watch(
+  () => [props.data, props.department],
+  ([data, department]) => {
+    if (data && department) {
+      // getTableList();
+    }
+  },
+  { immediate: true }
+);
+
 // 生命周期
 onMounted(() => {
-  nextTick(() => {});
+  nextTick(() => {
+    getTableList()
+  });
 });
 
 // 清理
@@ -149,6 +225,7 @@ onUnmounted(() => {});
       }
       .chart-btn:hover {
         background: none;
+        color: #7dbbfa;
       }
       .chart-btn.active {
         color: #409eff;
@@ -175,7 +252,6 @@ onUnmounted(() => {});
               background-color: transparent !important;
             }
           }
-
           th {
             background-color: transparent !important;
             color: #fff;

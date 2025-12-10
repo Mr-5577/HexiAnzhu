@@ -1,7 +1,12 @@
 <!-- 业绩走势折线图-组件 -->
 <template>
   <div class="performanceTrend-page">
-    <ChartBox title="业绩走势情况">
+    <ChartBox
+      title="业绩走势情况"
+      v-loading="loading"
+      :element-loading-text="'数据加载中...'"
+      :element-loading-background="'rgba(0, 0, 0, 0.2)'"
+    >
       <template #content>
         <div class="performanceTrendContent">
           <div class="chart-controls">
@@ -9,7 +14,7 @@
               text
               size="default"
               :class="['chart-btn', { active: chartType === 'year' }]"
-              @click="switchChartType('year')"
+              @click="handleChartTypeChange('year')"
             >
               近一年业绩走势
             </el-button>
@@ -17,7 +22,7 @@
               text
               size="default"
               :class="['chart-btn', { active: chartType === 'month' }]"
-              @click="switchChartType('month')"
+              @click="handleChartTypeChange('month')"
             >
               近三十天来访趋势
             </el-button>
@@ -31,99 +36,97 @@
 
 <script setup lang="ts">
 import ChartBox from "@/components/chart-box.vue";
-import { ref, shallowRef, onMounted, onUnmounted, nextTick } from "vue";
+import { ref, shallowRef, onMounted, onUnmounted, watch, nextTick } from "vue";
 import * as echarts from "echarts";
+import { dateUtil } from "@/utils/date-util";
+import { largeScreenApi } from "@/api/large-screen-api";
+import type { ECharts, EChartsOption } from "echarts";
 
-// 响应式数据
-const chartType = ref("year");
-const chartInstance = shallowRef<echarts.ECharts | null>(null);
-const chartDom = ref<HTMLDivElement | null>(null);
-// 模拟数据
-const chartData = ref({
-  dates: [
-    "1月",
-    "2月",
-    "3月",
-    "4月",
-    "5月",
-    "6月",
-    "7月",
-    "8月",
-    "9月",
-    "10月",
-    "11月",
-    "12月",
-  ],
-  subscription: [120, 132, 101, 134, 90, 230, 210, 182, 191, 234, 290, 330],
-  signing: [220, 182, 191, 234, 290, 330, 310, 321, 305, 387, 420, 450],
-  payment: [150, 232, 201, 154, 190, 330, 410, 281, 201, 284, 320, 380],
+interface Props {
+  data: string;
+  department: number[];
+}
+const props = withDefaults(defineProps<Props>(), {
+  data: "",
+  department: () => [],
+});
+// 定义一个需要暴露的方法
+const refreshData = () => {
+  getData();
+};
+// 暴露方法给父组件
+defineExpose({
+  refreshData,
 });
 
-// 切换图表类型
-const switchChartType = (type: string) => {
-  chartType.value = type;
+// 响应式数据
+const loading = ref(false);
+const chartType = ref("year");
+const chartInstance = shallowRef<ECharts | null>(null);
+const chartDom = ref<HTMLDivElement | null>(null);
+
+// 图表数据
+const chartData = ref({
+  dates: [], // 时间
+  subscription: [], // 认购
+  signing: [], // 签约
+  payment: [], // 回款
+});
+
+// 请求锁
+let isRequesting = false;
+
+// 计算Y轴最大值
+const calculateYAxisMax = (): number => {
+  const { subscription, signing, payment } = chartData.value;
+  const allData: any = [...subscription, ...signing, ...payment].filter(
+    (v) => v !== null && v !== undefined
+  );
+
+  if (allData.length === 0) return 100;
+
+  const maxValue = Math.max(...allData);
+  return maxValue > 0 ? maxValue : 100;
 };
 
-// 初始化图表
-const initChart = () => {
-  if (!chartDom.value) {
-    console.error("图表容器未找到");
-    return;
-  }
+// 获取基础图表配置
+const getBaseChartOption = (): EChartsOption => {
+  const yAxisMax = calculateYAxisMax();
 
-  try {
-    // 确保之前的实例被销毁
-    if (chartInstance.value) {
-      chartInstance.value.dispose();
-    }
-    chartInstance.value = echarts.init(chartDom.value);
-    setTimeout(() => {
-      updateChart();
-    }, 500);
-  } catch (error) {
-    console.error("图表初始化失败:", error);
-  }
-};
-
-// 更新图表
-const updateChart = () => {
-  if (!chartInstance.value) {
-    console.error("图表实例未初始化");
-    return;
-  }
-  const option = {
-    // title: {
-    //   // 图表标题
-    //   text: chartType.value === "year" ? "近一年业绩趋势" : "近三十天走访趋势",
-    //   left: "center",
-    //   textStyle: {
-    //     fontSize: 16,
-    //     fontWeight: "bold",
-    //   },
-    // },
+  return {
+    title: {
+      text: "单位：万元",
+      left: "left",
+      top: 0,
+      textStyle: {
+        color: "#fff",
+        fontSize: 12,
+      },
+    },
     tooltip: {
-      show: true,
       trigger: "axis",
+      axisPointer: {
+        type: "cross",
+        label: {
+          backgroundColor: "#6a7985",
+        },
+      },
     },
     legend: {
       data: ["认购", "签约", "回款"],
       top: "2%",
       textStyle: {
-        // 图例文字样式
-        color: "#fff", // 文字颜色
-        fontSize: 12, // 字体大小
-        fontWeight: "bold", // 字体粗细
-        fontFamily: "Arial", // 字体类型
+        color: "#fff",
+        fontSize: 12,
+        fontWeight: "bold",
       },
       itemStyle: {
-        // 图例标记样式
-        borderWidth: 1, // 边框宽度
-        borderColor: "#ccc", // 边框颜色
-        borderType: "solid", // 边框类型
+        borderWidth: 1,
+        borderColor: "#ccc",
       },
-      itemGap: 15, // 图例每项之间的间隔
-      itemWidth: 25, // 图例标记的图形宽度
-      itemHeight: 14, // 图例标记的图形高度
+      itemGap: 15,
+      itemWidth: 25,
+      itemHeight: 14,
     },
     grid: {
       left: "3%",
@@ -137,34 +140,27 @@ const updateChart = () => {
       boundaryGap: false,
       data: chartData.value.dates,
       axisLabel: {
-        // 坐标轴刻度标签样式
-        color: "#eee", // 文字颜色
-        fontSize: 12, // 字体大小
-        fontWeight: "bold", // 字体粗细
-        // rotate: 45, // 旋转角度
-        margin: 10, // 与坐标轴距离
-        // formatter: function (value: string) {
-        //   // 格式化文本
-        //   return value + "月";
-        // },
+        color: "#eee",
+        fontSize: 12,
+        fontWeight: "bold",
+        margin: 10,
       },
       axisTick: {
-        // 坐标轴刻度样式
-        show: true, // 是否显示
-        length: 5, // 刻度长度
+        show: true,
+        length: 5,
         lineStyle: {
-          color: "#999", // 刻度颜色
-          width: 1, // 刻度宽度
-          type: "solid", // 刻度类型
+          color: "#999",
+          width: 1,
         },
       },
     },
     yAxis: {
       type: "value",
+      min: 0,
+      max: yAxisMax,
       axisLabel: {
         color: "#eee",
         fontSize: 12,
-        // formatter: "{value}%", // 例如显示百分比
       },
       axisTick: {
         show: true,
@@ -174,11 +170,10 @@ const updateChart = () => {
         },
       },
       splitLine: {
-        // 网格线样式
         lineStyle: {
-          color: "#b1adad", // 网格线颜色
+          color: "rgba(177, 173, 173, 0.5)",
           width: 1,
-          type: "dashed", // 虚线
+          type: "dashed",
         },
       },
     },
@@ -194,6 +189,8 @@ const updateChart = () => {
         itemStyle: {
           color: "#5470c6",
         },
+        symbol: "circle",
+        symbolSize: 6,
       },
       {
         name: "签约",
@@ -206,6 +203,8 @@ const updateChart = () => {
         itemStyle: {
           color: "#91cc75",
         },
+        symbol: "circle",
+        symbolSize: 6,
       },
       {
         name: "回款",
@@ -218,39 +217,121 @@ const updateChart = () => {
         itemStyle: {
           color: "#fac858",
         },
+        symbol: "circle",
+        symbolSize: 6,
       },
     ],
   };
-
-  chartInstance.value.setOption(option);
 };
-// 监听窗口大小变化
-const handleResize = () => {
-  if (chartInstance.value && !chartInstance.value.isDisposed()) {
-    // 使用 requestAnimationFrame 优化性能
-    requestAnimationFrame(() => {
-      try {
-        chartInstance.value?.resize({
-          animation: {
-            duration: 300,
-          },
-        });
-      } catch (error) {
-        console.error("Resize error:", error);
-      }
-    });
+
+// 切换图表类型
+const handleChartTypeChange = (type: string) => {
+  if (chartType.value === type) return;
+  chartType.value = type;
+  getData();
+};
+
+// 初始化图表
+const initChart = () => {
+  if (!chartDom.value) return;
+
+  try {
+    chartInstance.value?.dispose();
+    chartInstance.value = echarts.init(chartDom.value);
+    updateChart();
+  } catch (error) {
+    console.error("图表初始化失败:", error);
   }
 };
 
-// 生命周期
+// 更新图表
+const updateChart = () => {
+  if (!chartInstance.value) return;
+
+  chartInstance.value.setOption(getBaseChartOption(), true);
+};
+
+// 处理窗口大小变化
+const handleResize = () => {
+  if (!chartInstance.value || chartInstance.value.isDisposed()) return;
+  chartInstance.value.resize();
+};
+
+// 获取数据
+const getData = async () => {
+  if (isRequesting) return;
+
+  const { data, department } = props;
+  const endDate = `${data} 00:00:00`;
+  const startDate = dateUtil(endDate)
+    .subtract(
+      chartType.value === "year" ? 1 : 30,
+      chartType.value === "year" ? "year" : "day"
+    )
+    .format("YYYY-MM-DD HH:mm:ss");
+
+  const params = {
+    projIds: department,
+    type: 0,
+    day: endDate,
+    beginDate: startDate,
+    endDate: endDate,
+  };
+
+  try {
+    isRequesting = true;
+    loading.value = true;
+
+    const res = await largeScreenApi.getSaleYearInfo(params);
+    if (res.code === 200) {
+      const dataList: any[] = res.data || [];
+      // 使用 reduce 一次性处理数据
+      const result = dataList.reduce(
+        (acc, item) => {
+          acc.dates.push(item.syearMonth);
+          acc.subscription.push(item.saleMoney || 0);
+          acc.signing.push(item.signMoney || 0);
+          acc.payment.push(item.collectMoney || 0);
+          return acc;
+        },
+        { dates: [], subscription: [], signing: [], payment: [] }
+      );
+      console.log("result", result);
+      chartData.value = result;
+      initChart();
+    }
+  } catch (error) {
+    console.error("获取数据失败:", error);
+    chartData.value = { dates: [], subscription: [], signing: [], payment: [] };
+    initChart();
+  } finally {
+    isRequesting = false;
+    loading.value = false;
+    nextTick(updateChart); // 确保 DOM 更新后重新渲染图表
+  }
+};
+
+// 监听依赖变化
+watch(
+  () => [props.data, props.department],
+  ([data, department]) => {
+    if (data && department) {
+      // getData();
+    }
+  },
+  { immediate: true }
+);
+
+// 组件挂载
 onMounted(() => {
   nextTick(() => {
-    initChart();
+    // initChart();
+    getData();
   });
   window.addEventListener("resize", handleResize);
 });
 
-// 清理
+// 组件卸载
 onUnmounted(() => {
   window.removeEventListener("resize", handleResize);
   chartInstance.value?.dispose();
@@ -261,34 +342,44 @@ onUnmounted(() => {
 .performanceTrend-page {
   width: 100%;
   height: 33%;
+
   .performanceTrendContent {
     width: 100%;
-    flex: 1;
+    height: 100%;
     display: flex;
-    flex-wrap: nowrap;
     flex-direction: column;
+
     .chart-controls {
-      width: 100%;
+      flex-shrink: 0;
       display: flex;
       justify-content: flex-end;
+      margin-bottom: 12px;
+
       .chart-btn {
         color: #fff;
-        cursor: pointer;
-        transition: all 0.3s;
+        padding: 0 8px;
         font-weight: 400;
-        padding: 0;
-      }
-      .chart-btn:hover {
-        background: none;
-      }
-      .chart-btn.active {
-        color: #409eff;
-        font-weight: 700;
+        transition: color 0.3s;
+
+        &:hover {
+          color: #7dbbfa;
+          background: none;
+        }
+
+        &.active {
+          color: #409eff;
+          font-weight: 700;
+        }
+
+        & + .chart-btn {
+          margin-left: 16px;
+        }
       }
     }
+
     .performanceTrend-chart {
-      width: 100%;
       flex: 1;
+      min-height: 0;
     }
   }
 }

@@ -106,6 +106,14 @@ const props = withDefaults(defineProps<Props>(), {
   data: "",
   department: () => [],
 });
+// 定义一个需要暴露的方法
+const refreshData = () => {
+  getData();
+};
+// 暴露方法给父组件
+defineExpose({
+  refreshData,
+});
 
 const typeVal = ref(0);
 const loading = ref(false);
@@ -125,14 +133,14 @@ const formatPercent = (value: any) => {
   return (value * 100).toFixed(0);
 };
 
-const initData = async () => {
+const getData = async () => {
   // 检查是否已有请求在进行
   if (isRequesting) return;
 
   const params = {
     projIds: props.department,
     type: typeVal.value,
-    day: props.data + " 23:59:59",
+    day: props.data + " 00:00:00",
   };
   try {
     isRequesting = true;
@@ -152,23 +160,25 @@ const initData = async () => {
 };
 const handleChange = () => {
   nextTick(() => {
-    initData();
+    getData();
   });
 };
 watch(
   () => [props.data, props.department],
   ([data, department]) => {
-    if (department) {
-      nextTick(() => {
-        initData();
-      });
+    if (data && department) {
+      // nextTick(() => {
+      //   getData();
+      // });
     }
   },
   { immediate: true }
 );
 // 生命周期
 onMounted(() => {
-  nextTick(() => {});
+  nextTick(() => {
+    getData();
+  });
 });
 
 // 清理

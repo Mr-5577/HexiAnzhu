@@ -25,6 +25,14 @@
           :clearable="false"
           class="custom-data-picker"
         ></el-date-picker>
+        <el-button
+          text
+          size="default"
+          class="search-btn"
+          @click="handleSearch()"
+        >
+          查询
+        </el-button>
       </div>
       <div class="header-title">和喜安筑销售监控平台</div>
       <div class="header-right">
@@ -38,18 +46,27 @@
     <el-main class="main-box">
       <div class="main-left">
         <goal-achieved
+          ref="goalAchievedRef"
           :data="dataVal"
           :department="departmentVal"
         ></goal-achieved>
-        <!-- <price-indicator-chart></price-indicator-chart> -->
-        <performance-ranking></performance-ranking>
+        <performance-ranking
+          ref="performanceRankingRef"
+          :data="dataVal"
+          :department="departmentVal"
+        ></performance-ranking>
       </div>
       <div class="main-middle">
         <achievement-rate
+          ref="achievementRateRef"
           :data="dataVal"
           :department="departmentVal"
         ></achievement-rate>
-        <performance-trend-chart></performance-trend-chart>
+        <performance-trend-chart
+          ref="performanceTrendChartRef"
+          :data="dataVal"
+          :department="departmentVal"
+        ></performance-trend-chart>
       </div>
       <div class="main-right">
         <conversion-metrics-chart></conversion-metrics-chart>
@@ -63,7 +80,6 @@
 <script setup lang="ts">
 import { config } from "@/utils/config";
 import GoalAchieved from "./components/goal-achieved.vue";
-import PriceIndicatorChart from "./components/price-indicator-chart.vue";
 import AchievementRate from "./components/achievement-rate.vue";
 import PerformanceTrendChart from "./components/performance-trend-chart.vue";
 import ConversionMetricsChart from "./components/conversion-metrics-chart.vue";
@@ -85,6 +101,13 @@ const week = ref("");
 const departmentVal = ref([]);
 const dataVal = ref("");
 const options = ref<any[]>([]);
+
+// 定义多个 ref
+const goalAchievedRef = ref<InstanceType<typeof GoalAchieved>>();
+const performanceRankingRef = ref<InstanceType<typeof PerformanceRanking>>();
+const achievementRateRef = ref<InstanceType<typeof AchievementRate>>();
+const performanceTrendChartRef =
+  ref<InstanceType<typeof PerformanceTrendChart>>();
 
 let timer: string | number | NodeJS.Timeout | null | undefined = null;
 const updateTime = () => {
@@ -110,11 +133,30 @@ const cascaderProps = computed(() => ({
   expandTrigger: "hover", // 可选：展开方式
 
   // 关键：根据 projType 设置 disabled
-  disabled: (data: any, node: any) => {
-    // projType !== 1 的项目禁用
-    return data.projType !== 1;
-  },
+  // disabled: (data: any, node: any) => {
+  //   // projType !== 1 的项目禁用
+  //   return data.projType !== 1;
+  // },
 }));
+
+// 统一刷新所有子组件
+const refreshAllComponents = () => {
+  const components = [
+    goalAchievedRef.value,
+    performanceRankingRef.value,
+    achievementRateRef.value,
+    performanceTrendChartRef.value,
+  ];
+  components.forEach((component) => {
+    if (component && typeof component.refreshData === "function") {
+      component.refreshData();
+    }
+  });
+};
+
+const handleSearch = () => {
+  refreshAllComponents();
+};
 
 onMounted(() => {
   console.log("项目环境配置config", config);
@@ -187,6 +229,23 @@ onUnmounted(() => {
       :deep(.el-input__inner) {
         color: #dbe9ef !important;
       }
+
+      .search-btn {
+        color: #fff;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 400;
+        padding: 0;
+        margin-left: 10px;
+      }
+      .search-btn:hover {
+        background: none;
+        color: #7dbbfa;
+      }
+      .search-btn.active {
+        color: #409eff;
+        font-weight: 700;
+      }
     }
     .header-title {
       width: 33%;
@@ -204,7 +263,7 @@ onUnmounted(() => {
       flex-wrap: nowrap;
       align-items: flex-end;
       justify-content: flex-end;
-      padding-right: 2rem;
+      padding-right: 1.5rem;
       box-sizing: border-box;
       .time {
         font-size: 16px;

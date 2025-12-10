@@ -144,6 +144,15 @@ const props = withDefaults(defineProps<Props>(), {
   data: "",
   department: () => [],
 });
+// 定义一个需要暴露的方法
+const refreshData = () => {
+  getData();
+};
+// 暴露方法给父组件
+defineExpose({
+  refreshData,
+});
+
 // 防止重复请求
 let isRequesting = false;
 const loading = ref(false);
@@ -315,7 +324,7 @@ const getData = async () => {
   const params = {
     projIds: props.department,
     type: typeVal.value,
-    day: props.data + " 23:59:59",
+    day: props.data + " 00:00:00",
   };
   try {
     isRequesting = true;
@@ -421,9 +430,9 @@ watch(
   () => [props.data, props.department],
   ([data, department]) => {
     if (data && department) {
-      nextTick(() => {
-        getData();
-      });
+      // nextTick(() => {
+      //   getData();
+      // });
     }
   },
   { immediate: true }
@@ -437,6 +446,7 @@ onMounted(() => {
     if (chartDom.value && !chartInstance.value) {
       initChart();
     }
+    getData();
   });
 });
 
