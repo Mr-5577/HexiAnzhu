@@ -1,12 +1,7 @@
 <!-- 目标达成情况-组件 -->
 <template>
   <div class="chart-page">
-    <ChartBox
-      title="目标达成情况"
-      v-loading="loading"
-      :element-loading-text="'数据加载中...'"
-      :element-loading-background="'rgba(0, 0, 0, 0.2)'"
-    >
+    <ChartBox title="目标达成情况" :loading="loading">
       <template #content>
         <div class="goalContent">
           <el-radio-group
@@ -76,7 +71,7 @@
                     <span class="num">{{ premiumData.premiumMoney }}</span>
                     <span class="unit">万</span>
                     <span class="num" style="margin-left: 5px">
-                      {{ formatPercent(premiumData.premiumMoney) }}%
+                      {{ formatPercent(premiumData.premiumRate) }}%
                     </span>
                   </div>
                 </div>
@@ -446,7 +441,7 @@ onMounted(() => {
     if (chartDom.value && !chartInstance.value) {
       initChart();
     }
-    getData();
+    // getData();
   });
 });
 
@@ -587,8 +582,11 @@ onUnmounted(() => {
         .item-unit {
           font-size: 13px;
           font-weight: 600;
+          display: flex;
+          flex-wrap: nowrap;
+          align-items: center;
           .num {
-            font-size: 15px;
+            font-size: 14px;
             color: #06e0b1;
           }
           .unit {

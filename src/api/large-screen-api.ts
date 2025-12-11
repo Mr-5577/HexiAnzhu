@@ -30,4 +30,16 @@ export const largeScreenApi = {
   getSaleYearInfo: (data: SaleParamsInterface) => {
     return http.post("/sale/getSaleYearInfo", data);
   },
+  // 获取库存数据
+  getRoomStockInfo: (data: SaleParamsInterface) => {
+    return http.post("/sale/getRoomStockInfo", data);
+  },
+  // 获取库存结构数据
+  getRoomStockGroupInfo: (data: SaleParamsInterface) => {
+    return http.post("/sale/getRoomStockGroupInfo", data);
+  },
+  // 获取销售总览
+  getSaleGeneralInfo: (data: SaleParamsInterface) => {
+    return http.post("/sale/getSaleGeneralInfo", data);
+  },
 };

@@ -36,12 +36,11 @@
       </div>
       <div class="header-title">和喜安筑销售监控平台</div>
       <div class="header-right">
-        <div class="time">更新时间:</div>
+        <!-- <div class="time">更新时间:</div> -->
         <div class="time">{{ yearMonthDay }}</div>
         <div class="time">{{ time }}</div>
         <div class="time">{{ week }}</div>
       </div>
-      <!-- <img class="screen" src="@/assets/imgs/largeScreenImg/full-screen.png" alt=""> -->
     </el-header>
     <el-main class="main-box">
       <div class="main-left">
@@ -70,8 +69,16 @@
       </div>
       <div class="main-right">
         <conversion-metrics-chart></conversion-metrics-chart>
-        <financial-statistics></financial-statistics>
-        <structural-statistics-chart></structural-statistics-chart>
+        <financial-statistics
+          ref="financialStatisticsRef"
+          :data="dataVal"
+          :department="departmentVal"
+        ></financial-statistics>
+        <structural-statistics-chart
+          ref="structuralStatisticsChartRef"
+          :data="dataVal"
+          :department="departmentVal"
+        ></structural-statistics-chart>
       </div>
     </el-main>
   </div>
@@ -98,7 +105,7 @@ defineOptions({
 const yearMonthDay = ref("");
 const time = ref("");
 const week = ref("");
-const departmentVal = ref([]);
+const departmentVal = ref<number[]>([]);
 const dataVal = ref("");
 const options = ref<any[]>([]);
 
@@ -108,6 +115,9 @@ const performanceRankingRef = ref<InstanceType<typeof PerformanceRanking>>();
 const achievementRateRef = ref<InstanceType<typeof AchievementRate>>();
 const performanceTrendChartRef =
   ref<InstanceType<typeof PerformanceTrendChart>>();
+const structuralStatisticsChartRef =
+  ref<InstanceType<typeof StructuralStatisticsChart>>();
+const financialStatisticsRef = ref<InstanceType<typeof FinancialStatistics>>();
 
 let timer: string | number | NodeJS.Timeout | null | undefined = null;
 const updateTime = () => {
@@ -117,10 +127,30 @@ const updateTime = () => {
   week.value = formatToDateTime(newDate, "dddd");
 };
 
+// 获取最后一层ID集合
+const getLeafNodeIds = (nodes: any[]): number[] => {
+  const result: number[] = [];
+  const traverse = (node: any) => {
+    if (!node.children || node.children.length === 0) {
+      result.push(node.id);
+      return;
+    }
+    node.children.forEach(traverse);
+  };
+  nodes.forEach(traverse);
+  return result;
+};
+
 const getProjList = async () => {
   const res = await largeScreenApi.getProjTree();
   if (res.code === 200) {
-    options.value = res.data || [];
+    const data = res.data || [];
+    options.value = data;
+    departmentVal.value = getLeafNodeIds(data);
+    setTimeout(() => {
+      // 手动触发子组件加载数据
+      refreshAllComponents();
+    }, 100);
   }
 };
 
@@ -146,6 +176,8 @@ const refreshAllComponents = () => {
     performanceRankingRef.value,
     achievementRateRef.value,
     performanceTrendChartRef.value,
+    structuralStatisticsChartRef.value,
+    financialStatisticsRef.value,
   ];
   components.forEach((component) => {
     if (component && typeof component.refreshData === "function") {
@@ -234,7 +266,7 @@ onUnmounted(() => {
         color: #fff;
         cursor: pointer;
         transition: all 0.3s;
-        font-weight: 400;
+        font-weight: 500;
         padding: 0;
         margin-left: 10px;
       }
@@ -271,14 +303,6 @@ onUnmounted(() => {
         font-weight: 600;
         margin-right: 8px;
       }
-    }
-    .screen {
-      position: absolute;
-      top: 5px;
-      right: 30px;
-      width: 24px;
-      height: 24px;
-      cursor: pointer;
     }
   }
   .main-box {

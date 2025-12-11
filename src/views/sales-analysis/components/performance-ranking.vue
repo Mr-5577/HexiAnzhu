@@ -1,12 +1,7 @@
 <!-- 业绩排名列表-组件 -->
 <template>
   <div class="ranking-page">
-    <ChartBox
-      title="业绩排名统计"
-      v-loading="loading"
-      :element-loading-text="'数据加载中...'"
-      :element-loading-background="'rgba(0, 0, 0, 0.2)'"
-    >
+    <ChartBox title="业绩排名统计" :loading="loading">
       <template #content>
         <div class="rankingContent">
           <div class="chart-controls">
@@ -89,7 +84,7 @@ const tableColumn = computed(() => {
         {
           prop: "sort",
           label: "排名",
-          width: "55",
+          width: "50",
         },
         {
           prop: "projName",
@@ -98,18 +93,21 @@ const tableColumn = computed(() => {
         {
           prop: "signNum",
           label: "签约(套)",
+          width: "70",
         },
         {
           prop: "orderNum",
           label: "认购(套)",
+          width: "70",
         },
         {
-          prop: "payMoney",
+          prop: "collectMoney",
           label: "回款(万)",
         },
         {
           prop: "totalRate",
           label: "完成率",
+          width: "70",
           // 使用 formatter 格式化
           formatter: (row: any, column: any, index: number) => {
             const value = row.totalRate;
@@ -123,10 +121,12 @@ const tableColumn = computed(() => {
         {
           prop: "sort",
           label: "集团排名",
+          width: "80",
         },
         {
           prop: "sortProj",
           label: "项目排名",
+          width: "80",
         },
         {
           prop: "projName",
@@ -135,6 +135,12 @@ const tableColumn = computed(() => {
         {
           prop: "salerName",
           label: "置业顾问",
+          width: "80",
+        },
+        {
+          prop: "orderNum",
+          label: "认购(套)",
+          width: "70",
         },
       ];
 });
@@ -193,9 +199,9 @@ watch(
 
 // 生命周期
 onMounted(() => {
-  nextTick(() => {
-    getTableList()
-  });
+  // nextTick(() => {
+  //   getTableList();
+  // });
 });
 
 // 清理

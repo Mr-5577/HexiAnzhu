@@ -1,8 +1,17 @@
 <template>
-  <div class="chart-box">
+  <div
+    class="chart-box"
+    v-loading="loading"
+    :element-loading-text="'数据加载中...'"
+    :element-loading-background="'rgba(0, 0, 0, 0.2)'"
+  >
     <div class="top-content">
       <div class="title">{{ title }}</div>
-      <img class="img" src="@/assets/imgs/largeScreenImg/title-bg.png" alt="img" />
+      <img
+        class="img"
+        src="@/assets/imgs/largeScreenImg/title-bg.png"
+        alt="img"
+      />
     </div>
     <!-- 默认插槽，用于放置图表或其他内容 -->
     <slot name="content">
@@ -14,8 +23,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from "vue";
-// defineProps 和 defineEmits 现在是编译器宏，不需要导入
+
 const props = defineProps({
+  loading: {
+    type: Boolean,
+    default: false,
+  },
   title: {
     type: String,
     default: "标题",

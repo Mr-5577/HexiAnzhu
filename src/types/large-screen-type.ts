@@ -2,6 +2,8 @@ export interface SaleParamsInterface {
   projIds: any[];
   type: number;
   day: string;
+  beginDate?: string;
+  endDate?: string;
 }
 // 销售数据接口
 export interface SaleDataInterface {

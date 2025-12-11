@@ -1,12 +1,7 @@
 <!-- 业绩走势折线图-组件 -->
 <template>
   <div class="performanceTrend-page">
-    <ChartBox
-      title="业绩走势情况"
-      v-loading="loading"
-      :element-loading-text="'数据加载中...'"
-      :element-loading-background="'rgba(0, 0, 0, 0.2)'"
-    >
+    <ChartBox title="业绩走势情况" :loading="loading">
       <template #content>
         <div class="performanceTrendContent">
           <div class="chart-controls">
@@ -68,41 +63,39 @@ const chartDom = ref<HTMLDivElement | null>(null);
 // 图表数据
 const chartData = ref({
   dates: [], // 时间
-  subscription: [], // 认购
-  signing: [], // 签约
-  payment: [], // 回款
+  subscription: [], // 认购(套)
+  signing: [], // 签约(套)
+  payment: [], // 回款(万元)
 });
 
 // 请求锁
 let isRequesting = false;
 
-// 计算Y轴最大值
-const calculateYAxisMax = (): number => {
-  const { subscription, signing, payment } = chartData.value;
-  const allData: any = [...subscription, ...signing, ...payment].filter(
+// 计算Y轴最大值，回款(万元)
+const calculatePaymentMax = (): number => {
+  const { payment } = chartData.value;
+  const validData = payment.filter((v) => v !== null && v !== undefined);
+  if (validData.length === 0) return 100;
+  const maxValue = Math.max(...validData);
+  return maxValue > 0 ? maxValue : 100;
+};
+// 计算Y轴最大值（套数）
+const calculateSetMax = (): number => {
+  const { subscription, signing } = chartData.value;
+  const allData = [...subscription, ...signing].filter(
     (v) => v !== null && v !== undefined
   );
-
   if (allData.length === 0) return 100;
-
   const maxValue = Math.max(...allData);
   return maxValue > 0 ? maxValue : 100;
 };
 
 // 获取基础图表配置
 const getBaseChartOption = (): EChartsOption => {
-  const yAxisMax = calculateYAxisMax();
+  const paymentMax = calculatePaymentMax();
+  const setMax = calculateSetMax();
 
   return {
-    title: {
-      text: "单位：万元",
-      left: "left",
-      top: 0,
-      textStyle: {
-        color: "#fff",
-        fontSize: 12,
-      },
-    },
     tooltip: {
       trigger: "axis",
       axisPointer: {
@@ -113,8 +106,8 @@ const getBaseChartOption = (): EChartsOption => {
       },
     },
     legend: {
-      data: ["认购", "签约", "回款"],
-      top: "2%",
+      data: ["认购(套)", "签约(套)", "回款(万)"],
+      top: "0%",
       textStyle: {
         color: "#fff",
         fontSize: 12,
@@ -130,7 +123,7 @@ const getBaseChartOption = (): EChartsOption => {
     },
     grid: {
       left: "3%",
-      right: "2%",
+      right: "3%",
       bottom: "3%",
       top: "15%",
       containLabel: true,
@@ -154,32 +147,90 @@ const getBaseChartOption = (): EChartsOption => {
         },
       },
     },
-    yAxis: {
-      type: "value",
-      min: 0,
-      max: yAxisMax,
-      axisLabel: {
-        color: "#eee",
-        fontSize: 12,
-      },
-      axisTick: {
-        show: true,
-        lineStyle: {
-          color: "#999",
-          width: 1,
+    yAxis: [
+      {
+        // 左侧坐标轴：万元（回款）
+        type: "value",
+        name: "万元",
+        nameTextStyle: {
+          color: "#eee",
+          fontSize: 12,
+        },
+        min: 0,
+        max: paymentMax,
+        axisLabel: {
+          color: "#eee",
+          fontSize: 12,
+        },
+        axisTick: {
+          show: true,
+          lineStyle: {
+            color: "#999",
+            width: 1,
+          },
+        },
+        // 左侧Y轴轴线（竖线）
+        axisLine: {
+          show: true,
+          lineStyle: {
+            color: "#38494a",
+            width: 1,
+          },
+        },
+        // 左侧网格线
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: "rgba(177, 173, 173, 0.3)",
+            width: 1,
+            type: "dashed",
+          },
         },
       },
-      splitLine: {
-        lineStyle: {
-          color: "rgba(177, 173, 173, 0.5)",
-          width: 1,
-          type: "dashed",
+      {
+        // 右侧坐标轴：套（认购、签约）
+        type: "value",
+        name: "套",
+        nameTextStyle: {
+          color: "#eee",
+          fontSize: 12,
+        },
+        min: 0,
+        max: setMax,
+        position: "right",
+        axisLabel: {
+          color: "#eee",
+          fontSize: 12,
+        },
+        axisTick: {
+          show: true,
+          lineStyle: {
+            color: "#999",
+            width: 1,
+          },
+        },
+        // 右侧Y轴轴线（竖线）
+        axisLine: {
+          show: true,
+          lineStyle: {
+            color: "#38494a",
+            width: 1,
+          },
+        },
+        // 右侧网格线
+        splitLine: {
+          show: true,
+          lineStyle: {
+            color: "rgba(177, 173, 173, 0.3)",
+            width: 1,
+            type: "dashed",
+          },
         },
       },
-    },
+    ],
     series: [
       {
-        name: "认购",
+        name: "认购(套)",
         type: "line",
         data: chartData.value.subscription,
         smooth: true,
@@ -191,9 +242,10 @@ const getBaseChartOption = (): EChartsOption => {
         },
         symbol: "circle",
         symbolSize: 6,
+        yAxisIndex: 1, // 使用右侧坐标轴（套）
       },
       {
-        name: "签约",
+        name: "签约(套)",
         type: "line",
         data: chartData.value.signing,
         smooth: true,
@@ -205,9 +257,10 @@ const getBaseChartOption = (): EChartsOption => {
         },
         symbol: "circle",
         symbolSize: 6,
+        yAxisIndex: 1, // 使用右侧坐标轴（套）
       },
       {
-        name: "回款",
+        name: "回款(万)",
         type: "line",
         data: chartData.value.payment,
         smooth: true,
@@ -219,6 +272,7 @@ const getBaseChartOption = (): EChartsOption => {
         },
         symbol: "circle",
         symbolSize: 6,
+        yAxisIndex: 0, // 使用左侧坐标轴（万元）
       },
     ],
   };
@@ -247,7 +301,6 @@ const initChart = () => {
 // 更新图表
 const updateChart = () => {
   if (!chartInstance.value) return;
-
   chartInstance.value.setOption(getBaseChartOption(), true);
 };
 
@@ -262,8 +315,19 @@ const getData = async () => {
   if (isRequesting) return;
 
   const { data, department } = props;
-  const endDate = `${data} 00:00:00`;
-  const startDate = dateUtil(endDate)
+  const time = `${data} 00:00:00`;
+  let endTime;
+  if (chartType.value === "year") {
+    // 近一年的结束时间是：当前时间的上个月最后一天
+    endTime = dateUtil(time)
+      .subtract(1, "month")
+      .endOf("month")
+      .format("YYYY-MM-DD HH:mm:ss");
+  } else {
+    // 近三十天的结束时间是：当前时间往前推一天
+    endTime = dateUtil(time).subtract(1, "day").format("YYYY-MM-DD HH:mm:ss");
+  }
+  const startDate = dateUtil(endTime)
     .subtract(
       chartType.value === "year" ? 1 : 30,
       chartType.value === "year" ? "year" : "day"
@@ -273,9 +337,9 @@ const getData = async () => {
   const params = {
     projIds: department,
     type: 0,
-    day: endDate,
+    day: time,
     beginDate: startDate,
-    endDate: endDate,
+    endDate: endTime,
   };
 
   try {
@@ -289,14 +353,13 @@ const getData = async () => {
       const result = dataList.reduce(
         (acc, item) => {
           acc.dates.push(item.syearMonth);
-          acc.subscription.push(item.saleMoney || 0);
-          acc.signing.push(item.signMoney || 0);
+          acc.subscription.push(item.orderNum || 0);
+          acc.signing.push(item.signNum || 0);
           acc.payment.push(item.collectMoney || 0);
           return acc;
         },
         { dates: [], subscription: [], signing: [], payment: [] }
       );
-      console.log("result", result);
       chartData.value = result;
       initChart();
     }
@@ -307,7 +370,6 @@ const getData = async () => {
   } finally {
     isRequesting = false;
     loading.value = false;
-    nextTick(updateChart); // 确保 DOM 更新后重新渲染图表
   }
 };
 
@@ -325,8 +387,7 @@ watch(
 // 组件挂载
 onMounted(() => {
   nextTick(() => {
-    // initChart();
-    getData();
+    // getData();
   });
   window.addEventListener("resize", handleResize);
 });
@@ -341,7 +402,7 @@ onUnmounted(() => {
 <style lang="scss" scoped>
 .performanceTrend-page {
   width: 100%;
-  height: 33%;
+  height: 34%;
 
   .performanceTrendContent {
     width: 100%;
@@ -353,7 +414,6 @@ onUnmounted(() => {
       flex-shrink: 0;
       display: flex;
       justify-content: flex-end;
-      margin-bottom: 12px;
 
       .chart-btn {
         color: #fff;
@@ -372,7 +432,7 @@ onUnmounted(() => {
         }
 
         & + .chart-btn {
-          margin-left: 16px;
+          margin-left: 0px;
         }
       }
     }

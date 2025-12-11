@@ -56,7 +56,7 @@ const cleanupDynamicRoutes = () => {
 
 let menuLoaded = false;
 router.beforeEach(async (to, from, next) => {
-  console.log("路由切换:", from.path, "->", to.path);
+  // console.log("路由切换:", from.path, "->", to.path);
 
   // 设置页面标题
   if (to.meta.title) {

@@ -10,7 +10,11 @@
         />
         <div class="desc">
           <div class="title">库存住宅</div>
-          <div class="num">500套/3.2亿</div>
+          <div class="num">
+            {{ formatTwoDecimalSafe(inventoryData.roomNum) }}套/{{
+              formatTwoDecimalSafe(inventoryData.roomMoney)
+            }}亿
+          </div>
         </div>
       </div>
       <div class="inventory-item">
@@ -21,7 +25,11 @@
         />
         <div class="desc">
           <div class="title">月均去化</div>
-          <div class="num2">200套/1.2亿</div>
+          <div class="num2">
+            {{ formatTwoDecimalSafe(inventoryData.costNum) }}套/{{
+              formatTwoDecimalSafe(inventoryData.costMoney)
+            }}亿
+          </div>
         </div>
       </div>
       <div class="inventory-item">
@@ -32,7 +40,9 @@
         />
         <div class="desc">
           <div class="title">存销比</div>
-          <div class="num3">2.5</div>
+          <div class="num3">
+            {{ formatTwoDecimalSafe(inventoryData.stockCostPercent) }}
+          </div>
         </div>
       </div>
     </div>
@@ -97,6 +107,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick, watch } from "vue";
 import { largeScreenApi } from "@/api/large-screen-api";
+import { dateUtil } from "@/utils/date-util";
 
 interface Props {
   data: string;
@@ -117,6 +128,13 @@ defineExpose({
 
 const typeVal = ref(0);
 const loading = ref(false);
+const inventoryData = ref({
+  roomNum: 0, // 房间库存数量
+  roomMoney: 0, // 房间库存金额
+  costNum: 0, // 房间月均去化数量
+  costMoney: 0, // 房间月均去化金额
+  stockCostPercent: 0, // 存销比率
+});
 const saleData = ref({
   orderRate: 0, // 认购达成率
   signRate: 0, // 签约达成率
@@ -126,6 +144,22 @@ const saleData = ref({
 });
 // 防止重复请求
 let isRequesting = false;
+
+// 保留两位小数
+const formatTwoDecimalSafe = (num: any): string => {
+  const number = Number(num);
+  // 是否是有效数字
+  if (isNaN(number)) {
+    return "0";
+  }
+  // 使用正则判断小数位数
+  const str = number.toString();
+  const match = str.match(/\.(\d+)$/);
+  if (match && match[1].length > 2) {
+    return number.toFixed(2);
+  }
+  return str;
+};
 
 // 格式化百分比函数
 const formatPercent = (value: any) => {
@@ -137,18 +171,39 @@ const getData = async () => {
   // 检查是否已有请求在进行
   if (isRequesting) return;
 
-  const params = {
-    projIds: props.department,
-    type: typeVal.value,
-    day: props.data + " 00:00:00",
-  };
   try {
     isRequesting = true;
     loading.value = true;
+    const seleckData = props.data;
+    const params = {
+      projIds: props.department,
+      type: typeVal.value,
+      day: `${seleckData} 00:00:00`,
+    };
+    const endTime = dateUtil(seleckData)
+      .subtract(1, "month")
+      .endOf("month")
+      .format("YYYY-MM-DD");
+    const inventoryParams = {
+      projIds: props.department,
+      type: 0,
+      day: props.data + " 00:00:00",
+      beginDate:
+        dateUtil(endTime).subtract(6, "month").format("YYYY-MM-DD") +
+        " 00:00:00",
+      endDate: `${endTime} 00:00:00`,
+    };
+    // 获取库存数据
+    const response = await largeScreenApi.getRoomStockInfo(inventoryParams);
+    if (response.code === 200) {
+      inventoryData.value = { ...inventoryData.value, ...response.data };
+    }
+    // 获取销售数据
     const res = await largeScreenApi.getSaleInfo(params);
     if (res.code === 200) {
       saleData.value = res.data;
     }
+    // 获取溢价数据
     const res2 = await largeScreenApi.getPremiumInfo(params);
     if (res2.code === 200) {
       saleData.value.premiumRate = res2.data?.premiumRate;
@@ -176,9 +231,9 @@ watch(
 );
 // 生命周期
 onMounted(() => {
-  nextTick(() => {
-    getData();
-  });
+  // nextTick(() => {
+  //   getData();
+  // });
 });
 
 // 清理
@@ -200,7 +255,6 @@ onUnmounted(() => {});
     flex-wrap: nowrap;
     justify-content: space-around;
     .inventory-item {
-      width: 150px;
       display: flex;
       align-items: center;
       height: 60px;
@@ -211,30 +265,32 @@ onUnmounted(() => {});
       );
       border-radius: 4px 4px;
       border: 1px solid #59c3dc;
+      min-width: 140px;
+      padding: 0 10px;
+      box-sizing: border-box;
       .item-img {
         width: 30px;
         height: 30px;
         margin-right: 10px;
-        margin-left: 10px;
       }
       .desc {
         .title {
-          font-size: 15px;
+          font-size: 14px;
           color: #fff;
           font-weight: 600;
         }
         .num {
-          font-size: 16px;
+          font-size: 15px;
           color: #fa6704;
           font-weight: 600;
         }
         .num2 {
-          font-size: 16px;
+          font-size: 15px;
           color: #69f803;
           font-weight: 600;
         }
         .num3 {
-          font-size: 16px;
+          font-size: 15px;
           color: #02b9fc;
           font-weight: 600;
         }

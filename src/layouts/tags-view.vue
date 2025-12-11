@@ -1,5 +1,10 @@
 <template>
-  <div class="tags-view-container">
+  <div
+    class="tags-view-container"
+    :class="
+      route.path == '/sales-analysis/large-screen' ? 'dark-background' : ''
+    "
+  >
     <el-scrollbar class="tags-view-wrapper">
       <router-link
         v-for="tag in visitedViews"
@@ -35,7 +40,8 @@ import { useTagsStore } from "@/stores/tags-store";
 import type { TagView } from "@/stores/tags-store";
 
 // 添加inject注入，用于缓存清理
-const clearPageCache = inject<(componentName: string) => void>('clearPageCache');
+const clearPageCache =
+  inject<(componentName: string) => void>("clearPageCache");
 
 const route = useRoute();
 const router = useRouter();
@@ -66,7 +72,7 @@ const extractQueryParams = (tag: TagView) => {
 // 关闭选中的标签，关闭标签时需要清除页面的缓存，等从路由重新进入时再次缓存
 const closeSelectedTag = (tag: TagView) => {
   // 获取当前标签对应的组件名称（从路由配置中）
-  const routeRecord = router.getRoutes().find(r => r.path === tag.path);
+  const routeRecord = router.getRoutes().find((r) => r.path === tag.path);
   const componentName = routeRecord?.components?.default?.name as string;
 
   // 删除标签
@@ -180,6 +186,16 @@ watch(
           color: #666666;
         }
       }
+    }
+  }
+}
+.dark-background {
+  border: none;
+  background: linear-gradient(135deg, #032c46 0%, #05456e 100%);
+  .tags-view-item {
+    color: #fff !important;
+    &:hover {
+      background: linear-gradient(135deg, #0a649c 0%, #063958 100%) !important;
     }
   }
 }
