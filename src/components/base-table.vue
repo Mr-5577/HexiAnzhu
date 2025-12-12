@@ -47,6 +47,7 @@
         v-bind="getTableProps"
         :data="tableData"
         v-loading="loading"
+        :default-expand-all="isExpandAll"
         element-loading-text="数据加载中..."
         element-loading-background="rgba(255, 255, 255, 0.8)"
         @selection-change="handleSelectionChange"
@@ -170,6 +171,8 @@ interface Props {
   showActionBar?: boolean;
   // 字典数据
   dictData?: DictData;
+  // 是否默认展开所有行，当 Table 包含展开行存在或者为树形表格时有效
+  isExpandAll?: boolean;
 }
 
 // 定义组件事件
@@ -333,6 +336,7 @@ const props = withDefaults(defineProps<Props>(), {
   showToolbar: false,
   showActionBar: false,
   dictData: () => ({}),
+  isExpandAll: false,
 });
 
 const emit = defineEmits<Emits>();
