@@ -1,29 +1,26 @@
 <template>
   <aside class="content-sidebar">
     <el-menu
-      active-text-color="#f7ffe5"
+      active-text-color="#ffd04b"
       background-color="#11496f"
       class="el-menu-vertical"
       :default-active="activeIndex"
-      text-color="#78c6dc"
+      text-color="#fff"
       :unique-opened="true"
     >
-      <sidebar-item
-        v-for="item in menuData"
-        :key="item.index"
-        :item="item"
-        @menu-click="handleMenuClick"
-      />
+      <template v-for="item in menuData" :key="item.index">
+        <menu-item-render :item="item" @menu-click="handleMenuClick" />
+      </template>
     </el-menu>
   </aside>
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
+import { computed, h, resolveComponent } from "vue";
 import type { SidebarMenuItem } from "@/types/menu-type";
-import SidebarItem from "./sidebar-menu-item.vue";
 
+// 定义props
 interface Props {
   menuData: SidebarMenuItem[];
 }
@@ -32,37 +29,88 @@ const props = defineProps<Props>();
 const router = useRouter();
 const route = useRoute();
 
-const activeIndex = computed(() => {
-  return findActiveIndex(route.path);
-});
+// 渲染函数组件
+const MenuItemRender = ({ item }: { item: SidebarMenuItem }, { emit }: any) => {
+  // 检查是否隐藏
+  if (!item.isVisible) {
+    // 如果 isVisible 为 true，表示隐藏，不渲染
+    return null;
+  }
 
+  const ElMenuItem = resolveComponent("el-menu-item");
+  const ElSubMenu = resolveComponent("el-sub-menu");
+
+  if (!item.children || item.children.length === 0) {
+    return h(
+      ElMenuItem,
+      {
+        index: item.index,
+        onClick: () => emit("menu-click", item),
+      },
+      {
+        default: () => h("span", item.title),
+      }
+    );
+  } else {
+    return h(
+      ElSubMenu,
+      {
+        index: item.index,
+      },
+      {
+        title: () => h("span", item.title),
+        default: () =>
+          item.children!.map((child: SidebarMenuItem) =>
+            h(MenuItemRender, {
+              item: child,
+              onMenuClick: (childItem: any) => emit("menu-click", childItem),
+            })
+          ),
+      }
+    );
+  }
+};
+
+// 根据当前路由查找对应的菜单index
 const findActiveIndex = (currentPath: string): string => {
   const findItem = (items: SidebarMenuItem[]): string | null => {
     for (const item of items) {
-      if (item.path === currentPath) return item.index;
+      if (item.path === currentPath) {
+        return item.index;
+      }
       if (item.children) {
         const found = findItem(item.children);
+        // console.log("found", found, item);
         if (found) return found;
       }
     }
     return null;
   };
+
   return findItem(props.menuData) || currentPath;
 };
 
+const activeIndex = computed(() => {
+  // console.log('当前路由',route.path)
+  return findActiveIndex(route.path);
+});
+
 const handleMenuClick = (item: SidebarMenuItem) => {
-  if (item.path) router.push(item.path);
+  if (item.path) {
+    router.push(item.path);
+  }
 };
 </script>
 
 <style lang="scss" scoped>
 .content-sidebar {
-  width: 220px;
+  width: 240px;
   color: white;
   display: flex;
   flex-direction: column;
   background: linear-gradient(135deg, #032c46 0%, #041e2d 100%);
   border-right: 1px solid #0a4a75;
+
   .el-menu-vertical {
     flex: 1;
     overflow-y: auto;
