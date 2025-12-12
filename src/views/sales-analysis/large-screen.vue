@@ -68,7 +68,11 @@
         ></performance-trend-chart>
       </div>
       <div class="main-right">
-        <conversion-metrics-chart></conversion-metrics-chart>
+        <conversion-metrics-chart
+          ref="conversionMetricsChartRef"
+          :data="dataVal"
+          :department="departmentVal"
+        ></conversion-metrics-chart>
         <financial-statistics
           ref="financialStatisticsRef"
           :data="dataVal"
@@ -117,6 +121,8 @@ const performanceTrendChartRef =
   ref<InstanceType<typeof PerformanceTrendChart>>();
 const structuralStatisticsChartRef =
   ref<InstanceType<typeof StructuralStatisticsChart>>();
+const conversionMetricsChartRef =
+  ref<InstanceType<typeof ConversionMetricsChart>>();
 const financialStatisticsRef = ref<InstanceType<typeof FinancialStatistics>>();
 
 let timer: string | number | NodeJS.Timeout | null | undefined = null;
@@ -177,6 +183,7 @@ const refreshAllComponents = () => {
     achievementRateRef.value,
     performanceTrendChartRef.value,
     structuralStatisticsChartRef.value,
+    conversionMetricsChartRef.value,
     financialStatisticsRef.value,
   ];
   components.forEach((component) => {

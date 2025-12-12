@@ -1,7 +1,7 @@
 <!-- 转化指标-组件 -->
 <template>
   <div class="conversionMetrics-page">
-    <ChartBox title="转化指标情况">
+    <ChartBox title="转化指标情况" :loading="loading">
       <template #content>
         <div class="conversionMetricsContent">
           <!-- 当月来访转化率 -->
@@ -16,8 +16,35 @@
 
 <script setup lang="ts">
 import ChartBox from "@/components/chart-box.vue";
-import { ref, onMounted, onUnmounted, nextTick } from "vue";
+import { ref, onMounted, onUnmounted, nextTick, computed } from "vue";
 import * as echarts from "echarts";
+import { largeScreenApi } from "@/api/large-screen-api";
+
+interface Props {
+  data: string;
+  department: number[];
+}
+const props = withDefaults(defineProps<Props>(), {
+  data: "",
+  department: () => [],
+});
+// 定义一个需要暴露的方法
+const refreshData = () => {
+  getData();
+};
+// 暴露方法给父组件
+defineExpose({
+  refreshData,
+});
+
+const loading = ref(false);
+// 防止重复请求
+let isRequesting = false;
+const conversionData = ref({
+  dylfComeNum: 0, // 总数量
+  dyrgNum: 0, // 当月转化数量
+  dylfrgNum: 0, // 总体转化数量
+});
 
 // 为每个图表创建独立的引用
 const monthChartRef = ref<HTMLDivElement | null>(null);
@@ -26,6 +53,59 @@ const overallChartRef = ref<HTMLDivElement | null>(null);
 // 为每个图表创建独立的实例
 const monthChartInstance = ref<echarts.ECharts | null>(null);
 const overallChartInstance = ref<echarts.ECharts | null>(null);
+
+const conversionRates = computed(() => {
+  const total = conversionData.value.dylfComeNum;
+  const monthly = conversionData.value.dyrgNum;
+  const overall = conversionData.value.dylfrgNum;
+
+  // 计算转化率的通用函数
+  const calculateRate = (numerator: number): number => {
+    if (total === 0) return 0;
+    const rate = (numerator / total) * 100;
+    // 处理NaN和Infinity
+    if (isNaN(rate) || !isFinite(rate)) {
+      return 0;
+    }
+    // 保留两位小数，四舍五入
+    return Math.round(rate * 100) / 100;
+  };
+
+  // 计算当月转化率
+  const monthlyRate = calculateRate(monthly);
+  // 计算总体转化率
+  const overallRate = calculateRate(overall);
+
+  // 计算未转化率
+  const monthlyUnconverted = Math.max(0, 100 - monthlyRate);
+  const overallUnconverted = Math.max(0, 100 - overallRate);
+
+  // 格式化函数
+  const formatRate = (rate: number): string => {
+    return rate.toFixed(2) + "%";
+  };
+
+  return {
+    // 转化率（数值）
+    monthlyRate,
+    overallRate,
+    monthlyUnconverted,
+    overallUnconverted,
+
+    // 格式化后的字符串
+    monthlyRateFormatted: formatRate(monthlyRate),
+    overallRateFormatted: formatRate(overallRate),
+    monthlyUnconvertedFormatted: formatRate(monthlyUnconverted),
+    overallUnconvertedFormatted: formatRate(overallUnconverted),
+
+    // 原始数据（方便调试）
+    rawData: {
+      total,
+      monthly,
+      overall,
+    },
+  };
+});
 
 // 初始化当月来访转化率图表
 const initMonthChart = () => {
@@ -44,7 +124,6 @@ const initMonthChart = () => {
     console.error("当月图表初始化失败:", error);
   }
 };
-
 // 初始化总体来访转化率图表
 const initOverallChart = () => {
   if (!overallChartRef.value) {
@@ -62,19 +141,18 @@ const initOverallChart = () => {
     console.error("总体图表初始化失败:", error);
   }
 };
-
 // 更新当月图表
 const updateMonthChart = () => {
   if (!monthChartInstance.value) {
     console.error("当月图表实例未初始化");
     return;
   }
-  
+
   const option = {
     backgroundColor: "transparent",
     title: {
       text: "当月转化率",
-      subtext: "35%",
+      subtext: conversionRates.value.monthlyRateFormatted,
       left: "center",
       top: "40%",
       textStyle: {
@@ -98,8 +176,16 @@ const updateMonthChart = () => {
           show: false,
         },
         data: [
-          { value: 35, name: "已转化", itemStyle: { color: "#18f2ff" } },
-          { value: 65, name: "未转化", itemStyle: { color: "#1890ff" } },
+          {
+            value: conversionRates.value.monthlyRate,
+            name: "已转化",
+            itemStyle: { color: "#18f2ff" },
+          },
+          {
+            value: conversionRates.value.monthlyUnconverted,
+            name: "未转化",
+            itemStyle: { color: "#1890ff" },
+          },
         ],
       },
     ],
@@ -107,19 +193,18 @@ const updateMonthChart = () => {
 
   monthChartInstance.value.setOption(option);
 };
-
 // 更新总体图表
 const updateOverallChart = () => {
   if (!overallChartInstance.value) {
     console.error("总体图表实例未初始化");
     return;
   }
-  
+
   const option = {
     backgroundColor: "transparent",
     title: {
       text: "总体转化率",
-      subtext: "42%",
+      subtext: conversionRates.value.overallRateFormatted,
       left: "center",
       top: "40%",
       textStyle: {
@@ -143,8 +228,16 @@ const updateOverallChart = () => {
           show: false,
         },
         data: [
-          { value: 42, name: "已转化", itemStyle: { color: "#52c41a" } },
-          { value: 58, name: "未转化", itemStyle: { color: "#faad14" } },
+          {
+            value: conversionRates.value.overallRate,
+            name: "已转化",
+            itemStyle: { color: "#52c41a" },
+          },
+          {
+            value: conversionRates.value.overallUnconverted,
+            name: "未转化",
+            itemStyle: { color: "#faad14" },
+          },
         ],
       },
     ],
@@ -152,16 +245,42 @@ const updateOverallChart = () => {
 
   overallChartInstance.value.setOption(option);
 };
-
 // 监听窗口大小变化 - 同时调整两个图表
 const handleResize = () => {
   monthChartInstance.value?.resize();
   overallChartInstance.value?.resize();
 };
 
+const getData = async () => {
+  // 检查是否已有请求在进行
+  if (isRequesting) return;
+
+  const params = {
+    projIds: props.department,
+    type: 1,
+    day: props.data + " 00:00:00",
+  };
+  try {
+    isRequesting = true;
+    loading.value = true;
+    const res = await largeScreenApi.getCustomerComeInfo(params);
+    if (res.code === 200) {
+      conversionData.value = res.data;
+    }
+    nextTick(() => {
+      initMonthChart();
+      initOverallChart();
+    });
+  } finally {
+    isRequesting = false;
+    loading.value = false;
+  }
+};
+
 // 生命周期
 onMounted(() => {
   nextTick(() => {
+    // getData();
     initMonthChart();
     initOverallChart();
   });

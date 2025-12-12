@@ -30,6 +30,10 @@ export const largeScreenApi = {
   getSaleYearInfo: (data: SaleParamsInterface) => {
     return http.post("/sale/getSaleYearInfo", data);
   },
+  // 获取销售业绩数据（近三十天）
+  getCustomerCome30Day: (data: SaleParamsInterface) => {
+    return http.post("/sale/getCustomerCome30Day", data);
+  },
   // 获取库存数据
   getRoomStockInfo: (data: SaleParamsInterface) => {
     return http.post("/sale/getRoomStockInfo", data);
@@ -41,5 +45,9 @@ export const largeScreenApi = {
   // 获取销售总览
   getSaleGeneralInfo: (data: SaleParamsInterface) => {
     return http.post("/sale/getSaleGeneralInfo", data);
+  },
+  // 获取来访数据
+  getCustomerComeInfo: (data: SaleParamsInterface) => {
+    return http.post("/sale/getCustomerComeInfo", data);
   },
 };

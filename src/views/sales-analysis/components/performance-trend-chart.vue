@@ -1,4 +1,3 @@
-<!-- 业绩走势折线图-组件 -->
 <template>
   <div class="performanceTrend-page">
     <ChartBox title="业绩走势情况" :loading="loading">
@@ -6,20 +5,14 @@
         <div class="performanceTrendContent">
           <div class="chart-controls">
             <el-button
+              v-for="item in CHART_TYPES"
+              :key="item.value"
               text
               size="default"
-              :class="['chart-btn', { active: chartType === 'year' }]"
-              @click="handleChartTypeChange('year')"
+              :class="['chart-btn', { active: chartType === item.value }]"
+              @click="handleChartTypeChange(item.value)"
             >
-              近一年业绩走势
-            </el-button>
-            <el-button
-              text
-              size="default"
-              :class="['chart-btn', { active: chartType === 'month' }]"
-              @click="handleChartTypeChange('month')"
-            >
-              近三十天来访趋势
+              {{ item.label }}
             </el-button>
           </div>
           <div ref="chartDom" class="performanceTrend-chart"></div>
@@ -31,7 +24,14 @@
 
 <script setup lang="ts">
 import ChartBox from "@/components/chart-box.vue";
-import { ref, shallowRef, onMounted, onUnmounted, watch, nextTick } from "vue";
+import {
+  ref,
+  shallowRef,
+  onMounted,
+  onUnmounted,
+  computed,
+  nextTick,
+} from "vue";
 import * as echarts from "echarts";
 import { dateUtil } from "@/utils/date-util";
 import { largeScreenApi } from "@/api/large-screen-api";
@@ -41,82 +41,177 @@ interface Props {
   data: string;
   department: number[];
 }
+
+interface YearData {
+  syearMonth: string;
+  orderNum: number;
+  signNum: number;
+  collectMoney: number;
+}
+
+interface DayData {
+  comeDate: string;
+  comeNum: number;
+}
+
 const props = withDefaults(defineProps<Props>(), {
   data: "",
   department: () => [],
 });
-// 定义一个需要暴露的方法
-const refreshData = () => {
-  getData();
-};
-// 暴露方法给父组件
-defineExpose({
-  refreshData,
-});
+
+// 常量定义
+const CHART_TYPES = [
+  { value: "year", label: "近一年业绩走势" },
+  { value: "month", label: "近三十天来访趋势" },
+] as const;
 
 // 响应式数据
 const loading = ref(false);
+// 请求锁
+let isRequesting = false;
 const chartType = ref("year");
 const chartInstance = shallowRef<ECharts | null>(null);
 const chartDom = ref<HTMLDivElement | null>(null);
 
 // 图表数据
 const chartData = ref({
-  dates: [], // 时间
-  subscription: [], // 认购(套)
-  signing: [], // 签约(套)
-  payment: [], // 回款(万元)
+  dates: [] as string[],
+  subscription: [] as number[],
+  signing: [] as number[],
+  payment: [] as number[],
 });
 
-// 请求锁
-let isRequesting = false;
+const chartDayData = ref({
+  xData: [] as string[],
+  yData: [] as number[],
+});
 
-// 计算Y轴最大值，回款(万元)
-const calculatePaymentMax = (): number => {
-  const { payment } = chartData.value;
-  const validData = payment.filter((v) => v !== null && v !== undefined);
-  if (validData.length === 0) return 100;
-  const maxValue = Math.max(...validData);
-  return maxValue > 0 ? maxValue : 100;
-};
-// 计算Y轴最大值（套数）
-const calculateSetMax = (): number => {
-  const { subscription, signing } = chartData.value;
-  const allData = [...subscription, ...signing].filter(
-    (v) => v !== null && v !== undefined
-  );
-  if (allData.length === 0) return 100;
-  const maxValue = Math.max(...allData);
-  return maxValue > 0 ? maxValue : 100;
-};
+// 计算属性
+const paymentMax = computed(() => {
+  const validData = chartData.value.payment.filter((v) => v != null);
+  return validData.length ? Math.max(...validData, 100) : 100;
+});
 
-// 获取基础图表配置
-const getBaseChartOption = (): EChartsOption => {
-  const paymentMax = calculatePaymentMax();
-  const setMax = calculateSetMax();
+const setMax = computed(() => {
+  const allData = [
+    ...chartData.value.subscription,
+    ...chartData.value.signing,
+  ].filter((v) => v != null);
+  return allData.length ? Math.max(...allData, 100) : 100;
+});
+const numMax = computed(() => {
+  const allData = [...chartDayData.value.yData].filter((v) => v != null);
+  return allData.length ? Math.max(...allData) : 30;
+});
 
-  return {
-    tooltip: {
-      trigger: "axis",
-      axisPointer: {
-        type: "cross",
-        label: {
-          backgroundColor: "#6a7985",
+// 图表配置
+const chartOption = computed<EChartsOption>(() => {
+  if (chartType.value === "year") {
+    return {
+      tooltip: { trigger: "axis" },
+      legend: {
+        data: ["认购(套)", "签约(套)", "回款(万)"],
+        top: "0%",
+        textStyle: { color: "#fff", fontSize: 12, fontWeight: "bold" },
+        itemGap: 15,
+        itemWidth: 25,
+        itemHeight: 14,
+      },
+      grid: {
+        left: "3%",
+        right: "3%",
+        bottom: "3%",
+        top: "15%",
+        containLabel: true,
+      },
+      xAxis: {
+        type: "category",
+        boundaryGap: false,
+        data: chartData.value.dates,
+        axisLabel: {
+          color: "#eee",
+          fontSize: 12,
+          fontWeight: "bold",
+          margin: 10,
         },
       },
-    },
+      yAxis: [
+        {
+          type: "value",
+          name: "万元",
+          min: 0,
+          max: paymentMax.value,
+          axisLabel: { color: "#eee", fontSize: 12 },
+          nameTextStyle: {
+            color: "#eee",
+            fontSize: 12,
+          },
+          splitLine: {
+            lineStyle: {
+              color: "rgba(177, 173, 173, 0.3)",
+              width: 1,
+              type: "dashed",
+            },
+          },
+        },
+        {
+          type: "value",
+          name: "套",
+          min: 0,
+          max: setMax.value,
+          position: "right",
+          axisLabel: { color: "#eee", fontSize: 12 },
+          nameTextStyle: {
+            color: "#eee",
+            fontSize: 12,
+          },
+          splitLine: {
+            lineStyle: {
+              color: "rgba(177, 173, 173, 0.3)",
+              width: 1,
+              type: "dashed",
+            },
+          },
+        },
+      ],
+      series: [
+        {
+          name: "认购(套)",
+          type: "line",
+          data: chartData.value.subscription,
+          smooth: true,
+          lineStyle: { width: 3 },
+          itemStyle: { color: "#5470c6" },
+          yAxisIndex: 1,
+        },
+        {
+          name: "签约(套)",
+          type: "line",
+          data: chartData.value.signing,
+          smooth: true,
+          lineStyle: { width: 3 },
+          itemStyle: { color: "#91cc75" },
+          yAxisIndex: 1,
+        },
+        {
+          name: "回款(万)",
+          type: "line",
+          data: chartData.value.payment,
+          smooth: true,
+          lineStyle: { width: 3 },
+          itemStyle: { color: "#fac858" },
+          yAxisIndex: 0,
+        },
+      ],
+    };
+  }
+
+  return {
+    tooltip: { trigger: "axis" },
     legend: {
-      data: ["认购(套)", "签约(套)", "回款(万)"],
+      data: ["人数"],
       top: "0%",
-      textStyle: {
-        color: "#fff",
-        fontSize: 12,
-        fontWeight: "bold",
-      },
-      itemStyle: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-      },
+      textStyle: { color: "#fff", fontSize: 12, fontWeight: "bold" },
       itemGap: 15,
       itemWidth: 25,
       itemHeight: 14,
@@ -131,95 +226,34 @@ const getBaseChartOption = (): EChartsOption => {
     xAxis: {
       type: "category",
       boundaryGap: false,
-      data: chartData.value.dates,
+      data: chartDayData.value.xData,
       axisLabel: {
         color: "#eee",
         fontSize: 12,
         fontWeight: "bold",
         margin: 10,
-      },
-      axisTick: {
-        show: true,
-        length: 5,
-        lineStyle: {
-          color: "#999",
-          width: 1,
+        // 自定义标签显示格式
+        formatter: (value: string) => {
+          // 示例1：只显示月份和日期（去掉年份）
+          if (value.includes("-")) {
+            return value.split("-").slice(1).join("-"); // 显示 MM-DD
+          }
+          return value;
         },
       },
     },
     yAxis: [
       {
-        // 左侧坐标轴：万元（回款）
         type: "value",
-        name: "万元",
+        name: "组",
+        min: 0,
+        max: numMax.value,
+        axisLabel: { color: "#eee", fontSize: 12 },
         nameTextStyle: {
           color: "#eee",
           fontSize: 12,
         },
-        min: 0,
-        max: paymentMax,
-        axisLabel: {
-          color: "#eee",
-          fontSize: 12,
-        },
-        axisTick: {
-          show: true,
-          lineStyle: {
-            color: "#999",
-            width: 1,
-          },
-        },
-        // 左侧Y轴轴线（竖线）
-        axisLine: {
-          show: true,
-          lineStyle: {
-            color: "#38494a",
-            width: 1,
-          },
-        },
-        // 左侧网格线
         splitLine: {
-          show: true,
-          lineStyle: {
-            color: "rgba(177, 173, 173, 0.3)",
-            width: 1,
-            type: "dashed",
-          },
-        },
-      },
-      {
-        // 右侧坐标轴：套（认购、签约）
-        type: "value",
-        name: "套",
-        nameTextStyle: {
-          color: "#eee",
-          fontSize: 12,
-        },
-        min: 0,
-        max: setMax,
-        position: "right",
-        axisLabel: {
-          color: "#eee",
-          fontSize: 12,
-        },
-        axisTick: {
-          show: true,
-          lineStyle: {
-            color: "#999",
-            width: 1,
-          },
-        },
-        // 右侧Y轴轴线（竖线）
-        axisLine: {
-          show: true,
-          lineStyle: {
-            color: "#38494a",
-            width: 1,
-          },
-        },
-        // 右侧网格线
-        splitLine: {
-          show: true,
           lineStyle: {
             color: "rgba(177, 173, 173, 0.3)",
             width: 1,
@@ -230,172 +264,145 @@ const getBaseChartOption = (): EChartsOption => {
     ],
     series: [
       {
-        name: "认购(套)",
+        name: "人数",
         type: "line",
-        data: chartData.value.subscription,
+        data: chartDayData.value.yData,
         smooth: true,
-        lineStyle: {
-          width: 3,
-        },
-        itemStyle: {
-          color: "#5470c6",
-        },
-        symbol: "circle",
-        symbolSize: 6,
-        yAxisIndex: 1, // 使用右侧坐标轴（套）
-      },
-      {
-        name: "签约(套)",
-        type: "line",
-        data: chartData.value.signing,
-        smooth: true,
-        lineStyle: {
-          width: 3,
-        },
-        itemStyle: {
-          color: "#91cc75",
-        },
-        symbol: "circle",
-        symbolSize: 6,
-        yAxisIndex: 1, // 使用右侧坐标轴（套）
-      },
-      {
-        name: "回款(万)",
-        type: "line",
-        data: chartData.value.payment,
-        smooth: true,
-        lineStyle: {
-          width: 3,
-        },
-        itemStyle: {
-          color: "#fac858",
-        },
-        symbol: "circle",
-        symbolSize: 6,
-        yAxisIndex: 0, // 使用左侧坐标轴（万元）
+        lineStyle: { width: 3 },
+        itemStyle: { color: "#5470c6" },
       },
     ],
   };
-};
+});
 
-// 切换图表类型
-const handleChartTypeChange = (type: string) => {
-  if (chartType.value === type) return;
-  chartType.value = type;
-  getData();
-};
+// 暴露方法
+defineExpose({ refreshData: () => fetchData() });
 
-// 初始化图表
+// 图表操作
 const initChart = () => {
   if (!chartDom.value) return;
 
-  try {
-    chartInstance.value?.dispose();
-    chartInstance.value = echarts.init(chartDom.value);
-    updateChart();
-  } catch (error) {
-    console.error("图表初始化失败:", error);
-  }
+  disposeChart();
+  chartInstance.value = echarts.init(chartDom.value);
+  updateChart();
 };
 
-// 更新图表
 const updateChart = () => {
   if (!chartInstance.value) return;
-  chartInstance.value.setOption(getBaseChartOption(), true);
+  chartInstance.value.setOption(chartOption.value, true);
 };
 
-// 处理窗口大小变化
-const handleResize = () => {
-  if (!chartInstance.value || chartInstance.value.isDisposed()) return;
-  chartInstance.value.resize();
-};
-
-// 获取数据
-const getData = async () => {
-  if (isRequesting) return;
-
-  const { data, department } = props;
-  const time = `${data} 00:00:00`;
-  let endTime;
-  if (chartType.value === "year") {
-    // 近一年的结束时间是：当前时间的上个月最后一天
-    endTime = dateUtil(time)
-      .subtract(1, "month")
-      .endOf("month")
-      .format("YYYY-MM-DD HH:mm:ss");
-  } else {
-    // 近三十天的结束时间是：当前时间往前推一天
-    endTime = dateUtil(time).subtract(1, "day").format("YYYY-MM-DD HH:mm:ss");
+const disposeChart = () => {
+  if (chartInstance.value && !chartInstance.value.isDisposed()) {
+    chartInstance.value.dispose();
   }
-  const startDate = dateUtil(endTime)
-    .subtract(
-      chartType.value === "year" ? 1 : 30,
-      chartType.value === "year" ? "year" : "day"
-    )
+};
+
+const handleResize = () => {
+  if (chartInstance.value && !chartInstance.value.isDisposed()) {
+    chartInstance.value.resize();
+  }
+};
+
+// 数据处理
+const handleChartTypeChange = (type: string) => {
+  if (chartType.value === type) return;
+  chartType.value = type;
+  fetchData();
+};
+
+const fetchData = async () => {
+  loading.value = true;
+  isRequesting = true;
+  try {
+    const params = getRequestParams();
+    if (chartType.value === "year") {
+      const res = await largeScreenApi.getSaleYearInfo(params);
+      if (res.code === 200) {
+        processYearData(res.data || []);
+      }
+    } else {
+      const res = await largeScreenApi.getCustomerCome30Day(params);
+      if (res.code === 200) {
+        processDayData(res.data || []);
+      }
+    }
+    initChart();
+  } catch (error) {
+    console.error("获取数据失败:", error);
+    resetData();
+    initChart();
+  } finally {
+    loading.value = false;
+    isRequesting = false;
+  }
+};
+
+const getRequestParams = () => {
+  const time = `${props.data} 00:00:00`;
+  const isYear = chartType.value === "year";
+
+  const endTime = dateUtil(time)
+    .subtract(isYear ? 1 : 1, isYear ? "month" : "day")
+    .endOf(isYear ? "month" : "day")
     .format("YYYY-MM-DD HH:mm:ss");
 
-  const params = {
-    projIds: department,
+  const startDate = dateUtil(endTime)
+    .subtract(isYear ? 1 : 30, isYear ? "year" : "day")
+    .format("YYYY-MM-DD HH:mm:ss");
+
+  return {
+    projIds: props.department,
     type: 0,
     day: time,
     beginDate: startDate,
     endDate: endTime,
   };
-
-  try {
-    isRequesting = true;
-    loading.value = true;
-
-    const res = await largeScreenApi.getSaleYearInfo(params);
-    if (res.code === 200) {
-      const dataList: any[] = res.data || [];
-      // 使用 reduce 一次性处理数据
-      const result = dataList.reduce(
-        (acc, item) => {
-          acc.dates.push(item.syearMonth);
-          acc.subscription.push(item.orderNum || 0);
-          acc.signing.push(item.signNum || 0);
-          acc.payment.push(item.collectMoney || 0);
-          return acc;
-        },
-        { dates: [], subscription: [], signing: [], payment: [] }
-      );
-      chartData.value = result;
-      initChart();
-    }
-  } catch (error) {
-    console.error("获取数据失败:", error);
-    chartData.value = { dates: [], subscription: [], signing: [], payment: [] };
-    initChart();
-  } finally {
-    isRequesting = false;
-    loading.value = false;
-  }
 };
 
-// 监听依赖变化
-watch(
-  () => [props.data, props.department],
-  ([data, department]) => {
-    if (data && department) {
-      // getData();
-    }
-  },
-  { immediate: true }
-);
-
-// 组件挂载
-onMounted(() => {
-  nextTick(() => {
-    // getData();
+const processYearData = (dataList: YearData[]) => {
+  const result = {
+    dates: [] as string[],
+    subscription: [] as number[],
+    signing: [] as number[],
+    payment: [] as number[],
+  };
+  dataList.forEach((item) => {
+    result.dates.push(item.syearMonth);
+    result.subscription.push(item.orderNum || 0);
+    result.signing.push(item.signNum || 0);
+    result.payment.push(item.collectMoney || 0);
   });
+  chartData.value = result;
+};
+
+const processDayData = (listData: DayData[]) => {
+  const xData: string[] = [];
+  const yData: number[] = [];
+  listData.forEach((item) => {
+    xData.push(dateUtil(item.comeDate).format("YYYY-MM-DD"));
+    yData.push(item.comeNum || 0);
+  });
+  chartDayData.value = { xData, yData };
+};
+
+const resetData = () => {
+  chartData.value = { dates: [], subscription: [], signing: [], payment: [] };
+  chartDayData.value = { xData: [], yData: [] };
+};
+
+// 生命周期
+onMounted(() => {
   window.addEventListener("resize", handleResize);
+  nextTick(() => {
+    initChart();
+    // fetchData();
+  });
 });
 
-// 组件卸载
 onUnmounted(() => {
   window.removeEventListener("resize", handleResize);
-  chartInstance.value?.dispose();
+  disposeChart();
 });
 </script>
 
@@ -432,7 +439,7 @@ onUnmounted(() => {
         }
 
         & + .chart-btn {
-          margin-left: 0px;
+          margin-left: 0;
         }
       }
     }

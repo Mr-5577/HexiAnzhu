@@ -17,17 +17,34 @@
             </el-button>
           </div>
 
-          <!-- 库存结构子类型 -->
-          <div v-show="chartType === '1'" class="sub-type-controls">
+          <div class="sub-type-controls">
+            <!-- 库存结构子类型 -->
             <el-radio-group
+              v-show="chartType === '1'"
               v-model="inventoryType"
               size="small"
               text-color="#626aef"
               fill="rgb(239, 240, 253)"
-              @change="handleInventoryTypeChange"
+              @change="handleSubTypeChange"
             >
               <el-radio-button
                 v-for="subType in INVENTORY_SUB_TYPES"
+                :key="subType.value"
+                :label="subType.label"
+                :value="subType.value"
+              />
+            </el-radio-group>
+            <!-- 渠道占比子类型 -->
+            <el-radio-group
+              v-show="chartType === '3'"
+              v-model="channelType"
+              size="small"
+              text-color="#626aef"
+              fill="rgb(239, 240, 253)"
+              @change="handleSubTypeChange"
+            >
+              <el-radio-button
+                v-for="subType in CHANNEL_SUB_TYPES"
                 :key="subType.value"
                 :label="subType.label"
                 :value="subType.value"
@@ -45,10 +62,17 @@
 
 <script setup lang="ts">
 import ChartBox from "@/components/chart-box.vue";
-import { ref, shallowRef, onMounted, onUnmounted, computed } from "vue";
+import {
+  ref,
+  shallowRef,
+  onMounted,
+  onUnmounted,
+  computed,
+  nextTick,
+} from "vue";
 import * as echarts from "echarts";
 import { largeScreenApi } from "@/api/large-screen-api";
-import type { ECharts, EChartsOption, PieSeriesOption } from "echarts";
+import type { ECharts, EChartsOption } from "echarts";
 
 interface Props {
   data: string;
@@ -85,25 +109,32 @@ const INVENTORY_SUB_TYPES = [
   { value: "format", label: "业态" },
 ] as const;
 
-// API数据索引映射 - 对应接口返回的6个数组
+const CHANNEL_SUB_TYPES = [
+  { value: "visit", label: "来访" },
+  { value: "deal", label: "成交" },
+] as const;
+
+// API数据索引映射 - 对应接口返回的7个数组（注意：增加了第7个成交数据）
 const API_DATA_INDEX_MAP = {
   time: 0, // 库存结构-时间维度
   area: 1, // 库存结构-面积维度
   allPrice: 2, // 库存结构-总价维度
   format: 3, // 库存结构-业态维度
   receivable: 4, // 应收账龄
-  channel: 5, // 渠道占比
+  channelVisit: 5, // 渠道占比-来访
+  channelDeal: 6, // 渠道占比-成交
 } as const;
 
 // 响应式数据
 const loading = ref(false);
 const chartType = ref("1");
 const inventoryType = ref("time");
+const channelType = ref("visit");
 const chartInstance = shallowRef<ECharts | null>(null);
 const chartDomRef = ref<HTMLDivElement | null>(null);
 
-// API返回的原始数据 - 包含6个维度
-const apiRawData = ref<ApiDataItem[][]>([[], [], [], [], [], []]);
+// API返回的原始数据 - 包含7个维度
+const apiRawData = ref<ApiDataItem[][]>([[], [], [], [], [], [], []]);
 
 // 请求锁
 let isRequesting = false;
@@ -123,13 +154,18 @@ const currentChartData = computed<PieDataItem[]>(() => {
     // 应收账龄
     dataIndex = API_DATA_INDEX_MAP.receivable;
   } else if (chartType.value === "3") {
-    // 渠道占比
-    dataIndex = API_DATA_INDEX_MAP.channel;
+    // 渠道占比，根据子类型选择
+    dataIndex =
+      channelType.value === "visit"
+        ? API_DATA_INDEX_MAP.channelVisit
+        : API_DATA_INDEX_MAP.channelDeal;
   } else {
     return [];
   }
+
   // 获取对应维度的数据
   const apiData = apiRawData.value[dataIndex] || [];
+
   // 转换为饼图数据格式
   return apiData
     .filter((item) => item && item.groupName)
@@ -150,7 +186,11 @@ const getChartName = (): string => {
   } else if (chartType.value === "2") {
     return "应收账龄统计";
   } else if (chartType.value === "3") {
-    return "渠道占比统计";
+    // 渠道占比，根据子类型显示
+    const subType = CHANNEL_SUB_TYPES.find(
+      (item) => item.value === channelType.value
+    );
+    return `渠道占比 - ${subType?.label || "统计"}`;
   }
   return "数据统计";
 };
@@ -167,19 +207,20 @@ const handleChartTypeChange = (type: string) => {
   updateChart();
 };
 
-// 切换库存结构子类型
-const handleInventoryTypeChange = () => {
+// 切换子类型（库存结构或渠道占比）
+const handleSubTypeChange = () => {
   updateChart();
 };
 
 // 初始化图表
 const initChart = () => {
   if (!chartDomRef.value) return;
-
   try {
     disposeChart();
     chartInstance.value = echarts.init(chartDomRef.value);
-    updateChart();
+    nextTick(() => {
+      updateChart();
+    });
   } catch (error) {
     console.error("图表初始化失败:", error);
   }
@@ -196,21 +237,23 @@ const disposeChart = () => {
 const getBaseChartOption = (): EChartsOption => {
   const chartData = currentChartData.value;
   const chartName = getChartName();
+
   // 如果没有数据，显示空状态
-  if (chartData.length === 0) {
-    return {
-      title: {
-        text: "暂无数据",
-        left: "center",
-        top: "center",
-        textStyle: {
-          color: "#999",
-          fontSize: 14,
-          fontWeight: "normal",
-        },
-      },
-    };
-  }
+  // if (chartData.length === 0) {
+  //   return {
+  //     title: {
+  //       text: "暂无数据",
+  //       left: "center",
+  //       top: "center",
+  //       textStyle: {
+  //         color: "#999",
+  //         fontSize: 14,
+  //         fontWeight: "normal",
+  //       },
+  //     },
+  //   };
+  // }
+
   return {
     tooltip: {
       trigger: "item",
@@ -227,14 +270,15 @@ const getBaseChartOption = (): EChartsOption => {
       {
         name: chartName,
         type: "pie",
-        radius: ["50%", "70%"],
+        radius: ["40%", "60%"],
         center: ["50%", "55%"],
         animationType: "scale",
         animationEasing: "elasticOut",
         animationDelay: () => Math.random() * 200,
         label: {
           show: true,
-          formatter: "{b}\n{c}({d}%)",
+          // formatter: "{b}\n{c}({d}%)",
+          formatter: "{b}",
           color: "#fff",
           fontSize: 12,
           fontWeight: "bold",
@@ -273,8 +317,10 @@ const fetchData = async () => {
   const { data, department } = props;
   if (!data || department.length === 0) {
     // 如果没有必要参数，清空数据
-    apiRawData.value = [[], [], [], [], [], []];
-    updateChart();
+    apiRawData.value = [[], [], [], [], [], [], []];
+    nextTick(() => {
+      updateChart();
+    });
     return;
   }
 
@@ -291,7 +337,7 @@ const fetchData = async () => {
 
     const res = await largeScreenApi.getRoomStockGroupInfo(params);
     if (res.code === 200) {
-      // 存储API原始数据 - 确保是6个数组
+      // 存储API原始数据 - 确保是7个数组
       const data = Array.isArray(res.data) ? res.data : [];
       apiRawData.value = [
         data[0] || [], // 时间
@@ -299,20 +345,25 @@ const fetchData = async () => {
         data[2] || [], // 总价
         data[3] || [], // 业态
         data[4] || [], // 应收账龄
-        data[5] || [], // 渠道占比
+        data[5] || [], // 渠道占比-来访
+        data[6] || [], // 渠道占比-成交
       ];
 
       // 确保图表已初始化
       if (!chartInstance.value) {
         initChart();
       } else {
-        updateChart();
+        nextTick(() => {
+          updateChart();
+        });
       }
     }
   } catch (error) {
     console.error("获取数据失败:", error);
-    apiRawData.value = [[], [], [], [], [], []];
-    updateChart();
+    apiRawData.value = [[], [], [], [], [], [], []];
+    nextTick(() => {
+      updateChart();
+    });
   } finally {
     isRequesting = false;
     loading.value = false;
@@ -321,13 +372,10 @@ const fetchData = async () => {
 
 // 生命周期
 onMounted(() => {
-  initChart();
+  nextTick(() => {
+    initChart();
+  })
   window.addEventListener("resize", handleResize);
-
-  // 如果初始有数据，获取数据
-  // if (props.data && props.department.length > 0) {
-  //   fetchData();
-  // }
 });
 
 onUnmounted(() => {
@@ -368,10 +416,11 @@ onUnmounted(() => {
       }
     }
     .sub-type-controls {
+      height: 24px;
       flex-shrink: 0;
       display: flex;
       justify-content: flex-end;
-      margin-bottom: 8px;
+      margin-bottom: 2px;
     }
     .structuralStatistics-chart {
       flex: 1;

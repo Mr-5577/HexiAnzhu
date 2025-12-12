@@ -360,6 +360,15 @@ const processCombinedData = () => {
   // 使用映射配置
   const mappings: any = [
     {
+      id: 1,
+      data: saleData.value,
+      fields: {
+        complete: "comeNum",
+        goal: "comeTask",
+        rate: "comeRate",
+      },
+    },
+    {
       id: 2,
       data: saleData.value,
       fields: {
