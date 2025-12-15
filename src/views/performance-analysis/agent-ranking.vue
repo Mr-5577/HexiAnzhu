@@ -1,27 +1,13 @@
+<!-- 置业顾问排名 -->
 <template>
-  <div class="inventory-statistics-page">
+  <div class="agent-ranking-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
-      <el-form-item label="所属项目" prop="status">
-        <el-select
+      <el-form-item label="日期" prop="status">
+        <el-date-picker
           v-model="queryParams.status"
-          placeholder="所属项目"
-          clearable
-          style="width: 200px"
-        >
-          <el-option label="启用" :value="1" />
-          <el-option label="停用" :value="0" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="业态" prop="status">
-        <el-select
-          v-model="queryParams.status"
-          placeholder="业态"
-          clearable
-          style="width: 200px"
-        >
-          <el-option label="启用" :value="1" />
-          <el-option label="停用" :value="0" />
-        </el-select>
+          type="month"
+          placeholder="选择月份"
+        />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">
@@ -34,7 +20,7 @@
       </el-form-item>
     </el-form>
     <base-table
-      :columns="inventoryStatisticsColumns"
+      :columns="agentRankingColumns"
       :tableData="tableData"
       :loading="tableLoading"
       :total="total"
@@ -48,12 +34,13 @@
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref } from "vue";
 import BaseTable from "@/components/base-table.vue";
-import { inventoryStatisticsColumns } from "./project-columns";
+import { agentRankingColumns } from "./project-columns";
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
-  name: "inventory-statistics",
+  name: "agent-ranking",
 });
+
 // 响应式数据
 const queryParams = ref({
   menuName: "",
@@ -87,7 +74,7 @@ onUnmounted(() => {});
 </script>
 
 <style lang="scss" scoped>
-.inventory-statistics-page {
+.agent-ranking-page {
   width: 100%;
   display: flex;
   flex-direction: column;

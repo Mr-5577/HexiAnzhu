@@ -1,27 +1,14 @@
+<!-- 销售年报表 -->
 <template>
-  <div class="inventory-statistics-page">
+  <div class="annual-report-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
-      <el-form-item label="所属项目" prop="status">
-        <el-select
-          v-model="queryParams.status"
-          placeholder="所属项目"
-          clearable
-          style="width: 200px"
-        >
-          <el-option label="启用" :value="1" />
-          <el-option label="停用" :value="0" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="业态" prop="status">
-        <el-select
-          v-model="queryParams.status"
-          placeholder="业态"
-          clearable
-          style="width: 200px"
-        >
-          <el-option label="启用" :value="1" />
-          <el-option label="停用" :value="0" />
-        </el-select>
+      <el-form-item label="年份" prop="year">
+        <el-date-picker
+          v-model="queryParams.year"
+          type="year"
+          placeholder="年份"
+          
+        />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">
@@ -34,7 +21,7 @@
       </el-form-item>
     </el-form>
     <base-table
-      :columns="inventoryStatisticsColumns"
+      :columns="annualReportColumns"
       :tableData="tableData"
       :loading="tableLoading"
       :total="total"
@@ -48,16 +35,16 @@
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref } from "vue";
 import BaseTable from "@/components/base-table.vue";
-import { inventoryStatisticsColumns } from "./project-columns";
+import { annualReportColumns } from "./project-columns";
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
-  name: "inventory-statistics",
+  name: "annual-report",
 });
+
 // 响应式数据
 const queryParams = ref({
-  menuName: "",
-  status: "",
+  year: "",
 });
 
 const tableLoading = ref(false);
@@ -74,7 +61,7 @@ const handlePaginationChange = (params: any) => {
 
 const handleQuery = () => {};
 const resetQuery = () => {
-  queryParams.value = { menuName: "", status: "" };
+  queryParams.value = { year: "" };
 };
 
 // 生命周期
@@ -87,7 +74,7 @@ onUnmounted(() => {});
 </script>
 
 <style lang="scss" scoped>
-.inventory-statistics-page {
+.annual-report-page {
   width: 100%;
   display: flex;
   flex-direction: column;

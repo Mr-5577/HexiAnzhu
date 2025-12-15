@@ -134,6 +134,11 @@ import AddEditMenu from "./add-edit-menu.vue";
 import type { TableColumnItem } from "@/components/base-table.vue";
 import { MenuForm, MenuItem } from "@/types/menu-type";
 
+// 组件name，需要和菜单配置里面的name一致
+defineOptions({
+  name: "menu",
+});
+
 const queryParams = ref({
   menuName: "",
   status: "",
@@ -147,25 +152,10 @@ const loading = ref(false);
 const refreshTable = ref(true);
 const isExpandAll = ref(false);
 const columns: TableColumnItem[] = [
-  {
-    prop: "title",
-    label: "菜单名称",
-    align: "left",
-  },
-  {
-    prop: "sort",
-    label: "排序",
-    width: 60,
-  },
-  {
-    prop: "isAutoRefresh",
-    label: "权限标识",
-  },
-  {
-    prop: "component",
-    label: "组件路径",
-    align: "left",
-  },
+  { prop: "title", label: "菜单名称", align: "left" },
+  { prop: "sort", label: "排序", width: 60 },
+  { prop: "isAutoRefresh", label: "权限标识" },
+  { prop: "component", label: "组件路径", align: "left" },
   {
     prop: "isKeepAlive",
     label: "页面缓存",
@@ -175,29 +165,10 @@ const columns: TableColumnItem[] = [
     //   return row.isKeepAlive ? '是' : '否';
     // },
   },
-  {
-    prop: "isMuitlOpen",
-    label: "支持多开",
-    slot: "isMuitlOpen",
-    width: 90,
-  },
-  {
-    prop: "isVisible",
-    label: "是否可见",
-    slot: "isVisible",
-    width: 90,
-  },
-  {
-    prop: "status",
-    label: "菜单状态",
-    slot: "status",
-    width: 90,
-  },
-  {
-    label: "操作",
-    slot: "action",
-    width: 220,
-  },
+  { label: "支持多开", slot: "isMuitlOpen", width: 90 },
+  { label: "是否可见", slot: "isVisible", width: 90 },
+  { label: "菜单状态", slot: "status", width: 90 },
+  { label: "操作", slot: "action", width: 220 },
 ];
 const tableData = ref<any[]>([]);
 const toggleExpandAll = () => {

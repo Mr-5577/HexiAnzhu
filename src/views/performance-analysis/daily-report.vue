@@ -1,9 +1,10 @@
+<!-- 销售日报表 -->
 <template>
-  <div class="inventory-statistics-page">
+  <div class="daily-report-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
-      <el-form-item label="所属项目" prop="status">
+      <el-form-item label="所属项目" prop="menuName">
         <el-select
-          v-model="queryParams.status"
+          v-model="queryParams.menuName"
           placeholder="所属项目"
           clearable
           style="width: 200px"
@@ -12,16 +13,13 @@
           <el-option label="停用" :value="0" />
         </el-select>
       </el-form-item>
-      <el-form-item label="业态" prop="status">
-        <el-select
+      <el-form-item label="日期" prop="status">
+        <el-date-picker
           v-model="queryParams.status"
-          placeholder="业态"
-          clearable
+          type="date"
+          placeholder="选择日期"
           style="width: 200px"
-        >
-          <el-option label="启用" :value="1" />
-          <el-option label="停用" :value="0" />
-        </el-select>
+        />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">
@@ -34,7 +32,7 @@
       </el-form-item>
     </el-form>
     <base-table
-      :columns="inventoryStatisticsColumns"
+      :columns="dailylReportColumns"
       :tableData="tableData"
       :loading="tableLoading"
       :total="total"
@@ -48,12 +46,13 @@
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref } from "vue";
 import BaseTable from "@/components/base-table.vue";
-import { inventoryStatisticsColumns } from "./project-columns";
+import { dailylReportColumns } from "./project-columns";
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
-  name: "inventory-statistics",
+  name: "daily-report",
 });
+
 // 响应式数据
 const queryParams = ref({
   menuName: "",
@@ -87,7 +86,7 @@ onUnmounted(() => {});
 </script>
 
 <style lang="scss" scoped>
-.inventory-statistics-page {
+.daily-report-page {
   width: 100%;
   display: flex;
   flex-direction: column;

@@ -1,5 +1,5 @@
 <template>
-  <div class="inventory-statistics-page">
+  <div class="inventory-detail-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
       <el-form-item label="所属项目" prop="status">
         <el-select
@@ -34,7 +34,7 @@
       </el-form-item>
     </el-form>
     <base-table
-      :columns="inventoryStatisticsColumns"
+      :columns="inventoryDetailColumns"
       :tableData="tableData"
       :loading="tableLoading"
       :total="total"
@@ -48,12 +48,13 @@
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref } from "vue";
 import BaseTable from "@/components/base-table.vue";
-import { inventoryStatisticsColumns } from "./project-columns";
+import { inventoryDetailColumns } from "./project-columns";
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
-  name: "inventory-statistics",
+  name: "inventory-detail",
 });
+
 // 响应式数据
 const queryParams = ref({
   menuName: "",
@@ -87,7 +88,7 @@ onUnmounted(() => {});
 </script>
 
 <style lang="scss" scoped>
-.inventory-statistics-page {
+.inventory-detail-page {
   width: 100%;
   display: flex;
   flex-direction: column;

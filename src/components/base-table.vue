@@ -603,7 +603,7 @@ defineExpose({
 .pagination {
   display: flex;
   justify-content: flex-end;
-  margin-top: 12px;
+  margin-top: 10px;
   flex-shrink: 0;
 }
 

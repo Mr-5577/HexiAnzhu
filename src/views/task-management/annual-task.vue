@@ -48,7 +48,7 @@ const dictData = {
     { value: 2, label: "女" },
   ],
 };
-const columns = ref([
+const columns: any = [
   {
     type: "index",
     label: "序号",
@@ -91,7 +91,7 @@ const columns = ref([
     label: "回款",
     dict: "gender",
   },
-]);
+];
 const tableData = ref([
   { id: 1, name: "zs", age: "18", gender: 1, num: 23, price: "18万" },
   { id: 2, name: "zs", age: "18", gender: 2, num: 23, price: "18万" },

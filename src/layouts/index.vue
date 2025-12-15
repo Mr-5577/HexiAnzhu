@@ -162,7 +162,6 @@ watch(
 onMounted(() => {
   const token = localStorage.getItem("token");
   if (token && menuStore.menuData.length > 0) {
-    console.log('执行了layouts')
     determineActiveModule();
     updateCachePages();
   }

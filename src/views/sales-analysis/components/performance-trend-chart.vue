@@ -312,6 +312,9 @@ const handleChartTypeChange = (type: string) => {
 };
 
 const fetchData = async () => {
+  // 检查是否已有请求在进行
+  if (isRequesting) return;
+
   loading.value = true;
   isRequesting = true;
   try {

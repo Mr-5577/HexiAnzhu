@@ -5,7 +5,7 @@
       route.path == '/sales-analysis/large-screen' ? 'dark-background' : ''
     "
   >
-    <el-scrollbar class="tags-view-wrapper">
+    <div class="tags-view-wrapper">
       <router-link
         v-for="tag in visitedViews"
         :key="tag.uniqueId || tag.path"
@@ -29,7 +29,7 @@
           <Close />
         </el-icon>
       </router-link>
-    </el-scrollbar>
+    </div>
   </div>
 </template>
 
@@ -121,13 +121,32 @@ watch(
   border-bottom: 1px solid #f0f0f0;
 
   .tags-view-wrapper {
-    height: 100%;
+    height: 40px;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    flex-shrink: 0;
+    overflow-x: auto;
+    padding: 0 12px;
+    box-sizing: border-box;
 
-    :deep(.el-scrollbar__view) {
-      display: flex;
-      align-items: center;
-      height: 100%;
-      padding: 0 12px;
+    /* 美化滚动条样式 - Webkit浏览器 (Chrome, Safari, Edge) */
+    &::-webkit-scrollbar {
+      height: 4px; /* 滚动条高度 */
+      background-color: transparent; /* 滚动条背景透明 */
+    }
+    &::-webkit-scrollbar-track {
+      background-color: transparent; /* 轨道背景透明 */
+      border-radius: 2px;
+      margin: 0 12px; /* 让滚动条与内容有间距 */
+    }
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(0, 0, 0, 0.15); /* 滑块颜色 */
+      border-radius: 2px;
+      transition: background-color 0.3s ease; /* 平滑过渡效果 */
+    }
+    &::-webkit-scrollbar-thumb:hover {
+      background-color: rgba(0, 0, 0, 0.2) !important; /* 鼠标悬停时的颜色 */
     }
 
     .tags-view-item {
@@ -192,6 +211,18 @@ watch(
 .dark-background {
   border: none;
   background: linear-gradient(135deg, #032c46 0%, #05456e 100%);
+  /* 深色背景下的滚动条样式 */
+  .tags-view-wrapper::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.2); /* 深色背景用浅色滑块 */
+  }
+  .tags-view-wrapper::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 255, 255, 0.3);
+  }
+  .tags-view-wrapper {
+    /* Firefox深色背景滚动条 */
+    scrollbar-color: #095e92 transparent;
+  }
+
   .tags-view-item {
     color: #fff !important;
     &:hover {
@@ -221,21 +252,6 @@ watch(
         }
       }
     }
-  }
-}
-
-// 滚动条样式
-:deep(.el-scrollbar__bar) {
-  &.is-horizontal {
-    height: 3px;
-  }
-}
-
-:deep(.el-scrollbar__thumb) {
-  background-color: rgba(0, 0, 0, 0.1);
-
-  &:hover {
-    background-color: rgba(0, 0, 0, 0.2);
   }
 }
 </style>

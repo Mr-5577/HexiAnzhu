@@ -10,9 +10,9 @@
   >
     <template #title>
       <div class="menu-content">
-        <el-icon v-if="item.icon">
+        <!-- <el-icon v-if="item.icon">
           <component :is="item.icon" />
-        </el-icon>
+        </el-icon> -->
         <span class="menu-title">{{ item.title }}</span>
       </div>
     </template>
@@ -21,9 +21,9 @@
   <el-sub-menu v-else :index="item.index">
     <template #title>
       <div class="menu-content">
-        <el-icon v-if="item.icon">
+        <!-- <el-icon v-if="item.icon">
           <component :is="item.icon" />
-        </el-icon>
+        </el-icon> -->
         <span class="menu-title">{{ item.title }}</span>
       </div>
     </template>

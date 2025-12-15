@@ -1,0 +1,60 @@
+// 房间台账表-表头
+export const roomLedgerColumns = [
+  { prop: "projectName", label: "所属项目", width: 240 },
+  { prop: "roomNumber", label: "房号", width: 120 },
+  { prop: "buildingPhase", label: "楼栋分期", width: 90 },
+  { prop: "predictedArea", label: "预测面积", width: 100 },
+  { prop: "type", label: "类型", width: 70 },
+  { prop: "subCategory", label: "二级分类", width: 120 },
+  { prop: "status", label: "状态", width: 80 },
+  { prop: "paymentMethod", label: "付款方式", width: 90 },
+  { prop: "listingPrice", label: "挂牌单价", width: 90 },
+  { prop: "listingTotal", label: "挂牌总价", width: 90 },
+  { prop: "mortgagePrice", label: "按揭单价", width: 90 },
+  { prop: "mortgageTotal", label: "按揭总价", width: 90 },
+  { prop: "fullPaymentPrice", label: "全款单价", width: 90 },
+  { prop: "fullPaymentTotal", label: "全款总价", width: 90 },
+  { prop: "dealTime", label: "成交时间", width: 120 },
+  { prop: "mortgageTotalAtDeal", label: "成交时系统按揭总价", width: 160 },
+  { prop: "fullPaymentTotalAtDeal", label: "成交时系统全款总价", width: 160 },
+  { prop: "createTime", label: "创建时间", width: 120 },
+  { prop: "signTime", label: "签约时间", width: 120 },
+  { prop: "dealTotal", label: "成交总价", width: 90 },
+  { prop: "measuredTotal", label: "实测总价", width: 90 },
+  { prop: "customerName", label: "客户名", width: 100 },
+  { prop: "phone", label: "联系电话", width: 120 },
+  { prop: "backupContact", label: "备用联系", width: 120 },
+  { prop: "paidAmount", label: "已付金额", width: 90 },
+  { prop: "bankLoan", label: "银行放款", width: 90 },
+  { prop: "loanTime", label: "放款时间", width: 120 },
+  { prop: "refundAmount", label: "退款金额", width: 90 },
+  { prop: "remark", label: "备注详情", width: 120 },
+];
+
+// 库存统计表-表头
+export const inventoryStatisticsColumns = [
+  { prop: "index", label: "序号", width: 80 },
+  { prop: "projectName", label: "项目名称" },
+  { prop: "businessType", label: "业态", width: 150 },
+  { prop: "totalUnits", label: "总套数", width: 150 },
+  { prop: "totalValue", label: "总货值(亿)", width: 150 },
+  { prop: "inventoryUnits", label: "库存套数", width: 150 },
+  { prop: "inventoryValue", label: "库存总货值(亿)", width: 150 },
+  { prop: "monthlySoldUnits", label: "月均去化套数", width: 150 },
+  { prop: "monthlySoldAmount", label: "月均去化金额(万)", width: 150 },
+  { prop: "inventorySalesRatio", label: "存销比", width: 150 },
+];
+
+// 库存明细表-表头
+export const inventoryDetailColumns = [
+  { prop: "index", label: "序号", width: 80 },
+  { prop: "projectName", label: "项目名称" },
+  { prop: "businessType", label: "业态", width: 150 },
+  { prop: "roomNumber", label: "房号", width: 150 },
+  { prop: "area", label: "面积", width: 150 },
+  { prop: "facePrice", label: "面价", width: 150 },
+  { prop: "basePrice", label: "底价单价", width: 150 },
+  { prop: "inventoryCycle", label: "库存周期(月)", width: 150 },
+  { prop: "areaRange", label: "面积段", width: 150 },
+  { prop: "totalPriceRange", label: "总价段", width: 150 },
+];
