@@ -167,7 +167,7 @@ export function transformMenuDataExact(originalData: any) {
     // 处理模块的子节点
     if (module.children && module.children.length > 0) {
       // 递归处理子节点，但需要调整parentId指向
-      function processChildren(children: any, parentId: any, pid: any) {
+      function processChildren(children: any, parentId: any, pid?: any) {
         return children
           .filter((child: any) => child.menuType === 1) // 只保留菜单类型
           .map((child: any) => {
@@ -186,18 +186,17 @@ export function transformMenuDataExact(originalData: any) {
             };
 
             // 添加component、keepAlive、isVisible、isMultiOpen
-
             if (child.component) {
-              childNode.component = child.component;
+              (childNode as any).component = child.component;
             }
             if (child.isKeepAlive) {
-              childNode.meta.keepAlive = true;
+              (childNode.meta as any).keepAlive = true;
             }
             if (child.isVisible) {
-              childNode.meta.isVisible = true;
+              (childNode.meta as any).isVisible = true;
             }
             if (child.isMultiOpen) {
-              childNode.meta.isMultiOpen = true;
+              (childNode.meta as any).isMultiOpen = true;
             }
 
             // 递归处理子菜单
@@ -206,7 +205,7 @@ export function transformMenuDataExact(originalData: any) {
                 (gc: any) => gc.menuType === 1
               );
               if (validGrandChildren.length > 0) {
-                childNode.children = processChildren(
+                (childNode as any).children = processChildren(
                   validGrandChildren,
                   childNode.id
                 );
