@@ -122,13 +122,14 @@ service.interceptors.response.use(
     }
 
     const { data } = response;
+    const resMessage = data.message;
     // 根据后端返回的 code 进行判断
     switch (data.code) {
       case 200:
         // 显示成功消息
         if (response.config.showSuccessMessage) {
           ElMessage.success(
-            response.config.successMessage || data.message || "操作成功"
+            response.config.successMessage || resMessage || "操作成功"
           );
         }
         return data;
@@ -142,22 +143,22 @@ service.interceptors.response.use(
         }, 1500);
         return Promise.reject(new Error("未授权"));
       case 403:
-        ElMessage.error("没有权限访问");
+        ElMessage.error("没有权限访问:" + resMessage);
         return Promise.reject(new Error("禁止访问"));
       case 404:
-        ElMessage.error("请求资源不存在");
+        ElMessage.error(resMessage || "请求资源不存在");
         return Promise.reject(new Error("资源不存在"));
       case 500:
-        ElMessage.error("服务器内部错误");
+        ElMessage.error(resMessage || "服务器内部错误");
         return Promise.reject(new Error("服务器错误"));
       case 503:
         ElMessage.error("服务不可用");
         return Promise.reject(new Error("服务不可用"));
       default:
         if (data.code !== 200 && response.config.showErrorMessage !== false) {
-          ElMessage.error(data.message || "请求失败");
+          ElMessage.error(resMessage || "请求失败");
         }
-        return Promise.reject(new Error(data.message || "Error"));
+        return Promise.reject(new Error(resMessage || "Error"));
     }
   },
   (error) => {
@@ -305,16 +306,16 @@ export const http = {
     filename?: string,
     config?: AxiosRequestConfig
   ): Promise<Blob> {
-    const response = await service
-      .get(url, {
-        params,
-        responseType: "blob",
-        ...config,
-      });
+    const response = await service.get(url, {
+      params,
+      responseType: "blob",
+      ...config,
+    });
     const blob = response.data;
     // 检查是否是错误响应
     await checkBlobError(blob);
-    const finalFilename = filename || getFilenameFromHeaders(response.headers) || "download";
+    const finalFilename =
+      filename || getFilenameFromHeaders(response.headers) || "download";
     saveAs(blob, finalFilename);
     return await blob;
   },
@@ -344,7 +345,8 @@ export const http = {
     const blob = response.data;
     // 检查是否是错误响应
     await checkBlobError(blob);
-    const finalFilename = filename || getFilenameFromHeaders(response.headers) || "export";
+    const finalFilename =
+      filename || getFilenameFromHeaders(response.headers) || "export";
     saveAs(blob, finalFilename);
     return await blob;
   },
@@ -379,24 +381,25 @@ export const http = {
     onProgress?: (progress: number) => void,
     method: "get" | "post" = "post"
   ): Promise<Blob> {
-    const response = await service
-      .request({
-        url,
-        method,
-        data: method === "post" ? data : undefined,
-        params: method === "get" ? data : undefined,
-        responseType: "blob",
-        onDownloadProgress: (progressEvent_1) => {
-          if (onProgress && progressEvent_1.total) {
-            const progress_1 = (progressEvent_1.loaded / progressEvent_1.total) * 100;
-            onProgress(Math.round(progress_1));
-          }
-        },
-      });
+    const response = await service.request({
+      url,
+      method,
+      data: method === "post" ? data : undefined,
+      params: method === "get" ? data : undefined,
+      responseType: "blob",
+      onDownloadProgress: (progressEvent_1) => {
+        if (onProgress && progressEvent_1.total) {
+          const progress_1 =
+            (progressEvent_1.loaded / progressEvent_1.total) * 100;
+          onProgress(Math.round(progress_1));
+        }
+      },
+    });
     const blob = response.data;
     // 检查是否是错误响应
     await checkBlobError(blob);
-    const finalFilename = filename || getFilenameFromHeaders(response.headers) || "export";
+    const finalFilename =
+      filename || getFilenameFromHeaders(response.headers) || "export";
     saveAs(blob, finalFilename);
     return await blob;
   },
