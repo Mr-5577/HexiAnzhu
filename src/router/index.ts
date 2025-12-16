@@ -23,6 +23,15 @@ const staticRoutes: Array<RouteRecordRaw> = [
     },
   },
   {
+    path: "/test",
+    name: "test",
+    component: () => import("@/views/test.vue"),
+    meta: {
+      title: "测试",
+      keepAlive: false,
+    },
+  },
+  {
     path: "/404",
     name: "404",
     component: () => import("@/views/404.vue"),
@@ -63,12 +72,12 @@ router.beforeEach(async (to, from, next) => {
     document.title = to.meta.title as string;
   }
 
-  // 登录页直接放行
-  if (to.path === "/login") {
+  // 白名单
+  const whiteList = ["/login", "/test"];
+  if (whiteList.includes(to.path)) {
     next();
     return;
   }
-
   // 检查token是否存在
   const token = localStorage.getItem("token");
   if (!token) {
@@ -89,7 +98,7 @@ router.beforeEach(async (to, from, next) => {
         text: "正在加载数据，请稍候...",
         background: "rgba(255, 255, 255, 0.9)",
         spinner: "el-icon-loading",
-        customClass: 'clean-loading',
+        customClass: "clean-loading",
       });
       // const exactData = await fetchMenuData();
       const menuData = await userApi.getUserMenuPowerList();
