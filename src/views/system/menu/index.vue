@@ -134,10 +134,6 @@ import AddEditMenu from "./add-edit-menu.vue";
 import type { TableColumnItem } from "@/components/base-table.vue";
 import { MenuForm, MenuItem } from "@/types/menu-type";
 
-// 组件name，需要和菜单配置里面的name一致
-defineOptions({
-  name: "menu",
-});
 
 const queryParams = ref({
   menuName: "",

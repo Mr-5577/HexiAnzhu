@@ -11,6 +11,9 @@ export const userApi = {
   login: (data: FormData) => {
     return http.post("/auth/login", data);
   },
+  test: () => {
+    return http.get("/test/test1");
+  },
   // 获取用户信息
   getUserInfo: () => {
     return http.get<UserInfo>("/user/info");

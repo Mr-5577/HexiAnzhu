@@ -9,12 +9,12 @@ export const config = {
     return import.meta.env.VITE_API_BASE_URL;
   },
 
-  get uploadUrl(): string {
-    if (!import.meta.env.VITE_UPLOAD_URL) {
-      console.warn("VITE_UPLOAD_URL 未配置，使用默认值");
-      return "http://localhost:8080/upload";
+  get apiActualUrl(): string {
+    if (!import.meta.env.VITE_API_BASE_URL_ACTUAL) {
+      console.warn("VITE_API_BASE_URL_ACTUAL 未配置，使用默认值");
+      return "http://localhost:8080/api";
     }
-    return import.meta.env.VITE_UPLOAD_URL;
+    return import.meta.env.VITE_API_BASE_URL_ACTUAL;
   },
 
   // 应用信息
@@ -61,14 +61,13 @@ export const config = {
 
 // API 相关
 export const getApiBaseUrl = (): string => config.apiBaseUrl;
+export const getApiActualUrl = (): string => config.apiActualUrl;
 
 export const getFullApiUrl = (endpoint: string): string => {
   const base = config.apiBaseUrl.replace(/\/$/, "");
   const path = endpoint.replace(/^\//, "");
   return `${base}/${path}`;
 };
-
-export const getUploadUrl = (): string => config.uploadUrl;
 
 // 应用信息
 export const getAppTitle = (): string => config.appTitle;

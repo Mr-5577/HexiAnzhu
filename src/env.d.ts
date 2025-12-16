@@ -30,7 +30,7 @@ interface ImportMetaEnv {
   
   // API 配置
   readonly VITE_API_BASE_URL: string
-  readonly VITE_UPLOAD_URL: string
+  readonly VITE_API_BASE_URL_ACTUAL: string
   
   // 功能开关
   readonly VITE_ENABLE_DEBUG: string

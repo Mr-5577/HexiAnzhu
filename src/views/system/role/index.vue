@@ -44,7 +44,12 @@
 
     <div class="content-section">
       <!-- 左侧角色列表 -->
-      <div class="list-card">
+      <div
+        class="list-card"
+        v-loading="listLoading"
+        :element-loading-text="'数据加载中...'"
+        :element-loading-background="'rgba(0, 0, 0, 0.1)'"
+      >
         <div class="card-header">
           <span class="card-title">角色列表</span>
           <el-button :icon="Plus" type="primary" @click="handleAddRole">
@@ -214,6 +219,7 @@ const roleForm = reactive({
   isEnable: true,
 });
 
+const listLoading = ref(false);
 // 新增编辑弹窗
 const modalVisible = ref(false);
 const currentData = ref<RoleItem | null>(null);
@@ -223,6 +229,7 @@ const handleSuccess = () => {
 
 // 获取角色列表
 const getRoleList = async () => {
+  listLoading.value = true;
   try {
     const res = await roleApi.getRoleList(searchForm.value);
     console.log("角色列表数据", res);
@@ -257,6 +264,8 @@ const getRoleList = async () => {
     }
   } catch (error) {
     console.error("获取角色列表失败:", error);
+  } finally {
+    listLoading.value = false;
   }
 };
 

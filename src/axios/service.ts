@@ -21,8 +21,8 @@ declare module "axios" {
 }
 // 创建 Axios 实例
 const service = axios.create({
-  baseURL: import.meta.env.PROD ? import.meta.env.VITE_APP_BASE_API : "/api", // url地址
-  timeout: 15000, // 超时时间
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  timeout: 30000, // 超时时间
   withCredentials: true, // 所有通过这个实例的请求都会自动携带 Cookie
 });
 
@@ -299,33 +299,28 @@ export const http = {
   },
 
   // 下载文件（直接下载）
-  download(
+  async download(
     url: string,
     params?: any,
     filename?: string,
     config?: AxiosRequestConfig
   ): Promise<Blob> {
-    return service
+    const response = await service
       .get(url, {
         params,
         responseType: "blob",
         ...config,
-      })
-      .then(async (response) => {
-        const blob = response.data;
-
-        // 检查是否是错误响应
-        await checkBlobError(blob);
-
-        const finalFilename =
-          filename || getFilenameFromHeaders(response.headers) || "download";
-        saveAs(blob, finalFilename);
-        return blob;
       });
+    const blob = response.data;
+    // 检查是否是错误响应
+    await checkBlobError(blob);
+    const finalFilename = filename || getFilenameFromHeaders(response.headers) || "download";
+    saveAs(blob, finalFilename);
+    return await blob;
   },
 
   // 导出文件（支持 POST 请求和更复杂的参数）
-  exportFile(
+  async exportFile(
     url: string,
     data?: any,
     filename?: string,
@@ -345,17 +340,13 @@ export const http = {
       request = service.post(url, data, requestConfig);
     }
 
-    return request.then(async (response) => {
-      const blob = response.data;
-
-      // 检查是否是错误响应
-      await checkBlobError(blob);
-
-      const finalFilename =
-        filename || getFilenameFromHeaders(response.headers) || "export";
-      saveAs(blob, finalFilename);
-      return blob;
-    });
+    const response = await request;
+    const blob = response.data;
+    // 检查是否是错误响应
+    await checkBlobError(blob);
+    const finalFilename = filename || getFilenameFromHeaders(response.headers) || "export";
+    saveAs(blob, finalFilename);
+    return await blob;
   },
 
   // 获取文件 Blob 对象（不直接下载，用于预览等场景）
@@ -381,38 +372,33 @@ export const http = {
   },
 
   // 带进度回调的导出
-  exportWithProgress(
+  async exportWithProgress(
     url: string,
     data: any,
     filename: string,
     onProgress?: (progress: number) => void,
     method: "get" | "post" = "post"
   ): Promise<Blob> {
-    return service
+    const response = await service
       .request({
         url,
         method,
         data: method === "post" ? data : undefined,
         params: method === "get" ? data : undefined,
         responseType: "blob",
-        onDownloadProgress: (progressEvent) => {
-          if (onProgress && progressEvent.total) {
-            const progress = (progressEvent.loaded / progressEvent.total) * 100;
-            onProgress(Math.round(progress));
+        onDownloadProgress: (progressEvent_1) => {
+          if (onProgress && progressEvent_1.total) {
+            const progress_1 = (progressEvent_1.loaded / progressEvent_1.total) * 100;
+            onProgress(Math.round(progress_1));
           }
         },
-      })
-      .then(async (response) => {
-        const blob = response.data;
-
-        // 检查是否是错误响应
-        await checkBlobError(blob);
-
-        const finalFilename =
-          filename || getFilenameFromHeaders(response.headers) || "export";
-        saveAs(blob, finalFilename);
-        return blob;
       });
+    const blob = response.data;
+    // 检查是否是错误响应
+    await checkBlobError(blob);
+    const finalFilename = filename || getFilenameFromHeaders(response.headers) || "export";
+    saveAs(blob, finalFilename);
+    return await blob;
   },
 };
 

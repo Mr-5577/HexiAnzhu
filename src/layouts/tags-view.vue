@@ -189,6 +189,7 @@ watch(
         overflow: hidden;
         text-overflow: ellipsis;
         max-width: 100px;
+        line-height: 1;
       }
 
       .close-icon {

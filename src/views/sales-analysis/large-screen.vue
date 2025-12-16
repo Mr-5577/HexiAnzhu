@@ -89,7 +89,6 @@
 </template>
 
 <script setup lang="ts">
-import { config } from "@/utils/config";
 import GoalAchieved from "./components/goal-achieved.vue";
 import AchievementRate from "./components/achievement-rate.vue";
 import PerformanceTrendChart from "./components/performance-trend-chart.vue";
@@ -198,7 +197,6 @@ const handleSearch = () => {
 };
 
 onMounted(() => {
-  console.log("项目环境配置config", config);
   dataVal.value = formatToDate(new Date());
   updateTime();
   timer = setInterval(updateTime, 1000);
