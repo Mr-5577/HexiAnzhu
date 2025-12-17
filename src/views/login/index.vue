@@ -264,8 +264,8 @@ const handleSignIn = async () => {
     height: 35px;
     border-radius: 20px;
     border: none;
-    background-color: #4fbbbb;
-    color: #0a2a43;
+    background-color: #4fbbbb !important;
+    color: #0a2a43 !important;
     font-size: 16px;
     font-family: Verdana, Geneva, Tahoma, sans-serif;
     box-shadow: -4px -4px 10px #ffffff1a, 4px 4px 10px #0000002d;
@@ -296,5 +296,37 @@ const handleSignIn = async () => {
       width: 100%;
     }
   }
+}
+.login-container .process-btn.el-button.el-button--primary {
+  margin-top: 20px !important;
+  width: 250px !important;
+  height: 35px !important;
+  min-height: 35px !important;
+  border-radius: 20px !important;
+  border: none !important;
+  background: #4fbbbb !important;
+  color: #0a2a43 !important;
+  font-size: 16px !important;
+  font-family: Verdana, Geneva, Tahoma, sans-serif !important;
+  box-shadow: -4px -4px 10px #ffffff1a, 4px 4px 10px #0000002d !important;
+  line-height: 1 !important;
+}
+/* 悬停时添加边框效果 */
+.login-container .process-btn.el-button.el-button--primary:hover {
+  background: #4fbbbb !important;
+  border-color: rgba(10, 42, 67, 0.3) !important; /* 添加深色边框 */
+  transform: translateY(-2px) !important;
+  box-shadow: -4px -4px 12px #ffffff2a, 4px 4px 12px #0000003d !important;
+}
+
+/* 禁用状态样式 */
+.login-container .process-btn.el-button.el-button--primary.is-disabled,
+.login-container .process-btn.el-button.el-button--primary.is-disabled:hover {
+  background: #a8d8d8 !important;
+  color: #6d8a9e !important;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
 }
 </style>

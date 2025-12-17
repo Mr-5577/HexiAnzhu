@@ -327,7 +327,7 @@ const fetchData = async () => {
   const endDate = `${data} 00:00:00`;
   const params = {
     projIds: department,
-    type: 0,
+    type: 1,
     day: endDate,
   };
 
