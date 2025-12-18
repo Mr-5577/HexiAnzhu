@@ -19,8 +19,8 @@ export const userApi = {
     return http.get<UserInfo>("/user/info");
   },
   // 退出登录
-  logout: (data: any) => {
-    return http.post(`/auth/logout`, data);
+  logout: () => {
+    return http.post(`/auth/logout`);
   },
   // 获取当前用户的菜单数据
   getUserMenuPowerList: async () => {

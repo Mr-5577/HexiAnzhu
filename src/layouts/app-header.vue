@@ -117,7 +117,7 @@ const logout = () => {
         // 设置按钮为加载状态
         instance.confirmButtonLoading = true;
         try {
-          const res = await userApi.logout({ username: "00001" });
+          const res = await userApi.logout();
           if (res.code === 200) {
             localStorage.clear();
             sessionStorage.clear();
@@ -131,7 +131,7 @@ const logout = () => {
             ElMessage.error("退出失败");
           }
         } catch (error) {
-          // ElMessage.error("请求失败，请重试");
+          ElMessage.error("请求失败，请重试");
         } finally {
           instance.confirmButtonLoading = false;
         }
