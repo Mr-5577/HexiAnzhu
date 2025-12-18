@@ -5,6 +5,7 @@ import Icons from "unplugin-icons/vite";
 import IconsResolver from "unplugin-icons/resolver";
 import Components from "unplugin-vue-components/vite";
 import { ElementPlusResolver } from "unplugin-vue-components/resolvers";
+import dayjs from "dayjs";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -13,6 +14,7 @@ export default defineConfig(({ mode }) => {
   const isDev = mode === "development";
   const isProd = mode === "production";
   const isStaging = mode === "staging";
+  const timestamp = dayjs().format("YYYYMMDDHHmmss"); // 20251217142359（年月日时分秒）
   // console.log("mode:", mode);
   // console.log("env:", env);
   return {
@@ -59,9 +61,19 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
-      outDir: `dist-${mode}`, // 根据不同环境输出到不同目录
-      sourcemap: isDev || isStaging,
+      outDir: `dist-${mode}-${timestamp}`, // 根据不同环境输出到不同目录
+      sourcemap: isDev || isStaging, // 非生产环境生成sourcemap
       minify: isProd ? "esbuild" : false,
+      // 生产环境文件名带时间戳
+      ...(isProd && {
+        rollupOptions: {
+          output: {
+            entryFileNames: `assets/[name].${timestamp}.[hash:8].js`,
+            chunkFileNames: `assets/[name].${timestamp}.[hash:8].js`,
+            assetFileNames: `assets/[name].${timestamp}.[hash:8].[ext]`,
+          },
+        },
+      }),
     },
   };
 });
