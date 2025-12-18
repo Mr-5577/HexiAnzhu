@@ -490,14 +490,8 @@ const defaultSummaryMethod = ({
         (total, val) => total + (isNaN(val) ? 0 : val),
         0
       );
-      // 判断是否有小数
-      if (sum % 1 === 0) {
-        // 整数，不保留小数
-        sums[index] = sum.toString();
-      } else {
-        // 有小数，保留两位
-        sums[index] = sum.toFixed(2);
-      }
+      // 使用 Number.isInteger() 判断是否整数,如果有小数则保留两位小数
+      sums[index] = Number.isInteger(sum) ? sum.toString() : sum.toFixed(2);
     } else {
       sums[index] = "--";
     }
@@ -606,12 +600,10 @@ defineExpose({
   display: flex;
   flex-direction: column;
 }
-
 .action-bar {
   margin-bottom: 8px;
   flex-shrink: 0;
 }
-
 .toolbar {
   height: 28px;
   display: flex;
@@ -622,18 +614,15 @@ defineExpose({
   gap: 8px;
   flex-shrink: 0;
 }
-
 .toolbar .left {
   display: flex;
   align-items: center;
   gap: 12px;
 }
-
 .toolbar .right {
   display: flex;
   align-items: center;
 }
-
 .batch-actions {
   display: flex;
   align-items: center;
@@ -642,17 +631,14 @@ defineExpose({
   background-color: #f0f9ff;
   border-radius: 4px;
 }
-
 .selected-count {
   font-size: 14px;
   color: #409eff;
 }
-
 .table-wrapper {
   flex: 1;
   min-height: 200px;
 }
-
 .pagination {
   display: flex;
   justify-content: flex-end;
@@ -664,17 +650,32 @@ defineExpose({
     }
   }
 }
-
 .empty-container {
   padding: 40px 0;
 }
-
+/* 调整合计行高度 */
+.pro-table-container {
+  :deep(.el-table) {
+    .el-table__footer-wrapper {
+      // 调整整个合计行区域的高度
+      .el-table__cell {
+        padding: 8px 0; // 调整内边距来控制高度
+        .cell {
+          line-height: 1.5; // 调整行高
+          min-height: 32px; // 最小高度
+          display: flex;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+      }
+    }
+  }
+}
 @media (max-width: 768px) {
   .toolbar {
     flex-direction: column;
     align-items: stretch;
   }
-
   .toolbar .left,
   .toolbar .right {
     justify-content: space-between;
