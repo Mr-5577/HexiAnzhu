@@ -37,7 +37,12 @@
           搜索
         </el-button>
         <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-        <el-button type="primary" icon="Download" :loading="exportLoading">
+        <el-button
+          type="primary"
+          icon="Download"
+          :loading="exportLoading"
+          @click="handleExport"
+        >
           导出
         </el-button>
       </el-form-item>
@@ -61,6 +66,7 @@ import { inventoryStatisticsColumns } from "./project-columns";
 import { assetManagementApi } from "@/api/asset-management-api";
 import type { InventoryStatisticsInterface } from "@/types/asset-management-type";
 import { useSalesData } from "@/composables/use-sales";
+import { ElMessage } from "element-plus";
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
@@ -125,6 +131,25 @@ const resetQuery = () => {
   getTableList();
 };
 
+const handleExport = async () => {
+  try {
+    exportLoading.value = true;
+    const fileBlob = await assetManagementApi.getRoomStockGroupProjExcel(
+      queryParams.value,
+      "库存统计表.xlsx"
+    );
+    if (!fileBlob || fileBlob.size === 0) {
+      ElMessage.warning("导出文件为空，请检查数据");
+    } else {
+      ElMessage.success("导出成功！");
+    }
+  } catch (error: any) {
+    ElMessage.error(`导出失败：${error.message || "未知错误"}`);
+  } finally {
+    exportLoading.value = false;
+  }
+};
+
 // 初始化数据
 const initPageData = async () => {
   await loadData({
@@ -153,7 +178,6 @@ const getTableList = async () => {
       current: currentPage.value,
     };
     const res = await assetManagementApi.getRoomStockGroupProj(params);
-    console.log("res", res);
     if (res.code === 200) {
       allTableList.value = res.data || [];
       total.value = res.data?.length;

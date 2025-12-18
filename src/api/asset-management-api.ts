@@ -30,6 +30,23 @@ export const assetManagementApi = {
   getRoomStockGroupProj: (data: StatisticsInterface) => {
     return http.post("/sale/getRoomStockGroupProj", data);
   },
+  /**
+   * @name 项目库存统计-导出
+   * @param data 导出参数
+   * @param filename 导出文件名
+   * @returns Excel文件数据流
+   */
+  getRoomStockGroupProjExcel: (
+    data: StatisticsInterface,
+    filename?: string
+  ) => {
+    return http.exportFile(
+      "/sale/getRoomStockGroupProjExcel",
+      data,
+      filename || "数据列表.xlsx",
+      "post"
+    );
+  },
   // 获取库存明细
   getRoomStockList: (data: StatisticsInterface) => {
     return http.post("/sale/getRoomStockList", data);
