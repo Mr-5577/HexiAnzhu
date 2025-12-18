@@ -57,6 +57,7 @@
       </el-form-item>
     </el-form>
     <base-table
+      :showSummary="true"
       :columns="pendingDetailColumns"
       :tableData="paginatedData"
       :loading="tableLoading"

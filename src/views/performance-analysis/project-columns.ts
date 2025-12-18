@@ -190,9 +190,9 @@ export const dailylReportColumns: any = [
     prop: "name",
     label: "月度实际完成",
     children: [
-      { prop: "price", label: "销售数量(套)", width: 90 },
-      { prop: "price", label: "签约数量(套)", width: 90 },
-      { prop: "price", label: "回款金额(万元)", width: 90 },
+      { prop: "totalOrderNum", label: "销售数量(套)", width: 90 },
+      { prop: "totalSignNum", label: "签约数量(套)", width: 90 },
+      { prop: "totalRecMoney", label: "回款金额(万元)", width: 90 },
     ],
   },
   {

@@ -69,6 +69,7 @@
       </el-form-item>
     </el-form>
     <base-table
+      :showSummary="true"
       :columns="forfeitureStatslColumns"
       :tableData="paginatedData"
       :loading="tableLoading"

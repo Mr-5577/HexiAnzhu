@@ -665,6 +665,7 @@ defineExpose({
           min-height: 32px; // 最小高度
           display: flex;
           align-items: center;
+          justify-content: center;
           flex-wrap: wrap;
         }
       }

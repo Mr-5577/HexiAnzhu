@@ -69,6 +69,7 @@
       </el-form-item>
     </el-form>
     <base-table
+      :showSummary="true"
       :columns="forfeitureDetailColumns"
       :tableData="paginatedData"
       :loading="tableLoading"
@@ -236,4 +237,3 @@ onUnmounted(() => {});
   background: #fff;
 }
 </style>
-

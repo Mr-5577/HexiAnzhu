@@ -37,6 +37,7 @@
       </el-form-item>
     </el-form>
     <base-table
+      :showSummary="true"
       :columns="dailylReportColumns"
       :tableData="paginatedData"
       :loading="tableLoading"
