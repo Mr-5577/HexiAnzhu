@@ -28,7 +28,16 @@
             />
           </template>
           <template #default>
-            <el-button text  @click="logout">退出登录</el-button>
+            <div class="user-dropdown">
+              <div class="dropdown-item" @click="handleProfile">
+                <el-icon><User /></el-icon>
+                <span>个人中心</span>
+              </div>
+              <div class="dropdown-item" @click="logout">
+                <el-icon><SwitchButton /></el-icon>
+                <span>退出登录</span>
+              </div>
+            </div>
           </template>
         </el-popover>
       </div>
@@ -93,6 +102,9 @@ const handleNavClick = (module: any) => {
     router.push(firstRoutePath);
   }
 };
+const handleProfile = () => {
+  router.push("/system/user");
+};
 
 const logout = () => {
   ElMessageBox.confirm("确定现在退出系统吗?", "退出", {
@@ -156,7 +168,6 @@ const logout = () => {
     flex-shrink: 0;
     display: flex;
     align-items: center;
-    margin-right: 40px;
     .logo-img {
       width: 70%;
       height: auto;
@@ -242,6 +253,49 @@ const logout = () => {
       }
       .el-avatar {
         cursor: pointer;
+      }
+      .user-dropdown {
+        padding: 4px 0;
+        min-width: 120px;
+        .dropdown-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 16px;
+          cursor: pointer;
+          font-size: 14px;
+          color: #606266;
+          transition: all 0.2s;
+          border-radius: 4px;
+          &:hover {
+            background-color: #f5f7fa;
+            color: #085381;
+
+            .el-icon {
+              color: #085381;
+            }
+          }
+          .el-icon {
+            font-size: 16px;
+            color: #909399;
+          }
+          &:last-child {
+            margin-top: 4px;
+            padding-top: 8px;
+            border-top: 1px solid #ebeef5;
+            color: #f56c6c;
+            &:hover {
+              background-color: #fef0f0;
+              color: #f56c6c;
+              .el-icon {
+                color: #f56c6c;
+              }
+            }
+            .el-icon {
+              color: #f56c6c;
+            }
+          }
+        }
       }
     }
   }
