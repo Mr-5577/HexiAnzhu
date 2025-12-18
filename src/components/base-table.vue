@@ -605,6 +605,11 @@ defineExpose({
   justify-content: flex-end;
   margin-top: 10px;
   flex-shrink: 0;
+  :deep(.el-pager) {
+    .is-active {
+      background: linear-gradient(135deg, #032c46 0%, #05456e 100%);
+    }
+  }
 }
 
 .empty-container {

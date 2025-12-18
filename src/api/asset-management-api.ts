@@ -66,4 +66,20 @@ export const assetManagementApi = {
   getOrderNumYearCount: (data: any) => {
     return http.post("/sale/getOrderNumYearCount", data);
   },
+  // 认购转签约统计
+  getOrderToSignPeriodProj: (data: any) => {
+    return http.post("/sale/getOrderToSignPeriodProj", data);
+  },
+  // 认购转签约明细
+  getOrderToSignPeriodRoom: (data: any) => {
+    return http.post("/sale/getOrderToSignPeriodRoom", data);
+  },
+  // 认购未签约统计
+  getOrderNotSignInfoProj: (data: any) => {
+    return http.post("/sale/getOrderNotSignInfoProj", data);
+  },
+  // 认购未签约明细
+  getOrderNotSignInfoRoom: (data: any) => {
+    return http.post("/sale/getOrderNotSignInfoRoom", data);
+  },
 };

@@ -1,53 +1,55 @@
 // 认购转签约统计-表头
-export const conversionStatsColumns = [
-  { prop: "name", label: "项目" },
-  { prop: "name", label: "签约套数" },
-  { prop: "name", label: "认转签周期" },
-  { prop: "name", label: "最小周期" },
-  { prop: "name", label: "最大周期" },
+export const conversionStatsColumns: any = [
+  { type: "index", label: "序号", width: 60 },
+  { prop: "projName", label: "项目" },
+  { prop: "signNum", label: "签约套数" },
+  { prop: "avgSignDays", label: "认转签周期" },
+  { prop: "minSignDays", label: "最小周期" },
+  { prop: "maxSignDays", label: "最大周期" },
 ];
 
 // 认购转签约明细-表头
-export const conversionDetailColumns = [
-  { prop: "index", label: "序号", width: 60 },
-  { prop: "name", label: "项目", width: 240 },
-  { prop: "name", label: "业态" },
-  { prop: "name", label: "房号" },
-  { prop: "name", label: "建筑面积" },
-  { prop: "name", label: "业主" },
-  { prop: "name", label: "联系电话" },
-  { prop: "name", label: "底价金额" },
-  { prop: "name", label: "认购金额" },
-  { prop: "name", label: "认购日期" },
-  { prop: "name", label: "签约日期" },
-  { prop: "name", label: "签约周期" },
+export const conversionDetailColumns: any = [
+  { type: "index", label: "序号", width: 60 },
+  { prop: "projName", label: "项目", width: 240 },
+  { prop: "bigProductTypeName", label: "业态" },
+  { prop: "roomNum", label: "房号" },
+  { prop: "saleArea", label: "建筑面积" },
+  { prop: "custName", label: "业主" },
+  { prop: "custTel", label: "联系电话" },
+  { prop: "floorMoney", label: "底价金额" },
+  { prop: "saleMoney", label: "认购金额" },
+  { prop: "saleDate", label: "认购日期" },
+  { prop: "signDate", label: "签约日期" },
+  { prop: "signDays", label: "签约周期" },
 ];
 
 // 认购未签约统计-表头
-export const pendingStatsColumns = [
-  { prop: "name", label: "项目" },
-  { prop: "name", label: "认购套数" },
-  { prop: "name", label: "成交面积" },
-  { prop: "name", label: "成交总金额" },
-  { prop: "name", label: "未签约套数" },
-  { prop: "name", label: "未签约金额" },
-  { prop: "name", label: "最大周期" },
-  { prop: "name", label: "平均周期" },
+export const pendingStatsColumns: any = [
+  { type: "index", label: "序号", width: 60 },
+  { prop: "projName", label: "项目" },
+  { prop: "orderNum", label: "认购套数" },
+  { prop: "orderArea", label: "成交面积" },
+  { prop: "orderMoney", label: "成交总金额" },
+  { prop: "notsignNum", label: "未签约套数" },
+  { prop: "notsignMoney", label: "未签约金额" },
+  { prop: "maxNotsignDays", label: "最大周期" },
+  { prop: "notsignDays", label: "平均周期" },
 ];
 
 // 认购未签约明细-表头
-export const pendingDetailColumns = [
-  { prop: "index", label: "序号", width: 60 },
-  { prop: "name", label: "项目", width: 240 },
-  { prop: "name", label: "业态" },
-  { prop: "name", label: "房号" },
-  { prop: "name", label: "建筑面积" },
-  { prop: "name", label: "业主" },
-  { prop: "name", label: "联系电话" },
-  { prop: "name", label: "认购日期" },
-  { prop: "name", label: "底价金额" },
-  { prop: "name", label: "认购金额" },
-  { prop: "name", label: "未签约天数" },
+export const pendingDetailColumns:any = [
+  { type: "index", label: "序号", width: 60 },
+  { prop: "projName", label: "项目", width: 240 },
+  { prop: "bigProductTypeName", label: "业态" },
+  { prop: "roomNum", label: "房号" },
+  { prop: "saleArea", label: "建筑面积" },
+  { prop: "custName", label: "业主" },
+  { prop: "custTel", label: "联系电话" },
+  { prop: "saleDate", label: "认购日期" },
+  { prop: "floorMoney", label: "底价金额" },
+  { prop: "saleMoney", label: "认购金额" },
+  { prop: "signDays", label: "未签约天数" },
 ];
 
 // 溢价统计-表头
