@@ -7,12 +7,12 @@ export const annualReportColumns: any = [
     prop: "name",
     label: "年度累计数据",
     children: [
-      { prop: "num", label: "认购套数", width: 90 },
-      { prop: "price", label: "认购金额", width: 90 },
-      { prop: "price", label: "成交均价", width: 90 },
-      { prop: "price", label: "签约套数", width: 90 },
-      { prop: "price", label: "签约金额", width: 90 },
-      { prop: "price", label: "回款金额", width: 90 },
+      { prop: "totalOrderNum", label: "认购套数", width: 90 },
+      { prop: "totalOrderMoney", label: "认购金额", width: 90 },
+      { prop: "totalPrice", label: "成交均价", width: 90 },
+      { prop: "totalSignNum", label: "签约套数", width: 90 },
+      { prop: "totalSignMoney", label: "签约金额", width: 90 },
+      { prop: "totalRecMoney", label: "回款金额", width: 90 },
     ],
   },
   {
@@ -23,24 +23,24 @@ export const annualReportColumns: any = [
         prop: "price",
         label: "未签约",
         children: [
-          { prop: "price", label: "套数", width: 80 },
-          { prop: "price", label: "金额", width: 80 },
+          { prop: "notSignNum", label: "套数", width: 80 },
+          { prop: "notSignOutstdMoney", label: "金额", width: 100 },
         ],
       },
       {
         prop: "price",
         label: "已签约",
         children: [
-          { prop: "price", label: "套数", width: 80 },
-          { prop: "price", label: "金额", width: 80 },
+          { prop: "signNum", label: "套数", width: 80 },
+          { prop: "signOutstdMoney", label: "金额", width: 100 },
         ],
       },
       {
         prop: "price",
         label: "总计",
         children: [
-          { prop: "price", label: "套数", width: 80 },
-          { prop: "price", label: "金额", width: 80 },
+          { prop: "totalOutstdNum", label: "套数", width: 80 },
+          { prop: "totalOutstdMoney", label: "金额", width: 100 },
         ],
       },
     ],
@@ -49,9 +49,9 @@ export const annualReportColumns: any = [
     prop: "name",
     label: "年度目标任务",
     children: [
-      { prop: "price", label: "销售数量(套)", width: 90 },
-      { prop: "price", label: "签约数量(套)", width: 90 },
-      { prop: "price", label: "回款金额(万元)", width: 90 },
+      { prop: "orderTask", label: "销售数量(套)", width: 90 },
+      { prop: "signTask", label: "签约数量(套)", width: 90 },
+      { prop: "collectTask", label: "回款金额(万元)", width: 90 },
     ],
   },
   {
@@ -67,10 +67,54 @@ export const annualReportColumns: any = [
     prop: "name",
     label: "年度达成率",
     children: [
-      { prop: "price", label: "销售数量(套)", width: 90 },
-      { prop: "price", label: "签约数量(套)", width: 90 },
-      { prop: "price", label: "回款金额(万元)", width: 90 },
-      { prop: "price", label: "综合达成率", width: 100 },
+      {
+        prop: "orderRate",
+        label: "销售数量",
+        width: 100,
+        formatter: (row: any, column: any, index: number) => {
+          const orderRate = row.orderRate || 0;
+          if (!orderRate) {
+            return "0%";
+          }
+          return `${(orderRate * 100).toFixed(5)}%`;
+        },
+      },
+      {
+        prop: "signRate",
+        label: "签约数量",
+        width: 100,
+        formatter: (row: any, column: any, index: number) => {
+          const signRate = row.signRate || 0;
+          if (!signRate) {
+            return "0%";
+          }
+          return `${(signRate * 100).toFixed(5)}%`;
+        },
+      },
+      {
+        prop: "collectRate",
+        label: "回款金额",
+        width: 100,
+        formatter: (row: any, column: any, index: number) => {
+          const collectRate = row.collectRate || 0;
+          if (!collectRate) {
+            return "0%";
+          }
+          return `${(collectRate * 100).toFixed(5)}%`;
+        },
+      },
+      {
+        prop: "totalRate",
+        label: "综合达成率",
+        width: 100,
+        formatter: (row: any, column: any, index: number) => {
+          const totalRate = row.totalRate || 0;
+          if (!totalRate) {
+            return "0%";
+          }
+          return `${(totalRate * 100).toFixed(5)}%`;
+        },
+      },
     ],
   },
 ];
@@ -84,23 +128,23 @@ export const dailylReportColumns: any = [
     prop: "name",
     label: "当日销售数据",
     children: [
-      { prop: "num", label: "认购套数", width: 90 },
-      { prop: "price", label: "成交均价", width: 90 },
-      { prop: "price", label: "退房挞定", width: 90 },
-      { prop: "price", label: "签约套数", width: 90 },
-      { prop: "price", label: "回款金额", width: 90 },
+      { prop: "dayOrderNum", label: "认购套数", width: 90 },
+      { prop: "dayPrice", label: "成交均价", width: 90 },
+      { prop: "dayCheckoutNum", label: "退房挞定", width: 90 },
+      { prop: "daySignNum", label: "签约套数", width: 90 },
+      { prop: "dayRecMoney", label: "回款金额", width: 90 },
     ],
   },
   {
     prop: "name",
     label: "当月累计数据",
     children: [
-      { prop: "num", label: "认购套数", width: 90 },
-      { prop: "price", label: "认购金额", width: 90 },
-      { prop: "price", label: "成交均价", width: 90 },
-      { prop: "price", label: "签约套数", width: 90 },
-      { prop: "price", label: "签约金额", width: 90 },
-      { prop: "price", label: "回款金额", width: 90 },
+      { prop: "totalOrderNum", label: "认购套数", width: 90 },
+      { prop: "totalOrderMoney", label: "认购金额", width: 90 },
+      { prop: "totalPrice", label: "成交均价", width: 90 },
+      { prop: "totalSignNum", label: "签约套数", width: 90 },
+      { prop: "totalSignMoney", label: "签约金额", width: 90 },
+      { prop: "totalRecMoney", label: "回款金额", width: 90 },
     ],
   },
   {
@@ -111,31 +155,40 @@ export const dailylReportColumns: any = [
         prop: "price",
         label: "未签约",
         children: [
-          { prop: "price", label: "套数", width: 80 },
-          { prop: "price", label: "金额", width: 80 },
+          { prop: "notSignNum", label: "套数", width: 80 },
+          { prop: "notSignOutstdMoney", label: "金额", width: 100 },
         ],
       },
       {
         prop: "price",
         label: "已签约",
         children: [
-          { prop: "price", label: "套数", width: 80 },
-          { prop: "price", label: "金额", width: 80 },
+          { prop: "signNum", label: "套数", width: 80 },
+          { prop: "signOutstdMoney", label: "金额", width: 100 },
         ],
       },
       {
         prop: "price",
         label: "总计",
         children: [
-          { prop: "price", label: "套数", width: 80 },
-          { prop: "price", label: "金额", width: 80 },
+          { prop: "totalOutstdNum", label: "套数", width: 80 },
+          { prop: "totalOutstdMoney", label: "金额", width: 100 },
         ],
       },
     ],
   },
   {
     prop: "name",
-    label: "年度目标任务",
+    label: "月度目标任务",
+    children: [
+      { prop: "orderTask", label: "销售数量(套)", width: 90 },
+      { prop: "signTask", label: "签约数量(套)", width: 90 },
+      { prop: "collectTask", label: "回款金额(万元)", width: 90 },
+    ],
+  },
+  {
+    prop: "name",
+    label: "月度实际完成",
     children: [
       { prop: "price", label: "销售数量(套)", width: 90 },
       { prop: "price", label: "签约数量(套)", width: 90 },
@@ -144,21 +197,56 @@ export const dailylReportColumns: any = [
   },
   {
     prop: "name",
-    label: "年度实际完成",
+    label: "月度达成率",
     children: [
-      { prop: "price", label: "销售数量(套)", width: 90 },
-      { prop: "price", label: "签约数量(套)", width: 90 },
-      { prop: "price", label: "回款金额(万元)", width: 90 },
-    ],
-  },
-  {
-    prop: "name",
-    label: "年度达成率",
-    children: [
-      { prop: "price", label: "销售数量(套)", width: 90 },
-      { prop: "price", label: "签约数量(套)", width: 90 },
-      { prop: "price", label: "回款金额(万元)", width: 90 },
-      { prop: "price", label: "综合达成率", width: 100 },
+      {
+        prop: "orderRate",
+        label: "销售数量",
+        width: 100,
+        formatter: (row: any, column: any, index: number) => {
+          const orderRate = row.orderRate || 0;
+          if (!orderRate) {
+            return "0%";
+          }
+          return `${(orderRate * 100).toFixed(5)}%`;
+        },
+      },
+      {
+        prop: "signRate",
+        label: "签约数量",
+        width: 100,
+        formatter: (row: any, column: any, index: number) => {
+          const signRate = row.signRate || 0;
+          if (!signRate) {
+            return "0%";
+          }
+          return `${(signRate * 100).toFixed(5)}%`;
+        },
+      },
+      {
+        prop: "collectRate",
+        label: "回款金额",
+        width: 100,
+        formatter: (row: any, column: any, index: number) => {
+          const collectRate = row.collectRate || 0;
+          if (!collectRate) {
+            return "0%";
+          }
+          return `${(collectRate * 100).toFixed(5)}%`;
+        },
+      },
+      {
+        prop: "totalRate",
+        label: "综合达成率",
+        width: 100,
+        formatter: (row: any, column: any, index: number) => {
+          const totalRate = row.totalRate || 0;
+          if (!totalRate) {
+            return "0%";
+          }
+          return `${(totalRate * 100).toFixed(5)}%`;
+        },
+      },
     ],
   },
 ];
