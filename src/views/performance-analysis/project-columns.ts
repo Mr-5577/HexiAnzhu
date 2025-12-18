@@ -216,17 +216,32 @@ export const SubscriptionStatisticsMonthColumns = [
 ];
 
 // 置业顾问排名-表头
-export const agentRankingColumns: any = [
-  { type: "index", label: "序号", width: 60 },
-  { prop: "name", label: "集团排名" },
-  { prop: "name", label: "项目排名" },
-  { prop: "name", label: "置业顾问" },
-  { prop: "name", label: "所属项目" },
-  { prop: "name", label: "认购" },
-  { prop: "name", label: "认购金额" },
-  { prop: "name", label: "签约" },
-  { prop: "name", label: "签约金额" },
-  { prop: "name", label: "回款金额" },
-  { prop: "name", label: "溢价金额" },
-  { prop: "name", label: "溢价比例" },
+export const agentRankingColumns = [
+  { prop: "sort", label: "集团排名" },
+  { prop: "sortProj", label: "项目排名" },
+  { prop: "salerName", label: "置业顾问" },
+  { prop: "projName", label: "所属项目" },
+  { prop: "orderNum", label: "认购" },
+  { prop: "orderMoney", label: "认购金额" },
+  { prop: "signNum", label: "签约" },
+  { prop: "signMoney", label: "签约金额" },
+  { prop: "payMoney", label: "回款金额" },
+  { prop: "premiumMoney", label: "溢价金额" },
+  {
+    prop: "premiumRate",
+    label: "溢价比例",
+    formatter: (row: any, column: any, index: number) => {
+      // 获取溢价金额和底价
+      const premiumMoney = row.premiumMoney || 0;
+      const floorMoney = row.floorMoney || 0;
+      // 避免除以零
+      if (!floorMoney || floorMoney <= 0) {
+        return "0.00%";
+      }
+      // 计算溢价比例（溢价金额 / 底价 * 100%）
+      const premiumRate = (premiumMoney / floorMoney) * 100;
+      // 保留两位小数并添加百分号
+      return `${premiumRate.toFixed(4)}%`;
+    },
+  },
 ];
