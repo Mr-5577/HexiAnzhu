@@ -1,6 +1,6 @@
 import { useMenuStore } from "@/stores/menu-store";
 import { fetchMenuData, transformMenuDataExact } from "@/utils/menu-util";
-import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
+import { createRouter, createWebHashHistory, createWebHistory, RouteRecordRaw } from "vue-router";
 import { addDynamicRoutes } from "./dynamic-routes";
 import { userApi } from "@/api/user-api";
 import { ElLoading } from "element-plus";
@@ -45,7 +45,8 @@ const staticRoutes: Array<RouteRecordRaw> = [
 ];
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  // history: createWebHistory(import.meta.env.BASE_URL), // history模式
+  history: createWebHashHistory(import.meta.env.BASE_URL), // hash模式
   routes: staticRoutes,
 });
 
