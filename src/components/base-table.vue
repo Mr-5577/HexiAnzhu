@@ -47,6 +47,8 @@
         v-bind="getTableProps"
         :data="tableData"
         v-loading="loading"
+        :show-summary="showSummary"
+        :summary-method="props.summaryMethod || defaultSummaryMethod"
         :default-expand-all="isExpandAll"
         element-loading-text="数据加载中..."
         element-loading-background="rgba(255, 255, 255, 0.8)"
@@ -173,6 +175,9 @@ interface Props {
   dictData?: DictData;
   // 是否默认展开所有行，当 Table 包含展开行存在或者为树形表格时有效
   isExpandAll?: boolean;
+  // 是否显示合计列
+  showSummary?: boolean;
+  summaryMethod?: (params: { columns: any[]; data: any[] }) => string[];
 }
 
 // 定义组件事件
@@ -275,7 +280,7 @@ const TableColumn = {
         align: column.align || "center",
         sortable: column.sortable || false,
         fixed: column.fixed,
-        showOverflowTooltip: true,
+        showOverflowTooltip: true, // 鼠标移入显示全部内容
       };
 
       // 如果有子列，递归渲染
@@ -337,6 +342,7 @@ const props = withDefaults(defineProps<Props>(), {
   showActionBar: false,
   dictData: () => ({}),
   isExpandAll: false,
+  showSummary: false,
 });
 
 const emit = defineEmits<Emits>();
@@ -450,6 +456,53 @@ const updateTableHeight = (): void => {
       tableHeight.value = calculateTableHeight();
     }, 100); // 稍微延迟确保 DOM 已更新
   }
+};
+
+// 实现默认的合计方法
+const defaultSummaryMethod = ({
+  columns,
+  data,
+}: {
+  columns: any[];
+  data: any[];
+}) => {
+  const sums: string[] = [];
+  columns.forEach((column, index) => {
+    // 第一列显示"合计"
+    if (index === 0) {
+      sums[index] = "合计";
+      return;
+    }
+    // 跳过特殊列
+    if (
+      column.type === "selection" ||
+      column.type === "index" ||
+      column.type === "expand"
+    ) {
+      sums[index] = "--";
+      return;
+    }
+    // 只对数值列求和
+    const values = data.map((item) => Number(item[column.property]));
+    const hasNumbers = values.some((v) => !isNaN(v));
+    if (hasNumbers) {
+      const sum = values.reduce(
+        (total, val) => total + (isNaN(val) ? 0 : val),
+        0
+      );
+      // 判断是否有小数
+      if (sum % 1 === 0) {
+        // 整数，不保留小数
+        sums[index] = sum.toString();
+      } else {
+        // 有小数，保留两位
+        sums[index] = sum.toFixed(2);
+      }
+    } else {
+      sums[index] = "--";
+    }
+  });
+  return sums;
 };
 
 // 监听相关变化
