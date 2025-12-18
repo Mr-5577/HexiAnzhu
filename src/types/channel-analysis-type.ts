@@ -53,4 +53,20 @@ export interface DayTableInterface {
   d30?: number;
   d31?: number;
 }
+// 转化率统计
+export interface ConversionRateInterface {
+  projId: number;
+  projName: string;
+  dylfComeNum: number;
+  dyrgNum: number;
+  dylfrgNum: number;
+  qqlfrgNum: number;
+  sylfComeNum: number;
+  syrgNum: number;
+  sylfrgNum: number;
+  dylfZhl: number;
+  sylfZhl: number;
+  dyztZhl: number;
+  syztZhl: number;
+}
 

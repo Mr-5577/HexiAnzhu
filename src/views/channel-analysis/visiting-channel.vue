@@ -87,7 +87,11 @@ const queryParams = ref({
   projIds: [],
   time: [],
 });
-const tableColumns = ref([]);
+// 固定列
+const tableColumns = ref<any>([
+  { type: "index", label: "序号", width: 80 },
+  { prop: "proj_name", label: "项目", width: 260 },
+]);
 const tableLoading = ref<boolean>(false);
 const exportLoading = ref<boolean>(false);
 const currentPage = ref<number>(1);
@@ -142,12 +146,6 @@ const getTableList = async () => {
     const res = await assetManagementApi.getComePathWayProjCount(params);
     if (res.code === 200) {
       const { header = [], records = [] } = res.data;
-
-      // 固定列
-      const fixedColumns = [
-        { type: "index", label: "序号", width: 80 },
-        { prop: "proj_name", label: "项目", width: 260 },
-      ];
       // 动态列
       const dynamicColumns = header
         .map((item: any) => ({
@@ -158,9 +156,8 @@ const getTableList = async () => {
         .filter((col: any) =>
           records.some((record: any) => record[col.prop] !== undefined)
         );
-
       // 合并列
-      tableColumns.value = [...fixedColumns, ...dynamicColumns];
+      tableColumns.value = [...tableColumns.value, ...dynamicColumns];
 
       // 原始数据
       allTableList.value = records;

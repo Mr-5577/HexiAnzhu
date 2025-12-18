@@ -38,7 +38,7 @@ export const pendingStatsColumns: any = [
 ];
 
 // 认购未签约明细-表头
-export const pendingDetailColumns:any = [
+export const pendingDetailColumns: any = [
   { type: "index", label: "序号", width: 60 },
   { prop: "projName", label: "项目", width: 240 },
   { prop: "bigProductTypeName", label: "业态" },
@@ -54,43 +54,53 @@ export const pendingDetailColumns:any = [
 
 // 溢价统计-表头
 export const premiumStatsColumns = [
-  { prop: "name", label: "项目", width: 240 },
-  { prop: "name", label: "认购套数" },
-  { prop: "name", label: "成交面积" },
-  { prop: "name", label: "系统底价" },
-  { prop: "name", label: "系统底单价" },
-  { prop: "name", label: "成交总价" },
-  { prop: "name", label: "成交单价" },
-  { prop: "name", label: "破底价溢价金额" },
-  { prop: "name", label: "补贴" },
-  { prop: "name", label: "项目政策" },
-  { prop: "name", label: "实际破底价溢价金额", width: 100 },
-  { prop: "name", label: "破底价溢价比例" },
+  { prop: "projName", label: "项目", width: 240 },
+  { prop: "allNum", label: "认购套数" },
+  { prop: "saleArea", label: "成交面积" },
+  { prop: "floorMoney", label: "系统底价" },
+  { prop: "floorUnitPrice", label: "系统底单价" },
+  { prop: "saleMoney", label: "成交总价" },
+  { prop: "allSalePrice", label: "成交单价" },
+  { prop: "premiumMoney", label: "破底价溢价金额" },
+  { prop: "incMoneyRm", label: "补贴" },
+  { prop: "incMoneyPj", label: "项目政策" },
+  { prop: "aaaaaaa", label: "实际破底价溢价金额", width: 100 }, // 字段调整
+  {
+    prop: "premiumRate",
+    label: "破底价溢价比例",
+    formatter: (row: any, column: any, index: number) => {
+      const premiumRate = row.premiumRate || 0;
+      if (!premiumRate) {
+        return "0%";
+      }
+      return `${(premiumRate * 100).toFixed(4)}%`;
+    },
+  },
 ];
 
 // 溢价明细-表头
-export const premiumDetailColumns = [
-  { prop: "index", label: "序号", width: 60 },
-  { prop: "name", label: "项目", width: 240 },
-  { prop: "name", label: "业态", width: 100 },
-  { prop: "name", label: "房号", width: 100 },
-  { prop: "name", label: "建筑面积", width: 120 },
-  { prop: "name", label: "业主", width: 120 },
-  { prop: "name", label: "联系电话", width: 150 },
-  { prop: "name", label: "认购日期", width: 150 },
-  { prop: "name", label: "底价金额", width: 120 },
-  { prop: "name", label: "认购金额", width: 120 },
-  { prop: "name", label: "实际成交金额", width: 150 },
-  { prop: "name", label: "溢价状态", width: 120 },
-  { prop: "name", label: "溢价金额", width: 120 },
-  { prop: "name", label: "溢价比例", width: 120 },
-  { prop: "name", label: "置业顾问", width: 120 },
-  { prop: "name", label: "更改总价说明", width: 150 },
-  { prop: "name", label: "备注详情", width: 150 },
+export const premiumDetailColumns: any = [
+  { type: "index", label: "序号", width: 60 },
+  { prop: "projName", label: "项目", width: 240 },
+  { prop: "bigProductTypeName", label: "业态", width: 100 },
+  { prop: "roomNum", label: "房号", width: 100 },
+  { prop: "buildArea", label: "建筑面积", width: 120 },
+  { prop: "custName", label: "业主", width: 120 },
+  { prop: "custTel", label: "联系电话", width: 150 },
+  { prop: "saleDate", label: "认购日期", width: 150 },
+  { prop: "floorMoney", label: "底价金额", width: 120 },
+  { prop: "saleMoney", label: "认购金额", width: 120 },
+  { prop: "saleMoneyAll", label: "实际成交金额", width: 150 },
+  { prop: "premiumStatus", label: "溢价状态", width: 120 },
+  { prop: "premiumMoney", label: "溢价金额", width: 120 },
+  { prop: "name", label: "溢价比例", width: 120 }, // 字段调整
+  { prop: "sallerName", label: "置业顾问", width: 120 },
+  { prop: "incMoneyMemo", label: "更改总价说明", width: 150, lineClamp: 3 },
+  { prop: "name", label: "备注详情", width: 150 }, // 字段调整
 ];
 // 应收明细-表头
-export const receivablesDetailColumns = [
-  { prop: "index", label: "序号", width: 60 },
+export const receivablesDetailColumns: any = [
+  { type: "index", label: "序号", width: 60 },
   { prop: "name", label: "项目", width: 240 },
   { prop: "name", label: "业态", width: 100 },
   { prop: "name", label: "房号", width: 100 },
@@ -107,25 +117,24 @@ export const receivablesDetailColumns = [
 ];
 // 退房挞定统计-表头
 export const forfeitureStatslColumns = [
-  { prop: "name", label: "项目" },
-  { prop: "name", label: "退房套数" },
-  { prop: "name", label: "退房金额" },
-  { prop: "name", label: "挞定套数" },
-  { prop: "name", label: "挞定金额" },
+  { prop: "projName", label: "项目" },
+  { prop: "tfNum", label: "退房套数" },
+  { prop: "tfMoney", label: "退房金额" },
+  { prop: "tdNum", label: "挞定套数" },
+  { prop: "tdMoney", label: "挞定金额" },
 ];
 // 退房挞定明细-表头
-export const forfeitureDetailColumns = [
-  { prop: "index", label: "序号", width: 60 },
-  { prop: "name", label: "项目", width: 240 },
-  { prop: "name", label: "业态" },
-  { prop: "name", label: "房号" },
-  { prop: "name", label: "建筑面积" },
-  { prop: "name", label: "业主" },
-  { prop: "name", label: "联系电话" },
-  { prop: "name", label: "认购日期" },
-  { prop: "name", label: "底价金额" },
-  { prop: "name", label: "认购金额" },
-  { prop: "name", label: "类型" },
-  { prop: "name", label: "退房时间" },
-  { prop: "name", label: "挞定时间" },
+export const forfeitureDetailColumns: any = [
+  { type: "index", label: "序号", width: 60 },
+  { prop: "projName", label: "项目", width: 240 },
+  { prop: "bigProductTypeName", label: "业态" },
+  { prop: "roomNum", label: "房号" },
+  { prop: "buildArea", label: "建筑面积" },
+  { prop: "custName", label: "业主" },
+  { prop: "custTel", label: "联系电话" },
+  { prop: "saleDate", label: "认购日期" },
+  { prop: "floorMoney", label: "底价金额" },
+  { prop: "saleMoney", label: "认购金额" },
+  { prop: "checkOutTypeName", label: "类型" },
+  { prop: "checkOutDate", label: "退定时间" },
 ];

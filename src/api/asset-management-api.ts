@@ -67,6 +67,10 @@ export const assetManagementApi = {
   getOrderPathWayProjCount: (data: any) => {
     return http.post("/sale/getOrderPathWayProjCount", data);
   },
+  // 获取来访数量（项目）== 转化率统计
+  getCustomerComeZhl: (data: any) => {
+    return http.post("/sale/getCustomerComeZhl", data);
+  },
   // 销售日报表
   getSaleDailyReport: (data: any) => {
     return http.post("/sale/getSaleDailyReport", data);
@@ -98,5 +102,21 @@ export const assetManagementApi = {
   // 认购未签约明细
   getOrderNotSignInfoRoom: (data: any) => {
     return http.post("/sale/getOrderNotSignInfoRoom", data);
+  },
+  // 溢价统计（项目）
+  getPremiumCountProj: (data: any) => {
+    return http.post("/sale/getPremiumCountProj", data);
+  },
+  // 溢价明细（房间）
+  getPremiumCountRoom: (data: any) => {
+    return http.post("/sale/getPremiumCountRoom", data);
+  },
+  // 退房、挞定统计-项目
+  getCheckOutInfoProj: (data: any) => {
+    return http.post("/sale/getCheckOutInfoProj", data);
+  },
+  // 退房、挞定明细-房间
+  getCheckOutInfoRoom: (data: any) => {
+    return http.post("/sale/getCheckOutInfoRoom", data);
   },
 };

@@ -15,8 +15,8 @@ export const roomLedgerColumns = [
   { prop: "priceOffer", label: "全款单价", width: 90 },
   { prop: "floorMoneyOffer", label: "全款总价", width: 90 },
   { prop: "saleDate", label: "成交时间", width: 120 },
-  { prop: "aa", label: "成交时系统按揭总价", width: 160 }, // 修复
-  { prop: "bb", label: "成交时系统全款总价", width: 160 }, // 修复
+  { prop: "aa", label: "成交时系统按揭总价", width: 160 }, // 字段调整
+  { prop: "bb", label: "成交时系统全款总价", width: 160 }, // 字段调整
   { prop: "orderCreateDate", label: "创建时间", width: 120 },
   { prop: "netDate", label: "签约时间", width: 120 },
   { prop: "saleMoney", label: "成交总价", width: 90 },
@@ -24,7 +24,7 @@ export const roomLedgerColumns = [
   { prop: "custName", label: "客户名", width: 100 },
   { prop: "custTel", label: "联系电话", width: 120 },
   { prop: "custTels", label: "备用联系", width: 120 },
-  { prop: "cc", label: "已付金额", width: 90 }, // 修复
+  { prop: "cc", label: "已付金额", width: 90 }, // 字段调整
   { prop: "loanPayMoney", label: "银行放款", width: 90 },
   { prop: "loanPayDate", label: "放款时间", width: 120 },
   { prop: "refundMoney", label: "退款金额", width: 90 },

@@ -33,7 +33,7 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="签约时间" prop="time">
+      <el-form-item label="时间" prop="time">
         <el-date-picker
           v-model="queryParams.time"
           type="daterange"

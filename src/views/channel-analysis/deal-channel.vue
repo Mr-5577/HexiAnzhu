@@ -40,7 +40,7 @@
       </el-form-item>
     </el-form>
     <base-table
-      :columns="dealChannelColumns"
+      :columns="tableColumns"
       :tableData="paginatedData"
       :loading="tableLoading"
       :total="total"
@@ -54,7 +54,6 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
 import BaseTable from "@/components/base-table.vue";
-import { dealChannelColumns } from "./project-columns";
 import { assetManagementApi } from "@/api/asset-management-api";
 import type { DayTableInterface } from "@/types/channel-analysis-type";
 import { useSalesData } from "@/composables/use-sales";
@@ -92,6 +91,11 @@ const queryParams = ref({
   projIds: [],
   time: [],
 });
+// 固定列
+const tableColumns = ref<any>([
+  { type: "index", label: "序号", width: 80 },
+  { prop: "proj_name", label: "项目", width: 260 },
+]);
 const tableLoading = ref<boolean>(false);
 const exportLoading = ref<boolean>(false);
 const currentPage = ref<number>(1);
@@ -146,10 +150,27 @@ const getTableList = async () => {
     };
     const res = await assetManagementApi.getOrderPathWayProjCount(params);
     if (res.code === 200) {
-      allTableList.value = res.data || [];
-      total.value = res.data?.length;
+      const { header = [], records = [] } = res.data;
+      // 动态列
+      const dynamicColumns = header
+        .map((item: any) => ({
+          prop: String(item.pathWayId),
+          label: item.pathWayName,
+          // width: 120,
+        }))
+        .filter((col: any) =>
+          records.some((record: any) => record[col.prop] !== undefined)
+        );
+
+      // 合并列
+      tableColumns.value = [...tableColumns.value, ...dynamicColumns];
+
+      // 原始数据
+      allTableList.value = records;
+      total.value = records.length;
     }
   } catch (error) {
+    tableLoading.value = false;
   } finally {
     tableLoading.value = false;
   }

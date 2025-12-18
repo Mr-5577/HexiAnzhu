@@ -26,6 +26,23 @@
           value-format="YYYY-MM"
         />
       </el-form-item>
+      <el-form-item label="业态" prop="productTypes">
+        <el-select
+          v-model="queryParams.productTypes"
+          placeholder="业态"
+          clearable
+          multiple
+          collapse-tags
+          style="width: 200px"
+        >
+          <el-option
+            v-for="item in productTypeList"
+            :key="item.id"
+            :label="item.productTypeName"
+            :value="item.id"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">
           搜索
@@ -38,7 +55,7 @@
     </el-form>
     <base-table
       :columns="conversionRateColumns"
-      :tableData="tableData"
+      :tableData="paginatedData"
       :loading="tableLoading"
       :total="total"
       :current-page="currentPage"
@@ -54,6 +71,8 @@ import BaseTable from "@/components/base-table.vue";
 import { conversionRateColumns } from "./project-columns";
 import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
+import { assetManagementApi } from "@/api/asset-management-api";
+import { ConversionRateInterface } from "@/types/channel-analysis-type";
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
   name: "conversion-rate",
@@ -62,10 +81,12 @@ defineOptions({
 // 使用共享的 data hook
 const {
   projectOptions,
+  productTypeList,
   // loading: dataLoading,
   // getLeafNodeIds,
   loadData,
   getAllLeafProjectIds,
+  getAllProductTypeIds,
 } = useSalesData();
 
 const cascaderProps = computed(() => ({
@@ -83,6 +104,7 @@ const cascaderProps = computed(() => ({
 }));
 const queryParams = ref({
   projIds: [],
+  productTypes: [],
   day: dateUtil().format("YYYY-MM"),
 });
 const tableLoading = ref<boolean>(false);
@@ -90,8 +112,8 @@ const exportLoading = ref<boolean>(false);
 const currentPage = ref<number>(1);
 const pageSize = ref<number>(20);
 const total = ref<number>(0);
-const tableData = ref<any[]>([]);
-const allTableList = ref<any[]>([]);
+const tableData = ref<ConversionRateInterface[]>([]);
+const allTableList = ref<ConversionRateInterface[]>([]);
 
 const handlePaginationChange = (params: any) => {
   currentPage.value = params.currentPage;
@@ -101,28 +123,61 @@ const handlePaginationChange = (params: any) => {
 const handleQuery = () => {
   currentPage.value = 1;
   pageSize.value = 20;
+  getTableList();
 };
 const resetQuery = () => {
   queryParams.value = {
     projIds: getAllLeafProjectIds(),
+    productTypes: getAllProductTypeIds(),
     day: dateUtil().format("YYYY-MM"),
   };
   currentPage.value = 1;
   pageSize.value = 20;
+  getTableList();
 };
 // 初始化数据
 const initPageData = async () => {
   await loadData({
     projects: true, // 项目数据
-    productTypes: false, // 不需要业态数据
+    productTypes: true, // 业态数据
     saleStatus: false, // 不需要状态数据
   });
 
   // 设置查询参数默认值为全选
   queryParams.value.projIds = getAllLeafProjectIds();
+  queryParams.value.productTypes = getAllProductTypeIds();
 
   // 获取列表数据
-  // await getTableList();
+  await getTableList();
+};
+
+// 获取列表
+const getTableList = async () => {
+  try {
+    tableLoading.value = true;
+    allTableList.value = [];
+    const { projIds, day, productTypes } = queryParams.value;
+    const lastDay = dateUtil(day).endOf("month").format("YYYY-MM-DD");
+    const params = {
+      projIds,
+      productTypes,
+      type: 1,
+      day: `${day}-01 00:00:00`,
+      beginDate: `${day}-01 00:00:00`,
+      endDate: `${lastDay} 00:00:00`,
+    };
+    const res = await assetManagementApi.getCustomerComeZhl(params);
+    if (res.code === 200) {
+      allTableList.value = res.data || [];
+      total.value = res.data?.length || 0;
+    }
+  } catch (error) {
+    console.error("获取数据失败:", error);
+    allTableList.value = [];
+    total.value = 0;
+  } finally {
+    tableLoading.value = false;
+  }
 };
 
 // 手动分页

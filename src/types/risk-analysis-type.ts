@@ -57,3 +57,61 @@ export interface PendingDetailInterface {
   isSign: number; // 0表示未签约
   signDays: number; // 未签约天数
 }
+// 溢价统计表
+export interface PremiumStatsInterface {
+  companyId: number;
+  projId: number;
+  projName: string;
+  allNum: number;
+  saleArea: number;
+  floorMoney: number;
+  floorUnitPrice: number;
+  saleMoney: number;
+  allSalePrice: number;
+  incMoneyRm: number;
+  incMoneyPj: number;
+  premiumMoney: number;
+  premiumRate: number;
+  yjNum: number;
+  yjMoney: number;
+  pjNum: number;
+  pjMoney: number;
+}
+// 溢价明细表
+export interface PremiumDetailInterface {
+  companyId: number;
+  projId: number;
+  projName: string;
+  allNum: number;
+  saleArea: number;
+  floorMoney: number;
+  floorUnitPrice: number;
+  saleMoney: number;
+  allSalePrice: number;
+  incMoneyRm: number;
+  incMoneyPj: number;
+  premiumMoney: number;
+  premiumRate: number;
+  yjNum: number;
+  yjMoney: number;
+  pjNum: number;
+  pjMoney: number;
+}
+// 退房挞定统计
+export interface ForfeitureStatsInterface {
+  projId: number;
+  projName: string;
+  tdMoney: number;
+  tdNum: number;
+  tfMoney: number;
+  tfNum: number;
+}
+// 退房挞定明细
+export interface ForfeitureDetailInterface {
+  projId: number;
+  projName: string;
+  tdMoney: number;
+  tdNum: number;
+  tfMoney: number;
+  tfNum: number;
+}
