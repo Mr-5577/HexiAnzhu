@@ -133,6 +133,8 @@ const getParams = () => {
   return {
     projIds: projIds,
     day: `${day}-01-01 00:00:00`,
+    beginDate: `${day}-01-01 00:00:00`,
+    endDate: dateUtil(day).endOf("year").format("YYYY-MM-DD") + " 23:59:59",
   };
 };
 // 获取列表

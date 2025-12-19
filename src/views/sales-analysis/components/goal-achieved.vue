@@ -320,8 +320,6 @@ const getData = async () => {
     projIds: props.department,
     type: typeVal.value,
     day: `${props.data} 00:00:00`,
-    beginDate: `${props.data} 00:00:00`,
-    endDate: `${props.data} 23:59:59`,
   };
   try {
     isRequesting = true;

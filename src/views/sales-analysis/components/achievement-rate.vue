@@ -179,8 +179,6 @@ const getData = async () => {
       projIds: props.department,
       type: typeVal.value,
       day: `${seleckData} 00:00:00`,
-      beginDate: `${seleckData} 00:00:00`,
-      endDate: `${seleckData} 23:59:59`,
     };
     const endTime = dateUtil(seleckData)
       .subtract(1, "month")
