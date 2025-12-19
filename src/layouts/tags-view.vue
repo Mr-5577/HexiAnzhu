@@ -11,8 +11,8 @@
         :key="tag.uniqueId || tag.path"
         :to="{ path: tag.path, query: extractQueryParams(tag) }"
         :class="['tags-view-item', { active: isActive(tag) }]"
+        @contextmenu.prevent="showContextMenu($event, tag)"
       >
-        <!-- <span class="tag-title">{{ tag.title }}</span> -->
         <el-tooltip
           :content="tag.title"
           placement="bottom-end"
@@ -29,12 +29,19 @@
           <Close />
         </el-icon>
       </router-link>
+
+      <!-- 右键菜单 -->
+      <div v-show="menuVisible" class="context-menu" :style="menuStyle">
+        <div @click="closeCurrent">关闭当前</div>
+        <div @click="closeOthers">关闭其他</div>
+        <div @click="closeAll">关闭全部</div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, inject, watch } from "vue";
+import { computed, ref, onMounted, onUnmounted, watch, inject } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useTagsStore } from "@/stores/tags-store";
 import type { TagView } from "@/stores/tags-store";
@@ -48,6 +55,63 @@ const router = useRouter();
 const tagsStore = useTagsStore();
 
 const visitedViews = computed(() => tagsStore.visitedViews);
+
+// 右键菜单相关
+const menuVisible = ref(false);
+const menuStyle = ref({ left: "0px", top: "0px" });
+const currentTag = ref<TagView | null>(null);
+
+// 显示右键菜单
+const showContextMenu = (e: MouseEvent, tag: TagView) => {
+  currentTag.value = tag;
+  menuStyle.value = {
+    left: e.pageX + "px",
+    top: e.pageY + "px",
+  };
+  menuVisible.value = true;
+};
+
+// 关闭当前标签
+const closeCurrent = () => {
+  if (currentTag.value && !currentTag.value.affix) {
+    closeSelectedTag(currentTag.value);
+  }
+  menuVisible.value = false;
+};
+
+// 关闭其他标签
+const closeOthers = () => {
+  if (currentTag.value) {
+    tagsStore.delOtherViews(currentTag.value);
+    // 跳转到当前标签
+    router.push({
+      path: currentTag.value.path,
+      query: extractQueryParams(currentTag.value),
+    });
+  }
+  menuVisible.value = false;
+};
+// 关闭全部标签
+const closeAll = () => {
+  tagsStore.delAllViews();
+  // 如果有固定标签，跳转到最后一个固定标签
+  const affixTags = visitedViews.value.filter((tag) => tag.affix);
+  if (affixTags.length > 0) {
+    const lastAffixTag = affixTags[affixTags.length - 1];
+    router.push({
+      path: lastAffixTag.path,
+      query: extractQueryParams(lastAffixTag),
+    });
+  } else {
+    router.push("/");
+  }
+  menuVisible.value = false;
+};
+
+// 点击其他地方关闭菜单
+const closeMenu = () => {
+  menuVisible.value = false;
+};
 
 // 使用store中的方法检查标签是否激活
 const isActive = (tag: TagView) => {
@@ -97,7 +161,6 @@ const closeSelectedTag = (tag: TagView) => {
 };
 
 // 监听路由变化，添加标签
-// 使用 immediate: true 确保初始路由也被添加
 watch(
   () => ({
     path: route.path,
@@ -111,6 +174,15 @@ watch(
   },
   { immediate: true, deep: true }
 );
+
+// 添加事件监听
+onMounted(() => {
+  document.addEventListener("click", closeMenu);
+});
+
+onUnmounted(() => {
+  document.removeEventListener("click", closeMenu);
+});
 </script>
 
 <style lang="scss" scoped>
@@ -129,24 +201,25 @@ watch(
     overflow-x: auto;
     padding: 0 12px;
     box-sizing: border-box;
+    position: relative;
 
     /* 美化滚动条样式 - Webkit浏览器 (Chrome, Safari, Edge) */
     &::-webkit-scrollbar {
-      height: 4px; /* 滚动条高度 */
-      background-color: transparent; /* 滚动条背景透明 */
+      height: 4px;
+      background-color: transparent;
     }
     &::-webkit-scrollbar-track {
-      background-color: transparent; /* 轨道背景透明 */
+      background-color: transparent;
       border-radius: 2px;
-      margin: 0 12px; /* 让滚动条与内容有间距 */
+      margin: 0 12px;
     }
     &::-webkit-scrollbar-thumb {
-      background-color: rgba(0, 0, 0, 0.15); /* 滑块颜色 */
+      background-color: rgba(0, 0, 0, 0.15);
       border-radius: 2px;
-      transition: background-color 0.3s ease; /* 平滑过渡效果 */
+      transition: background-color 0.3s ease;
     }
     &::-webkit-scrollbar-thumb:hover {
-      background-color: rgba(0, 0, 0, 0.2) !important; /* 鼠标悬停时的颜色 */
+      background-color: rgba(0, 0, 0, 0.2) !important;
     }
 
     .tags-view-item {
@@ -209,23 +282,54 @@ watch(
     }
   }
 }
+
+// 右键菜单样式
+.context-menu {
+  position: fixed;
+  background: white;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  z-index: 9999;
+  min-width: 120px;
+
+  div {
+    padding: 8px 16px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #606266;
+    transition: background-color 0.3s;
+
+    &:hover {
+      color: #054168;
+      background-color: #f5f7fa;
+    }
+
+    &:not(:last-child) {
+      border-bottom: 1px solid #ebeef5;
+    }
+  }
+}
+
 .dark-background {
   border: none;
   background: linear-gradient(135deg, #032c46 0%, #05456e 100%);
-  /* 深色背景下的滚动条样式 */
+
   .tags-view-wrapper::-webkit-scrollbar-thumb {
-    background-color: rgba(255, 255, 255, 0.2); /* 深色背景用浅色滑块 */
+    background-color: rgba(255, 255, 255, 0.2);
   }
+
   .tags-view-wrapper::-webkit-scrollbar-thumb:hover {
     background-color: rgba(255, 255, 255, 0.3);
   }
+
   .tags-view-wrapper {
-    /* Firefox深色背景滚动条 */
     scrollbar-color: #095e92 transparent;
   }
 
   .tags-view-item {
     color: #fff !important;
+
     &:hover {
       background: linear-gradient(135deg, #0a649c 0%, #063958 100%) !important;
     }
