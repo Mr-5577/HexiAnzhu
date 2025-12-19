@@ -179,6 +179,8 @@ const getData = async () => {
       projIds: props.department,
       type: typeVal.value,
       day: `${seleckData} 00:00:00`,
+      beginDate: `${seleckData} 00:00:00`,
+      endDate: `${seleckData} 23:59:59`,
     };
     const endTime = dateUtil(seleckData)
       .subtract(1, "month")
@@ -186,12 +188,12 @@ const getData = async () => {
       .format("YYYY-MM-DD");
     const inventoryParams = {
       projIds: props.department,
-      type: 0,
-      day: props.data + " 00:00:00",
+      type: 0, // 0:年  1:月  2:周  3:日
+      day: `${seleckData} 00:00:00`,
       beginDate:
         dateUtil(endTime).subtract(6, "month").format("YYYY-MM-DD") +
         " 00:00:00",
-      endDate: `${endTime} 00:00:00`,
+      endDate: `${endTime} 23:59:59`,
     };
     // 获取库存数据
     const response = await largeScreenApi.getRoomStockInfo(inventoryParams);

@@ -342,24 +342,22 @@ const fetchData = async () => {
 };
 
 const getRequestParams = () => {
-  const time = `${props.data} 00:00:00`;
   const isYear = chartType.value === "year";
-
-  const endTime = dateUtil(time)
+  const endTime = dateUtil(props.data)
     .subtract(isYear ? 1 : 1, isYear ? "month" : "day")
     .endOf(isYear ? "month" : "day")
-    .format("YYYY-MM-DD HH:mm:ss");
+    .format("YYYY-MM-DD");
 
   const startDate = dateUtil(endTime)
     .subtract(isYear ? 1 : 30, isYear ? "year" : "day")
-    .format("YYYY-MM-DD HH:mm:ss");
+    .format("YYYY-MM-DD");
 
   return {
     projIds: props.department,
-    type: 0,
-    day: time,
-    beginDate: startDate,
-    endDate: endTime,
+    type: 0, // 0:年  1:月  2:周  3:日
+    day: `${props.data} 00:00:00`,
+    beginDate: `${startDate} 00:00:00`,
+    endDate: `${endTime} 23:59:59`,
   };
 };
 

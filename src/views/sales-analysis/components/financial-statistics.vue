@@ -32,6 +32,7 @@ import yingshou from "@/assets/imgs/largeScreenImg/yingshou.png";
 import yuqi from "@/assets/imgs/largeScreenImg/yuqi.png";
 import zhouqi from "@/assets/imgs/largeScreenImg/zhouqi.png";
 import ChartBox from "@/components/chart-box.vue";
+import { dateUtil } from "@/utils/date-util";
 import { ref, onMounted, onUnmounted, nextTick, computed } from "vue";
 
 interface Props {
@@ -127,11 +128,14 @@ const formatTwoDecimal = (num: any): string => {
 const getData = async () => {
   // 检查是否已有请求在进行
   if (isRequesting) return;
-
+  const { data, department } = props;
   const params = {
-    projIds: props.department,
+    projIds: department,
     type: 1, // 0:年  1:月  2:周  3:日
-    day: props.data + " 00:00:00",
+    day: `${props.data} 00:00:00`,
+    beginDate:
+      dateUtil(data).startOf("month").format("YYYY-MM-DD") + " 00:00:00",
+    endDate: dateUtil(data).endOf("month").format("YYYY-MM-DD") + " 23:59:59",
   };
   try {
     isRequesting = true;

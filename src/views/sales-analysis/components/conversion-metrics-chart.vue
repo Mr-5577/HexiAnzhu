@@ -19,6 +19,7 @@ import ChartBox from "@/components/chart-box.vue";
 import { ref, onMounted, onUnmounted, nextTick, computed } from "vue";
 import * as echarts from "echarts";
 import { largeScreenApi } from "@/api/large-screen-api";
+import { dateUtil } from "@/utils/date-util";
 
 interface Props {
   data: string;
@@ -255,10 +256,14 @@ const getData = async () => {
   // 检查是否已有请求在进行
   if (isRequesting) return;
 
+  const { data, department } = props;
   const params = {
-    projIds: props.department,
-    type: 1,
-    day: props.data + " 00:00:00",
+    projIds: department,
+    type: 1, // 0:年  1:月  2:周  3:日
+    day: `${data} 00:00:00`,
+    beginDate:
+      dateUtil(data).startOf("month").format("YYYY-MM-DD") + " 00:00:00",
+    endDate: dateUtil(data).endOf("month").format("YYYY-MM-DD") + " 23:59:59",
   };
   try {
     isRequesting = true;

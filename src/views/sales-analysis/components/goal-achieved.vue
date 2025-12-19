@@ -319,7 +319,9 @@ const getData = async () => {
   const params = {
     projIds: props.department,
     type: typeVal.value,
-    day: props.data + " 00:00:00",
+    day: `${props.data} 00:00:00`,
+    beginDate: `${props.data} 00:00:00`,
+    endDate: `${props.data} 23:59:59`,
   };
   try {
     isRequesting = true;

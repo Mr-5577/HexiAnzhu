@@ -73,6 +73,7 @@ import {
 import * as echarts from "echarts";
 import { largeScreenApi } from "@/api/large-screen-api";
 import type { ECharts, EChartsOption } from "echarts";
+import { dateUtil } from "@/utils/date-util";
 
 interface Props {
   data: string;
@@ -323,14 +324,14 @@ const fetchData = async () => {
     });
     return;
   }
-
-  const endDate = `${data} 00:00:00`;
   const params = {
     projIds: department,
-    type: 1,
-    day: endDate,
+    type: 1, // 0:年  1:月  2:周  3:日
+    day: `${data} 00:00:00`,
+    beginDate:
+      dateUtil(data).startOf("month").format("YYYY-MM-DD") + " 00:00:00",
+    endDate: dateUtil(data).endOf("month").format("YYYY-MM-DD") + " 23:59:59",
   };
-
   try {
     isRequesting = true;
     loading.value = true;
@@ -374,7 +375,7 @@ const fetchData = async () => {
 onMounted(() => {
   nextTick(() => {
     initChart();
-  })
+  });
   window.addEventListener("resize", handleResize);
 });
 

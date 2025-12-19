@@ -31,8 +31,7 @@
             show-password
           />
         </el-form-item>
-        <div class="forgot-password">忘记密码</div>
-
+        <!-- <div class="forgot-password">忘记密码</div> -->
         <el-button
           class="process-btn"
           type="primary"

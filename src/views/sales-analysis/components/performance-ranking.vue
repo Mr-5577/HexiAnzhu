@@ -162,11 +162,14 @@ const getTableList = async () => {
   // 检查是否已有请求在进行
   if (isRequesting) return;
 
-  const data = `${props.data} 00:00:00`;
+  const time = dateUtil(props.data).subtract(1, "month").format("YYYY-MM-DD");
   const params = {
     projIds: props.department,
-    type: 1, // 1:月  0:年
-    day: dateUtil(data).subtract(1, "month").format("YYYY-MM-DD HH:mm:ss"),
+    type: 1, // 0:年  1:月  2:周  3:日
+    day: `${time} 00:00:00`,
+    beginDate:
+      dateUtil(time).startOf("month").format("YYYY-MM-DD") + " 00:00:00",
+    endDate: dateUtil(time).endOf("month").format("YYYY-MM-DD") + " 23:59:59",
   };
   try {
     isRequesting = true;
