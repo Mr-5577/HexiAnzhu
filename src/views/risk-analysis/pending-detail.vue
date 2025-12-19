@@ -51,7 +51,12 @@
           搜索
         </el-button>
         <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-        <el-button type="primary" icon="Download" :loading="exportLoading">
+        <el-button
+          type="primary"
+          icon="Download"
+          :loading="exportLoading"
+          @click="handleExport"
+        >
           导出
         </el-button>
       </el-form-item>
@@ -77,6 +82,7 @@ import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
 import { assetManagementApi } from "@/api/asset-management-api";
 import { PendingDetailInterface } from "@/types/risk-analysis-type";
+import { ElMessage } from "element-plus";
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
@@ -156,26 +162,29 @@ const initPageData = async () => {
   // 获取列表数据
   await getTableList();
 };
-
+const getParams = () => {
+  const { projIds, time, productTypes } = queryParams.value;
+  return {
+    projIds,
+    productTypes,
+    type: 1,
+    day: `${time[0]} 00:00:00`,
+    beginDate: `${time[0]} 00:00:00`,
+    endDate: `${time[1]} 23:59:59`,
+  };
+};
 // 获取列表
 const getTableList = async () => {
   try {
     tableLoading.value = true;
     allTableList.value = [];
-    const { projIds, time, productTypes } = queryParams.value;
+    const { time } = queryParams.value;
     if (!time || time.length < 2) {
       allTableList.value = [];
       total.value = 0;
       return;
     }
-    const params = {
-      projIds,
-      productTypes,
-      type: 1,
-      day: `${time[0]} 00:00:00`,
-      beginDate: `${time[0]} 00:00:00`,
-      endDate: `${time[1]} 00:00:00`,
-    };
+    const params = getParams();
     const res = await assetManagementApi.getOrderNotSignInfoRoom(params);
     if (res.code === 200) {
       allTableList.value = res.data || [];
@@ -187,6 +196,26 @@ const getTableList = async () => {
     total.value = 0;
   } finally {
     tableLoading.value = false;
+  }
+};
+// 导出
+const handleExport = async () => {
+  try {
+    exportLoading.value = true;
+    const params = { ...getParams(), isExport: true };
+    const fileBlob = await assetManagementApi.exportOrderNotSignInfoRoom(
+      params
+    );
+    console.log("fileBlob", fileBlob);
+    if (!fileBlob || fileBlob.size === 0) {
+      ElMessage.warning("导出文件为空，请检查数据");
+    } else {
+      ElMessage.success("导出成功！");
+    }
+  } catch (error: any) {
+    ElMessage.error(`导出失败：${error.message || "未知错误"}`);
+  } finally {
+    exportLoading.value = false;
   }
 };
 const initTime = () => {

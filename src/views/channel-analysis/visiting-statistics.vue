@@ -41,7 +41,12 @@
           搜索
         </el-button>
         <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-        <el-button type="primary" icon="Download" :loading="exportLoading">
+        <el-button
+          type="primary"
+          icon="Download"
+          :loading="exportLoading"
+          @click="handleExport"
+        >
           导出
         </el-button>
       </el-form-item>
@@ -73,6 +78,7 @@ import type {
 } from "@/types/channel-analysis-type";
 import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
+import { ElMessage } from "element-plus";
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
@@ -153,7 +159,14 @@ const initPageData = async () => {
   // 获取列表数据
   await getTableList();
 };
-
+const getParams = () => ({
+  projIds: queryParams.value.projIds,
+  day:
+    queryParams.value.type === "month"
+      ? `${queryParams.value.day}-01 00:00:00`
+      : `${queryParams.value.day} 00:00:00`,
+  current: currentPage.value,
+});
 // 获取列表
 const getTableList = async () => {
   if (isRequesting) return;
@@ -161,14 +174,7 @@ const getTableList = async () => {
     isRequesting = true;
     tableLoading.value = true;
     allTableList.value = [];
-    const params = {
-      projIds: queryParams.value.projIds,
-      day:
-        queryParams.value.type === "month"
-          ? `${queryParams.value.day}-01 00:00:00`
-          : `${queryParams.value.day} 00:00:00`,
-      current: currentPage.value,
-    };
+    const params = getParams();
     const interfaceApi =
       queryParams.value.type === "month"
         ? assetManagementApi.getCustomerComeYearCount
@@ -182,6 +188,27 @@ const getTableList = async () => {
   } finally {
     isRequesting = false;
     tableLoading.value = false;
+  }
+};
+// 导出
+const handleExport = async () => {
+  try {
+    exportLoading.value = true;
+    const params = { ...getParams(), isExport: true };
+    const interfaceExportApi =
+      queryParams.value.type === "month"
+        ? assetManagementApi.exportCustomerComeYearCount
+        : assetManagementApi.exportCustomerComeMonthCount;
+    const fileBlob = await interfaceExportApi(params);
+    if (!fileBlob || fileBlob.size === 0) {
+      ElMessage.warning("导出文件为空，请检查数据");
+    } else {
+      ElMessage.success("导出成功！");
+    }
+  } catch (error: any) {
+    ElMessage.error(`导出失败：${error.message || "未知错误"}`);
+  } finally {
+    exportLoading.value = false;
   }
 };
 // 手动分页

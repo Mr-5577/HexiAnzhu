@@ -26,6 +26,18 @@ export const largeScreenApi = {
   getSaleProjSalerInfo: (data: SaleParamsInterface) => {
     return http.post("/sale/getSaleProjSalerInfo", data);
   },
+  // 导出-置业顾问排名
+  exportSaleProjSalerInfo: (
+    data: any,
+    filename: string = "置业顾问排名.xlsx"
+  ) => {
+    return http.exportFile(
+      "/sale/getSaleProjSalerInfo",
+      data,
+      filename || "数据列表.xlsx",
+      "post"
+    );
+  },
   // 获取销售业绩数据（近一年）
   getSaleYearInfo: (data: SaleParamsInterface) => {
     return http.post("/sale/getSaleYearInfo", data);

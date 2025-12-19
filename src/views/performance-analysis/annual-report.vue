@@ -31,7 +31,12 @@
           搜索
         </el-button>
         <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-        <el-button type="primary" icon="Download" :loading="exportLoading">
+        <el-button
+          type="primary"
+          icon="Download"
+          :loading="exportLoading"
+          @click="handleExport"
+        >
           导出
         </el-button>
       </el-form-item>
@@ -56,6 +61,7 @@ import { annualReportColumns } from "./project-columns";
 import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
 import { assetManagementApi } from "@/api/asset-management-api";
+import { ElMessage } from "element-plus";
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
@@ -112,7 +118,7 @@ const resetQuery = () => {
 const initPageData = async () => {
   await loadData({
     projects: true, // 项目数据
-    productTypes: true, // 业态数据
+    productTypes: false, // 业态数据
     saleStatus: false, // 不需要状态数据
   });
 
@@ -122,16 +128,19 @@ const initPageData = async () => {
   // 获取列表数据
   await getTableList();
 };
+const getParams = () => {
+  const { projIds, day } = queryParams.value;
+  return {
+    projIds: projIds,
+    day: `${day}-01-01 00:00:00`,
+  };
+};
 // 获取列表
 const getTableList = async () => {
   try {
     tableLoading.value = true;
     allTableList.value = [];
-    const { projIds, day } = queryParams.value;
-    const params = {
-      projIds: projIds,
-      day: `${day}-01-01 00:00:00`,
-    };
+    const params = getParams();
     const res = await assetManagementApi.getSaleYearReport(params);
     if (res.code === 200) {
       allTableList.value = res.data || [];
@@ -140,6 +149,23 @@ const getTableList = async () => {
   } catch (error) {
   } finally {
     tableLoading.value = false;
+  }
+};
+// 导出
+const handleExport = async () => {
+  try {
+    exportLoading.value = true;
+    const params = { ...getParams(), isExport: true };
+    const fileBlob = await assetManagementApi.exportSaleYearReport(params);
+    if (!fileBlob || fileBlob.size === 0) {
+      ElMessage.warning("导出文件为空，请检查数据");
+    } else {
+      ElMessage.success("导出成功！");
+    }
+  } catch (error: any) {
+    ElMessage.error(`导出失败：${error.message || "未知错误"}`);
+  } finally {
+    exportLoading.value = false;
   }
 };
 const initTime = () => {

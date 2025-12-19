@@ -83,6 +83,7 @@ import { roomLedgerColumns } from "./project-columns";
 import { assetManagementApi } from "@/api/asset-management-api";
 import type { RoomTableInterface } from "@/types/asset-management-type";
 import { useSalesData } from "@/composables/use-sales";
+import { ElMessage } from "element-plus";
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
@@ -165,21 +166,20 @@ const initPageData = async () => {
   // 获取列表数据
   await getTableList();
 };
+const getParams = () => ({
+  ...queryParams.value,
+  current: currentPage.value,
+});
 // 获取列表
 const getTableList = async () => {
   try {
     tableLoading.value = true;
-    allTableList.value = [];
-    const params = {
-      ...queryParams.value,
-      current: currentPage.value,
-    };
+    const params = getParams();
     const res = await assetManagementApi.getRoomAccountBook(params);
-    console.log("res", res);
     if (res.code === 200) {
       allTableList.value = res.data?.records || [];
       currentPage.value = res.data.current;
-      total.value = res.data?.total;
+      total.value = res.data?.total || 0;
     }
   } catch (error) {
   } finally {
@@ -187,7 +187,22 @@ const getTableList = async () => {
   }
 };
 // 导出
-const handleExport = () => {};
+const handleExport = async () => {
+  try {
+    exportLoading.value = true;
+    const params = { ...getParams(), isExport: true };
+    const fileBlob = await assetManagementApi.exportRoomAccountBook(params);
+    if (!fileBlob || fileBlob.size === 0) {
+      ElMessage.warning("导出文件为空，请检查数据");
+    } else {
+      ElMessage.success("导出成功！");
+    }
+  } catch (error: any) {
+    ElMessage.error(`导出失败：${error.message || "未知错误"}`);
+  } finally {
+    exportLoading.value = false;
+  }
+};
 // 手动分页
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value;

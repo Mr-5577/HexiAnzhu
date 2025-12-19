@@ -48,7 +48,12 @@
           搜索
         </el-button>
         <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-        <el-button type="primary" icon="Download" :loading="exportLoading">
+        <el-button
+          type="primary"
+          icon="Download"
+          :loading="exportLoading"
+          @click="handleExport"
+        >
           导出
         </el-button>
       </el-form-item>
@@ -73,6 +78,7 @@ import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
 import { assetManagementApi } from "@/api/asset-management-api";
 import { ConversionRateInterface } from "@/types/channel-analysis-type";
+import { ElMessage } from "element-plus";
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
   name: "conversion-rate",
@@ -150,22 +156,24 @@ const initPageData = async () => {
   // 获取列表数据
   await getTableList();
 };
-
+const getParams = () => {
+  const { projIds, day, productTypes } = queryParams.value;
+  const lastDay = dateUtil(day).endOf("month").format("YYYY-MM-DD");
+  return {
+    projIds,
+    productTypes,
+    type: 1,
+    day: `${day}-01 00:00:00`,
+    beginDate: `${day}-01 00:00:00`,
+    endDate: `${lastDay} 23:59:59`,
+  };
+};
 // 获取列表
 const getTableList = async () => {
   try {
     tableLoading.value = true;
     allTableList.value = [];
-    const { projIds, day, productTypes } = queryParams.value;
-    const lastDay = dateUtil(day).endOf("month").format("YYYY-MM-DD");
-    const params = {
-      projIds,
-      productTypes,
-      type: 1,
-      day: `${day}-01 00:00:00`,
-      beginDate: `${day}-01 00:00:00`,
-      endDate: `${lastDay} 00:00:00`,
-    };
+    const params = getParams();
     const res = await assetManagementApi.getCustomerComeZhl(params);
     if (res.code === 200) {
       allTableList.value = res.data || [];
@@ -179,7 +187,23 @@ const getTableList = async () => {
     tableLoading.value = false;
   }
 };
-
+// 导出
+const handleExport = async () => {
+  try {
+    exportLoading.value = true;
+    const params = { ...getParams(), isExport: true };
+    const fileBlob = await assetManagementApi.exportCustomerComeZhl(params);
+    if (!fileBlob || fileBlob.size === 0) {
+      ElMessage.warning("导出文件为空，请检查数据");
+    } else {
+      ElMessage.success("导出成功！");
+    }
+  } catch (error: any) {
+    ElMessage.error(`导出失败：${error.message || "未知错误"}`);
+  } finally {
+    exportLoading.value = false;
+  }
+};
 // 手动分页
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value;

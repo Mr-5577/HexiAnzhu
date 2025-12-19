@@ -31,7 +31,12 @@
           搜索
         </el-button>
         <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-        <el-button type="primary" icon="Download" :loading="exportLoading">
+        <el-button
+          type="primary"
+          icon="Download"
+          :loading="exportLoading"
+          @click="handleExport"
+        >
           导出
         </el-button>
       </el-form-item>
@@ -50,12 +55,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import BaseTable from "@/components/base-table.vue";
 import { dailylReportColumns } from "./project-columns";
 import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
 import { assetManagementApi } from "@/api/asset-management-api";
+import { ElMessage } from "element-plus";
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
@@ -122,16 +128,21 @@ const initPageData = async () => {
   // 获取列表数据
   await getTableList();
 };
+const getParams = () => {
+  const { projIds, day } = queryParams.value;
+  return {
+    projIds: projIds,
+    day: `${day} 00:00:00`,
+    beginDate: `${day} 00:00:00`,
+    endDate: `${day} 23:59:59`,
+  };
+};
 // 获取列表
 const getTableList = async () => {
   try {
     tableLoading.value = true;
     allTableList.value = [];
-    const { projIds, day } = queryParams.value;
-    const params = {
-      projIds: projIds,
-      day: `${day} 00:00:00`,
-    };
+    const params = getParams();
     const res = await assetManagementApi.getSaleDailyReport(params);
     if (res.code === 200) {
       allTableList.value = res.data || [];
@@ -142,6 +153,24 @@ const getTableList = async () => {
     tableLoading.value = false;
   }
 };
+// 导出
+const handleExport = async () => {
+  try {
+    exportLoading.value = true;
+    const params = { ...getParams(), isExport: true };
+    const fileBlob = await assetManagementApi.exportSaleDailyReport(params);
+    if (!fileBlob || fileBlob.size === 0) {
+      ElMessage.warning("导出文件为空，请检查数据");
+    } else {
+      ElMessage.success("导出成功！");
+    }
+  } catch (error: any) {
+    ElMessage.error(`导出失败：${error.message || "未知错误"}`);
+  } finally {
+    exportLoading.value = false;
+  }
+};
+
 const initTime = () => {
   queryParams.value.day = dateUtil().format("YYYY-MM-DD");
 };

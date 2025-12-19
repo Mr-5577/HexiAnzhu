@@ -130,26 +130,6 @@ const resetQuery = () => {
   pageSize.value = 20;
   getTableList();
 };
-
-const handleExport = async () => {
-  try {
-    exportLoading.value = true;
-    const fileBlob = await assetManagementApi.getRoomStockGroupProjExcel(
-      queryParams.value,
-      "库存统计表.xlsx"
-    );
-    if (!fileBlob || fileBlob.size === 0) {
-      ElMessage.warning("导出文件为空，请检查数据");
-    } else {
-      ElMessage.success("导出成功！");
-    }
-  } catch (error: any) {
-    ElMessage.error(`导出失败：${error.message || "未知错误"}`);
-  } finally {
-    exportLoading.value = false;
-  }
-};
-
 // 初始化数据
 const initPageData = async () => {
   await loadData({
@@ -167,27 +147,43 @@ const initPageData = async () => {
   // 获取列表数据
   await getTableList();
 };
-
+const getParams = () => ({
+  ...queryParams.value,
+  current: currentPage.value,
+});
 // 获取列表
 const getTableList = async () => {
   try {
     tableLoading.value = true;
     allTableList.value = [];
-    const params = {
-      ...queryParams.value,
-      current: currentPage.value,
-    };
+    const params = getParams();
     const res = await assetManagementApi.getRoomStockGroupProj(params);
     if (res.code === 200) {
       allTableList.value = res.data || [];
-      total.value = res.data?.length;
+      total.value = res.data?.length || 0;
     }
   } catch (error) {
   } finally {
     tableLoading.value = false;
   }
 };
-
+// 导出
+const handleExport = async () => {
+  try {
+    exportLoading.value = true;
+    const params = { ...getParams(), isExport: true };
+    const fileBlob = await assetManagementApi.exportRoomStockGroupProj(params);
+    if (!fileBlob || fileBlob.size === 0) {
+      ElMessage.warning("导出文件为空，请检查数据");
+    } else {
+      ElMessage.success("导出成功！");
+    }
+  } catch (error: any) {
+    ElMessage.error(`导出失败：${error.message || "未知错误"}`);
+  } finally {
+    exportLoading.value = false;
+  }
+};
 // 手动分页
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value;
