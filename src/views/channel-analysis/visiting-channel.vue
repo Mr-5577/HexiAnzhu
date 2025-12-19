@@ -155,16 +155,32 @@ const getTableList = async () => {
     const res = await assetManagementApi.getComePathWayProjCount(params);
     if (res.code === 200) {
       const { header = [], records = [] } = res.data;
-      // 动态列
+      // 动态列 - 多级表头形式
       const dynamicColumns = header
+        .filter((item: any) => {
+          // 先过滤掉不匹配的字段值
+          const key = String(item.pathWayId);
+          return records.some((record: any) => record[key] !== undefined);
+        })
         .map((item: any) => ({
-          prop: String(item.pathWayId),
-          label: item.pathWayName,
-          // width: 120,
-        }))
-        .filter((col: any) =>
-          records.some((record: any) => record[col.prop] !== undefined)
-        );
+          label: item.pathWayName, // 一级表头名称
+          align: "center",
+          children: [
+            {
+              prop: String(item.pathWayId),
+              label: "套数",
+              align: "center",
+              width: 90,
+            },
+            {
+              prop: `${item.pathWayId}_ratio`,
+              label: "占比",
+              align: "center",
+              width: 90,
+              // formatter: (row: any) => row[`${item.pathWayId}_ratio`] || "0%",
+            },
+          ],
+        }));
       // 合并列
       tableColumns.value = [...tableColumns.value, ...dynamicColumns];
 

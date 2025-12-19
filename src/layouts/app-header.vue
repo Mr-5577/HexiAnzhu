@@ -119,14 +119,17 @@ const logout = () => {
         try {
           const res = await userApi.logout();
           if (res.code === 200) {
+            ElMessage.success("退出成功，即将跳转到登录页！");
             localStorage.clear();
             sessionStorage.clear();
             // 关闭弹窗
             done();
-            // 跳转到登录页并刷新
-            router.push("/login").then(() => {
-              window.location.reload();
-            });
+            setTimeout(() => {
+              // 跳转到登录页并刷新
+              router.push("/login").then(() => {
+                window.location.reload();
+              });
+            }, 1500);
           } else {
             ElMessage.error("退出失败");
           }

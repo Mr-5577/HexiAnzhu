@@ -45,8 +45,8 @@ const staticRoutes: Array<RouteRecordRaw> = [
 ];
 
 const router = createRouter({
-  // history: createWebHistory(import.meta.env.BASE_URL), // history模式
-  history: createWebHashHistory(import.meta.env.BASE_URL), // hash模式
+  history: createWebHistory(import.meta.env.BASE_URL), // history模式
+  // history: createWebHashHistory(import.meta.env.BASE_URL), // hash模式
   routes: staticRoutes,
 });
 
