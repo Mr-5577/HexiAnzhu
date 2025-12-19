@@ -57,8 +57,8 @@ const overallChartInstance = ref<echarts.ECharts | null>(null);
 
 const conversionRates = computed(() => {
   const total = conversionData.value.dylfComeNum;
-  const monthly = conversionData.value.dyrgNum;
-  const overall = conversionData.value.dylfrgNum;
+  const monthly = conversionData.value.dylfrgNum;
+  const overall = conversionData.value.dyrgNum;
 
   // 计算转化率的通用函数
   const calculateRate = (numerator: number): number => {
