@@ -44,7 +44,7 @@ export default defineConfig(({ mode }) => {
         "@assets": resolve(__dirname, "src/assets"),
       },
     },
-    base: "./",
+    base: "/",
     server: {
       host: true,
       port: 3000,
