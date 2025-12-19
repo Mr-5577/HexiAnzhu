@@ -114,7 +114,11 @@ const initMonthChart = () => {
     console.error("当月图表容器未找到");
     return;
   }
-
+  // 如果有实例，先销毁
+  if (monthChartInstance.value) {
+    monthChartInstance.value.dispose();
+    monthChartInstance.value = null;
+  }
   try {
     monthChartInstance.value = echarts.init(monthChartRef.value, null, {
       renderer: "canvas",
@@ -131,7 +135,11 @@ const initOverallChart = () => {
     console.error("总体图表容器未找到");
     return;
   }
-
+  // 如果有实例，先销毁
+  if (overallChartInstance.value) {
+    overallChartInstance.value.dispose();
+    overallChartInstance.value = null;
+  }
   try {
     overallChartInstance.value = echarts.init(overallChartRef.value, null, {
       renderer: "canvas",
@@ -295,8 +303,15 @@ onMounted(() => {
 // 清理 - 同时清理两个图表
 onUnmounted(() => {
   window.removeEventListener("resize", handleResize);
-  monthChartInstance.value?.dispose();
-  overallChartInstance.value?.dispose();
+  // 安全销毁图表实例
+  if (monthChartInstance.value) {
+    monthChartInstance.value.dispose();
+    monthChartInstance.value = null;
+  }
+  if (overallChartInstance.value) {
+    overallChartInstance.value.dispose();
+    overallChartInstance.value = null;
+  }
 });
 </script>
 
