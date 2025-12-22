@@ -17,7 +17,6 @@
             </el-button>
           </div>
           <div class="performance-ranking-table-list">
-            <!-- 关键：禁用autoHeight，设置固定高度 -->
             <base-table
               :key="chartType"
               :pagination="false"
@@ -93,18 +92,25 @@ const tableCache = ref({
 // 计算表格高度
 const tableHeight = ref("100%");
 
-// 监听容器大小变化
+// 添加防抖函数（简单实现）
+let resizeTimer: NodeJS.Timeout | null = null;
+
 const updateTableHeight = () => {
-  nextTick(() => {
-    const tableContainer = document.querySelector(
-      ".performance-ranking-table-list"
-    );
-    if (tableContainer) {
-      const containerHeight = tableContainer.clientHeight;
-      // 减去可能的边距
-      tableHeight.value = `${containerHeight - 2}px`;
-    }
-  });
+  if (resizeTimer) clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    nextTick(() => {
+      const tableContainer = document.querySelector(
+        ".performance-ranking-table-list"
+      );
+
+      if (tableContainer) {
+        // 直接使用容器高度，避免复杂计算
+        const containerHeight = tableContainer.clientHeight;
+        // 简单减去固定的控制栏高度（约40px）
+        tableHeight.value = `${Math.max(containerHeight - 4, 100)}px`;
+      }
+    });
+  }, 100); // 100ms 防抖延迟
 };
 
 const tableColumn = computed(() => {
@@ -194,15 +200,27 @@ watch(
   },
   { immediate: true }
 );
+let resizeObserver: ResizeObserver | null = null;
 
 onMounted(() => {
   updateTableHeight();
-  // 监听窗口大小变化
-  window.addEventListener("resize", updateTableHeight);
+  // 监听表格容器大小变化
+  const tableContainer = document.querySelector(
+    ".performance-ranking-table-list"
+  );
+  if (tableContainer) {
+    resizeObserver = new ResizeObserver(updateTableHeight);
+    resizeObserver.observe(tableContainer);
+  }
 });
 
 onUnmounted(() => {
-  window.removeEventListener("resize", updateTableHeight);
+  if (resizeObserver) {
+    resizeObserver.disconnect();
+  }
+  if (resizeTimer) {
+    clearTimeout(resizeTimer);
+  }
 });
 </script>
 <style lang="scss" scoped>
@@ -215,7 +233,7 @@ onUnmounted(() => {
     display: flex;
     flex-direction: column;
     .chart-controls {
-      width: 100%;
+      height: 32px; // 固定高度
       display: flex;
       justify-content: flex-end;
       flex-shrink: 0;
@@ -225,6 +243,7 @@ onUnmounted(() => {
         transition: all 0.3s;
         font-weight: 400;
         padding: 0 !important;
+        border: none !important;
         &:hover {
           background: none;
           color: #7dbbfa;
@@ -243,6 +262,7 @@ onUnmounted(() => {
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      min-height: 0; // 关键：允许容器收缩
       // 关键：确保表格容器背景透明
       :deep(.pro-table-container) {
         background-color: transparent;
