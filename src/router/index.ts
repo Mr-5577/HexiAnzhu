@@ -121,7 +121,7 @@ router.beforeEach(async (to, from, next) => {
       cleanupDynamicRoutes();
       // 存储到store
       menuStore.setMenuData(exactData);
-      menuStore.setpermissionData(buttonPermission);
+      menuStore.setPermissionData(buttonPermission);
 
       // 添加动态路由
       await addDynamicRoutes(router, exactData);

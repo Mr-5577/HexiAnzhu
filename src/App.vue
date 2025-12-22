@@ -14,7 +14,7 @@ console.log(getEnvironmentName(), import.meta.env.VITE_APP_TITLE);
 #app {
   width: 100%;
   min-height: 100vh;
-  font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Hiragino Sans GB",
-    Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
 }
 </style>
