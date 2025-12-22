@@ -80,8 +80,8 @@ export const premiumStatsColumns = [
 
 // 溢价明细-表头
 export const premiumDetailColumns: any = [
-  { type: "index", label: "序号", width: 60 },
-  { prop: "projName", label: "项目", width: 240 },
+  { type: "index", label: "序号", width: 60, fixed: "left" },
+  { prop: "projName", label: "项目", width: 240, fixed: "left" },
   { prop: "bigProductTypeName", label: "业态", width: 100 },
   { prop: "roomNum", label: "房号", width: 100 },
   { prop: "buildArea", label: "建筑面积", width: 120 },

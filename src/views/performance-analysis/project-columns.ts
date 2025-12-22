@@ -1,7 +1,7 @@
 // 销售年报表-表头
 export const annualReportColumns: any = [
-  { type: "index", label: "序号", width: 60 },
-  { prop: "projName", label: "项目", width: 220 },
+  { type: "index", label: "序号", width: 60, fixed: "left" },
+  { prop: "projName", label: "项目", width: 220, fixed: "left" },
   { prop: "productTypeName", label: "考核类型", width: 150 },
   {
     prop: "name",
@@ -121,8 +121,8 @@ export const annualReportColumns: any = [
 
 // 销售日报表-表头
 export const dailylReportColumns: any = [
-  { type: "index", label: "序号", width: 60 },
-  { prop: "projName", label: "项目", width: 220 },
+  { type: "index", label: "序号", width: 60, fixed: "left" },
+  { prop: "projName", label: "项目", width: 220, fixed: "left" },
   { prop: "productTypeName", label: "考核类型", width: 150 },
   {
     prop: "name",

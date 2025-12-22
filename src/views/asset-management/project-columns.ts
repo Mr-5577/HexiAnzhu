@@ -1,6 +1,6 @@
 // 房间台账表-表头
 export const roomLedgerColumns = [
-  { prop: "projName", label: "项目", width: 240 },
+  { prop: "projName", label: "项目", width: 240, fixed: "left" },
   { prop: "roomNum", label: "房号", width: 120 },
   { prop: "buildBatch", label: "楼栋分期", width: 90 },
   { prop: "forecastArea", label: "预测面积", width: 100 },

@@ -65,8 +65,8 @@ export const visitingChannelColumns: any = [
 ];
 // 成交渠道分析-表头
 export const dealChannelColumns: any = [
-  { type: "index", label: "序号", width: 80 },
-  { prop: "projName", label: "项目", width: 240 },
+  { type: "index", label: "序号", width: 80, fixed: "left" },
+  { prop: "projName", label: "项目", width: 240, fixed: "left" },
   { prop: "name", label: "成交合计", width: 100 },
   {
     prop: "name",
@@ -150,7 +150,7 @@ export const dealChannelColumns: any = [
   },
 ];
 // 转化率统计-表头
-export const conversionRateColumns:any = [
+export const conversionRateColumns: any = [
   { type: "index", label: "序号", width: 80 },
   { prop: "projName", label: "项目名称" },
   { prop: "dylfComeNum", label: "当月来访" },

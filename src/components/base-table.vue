@@ -233,21 +233,31 @@ const TableColumn = {
     const renderColumn = (column: TableColumnItem): VNode => {
       // 选择列
       if (column.type === "selection") {
-        return h(resolveComponent("el-table-column"), {
+        const selectionColumnProps: any = {
           type: "selection",
           width: "55",
           align: column.align || "center",
-        });
+        };
+        // 添加 fixed 属性支持
+        if (column.fixed) {
+          selectionColumnProps.fixed = column.fixed;
+        }
+        return h(resolveComponent("el-table-column"), selectionColumnProps);
       }
 
       // 序号列
       if (column.type === "index") {
-        return h(resolveComponent("el-table-column"), {
+        const indexColumnProps: any = {
           type: "index",
           align: column.align || "center",
           width: column.width || "80",
           label: column.label || "序号",
-        });
+        };
+        // 添加 fixed 属性支持
+        if (column.fixed) {
+          indexColumnProps.fixed = column.fixed;
+        }
+        return h(resolveComponent("el-table-column"), indexColumnProps);
       }
 
       // 可展开列
