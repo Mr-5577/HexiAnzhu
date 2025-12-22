@@ -112,5 +112,6 @@ export const useMenuStore = defineStore("menu-store", () => {
     hasPermission,
     hasAnyPermission,
     hasAllPermissions,
+    hasExactPermission,
   };
 });
