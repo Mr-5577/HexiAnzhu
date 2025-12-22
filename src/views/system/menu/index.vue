@@ -95,6 +95,7 @@
             type="primary"
             size="small"
             @click="handleEditMenu(scope.row)"
+            v-permission="'menuList:edit'"
           >
             修改
           </el-button>
@@ -107,6 +108,7 @@
             type="danger"
             size="small"
             @click="handleDelete(scope.row)"
+            v-permission="['menuList:edit22','menuList:edit']"
           >
             删除
           </el-button>

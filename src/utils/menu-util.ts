@@ -228,3 +228,21 @@ export function transformMenuDataExact(originalData: any) {
 
   return result;
 }
+
+// 从路由菜单数据中提取按钮权限
+export function extractButtonPermissions(menuData: any[]): string[] {
+  const permissions: string[] = [];
+  function traverse(menus: any[]) {
+    menus.forEach((menu) => {
+      if (menu.menuType === 2) {
+        // 按钮类型
+        permissions.push(menu.name);
+      }
+      if (menu.children && menu.children.length > 0) {
+        traverse(menu.children);
+      }
+    });
+  }
+  traverse(menuData);
+  return permissions;
+}
