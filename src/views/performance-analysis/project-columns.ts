@@ -76,7 +76,7 @@ export const annualReportColumns: any = [
           if (!orderRate) {
             return "0%";
           }
-          return `${(orderRate * 100).toFixed(5)}%`;
+          return `${(orderRate * 100).toFixed(2)}%`;
         },
       },
       {
@@ -88,7 +88,7 @@ export const annualReportColumns: any = [
           if (!signRate) {
             return "0%";
           }
-          return `${(signRate * 100).toFixed(5)}%`;
+          return `${(signRate * 100).toFixed(2)}%`;
         },
       },
       {
@@ -100,7 +100,7 @@ export const annualReportColumns: any = [
           if (!collectRate) {
             return "0%";
           }
-          return `${(collectRate * 100).toFixed(5)}%`;
+          return `${(collectRate * 100).toFixed(2)}%`;
         },
       },
       {
@@ -112,7 +112,7 @@ export const annualReportColumns: any = [
           if (!totalRate) {
             return "0%";
           }
-          return `${(totalRate * 100).toFixed(5)}%`;
+          return `${(totalRate * 100).toFixed(2)}%`;
         },
       },
     ],
@@ -208,7 +208,7 @@ export const dailylReportColumns: any = [
           if (!orderRate) {
             return "0%";
           }
-          return `${(orderRate * 100).toFixed(5)}%`;
+          return `${(orderRate * 100).toFixed(2)}%`;
         },
       },
       {
@@ -220,7 +220,7 @@ export const dailylReportColumns: any = [
           if (!signRate) {
             return "0%";
           }
-          return `${(signRate * 100).toFixed(5)}%`;
+          return `${(signRate * 100).toFixed(2)}%`;
         },
       },
       {
@@ -232,7 +232,7 @@ export const dailylReportColumns: any = [
           if (!collectRate) {
             return "0%";
           }
-          return `${(collectRate * 100).toFixed(5)}%`;
+          return `${(collectRate * 100).toFixed(2)}%`;
         },
       },
       {
@@ -244,7 +244,7 @@ export const dailylReportColumns: any = [
           if (!totalRate) {
             return "0%";
           }
-          return `${(totalRate * 100).toFixed(5)}%`;
+          return `${(totalRate * 100).toFixed(2)}%`;
         },
       },
     ],
@@ -329,7 +329,7 @@ export const agentRankingColumns = [
       // 计算溢价比例（溢价金额 / 底价 * 100%）
       const premiumRate = (premiumMoney / floorMoney) * 100;
       // 保留两位小数并添加百分号
-      return `${premiumRate.toFixed(4)}%`;
+      return `${premiumRate.toFixed(2)}%`;
     },
   },
 ];

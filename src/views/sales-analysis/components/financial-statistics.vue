@@ -66,6 +66,8 @@ const dataObj = ref({
   noSignMoney: 0, // 认购未签金额
   collectMoney: 0, // 累计应收金额
   collectNum: 0, // 累计应收套数
+  outstdMoney: 0, // 逾期未回款
+  outstdNum: 0, // 逾期未回套数
 });
 
 const statisticsItems = computed(() => [
@@ -105,7 +107,9 @@ const statisticsItems = computed(() => [
   {
     img: yuqi,
     text: "逾期未回款",
-    value: "2000万(55套)",
+    value: `${formatTwoDecimal(dataObj.value.outstdMoney)}万(${
+      dataObj.value.outstdNum
+    }套)`,
   },
 ]);
 

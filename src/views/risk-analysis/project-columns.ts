@@ -73,7 +73,7 @@ export const premiumStatsColumns = [
       if (!premiumRate) {
         return "0%";
       }
-      return `${(premiumRate * 100).toFixed(4)}%`;
+      return `${(premiumRate * 100).toFixed(2)}%`;
     },
   },
 ];
@@ -101,19 +101,19 @@ export const premiumDetailColumns: any = [
 // 应收明细-表头
 export const receivablesDetailColumns: any = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "name", label: "项目", width: 240 },
-  { prop: "name", label: "业态", width: 100 },
-  { prop: "name", label: "房号", width: 100 },
-  { prop: "name", label: "建筑面积", width: 120 },
-  { prop: "name", label: "业主" },
-  { prop: "name", label: "联系电话" },
-  { prop: "name", label: "认购日期" },
-  { prop: "name", label: "认购金额" },
-  { prop: "name", label: "置业顾问" },
-  { prop: "name", label: "应收金额" },
-  { prop: "name", label: "最近应收日期" },
-  { prop: "name", label: "逾期未收金额" },
-  { prop: "name", label: "最大逾期天数" },
+  { prop: "projName", label: "项目", width: 240 },
+  { prop: "bigProductTypeName", label: "业态", width: 100 },
+  { prop: "roomNum", label: "房号", width: 100 },
+  { prop: "buildArea", label: "建筑面积", width: 120 },
+  { prop: "custName", label: "业主" },
+  { prop: "custTel", label: "联系电话" },
+  { prop: "saleDate", label: "认购日期" },
+  { prop: "saleMoney", label: "认购金额" },
+  { prop: "salerName", label: "置业顾问" },
+  { prop: "recMoney", label: "应收金额" },
+  { prop: "minRecDate", label: "最近应收日期" },
+  { prop: "yqMoney", label: "逾期未收金额" },
+  { prop: "maxYqDays", label: "最大逾期天数" },
 ];
 // 退房挞定统计-表头
 export const forfeitureStatslColumns = [

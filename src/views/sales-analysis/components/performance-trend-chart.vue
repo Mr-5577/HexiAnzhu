@@ -425,10 +425,9 @@ onUnmounted(() => {
 
       .chart-btn {
         color: #fff;
-        padding: 0 8px;
+        padding: 0 8px !important;
         font-weight: 400;
         transition: color 0.3s;
-
         &:hover {
           color: #7dbbfa;
           background: none;

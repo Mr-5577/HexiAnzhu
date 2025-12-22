@@ -62,8 +62,8 @@
         >
           <el-radio-button label="年" :value="0" />
           <el-radio-button label="月" :value="1" />
-          <el-radio-button label="周" :value="2" />
-          <el-radio-button label="日" :value="3" />
+          <!-- <el-radio-button label="周" :value="2" />
+          <el-radio-button label="日" :value="3" /> -->
         </el-radio-group>
       </div>
       <!-- 动画部分 -->

@@ -113,7 +113,7 @@ router.beforeEach(async (to, from, next) => {
       // console.log("获取到菜单数据:", menuData);
       // 提取按钮权限
       const buttonPermission = extractButtonPermissions(menuData);
-      console.log("权限列表:", buttonPermission);
+      // console.log("权限列表:", buttonPermission);
       // 数据转换
       const exactData = transformMenuDataExact(menuData || []);
       // console.log("转换后的数据：", exactData);

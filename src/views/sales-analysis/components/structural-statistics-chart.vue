@@ -400,7 +400,7 @@ onUnmounted(() => {
       justify-content: flex-end;
       .chart-btn {
         color: #fff;
-        padding: 0;
+        padding: 0 !important;
         font-weight: 400;
         transition: color 0.3s;
         &:hover {
