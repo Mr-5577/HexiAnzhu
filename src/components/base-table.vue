@@ -638,6 +638,32 @@ defineExpose({
 .table-wrapper {
   flex: 1;
   min-height: 200px;
+  :deep(.el-table) {
+    .el-table__header-wrapper {
+      background-color: #f8f8f9 !important;
+      .el-table__header {
+        background-color: #f8f8f9 !important;
+        thead {
+          background-color: #f8f8f9 !important;
+          tr {
+            background-color: #f8f8f9 !important;
+            th {
+              background-color: #f8f8f9 !important;
+              color: #515a6e !important;
+              .cell {
+                color: #515a6e !important;
+              }
+            }
+          }
+        }
+      }
+    }
+    .el-table__body {
+      .el-table__cell {
+        padding: 4px 0; // 调整内边距来控制高度
+      }
+    }
+  }
 }
 .pagination {
   display: flex;
@@ -659,7 +685,7 @@ defineExpose({
     .el-table__footer-wrapper {
       // 调整整个合计行区域的高度
       .el-table__cell {
-        padding: 8px 0; // 调整内边距来控制高度
+        padding: 4px 0; // 调整内边距来控制高度
         .cell {
           line-height: 1.5; // 调整行高
           min-height: 32px; // 最小高度
