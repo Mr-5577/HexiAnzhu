@@ -159,10 +159,10 @@
           <el-form-item
             v-if="showMuitlOpenField"
             label="支持多开"
-            prop="isMuitlOpen"
+            prop="isMultiOpen"
           >
             <el-switch
-              v-model="form.isMuitlOpen"
+              v-model="form.isMultiOpen"
               active-text="开启"
               inactive-text="关闭"
             /> </el-form-item
@@ -214,7 +214,7 @@ const form = reactive<MenuForm>({
   component: "",
   path: "",
   isKeepAlive: false,
-  isMuitlOpen: false,
+  isMultiOpen: false,
   isControl: true,
   isVisible: true,
   sort: 99,
@@ -265,7 +265,7 @@ const menuTreeOptions = computed(() => {
     component: "",
     path: "",
     isKeepAlive: false,
-    isMuitlOpen: false,
+    isMultiOpen: false,
     isControl: true,
     isVisible: true,
     sort: 0,
@@ -333,7 +333,7 @@ const resetForm = () => {
     component: "",
     path: "",
     isKeepAlive: false,
-    isMuitlOpen: false,
+    isMultiOpen: false,
     isControl: true,
     isVisible: true,
     sort: 1,
@@ -358,7 +358,7 @@ const initForm = () => {
       component: props.formData.component || "",
       path: props.formData.path || "",
       isKeepAlive: props.formData.isKeepAlive || false,
-      isMuitlOpen: props.formData.isMuitlOpen || false,
+      isMultiOpen: props.formData.isMultiOpen || false,
       isControl:
         props.formData.isControl !== undefined
           ? props.formData.isControl
@@ -392,7 +392,7 @@ const handleSubmit = async () => {
       component: form.menuType === 2 ? "" : form.component,
       path: form.menuType === 2 ? "" : form.path,
       isKeepAlive: form.menuType === 1 ? form.isKeepAlive : false,
-      isMuitlOpen: form.menuType === 1 ? form.isMuitlOpen : false,
+      isMultiOpen: form.menuType === 1 ? form.isMultiOpen : false,
       isVisible: form.menuType === 2 ? false : form.isVisible,
     };
 
@@ -414,7 +414,7 @@ const handleMenuTypeChange = (value: number) => {
     form.component = "";
     form.path = "";
     form.isKeepAlive = false;
-    form.isMuitlOpen = false;
+    form.isMultiOpen = false;
     form.isVisible = false;
   }
 };

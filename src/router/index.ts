@@ -1,6 +1,11 @@
 import { useMenuStore } from "@/stores/menu-store";
-import { fetchMenuData, transformMenuDataExact } from "@/utils/menu-util";
-import { createRouter, createWebHashHistory, createWebHistory, RouteRecordRaw } from "vue-router";
+import { transformMenuDataExact } from "@/utils/menu-util";
+import {
+  createRouter,
+  createWebHashHistory,
+  createWebHistory,
+  RouteRecordRaw,
+} from "vue-router";
 import { addDynamicRoutes } from "./dynamic-routes";
 import { userApi } from "@/api/user-api";
 import { ElLoading } from "element-plus";
@@ -69,9 +74,9 @@ router.beforeEach(async (to, from, next) => {
   // console.log("路由切换:", from.path, "->", to.path);
 
   // 设置页面标题
-  if (to.meta.title) {
-    document.title = to.meta.title as string;
-  }
+  // if (to.meta.title) {
+  //   document.title = to.meta.title as string;
+  // }
 
   // 白名单
   const whiteList = ["/login", "/test"];
@@ -101,7 +106,6 @@ router.beforeEach(async (to, from, next) => {
         spinner: "el-icon-loading",
         customClass: "clean-loading",
       });
-      // const exactData = await fetchMenuData();
       const menuData = await userApi.getUserMenuPowerList();
       // console.log("获取到菜单数据:", menuData);
       const exactData = transformMenuDataExact(menuData || []);

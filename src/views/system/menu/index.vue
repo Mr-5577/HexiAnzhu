@@ -69,10 +69,10 @@
           {{ scope.row.isKeepAlive ? "开启" : "关闭" }}
         </el-tag>
       </template>
-      <template #isMuitlOpen="scope">
+      <template #isMultiOpen="scope">
         <!-- 页面多开 -->
-        <el-tag :type="scope.row.isMuitlOpen ? 'success' : 'info'" size="small">
-          {{ scope.row.isMuitlOpen ? "是" : "否" }}
+        <el-tag :type="scope.row.isMultiOpen ? 'success' : 'info'" size="small">
+          {{ scope.row.isMultiOpen ? "是" : "否" }}
         </el-tag>
       </template>
       <template #isVisible="scope">
@@ -161,7 +161,7 @@ const columns: TableColumnItem[] = [
     //   return row.isKeepAlive ? '是' : '否';
     // },
   },
-  { label: "支持多开", slot: "isMuitlOpen", width: 90 },
+  { label: "支持多开", slot: "isMultiOpen", width: 90 },
   { label: "是否可见", slot: "isVisible", width: 90 },
   { label: "菜单状态", slot: "status", width: 90 },
   { label: "操作", slot: "action", width: 220 },
@@ -205,7 +205,7 @@ const handleEditMenu = (menu: MenuItem) => {
     component: menu.component || "",
     path: menu.path,
     isKeepAlive: menu.isKeepAlive,
-    isMuitlOpen: menu.isMuitlOpen,
+    isMultiOpen: menu.isMultiOpen,
     isControl: menu.isControl,
     isVisible: menu.isVisible,
     sort: menu.sort,

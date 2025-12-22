@@ -2,17 +2,29 @@ export interface BackendMenuItem {
   id: number;
   type: string; // 'module' | 'menu' | 'button'
   name: string;
+  title: string;
+  icon: string;
+  menuType: number;
   path?: string;
   component?: string;
+  isKeepAlive: boolean;
+  isMultiOpen: boolean;
+  isControl: boolean;
+  isVisible: boolean;
   pid?: number;
   sort: number;
+  isDel:boolean;
   parentId: number;
+  createId: number;
   meta: {
     title: string;
     icon: string;
-    keepAlive?: boolean;
-    isVisible?: boolean;
+    isKeepAlive?: boolean;
     isMultiOpen?: boolean;
+    isControl?: boolean;
+    isVisible?: boolean;
+    isDel:boolean;
+    createId: number;
   };
   children?: BackendMenuItem[];
 }
@@ -44,7 +56,7 @@ export interface MenuItem {
   component?: string;
   path: string;
   isKeepAlive: boolean;
-  isMuitlOpen: boolean;
+  isMultiOpen: boolean;
   isControl: boolean;
   isVisible: boolean;
   sort: number;
@@ -63,7 +75,7 @@ export interface MenuForm {
   component: string;
   path: string;
   isKeepAlive: boolean;
-  isMuitlOpen: boolean;
+  isMultiOpen: boolean;
   isControl: boolean;
   isVisible: boolean;
   sort: number;
