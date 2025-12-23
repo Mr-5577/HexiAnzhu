@@ -58,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import BaseTable from "@/components/base-table.vue";
 import { assetManagementApi } from "@/api/asset-management-api";
 import type { DayTableInterface } from "@/types/channel-analysis-type";

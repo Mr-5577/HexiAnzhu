@@ -69,7 +69,6 @@ export const dealChannelColumns: any = [
   { prop: "projName", label: "项目", width: 240, fixed: "left" },
   { prop: "name", label: "成交合计", width: 100 },
   {
-    prop: "name",
     label: "分销",
     children: [
       { prop: "num", label: "套数", width: 90 },
@@ -77,7 +76,6 @@ export const dealChannelColumns: any = [
     ],
   },
   {
-    prop: "name",
     label: "内渠",
     children: [
       { prop: "num", label: "套数", width: 90 },
@@ -85,7 +83,6 @@ export const dealChannelColumns: any = [
     ],
   },
   {
-    prop: "name",
     label: "全民经纪人",
     children: [
       { prop: "num", label: "套数", width: 90 },
@@ -93,7 +90,6 @@ export const dealChannelColumns: any = [
     ],
   },
   {
-    prop: "name",
     label: "老带新",
     children: [
       { prop: "num", label: "套数", width: 90 },
@@ -101,7 +97,6 @@ export const dealChannelColumns: any = [
     ],
   },
   {
-    prop: "name",
     label: "内部员工推荐",
     children: [
       { prop: "num", label: "套数", width: 90 },
@@ -109,7 +104,6 @@ export const dealChannelColumns: any = [
     ],
   },
   {
-    prop: "name",
     label: "自然到访",
     children: [
       { prop: "num", label: "套数", width: 90 },
@@ -117,7 +111,6 @@ export const dealChannelColumns: any = [
     ],
   },
   {
-    prop: "name",
     label: "员工自购",
     children: [
       { prop: "num", label: "套数", width: 90 },
@@ -125,7 +118,6 @@ export const dealChannelColumns: any = [
     ],
   },
   {
-    prop: "name",
     label: "自拓",
     children: [
       { prop: "num", label: "套数", width: 90 },
@@ -133,7 +125,6 @@ export const dealChannelColumns: any = [
     ],
   },
   {
-    prop: "name",
     label: "工抵",
     children: [
       { prop: "num", label: "套数", width: 90 },
@@ -141,7 +132,6 @@ export const dealChannelColumns: any = [
     ],
   },
   {
-    prop: "name",
     label: "房票",
     children: [
       { prop: "num", label: "套数", width: 90 },

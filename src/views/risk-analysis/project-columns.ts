@@ -98,6 +98,95 @@ export const premiumDetailColumns: any = [
   { prop: "incMoneyMemo", label: "更改总价说明", width: 150, lineClamp: 3 },
   { prop: "name", label: "备注详情", width: 150 }, // 字段调整
 ];
+// 应收统计-表头
+export const receivablesColumns1: any = [
+  { prop: "proj_name", label: "项目", width: 260, fixed: "left" },
+  {
+    label: "应收合计",
+    children: [
+      { prop: "totalCollectNum", label: "总户数", width: 90 },
+      { prop: "totalCollectMoney", label: "总金额", width: 90 },
+      {
+        label: "预计回款",
+        children: [
+          { prop: "totalSldCollectNum", label: "总户数", width: 90 },
+          { prop: "totalSldCollectMoney", label: "总金额", width: 90 },
+        ],
+      },
+    ],
+  },
+  {
+    label: "逾期未回款",
+    children: [
+      { prop: "outstdCollectNum", label: "总户数", width: 90 },
+      { prop: "outstdCollectMoney", label: "总金额", width: 90 },
+    ],
+  },
+  {
+    label: "认购未签",
+    children: [
+      {
+        label: "工程抵款",
+        children: [
+          { prop: "rwqGcdkCollectNum", label: "总户数", width: 90 },
+          { prop: "rwqGcdkCollectMoney", label: "总金额", width: 90 },
+          {
+            prop: "name",
+            label: "预计回款",
+            children: [
+              { prop: "rwqGcdkSldCollectNum", label: "总户数", width: 90 },
+              { prop: "rwqGcdkSldCollectMoney", label: "总金额", width: 90 },
+            ],
+          },
+        ],
+      },
+      {
+        label: "其他",
+        children: [
+          { prop: "rwqQtCollectNum", label: "总户数", width: 90 },
+          { prop: "rwqQtCollectMoney", label: "总金额", width: 90 },
+          {
+            label: "预计回款",
+            children: [
+              { prop: "rwqQtSldCollectNum", label: "总户数", width: 90 },
+              { prop: "rwqQtSldCollectMoney", label: "总金额", width: 90 },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+];
+export const receivablesColumns2: any = [
+  {
+    label: "工程抵款",
+    children: [
+      { prop: "qwhGcdkCollectNum", label: "总户数", width: 90 },
+      { prop: "qwhGcdkCollectMoney", label: "总金额", width: 90 },
+      {
+        label: "预计回款",
+        children: [
+          { prop: "qwhGcdkSldCollectNum", label: "总户数", width: 90 },
+          { prop: "qwhGcdkSldCollectMoney", label: "总金额", width: 90 },
+        ],
+      },
+    ],
+  },
+  {
+    label: "房票",
+    children: [
+      { prop: "qwhFpCollectNum", label: "总户数", width: 90 },
+      { prop: "qwhFpCollectMoney", label: "总金额", width: 90 },
+      {
+        label: "预计回款",
+        children: [
+          { prop: "qwhFpSldCollectNum", label: "总户数", width: 90 },
+          { prop: "qwhFpSldCollectMoney", label: "总金额", width: 90 },
+        ],
+      },
+    ],
+  },
+];
 // 应收明细-表头
 export const receivablesDetailColumns: any = [
   { type: "index", label: "序号", width: 60 },

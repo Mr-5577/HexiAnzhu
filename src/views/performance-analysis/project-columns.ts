@@ -4,7 +4,6 @@ export const annualReportColumns: any = [
   { prop: "projName", label: "项目", width: 220, fixed: "left" },
   { prop: "productTypeName", label: "考核类型", width: 150 },
   {
-    prop: "name",
     label: "年度累计数据",
     children: [
       { prop: "totalOrderNum", label: "认购套数", width: 90 },
@@ -16,11 +15,9 @@ export const annualReportColumns: any = [
     ],
   },
   {
-    prop: "name",
     label: "项目累计未回款（万元）",
     children: [
       {
-        prop: "price",
         label: "未签约",
         children: [
           { prop: "notSignNum", label: "套数", width: 80 },
@@ -28,7 +25,6 @@ export const annualReportColumns: any = [
         ],
       },
       {
-        prop: "price",
         label: "已签约",
         children: [
           { prop: "signNum", label: "套数", width: 80 },
@@ -36,7 +32,6 @@ export const annualReportColumns: any = [
         ],
       },
       {
-        prop: "price",
         label: "总计",
         children: [
           { prop: "totalOutstdNum", label: "套数", width: 80 },
@@ -46,7 +41,6 @@ export const annualReportColumns: any = [
     ],
   },
   {
-    prop: "name",
     label: "年度目标任务",
     children: [
       { prop: "orderTask", label: "销售数量(套)", width: 90 },
@@ -55,7 +49,6 @@ export const annualReportColumns: any = [
     ],
   },
   {
-    prop: "name",
     label: "年度实际完成",
     children: [
       { prop: "price", label: "销售数量(套)", width: 90 },
@@ -64,7 +57,6 @@ export const annualReportColumns: any = [
     ],
   },
   {
-    prop: "name",
     label: "年度达成率",
     children: [
       {
@@ -125,7 +117,6 @@ export const dailylReportColumns: any = [
   { prop: "projName", label: "项目", width: 220, fixed: "left" },
   { prop: "productTypeName", label: "考核类型", width: 150 },
   {
-    prop: "name",
     label: "当日销售数据",
     children: [
       { prop: "dayOrderNum", label: "认购套数", width: 90 },
@@ -136,7 +127,6 @@ export const dailylReportColumns: any = [
     ],
   },
   {
-    prop: "name",
     label: "当月累计数据",
     children: [
       { prop: "totalOrderNum", label: "认购套数", width: 90 },
@@ -148,11 +138,9 @@ export const dailylReportColumns: any = [
     ],
   },
   {
-    prop: "name",
     label: "项目累计未回款（万元）",
     children: [
       {
-        prop: "price",
         label: "未签约",
         children: [
           { prop: "notSignNum", label: "套数", width: 80 },
@@ -160,7 +148,6 @@ export const dailylReportColumns: any = [
         ],
       },
       {
-        prop: "price",
         label: "已签约",
         children: [
           { prop: "signNum", label: "套数", width: 80 },
@@ -168,7 +155,6 @@ export const dailylReportColumns: any = [
         ],
       },
       {
-        prop: "price",
         label: "总计",
         children: [
           { prop: "totalOutstdNum", label: "套数", width: 80 },
@@ -178,7 +164,6 @@ export const dailylReportColumns: any = [
     ],
   },
   {
-    prop: "name",
     label: "月度目标任务",
     children: [
       { prop: "orderTask", label: "销售数量(套)", width: 90 },
@@ -187,7 +172,6 @@ export const dailylReportColumns: any = [
     ],
   },
   {
-    prop: "name",
     label: "月度实际完成",
     children: [
       { prop: "totalOrderNum", label: "销售数量(套)", width: 90 },
@@ -196,7 +180,6 @@ export const dailylReportColumns: any = [
     ],
   },
   {
-    prop: "name",
     label: "月度达成率",
     children: [
       {

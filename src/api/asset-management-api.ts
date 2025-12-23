@@ -307,6 +307,18 @@ export const assetManagementApi = {
   getSaleOutStdFundsInfoYsProj: (data: any) => {
     return http.post("/sale/getSaleOutStdFundsInfoYsProj", data);
   },
+  // 应收统计（项目汇总）-导出
+  exportSaleOutStdFundsInfoYsProj: (
+    data: any,
+    filename: string = "应收统计表.xlsx"
+  ) => {
+    return http.exportFile(
+      "/sale/getSaleOutStdFundsInfoYsProj",
+      data,
+      filename || "数据列表.xlsx",
+      "post"
+    );
+  },
   // 应收统计（房间明细）
   getSaleOutStdFundsInfoYsRoom: (data: any) => {
     return http.post("/sale/getSaleOutStdFundsInfoYsRoom", data);

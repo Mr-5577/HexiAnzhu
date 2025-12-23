@@ -129,7 +129,7 @@ const logout = () => {
               router.push("/login").then(() => {
                 window.location.reload();
               });
-            }, 1500);
+            }, 1000);
           } else {
             ElMessage.error("退出失败");
           }
