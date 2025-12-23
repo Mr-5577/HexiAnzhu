@@ -314,7 +314,7 @@ const handleDeleteRole = async (role: RoleItem) => {
       type: "warning",
     })
       .then(async () => {
-        const response = await roleApi.delRole({ id: role.id });
+        const response = await roleApi.delRole({ id: role.id, isDel: true });
         if (response.code === 200) {
           ElMessage.success("删除成功");
           getRoleList();

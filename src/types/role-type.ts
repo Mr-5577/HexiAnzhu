@@ -35,6 +35,7 @@ export interface MemberSearch {
 
 export interface RoleDelete {
   id: number;
+  isDel?: boolean;
 }
 
 export interface RoleMemberItem {
