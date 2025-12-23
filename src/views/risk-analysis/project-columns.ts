@@ -105,12 +105,12 @@ export const receivablesColumns1: any = [
     label: "应收合计",
     children: [
       { prop: "totalCollectNum", label: "总户数", width: 90 },
-      { prop: "totalCollectMoney", label: "总金额", width: 90 },
+      { prop: "totalCollectMoney", label: "总金额", width: 100 },
       {
         label: "预计回款",
         children: [
           { prop: "totalSldCollectNum", label: "总户数", width: 90 },
-          { prop: "totalSldCollectMoney", label: "总金额", width: 90 },
+          { prop: "totalSldCollectMoney", label: "总金额", width: 100 },
         ],
       },
     ],
@@ -119,7 +119,7 @@ export const receivablesColumns1: any = [
     label: "逾期未回款",
     children: [
       { prop: "outstdCollectNum", label: "总户数", width: 90 },
-      { prop: "outstdCollectMoney", label: "总金额", width: 90 },
+      { prop: "outstdCollectMoney", label: "总金额", width: 100 },
     ],
   },
   {
@@ -129,13 +129,13 @@ export const receivablesColumns1: any = [
         label: "工程抵款",
         children: [
           { prop: "rwqGcdkCollectNum", label: "总户数", width: 90 },
-          { prop: "rwqGcdkCollectMoney", label: "总金额", width: 90 },
+          { prop: "rwqGcdkCollectMoney", label: "总金额", width: 100 },
           {
             prop: "name",
             label: "预计回款",
             children: [
               { prop: "rwqGcdkSldCollectNum", label: "总户数", width: 90 },
-              { prop: "rwqGcdkSldCollectMoney", label: "总金额", width: 90 },
+              { prop: "rwqGcdkSldCollectMoney", label: "总金额", width: 100 },
             ],
           },
         ],
@@ -144,12 +144,12 @@ export const receivablesColumns1: any = [
         label: "其他",
         children: [
           { prop: "rwqQtCollectNum", label: "总户数", width: 90 },
-          { prop: "rwqQtCollectMoney", label: "总金额", width: 90 },
+          { prop: "rwqQtCollectMoney", label: "总金额", width: 100 },
           {
             label: "预计回款",
             children: [
               { prop: "rwqQtSldCollectNum", label: "总户数", width: 90 },
-              { prop: "rwqQtSldCollectMoney", label: "总金额", width: 90 },
+              { prop: "rwqQtSldCollectMoney", label: "总金额", width: 100 },
             ],
           },
         ],
@@ -162,12 +162,12 @@ export const receivablesColumns2: any = [
     label: "工程抵款",
     children: [
       { prop: "qwhGcdkCollectNum", label: "总户数", width: 90 },
-      { prop: "qwhGcdkCollectMoney", label: "总金额", width: 90 },
+      { prop: "qwhGcdkCollectMoney", label: "总金额", width: 100 },
       {
         label: "预计回款",
         children: [
           { prop: "qwhGcdkSldCollectNum", label: "总户数", width: 90 },
-          { prop: "qwhGcdkSldCollectMoney", label: "总金额", width: 90 },
+          { prop: "qwhGcdkSldCollectMoney", label: "总金额", width: 100 },
         ],
       },
     ],
@@ -176,12 +176,12 @@ export const receivablesColumns2: any = [
     label: "房票",
     children: [
       { prop: "qwhFpCollectNum", label: "总户数", width: 90 },
-      { prop: "qwhFpCollectMoney", label: "总金额", width: 90 },
+      { prop: "qwhFpCollectMoney", label: "总金额", width: 100 },
       {
         label: "预计回款",
         children: [
           { prop: "qwhFpSldCollectNum", label: "总户数", width: 90 },
-          { prop: "qwhFpSldCollectMoney", label: "总金额", width: 90 },
+          { prop: "qwhFpSldCollectMoney", label: "总金额", width: 100 },
         ],
       },
     ],

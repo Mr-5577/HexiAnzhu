@@ -32,6 +32,7 @@
       </el-form-item>
     </el-form>
     <base-table
+      :showSummary="true"
       :columns="tableColumns"
       :tableData="paginatedData"
       :loading="tableLoading"
@@ -46,11 +47,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import BaseTable from "@/components/base-table.vue";
-import {
-  receivablesColumns1,
-  receivablesColumns2,
-  receivablesDetailColumns,
-} from "./project-columns";
+import { receivablesColumns1, receivablesColumns2 } from "./project-columns";
 import { assetManagementApi } from "@/api/asset-management-api";
 import { useSalesData } from "@/composables/use-sales";
 import { ElMessage } from "element-plus";
@@ -163,7 +160,7 @@ const getTableList = async () => {
             {
               prop: `${item.groupId}_collectMoney`,
               label: "总金额",
-              width: 90,
+              width: 100,
             },
             {
               label: "预计回款", // 三级表头
@@ -176,7 +173,7 @@ const getTableList = async () => {
                 {
                   prop: `${item.groupId}_sldCollectMoney`,
                   label: "总金额",
-                  width: 90,
+                  width: 100,
                 },
               ],
             },
