@@ -50,10 +50,12 @@
         :show-summary="showSummary"
         :summary-method="props.summaryMethod || defaultSummaryMethod"
         :default-expand-all="isExpandAll"
+        :row-class-name="getRowClassName"
         element-loading-text="数据加载中..."
         element-loading-background="rgba(255, 255, 255, 0.8)"
         @selection-change="handleSelectionChange"
         @sort-change="handleSortChange"
+        @row-click="handleRowClick"
       >
         <!-- 递归渲染多级表头 -->
         <template v-for="item in visibleColumns" :key="item.prop || item.type">
@@ -178,6 +180,8 @@ interface Props {
   // 是否显示合计列
   showSummary?: boolean;
   summaryMethod?: (params: { columns: any[]; data: any[] }) => string[];
+  // 是否开启行点击高亮
+  highlightCurrentRow?: boolean;
 }
 
 // 定义组件事件
@@ -191,6 +195,7 @@ interface Emits {
     value: { pageSize: number; currentPage: number }
   ): void;
   (event: "refresh"): void;
+  (event: "row-click", value: { row: any; event: Event }): void;
 }
 
 // 递归列组件的 Props
@@ -353,12 +358,14 @@ const props = withDefaults(defineProps<Props>(), {
   dictData: () => ({}),
   isExpandAll: false,
   showSummary: false,
+  highlightCurrentRow: true,
 });
 
 const emit = defineEmits<Emits>();
 
 const tableRef = ref<TableInstance>();
 const selectedRows = ref<any[]>([]);
+const currentRowKey = ref<string | number>(""); // 当前选中行的key
 
 const columnSettings = computed(() => {
   return props.columns.map((col) => ({
@@ -448,6 +455,7 @@ const getTableProps = computed(() => {
     size: props.size,
     height: props.autoHeight ? tableHeight.value : props.height,
     maxHeight: props.maxHeight,
+    highlightCurrentRow: props.highlightCurrentRow,
     ...$attrs,
   };
 
@@ -458,6 +466,17 @@ const getTableProps = computed(() => {
 
   return baseProps;
 });
+
+// 获取行类名
+const getRowClassName = ({ row }: { row: any }): string => {
+  if (!props.highlightCurrentRow) return "";
+
+  const rowKeyValue = row[props.rowKey];
+  if (rowKeyValue === currentRowKey.value) {
+    return "current-row";
+  }
+  return "";
+};
 
 // 更新表格高度
 const updateTableHeight = (): void => {
@@ -573,6 +592,23 @@ const handleSortChange = (val: Sort): void => {
   emit("sort-change", val);
 };
 
+// 行点击事件
+const handleRowClick = (row: any, column: any, event: Event): void => {
+  if (!props.highlightCurrentRow) return;
+
+  // 获取当前行的key值
+  const rowKeyValue = row[props.rowKey];
+
+  // 如果点击的是同一行，则清除选中状态
+  if (currentRowKey.value === rowKeyValue) {
+    currentRowKey.value = "";
+  } else {
+    currentRowKey.value = rowKeyValue;
+  }
+
+  emit("row-click", { row, event });
+};
+
 const handlePageSizeChange = (val: number): void => {
   emit("update:pageSize", val);
   emit("pagination-change", { pageSize: val, currentPage: props.currentPage });
@@ -594,9 +630,15 @@ const handleColumnSetting = (): void => {
   console.log("打开列设置");
 };
 
+// 清除当前选中行
+const clearCurrentRow = (): void => {
+  currentRowKey.value = "";
+};
+
 // 暴露方法给父组件
 defineExpose({
   clearSelection: handleClearSelection,
+  clearCurrentRow,
   getTableRef: () => tableRef.value,
   updateTableHeight,
 });
@@ -671,6 +713,22 @@ defineExpose({
     .el-table__body {
       .el-table__cell {
         padding: 4px 0; // 调整内边距来控制高度
+      }
+
+      // 添加点击行高亮样式
+      .current-row {
+        & > .el-table__cell {
+          background-color: #e0ecfc !important;
+        }
+      }
+
+      // 鼠标悬停效果
+      .el-table__row {
+        &:hover {
+          & > .el-table__cell {
+            background-color: #f0f5ff !important;
+          }
+        }
       }
     }
   }
