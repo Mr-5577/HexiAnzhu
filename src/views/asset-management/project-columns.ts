@@ -1,5 +1,5 @@
 // 房间台账表-表头
-export const roomLedgerColumns = [
+export const roomLedgerColumns: any = [
   { prop: "projName", label: "项目", width: 240, fixed: "left" },
   { prop: "roomNum", label: "房号", width: 120 },
   { prop: "buildBatch", label: "楼栋分期", width: 90 },

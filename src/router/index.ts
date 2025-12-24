@@ -109,26 +109,29 @@ router.beforeEach(async (to, from, next) => {
         spinner: "el-icon-loading",
         customClass: "clean-loading",
       });
-      const menuData = await userApi.getUserMenuPowerList();
-      // console.log("获取到菜单数据:", menuData);
-      // 提取按钮权限
-      const buttonPermission = extractButtonPermissions(menuData);
-      // console.log("权限列表:", buttonPermission);
-      // 数据转换
-      const exactData = transformMenuDataExact(menuData || []);
-      // console.log("转换后的数据：", exactData);
-      // 先清理动态路由
-      cleanupDynamicRoutes();
-      // 存储到store
-      menuStore.setMenuData(exactData);
-      menuStore.setPermissionData(buttonPermission);
+      const res = await userApi.getUserMenuPowerList();
+      // console.log("获取到菜单数据:", res);
+      if (res.code === 200) {
+        const menuData = res.data || [];
+        // 提取按钮权限
+        const buttonPermission = extractButtonPermissions(menuData);
+        // console.log("权限列表:", buttonPermission);
+        // 数据转换
+        const exactData = transformMenuDataExact(menuData || []);
+        // console.log("转换后的数据：", exactData);
+        // 先清理动态路由
+        cleanupDynamicRoutes();
+        // 存储到store
+        menuStore.setMenuData(exactData);
+        menuStore.setPermissionData(buttonPermission);
 
-      // 添加动态路由
-      await addDynamicRoutes(router, exactData);
-      // 标记为已加载
-      menuLoaded = true;
-      // 重新导航
-      next({ ...to, replace: true });
+        // 添加动态路由
+        await addDynamicRoutes(router, exactData);
+        // 标记为已加载
+        menuLoaded = true;
+        // 重新导航
+        next({ ...to, replace: true });
+      }
       return;
     } catch (error) {
       console.error("加载菜单失败:", error);

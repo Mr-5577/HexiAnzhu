@@ -234,6 +234,66 @@ export const dailylReportColumns: any = [
   },
 ];
 
+// 认购业绩明细-表头
+export const SubDetailColumns: any = [
+  { type: "index", label: "序号", width: 60, fixed: "left" },
+  { prop: "projName", label: "项目", width: 220, fixed: "left" },
+  { prop: "bigProductTypeName", label: "业态", width: 100 },
+  { prop: "roomNum", label: "房号", width: 150 },
+  { prop: "forecastArea", label: "建筑面积", width: 100 },
+  { prop: "custName", label: "业主", width: 100 },
+  { prop: "custTel", label: "联系电话", width: 120 },
+  { prop: "floorMoney", label: "低价金额", width: 120 },
+  { prop: "saleMoney", label: "认购金额", width: 120 },
+  { prop: "saleUnitPrice", label: "认购单价", width: 120 },
+  { prop: "saleDate", label: "认购日期", width: 120 },
+  { prop: "asstDate", label: "认购业绩认定日期", width: 120 },
+  { prop: "sYearMonth", label: "业绩年月", width: 100 },
+  { prop: "saleNum", label: "业绩套数", width: 100 },
+  { prop: "signDate", label: "签约日期", width: 120 },
+  { prop: "salerName", label: "置业顾问", width: 150 },
+  { prop: "typeName", label: "业务类型", width: 100 },
+];
+// 签约业绩-表头
+export const ContractDetailColumns: any = [
+  { type: "index", label: "序号", width: 60, fixed: "left" },
+  { prop: "projName", label: "项目", width: 220, fixed: "left" },
+  { prop: "bigProductTypeName", label: "业态", width: 100 },
+  { prop: "roomNum", label: "房号", width: 150 },
+  { prop: "forecastArea", label: "建筑面积", width: 100 },
+  { prop: "custName", label: "业主", width: 100 },
+  { prop: "custTel", label: "联系电话", width: 120 },
+  { prop: "floorMoney", label: "低价金额", width: 120 },
+  { prop: "saleMoney", label: "认购金额", width: 120 },
+  { prop: "saleUnitPrice", label: "认购单价", width: 120 },
+  { prop: "saleDate", label: "认购日期", width: 120 },
+  { prop: "signTime", label: "签约日期", width: 120 },
+  { prop: "syearMonth", label: "业绩年月", width: 100 },
+  { prop: "signNum", label: "业绩套数", width: 100 },
+  { prop: "saleMoneyInc", label: "签约增量金额", width: 120 },
+  { prop: "salerName", label: "置业顾问", width: 150 },
+  { prop: "typeName", label: "业务类型", width: 100 },
+];
+// 回款业绩-表头
+export const CollectionDetailColumns: any = [
+  { type: "index", label: "序号", width: 60, fixed: "left" },
+  { prop: "projName", label: "项目", width: 220, fixed: "left" },
+  { prop: "bigProductTypeName", label: "业态", width: 120 },
+  { prop: "roomNum", label: "房号", width: 150 },
+  { prop: "forecastArea", label: "建筑面积", width: 100 },
+  { prop: "custName", label: "业主", width: 100 },
+  { prop: "custTel", label: "联系电话", width: 120 },
+  // { prop: "floorMoney", label: "低价金额", width: 120 },
+  { prop: "saleMoney", label: "认购金额", width: 120 },
+  // { prop: "saleUnitPrice", label: "认购单价", width: 120 },
+  { prop: "saleDate", label: "认购日期", width: 120 },
+  // { prop: "signTime", label: "签约日期", width: 120 },
+  { prop: "collectDate", label: "回款日期", width: 120 },
+  { prop: "syearMonth", label: "业绩年月", width: 100 },
+  { prop: "collectMoney", label: "回款金额", width: 100 },
+  { prop: "salerName", label: "置业顾问", width: 150 },
+  { prop: "typeName", label: "业务类型", width: 100 },
+];
 // 认购达成统计-天-表头
 export const SubscriptionStatisticsDayColumns = [
   { prop: "projName", label: "项目" },

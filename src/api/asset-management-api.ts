@@ -181,6 +181,54 @@ export const assetManagementApi = {
       "post"
     );
   },
+  // 认购业绩明细
+  getSaleAsstListOrder: (data: any) => {
+    return http.post("/sale/getSaleAsstListOrder", data);
+  },
+  // 认购业绩明细-导出
+  exportSaleAsstListOrder: (
+    data: any,
+    filename: string = "认购业绩明细.xlsx"
+  ) => {
+    return http.exportFile(
+      "/sale/getSaleAsstListOrder",
+      data,
+      filename || "数据列表.xlsx",
+      "post"
+    );
+  },
+  // 签约业绩明细
+  getSaleAsstListSign: (data: any) => {
+    return http.post("/sale/getSaleAsstListSign", data);
+  },
+  // 签约业绩明细-导出
+  exportSaleAsstListSign: (
+    data: any,
+    filename: string = "签约业绩明细.xlsx"
+  ) => {
+    return http.exportFile(
+      "/sale/getSaleAsstListSign",
+      data,
+      filename || "数据列表.xlsx",
+      "post"
+    );
+  },
+  // 回款业绩明细
+  getSaleAsstListPay: (data: any) => {
+    return http.post("/sale/getSaleAsstListPay", data);
+  },
+  // 回款业绩明细-导出
+  exportSaleAsstListPay: (
+    data: any,
+    filename: string = "回款业绩明细.xlsx"
+  ) => {
+    return http.exportFile(
+      "/sale/getSaleAsstListPay",
+      data,
+      filename || "数据列表.xlsx",
+      "post"
+    );
+  },
   // 认购统计表（月度）
   getOrderNumMonthCount: (data: any) => {
     return http.post("/sale/getOrderNumMonthCount", data);
