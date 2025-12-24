@@ -83,11 +83,13 @@ import { dateUtil } from "@/utils/date-util";
 import { assetManagementApi } from "@/api/asset-management-api";
 import { PremiumStatsInterface } from "@/types/risk-analysis-type";
 import { ElMessage } from "element-plus";
+import { useRoute, useRouter } from "vue-router";
+
+const route = useRoute();
+const router = useRouter();
 
 // 组件name，需要和菜单配置里面的name一致
-defineOptions({
-  name: "premium-stats",
-});
+defineOptions({ name: "premium-stats" });
 
 // 使用共享的 data hook
 const {
@@ -139,12 +141,42 @@ const handleQuery = () => {
   getTableList();
 };
 const resetQuery = () => {
-  initTime();
-  queryParams.value.projIds = getAllLeafProjectIds();
-  queryParams.value.productTypes = getAllProductTypeIds();
+  initQueryParams();
   currentPage.value = 1;
   pageSize.value = 20;
   getTableList();
+};
+
+const initQueryParams = () => {
+  // 如果有路由参数，使用路由参数
+  if (route.query.data) {
+    try {
+      const routeData = JSON.parse(route.query.data as string);
+      queryParams.value.projIds = routeData.department || [];
+      queryParams.value.productTypes = getAllProductTypeIds();
+      initTimeRange(routeData.data);
+    } catch (error) {
+      console.error("解析路由参数失败，使用默认值", error);
+      initDefaultParams()
+    }
+  } else {
+    // 没有路由参数，使用全选
+    initDefaultParams()
+  }
+};
+const initDefaultParams = () => {
+  queryParams.value.projIds = getAllLeafProjectIds();
+  queryParams.value.productTypes = getAllProductTypeIds();
+  initTimeRange();
+};
+
+const initTimeRange = (date?: string) => {
+  const baseDate = date ? dateUtil(date) : dateUtil();
+  const startTime = baseDate.date(1).format("YYYY-MM-DD");
+  const endTime = date
+    ? baseDate.format("YYYY-MM-DD")
+    : dateUtil().format("YYYY-MM-DD");
+  queryParams.value.time = [startTime, endTime];
 };
 
 // 初始化数据
@@ -155,14 +187,13 @@ const initPageData = async () => {
     saleStatus: false, // 不需要状态数据
   });
 
-  // 设置查询参数默认值为全选
-  queryParams.value.projIds = getAllLeafProjectIds();
-  queryParams.value.productTypes = getAllProductTypeIds();
+  // 初始化查询参数
+  initQueryParams();
 
   // 获取列表数据
   await getTableList();
 };
-const getParams = () => {
+const getApiParams = () => {
   const { projIds, time, productTypes } = queryParams.value;
   return {
     projIds,
@@ -184,7 +215,7 @@ const getTableList = async () => {
       total.value = 0;
       return;
     }
-    const params = getParams();
+    const params = getApiParams();
     const res = await assetManagementApi.getPremiumCountProj(params);
     if (res.code === 200) {
       allTableList.value = res.data || [];
@@ -202,7 +233,7 @@ const getTableList = async () => {
 const handleExport = async () => {
   try {
     exportLoading.value = true;
-    const params = { ...getParams(), isExport: true };
+    const params = { ...getApiParams(), isExport: true };
     const fileBlob = await assetManagementApi.exportPremiumCountProj(params);
     if (!fileBlob || fileBlob.size === 0) {
       ElMessage.warning("导出文件为空，请检查数据");
@@ -215,11 +246,6 @@ const handleExport = async () => {
     exportLoading.value = false;
   }
 };
-const initTime = () => {
-  const startTime = dateUtil().date(1).format("YYYY-MM-DD");
-  const endTime = dateUtil().format("YYYY-MM-DD");
-  queryParams.value.time = [startTime, endTime];
-};
 // 手动分页
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value;
@@ -229,7 +255,6 @@ const paginatedData = computed(() => {
 
 // 生命周期
 onMounted(() => {
-  initTime();
   initPageData();
 });
 

@@ -79,6 +79,10 @@ import type {
 import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
 import { ElMessage } from "element-plus";
+import { useRoute, useRouter } from "vue-router";
+
+const route = useRoute();
+const router = useRouter();
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
@@ -135,16 +139,31 @@ const handleQuery = () => {
   getTableList();
 };
 const resetQuery = () => {
-  queryParams.value = {
-    projIds: getAllLeafProjectIds(),
-    type: "month",
-    day: dateUtil().format("YYYY-MM"),
-  };
+  initParams();
   currentPage.value = 1;
   pageSize.value = 20;
   getTableList();
 };
-
+const initParams = () => {
+  // 如果有路由参数，使用路由参数
+  if (route.query.data) {
+    try {
+      const routeData = JSON.parse(route.query.data as string);
+      queryParams.value.projIds = routeData.department || [];
+      queryParams.value.day = dateUtil(routeData.data || new Date()).format(
+        "YYYY-MM"
+      );
+    } catch (error) {
+      console.error("解析路由参数失败，使用默认值", error);
+      queryParams.value.projIds = getAllLeafProjectIds();
+      queryParams.value.day = dateUtil().format("YYYY-MM");
+    }
+  } else {
+    // 没有路由参数，使用全选
+    queryParams.value.projIds = getAllLeafProjectIds();
+    queryParams.value.day = dateUtil().format("YYYY-MM");
+  }
+};
 // 初始化数据
 const initPageData = async () => {
   await loadData({
@@ -152,10 +171,8 @@ const initPageData = async () => {
     productTypes: false, // 不需要业态数据
     saleStatus: false, // 不需要状态数据
   });
-
-  // 设置查询参数默认值为全选
-  queryParams.value.projIds = getAllLeafProjectIds();
-
+  // 初始化查询参数
+  initParams();
   // 获取列表数据
   await getTableList();
 };
@@ -242,13 +259,10 @@ watch(
   }
   // { immediate: true }
 );
-
 // 生命周期
 onMounted(() => {
   initPageData();
 });
-
-// 清理
 onUnmounted(() => {});
 </script>
 

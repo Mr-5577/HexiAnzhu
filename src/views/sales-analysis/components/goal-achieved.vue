@@ -17,7 +17,12 @@
             <el-radio-button label="日" :value="3" />
           </el-radio-group>
           <div class="all-goal">
-            <div class="goal-item" v-for="item in dataList" :key="item.id">
+            <div
+              class="goal-item"
+              v-for="item in dataList"
+              :key="item.id"
+              @click="handleLookDetail(item)"
+            >
               <div class="item-left">
                 <img class="img-icon" :src="item.img" alt="" />
                 <div class="goal-desc">
@@ -43,6 +48,7 @@
             </div>
           </div>
           <div class="priceIndicatorContent">
+            <!-- 饼状图 -->
             <div ref="chartDom" class="chart-container"></div>
             <div class="statistics">
               <div class="statistics-item">
@@ -130,7 +136,8 @@ import {
   PremiumDataInterface,
   SaleDataInterface,
 } from "@/types/large-screen-type";
-
+import { useRouter } from "vue-router";
+const router = useRouter();
 interface Props {
   data: string;
   department: number[];
@@ -194,6 +201,7 @@ const dataList = ref([
     goal: 0,
     color: "#409eff",
     proportion: 0,
+    path: "/channel-analysis/visiting-statistics",
   },
   {
     id: 2,
@@ -204,6 +212,7 @@ const dataList = ref([
     goal: 0,
     color: "#1ff4cb",
     proportion: 0,
+    path: "/performance-analysis/daily-report",
   },
   {
     id: 3,
@@ -214,6 +223,7 @@ const dataList = ref([
     goal: 0,
     color: "#67c23a",
     proportion: 0,
+    path: "/performance-analysis/daily-report",
   },
   {
     id: 4,
@@ -224,6 +234,7 @@ const dataList = ref([
     goal: 0,
     color: "#e6a23c",
     proportion: 0,
+    path: "/performance-analysis/daily-report",
   },
 ]);
 
@@ -247,6 +258,7 @@ const initChart = () => {
       renderer: "canvas",
       useDirtyRect: false,
     });
+
     setTimeout(() => {
       updateChart();
     }, 500);
@@ -265,6 +277,7 @@ const updateChart = () => {
   const option = {
     backgroundColor: "transparent", // 设置整个图表的背景色
     title: {
+      show: false, // 不显示title标题
       text: "溢价率",
       subtext: subtext,
       left: "center",
@@ -282,6 +295,41 @@ const updateChart = () => {
         fontWeight: "bold",
       },
     },
+    // 使用graphic自定义标题
+    graphic: [
+      {
+        // 主标题
+        type: "text",
+        left: "center",
+        top: "38%",
+        style: {
+          text: "溢价率",
+          fontSize: 16,
+          fontWeight: "bold",
+          fill: "#fff",
+        },
+        cursor: "pointer",
+        onclick: () => {
+          handleTitleClick();
+        },
+      },
+      {
+        // 副标题
+        type: "text",
+        left: "center",
+        top: "50%",
+        style: {
+          text: subtext,
+          fontSize: 20,
+          fontWeight: "bold",
+          fill: "#fff",
+        },
+        cursor: "pointer",
+        onclick: () => {
+          handleTitleClick();
+        },
+      },
+    ],
     // tooltip: {
     //   trigger: "item",
     //   formatter: "{b}: {c}%",
@@ -304,6 +352,12 @@ const updateChart = () => {
   };
 
   chartInstance.value.setOption(option);
+};
+
+// 跳转到项目溢价统计表页面
+const handleTitleClick = () => {
+  const data = { path: "/risk-analysis/premium-stats" };
+  handleLookDetail(data);
 };
 
 // 监听窗口大小变化
@@ -430,6 +484,16 @@ const handleChange = () => {
     getData();
   });
 };
+const handleLookDetail = (item: any) => {
+  const timestamp = new Date().getTime();
+  router.push({
+    path: item.path,
+    query: {
+      data: JSON.stringify(props),
+      _t: timestamp.toString(),
+    },
+  });
+};
 watch(
   () => [props.data, props.department],
   ([data, department]) => {
@@ -492,6 +556,7 @@ onUnmounted(() => {
         flex-wrap: nowrap;
         margin-right: 20px;
         width: 115px;
+        cursor: pointer;
         .img-icon {
           width: 45px;
           height: 45px;
@@ -539,6 +604,7 @@ onUnmounted(() => {
           }
         }
         :deep(.el-progress-bar__outer) {
+          cursor: pointer;
           background-color: transparent; // 进度条背景
         }
       }
