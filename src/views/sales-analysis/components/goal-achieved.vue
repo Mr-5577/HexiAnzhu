@@ -49,7 +49,19 @@
           </div>
           <div class="priceIndicatorContent">
             <!-- 饼状图 -->
-            <div ref="chartDom" class="chart-container"></div>
+            <div class="chart-wrapper">
+              <div ref="chartDom" class="chart-container"></div>
+              <div
+                class="chart-overlay"
+                v-show="chartInstance"
+                @click="handleTitleClick"
+              >
+                <div class="main-title">溢价率</div>
+                <div class="sub-title">
+                  {{ formatPercent(premiumData?.premiumRate) + "%" }}
+                </div>
+              </div>
+            </div>
             <div class="statistics">
               <div class="statistics-item">
                 <img
@@ -273,7 +285,7 @@ const updateChart = () => {
     console.error("图表实例未初始化");
     return;
   }
-  const subtext = formatPercent(premiumData.value.premiumRate) + "%";
+  const subtext = formatPercent(premiumData.value?.premiumRate) + "%";
   const option = {
     backgroundColor: "transparent", // 设置整个图表的背景色
     title: {
@@ -295,41 +307,6 @@ const updateChart = () => {
         fontWeight: "bold",
       },
     },
-    // 使用graphic自定义标题
-    graphic: [
-      {
-        // 主标题
-        type: "text",
-        left: "center",
-        top: "38%",
-        style: {
-          text: "溢价率",
-          fontSize: 16,
-          fontWeight: "bold",
-          fill: "#fff",
-        },
-        cursor: "pointer",
-        onclick: () => {
-          handleTitleClick();
-        },
-      },
-      {
-        // 副标题
-        type: "text",
-        left: "center",
-        top: "50%",
-        style: {
-          text: subtext,
-          fontSize: 20,
-          fontWeight: "bold",
-          fill: "#fff",
-        },
-        cursor: "pointer",
-        onclick: () => {
-          handleTitleClick();
-        },
-      },
-    ],
     // tooltip: {
     //   trigger: "item",
     //   formatter: "{b}: {c}%",
@@ -616,9 +593,42 @@ onUnmounted(() => {
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
-    .chart-container {
+    .chart-wrapper {
       width: 50%;
       height: 100%;
+      position: relative;
+      .chart-container {
+        width: 100%;
+        height: 100%;
+      }
+      .chart-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        .main-title {
+          font-size: 16px;
+          font-weight: bold;
+          color: #fff;
+          pointer-events: auto;
+          cursor: pointer;
+          text-align: center;
+        }
+        .sub-title {
+          font-size: 20px;
+          font-weight: bold;
+          color: #fff;
+          pointer-events: auto;
+          cursor: pointer;
+          text-align: center;
+        }
+      }
     }
     .statistics {
       width: 50%;

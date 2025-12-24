@@ -5,9 +5,25 @@
       <template #content>
         <div class="conversionMetricsContent">
           <!-- 当月来访转化率 -->
-          <div ref="monthChartRef" class="chart-container"></div>
+          <div class="chart-wrapper">
+            <div ref="monthChartRef" class="chart-container"></div>
+            <div class="chart-overlay" @click="handleMonthTitleClick">
+              <div class="main-title">当月转化率</div>
+              <div class="sub-title">
+                {{ conversionRates.monthlyRateFormatted }}
+              </div>
+            </div>
+          </div>
           <!-- 总体来访转化率 -->
-          <div ref="overallChartRef" class="chart-container"></div>
+          <div class="chart-wrapper">
+            <div ref="overallChartRef" class="chart-container"></div>
+            <div class="chart-overlay" @click="handleOverallTitleClick">
+              <div class="main-title">总体转化率</div>
+              <div class="sub-title">
+                {{ conversionRates.overallRateFormatted }}
+              </div>
+            </div>
+          </div>
         </div>
       </template>
     </ChartBox>
@@ -20,6 +36,8 @@ import { ref, onMounted, onUnmounted, nextTick, computed } from "vue";
 import * as echarts from "echarts";
 import { largeScreenApi } from "@/api/large-screen-api";
 import { dateUtil } from "@/utils/date-util";
+import { useRouter } from "vue-router";
+const router = useRouter();
 
 interface Props {
   data: string;
@@ -160,6 +178,7 @@ const updateMonthChart = () => {
   const option = {
     backgroundColor: "transparent",
     title: {
+      show: false,
       text: "当月转化率",
       subtext: conversionRates.value.monthlyRateFormatted,
       left: "center",
@@ -212,6 +231,7 @@ const updateOverallChart = () => {
   const option = {
     backgroundColor: "transparent",
     title: {
+      show: false,
       text: "总体转化率",
       subtext: conversionRates.value.overallRateFormatted,
       left: "center",
@@ -289,7 +309,28 @@ const getData = async () => {
     loading.value = false;
   }
 };
-
+// 跳转到 转化率统计
+const handleMonthTitleClick = () => {
+  const timestamp = new Date().getTime();
+  router.push({
+    path: "/channel-analysis/conversion-rate",
+    query: {
+      data: JSON.stringify(props),
+      _t: timestamp.toString(),
+    },
+  });
+};
+// 跳转到 来访统计
+const handleOverallTitleClick = () => {
+  const timestamp = new Date().getTime();
+  router.push({
+    path: "/channel-analysis/visiting-statistics",
+    query: {
+      data: JSON.stringify(props),
+      _t: timestamp.toString(),
+    },
+  });
+};
 // 生命周期
 onMounted(() => {
   nextTick(() => {
@@ -326,9 +367,46 @@ onUnmounted(() => {
     flex-wrap: nowrap;
     align-items: center;
     justify-content: center;
-    .chart-container {
+    .chart-wrapper {
       width: 50%;
       height: 100%;
+      position: relative;
+
+      .chart-container {
+        width: 100%;
+        height: 100%;
+      }
+
+      .chart-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+
+        .main-title {
+          font-size: 16px;
+          font-weight: bold;
+          color: #fff;
+          pointer-events: auto;
+          cursor: pointer;
+          text-align: center;
+        }
+
+        .sub-title {
+          font-size: 20px;
+          font-weight: bold;
+          color: #fff;
+          pointer-events: auto;
+          cursor: pointer;
+          text-align: center;
+        }
+      }
     }
   }
 }
