@@ -3,11 +3,15 @@
     <app-header
       :active-module-id="activeModuleId"
       @module-change="handleModuleChange"
+      v-show="!isFullScreen"
     ></app-header>
     <div class="content-body">
-      <app-sidebar :menu-data="sidebarMenu"></app-sidebar>
+      <app-sidebar
+        :menu-data="sidebarMenu"
+        v-show="!isFullScreen"
+      ></app-sidebar>
       <main class="content-main">
-        <tags-view></tags-view>
+        <tags-view v-show="!isFullScreen"></tags-view>
         <!-- <router-view /> -->
         <router-view v-slot="{ Component, route }">
           <keep-alive :include="cachePagesArray">
@@ -36,11 +40,14 @@ import AppSidebar from "./app-sidebar.vue";
 import TagsView from "./tags-view.vue";
 import { useMenuStore } from "@/stores/menu-store";
 import { getSidebarMenuByModule, extractModules } from "@/utils/menu-util";
+import { useUserStore } from "@/stores/user-store";
 
+const userStore = useUserStore();
 const route = useRoute();
 const router = useRouter();
 const menuStore = useMenuStore();
 
+const isFullScreen = computed(() => userStore.isFullScreen);
 // 缓存的页面组件名列表
 const cachePages = ref<Set<string>>(new Set());
 // 转换为数组供 KeepAlive 使用
@@ -133,7 +140,7 @@ const clearPageCache = (componentName: string) => {
 };
 
 // 通过 provide 提供给子组件使用
-provide('clearPageCache', clearPageCache);
+provide("clearPageCache", clearPageCache);
 
 // 监听菜单数据变化
 // 监听路由变化 - 修改为监听 fullPath，包含查询参数
@@ -155,8 +162,6 @@ watch(
     updateCachePages();
   }
 );
-
-
 
 // 初始化
 onMounted(() => {

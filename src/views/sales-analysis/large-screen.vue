@@ -41,6 +41,17 @@
         <div class="time">{{ time }}</div>
         <div class="time">{{ week }}</div>
       </div>
+      <el-tooltip
+        :content="isFullScreen ? '退出全屏' : '全屏'"
+        placement="bottom"
+      >
+        <img
+          class="full-screen-img"
+          :src="isFullScreen ? exitFullScreenIcon : fullScreenIcon"
+          :alt="isFullScreen ? '退出全屏' : '全屏'"
+          @click="toggleFullScreen"
+        />
+      </el-tooltip>
     </el-header>
     <el-main class="main-box">
       <div class="main-left">
@@ -100,6 +111,12 @@ import { ref, onMounted, onUnmounted, computed } from "vue";
 import { formatToDateTime, formatToDate } from "@/utils/date-util";
 import { largeScreenApi } from "@/api/large-screen-api";
 
+import { ElMessage } from "element-plus";
+import fullScreenIcon from "@/assets/imgs/largeScreenImg/full-screen.png";
+import exitFullScreenIcon from "@/assets/imgs/largeScreenImg/small-screen.png";
+import { useUserStore } from "@/stores/user-store";
+const userStore = useUserStore();
+
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
   name: "large-screen",
@@ -124,12 +141,37 @@ const conversionMetricsChartRef =
   ref<InstanceType<typeof ConversionMetricsChart>>();
 const financialStatisticsRef = ref<InstanceType<typeof FinancialStatistics>>();
 
+// 更新时间
 let timer: string | number | NodeJS.Timeout | null | undefined = null;
 const updateTime = () => {
   const newDate = new Date();
   yearMonthDay.value = formatToDateTime(newDate, "YYYY年MM月DD日");
   time.value = formatToDateTime(newDate, "HH:mm:ss");
   week.value = formatToDateTime(newDate, "dddd");
+
+  dataVal.value = formatToDate(newDate);
+};
+
+// 定时更新时间和请求子组件方法
+const updateTimeAndRefresh = () => {
+  updateTime();
+  refreshAllComponents();
+};
+
+const isFullScreen = computed(() => userStore.isFullScreen);
+// 切换全屏函数
+const toggleFullScreen = async () => {
+  try {
+    if (!isFullScreen.value) {
+      userStore.setFullScreen(true);
+      // ElMessage.success("已进入全屏模式");
+    } else {
+      userStore.setFullScreen(false);
+      // ElMessage.success("已退出全屏模式");
+    }
+  } catch (error) {
+    console.error("全屏切换失败:", error);
+  }
 };
 
 // 获取最后一层ID集合
@@ -197,10 +239,9 @@ const handleSearch = () => {
 };
 
 onMounted(() => {
-  dataVal.value = formatToDate(new Date());
   updateTime();
-  timer = setInterval(updateTime, 1000);
   getProjList();
+  timer = setInterval(updateTimeAndRefresh, 5 * 60 * 1000);
 });
 
 onUnmounted(() => {
@@ -308,6 +349,15 @@ onUnmounted(() => {
         font-weight: 600;
         margin-right: 8px;
       }
+    }
+    .full-screen-img {
+      position: absolute;
+      top: 26px;
+      right: 20px;
+      width: 20px;
+      height: 20px;
+      cursor: pointer;
+      color: #fff;
     }
   }
   .main-box {

@@ -12,6 +12,7 @@ export const useUserStore = defineStore(
   () => {
     const userInfo = ref<UserInfo | null>(null);
     const token = ref<string>("");
+    const isFullScreen = ref<boolean>(false);
 
     const setUserInfo = (info: UserInfo) => {
       userInfo.value = info;
@@ -26,12 +27,21 @@ export const useUserStore = defineStore(
       token.value = "";
     };
 
+    const setFullScreen = (state: boolean) => {
+      isFullScreen.value = state;
+    };
+
     return {
+      // 数据
       userInfo,
       token,
+      isFullScreen,
+
+      // 方法
       setUserInfo,
       setToken,
       clearUserInfo,
+      setFullScreen,
     };
   },
   {
