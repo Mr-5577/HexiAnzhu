@@ -25,6 +25,7 @@
               :autoHeight="false"
               :height="tableHeight"
               :size="'small'"
+              :highlightCurrentRow="false"
             >
               <template #empty>
                 <div>暂无数据</div>

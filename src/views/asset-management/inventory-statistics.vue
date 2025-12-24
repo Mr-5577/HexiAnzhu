@@ -1,3 +1,4 @@
+<!-- 资产管理 库存统计表 -->
 <template>
   <div class="inventory-statistics-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
@@ -48,6 +49,7 @@
       </el-form-item>
     </el-form>
     <base-table
+      :rowKey="'uuid'"
       :columns="inventoryStatisticsColumns"
       :tableData="paginatedData"
       :loading="tableLoading"
@@ -68,6 +70,7 @@ import type { InventoryStatisticsInterface } from "@/types/asset-management-type
 import { useSalesData } from "@/composables/use-sales";
 import { ElMessage } from "element-plus";
 import { useRoute, useRouter } from "vue-router";
+import { v4 as uuidv4 } from "uuid";
 
 const route = useRoute();
 const router = useRouter();
@@ -208,7 +211,10 @@ const handleExport = async () => {
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value;
   const end = start + pageSize.value;
-  return allTableList.value.slice(start, end);
+  return allTableList.value.slice(start, end).map((item) => ({
+    ...item,
+    uuid: uuidv4(), // 为当前页的每一行生成 UUID
+  }));
 });
 
 // 生命周期

@@ -70,6 +70,7 @@
       </el-form-item>
     </el-form>
     <base-table
+      :rowKey="'uuid'"
       :columns="tableColumns"
       :tableData="paginatedData"
       :loading="tableLoading"
@@ -96,6 +97,7 @@ import type {
 import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
 import { ElMessage } from "element-plus";
+import { v4 as uuidv4 } from "uuid";
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
@@ -238,7 +240,10 @@ const handleExport = async () => {
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value;
   const end = start + pageSize.value;
-  return allTableList.value.slice(start, end);
+  return allTableList.value.slice(start, end).map((item) => ({
+    ...item,
+    uuid: uuidv4(), // 为当前页的每一行生成 UUID
+  }));
 });
 const tableColumns = computed(() => {
   if (queryParams.value.type === "month") {

@@ -626,6 +626,7 @@ const initForm = () => {
     // 如果是新增子级，查找父级信息
     if (isAddChildType.value && data.pid) {
       parentMenuInfo.value = findMenuById(data.pid, props.menuTree);
+      console.log('父级信息：', parentMenuInfo.value)
       // 根据父级类型设置子级的默认菜单类型
       if (parentMenuInfo.value) {
         if (parentMenuInfo.value.menuType === 0) {

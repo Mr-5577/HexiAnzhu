@@ -46,6 +46,7 @@
     </el-form>
     <base-table
       :showSummary="true"
+      :rowKey="'uuid'"
       :columns="tableColumns"
       :tableData="paginatedData"
       :loading="tableLoading"
@@ -66,6 +67,7 @@ import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
 import { ElMessage } from "element-plus";
 import { useRoute, useRouter } from "vue-router";
+import { v4 as uuidv4 } from "uuid";
 
 const route = useRoute();
 const router = useRouter();
@@ -254,7 +256,10 @@ const handleExport = async () => {
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value;
   const end = start + pageSize.value;
-  return allTableList.value.slice(start, end);
+  return allTableList.value.slice(start, end).map((item) => ({
+    ...item,
+    uuid: uuidv4(), // 为当前页的每一行生成 UUID
+  }));
 });
 // 生命周期
 onMounted(() => {

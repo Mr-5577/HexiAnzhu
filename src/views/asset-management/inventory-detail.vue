@@ -1,3 +1,4 @@
+<!-- 资产管理-库存明细表 -->
 <template>
   <div class="inventory-detail-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
@@ -48,6 +49,7 @@
       </el-form-item>
     </el-form>
     <base-table
+      :rowKey="'uuid'"
       :columns="inventoryDetailColumns"
       :tableData="paginatedData"
       :loading="tableLoading"
@@ -67,6 +69,7 @@ import { assetManagementApi } from "@/api/asset-management-api";
 import type { InventoryDetailInterface } from "@/types/asset-management-type";
 import { useSalesData } from "@/composables/use-sales";
 import { ElMessage } from "element-plus";
+import { v4 as uuidv4 } from "uuid";
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
@@ -189,7 +192,10 @@ const handleExport = async () => {
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value;
   const end = start + pageSize.value;
-  return allTableList.value.slice(start, end);
+  return allTableList.value.slice(start, end).map((item) => ({
+    ...item,
+    uuid: uuidv4(), // 为当前页的每一行生成 UUID
+  }));
 });
 // 生命周期
 onMounted(() => {
