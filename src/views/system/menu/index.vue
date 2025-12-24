@@ -10,17 +10,6 @@
           style="width: 200px"
         />
       </el-form-item>
-      <el-form-item label="菜单状态" prop="status">
-        <el-select
-          v-model="queryParams.status"
-          placeholder="菜单状态"
-          clearable
-          style="width: 200px"
-        >
-          <el-option label="启用" :value="1" />
-          <el-option label="停用" :value="0" />
-        </el-select>
-      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">
           搜索
@@ -32,7 +21,7 @@
       v-if="refreshTable"
       :columns="columns"
       :tableData="tableData"
-      :loading="loading"
+      :loading="tableLoading"
       :rowKey="'id'"
       :border="false"
       :pagination="false"
@@ -63,6 +52,12 @@
         </div>
       </template>
       <!-- 自定义插槽 ==> scope 包含：row, column, $index 等 -->
+      <template #isInner="scope">
+        <!-- 页面缓存 -->
+        <el-tag :type="scope.row.isInner ? 'success' : 'info'" size="small">
+          {{ scope.row.isInner ? "是" : "否" }}
+        </el-tag>
+      </template>
       <template #isKeepAlive="scope">
         <!-- 页面缓存 -->
         <el-tag :type="scope.row.isKeepAlive ? 'success' : 'info'" size="small">
@@ -81,12 +76,6 @@
           {{ scope.row.isVisible ? "否" : "是" }}
         </el-tag>
       </template>
-      <template #isPower="scope">
-        <!-- 菜单状态 -->
-        <el-tag :type="scope.row.status ? 'success' : 'info'" size="small">
-          {{ scope.row.status ? "启用" : "停用" }}
-        </el-tag>
-      </template>
       <template #action="scope">
         <div class="action-buttons">
           <el-button
@@ -94,12 +83,17 @@
             :icon="EditPen"
             type="primary"
             size="small"
-            @click="handleEditMenu(scope.row)"
-            v-permission="'menuList:edit'"
+            @click="handleAddEditMenu(scope.row, 'edit')"
           >
             修改
           </el-button>
-          <el-button link :icon="Plus" type="primary" size="small">
+          <el-button
+            link
+            :icon="Plus"
+            type="primary"
+            size="small"
+            @click="handleAddEditMenu(scope.row, 'add')"
+          >
             新增
           </el-button>
           <el-button
@@ -108,7 +102,6 @@
             type="danger"
             size="small"
             @click="handleDelete(scope.row)"
-            v-permission="['menuList:edit22','menuList:edit']"
           >
             删除
           </el-button>
@@ -117,9 +110,10 @@
     </base-table>
     <add-edit-menu
       v-model="modalVisible"
-      :form-data="formData"
+      :currentData="formData"
       :menu-tree="tableData"
       :title="dialogTitle"
+      :dialog-type="dialogType"
       @submit="handleSubmit"
       @close="handleDialogClose"
     ></add-edit-menu>
@@ -135,18 +129,19 @@ import BaseTable from "@/components/base-table.vue";
 import AddEditMenu from "./add-edit-menu.vue";
 import type { TableColumnItem } from "@/components/base-table.vue";
 import { MenuForm, MenuItem } from "@/types/menu-type";
-
+import { menuApi } from "@/api/menu-api";
 
 const queryParams = ref({
   menuName: "",
-  status: "",
 });
 // 对话框控制
+// 对话框类型：add-root(新增根级), add-child(新增子级), edit(编辑)
+const dialogType = ref<"add-root" | "add-child" | "edit">("add-root");
 const modalVisible = ref(false);
 const dialogTitle = ref("添加菜单");
 const formData = ref<Partial<MenuForm>>({});
 
-const loading = ref(false);
+const tableLoading = ref(false);
 const refreshTable = ref(true);
 const isExpandAll = ref(false);
 const columns: TableColumnItem[] = [
@@ -154,6 +149,7 @@ const columns: TableColumnItem[] = [
   { prop: "sort", label: "排序", width: 60 },
   { prop: "isAutoRefresh", label: "权限标识" },
   { prop: "component", label: "组件路径", align: "left" },
+  { label: "是否内置", slot: "isInner", width: 90 },
   {
     prop: "isKeepAlive",
     label: "页面缓存",
@@ -165,7 +161,6 @@ const columns: TableColumnItem[] = [
   },
   { label: "支持多开", slot: "isMultiOpen", width: 90 },
   { label: "是否可见", slot: "isVisible", width: 90 },
-  { label: "菜单状态", slot: "status", width: 90 },
   { label: "操作", slot: "action", width: 220 },
 ];
 const tableData = ref<any[]>([]);
@@ -181,11 +176,10 @@ const handleQuery = () => {
   getDataList();
 };
 const resetQuery = () => {
-  queryParams.value = { menuName: "", status: "" };
+  queryParams.value = { menuName: "" };
   getDataList();
 };
 const handleAddMenu = () => {
-  console.log("新增");
   formData.value = {
     pid: 0,
     menuType: 0,
@@ -193,26 +187,28 @@ const handleAddMenu = () => {
     isControl: true,
     isVisible: true,
   };
-  dialogTitle.value = "添加菜单";
+  dialogTitle.value = "新增菜单";
+  dialogType.value = "add-root"; // 设置为新增根级
   modalVisible.value = true;
 };
-const handleEditMenu = (menu: MenuItem) => {
-  formData.value = {
-    id: menu.id,
-    pid: menu.pid,
-    name: menu.name,
-    title: menu.title,
-    icon: menu.icon,
-    menuType: menu.menuType,
-    component: menu.component || "",
-    path: menu.path,
-    isKeepAlive: menu.isKeepAlive,
-    isMultiOpen: menu.isMultiOpen,
-    isControl: menu.isControl,
-    isVisible: menu.isVisible,
-    sort: menu.sort,
-  };
-  dialogTitle.value = "编辑菜单";
+const handleAddEditMenu = (menu: MenuItem, type: string) => {
+  if (type === "edit") {
+    // 编辑菜单
+    formData.value = { ...menu };
+    dialogTitle.value = "编辑菜单";
+    dialogType.value = "edit";
+  } else {
+    // 新增子菜单
+    formData.value = {
+      pid: menu.id, // 父级是当前选中的菜单
+      menuType: menu.menuType === 0 ? 1 : 2, // 父级是模块则子级是菜单，父级是菜单则子级是按钮
+      sort: 1,
+      isControl: true,
+      isVisible: menu.menuType !== 2, // 按钮默认不可见
+    };
+    dialogTitle.value = "新增子菜单";
+    dialogType.value = "add-child";
+  }
   modalVisible.value = true;
 };
 const handleDelete = (menu: MenuItem) => {
@@ -222,37 +218,82 @@ const handleDelete = (menu: MenuItem) => {
     type: "warning",
   })
     .then(async () => {
-      ElMessage.success("删除成功！");
+      const res = await menuApi.delMenu({ ...menu, isDel: true });
+      if (res.code === 200) {
+        ElMessage.success("删除成功！");
+        getDataList();
+      }
     })
     .catch(() => {});
 };
 const handleSubmit = (form: MenuForm) => {
   console.log("提交的表单数据:", form);
-  // 这里调用API接口
-  if (form.id) {
-    // 更新菜单
-    // updateMenuApi(form)
-  } else {
-    // 新增菜单
-    // addMenuApi(form)
-  }
   modalVisible.value = false;
+  getDataList();
 };
 
 // 对话框关闭
 const handleDialogClose = () => {
   formData.value = {};
+  dialogType.value = "add-root"; // 重置为默认
 };
 
 // 获取数据列表
 const getDataList = async () => {
   try {
-    loading.value = true;
-    const data = await userApi.getUserMenuPowerList();
-    tableData.value = data || [];
+    tableLoading.value = true;
+    // const res = await userApi.getUserMenuPowerList();
+    const res = await menuApi.getMenuList({ ...queryParams.value });
+    if (res.code === 200) {
+      console.log("sds", convertToTreeOptimized(res.data || []));
+      tableData.value = convertToTreeOptimized(res.data || []);
+    }
   } finally {
-    loading.value = false;
+    tableLoading.value = false;
   }
+};
+/**
+ * 优化性能的树形结构转换
+ * @param flatData 扁平菜单数据
+ * @returns 树形结构数据
+ */
+const convertToTreeOptimized = (flatData: MenuItem[]): MenuItem[] => {
+  if (!flatData?.length) return [];
+  const menuMap = new Map<number, MenuItem & { children: MenuItem[] }>();
+  const tree: MenuItem[] = [];
+  // 初始化所有节点
+  flatData.forEach((item) => {
+    menuMap.set(item.id, { ...item, children: [] });
+  });
+
+  // 建立父子关系
+  flatData.forEach((item) => {
+    const menuItem = menuMap.get(item.id)!;
+    const parent = menuMap.get(item.pid);
+    if (item.pid === 0) {
+      // pid为0表示根节点
+      tree.push(menuItem);
+    } else if (parent) {
+      parent.children.push(menuItem);
+    } else {
+      tree.push(menuItem); // 处理孤儿节点
+    }
+  });
+  // 后置排序：递归排序整个树
+  const sortTreeRecursive = (nodes: MenuItem[]) => {
+    if (!nodes.length) return;
+    // 排序当前层级
+    nodes.sort((a, b) => a.sort - b.sort);
+    // 递归排序所有子层级
+    nodes.forEach((node) => {
+      if (node.children?.length) {
+        sortTreeRecursive(node.children);
+      }
+    });
+  };
+  // 从根节点开始排序
+  sortTreeRecursive(tree);
+  return tree;
 };
 
 // 生命周期
