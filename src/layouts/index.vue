@@ -18,13 +18,13 @@
             <component
               :is="Component"
               :key="route.fullPath"
-              v-if="route.meta?.keepAlive"
+              v-if="route.meta?.isKeepAlive"
             />
           </keep-alive>
           <component
             :is="Component"
             :key="route.fullPath"
-            v-if="!route.meta?.keepAlive"
+            v-if="!route.meta?.isKeepAlive"
           />
         </router-view>
       </main>
@@ -59,7 +59,7 @@ const updateCachePages = () => {
   const routes = router.getRoutes();
   cachePages.value.clear();
   routes.forEach((route) => {
-    if (route.meta?.keepAlive && route.name) {
+    if (route.meta?.isKeepAlive && route.name) {
       cachePages.value.add(route.name as string);
     }
   });

@@ -116,7 +116,6 @@
           v-model="formData.name"
           :placeholder="namePlaceholder"
           clearable
-          :disabled="isEditing"
         />
         <!-- <div class="form-tip">{{ nameTip }}</div> -->
       </el-form-item>

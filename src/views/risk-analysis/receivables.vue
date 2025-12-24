@@ -51,6 +51,10 @@ import { receivablesColumns1, receivablesColumns2 } from "./project-columns";
 import { assetManagementApi } from "@/api/asset-management-api";
 import { useSalesData } from "@/composables/use-sales";
 import { ElMessage } from "element-plus";
+import { useRoute, useRouter } from "vue-router";
+
+const route = useRoute();
+const router = useRouter();
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
@@ -105,12 +109,25 @@ const handleQuery = () => {
   getTableList();
 };
 const resetQuery = () => {
-  queryParams.value = {
-    projIds: getAllLeafProjectIds(),
-  };
+  initQueryParams();
   currentPage.value = 1;
   pageSize.value = 20;
   getTableList();
+};
+const initQueryParams = () => {
+  // 如果有路由参数，使用路由参数
+  if (route.query.data) {
+    try {
+      const routeData = JSON.parse(route.query.data as string);
+      queryParams.value.projIds = routeData.department || [];
+    } catch (error) {
+      console.error("解析路由参数失败，使用默认值", error);
+      queryParams.value.projIds = getAllLeafProjectIds();
+    }
+  } else {
+    // 没有路由参数，使用全选
+    queryParams.value.projIds = getAllLeafProjectIds();
+  }
 };
 // 初始化数据
 const initPageData = async () => {
@@ -120,10 +137,8 @@ const initPageData = async () => {
     saleStatus: false, // 状态数据
   });
 
-  // 设置查询参数默认值为全选
-  queryParams.value = {
-    projIds: getAllLeafProjectIds(),
-  };
+  // 初始化查询参数
+  initQueryParams();
 
   // 获取列表数据
   await getTableList();
@@ -139,7 +154,6 @@ const getTableList = async () => {
     allTableList.value = [];
     const params = getParams();
     const res = await assetManagementApi.getSaleOutStdFundsInfoYsProj(params);
-    console.log("res", res);
     if (res.code === 200) {
       const { header = [], records = [] } = res.data;
       // 动态列 - 多级表头形式

@@ -185,12 +185,12 @@ export function transformMenuDataExact(originalData: any) {
               },
             };
 
-            // 添加component、keepAlive、isVisible、isMultiOpen
+            // 添加component、isKeepAlive、isVisible、isMultiOpen
             if (child.component) {
               (childNode as any).component = child.component;
             }
             if (child.isKeepAlive) {
-              (childNode.meta as any).keepAlive = true;
+              (childNode.meta as any).isKeepAlive = true;
             }
             if (child.isVisible) {
               (childNode.meta as any).isVisible = true;

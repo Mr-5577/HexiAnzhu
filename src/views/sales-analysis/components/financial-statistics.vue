@@ -8,6 +8,7 @@
             class="content-item"
             v-for="(item, index) in statisticsItems"
             :key="index"
+            @click="handleToPage(item.path)"
           >
             <div class="img-type">
               <img class="item-icon" :src="item.img" alt="" />
@@ -34,6 +35,8 @@ import zhouqi from "@/assets/imgs/largeScreenImg/zhouqi.png";
 import ChartBox from "@/components/chart-box.vue";
 import { dateUtil } from "@/utils/date-util";
 import { ref, onMounted, onUnmounted, nextTick, computed } from "vue";
+import { useRouter } from "vue-router";
+const router = useRouter();
 
 interface Props {
   data: string;
@@ -75,6 +78,7 @@ const statisticsItems = computed(() => [
     img: zhouqi,
     text: "认转签周期",
     value: `${dataObj.value.signDays}天`,
+    path: "/risk-analysis/conversion-stats", // 认转签统计页面路径
   },
   {
     img: rengou,
@@ -82,6 +86,7 @@ const statisticsItems = computed(() => [
     value: `${formatTwoDecimal(dataObj.value.noSignMoney)}万(${
       dataObj.value.noSignNum
     }套)`,
+    path: "/risk-analysis/pending-stats",
   },
   {
     img: dingdan,
@@ -89,6 +94,7 @@ const statisticsItems = computed(() => [
     value: `${formatTwoDecimal(dataObj.value.tdMoney)}万(${
       dataObj.value.tdNum
     }套)`,
+    path: "/risk-analysis/forfeiture-stats",
   },
   {
     img: yingshou,
@@ -96,6 +102,7 @@ const statisticsItems = computed(() => [
     value: `${formatTwoDecimal(dataObj.value.collectMoney)}万(${
       dataObj.value.collectNum
     }套)`,
+    path: "/risk-analysis/receivables",
   },
   {
     img: tuifang,
@@ -103,6 +110,7 @@ const statisticsItems = computed(() => [
     value: `${formatTwoDecimal(dataObj.value.tfMoney)}万(${
       dataObj.value.tfNum
     }套)`,
+    path: "/risk-analysis/forfeiture-stats",
   },
   {
     img: yuqi,
@@ -110,6 +118,7 @@ const statisticsItems = computed(() => [
     value: `${formatTwoDecimal(dataObj.value.outstdMoney)}万(${
       dataObj.value.outstdNum
     }套)`,
+    path: "/risk-analysis/receivables",
   },
 ]);
 
@@ -153,7 +162,16 @@ const getData = async () => {
     loading.value = false;
   }
 };
-
+const handleToPage = (path: string) => {
+  const timestamp = new Date().getTime();
+  router.push({
+    path: path,
+    query: {
+      data: JSON.stringify(props),
+      _t: timestamp.toString(),
+    },
+  });
+};
 // 生命周期
 onMounted(() => {
   nextTick(() => {
@@ -175,7 +193,7 @@ onUnmounted(() => {});
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-    align-items: anchor-center;
+    align-items: center;
     .content-item {
       width: 46%;
       height: 28%;
@@ -184,6 +202,7 @@ onUnmounted(() => {});
       border: 1px solid #405c7f;
       border-radius: 2px 2px;
       position: relative;
+      cursor: pointer;
       .img-type {
         width: 50px;
         height: 50px;

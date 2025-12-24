@@ -27,7 +27,7 @@ const staticRoutes: Array<RouteRecordRaw> = [
       title: "登录",
       requiresAuth: false,
       hide: true,
-      keepAlive: false, // 登录页不需要缓存
+      isKeepAlive: false, // 登录页不需要缓存
     },
   },
   {
@@ -36,7 +36,7 @@ const staticRoutes: Array<RouteRecordRaw> = [
     component: () => import("@/views/test.vue"),
     meta: {
       title: "测试",
-      keepAlive: false,
+      isKeepAlive: false,
     },
   },
   {
@@ -47,7 +47,7 @@ const staticRoutes: Array<RouteRecordRaw> = [
       title: "页面不存在",
       requiresAuth: false,
       hide: true,
-      keepAlive: false,
+      isKeepAlive: false,
     },
   },
 ];
