@@ -71,7 +71,7 @@
                 />
                 <div class="item-content">
                   <div class="item-title">住宅均价</div>
-                  <div class="item-unit">
+                  <div class="item-unit" @click="handleTitleClick">
                     <span class="num">{{ premiumData.zzSalePrice }}</span>
                     <span class="unit">元/m²</span>
                   </div>
@@ -85,7 +85,7 @@
                 />
                 <div class="item-content">
                   <div class="item-title">整体溢价</div>
-                  <div class="item-unit">
+                  <div class="item-unit" @click="handleTitleClick">
                     <span class="num">{{ premiumData.premiumMoney }}</span>
                     <span class="unit">万</span>
                     <span class="num" style="margin-left: 5px">
@@ -102,7 +102,7 @@
                 />
                 <div class="item-content">
                   <div class="item-title">溢价</div>
-                  <div class="item-unit">
+                  <div class="item-unit" @click="handleTitleClick">
                     <span class="num">{{ premiumData.yjMoney }}</span>
                     <span class="unit">万</span>
                     <span class="num" style="margin-left: 5px">
@@ -119,7 +119,7 @@
                 />
                 <div class="item-content">
                   <div class="item-title">破价</div>
-                  <div class="item-unit">
+                  <div class="item-unit" @click="handleTitleClick">
                     <span class="warning">{{ premiumData.pjMoney }}</span>
                     <span class="unit">万</span>
                     <span class="warning" style="margin-left: 5px">
@@ -670,6 +670,7 @@ onUnmounted(() => {
           display: flex;
           flex-wrap: nowrap;
           align-items: center;
+          cursor: pointer;
           .num {
             font-size: 14px;
             color: #06e0b1;

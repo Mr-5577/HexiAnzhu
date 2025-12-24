@@ -20,7 +20,10 @@
           </div>
         </div>
       </div>
-      <div class="inventory-item">
+      <div
+        class="inventory-item"
+        @click="handelToListPage('/asset-management/inventory-statistics')"
+      >
         <img
           class="item-img"
           src="@/assets/imgs/largeScreenImg/quhua.png"
@@ -35,7 +38,10 @@
           </div>
         </div>
       </div>
-      <div class="inventory-item">
+      <div
+        class="inventory-item"
+        @click="handelToListPage('/asset-management/inventory-statistics')"
+      >
         <img
           class="item-img"
           src="@/assets/imgs/largeScreenImg/proportion.png"

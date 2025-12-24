@@ -65,6 +65,10 @@ import type { DayTableInterface } from "@/types/channel-analysis-type";
 import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
 import { ElMessage } from "element-plus";
+import { useRoute, useRouter } from "vue-router";
+
+const route = useRoute();
+const router = useRouter();
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
@@ -117,11 +121,39 @@ const handleQuery = () => {
   getTableList();
 };
 const resetQuery = () => {
-  initTime();
-  queryParams.value.projIds = getAllLeafProjectIds();
+  initQueryParams();
   currentPage.value = 1;
   pageSize.value = 20;
   getTableList();
+};
+const initQueryParams = () => {
+  // 如果有路由参数，使用路由参数
+  if (route.query.data) {
+    try {
+      const routeData = JSON.parse(route.query.data as string);
+      queryParams.value.projIds = routeData.department || [];
+      initTimeRange(routeData.data);
+    } catch (error) {
+      console.error("解析路由参数失败，使用默认值", error);
+      initDefaultParams();
+    }
+  } else {
+    // 没有路由参数，使用全选
+    initDefaultParams();
+  }
+};
+const initDefaultParams = () => {
+  queryParams.value.projIds = getAllLeafProjectIds();
+  initTimeRange();
+};
+
+const initTimeRange = (date?: string) => {
+  const baseDate = date ? dateUtil(date) : dateUtil();
+  const startTime = baseDate.date(1).format("YYYY-MM-DD");
+  const endTime = date
+    ? baseDate.format("YYYY-MM-DD")
+    : dateUtil().format("YYYY-MM-DD");
+  queryParams.value.time = [startTime, endTime];
 };
 // 初始化数据
 const initPageData = async () => {
@@ -131,8 +163,8 @@ const initPageData = async () => {
     saleStatus: false, // 不需要状态数据
   });
 
-  // 设置查询参数默认值为全选
-  queryParams.value.projIds = getAllLeafProjectIds();
+  // 初始化查询参数
+  initQueryParams();
 
   // 获取列表数据
   await getTableList();
@@ -213,11 +245,6 @@ const handleExport = async () => {
     exportLoading.value = false;
   }
 };
-const initTime = () => {
-  const startTime = dateUtil().date(1).format("YYYY-MM-DD");
-  const endTime = dateUtil().format("YYYY-MM-DD");
-  queryParams.value.time = [startTime, endTime];
-};
 // 手动分页
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value;
@@ -227,7 +254,6 @@ const paginatedData = computed(() => {
 
 // 生命周期
 onMounted(() => {
-  initTime();
   initPageData();
 });
 

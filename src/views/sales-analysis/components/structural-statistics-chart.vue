@@ -74,6 +74,10 @@ import * as echarts from "echarts";
 import { largeScreenApi } from "@/api/large-screen-api";
 import type { ECharts, EChartsOption } from "echarts";
 import { dateUtil } from "@/utils/date-util";
+import { useRoute, useRouter } from "vue-router";
+
+const route = useRoute();
+const router = useRouter();
 
 interface Props {
   data: string;
@@ -300,10 +304,47 @@ const getBaseChartOption = (): EChartsOption => {
 // 更新图表
 const updateChart = () => {
   if (!chartInstance.value) return;
+  // 先移除所有点击事件
+  chartInstance.value.off("click");
+
   const option = getBaseChartOption();
   chartInstance.value.setOption(option, true);
-};
 
+  // 绑定点击事件
+  chartInstance.value.on("click", function (params) {
+    console.log("点击数据:", params);
+    bindChartClickEvent();
+  });
+};
+const bindChartClickEvent = () => {
+  let path: string = "";
+  if (chartType.value === "1") {
+  }
+  if (chartType.value === "2") {
+    // 跳转到应收统计表
+    path = "/risk-analysis/receivables";
+  }
+  if (chartType.value === "3") {
+    if (channelType.value === "visit") {
+      // 跳转到来访渠道分析
+      path = "/channel-analysis/visiting-channel";
+    }
+    if (channelType.value === "deal") {
+      // 跳转到成交渠道分析
+      path = "/channel-analysis/deal-channel";
+    }
+  }
+  if (path) {
+    const timestamp = new Date().getTime();
+    router.push({
+      path: path,
+      query: {
+        data: JSON.stringify(props),
+        _t: timestamp.toString(),
+      },
+    });
+  }
+};
 // 处理窗口大小变化
 const handleResize = () => {
   if (chartInstance.value && !chartInstance.value.isDisposed()) {

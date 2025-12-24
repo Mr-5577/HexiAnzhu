@@ -92,7 +92,7 @@ export const userApi = {
               menuType: 1,
               component: "sales-analysis/large-screen",
               path: "sales-analysis/large-screen",
-              isKeepAlive: true,
+              isKeepAlive: false,
               isMultiOpen: false,
               isControl: true,
               isVisible: true,
