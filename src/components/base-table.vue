@@ -110,6 +110,7 @@ import {
   type Slots,
 } from "vue";
 import type { TableInstance, Sort } from "element-plus";
+import { isNumber } from "@/utils/is";
 
 // 定义列接口
 export interface TableColumnItem {
@@ -511,15 +512,36 @@ const defaultSummaryMethod = ({
       sums[index] = "--";
       return;
     }
-    // 只对数值列求和
-    const values = data.map((item) => Number(item[column.property]));
-    const hasNumbers = values.some((v) => !isNaN(v));
+
+    // 检查是否有属性名（跳过没有property的列）
+    const property = column.property;
+    if (property === undefined || property === null) {
+      sums[index] = "--";
+      return;
+    }
+
+    // 计算数值合计
+    let sum = 0;
+    let hasNumbers = false;
+    data.forEach((item) => {
+      const value = item[property];
+      // 检查是否为数值类型（包括字符串形式的数字）
+      if (
+        value !== undefined &&
+        value !== null &&
+        value !== "" &&
+        isNumber(value) // 判断是否是数字类型
+      ) {
+        const numValue = Number(value);
+        if (!isNaN(numValue)) {
+          sum += numValue;
+          hasNumbers = true;
+        }
+      }
+    });
+
     if (hasNumbers) {
-      const sum = values.reduce(
-        (total, val) => total + (isNaN(val) ? 0 : val),
-        0
-      );
-      // 使用 Number.isInteger() 判断是否整数,如果有小数则保留两位小数
+      // 使用 Number.isInteger() 判断是否整数，如果有小数则保留两位小数
       sums[index] = Number.isInteger(sum) ? sum.toString() : sum.toFixed(2);
     } else {
       sums[index] = "--";
