@@ -2,7 +2,10 @@
 <template>
   <div class="rate-page">
     <div class="inventory-content">
-      <div class="inventory-item">
+      <div
+        class="inventory-item"
+        @click="handelToListPage('/asset-management/inventory-statistics')"
+      >
         <img
           class="item-img"
           src="@/assets/imgs/largeScreenImg/kucun.png"
@@ -108,6 +111,9 @@
 import { ref, onMounted, onUnmounted, nextTick, watch } from "vue";
 import { largeScreenApi } from "@/api/large-screen-api";
 import { dateUtil } from "@/utils/date-util";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 interface Props {
   data: string;
@@ -218,6 +224,16 @@ const handleChange = () => {
     getData();
   });
 };
+const handelToListPage = (path: string) => {
+  const timestamp = new Date().getTime();
+  router.push({
+    path: path,
+    query: {
+      data: JSON.stringify(props),
+      _t: timestamp.toString(),
+    },
+  });
+};
 watch(
   () => [props.data, props.department],
   ([data, department]) => {
@@ -268,6 +284,7 @@ onUnmounted(() => {});
       min-width: 140px;
       padding: 0 10px;
       box-sizing: border-box;
+      cursor: pointer;
       .item-img {
         width: 30px;
         height: 30px;
