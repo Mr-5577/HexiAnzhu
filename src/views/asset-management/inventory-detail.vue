@@ -69,7 +69,10 @@ import { assetManagementApi } from "@/api/asset-management-api";
 import type { InventoryDetailInterface } from "@/types/asset-management-type";
 import { useSalesData } from "@/composables/use-sales";
 import { ElMessage } from "element-plus";
+import { useRoute } from "vue-router";
 import { v4 as uuidv4 } from "uuid";
+
+const route = useRoute();
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
@@ -125,15 +128,34 @@ const handleQuery = () => {
   getTableList();
 };
 const resetQuery = () => {
-  queryParams.value = {
-    projIds: getAllLeafProjectIds(),
-    productTypes: getAllProductTypeIds(),
-  };
+  initQueryParams();
   currentPage.value = 1;
   pageSize.value = 20;
   getTableList();
 };
-
+// 处理查询参数
+const initQueryParams = () => {
+  // 如果有路由参数，使用路由参数
+  if (route.query.data) {
+    try {
+      const routeData = JSON.parse(route.query.data as string);
+      console.log("routeData", routeData);
+      queryParams.value.projIds = routeData.projIds || [];
+      queryParams.value.productTypes = routeData.productTypes || [];
+    } catch (error) {
+      console.error("解析路由参数失败，使用默认值", error);
+      initDefaultParams();
+    }
+  } else {
+    // 没有路由参数，默认全选
+    initDefaultParams();
+  }
+};
+// 默认全选查询条件
+const initDefaultParams = () => {
+  queryParams.value.projIds = getAllLeafProjectIds();
+  queryParams.value.productTypes = getAllProductTypeIds();
+};
 // 初始化数据
 const initPageData = async () => {
   await loadData({
@@ -142,11 +164,8 @@ const initPageData = async () => {
     saleStatus: false, // 不需要状态数据
   });
 
-  // 设置查询参数默认值为全选
-  queryParams.value = {
-    projIds: getAllLeafProjectIds(),
-    productTypes: getAllProductTypeIds(),
-  };
+  // 初始化查询参数
+  initQueryParams();
 
   // 获取列表数据
   await getTableList();
