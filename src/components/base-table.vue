@@ -64,6 +64,7 @@
             :column="item"
             :slots="$slots"
             :dict-data="dictData"
+            @cell-click="handleTableCellClick"
           />
         </template>
 
@@ -126,6 +127,8 @@ export interface TableColumnItem {
   slot?: string;
   dict?: string;
   visible?: boolean;
+  clickable?: boolean; // 新增：是否可点击
+  clickHandler?: (row: any, column: TableColumnItem, index: number) => void; // 新增：点击处理函数
   children?: TableColumnItem[];
   formatter?: (row: any, column: any, index: number) => any;
   [key: string]: any;
@@ -197,6 +200,10 @@ interface Emits {
   ): void;
   (event: "refresh"): void;
   (event: "row-click", value: { row: any; event: Event }): void;
+  (
+    event: "cell-click",
+    value: { row: any; column: TableColumnItem; event: Event }
+  ): void;
 }
 
 // 递归列组件的 Props
@@ -228,12 +235,31 @@ const TableColumn = {
       default: () => ({}),
     },
   },
-  setup(props: TableColumnProps & { slots: any }) {
+  emits: ["cell-click"],
+  setup(props: TableColumnProps & { slots: any }, { emit }) {
     const getDictLabel = (dictKey: string, value: any): string => {
       const dict = props.dictData[dictKey];
       if (!dict) return String(value);
       const item = dict.find((item: DictItem) => item.value === value);
       return item ? item.label : String(value);
+    };
+
+    // 处理单元格点击
+    const handleColumnCellClick = (
+      row: any,
+      column: TableColumnItem,
+      index: number,
+      event: Event
+    ) => {
+      // 如果传入单元格点击事件以及属性，则拦截默认的cell-click事件
+      if (column.clickable && column.clickHandler) {
+        event.stopPropagation();
+        column.clickHandler(row, column, index);
+        // console.log('传入的单元格点击事件')
+        return;
+      }
+      // console.log('单元格点击事件！！')
+      emit("cell-click", { row, column, event });
     };
 
     const renderColumn = (column: TableColumnItem): VNode => {
@@ -317,18 +343,39 @@ const TableColumn = {
             }
           }
 
+          // 创建内容元素
+          let contentValue: any;
+
           // 格式化显示
           if (column.formatter) {
-            return column.formatter(scope.row, scope.column, scope.$index);
+            contentValue = column.formatter(
+              scope.row,
+              scope.column,
+              scope.$index
+            );
+          } else if (column.dict) {
+            contentValue = getDictLabel(column.dict, scope.row[column.prop!]);
+          } else {
+            contentValue = scope.row[column.prop!];
           }
 
-          // 字典值转换
-          if (column.dict) {
-            return getDictLabel(column.dict, scope.row[column.prop!]);
-          }
+          const content = h(
+            "div",
+            {
+              class: {
+                "clickable-cell": column.clickable,
+              },
+              style: {
+                cursor: column.clickable ? "pointer" : "default",
+                color: column.clickable ? "#1890ff" : "inherit",
+              },
+              onClick: (event: Event) =>
+                handleColumnCellClick(scope.row, column, scope.$index, event),
+            },
+            [contentValue]
+          );
 
-          // 默认显示
-          return scope.row[column.prop!];
+          return content;
         },
       });
     };
@@ -552,6 +599,7 @@ const defaultSummaryMethod = ({
   });
   return sums;
 };
+
 const formatNumberWithCommasV3 = (num: number): string => {
   return new Intl.NumberFormat("zh-CN", {
     minimumFractionDigits: 0,
@@ -587,24 +635,19 @@ const observeResize = (): void => {
   resizeObserver.observe(container);
 };
 
-onMounted(() => {
-  // 初始化高度计算
-  updateTableHeight();
-
-  // 监听窗口大小变化
-  window.addEventListener("resize", handleWindowResize);
-
-  // 监听容器大小变化
-  observeResize();
-});
-
-onUnmounted(() => {
-  // 清理事件监听
-  window.removeEventListener("resize", handleWindowResize);
-  if (resizeObserver) {
-    resizeObserver.disconnect();
-  }
-});
+// 单元格点击事件
+const handleTableCellClick = ({
+  row,
+  column,
+  event,
+}: {
+  row: any;
+  column: TableColumnItem;
+  event: Event;
+}) => {
+  // console.log("默认单元格点击事件");
+  emit("cell-click", { row, column, event });
+};
 
 // 多选方法
 const handleSelectionChange = (val: any[]): void => {
@@ -636,7 +679,7 @@ const handleRowClick = (row: any, column: any, event: Event): void => {
   } else {
     currentRowKey.value = rowKeyValue;
   }
-
+  // console.log("行点击事件");
   emit("row-click", { row, event });
 };
 
@@ -657,7 +700,6 @@ const handleRefresh = (): void => {
 
 // 表格列设置
 const handleColumnSetting = (): void => {
-  // 这里可以实现列设置的弹窗
   console.log("打开列设置");
 };
 
@@ -665,6 +707,25 @@ const handleColumnSetting = (): void => {
 const clearCurrentRow = (): void => {
   currentRowKey.value = "";
 };
+
+onMounted(() => {
+  // 初始化高度计算
+  updateTableHeight();
+
+  // 监听窗口大小变化
+  window.addEventListener("resize", handleWindowResize);
+
+  // 监听容器大小变化
+  observeResize();
+});
+
+onUnmounted(() => {
+  // 清理事件监听
+  window.removeEventListener("resize", handleWindowResize);
+  if (resizeObserver) {
+    resizeObserver.disconnect();
+  }
+});
 
 // 暴露方法给父组件
 defineExpose({
@@ -676,7 +737,6 @@ defineExpose({
 </script>
 
 <style lang="scss" scoped>
-/* 样式部分保持不变 */
 .pro-table-container {
   width: 100%;
   height: 100%;
@@ -747,6 +807,15 @@ defineExpose({
     .el-table__body {
       .el-table__cell {
         padding: 1px 0; // 调整内边距来控制高度
+
+        // 可点击单元格样式
+        .clickable-cell {
+          cursor: pointer;
+          color: #1890ff;
+          &:hover {
+            text-decoration: underline;
+          }
+        }
       }
 
       // 添加点击行高亮样式
