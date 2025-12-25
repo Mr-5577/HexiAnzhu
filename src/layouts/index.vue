@@ -3,15 +3,15 @@
     <app-header
       :active-module-id="activeModuleId"
       @module-change="handleModuleChange"
-      v-show="!isFullScreen"
+      v-show="!shouldHideLayout"
     ></app-header>
     <div class="content-body">
       <app-sidebar
         :menu-data="sidebarMenu"
-        v-show="!isFullScreen"
+        v-show="!shouldHideLayout"
       ></app-sidebar>
       <main class="content-main">
-        <tags-view v-show="!isFullScreen"></tags-view>
+        <tags-view v-show="!shouldHideLayout"></tags-view>
         <!-- <router-view /> -->
         <router-view v-slot="{ Component, route }">
           <keep-alive :include="cachePagesArray">
@@ -48,6 +48,21 @@ const router = useRouter();
 const menuStore = useMenuStore();
 
 const isFullScreen = computed(() => userStore.isFullScreen);
+const currentRoutePath = computed(() => route.path);
+// 判断是否在大屏页面
+const isInLargeScreen = computed(() => {
+  return currentRoutePath.value === '/sales-analysis/large-screen';
+});
+// 判断是否需要隐藏布局组件
+const shouldHideLayout = computed(() => {
+  // 如果不在大屏页面，就显示布局组件
+  if (!isInLargeScreen.value) {
+    return false;
+  }
+  // 如果在大屏页面，就用 isFullScreen 控制
+  return userStore.isFullScreen;
+});
+
 // 缓存的页面组件名列表
 const cachePages = ref<Set<string>>(new Set());
 // 转换为数组供 KeepAlive 使用
