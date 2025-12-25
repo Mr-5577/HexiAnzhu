@@ -238,7 +238,7 @@ onMounted(() => {
     left: 0;
     right: 0;
     bottom: 0;
-    background-image: url("@/assets/imgs/loginImg/login_bg.png"); // 请替换为您的背景图片路径
+    background-image: url("@/assets/imgs/loginImg/login_bg.png"); // 背景图片路径
     background-size: cover;
     background-position: center center;
     background-size: cover;

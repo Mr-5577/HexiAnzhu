@@ -31,6 +31,14 @@ const staticRoutes: Array<RouteRecordRaw> = [
     },
   },
   {
+    path: "/autoLogin",
+    name: "autoLogin",
+    component: () => import("@/views/login/auto-login.vue"),
+    meta: {
+      title: "外部登录",
+    },
+  },
+  {
     path: "/test",
     name: "test",
     component: () => import("@/views/test.vue"),
@@ -82,7 +90,7 @@ router.beforeEach(async (to, from, next) => {
   // }
 
   // 白名单
-  const whiteList = ["/login", "/test"];
+  const whiteList = ["/login", "/test", "/autoLogin"];
   if (whiteList.includes(to.path)) {
     next();
     return;
