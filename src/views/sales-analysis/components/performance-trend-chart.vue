@@ -4,15 +4,27 @@
       <template #content>
         <div class="performanceTrendContent">
           <div class="chart-controls">
+            <div>
+              <el-button
+                v-for="item in CHART_TYPES"
+                :key="item.value"
+                text
+                size="default"
+                :class="['chart-btn', { active: chartType === item.value }]"
+                @click="handleChartTypeChange(item.value)"
+              >
+                {{ item.label }}
+              </el-button>
+            </div>
+
             <el-button
-              v-for="item in CHART_TYPES"
-              :key="item.value"
-              text
+              class="chart-btn"
               size="default"
-              :class="['chart-btn', { active: chartType === item.value }]"
-              @click="handleChartTypeChange(item.value)"
+              text
+              style="color: #409eff"
+              @click="handleToPage"
             >
-              {{ item.label }}
+              更多>>
             </el-button>
           </div>
           <div ref="chartDom" class="performanceTrend-chart"></div>
@@ -36,6 +48,9 @@ import * as echarts from "echarts";
 import { dateUtil } from "@/utils/date-util";
 import { largeScreenApi } from "@/api/large-screen-api";
 import type { ECharts, EChartsOption } from "echarts";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 interface Props {
   data: string;
@@ -392,6 +407,25 @@ const resetData = () => {
   chartDayData.value = { xData: [], yData: [] };
 };
 
+const handleToPage = () => {
+  const path =
+    chartType.value === "year"
+      ? "/performance-analysis/annual-report"
+      : "/channel-analysis/visiting-statistics";
+  const timestamp = new Date().getTime();
+  const params: any = { ...props };
+  if (chartType.value === "month") {
+    params.type = "date";
+  }
+  router.push({
+    path: path,
+    query: {
+      data: JSON.stringify(params),
+      _t: timestamp.toString(),
+    },
+  });
+};
+
 // 生命周期
 onMounted(() => {
   window.addEventListener("resize", handleResize);
@@ -421,7 +455,7 @@ onUnmounted(() => {
     .chart-controls {
       flex-shrink: 0;
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
 
       .chart-btn {
         color: #fff;

@@ -224,7 +224,7 @@ const dataList = ref([
     goal: 0,
     color: "#1ff4cb",
     proportion: 0,
-    path: "/performance-analysis/daily-report",
+    path: "/performance-analysis/sub-detail",
   },
   {
     id: 3,
@@ -235,7 +235,7 @@ const dataList = ref([
     goal: 0,
     color: "#67c23a",
     proportion: 0,
-    path: "/performance-analysis/daily-report",
+    path: "/performance-analysis/contract-detail",
   },
   {
     id: 4,
@@ -246,7 +246,7 @@ const dataList = ref([
     goal: 0,
     color: "#e6a23c",
     proportion: 0,
-    path: "/performance-analysis/daily-report",
+    path: "/performance-analysis/collection-detail",
   },
 ]);
 
@@ -333,8 +333,14 @@ const updateChart = () => {
 
 // 跳转到项目溢价统计表页面
 const handleTitleClick = () => {
-  const data = { path: "/risk-analysis/premium-stats" };
-  handleLookDetail(data);
+  const timestamp = new Date().getTime();
+  router.push({
+    path: "/risk-analysis/premium-stats",
+    query: {
+      data: JSON.stringify(props),
+      _t: timestamp.toString(),
+    },
+  });
 };
 
 // 监听窗口大小变化
@@ -463,10 +469,11 @@ const handleChange = () => {
 };
 const handleLookDetail = (item: any) => {
   const timestamp = new Date().getTime();
+  const type = typeVal.value == 0 ? "month" : "date";
   router.push({
     path: item.path,
     query: {
-      data: JSON.stringify(props),
+      data: JSON.stringify({ ...props, type }),
       _t: timestamp.toString(),
     },
   });

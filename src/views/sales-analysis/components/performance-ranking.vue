@@ -5,15 +5,26 @@
       <template #content>
         <div class="rankingContent">
           <div class="chart-controls">
+            <div>
+              <el-button
+                v-for="item in chartTypeOptions"
+                :key="item.value"
+                text
+                size="default"
+                :class="['chart-btn', { active: chartType === item.value }]"
+                @click="switchChartType(item.value)"
+              >
+                {{ item.label }}
+              </el-button>
+            </div>
             <el-button
-              v-for="item in chartTypeOptions"
-              :key="item.value"
-              text
+              class="chart-btn"
               size="default"
-              :class="['chart-btn', { active: chartType === item.value }]"
-              @click="switchChartType(item.value)"
+              text
+              style="color: #409eff"
+              @click="handleToPage"
             >
-              {{ item.label }}
+              更多>>
             </el-button>
           </div>
           <div class="performance-ranking-table-list">
@@ -44,6 +55,9 @@ import BaseTable from "@/components/base-table.vue";
 import { ref, computed, watch, onMounted, nextTick, onUnmounted } from "vue";
 import { dateUtil } from "@/utils/date-util";
 import { largeScreenApi } from "@/api/large-screen-api";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 interface Props {
   data: string;
@@ -192,6 +206,21 @@ const getTableList = async () => {
   }
 };
 
+const handleToPage = () => {
+  const path =
+    chartType.value === "1"
+      ? "/performance-analysis/daily-report"
+      : "/performance-analysis/agent-ranking";
+  const timestamp = new Date().getTime();
+  router.push({
+    path: path,
+    query: {
+      data: JSON.stringify(props),
+      _t: timestamp.toString(),
+    },
+  });
+};
+
 watch(
   () => [props.data, props.department],
   ([data, department]) => {
@@ -236,7 +265,7 @@ onUnmounted(() => {
     .chart-controls {
       height: 32px; // 固定高度
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
       flex-shrink: 0;
       .chart-btn {
         color: #fff;

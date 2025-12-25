@@ -83,7 +83,7 @@
         <div class="sphere-bg"></div>
         <div class="sum">
           <span>综合达成率</span>
-          <p>{{ formatPercent(saleData.totalRate) }}%</p>
+          <p @click="handleToPage">{{ formatPercent(saleData.totalRate) }}%</p>
         </div>
       </div>
       <!-- 旋转圆圈 -->
@@ -231,6 +231,20 @@ const handleChange = () => {
   });
 };
 const handelToListPage = (path: string) => {
+  const timestamp = new Date().getTime();
+  router.push({
+    path: path,
+    query: {
+      data: JSON.stringify(props),
+      _t: timestamp.toString(),
+    },
+  });
+};
+const handleToPage = () => {
+  const path =
+    typeVal.value == 0
+      ? "/performance-analysis/annual-report"
+      : "/performance-analysis/daily-report";
   const timestamp = new Date().getTime();
   router.push({
     path: path,

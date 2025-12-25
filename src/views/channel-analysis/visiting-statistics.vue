@@ -152,9 +152,16 @@ const initParams = () => {
     try {
       const routeData = JSON.parse(route.query.data as string);
       queryParams.value.projIds = routeData.department || [];
-      queryParams.value.day = dateUtil(routeData.data || new Date()).format(
-        "YYYY-MM"
-      );
+      if (routeData.type === "month") {
+        queryParams.value.day = dateUtil(routeData.data || new Date()).format(
+          "YYYY-MM"
+        );
+      } else {
+        queryParams.value.day = dateUtil(routeData.data || new Date()).format(
+          "YYYY-MM-DD"
+        );
+      }
+      queryParams.value.type = routeData.type;
     } catch (error) {
       console.error("解析路由参数失败，使用默认值", error);
       queryParams.value.projIds = getAllLeafProjectIds();

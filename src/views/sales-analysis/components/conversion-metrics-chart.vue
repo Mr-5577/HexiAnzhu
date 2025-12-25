@@ -326,7 +326,7 @@ const handleOverallTitleClick = () => {
   router.push({
     path: "/channel-analysis/visiting-statistics",
     query: {
-      data: JSON.stringify(props),
+      data: JSON.stringify({...props, type: 'date'}),
       _t: timestamp.toString(),
     },
   });

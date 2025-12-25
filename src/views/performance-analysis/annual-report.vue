@@ -63,7 +63,10 @@ import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
 import { assetManagementApi } from "@/api/asset-management-api";
 import { ElMessage } from "element-plus";
+import { useRoute, useRouter } from "vue-router";
 import { v4 as uuidv4 } from "uuid";
+const route = useRoute();
+const router = useRouter();
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
@@ -110,11 +113,31 @@ const handleQuery = () => {
   getTableList();
 };
 const resetQuery = () => {
-  initTime();
-  queryParams.value.projIds = getAllLeafProjectIds();
+  initParams();
   currentPage.value = 1;
   pageSize.value = 20;
   getTableList();
+};
+
+const initParams = () => {
+  // 如果有路由参数，使用路由参数
+  if (route.query.data) {
+    try {
+      const routeData = JSON.parse(route.query.data as string);
+      queryParams.value.projIds = routeData.department || [];
+      queryParams.value.day = dateUtil(routeData.data || new Date()).format(
+        "YYYY"
+      );
+    } catch (error) {
+      console.error("解析路由参数失败，使用默认值", error);
+      queryParams.value.projIds = getAllLeafProjectIds();
+      queryParams.value.day = dateUtil().format("YYYY");
+    }
+  } else {
+    // 没有路由参数，使用全选
+    queryParams.value.projIds = getAllLeafProjectIds();
+    queryParams.value.day = dateUtil().format("YYYY");
+  }
 };
 // 初始化数据
 const initPageData = async () => {
@@ -124,8 +147,8 @@ const initPageData = async () => {
     saleStatus: false, // 不需要状态数据
   });
 
-  // 设置查询参数默认值为全选
-  queryParams.value.projIds = getAllLeafProjectIds();
+  // 初始化查询参数
+  initParams();
 
   // 获取列表数据
   await getTableList();
@@ -172,9 +195,6 @@ const handleExport = async () => {
     exportLoading.value = false;
   }
 };
-const initTime = () => {
-  queryParams.value.day = dateUtil().format("YYYY");
-};
 // 手动分页
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value;
@@ -187,7 +207,6 @@ const paginatedData = computed(() => {
 
 // 生命周期
 onMounted(() => {
-  initTime();
   initPageData();
 });
 

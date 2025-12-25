@@ -319,10 +319,12 @@ const updateChart = () => {
 const bindChartClickEvent = () => {
   let path: string = "";
   if (chartType.value === "1") {
+    // 跳转到库存统计表
+    path = "/asset-management/inventory-statistics";
   }
   if (chartType.value === "2") {
     // 跳转到应收统计表
-    path = "/risk-analysis/receivables";
+    // path = "/risk-analysis/receivables";
   }
   if (chartType.value === "3") {
     if (channelType.value === "visit") {
