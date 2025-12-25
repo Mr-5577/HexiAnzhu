@@ -16,11 +16,11 @@
           :max-collapse-tags="1"
         ></el-cascader>
       </el-form-item>
-      <el-form-item label="时间" prop="day">
+      <el-form-item label="年月" prop="day">
         <el-date-picker
           v-model="queryParams.day"
           type="month"
-          placeholder="时间"
+          placeholder="年月"
           :clearable="false"
           format="YYYY-MM"
           value-format="YYYY-MM"

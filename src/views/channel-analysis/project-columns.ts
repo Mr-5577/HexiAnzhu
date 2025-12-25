@@ -1,6 +1,7 @@
 // 来访统计-天-表头
 export const VisitingStatisticsDayColumns = [
-  { prop: "projName", label: "项目" },
+  { prop: "projName", label: "项目", width: 200, fixed: "left" },
+  { prop: "total", label: "总计" }, // 新增
   { prop: "d1", label: "1日" },
   { prop: "d2", label: "2日" },
   { prop: "d3", label: "3日" },
@@ -35,7 +36,8 @@ export const VisitingStatisticsDayColumns = [
 ];
 // 来访统计-月-表头
 export const VisitingStatisticsMonthColumns = [
-  { prop: "projName", label: "项目" },
+  { prop: "projName", label: "项目", width: 240 },
+  { prop: "total", label: "总计" }, // 新增
   { prop: "m1", label: "1月" },
   { prop: "m2", label: "2月" },
   { prop: "m3", label: "3月" },
@@ -141,14 +143,14 @@ export const dealChannelColumns: any = [
 ];
 // 转化率统计-表头
 export const conversionRateColumns: any = [
-  { type: "index", label: "序号", width: 80 },
-  { prop: "projName", label: "项目名称" },
-  { prop: "dylfComeNum", label: "当月来访" },
-  { prop: "dyrgNum", label: "当月认购" },
+  { type: "index", label: "序号", width: 60 },
+  { prop: "projName", label: "项目名称", width: 200 },
+  { prop: "dylfComeNum", label: "当月来访人数" },
+  { prop: "dyrgNum", label: "当月认购套数" },
   { prop: "qqlfrgNum", label: "前期来访本月成交套数" },
   { prop: "dylfrgNum", label: "当月来访当月成交套数" },
-  { prop: "dylfZhl", label: "当月来访认购转化率" },
-  { prop: "sylfZhl", label: "上月来访认购转化率" },
-  { prop: "dyztZhl", label: "当月整体转化率" },
-  { prop: "syztZhl", label: "上月整体转化率" },
+  { prop: "dylfZhl", label: "当月来访认购转化率" }, // 格式化加上%
+  { prop: "sylfZhl", label: "上月来访认购转化率" }, // 格式化加上%
+  { prop: "dyztZhl", label: "当月整体转化率" }, // 格式化加上%
+  { prop: "syztZhl", label: "上月整体转化率" }, // 格式化加上%
 ];

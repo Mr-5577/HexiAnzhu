@@ -43,7 +43,10 @@
           <el-option label="按天统计" value="date" />
         </el-select>
       </el-form-item>
-      <el-form-item label="时间" prop="day">
+      <el-form-item
+        :label="queryParams.type === 'month' ? '年月' : '认购日期'"
+        prop="day"
+      >
         <el-date-picker
           v-model="queryParams.day"
           :type="queryParams.type"
@@ -71,6 +74,7 @@
     </el-form>
     <base-table
       :rowKey="'uuid'"
+      :showSummary="true"
       :columns="tableColumns"
       :tableData="paginatedData"
       :loading="tableLoading"

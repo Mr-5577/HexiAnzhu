@@ -16,13 +16,13 @@
           :max-collapse-tags="1"
         ></el-cascader>
       </el-form-item>
-      <el-form-item label="时间" prop="time">
+      <el-form-item label="来访日期" prop="time">
         <el-date-picker
           v-model="queryParams.time"
           type="daterange"
           range-separator="-"
-          start-placeholder="开始时间"
-          end-placeholder="结束时间"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
           format="YYYY-MM-DD"
           value-format="YYYY-MM-DD"
           style="width: 220px"
@@ -101,8 +101,8 @@ const queryParams = ref({
 });
 // 固定列
 const tableColumns = ref<any>([
-  { type: "index", label: "序号", width: 80 },
-  { prop: "proj_name", label: "项目", width: 260 },
+  { type: "index", label: "序号", width: 80, fixed: "left" },
+  { prop: "proj_name", label: "项目", width: 200, fixed: "left" },
 ]);
 const tableLoading = ref<boolean>(false);
 const exportLoading = ref<boolean>(false);

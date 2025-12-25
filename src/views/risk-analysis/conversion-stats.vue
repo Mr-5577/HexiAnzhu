@@ -33,7 +33,7 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="签约时间" prop="time">
+      <el-form-item label="签约日期" prop="time">
         <el-date-picker
           v-model="queryParams.time"
           type="daterange"
@@ -64,7 +64,7 @@
     <base-table
       :rowKey="'uuid'"
       :showSummary="true"
-      :columns="conversionStatsColumns"
+      :columns="tableColumns"
       :tableData="paginatedData"
       :loading="tableLoading"
       :total="total"
@@ -78,7 +78,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import BaseTable from "@/components/base-table.vue";
-import { conversionStatsColumns } from "./project-columns";
+import { createConversionStatsColumns } from "./project-columns";
 import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
 import { assetManagementApi } from "@/api/asset-management-api";
@@ -86,6 +86,7 @@ import { ConversionStatsInterface } from "@/types/risk-analysis-type";
 import { ElMessage } from "element-plus";
 import { useRoute, useRouter } from "vue-router";
 import { v4 as uuidv4 } from "uuid";
+import { findProjectIdByXsProjId } from "@/utils/project-helper";
 const route = useRoute();
 const router = useRouter();
 
@@ -132,6 +133,29 @@ const pageSize = ref<number>(20);
 const total = ref<number>(0);
 const tableData = ref<ConversionStatsInterface[]>([]);
 const allTableList = ref<ConversionStatsInterface[]>([]);
+
+// 项目名称点击
+const handleProjectClick = (row: any, column: any, index: number) => {
+  if (row.projId) {
+    const timestamp = new Date().getTime();
+    const id = findProjectIdByXsProjId(projectOptions.value, row.projId);
+    const params = {
+      projIds: [id],
+      time: queryParams.value.time,
+      productTypes: queryParams.value.productTypes,
+    };
+    router.push({
+      path: "/risk-analysis/conversion-detail",
+      query: {
+        data: JSON.stringify(params),
+        _t: timestamp.toString(),
+      },
+    });
+  } else {
+    ElMessage.warning("该项目ID不存在，无法查看明细");
+  }
+};
+const tableColumns = createConversionStatsColumns(handleProjectClick);
 
 const handlePaginationChange = (params: any) => {
   currentPage.value = params.currentPage;

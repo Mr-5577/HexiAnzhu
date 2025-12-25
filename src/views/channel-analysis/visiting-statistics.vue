@@ -26,11 +26,11 @@
           <el-option label="按天统计" value="date" />
         </el-select>
       </el-form-item>
-      <el-form-item label="时间" prop="day">
+      <el-form-item label="来访日期" prop="day">
         <el-date-picker
           v-model="queryParams.day"
           :type="queryParams.type"
-          placeholder="时间"
+          placeholder="日期"
           :clearable="false"
           :format="queryParams.type == 'month' ? 'YYYY-MM' : 'YYYY-MM-DD'"
           :value-format="queryParams.type == 'month' ? 'YYYY-MM' : 'YYYY-MM-DD'"

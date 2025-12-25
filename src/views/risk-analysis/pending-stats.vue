@@ -33,7 +33,7 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="时间" prop="time">
+      <!-- <el-form-item label="时间" prop="time">
         <el-date-picker
           v-model="queryParams.time"
           type="daterange"
@@ -45,7 +45,7 @@
           style="width: 220px"
           :clearable="false"
         />
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">
           搜索
