@@ -541,13 +541,22 @@ const defaultSummaryMethod = ({
     });
 
     if (hasNumbers) {
-      // 使用 Number.isInteger() 判断是否整数，如果有小数则保留两位小数
-      sums[index] = Number.isInteger(sum) ? sum.toString() : sum.toFixed(2);
+      // // 使用 Number.isInteger() 判断是否整数，如果有小数则保留两位小数
+      // sums[index] = Number.isInteger(sum) ? sum.toString() : sum.toFixed(2);
+      // 格式化数字：添加千分位，保留两位小数
+      const formattedSum = formatNumberWithCommasV3(sum);
+      sums[index] = formattedSum;
     } else {
       sums[index] = "--";
     }
   });
   return sums;
+};
+const formatNumberWithCommasV3 = (num: number): string => {
+  return new Intl.NumberFormat("zh-CN", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(num);
 };
 
 // 监听相关变化
@@ -717,6 +726,9 @@ defineExpose({
       background-color: #f8f8f9 !important;
       .el-table__header {
         background-color: #f8f8f9 !important;
+        .el-table__cell {
+          padding: 1px 0; // 调整内边距来控制高度
+        }
         thead {
           background-color: #f8f8f9 !important;
           tr {
@@ -734,7 +746,7 @@ defineExpose({
     }
     .el-table__body {
       .el-table__cell {
-        padding: 4px 0; // 调整内边距来控制高度
+        padding: 1px 0; // 调整内边距来控制高度
       }
 
       // 添加点击行高亮样式
@@ -775,7 +787,7 @@ defineExpose({
     .el-table__footer-wrapper {
       // 调整整个合计行区域的高度
       .el-table__cell {
-        padding: 4px 0; // 调整内边距来控制高度
+        padding: 2px 0; // 调整内边距来控制高度
         .cell {
           line-height: 1.5; // 调整行高
           min-height: 32px; // 最小高度
