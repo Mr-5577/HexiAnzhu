@@ -415,4 +415,20 @@ export const assetManagementApi = {
       "post"
     );
   },
+  // 逾期未回款明细
+  getSaleOutStdFundsInfoRoom: (data: any) => {
+    return http.post("/sale/getSaleOutStdFundsInfoRoom", data);
+  },
+  // 逾期未回款明细-导出
+  exportSaleOutStdFundsInfoRoom: (
+    data: any,
+    filename: string = "逾期未回款明细.xlsx"
+  ) => {
+    return http.exportFile(
+      "/sale/getSaleOutStdFundsInfoRoom",
+      data,
+      filename || "数据列表.xlsx",
+      "post"
+    );
+  },
 };

@@ -22,7 +22,7 @@ declare module "axios" {
 // 创建 Axios 实例
 const service = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
-  timeout: 30000, // 超时时间
+  timeout: 60000, // 超时时间
   withCredentials: true, // 所有通过这个实例的请求都会自动携带 Cookie
 });
 

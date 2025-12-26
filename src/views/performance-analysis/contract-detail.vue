@@ -155,7 +155,13 @@ const initQueryParams = () => {
       const routeData = JSON.parse(route.query.data as string);
       queryParams.value.projIds = routeData.department || [];
       queryParams.value.productTypes = getAllProductTypeIds();
-      initTimeRange(routeData.data);
+      if (routeData.time) {
+        // 从销售年报表跳转过来
+        queryParams.value.time = routeData.time || [];
+      } else {
+        // 从大屏跳转过来或直接路由进入
+        initTimeRange(routeData.data);
+      }
     } catch (error) {
       console.error("解析路由参数失败，使用默认值", error);
       initDefaultParams();

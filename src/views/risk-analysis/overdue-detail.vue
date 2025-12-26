@@ -1,6 +1,6 @@
-<!-- 回款业绩明细 -->
+<!-- 逾期未回款明细 -->
 <template>
-  <div class="collection-detail-page">
+  <div class="overdue-detail-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
       <el-form-item label="项目" prop="projIds">
         <el-cascader
@@ -14,37 +14,7 @@
           clearable
           :show-all-levels="false"
           :max-collapse-tags="1"
-        />
-      </el-form-item>
-      <el-form-item label="业态" prop="productTypes">
-        <el-select
-          v-model="queryParams.productTypes"
-          placeholder="业态"
-          clearable
-          multiple
-          collapse-tags
-          style="width: 200px"
-        >
-          <el-option
-            v-for="item in productTypeList"
-            :key="item.id"
-            :label="item.productTypeName"
-            :value="item.id"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="回款日期" prop="time">
-        <el-date-picker
-          v-model="queryParams.time"
-          type="daterange"
-          range-separator="-"
-          start-placeholder="开始时间"
-          end-placeholder="结束时间"
-          format="YYYY-MM-DD"
-          value-format="YYYY-MM-DD"
-          style="width: 220px"
-          :clearable="false"
-        />
+        ></el-cascader>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">
@@ -64,7 +34,7 @@
     <base-table
       :rowKey="'uuid'"
       :showSummary="true"
-      :columns="CollectionDetailColumns"
+      :columns="overdueDetailColumns"
       :tableData="paginatedData"
       :loading="tableLoading"
       :total="total"
@@ -78,10 +48,9 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import BaseTable from "@/components/base-table.vue";
-import { CollectionDetailColumns } from "./project-columns";
-import { useSalesData } from "@/composables/use-sales";
-import { dateUtil } from "@/utils/date-util";
+import { overdueDetailColumns } from "./project-columns";
 import { assetManagementApi } from "@/api/asset-management-api";
+import { useSalesData } from "@/composables/use-sales";
 import { ElMessage } from "element-plus";
 import { useRoute } from "vue-router";
 import { v4 as uuidv4 } from "uuid";
@@ -89,18 +58,16 @@ const route = useRoute();
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
-  name: "collection-detail",
+  name: "overdue-detail",
 });
 
 // 使用共享的 data hook
 const {
   projectOptions,
-  productTypeList,
   // loading: dataLoading,
   // getLeafNodeIds,
   loadData,
   getAllLeafProjectIds,
-  getAllProductTypeIds,
 } = useSalesData();
 
 const cascaderProps = computed(() => ({
@@ -120,8 +87,6 @@ const cascaderProps = computed(() => ({
 // ref
 const queryParams = ref({
   projIds: [],
-  productTypes: [],
-  time: [],
 });
 const tableLoading = ref<boolean>(false);
 const exportLoading = ref<boolean>(false);
@@ -153,14 +118,6 @@ const initQueryParams = () => {
     try {
       const routeData = JSON.parse(route.query.data as string);
       queryParams.value.projIds = routeData.department || [];
-      queryParams.value.productTypes = getAllProductTypeIds();
-      if (routeData.time) {
-        // 从销售年报表跳转过来
-        queryParams.value.time = routeData.time || [];
-      } else {
-        // 从大屏跳转过来或直接路由进入
-        initTimeRange(routeData.data);
-      }
     } catch (error) {
       console.error("解析路由参数失败，使用默认值", error);
       initDefaultParams();
@@ -172,24 +129,13 @@ const initQueryParams = () => {
 };
 const initDefaultParams = () => {
   queryParams.value.projIds = getAllLeafProjectIds();
-  queryParams.value.productTypes = getAllProductTypeIds();
-  initTimeRange();
-};
-
-const initTimeRange = (date?: string) => {
-  const baseDate = date ? dateUtil(date) : dateUtil();
-  const startTime = baseDate.date(1).format("YYYY-MM-DD");
-  const endTime = date
-    ? baseDate.format("YYYY-MM-DD")
-    : dateUtil().format("YYYY-MM-DD");
-  queryParams.value.time = [startTime, endTime];
 };
 // 初始化数据
 const initPageData = async () => {
   await loadData({
     projects: true, // 项目数据
-    productTypes: true, // 业态数据
-    saleStatus: false, // 不需要状态数据
+    productTypes: false, // 业态数据
+    saleStatus: false, // 状态数据
   });
 
   // 初始化查询参数
@@ -198,49 +144,35 @@ const initPageData = async () => {
   // 获取列表数据
   await getTableList();
 };
-const getParams = () => {
-  const { projIds, time, productTypes } = queryParams.value;
-  return {
-    projIds,
-    productTypes,
-    type: 1,
-    day: `${time[0]} 00:00:00`,
-    beginDate: `${time[0]} 00:00:00`,
-    endDate: `${time[1]} 23:59:59`,
-  };
-};
+const getParams = () => ({
+  ...queryParams.value,
+  current: currentPage.value,
+});
 // 获取列表
 const getTableList = async () => {
   try {
     tableLoading.value = true;
     allTableList.value = [];
-    const { time } = queryParams.value;
-    if (!time || time.length < 2) {
-      allTableList.value = [];
-      total.value = 0;
-      return;
-    }
     const params = getParams();
-    const res = await assetManagementApi.getSaleAsstListPay(params);
+    const res = await assetManagementApi.getSaleOutStdFundsInfoRoom(params);
     if (res.code === 200) {
       allTableList.value = res.data || [];
       total.value = res.data?.length || 0;
     }
   } catch (error) {
-    console.error("获取数据失败:", error);
-    allTableList.value = [];
-    total.value = 0;
   } finally {
     tableLoading.value = false;
   }
 };
+
 // 导出
 const handleExport = async () => {
   try {
     exportLoading.value = true;
     const params = { ...getParams(), isExport: true };
-    const fileBlob = await assetManagementApi.exportSaleAsstListPay(params);
-    console.log("fileBlob", fileBlob);
+    const fileBlob = await assetManagementApi.exportSaleOutStdFundsInfoRoom(
+      params
+    );
     if (!fileBlob || fileBlob.size === 0) {
       ElMessage.warning("导出文件为空，请检查数据");
     } else {
@@ -272,7 +204,7 @@ onUnmounted(() => {});
 </script>
 
 <style lang="scss" scoped>
-.collection-detail-page {
+.overdue-detail-page {
   width: 100%;
   display: flex;
   flex-direction: column;

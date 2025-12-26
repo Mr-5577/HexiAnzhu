@@ -265,7 +265,7 @@ export const formatNumber = (
 export const formatNumberDisplay = (
   value: any,
   decimals: number = 2,
-  nullText: string = "0"
+  nullText: string = ""
 ): string => {
   // 转成number类型
   const num = formatNumber(value, decimals);

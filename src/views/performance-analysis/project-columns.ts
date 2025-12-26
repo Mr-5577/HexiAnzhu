@@ -1,7 +1,7 @@
 import { formatNumber, formatNumberDisplay } from "@/utils/common";
 
 // 销售年报表-表头
-export const annualReportColumns: any = [
+export const AnnualReportColumns: any = [
   { type: "index", label: "序号", width: 60, fixed: "left" },
   { prop: "projName", label: "项目", width: 220, fixed: "left" },
   { prop: "productTypeName", label: "考核业态", width: 150 },
@@ -9,24 +9,51 @@ export const annualReportColumns: any = [
     label: "年度累计数据(万元)",
     children: [
       {
-        prop: "totalOrderNum",
-        label: "认购业绩套数",
+        prop: "totalComeNum",
+        label: "来访人数",
         width: 120,
+        showSummary: true,
+      },
+      {
+        prop: "totalOrderNum",
+        label: "成交套数",
+        width: 120,
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "order-name-click", // 事件名称
         showSummary: true,
       },
       {
         prop: "totalOrderMoney",
-        label: "认购业绩金额",
+        label: "成交金额",
         width: 120,
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "order-name-click", // 事件名称
         showSummary: true,
         formatter: (row: any) => formatNumberDisplay(row.totalOrderMoney),
       },
       { prop: "totalPrice", label: "成交均价", width: 100 },
-      { prop: "totalSignNum", label: "签约套数", width: 90, showSummary: true },
+      {
+        prop: "totalCheckoutNum",
+        label: "退房挞定",
+        width: 120,
+        showSummary: true,
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "totalCheckoutNum-click", // 事件名称
+      },
+      {
+        prop: "totalSignNum",
+        label: "签约套数",
+        width: 90,
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "sgin-name-click", // 事件名称
+        showSummary: true,
+      },
       {
         prop: "totalSignMoney",
         label: "签约金额",
         width: 90,
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "sgin-name-click", // 事件名称
         showSummary: true,
         formatter: (row: any) => formatNumberDisplay(row.totalSignMoney),
       },
@@ -34,8 +61,30 @@ export const annualReportColumns: any = [
         prop: "totalRecMoney",
         label: "回款金额",
         width: 90,
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "payment-name-click", // 事件名称
         showSummary: true,
         formatter: (row: any) => formatNumberDisplay(row.totalRecMoney),
+      },
+      {
+        prop: "totalPemMoney",
+        label: "溢价金额",
+        width: 120,
+        showSummary: true,
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "totalPemMoney-click", // 事件名称
+      },
+      {
+        prop: "totalPemRate",
+        label: "溢价率",
+        width: 120,
+        formatter: (row: any, column: any, index: number) => {
+          const totalPemRate = row.totalPemRate || 0;
+          if (!totalPemRate) {
+            return "0%";
+          }
+          return `${(totalPemRate * 100).toFixed(2)}%`;
+        },
       },
     ],
   },
@@ -77,11 +126,15 @@ export const annualReportColumns: any = [
             label: "套数",
             width: 80,
             showSummary: true,
+            clickable: true, // 允许触发单元格事件
+            clickEvent: "total-name-click", // 事件名称
           },
           {
             prop: "totalOutstdMoney",
             label: "金额",
             width: 100,
+            clickable: true, // 允许触发单元格事件
+            clickEvent: "total-name-click", // 事件名称
             showSummary: true,
             formatter: (row: any) => formatNumberDisplay(row.totalOutstdMoney),
           },
@@ -92,7 +145,7 @@ export const annualReportColumns: any = [
   {
     label: "年度目标任务(万元)",
     children: [
-      { prop: "orderTask", label: "认购套数", width: 90, showSummary: true },
+      { prop: "orderTask", label: "成交套数", width: 90, showSummary: true },
       { prop: "signTask", label: "签约套数", width: 90, showSummary: true },
       {
         prop: "collectTask",
@@ -106,14 +159,19 @@ export const annualReportColumns: any = [
   {
     label: "年度实际完成(万元)",
     children: [
-      { prop: "price", label: "认购套数", width: 90, showSummary: true },
-      { prop: "price", label: "签约套数", width: 90, showSummary: true },
       {
-        prop: "price",
+        prop: "totalOrderNum",
+        label: "成交套数",
+        width: 90,
+        showSummary: true,
+      },
+      { prop: "totalSignNum", label: "签约套数", width: 90, showSummary: true },
+      {
+        prop: "totalRecMoney",
         label: "回款金额",
         width: 90,
         showSummary: true,
-        formatter: (row: any) => formatNumberDisplay(row.price),
+        formatter: (row: any) => formatNumberDisplay(row.totalRecMoney),
       },
     ],
   },
@@ -122,7 +180,7 @@ export const annualReportColumns: any = [
     children: [
       {
         prop: "orderRate",
-        label: "认购",
+        label: "成交",
         width: 80,
         formatter: (row: any, column: any, index: number) => {
           const orderRate = row.orderRate || 0;
@@ -181,25 +239,64 @@ export const dailylReportColumns: any = [
     label: "当日销售数据(万元)",
     children: [
       {
-        prop: "dayOrderNum",
-        label: "认购业绩套数",
+        prop: "dayComeNum",
+        label: "来访人数",
         width: 120,
         showSummary: true,
       },
-      { prop: "dayPrice", label: "成交均价", width: 100 },
+      {
+        prop: "dayOrderNum",
+        label: "成交套数",
+        width: 120,
+        showSummary: true, // 允许合计
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "order-name-click", // 事件名称
+      },
+      { prop: "dayPrice", label: "销售均价", width: 100 },
       {
         prop: "dayCheckoutNum",
         label: "退房挞定",
         width: 90,
         showSummary: true,
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "dayCheckoutNum-click", // 事件名称
       },
-      { prop: "daySignNum", label: "签约套数", width: 90, showSummary: true },
+      {
+        prop: "daySignNum",
+        label: "签约套数",
+        width: 90,
+        showSummary: true,
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "sgin-name-click", // 事件名称
+      },
       {
         prop: "dayRecMoney",
         label: "回款金额",
         width: 90,
+        showSummary: true, // 运行合计
+        formatter: (row: any) => formatNumberDisplay(row.dayRecMoney), // 千分位并保留2为小数
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "payment-name-click", // 事件名称
+      },
+      {
+        prop: "dayPemMoney",
+        label: "溢价金额",
+        width: 120,
         showSummary: true,
-        formatter: (row: any) => formatNumberDisplay(row.dayRecMoney),
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "dayPemMoney-click", // 事件名称
+      },
+      {
+        prop: "dayPemRate",
+        label: "溢价率",
+        width: 100,
+        formatter: (row: any, column: any, index: number) => {
+          const dayPemRate = row.dayPemRate || 0;
+          if (!dayPemRate) {
+            return "0%";
+          }
+          return `${(dayPemRate * 100).toFixed(2)}%`;
+        },
       },
     ],
   },
@@ -207,19 +304,33 @@ export const dailylReportColumns: any = [
     label: "当月累计数据(万元)",
     children: [
       {
+        prop: "totalComeNum",
+        label: "来访人数",
+        width: 120,
+        showSummary: true,
+      },
+      {
         prop: "totalOrderNum",
-        label: "认购业绩套数",
+        label: "成交套数",
         width: 120,
         showSummary: true,
       },
       {
         prop: "totalOrderMoney",
-        label: "认购业绩金额",
+        label: "成交金额",
         width: 120,
         showSummary: true,
         formatter: (row: any) => formatNumberDisplay(row.totalOrderMoney),
       },
-      { prop: "totalPrice", label: "成交均价", width: 100 },
+      { prop: "totalPrice", label: "销售均价", width: 100 },
+      {
+        prop: "totalCheckoutNum",
+        label: "退房挞定",
+        width: 100,
+        showSummary: true,
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "totalCheckoutNum-click", // 事件名称
+      },
       { prop: "totalSignNum", label: "签约套数", width: 90, showSummary: true },
       {
         prop: "totalSignMoney",
@@ -234,6 +345,26 @@ export const dailylReportColumns: any = [
         width: 90,
         showSummary: true,
         formatter: (row: any) => formatNumberDisplay(row.totalRecMoney),
+      },
+      {
+        prop: "totalPemMoney",
+        label: "溢价金额",
+        width: 120,
+        showSummary: true,
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "totalPemMoney-click", // 事件名称
+      },
+      {
+        prop: "totalPemRate",
+        label: "溢价率",
+        width: 100,
+        formatter: (row: any, column: any, index: number) => {
+          const totalPemRate = row.totalPemRate || 0;
+          if (!totalPemRate) {
+            return "0%";
+          }
+          return `${(totalPemRate * 100).toFixed(2)}%`;
+        },
       },
     ],
   },
@@ -275,6 +406,8 @@ export const dailylReportColumns: any = [
             label: "套数",
             width: 80,
             showSummary: true,
+            clickable: true, // 允许触发单元格事件
+            clickEvent: "total-name-click", // 事件名称
           },
           {
             prop: "totalOutstdMoney",
@@ -282,6 +415,8 @@ export const dailylReportColumns: any = [
             width: 100,
             showSummary: true,
             formatter: (row: any) => formatNumberDisplay(row.totalOutstdMoney),
+            clickable: true, // 允许触发单元格事件
+            clickEvent: "total-name-click", // 事件名称
           },
         ],
       },
@@ -290,7 +425,7 @@ export const dailylReportColumns: any = [
   {
     label: "月度目标任务(万元)",
     children: [
-      { prop: "orderTask", label: "认购套数", width: 90, showSummary: true },
+      { prop: "orderTask", label: "成交套数", width: 90, showSummary: true },
       { prop: "signTask", label: "签约套数", width: 90, showSummary: true },
       {
         prop: "collectTask",
@@ -306,7 +441,7 @@ export const dailylReportColumns: any = [
     children: [
       {
         prop: "totalOrderNum",
-        label: "认购套数",
+        label: "成交套数",
         width: 90,
         showSummary: true,
       },
@@ -325,7 +460,7 @@ export const dailylReportColumns: any = [
     children: [
       {
         prop: "orderRate",
-        label: "认购",
+        label: "成交",
         width: 80,
         formatter: (row: any, column: any, index: number) => {
           const orderRate = row.orderRate || 0;
@@ -421,7 +556,7 @@ export const SubDetailColumns: any = [
     formatter: (row: any) => formatNumberDisplay(row.saleUnitPrice),
   },
   { prop: "saleDate", label: "认购日期", width: 120 },
-  { prop: "asstDate", label: "认购业绩日期", width: 120 },
+  { prop: "asstDate", label: "成交日期", width: 120 },
   { prop: "syearMonth", label: "业绩年月", width: 100 },
   { prop: "saleNum", label: "业绩套数", width: 100, showSummary: true },
   { prop: "signDate", label: "签约日期", width: 120 },

@@ -1,23 +1,19 @@
 import { formatNumberDisplay } from "@/utils/common";
 
 // 认购转签约统计-表头
-export const createConversionStatsColumns = (
-  clickHandler?: (row: any, column: any, index: number) => void
-): any[] => {
-  return [
-    { type: "index", label: "序号", width: 60 },
-    {
-      prop: "projName",
-      label: "项目名称",
-      clickable: !!clickHandler, // 如果有处理函数才设置为可点击
-      clickHandler,
-    },
-    { prop: "signNum", label: "签约套数", showSummary: true },
-    { prop: "avgSignDays", label: "认转签周期(天)" },
-    { prop: "minSignDays", label: "最小周期(天)" },
-    { prop: "maxSignDays", label: "最大周期(天)" },
-  ];
-};
+export const ConversionStatsColumns: any = [
+  { type: "index", label: "序号", width: 60 },
+  {
+    prop: "projName",
+    label: "项目名称",
+    clickable: true, // 允许触发单元格事件
+    clickEvent: "projName-click", // 事件名称
+  },
+  { prop: "signNum", label: "签约套数", showSummary: true },
+  { prop: "avgSignDays", label: "认转签周期(天)" },
+  { prop: "minSignDays", label: "最小周期(天)" },
+  { prop: "maxSignDays", label: "最大周期(天)" },
+];
 
 // 认购转签约明细-表头
 export const conversionDetailColumns: any = [
@@ -48,7 +44,12 @@ export const conversionDetailColumns: any = [
 // 认购未签约统计-表头
 export const pendingStatsColumns: any = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "projName", label: "项目" },
+  {
+    prop: "projName",
+    label: "项目",
+    clickable: true, // 允许触发单元格事件
+    clickEvent: "projName-click", // 事件名称
+  },
   { prop: "orderNum", label: "认购套数", showSummary: true },
   {
     prop: "orderArea",
@@ -104,7 +105,14 @@ export const pendingDetailColumns: any = [
 
 // 溢价统计-表头
 export const premiumStatsColumns: any = [
-  { prop: "projName", label: "项目", width: 240, fixed: "left" },
+  {
+    prop: "projName",
+    label: "项目",
+    width: 240,
+    fixed: "left",
+    clickable: true, // 允许触发单元格事件
+    clickEvent: "projName-click", // 事件名称
+  },
   { prop: "allNum", label: "认购套数", width: 100, showSummary: true },
   {
     prop: "saleArea",
@@ -216,7 +224,7 @@ export const premiumDetailColumns: any = [
   }, // 字段调整
   {
     prop: "saleMoneyAll",
-    label: "实际成交金额",
+    label: "实际销售金额",
     width: 150,
     showSummary: true,
     formatter: (row: any) => formatNumberDisplay(row.saleMoneyAll),
@@ -236,13 +244,20 @@ export const premiumDetailColumns: any = [
 ];
 // 应收统计-表头
 export const receivablesColumns1: any = [
-  { prop: "proj_name", label: "项目", width: 260, fixed: "left" },
+  {
+    prop: "proj_name",
+    label: "项目",
+    width: 260,
+    fixed: "left",
+    clickable: true, // 允许触发单元格事件
+    clickEvent: "projName-click", // 事件名称
+  },
   {
     label: "应收合计",
     children: [
       {
         prop: "totalCollectNum",
-        label: "总户数",
+        label: "总套数",
         width: 90,
         showSummary: true,
       },
@@ -258,7 +273,7 @@ export const receivablesColumns1: any = [
         children: [
           {
             prop: "totalSldCollectNum",
-            label: "总户数",
+            label: "总套数",
             width: 90,
             showSummary: true,
           },
@@ -279,7 +294,7 @@ export const receivablesColumns1: any = [
     children: [
       {
         prop: "outstdCollectNum",
-        label: "总户数",
+        label: "总套数",
         width: 90,
         showSummary: true,
       },
@@ -300,7 +315,7 @@ export const receivablesColumns1: any = [
         children: [
           {
             prop: "rwqGcdkCollectNum",
-            label: "总户数",
+            label: "总套数",
             width: 90,
             showSummary: true,
           },
@@ -318,7 +333,7 @@ export const receivablesColumns1: any = [
             children: [
               {
                 prop: "rwqGcdkSldCollectNum",
-                label: "总户数",
+                label: "总套数",
                 width: 90,
                 showSummary: true,
               },
@@ -339,7 +354,7 @@ export const receivablesColumns1: any = [
         children: [
           {
             prop: "rwqQtCollectNum",
-            label: "总户数",
+            label: "总套数",
             width: 90,
             showSummary: true,
           },
@@ -355,7 +370,7 @@ export const receivablesColumns1: any = [
             children: [
               {
                 prop: "rwqQtSldCollectNum",
-                label: "总户数",
+                label: "总套数",
                 width: 90,
                 showSummary: true,
               },
@@ -380,7 +395,7 @@ export const receivablesColumns2: any = [
     children: [
       {
         prop: "qwhGcdkCollectNum",
-        label: "总户数",
+        label: "总套数",
         width: 90,
         showSummary: true,
       },
@@ -396,7 +411,7 @@ export const receivablesColumns2: any = [
         children: [
           {
             prop: "qwhGcdkSldCollectNum",
-            label: "总户数",
+            label: "总套数",
             width: 90,
             showSummary: true,
           },
@@ -417,7 +432,7 @@ export const receivablesColumns2: any = [
     children: [
       {
         prop: "qwhFpCollectNum",
-        label: "总户数",
+        label: "总套数",
         width: 90,
         showSummary: true,
       },
@@ -433,7 +448,7 @@ export const receivablesColumns2: any = [
         children: [
           {
             prop: "qwhFpSldCollectNum",
-            label: "总户数",
+            label: "总套数",
             width: 90,
             showSummary: true,
           },
@@ -481,7 +496,12 @@ export const receivablesDetailColumns: any = [
 ];
 // 退房挞定统计-表头
 export const forfeitureStatslColumns = [
-  { prop: "projName", label: "项目" },
+  {
+    prop: "projName",
+    label: "项目",
+    clickable: true, // 允许触发单元格事件
+    clickEvent: "projName-click", // 事件名称
+  },
   { prop: "tfNum", label: "退房套数", showSummary: true },
   {
     prop: "tfMoney",
@@ -500,7 +520,11 @@ export const forfeitureStatslColumns = [
 // 退房挞定明细-表头
 export const forfeitureDetailColumns: any = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "projName", label: "项目", width: 240 },
+  {
+    prop: "projName",
+    label: "项目",
+    width: 240,
+  },
   { prop: "bigProductTypeName", label: "业态" },
   { prop: "roomNum", label: "房号" },
   { prop: "buildArea", label: "建筑面积", showSummary: true },
@@ -521,4 +545,39 @@ export const forfeitureDetailColumns: any = [
   },
   { prop: "checkOutTypeName", label: "类型" },
   { prop: "checkOutDate", label: "退定日期" },
+];
+// 逾期未回款明细-表头
+export const overdueDetailColumns: any = [
+  { type: "index", label: "序号", width: 60, fixed: "left" },
+  { prop: "projName", label: "项目", width: 240, fixed: "left" },
+  { prop: "bigProductTypeName", label: "业态", width: 100 },
+  { prop: "roomNum", label: "房号", width: 100 },
+  { prop: "buildArea", label: "建筑面积", showSummary: true, width: 100 },
+  { prop: "custName", label: "业主", width: 100 },
+  { prop: "custTel", label: "联系电话", width: 120 },
+  { prop: "saleDate", label: "认购日期", width: 120 },
+  {
+    prop: "saleMoney",
+    label: "认购金额",
+    showSummary: true,
+    formatter: (row: any) => formatNumberDisplay(row.saleMoney),
+    width: 120,
+  },
+  { prop: "salerName", label: "置业顾问", width: 120 },
+  {
+    prop: "recMoney",
+    label: "应收总金额",
+    showSummary: true,
+    formatter: (row: any) => formatNumberDisplay(row.recMoney),
+    width: 150,
+  },
+  { prop: "minRecDate", label: "最早回款日期", width: 150 },
+  {
+    prop: "yqMoney",
+    label: "逾期金额",
+    showSummary: true,
+    formatter: (row: any) => formatNumberDisplay(row.yqMoney),
+    width: 150,
+  },
+  { prop: "maxYqDays", label: "最大逾期天数", width: 150 },
 ];

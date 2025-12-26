@@ -16,7 +16,7 @@
           :max-collapse-tags="1"
         ></el-cascader>
       </el-form-item>
-      <el-form-item label="成交日期" prop="time">
+      <el-form-item label="认购日期" prop="time">
         <el-date-picker
           v-model="queryParams.time"
           type="daterange"

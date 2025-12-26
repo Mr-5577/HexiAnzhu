@@ -64,13 +64,14 @@
     <base-table
       :rowKey="'uuid'"
       :showSummary="true"
-      :columns="tableColumns"
+      :columns="ConversionStatsColumns"
       :tableData="paginatedData"
       :loading="tableLoading"
       :total="total"
       :current-page="currentPage"
       :page-size="pageSize"
       @pagination-change="handlePaginationChange"
+      @cell-event="handleCellEventClick"
     ></base-table>
   </div>
 </template>
@@ -78,7 +79,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import BaseTable from "@/components/base-table.vue";
-import { createConversionStatsColumns } from "./project-columns";
+import { ConversionStatsColumns } from "./project-columns";
 import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
 import { assetManagementApi } from "@/api/asset-management-api";
@@ -135,12 +136,18 @@ const tableData = ref<ConversionStatsInterface[]>([]);
 const allTableList = ref<ConversionStatsInterface[]>([]);
 
 // 项目名称点击
-const handleProjectClick = (row: any, column: any, index: number) => {
-  if (row.projId) {
+const handleCellEventClick = (data: any) => {
+  const { eventName, row } = data;
+  // 校验：必须有项目ID才能跳转
+  if (!row.projId) return;
+  // 查找项目ID映射
+  const projectId = findProjectIdByXsProjId(projectOptions.value, row.projId);
+  if (!projectId) return;
+  // 点击项目名称跳转到 认购转签约明细
+  if (eventName === "projName-click") {
     const timestamp = new Date().getTime();
-    const id = findProjectIdByXsProjId(projectOptions.value, row.projId);
     const params = {
-      projIds: [id],
+      projIds: [projectId],
       time: queryParams.value.time,
       productTypes: queryParams.value.productTypes,
     };
@@ -151,11 +158,8 @@ const handleProjectClick = (row: any, column: any, index: number) => {
         _t: timestamp.toString(),
       },
     });
-  } else {
-    ElMessage.warning("该项目ID不存在，无法查看明细");
   }
 };
-const tableColumns = createConversionStatsColumns(handleProjectClick);
 
 const handlePaginationChange = (params: any) => {
   currentPage.value = params.currentPage;

@@ -85,6 +85,10 @@ import { assetManagementApi } from "@/api/asset-management-api";
 import { PendingDetailInterface } from "@/types/risk-analysis-type";
 import { ElMessage } from "element-plus";
 import { v4 as uuidv4 } from "uuid";
+import { useRoute } from "vue-router";
+
+const route = useRoute();
+
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
   name: "pending-detail",
@@ -140,12 +144,38 @@ const handleQuery = () => {
   getTableList();
 };
 const resetQuery = () => {
-  initTime();
-  queryParams.value.projIds = getAllLeafProjectIds();
-  queryParams.value.productTypes = getAllProductTypeIds();
+  initQueryParams();
   currentPage.value = 1;
   pageSize.value = 20;
   getTableList();
+};
+// 处理查询参数
+const initQueryParams = () => {
+  // 如果有路由参数，使用路由参数
+  if (route.query.data) {
+    try {
+      const routeData = JSON.parse(route.query.data as string);
+      queryParams.value.productTypes = getAllProductTypeIds();
+      queryParams.value = { ...queryParams.value, ...routeData };
+    } catch (error) {
+      console.error("解析路由参数失败，使用默认值", error);
+      initDefaultParams();
+    }
+  } else {
+    // 没有路由参数，默认全选
+    initDefaultParams();
+  }
+};
+// 默认全选查询条件
+const initDefaultParams = () => {
+  queryParams.value.projIds = getAllLeafProjectIds();
+  queryParams.value.productTypes = getAllProductTypeIds();
+  initTime();
+};
+const initTime = () => {
+  const startTime = dateUtil().date(1).format("YYYY-MM-DD");
+  const endTime = dateUtil().format("YYYY-MM-DD");
+  queryParams.value.time = [startTime, endTime];
 };
 
 // 初始化数据
@@ -156,9 +186,8 @@ const initPageData = async () => {
     saleStatus: false, // 不需要状态数据
   });
 
-  // 设置查询参数默认值为全选
-  queryParams.value.projIds = getAllLeafProjectIds();
-  queryParams.value.productTypes = getAllProductTypeIds();
+  // 初始化查询参数
+  initQueryParams();
 
   // 获取列表数据
   await getTableList();
@@ -168,10 +197,10 @@ const getParams = () => {
   return {
     projIds,
     productTypes,
-    type: 1,
-    day: `${time[0]} 00:00:00`,
-    beginDate: `${time[0]} 00:00:00`,
-    endDate: `${time[1]} 23:59:59`,
+    // type: 1,
+    // day: `${time[0]} 00:00:00`,
+    // beginDate: `${time[0]} 00:00:00`,
+    // endDate: `${time[1]} 23:59:59`,
   };
 };
 // 获取列表
@@ -219,11 +248,6 @@ const handleExport = async () => {
     exportLoading.value = false;
   }
 };
-const initTime = () => {
-  const startTime = dateUtil().date(1).format("YYYY-MM-DD");
-  const endTime = dateUtil().format("YYYY-MM-DD");
-  queryParams.value.time = [startTime, endTime];
-};
 // 手动分页
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value;
@@ -236,7 +260,6 @@ const paginatedData = computed(() => {
 
 // 生命周期
 onMounted(() => {
-  initTime();
   initPageData();
 });
 

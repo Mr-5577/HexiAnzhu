@@ -59,8 +59,48 @@ export const conversionRateColumns: any = [
   { prop: "dyrgNum", label: "当月认购套数" },
   { prop: "qqlfrgNum", label: "前期来访本月成交套数" },
   { prop: "dylfrgNum", label: "当月来访当月成交套数" },
-  { prop: "dylfZhl", label: "当月来访认购转化率" }, // 格式化加上%
-  { prop: "sylfZhl", label: "上月来访认购转化率" }, // 格式化加上%
-  { prop: "dyztZhl", label: "当月整体转化率" }, // 格式化加上%
-  { prop: "syztZhl", label: "上月整体转化率" }, // 格式化加上%
+  {
+    prop: "dylfZhl",
+    label: "当月来访认购转化率",
+    formatter: (row: any, column: any, index: number) => {
+      const dylfZhl = row.dylfZhl || 0;
+      if (!dylfZhl) {
+        return "0%";
+      }
+      return `${(dylfZhl * 100).toFixed(2)}%`;
+    },
+  },
+  {
+    prop: "sylfZhl",
+    label: "上月来访认购转化率",
+    formatter: (row: any, column: any, index: number) => {
+      const sylfZhl = row.sylfZhl || 0;
+      if (!sylfZhl) {
+        return "0%";
+      }
+      return `${(sylfZhl * 100).toFixed(2)}%`;
+    },
+  },
+  {
+    prop: "dyztZhl",
+    label: "当月整体转化率",
+    formatter: (row: any, column: any, index: number) => {
+      const dyztZhl = row.dyztZhl || 0;
+      if (!dyztZhl) {
+        return "0%";
+      }
+      return `${(dyztZhl * 100).toFixed(2)}%`;
+    },
+  },
+  {
+    prop: "syztZhl",
+    label: "上月整体转化率",
+    formatter: (row: any, column: any, index: number) => {
+      const syztZhl = row.syztZhl || 0;
+      if (!syztZhl) {
+        return "0%";
+      }
+      return `${(syztZhl * 100).toFixed(2)}%`;
+    },
+  },
 ];

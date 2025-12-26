@@ -154,7 +154,8 @@ const initQueryParams = () => {
   if (route.query.data) {
     try {
       const routeData = JSON.parse(route.query.data as string);
-      queryParams.value = routeData;
+      queryParams.value.productTypes = getAllProductTypeIds();
+      queryParams.value = { ...queryParams.value, ...routeData };
     } catch (error) {
       console.error("解析路由参数失败，使用默认值", error);
       initDefaultParams();

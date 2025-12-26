@@ -26,7 +26,7 @@
           value-format="YYYY-MM"
         />
       </el-form-item>
-      <el-form-item label="业态" prop="productTypes">
+      <!-- <el-form-item label="业态" prop="productTypes">
         <el-select
           v-model="queryParams.productTypes"
           placeholder="业态"
@@ -42,7 +42,7 @@
             :value="item.id"
           />
         </el-select>
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">
           搜索
@@ -189,7 +189,7 @@ const getParams = () => {
   const lastDay = dateUtil(day).endOf("month").format("YYYY-MM-DD");
   return {
     projIds,
-    productTypes,
+    // productTypes,
     type: 1,
     day: `${day}-01 00:00:00`,
     beginDate: `${day}-01 00:00:00`,

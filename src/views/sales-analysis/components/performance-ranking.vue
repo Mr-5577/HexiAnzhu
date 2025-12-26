@@ -179,7 +179,8 @@ const getTableList = async () => {
   const dataList = tableCache.value[chartType.value] || [];
   if (dataList && dataList.length) return;
 
-  const time = dateUtil(props.data).subtract(1, "month").format("YYYY-MM-DD");
+  // const time = dateUtil(props.data).subtract(1, "month").format("YYYY-MM-DD"); // 上月
+  const time = dateUtil(props.data || new Date()).format("YYYY-MM-DD"); // 当月
   const params = {
     projIds: props.department,
     type: 1,

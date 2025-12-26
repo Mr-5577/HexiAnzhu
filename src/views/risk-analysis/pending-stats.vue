@@ -71,6 +71,7 @@
       :current-page="currentPage"
       :page-size="pageSize"
       @pagination-change="handlePaginationChange"
+      @cell-event="handleCellEventClick"
     ></base-table>
   </div>
 </template>
@@ -86,6 +87,7 @@ import { PendingStatsInterface } from "@/types/risk-analysis-type";
 import { ElMessage } from "element-plus";
 import { useRoute, useRouter } from "vue-router";
 import { v4 as uuidv4 } from "uuid";
+import { findProjectIdByXsProjId } from "@/utils/project-helper";
 const route = useRoute();
 const router = useRouter();
 
@@ -132,6 +134,32 @@ const pageSize = ref<number>(20);
 const total = ref<number>(0);
 const tableData = ref<PendingStatsInterface[]>([]);
 const allTableList = ref<PendingStatsInterface[]>([]);
+
+// 项目名称点击
+const handleCellEventClick = (data: any) => {
+  const { eventName, row } = data;
+  // 校验：必须有项目ID才能跳转
+  if (!row.projId) return;
+  // 查找项目ID映射
+  const projectId = findProjectIdByXsProjId(projectOptions.value, row.projId);
+  if (!projectId) return;
+  // 点击项目名称跳转到 认购未签约明细
+  if (eventName === "projName-click") {
+    const timestamp = new Date().getTime();
+    const params = {
+      projIds: [projectId],
+      time: queryParams.value.time,
+      productTypes: queryParams.value.productTypes,
+    };
+    router.push({
+      path: "/risk-analysis/pending-detail",
+      query: {
+        data: JSON.stringify(params),
+        _t: timestamp.toString(),
+      },
+    });
+  }
+};
 
 const handlePaginationChange = (params: any) => {
   currentPage.value = params.currentPage;
@@ -199,10 +227,10 @@ const getParams = () => {
   return {
     projIds,
     productTypes,
-    type: 1,
-    day: `${time[0]} 00:00:00`,
-    beginDate: `${time[0]} 00:00:00`,
-    endDate: `${time[1]} 23:59:59`,
+    // type: 1,
+    // day: `${time[0]} 00:00:00`,
+    // beginDate: `${time[0]} 00:00:00`,
+    // endDate: `${time[1]} 23:59:59`,
   };
 };
 // 获取列表

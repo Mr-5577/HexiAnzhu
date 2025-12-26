@@ -83,6 +83,7 @@
       :current-page="currentPage"
       :page-size="pageSize"
       @pagination-change="handlePaginationChange"
+      @cell-event="handleCellEventClick"
     ></base-table>
   </div>
 </template>
@@ -98,6 +99,7 @@ import { ForfeitureStatsInterface } from "@/types/risk-analysis-type";
 import { ElMessage } from "element-plus";
 import { useRoute, useRouter } from "vue-router";
 import { v4 as uuidv4 } from "uuid";
+import { findProjectIdByXsProjId } from "@/utils/project-helper";
 const route = useRoute();
 const router = useRouter();
 
@@ -145,6 +147,33 @@ const pageSize = ref<number>(20);
 const total = ref<number>(0);
 const tableData = ref<ForfeitureStatsInterface[]>([]);
 const allTableList = ref<ForfeitureStatsInterface[]>([]);
+
+// 项目名称点击
+const handleCellEventClick = (data: any) => {
+  const { eventName, row } = data;
+  // 校验：必须有项目ID才能跳转
+  if (!row.projId) return;
+  // 查找项目ID映射
+  const projectId = findProjectIdByXsProjId(projectOptions.value, row.projId);
+  if (!projectId) return;
+  // 点击项目名称跳转到 退房挞定明细
+  if (eventName === "projName-click") {
+    const timestamp = new Date().getTime();
+    const params = {
+      projIds: [projectId],
+      time: queryParams.value.time,
+      checkOutType: queryParams.value.checkOutType,
+      productTypes: queryParams.value.productTypes,
+    };
+    router.push({
+      path: "/risk-analysis/forfeiture-detail",
+      query: {
+        data: JSON.stringify(params),
+        _t: timestamp.toString(),
+      },
+    });
+  }
+};
 
 const handlePaginationChange = (params: any) => {
   currentPage.value = params.currentPage;

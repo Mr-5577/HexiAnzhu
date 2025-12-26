@@ -83,10 +83,9 @@ import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
 import { assetManagementApi } from "@/api/asset-management-api";
 import { ElMessage } from "element-plus";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import { v4 as uuidv4 } from "uuid";
 const route = useRoute();
-const router = useRouter();
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
@@ -155,7 +154,13 @@ const initQueryParams = () => {
       const routeData = JSON.parse(route.query.data as string);
       queryParams.value.projIds = routeData.department || [];
       queryParams.value.productTypes = getAllProductTypeIds();
-      initTimeRange(routeData.data);
+      if (routeData.time) {
+        // 从销售年报表跳转过来
+        queryParams.value.time = routeData.time || [];
+      } else {
+        // 从大屏跳转过来或直接路由进入
+        initTimeRange(routeData.data);
+      }
     } catch (error) {
       console.error("解析路由参数失败，使用默认值", error);
       initDefaultParams();

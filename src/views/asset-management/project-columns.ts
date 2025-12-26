@@ -103,28 +103,24 @@ export const roomLedgerColumns: any = [
 ];
 
 // 库存统计表-表头
-export const createInventoryStatisticsColumns = (
-  clickHandler?: (row: any, column: any, index: number) => void
-): any[] => {
-  return [
-    { type: "index", label: "序号", width: 80 },
-    {
-      prop: "projName",
-      label: "项目名称",
-      clickable: !!clickHandler, // 如果有处理函数才设置为可点击
-      clickHandler,
-      width: 150,
-    },
-    { prop: "bigProductTypeName", label: "业态", width: 150 },
-    { prop: "totalRoomNum", label: "总套数", width: 150 },
-    { prop: "totalMoney", label: "总货值(亿)", width: 150 },
-    { prop: "stockRoomNum", label: "库存套数", width: 150 },
-    { prop: "stockMoney", label: "库存总货值(亿)", width: 150 },
-    { prop: "costNum", label: "月均去化套数", width: 150 }, // 提示：近6个月的平均值
-    { prop: "costMoney", label: "月均去化金额(万)", width: 150 }, // 提示：近6个月的平均值
-    { prop: "saleMonths", label: "存销比", width: 150 }, // 提示：库存总套数÷月均去化套数
-  ];
-};
+export const inventoryStatisticsColumns: any = [
+  { type: "index", label: "序号", width: 80 },
+  {
+    prop: "projName",
+    label: "项目名称",
+    width: 150,
+    clickable: true, // 允许触发单元格事件
+    clickEvent: "projName-click", // 事件名称
+  },
+  { prop: "bigProductTypeName", label: "业态", width: 150 },
+  { prop: "totalRoomNum", label: "总套数", width: 150 },
+  { prop: "totalMoney", label: "总货值(亿)", width: 150 },
+  { prop: "stockRoomNum", label: "库存套数", width: 150 },
+  { prop: "stockMoney", label: "库存总货值(亿)", width: 150 },
+  { prop: "costNum", label: "月均去化套数", width: 150 }, // 提示：近6个月的平均值
+  { prop: "costMoney", label: "月均去化金额(万)", width: 150 }, // 提示：近6个月的平均值
+  { prop: "saleMonths", label: "存销比", width: 150 }, // 提示：库存总套数÷月均去化套数
+];
 
 // 库存明细表-表头
 export const inventoryDetailColumns: any = [

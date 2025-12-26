@@ -41,6 +41,7 @@
       :current-page="currentPage"
       :page-size="pageSize"
       @pagination-change="handlePaginationChange"
+      @cell-event="handleCellEventClick"
     ></base-table>
   </div>
 </template>
@@ -54,6 +55,7 @@ import { useSalesData } from "@/composables/use-sales";
 import { ElMessage } from "element-plus";
 import { useRoute, useRouter } from "vue-router";
 import { v4 as uuidv4 } from "uuid";
+import { findProjectIdByXsProjId } from "@/utils/project-helper";
 const route = useRoute();
 const router = useRouter();
 
@@ -98,6 +100,31 @@ const pageSize = ref<number>(20);
 const total = ref<number>(0);
 const tableData = ref<any[]>([]);
 const allTableList = ref<any[]>([]);
+
+// 项目名称点击
+const handleCellEventClick = (data: any) => {
+  const { eventName, row } = data;
+  console.log(row)
+  // 校验：必须有项目ID才能跳转
+  if (!row.proj_id) return;
+  // 查找项目ID映射
+  const projectId = findProjectIdByXsProjId(projectOptions.value, row.proj_id);
+  if (!projectId) return;
+  // 点击项目名称跳转到 应收明细表
+  if (eventName === "projName-click") {
+    const timestamp = new Date().getTime();
+    const params = {
+      projIds: [projectId],
+    };
+    router.push({
+      path: "/risk-analysis/receivable-detail",
+      query: {
+        data: JSON.stringify(params),
+        _t: timestamp.toString(),
+      },
+    });
+  }
+};
 
 const handlePaginationChange = (params: any) => {
   currentPage.value = params.currentPage;
