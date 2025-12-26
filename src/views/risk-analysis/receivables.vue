@@ -171,11 +171,13 @@ const getTableList = async () => {
               prop: `${item.groupId}_collectNum`,
               label: "总套数",
               width: 90,
+              showSummary: true,
             },
             {
               prop: `${item.groupId}_collectMoney`,
               label: "总金额",
               width: 100,
+              showSummary: true,
             },
             {
               label: "预计回款", // 三级表头
@@ -184,11 +186,13 @@ const getTableList = async () => {
                   prop: `${item.groupId}_sldCollectNum`,
                   label: "总套数",
                   width: 90,
+                  showSummary: true,
                 },
                 {
                   prop: `${item.groupId}_sldCollectMoney`,
                   label: "总金额",
                   width: 100,
+                  showSummary: true,
                 },
               ],
             },
