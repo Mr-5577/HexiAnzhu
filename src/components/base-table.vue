@@ -65,6 +65,7 @@
             :slots="$slots"
             :dict-data="dictData"
             @cell-click="handleTableCellClick"
+            @cell-event="handleTableCellEvent"
           />
         </template>
 
@@ -205,6 +206,15 @@ interface Emits {
     event: "cell-click",
     value: { row: any; column: TableColumnItem; event: Event }
   ): void;
+  (
+    event: "cell-event",
+    value: {
+      eventName: string;
+      row: any;
+      column: TableColumnItem;
+      index: number;
+    }
+  ): void;
 }
 
 // 递归列组件的 Props
@@ -236,7 +246,7 @@ const TableColumn = {
       default: () => ({}),
     },
   },
-  emits: ["cell-click"],
+  emits: ["cell-click", "cell-event"],
   setup(props: TableColumnProps & { slots: any }, { emit }) {
     const getDictLabel = (dictKey: string, value: any): string => {
       const dict = props.dictData[dictKey];
@@ -252,14 +262,18 @@ const TableColumn = {
       index: number,
       event: Event
     ) => {
-      // 如果传入单元格点击事件以及属性，则拦截默认的cell-click事件
-      if (column.clickable && column.clickHandler) {
+      // 如果有 clickEvent，则触发特定事件
+      if (column.clickable && column.clickEvent) {
         event.stopPropagation();
-        column.clickHandler(row, column, index);
-        // console.log('传入的单元格点击事件')
+        emit("cell-event", {
+          eventName: column.clickEvent,
+          row,
+          column,
+          index,
+        });
         return;
       }
-      // console.log('单元格点击事件！！')
+      // 默认单元格点击事件
       emit("cell-click", { row, column, event });
     };
 
@@ -640,7 +654,7 @@ const observeResize = (): void => {
   resizeObserver.observe(container);
 };
 
-// 单元格点击事件
+// 默认单元格点击事件
 const handleTableCellClick = ({
   row,
   column,
@@ -652,6 +666,16 @@ const handleTableCellClick = ({
 }) => {
   // console.log("默认单元格点击事件");
   emit("cell-click", { row, column, event });
+};
+// 单元格特定事件name方法回调
+const handleTableCellEvent = (payload: {
+  eventName: string;
+  row: any;
+  column: TableColumnItem;
+  index: number;
+}) => {
+  // 将事件冒泡给父组件
+  emit("cell-event", payload);
 };
 
 // 多选方法

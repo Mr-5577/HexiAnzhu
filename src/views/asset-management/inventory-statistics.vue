@@ -50,7 +50,7 @@
     </el-form>
     <base-table
       :rowKey="'uuid'"
-      :columns="tableColumns"
+      :columns="inventoryStatisticsColumns"
       :tableData="paginatedData"
       :loading="tableLoading"
       :total="total"
@@ -58,6 +58,7 @@
       :page-size="pageSize"
       @pagination-change="handlePaginationChange"
       @cell-click="handleCellClick"
+      @cell-event="handleCellEventClick"
     ></base-table>
   </div>
 </template>
@@ -65,7 +66,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import BaseTable from "@/components/base-table.vue";
-import { createInventoryStatisticsColumns } from "./project-columns";
+import { inventoryStatisticsColumns } from "./project-columns";
 import { assetManagementApi } from "@/api/asset-management-api";
 import type { InventoryStatisticsInterface } from "@/types/asset-management-type";
 import { useSalesData } from "@/composables/use-sales";
@@ -121,13 +122,18 @@ const tableData = ref<InventoryStatisticsInterface[]>([]);
 const allTableList = ref<InventoryStatisticsInterface[]>([]);
 
 // 项目名称点击
-const handleProjectClick = (row: any, column: any, index: number) => {
-  console.log(row, column, index);
-  if (row.projId) {
+const handleCellEventClick = (data: any) => {
+  const { eventName, row } = data;
+  // 校验：必须有项目ID才能跳转
+  if (!row.projId) return;
+  // 查找项目ID映射
+  const projectId = findProjectIdByXsProjId(projectOptions.value, row.projId);
+  if (!projectId) return;
+  // 点击项目名称跳转到 库存明细表
+  if (eventName === "projName-click") {
     const timestamp = new Date().getTime();
-    const id = findProjectIdByXsProjId(projectOptions.value, row.projId);
     const params = {
-      projIds: [id],
+      projIds: [projectId],
       productTypes: queryParams.value.productTypes,
     };
     router.push({
@@ -137,14 +143,11 @@ const handleProjectClick = (row: any, column: any, index: number) => {
         _t: timestamp.toString(),
       },
     });
-  } else {
-    ElMessage.warning("该项目ID不存在，无法查看详情");
   }
 };
 const handleCellClick = (data: any) => {
   console.log("单元格点击事件", data);
 };
-const tableColumns = createInventoryStatisticsColumns(handleProjectClick);
 
 const handlePaginationChange = (params: any) => {
   currentPage.value = params.currentPage;
