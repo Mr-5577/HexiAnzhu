@@ -112,6 +112,7 @@ import {
 } from "vue";
 import type { TableInstance, Sort } from "element-plus";
 import { isNumber } from "@/utils/is";
+import { formatNumber, formatNumberDisplay } from "@/utils/common";
 
 // 定义列接口
 export interface TableColumnItem {
@@ -535,6 +536,24 @@ const updateTableHeight = (): void => {
   }
 };
 
+// 添加一个递归查找函数
+const findColumnConfig = (
+  columns: TableColumnItem[],
+  property: string
+): TableColumnItem | null => {
+  for (const col of columns) {
+    // 如果是当前列
+    if (col.prop === property) {
+      return col;
+    }
+    // 如果有子列，递归查找
+    if (col.children && col.children.length > 0) {
+      const found = findColumnConfig(col.children, property);
+      if (found) return found;
+    }
+  }
+  return null;
+};
 // 实现默认的合计方法
 const defaultSummaryMethod = ({
   columns,
@@ -550,6 +569,7 @@ const defaultSummaryMethod = ({
       sums[index] = "合计";
       return;
     }
+
     // 跳过特殊列
     if (
       column.type === "selection" ||
@@ -562,49 +582,34 @@ const defaultSummaryMethod = ({
 
     // 检查是否有属性名（跳过没有property的列）
     const property = column.property;
-    if (property === undefined || property === null) {
+
+    if (!property) {
       sums[index] = "--";
       return;
     }
 
-    // 计算数值合计
+    // 从列配置中查找是否设置了 showSummary
+    // 1. 先找到对应的列配置,使用递归查找函数
+    const colConfig = findColumnConfig(props.columns, property);
+
+    // 2. 判断是否需要合计
+    if (!colConfig || colConfig.showSummary !== true) {
+      sums[index] = "--";
+      return;
+    }
+
+    // 计算合计（使用 formatMoney 处理每个值）
     let sum = 0;
-    let hasNumbers = false;
     data.forEach((item) => {
       const value = item[property];
-      // 检查是否为数值类型（包括字符串形式的数字）
-      if (
-        value !== undefined &&
-        value !== null &&
-        value !== "" &&
-        isNumber(value) // 判断是否是数字类型
-      ) {
-        const numValue = Number(value);
-        if (!isNaN(numValue)) {
-          sum += numValue;
-          hasNumbers = true;
-        }
-      }
+      // 使用 formatMoney 获取处理后的数值
+      const numValue = formatNumber(value, 2);
+      sum += numValue;
     });
-
-    if (hasNumbers) {
-      // // 使用 Number.isInteger() 判断是否整数，如果有小数则保留两位小数
-      // sums[index] = Number.isInteger(sum) ? sum.toString() : sum.toFixed(2);
-      // 格式化数字：添加千分位，保留两位小数
-      const formattedSum = formatNumberWithCommasV3(sum);
-      sums[index] = formattedSum;
-    } else {
-      sums[index] = "--";
-    }
+    // 格式化显示（使用 formatMoneyDisplay）
+    sums[index] = formatNumberDisplay(sum, 2);
   });
   return sums;
-};
-
-const formatNumberWithCommasV3 = (num: number): string => {
-  return new Intl.NumberFormat("zh-CN", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 2,
-  }).format(num);
 };
 
 // 监听相关变化

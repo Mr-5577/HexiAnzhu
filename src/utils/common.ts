@@ -205,21 +205,98 @@ export function unique<T>(array: T[], key?: string): T[] {
 }
 
 /**
- * @name 数字千分位格式化
- * @param num 要格式化的数字
- * @param decimals 小数位数，默认2
- * @returns 格式化后的字符串
+ * @name 格式化数值（返回数字类型）
+ * @description 将输入值格式化为指定小数位数的数字，支持不同的舍入模式
+ * @param value - 要格式化的值（支持数字、字符串、null、undefined）
+ * @param decimals - 保留小数位数，默认2位
+ * @param rounding - 舍入模式：round（四舍五入，默认）、floor（向下取整）、ceil（向上取整）
+ * @returns 格式化后的数字，如果输入无效则返回0
+ * @example formatNumber(1234567.891) // 1234567.89
+ * @example formatNumber(1234567.895) // 1234567.90
+ * @example formatNumber(null) // 0
+ * @example formatNumber('abc') // 0
+ * @example formatNumber(1234567.891, 0) // 1234568
+ * @example formatNumber(1234567.891, 4) // 1234567.8910
+ * @example formatNumber(123.456, 2, 'floor') // 123.45（向下取整）
+ * @example formatNumber(123.451, 2, 'ceil') // 123.46（向上取整）
  */
-export function formatNumber(
-  num: number | string,
-  decimals: number = 2
-): string {
-  const number = Number(num);
-  if (isNaN(number)) return "0";
+export const formatNumber = (
+  value: any,
+  decimals: number = 2,
+  rounding: "round" | "floor" | "ceil" = "round"
+): number => {
+  // 处理空值
+  if (value === null || value === undefined || value === "") {
+    return 0;
+  }
+  // 转换为数字
+  const num = Number(value);
+  // 处理非数字值
+  if (isNaN(num)) {
+    return 0;
+  }
 
-  const fixedNum = number.toFixed(decimals);
-  const parts = fixedNum.split(".");
-  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  const factor = Math.pow(10, decimals);
 
-  return parts.join(".");
-}
+  // 根据舍入模式处理
+  switch (rounding) {
+    case "floor": // 向下取整（截断）
+      return Math.floor(num * factor) / factor;
+    case "ceil": // 向上取整
+      return Math.ceil(num * factor) / factor;
+    case "round": // 四舍五入（默认）
+    default:
+      return Math.round(num * factor) / factor;
+  }
+};
+
+/**
+ * @name 格式化数值,带千分位分隔符（字符串）
+ * @param value - 要格式化的值
+ * @param decimals - 保留小数位数，默认2位
+ * @param nullText - 空值显示文本，默认'0.00'
+ * @returns 格式化后的字符串（带千分位）
+ * @example formatNumberDisplay(1234567.891) // "1,234,567.89" (string)
+ * @example formatNumberDisplay(1234567.891, 2, '暂无') // "1,234,567.89" (string)
+ * @example formatNumberDisplay(null) // "0" (string)
+ * @example formatNumberDisplay('') // "0" (string)
+ * @example formatNumberDisplay('abc') // "0" (string)
+ */
+export const formatNumberDisplay = (
+  value: any,
+  decimals: number = 2,
+  nullText: string = "0"
+): string => {
+  // 转成number类型
+  const num = formatNumber(value, decimals);
+  // 如果结果是0且原始值是空值，返回自定义文本
+  if (num === 0 && (value === null || value === undefined || value === "")) {
+    return nullText;
+  }
+  // 使用 Intl.NumberFormat 添加千分位
+  if (typeof Intl !== "undefined" && Intl.NumberFormat) {
+    try {
+      return new Intl.NumberFormat("zh-CN", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+        useGrouping: true,
+      }).format(num);
+    } catch (error) {
+      // 降级处理
+      return fallbackFormatDisplay(num, decimals);
+    }
+  }
+
+  // 降级方案
+  return fallbackFormatDisplay(num, decimals);
+};
+
+/**
+ * 降级显示格式化
+ */
+const fallbackFormatDisplay = (num: number, decimals: number): string => {
+  const fixedNum = num.toFixed(decimals);
+  const [integerPart, decimalPart] = fixedNum.split(".");
+  const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return decimals > 0 ? `${formattedInteger}.${decimalPart}` : formattedInteger;
+};
