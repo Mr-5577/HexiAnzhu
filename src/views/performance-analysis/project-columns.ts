@@ -525,7 +525,7 @@ export const SubDetailColumns: any = [
     formatter: (row: any) => formatNumberDisplay(row.forecastArea),
   },
   { prop: "custName", label: "业主", width: 100 },
-  { prop: "custTel", label: "联系电话", width: 120 },
+  // { prop: "custTel", label: "联系电话", width: 120 },
   {
     prop: "floorMoney",
     label: "底价总价",
@@ -571,7 +571,7 @@ export const ContractDetailColumns: any = [
   { prop: "roomNum", label: "房号", width: 150 },
   { prop: "forecastArea", label: "预测面积", width: 100, showSummary: true },
   { prop: "custName", label: "业主", width: 100 },
-  { prop: "custTel", label: "联系电话", width: 120 },
+  // { prop: "custTel", label: "联系电话", width: 120 },
   {
     prop: "floorMoney",
     label: "底价总价",
@@ -615,7 +615,7 @@ export const CollectionDetailColumns: any = [
   { prop: "roomNum", label: "房号", width: 150 },
   { prop: "forecastArea", label: "预测面积", width: 100, showSummary: true },
   { prop: "custName", label: "业主", width: 100 },
-  { prop: "custTel", label: "联系电话", width: 120 },
+  // { prop: "custTel", label: "联系电话", width: 120 },
   {
     prop: "saleMoney",
     label: "销售总价",
