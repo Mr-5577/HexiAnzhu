@@ -52,8 +52,14 @@
         </div>
       </template>
       <!-- 自定义插槽 ==> scope 包含：row, column, $index 等 -->
+      <template #permissionIdentifier="scope">
+        <!-- 权限标识 -->
+        <div v-if="scope.row.menuType === 2">
+          {{ scope.row.name }}
+        </div>
+      </template>
       <template #isInner="scope">
-        <!-- 页面缓存 -->
+        <!-- 是否内置 -->
         <el-tag :type="scope.row.isInner ? 'success' : 'info'" size="small">
           {{ scope.row.isInner ? "是" : "否" }}
         </el-tag>
@@ -123,7 +129,6 @@
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { Delete, EditPen, Plus, Sort } from "@element-plus/icons-vue";
-import { userApi } from "@/api/user-api";
 import { ElMessage, ElMessageBox } from "element-plus";
 import BaseTable from "@/components/base-table.vue";
 import AddEditMenu from "./add-edit-menu.vue";
@@ -147,7 +152,7 @@ const isExpandAll = ref(false);
 const columns: TableColumnItem[] = [
   { prop: "title", label: "菜单名称", align: "left" },
   { prop: "sort", label: "排序", width: 60 },
-  { prop: "isAutoRefresh", label: "权限标识" },
+  { slot: "permissionIdentifier", label: "权限标识" },
   { prop: "component", label: "组件路径", align: "left" },
   { label: "是否内置", slot: "isInner", width: 90 },
   {
@@ -242,7 +247,6 @@ const handleDialogClose = () => {
 const getDataList = async () => {
   try {
     tableLoading.value = true;
-    // const res = await userApi.getUserMenuPowerList();
     const res = await menuApi.getMenuList({ ...queryParams.value });
     if (res.code === 200) {
       console.log("sds", convertToTreeOptimized(res.data || []));

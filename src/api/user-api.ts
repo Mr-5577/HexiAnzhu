@@ -41,7 +41,7 @@ export const userApi = {
   },
   // 获取当前用户的菜单数据
   getUserMenuPowerList: async () => {
-    // return http.post("/auth/getUserMenuPowerList");
+    return http.post("/auth/getUserMenuPowerList");
     await new Promise((resolve) => setTimeout(resolve, 1000));
     return {
       code: 200,

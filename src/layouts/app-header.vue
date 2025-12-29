@@ -18,7 +18,7 @@
         </div>
       </div>
       <div class="user-info">
-        <div class="user-name">{{ userStore.userInfo.empName }}</div>
+        <div class="user-name">{{ userStore?.userInfo?.empName }}</div>
         <el-popover title="" :teleported="false" placement="bottom-end">
           <template #reference>
             <el-avatar
