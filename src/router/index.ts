@@ -89,8 +89,8 @@ router.beforeEach(async (to, from, next) => {
   //   document.title = to.meta.title as string;
   // }
 
-  // 白名单
-  const whiteList = ["/login", "/test", "/autoLogin"];
+  // 白名单路由
+  const whiteList = ["/login", "/test", "/autoLogin", "scanLogin"];
   if (whiteList.includes(to.path)) {
     next();
     return;
