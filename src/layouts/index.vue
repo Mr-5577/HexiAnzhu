@@ -41,6 +41,7 @@ import TagsView from "./tags-view.vue";
 import { useMenuStore } from "@/stores/menu-store";
 import { getSidebarMenuByModule, extractModules } from "@/utils/menu-util";
 import { useUserStore } from "@/stores/user-store";
+import { userApi } from "@/api/user-api";
 
 const userStore = useUserStore();
 const route = useRoute();
@@ -50,7 +51,7 @@ const menuStore = useMenuStore();
 const currentRoutePath = computed(() => route.path);
 // 判断是否在大屏页面
 const isInLargeScreen = computed(() => {
-  return currentRoutePath.value === '/sales-analysis/large-screen';
+  return currentRoutePath.value === "/sales-analysis/large-screen";
 });
 // 判断是否需要隐藏布局组件
 const shouldHideLayout = computed(() => {
@@ -153,6 +154,12 @@ const clearPageCache = (componentName: string) => {
   }
 };
 
+const getUserInfo = async () => {
+  const res = await userApi.getEmpInfo();
+  if (res.code === 200) {
+    userStore.setUserInfo(res.data || null);
+  }
+};
 // 通过 provide 提供给子组件使用
 provide("clearPageCache", clearPageCache);
 
@@ -183,6 +190,9 @@ onMounted(() => {
   if (token && menuStore.menuData.length > 0) {
     determineActiveModule();
     updateCachePages();
+  }
+  if (token) {
+    getUserInfo();
   }
 });
 onUnmounted(() => {});

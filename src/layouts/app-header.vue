@@ -18,7 +18,7 @@
         </div>
       </div>
       <div class="user-info">
-        <div class="user-name">您好！张三</div>
+        <div class="user-name">{{ userStore.userInfo.empName }}</div>
         <el-popover title="" :teleported="false" placement="bottom-end">
           <template #reference>
             <el-avatar
@@ -52,8 +52,10 @@ import { extractModules, getFirstRoutePath } from "@/utils/menu-util";
 import { useMenuStore } from "@/stores/menu-store";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { userApi } from "@/api/user-api";
+import { useUserStore } from "@/stores/user-store";
 
 const menuStore = useMenuStore();
+const userStore = useUserStore();
 
 interface Props {
   activeModuleId?: number;

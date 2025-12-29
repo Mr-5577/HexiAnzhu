@@ -35,6 +35,10 @@ export const userApi = {
   getAuthRedirectUrl: (data: any) => {
     return http.post(`/callback/getAuthRedirectUrl`, data);
   },
+  // 获取用户信息
+  getEmpInfo: () => {
+    return http.post(`/emp/getEmpInfo`);
+  },
   // 获取当前用户的菜单数据
   getUserMenuPowerList: async () => {
     // return http.post("/auth/getUserMenuPowerList");

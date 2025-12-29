@@ -2,9 +2,20 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 
 interface UserInfo {
-  id: number;
-  name: string;
-  email: string;
+  isDel: boolean; // 是否删除
+  id: number; // 员工ID
+  mdUserId: number; // 用户ID
+  empName: string; // 员工姓名（包含工号）
+  empStatus: number; // 员工状态
+  empNo: string; // 员工工号
+  deptId: number; // 部门ID
+  managerId: number; // 上级ID
+  gender: boolean; // 性别（true: 男, false: 女）
+  birthday: string; // 生日（字符串格式）
+  cardNo: string; // 身份证号
+  mobile: string; // 手机号
+  email: string; // 邮箱
+  sort: number; // 排序号
 }
 
 export const useUserStore = defineStore(

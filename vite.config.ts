@@ -61,7 +61,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
-      outDir: `dist-${mode}-${timestamp}`, // 根据不同环境输出到不同目录
+      outDir: `dist-${mode}`, // 根据不同环境输出到不同目录
       sourcemap: isDev || isStaging, // 非生产环境生成sourcemap
       minify: isProd ? "esbuild" : false,
       // 生产环境文件名带时间戳

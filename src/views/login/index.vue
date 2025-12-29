@@ -138,7 +138,7 @@ const activeTab = ref<"account" | "qr">("account");
 const signInFormRef = ref<FormInstance>();
 const loading = ref(false);
 const signInForm = reactive({
-  userName: "00001",
+  userName: "000001",
   password: "666666",
 });
 

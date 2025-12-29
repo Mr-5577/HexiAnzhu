@@ -83,16 +83,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, computed } from "vue";
 import { useRoute } from "vue-router";
 import UserAvatar from "./user-avatar.vue";
 import UserInfo from "./user-info.vue";
 import ResetPwd from "./reset-pwd.vue";
+import { useUserStore } from "@/stores/user-store";
+const userStore = useUserStore();
+
+const userInfo = computed(() => userStore.userInfo);
 
 // 组件name，需要和菜单配置里面的name一致
-defineOptions({
-  name: "user",
-});
+defineOptions({ name: "user" });
+
 interface UserInfo {
   userName: string;
   nickName: string;
@@ -138,7 +141,8 @@ onMounted(() => {
 .user-container {
   padding: 20px;
   background-color: #fff;
-  .box-card {}
+  .box-card {
+  }
   .text-center {
     text-align: center;
     margin-bottom: 20px;

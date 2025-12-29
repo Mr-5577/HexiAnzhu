@@ -39,6 +39,14 @@ const staticRoutes: Array<RouteRecordRaw> = [
     },
   },
   {
+    path: "/scanLogin",
+    name: "scanLogin",
+    component: () => import("@/views/login/scan-login.vue"),
+    meta: {
+      title: "扫码登录",
+    },
+  },
+  {
     path: "/test",
     name: "test",
     component: () => import("@/views/test.vue"),
@@ -90,11 +98,14 @@ router.beforeEach(async (to, from, next) => {
   // }
 
   // 白名单路由
-  const whiteList = ["/login", "/test", "/autoLogin", "scanLogin"];
-  if (whiteList.includes(to.path)) {
+  const whiteListPaths = ["/login", "/test", "/autoLogin", "/scanLogin"];
+  // 创建大小写不敏感的白名单
+  const whiteListLower = whiteListPaths.map((path) => path.toLowerCase());
+  if (whiteListLower.includes(to.path.toLowerCase())) {
     next();
     return;
   }
+
   // 检查token是否存在
   const token = localStorage.getItem("token");
   if (!token) {

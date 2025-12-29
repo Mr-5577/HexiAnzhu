@@ -220,7 +220,7 @@ service.interceptors.response.use(
           ElMessage.error("服务器内部错误");
           break;
         case 502:
-          ElMessage.error("网关错误");
+          ElMessage.error("升级中，请稍后再试");
           break;
         case 503:
           ElMessage.error("服务不可用");

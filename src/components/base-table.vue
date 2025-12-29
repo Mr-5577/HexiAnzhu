@@ -375,7 +375,7 @@ const TableColumn = {
           }
 
           const content = h(
-            "div",
+            "span",
             {
               class: {
                 "clickable-cell": column.clickable,
