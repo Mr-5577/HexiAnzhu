@@ -9,14 +9,14 @@
             <div
               class="tab-item"
               :class="{ active: activeTab === 'account' }"
-              @click="activeTab = 'account'"
+              @click="handleTabSwitch('account')"
             >
               账号登录
             </div>
             <div
               class="tab-item"
               :class="{ active: activeTab === 'qr' }"
-              @click="activeTab = 'qr'"
+              @click="handleTabSwitch('qr')"
             >
               扫码登录
             </div>
@@ -69,20 +69,32 @@
           <div v-else class="qr-login">
             <div class="qr-container">
               <div class="qr-code">
-                <div class="qr-placeholder">
-                  <img
+                <div
+                  class="qr-placeholder"
+                  v-loading="qrLoading"
+                  :element-loading-text="'二维码加载中...'"
+                  :element-loading-background="'rgba(255, 255, 255, 0.9)'"
+                >
+                  <!-- <img
                     src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://estate.example.com/login/token123"
                     alt="登录二维码"
                     class="qr-image"
+                  /> -->
+                  <img
+                    v-if="qrCodeUrl"
+                    :src="qrCodeUrl"
+                    alt="二维码"
+                    class="qr-image"
                   />
-                  <!-- <div class="qr-expire">有效期: 5分钟</div> -->
+                  <div v-else class="placeholder-content">
+                    {{ qrMessage }}
+                  </div>
                 </div>
               </div>
               <div class="qr-instructions">
                 <h3>扫码登录</h3>
                 <p>1. 打开企业微信扫一扫</p>
-                <p>2. 扫描上方二维码</p>
-                <p>3. 确认登录信息</p>
+                <p>2. 扫描上方二维码进行登录</p>
               </div>
               <div class="refresh-qr">
                 <el-button text @click="refreshQRCode">
@@ -95,9 +107,10 @@
         </div>
 
         <!-- <div class="footer-links">
-          <span class="register-link"
-            >还没有账号？<a href="#">立即注册</a></span
-          >
+          <span class="register-link">
+            还没有账号？
+            <a href="#">立即注册</a>
+          </span>
           <span class="forgot-link"><a href="#">忘记密码？</a></span>
         </div> -->
       </div>
@@ -106,18 +119,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, onUnmounted, watch } from "vue";
 import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import { useRouter } from "vue-router";
 import { md5 } from "@/utils/crypto";
 import { userApi } from "@/api/user-api";
 import { Refresh } from "@element-plus/icons-vue";
+import { v4 as uuidv4 } from "uuid";
+import { useUserStore } from "@/stores/user-store";
+import QRCode from "qrcode";
 
 const router = useRouter();
+const userStore = useUserStore();
 
 // Tab切换
 const activeTab = ref<"account" | "qr">("account");
-
 // 登录表单数据
 const signInFormRef = ref<FormInstance>();
 const loading = ref(false);
@@ -125,6 +141,14 @@ const signInForm = reactive({
   userName: "00001",
   password: "666666",
 });
+
+// 扫码登录相关状态
+const qrLoading = ref(false);
+const qrCodeUrl = ref<string>("");
+const qrMessage = ref<string>("二维码加载中...");
+const pollingCount = ref(0); // 轮询次数计数器
+const MAX_POLLING_COUNT = 24; // 2分钟轮询，每5秒一次，共24次
+const POLLING_INTERVAL = 5000; // 5秒轮询一次
 
 // 密码正则验证函数
 const validatePassword = (rule: any, value: string, callback: any) => {
@@ -185,21 +209,129 @@ const handleSignIn = async () => {
   }
 };
 
-// 刷新二维码
-const refreshQRCode = () => {
-  ElMessage.info("二维码已刷新");
-  // 这里可以调用API获取新的二维码
+// 生成并获取二维码
+const generateAndGetQRCode = async () => {
+  try {
+    qrLoading.value = true;
+    qrMessage.value = "二维码加载中...";
+    pollingCount.value = 0; // 重置轮询计数器
+
+    // 生成新的stateTag
+    const validState = uuidv4();
+    userStore.setStateTag(validState);
+    console.log("扫码生成新的stateTag:", validState);
+
+    // 获取二维码路径地址
+    const qrRes = await userApi.createQrCode({ state: validState });
+    console.log("qrRes", qrRes);
+    if (qrRes.code === 200 && qrRes.data) {
+      // 生成二维码图片
+      const url = await QRCode.toDataURL(qrRes.data, {
+        width: 200,
+        margin: 2,
+        color: { dark: "#000000", light: "#FFFFFF" },
+      });
+      qrCodeUrl.value = url;
+
+      // 开始轮询
+      startPolling();
+    } else {
+      qrMessage.value = "二维码生成失败，请刷新";
+      ElMessage.error("二维码生成失败，请重试");
+    }
+  } catch (error) {
+    qrMessage.value = "二维码生成失败，请刷新";
+    console.error("生成二维码失败:", error);
+    ElMessage.error("二维码生成失败，请重试");
+  } finally {
+    qrLoading.value = false;
+  }
 };
 
 // 检查扫码登录状态
 const checkQRLoginStatus = async () => {
-  // 这里可以调用API检查扫码状态
-  // 如果扫码成功，执行登录逻辑
-  // const status = await userApi.checkQRStatus();
-  // if (status.loggedIn) {
-  //   localStorage.setItem("token", status.token);
-  //   router.replace("/home");
-  // }
+  if (!userStore.stateTag) {
+    console.error("stateTag不存在，停止轮询");
+    clearPolling();
+    return;
+  }
+
+  try {
+    const statusRes = await userApi.getTokenForAutoLogin({
+      state: userStore.stateTag,
+    });
+    console.log("扫码状态检查结果:", statusRes);
+
+    if (statusRes.code === 200 && statusRes.data) {
+      // 扫码成功，获取到token
+      handleQRLoginSuccess(statusRes.data);
+    }
+    // else if (statusRes.code === 400) {
+    //   // 二维码已过期或被使用
+    //   handleQRCodeExpired();
+    // }
+    // 其他状态码，继续轮询
+  } catch (error) {
+    console.error("检查扫码状态失败:", error);
+    // 网络错误时不停止轮询，继续尝试
+  }
+
+  // 增加轮询次数并检查是否超时
+  pollingCount.value++;
+  if (pollingCount.value >= MAX_POLLING_COUNT) {
+    handleQRLoginTimeout();
+  }
+};
+
+// 处理扫码登录成功
+const handleQRLoginSuccess = (token: string) => {
+  // 清除定时器
+  clearPolling();
+  ElMessage.success("扫码登录成功！");
+  localStorage.setItem("token", token);
+
+  // 清理缓存的stateTag
+  userStore.setStateTag("");
+
+  // 跳转到首页
+  router.replace("/home");
+};
+
+// 处理二维码过期
+const handleQRCodeExpired = () => {
+  clearPolling();
+  qrCodeUrl.value = ""; // 清空二维码
+  ElMessage.warning("二维码已过期，请刷新后重新扫码");
+
+  // 清理缓存的stateTag
+  userStore.setStateTag("");
+};
+
+// 处理扫码登录超时
+const handleQRLoginTimeout = () => {
+  clearPolling();
+  qrCodeUrl.value = ""; // 清空二维码
+  ElMessage.warning("扫码登录超时，请刷新后重新扫码");
+
+  // 清理缓存的stateTag
+  userStore.setStateTag("");
+};
+
+// 扫码登录轮询相关
+let qrPolling: any = null;
+
+// 开始轮询
+const startPolling = () => {
+  clearPolling(); // 先清理之前的轮询
+  pollingCount.value = 0; // 重置计数器
+
+  // 立即检查一次状态
+  checkQRLoginStatus();
+
+  // 开始定时轮询
+  qrPolling = setInterval(() => {
+    checkQRLoginStatus();
+  }, POLLING_INTERVAL);
 };
 
 // 清理轮询
@@ -208,17 +340,53 @@ const clearPolling = () => {
     clearInterval(qrPolling);
     qrPolling = null;
   }
+  pollingCount.value = 0;
 };
 
-// 模拟扫码登录轮询
-let qrPolling: any = null;
+// 切换登录方式
+const handleTabSwitch = async (type: "account" | "qr") => {
+  activeTab.value = type;
+
+  if (type === "qr") {
+    // 切换到扫码登录
+    await generateAndGetQRCode();
+  } else {
+    // 切换到账号登录，清理扫码登录相关状态
+    clearPolling();
+    qrCodeUrl.value = "";
+  }
+};
+
+// 刷新二维码
+const refreshQRCode = async () => {
+  // 先清理旧的状态
+  clearPolling();
+  userStore.setStateTag("");
+
+  // 生成新的二维码
+  await generateAndGetQRCode();
+  ElMessage.success("二维码已刷新，请重新扫码");
+};
+
+// 监听tab切换，清理状态
+watch(activeTab, (newTab) => {
+  if (newTab !== "qr") {
+    // 如果不是扫码登录tab，清理扫码相关状态
+    clearPolling();
+    qrCodeUrl.value = "";
+    userStore.setStateTag("");
+  }
+});
+
+// 组件卸载时清理
+onUnmounted(() => {
+  clearPolling();
+  userStore.setStateTag("");
+});
+
+// 组件挂载时清理可能存在的旧状态
 onMounted(() => {
-  // 如果是扫码登录，开始轮询
-  // qrPolling = setInterval(() => {
-  //   if (activeTab.value === "qr") {
-  //     checkQRLoginStatus();
-  //   }
-  // }, 3000);
+  userStore.setStateTag("");
 });
 </script>
 
@@ -405,21 +573,68 @@ onMounted(() => {
     .qr-code {
       background: #f8f9fa;
       border-radius: 12px;
+      // padding: 20px;
+      position: relative;
 
       .qr-placeholder {
         display: inline-block;
         position: relative;
+        width: 200px;
+        height: 200px;
 
-        .qr-image {
+        // 二维码过期提示样式
+        &.expired {
+          &::before {
+            content: "二维码已过期";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            z-index: 1;
+          }
+
+          .qr-image {
+            opacity: 0.3;
+          }
+        }
+        .placeholder-content {
+          background: transparent;
+          box-shadow: none;
           width: 200px;
           height: 200px;
-          border-radius: 8px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          color: #495057;
+          font-size: 15px;
+        }
+      }
+
+      .qr-image {
+        width: 200px;
+        height: 200px;
+        border-radius: 8px;
+        display: block;
+        margin: 0 auto;
+      }
+
+      // 轮询状态提示
+      .polling-status {
+        margin-top: 10px;
+        font-size: 12px;
+        color: #666;
+
+        &.expiring {
+          color: #e6a23c;
         }
 
-        .qr-expire {
-          margin-top: 10px;
-          font-size: 12px;
-          color: #666;
+        &.expired {
+          color: #f56c6c;
         }
       }
     }
@@ -429,34 +644,67 @@ onMounted(() => {
       background: #f0f7ff;
       padding: 15px;
       border-radius: 12px;
-      margin-bottom: 20px;
+      margin: 20px 0;
+      border: 1px solid #d9ecff;
 
       h3 {
         color: #409eff;
         margin-bottom: 10px;
         font-size: 16px;
+        font-weight: 600;
       }
 
       p {
-        margin: 5px 0;
+        margin: 8px 0;
         color: #666;
         font-size: 14px;
         line-height: 1.5;
+
+        &:before {
+          content: "•";
+          color: #409eff;
+          margin-right: 8px;
+        }
       }
     }
 
     .refresh-qr {
       .el-button {
         color: #409eff;
+        font-size: 14px;
+
         .el-icon {
           margin-right: 5px;
         }
+
         &:hover {
           color: #66b1ff;
+        }
+
+        &:disabled {
+          color: #c0c4cc;
+          cursor: not-allowed;
         }
       }
     }
   }
+}
+
+/* 添加二维码加载动画 */
+@keyframes qr-loading {
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.5;
+  }
+}
+
+.qr-loading {
+  animation: qr-loading 1.5s ease-in-out infinite;
 }
 
 .footer-links {

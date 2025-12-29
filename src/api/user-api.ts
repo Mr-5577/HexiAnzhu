@@ -11,6 +11,7 @@ export const userApi = {
   login: (data: FormData) => {
     return http.post("/auth/login", data);
   },
+  // 测试接口
   test: () => {
     return http.get("/test/test1");
   },
@@ -21,6 +22,18 @@ export const userApi = {
   // 退出登录
   logout: () => {
     return http.post(`/auth/logout`);
+  },
+  // 获取二维码
+  createQrCode: (data: any) => {
+    return http.post(`/callback/createQrCode`, data);
+  },
+  // 获取扫码后的token
+  getTokenForAutoLogin: (data: any) => {
+    return http.post(`/callback/getTokenForAutoLogin`, data);
+  },
+  // 一键登录
+  getAuthRedirectUrl: (data: any) => {
+    return http.post(`/callback/getAuthRedirectUrl`, data);
   },
   // 获取当前用户的菜单数据
   getUserMenuPowerList: async () => {
@@ -582,23 +595,23 @@ export const userApi = {
                   isDel: false,
                   createId: 0,
                 },
-                {
-                  id: 621,
-                  pid: 61,
-                  name: "overdue-detail",
-                  title: "逾期未回款明细",
-                  icon: "Monitor",
-                  menuType: 1,
-                  component: "risk-analysis/overdue-detail",
-                  path: "risk-analysis/overdue-detail",
-                  isKeepAlive: true,
-                  isMultiOpen: false,
-                  isControl: true,
-                  isVisible: true,
-                  sort: 11,
-                  isDel: false,
-                  createId: 0,
-                },
+                // {
+                //   id: 621,
+                //   pid: 61,
+                //   name: "overdue-detail",
+                //   title: "逾期未回款明细",
+                //   icon: "Monitor",
+                //   menuType: 1,
+                //   component: "risk-analysis/overdue-detail",
+                //   path: "risk-analysis/overdue-detail",
+                //   isKeepAlive: true,
+                //   isMultiOpen: false,
+                //   isControl: true,
+                //   isVisible: true,
+                //   sort: 11,
+                //   isDel: false,
+                //   createId: 0,
+                // },
               ],
             },
           ],
