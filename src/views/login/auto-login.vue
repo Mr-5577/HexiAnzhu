@@ -4,166 +4,282 @@
     <div v-if="loading" class="loading-container">
       <span>正在处理登录...</span>
     </div>
-    <div v-else class="error-container">
-      <span>token: {{ token }}</span>
-      <span>code: {{ code }}</span>
-      <span>state: {{ state }}</span>
-      <span>error: {{ error }}</span>
-      <!-- <button @click="retry">重试</button> -->
+    <div v-else-if="error" class="error-container">
+      <span class="error-message">{{ error }}</span>
+      <!-- <button class="retry-btn" @click="handleRetry">重试</button> -->
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { userApi } from "@/api/user-api";
 import { ref, onMounted, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { v4 as uuidv4 } from "uuid";
+import { useUserStore } from "@/stores/user-store";
+import { ElMessage } from "element-plus";
 
-// 定义路由和路由实例
+const userStore = useUserStore();
 const route = useRoute();
 const router = useRouter();
 
-// 响应式数据
 const loading = ref(true);
-const token = ref<string>("");
-const code = ref<string>("");
-const state = ref<string>("");
-const error = ref<string>("");
+const error = ref("");
 
-// 辅助函数：安全获取 query 参数（处理 string | string[] 类型）
+// 防止重复处理标志
+let isProcessing = false;
+// 组件是否已卸载
+let isUnmounted = false;
+// 超时定时器引用
+let timeoutId: NodeJS.Timeout | null = null;
+
+// 安全获取查询参数
 const getQueryParam = (param: string | string[] | undefined): string => {
   if (!param) return "";
-  if (Array.isArray(param)) return param[0] || "";
-  return param;
+  return Array.isArray(param) ? param[0] || "" : param;
 };
 
-// 解析和处理路由参数
-const handleRouteParams = () => {
-  loading.value = true;
-  error.value = "";
+// 检查组件是否已卸载
+const checkIfUnmounted = () => {
+  if (isUnmounted) {
+    throw new Error("COMPONENT_UNMOUNTED");
+  }
+};
+
+// 处理重定向到认证页面
+const redirectToAuth = async () => {
+  console.log("进入重定向到认证页面逻辑");
+  checkIfUnmounted();
 
   try {
-    // 获取所有路由参数
-    const queryParams = route.query;
-    console.log("路由参数 query:", queryParams);
+    // 缓存stateTag
+    const validState = uuidv4();
+    userStore.setStateTag(validState);
+    console.log("生成新的stateTag:", validState);
 
-    // 安全获取参数值
-    const tokenParam = getQueryParam(queryParams?.token);
-    const codeParam = getQueryParam(queryParams?.code);
-    const stateParam = getQueryParam(queryParams?.state);
-    const errorParam = getQueryParam(queryParams?.error);
+    // 获取认证地址回调
+    const res = await userApi.getAuthRedirectUrl({ state: validState });
 
-    // 重置参数显示
-    token.value = "";
-    code.value = "";
-    state.value = "";
+    checkIfUnmounted();
+
+    if (res.code === 200 && res.data) {
+      console.log("获取到认证地址，开始重定向:", res.data);
+
+      // 显示跳转提示
+      ElMessage.info("正在跳转到认证页面...");
+
+      // 短暂延迟让用户看到提示
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      checkIfUnmounted();
+
+      // 标记即将跳转
+      isUnmounted = true;
+
+      // 跳转到认证页面
+      window.location.href = res.data;
+      return;
+    } else {
+      ElMessage.error("获取认证地址失败！");
+      throw new Error("获取认证地址失败");
+    }
+  } catch (err) {
+    // 如果是组件卸载的错误，直接返回
+    if (err.message === "COMPONENT_UNMOUNTED") {
+      return;
+    }
+
+    // 重置处理标志
+    isProcessing = false;
+
+    // 显示错误消息
+    if (!isUnmounted) {
+      ElMessage.error("无法连接到认证服务！");
+      console.error("重定向到认证页面失败:", err);
+    }
+
+    throw new Error("无法连接到认证服务");
+  }
+};
+
+// 处理token验证和登录
+const handleTokenLogin = async (token: string, stateParam: string) => {
+  checkIfUnmounted();
+
+  console.log("开始验证token和state", {
+    token,
+    stateParam,
+    storedState: userStore.stateTag,
+  });
+
+  // 验证state参数
+  if (stateParam !== userStore.stateTag) {
+    console.error("state验证失败:", {
+      received: stateParam,
+      expected: userStore.stateTag,
+    });
+    ElMessage.error("登录验证失败，请重新登录！");
+
+    // 清除可能已存储的token
+    localStorage.removeItem("token");
+
+    // 清理state标记
+    userStore.setStateTag("");
+
+    throw new Error("登录验证失败，请重新登录");
+  }
+
+  // 存储token
+  localStorage.setItem("token", token);
+
+  // 清理state标记
+  userStore.setStateTag("");
+
+  console.log("token验证成功，存储token，清理state");
+
+  // 显示成功提示
+  ElMessage.success("登录成功，正在跳转...");
+
+  // 短暂延迟让用户看到提示
+  await new Promise((resolve) => setTimeout(resolve, 800));
+
+  checkIfUnmounted();
+
+  // 跳转到首页
+  await router.replace("/home");
+
+  // 这里的代码不会执行，因为页面已经跳转了
+};
+
+// 主处理逻辑
+const handleRouteParams = async () => {
+  // 防止重复处理
+  if (isProcessing) return;
+  isProcessing = true;
+
+  try {
+    checkIfUnmounted();
+
+    loading.value = true;
     error.value = "";
 
-    // 检查是否带有特定参数
-    // if (!tokenParam && !codeParam && !stateParam) {
-    //   error.value = "未找到有效的登录参数";
-    //   console.log("没有找到有效参数");
-    //   return;
-    // }
+    const query = route.query;
+    const tokenParam = getQueryParam(query.token);
+    const stateParam = getQueryParam(query.state);
+    const errorParam = getQueryParam(query.error);
 
-    // 处理常见的登录参数
-    if (tokenParam) {
-      token.value = tokenParam;
-      // 处理 token 登录
-      handleTokenLogin(tokenParam);
-    }
-    if (codeParam) {
-      code.value = codeParam;
-      // 处理 OAuth 授权码
-      handleOAuthLogin(codeParam);
-    }
-    if (stateParam) {
-      state.value = stateParam;
-      // 处理单点登录票据
-      handleSSOLogin(stateParam);
-    }
+    console.log("路由参数:", {
+      tokenParam,
+      stateParam,
+      errorParam,
+      storedState: userStore.stateTag,
+    });
+
+    // 情况1：如果有错误参数，直接显示
     if (errorParam) {
-      error.value = errorParam;
-    } else {
-      error.value = "参数格式不正确";
+      error.value = `认证服务错误: ${errorParam}`;
+      ElMessage.error(`认证错误: ${errorParam}`);
+      return;
     }
+
+    // 情况:2：有token和state，进行登录验证
+    if (tokenParam && stateParam) {
+      console.log("有token和state，开始验证登录");
+      await handleTokenLogin(tokenParam, stateParam);
+      return;
+    }
+
+    // 情况3：首次访问，没有token但有state标记（可能是刷新页面）
+    if (!tokenParam && userStore.stateTag) {
+      console.log("等待token返回，已有stateTag:", userStore.stateTag);
+
+      // 清理之前的定时器
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+
+      // 等待token返回，设置合理超时
+      timeoutId = setTimeout(() => {
+        // 检查组件是否已卸载
+        if (isUnmounted) return;
+
+        const currentToken = getQueryParam(route.query.token);
+        console.log("超时检查，当前token:", currentToken);
+
+        // 如果等待一段时间后仍然没有token，可能是超时
+        if (!currentToken && !error.value) {
+          error.value = "登录超时，请重新登录";
+          loading.value = false;
+          ElMessage.warning("登录超时，请重新登录");
+        }
+      }, 3000);
+
+      return;
+    }
+
+    // 情况4：首次访问，没有token也没有state标记
+    if (!tokenParam && !userStore.stateTag) {
+      console.log("首次访问，开始重定向到认证页面");
+      // 重定向到认证页面
+      await redirectToAuth();
+      return;
+    }
+
+    // 其他情况
+    error.value = "无效的登录参数";
+    ElMessage.error("无效的登录参数");
   } catch (err) {
-    error.value = err instanceof Error ? err.message : "处理参数时发生未知错误";
-    console.log("error.value", error.value);
+    // 如果是"组件已卸载"错误，不处理
+    if (err.message === "COMPONENT_UNMOUNTED") {
+      return;
+    }
+
+    console.error("登录处理失败:", err);
+    if (!isUnmounted) {
+      error.value = err instanceof Error ? err.message : "登录处理失败";
+    }
   } finally {
-    loading.value = false;
-  }
-};
-
-// 处理 token 登录
-const handleTokenLogin = async (token: string) => {
-  console.log("成功获取到token！！！");
-  localStorage.setItem("token", token);
-  router.replace("/home");
-  try {
-    // 调用登录 API
-    // const response = await loginWithToken(token);
-    // 存储登录信息
-    // localStorage.setItem('auth_token', token);
-    // 跳转到目标页面或首页
-    // const redirectUrl = getQueryParam(route.query.redirect) || "/";
-    // router.push(redirectUrl);
-  } catch (err) {
-    throw new Error(`Token登录失败: ${err}`);
-  }
-};
-
-// 处理 OAuth 登录
-const handleOAuthLogin = async (code: string) => {
-  try {
-    // 使用授权码获取 access_token
-    // const response = await exchangeCodeForToken(code);
-
-    // 处理登录成功逻辑
-    console.log("OAuth code:", code);
-    // 跳转
-    // const redirectUrl = getQueryParam(route.query.redirect) || "/";
-    // router.push(redirectUrl);
-  } catch (err) {
-    throw new Error(`OAuth登录失败: ${err}`);
-  }
-};
-
-// 处理单点登录
-const handleSSOLogin = async (ticket: string) => {
-  try {
-    // 验证 SSO ticket
-    // const isValid = await validateSSOTicket(ticket);
-
-    console.log("SSO ticket:", ticket);
-
-    // 跳转
-    // const redirectUrl = getQueryParam(route.query.redirect) || "/";
-    // router.push(redirectUrl);
-  } catch (err) {
-    throw new Error(`单点登录失败: ${err}`);
+    if (!isUnmounted) {
+      loading.value = false;
+      isProcessing = false;
+    }
   }
 };
 
 // 重试函数
-const retry = () => {
+const handleRetry = () => {
+  console.log("用户点击重试");
+
+  // 清理定时器
+  if (timeoutId) {
+    clearTimeout(timeoutId);
+    timeoutId = null;
+  }
+
+  // 清理状态并重新处理
+  error.value = "";
+  userStore.setStateTag("");
+  isProcessing = false;
+
   handleRouteParams();
 };
 
-// 监听路由变化（如果允许用户在页面刷新）
-const unwatch = router.afterEach((to, from) => {
-  if (to.name === route.name) {
-    handleRouteParams();
-  }
-});
-
 onMounted(() => {
-  // 组件挂载时处理参数
+  console.log("自动登录页面挂载");
   handleRouteParams();
 });
 
 onUnmounted(() => {
-  // 清理监听器
-  unwatch();
+  console.log("自动登录页面卸载");
+  // 标记组件已卸载
+  isUnmounted = true;
+
+  // 清理定时器
+  if (timeoutId) {
+    clearTimeout(timeoutId);
+    timeoutId = null;
+  }
 });
 </script>
 
@@ -171,7 +287,6 @@ onUnmounted(() => {
 .auto-login-page {
   width: 100%;
   height: 100vh;
-  overflow: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -184,25 +299,25 @@ onUnmounted(() => {
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     text-align: center;
-    max-width: 400px;
-    width: 90%;
+    min-width: 300px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    align-items: center;
+    gap: 1rem;
   }
 
   .loading-container {
     span {
-      display: inline-block;
-      margin-right: 10px;
+      font-size: 16px;
+      color: #333;
+      margin-bottom: 1rem;
     }
 
-    // 简单的加载动画
     &::after {
       content: "";
-      display: inline-block;
-      width: 20px;
-      height: 20px;
+      display: block;
+      width: 24px;
+      height: 24px;
       border: 3px solid #e0e0e0;
       border-top-color: #3498db;
       border-radius: 50%;
@@ -211,18 +326,31 @@ onUnmounted(() => {
   }
 
   .error-container {
-    button {
-      margin-top: 1rem;
-      padding: 0.5rem 1.5rem;
+    .error-message {
+      color: #e74c3c;
+      font-size: 16px;
+      margin-bottom: 1rem;
+      max-width: 250px;
+      word-break: break-word;
+    }
+
+    .retry-btn {
+      padding: 0.6rem 1.8rem;
       background: #3498db;
       color: white;
       border: none;
-      border-radius: 4px;
+      border-radius: 6px;
       cursor: pointer;
-      transition: background-color 0.3s;
+      font-size: 14px;
+      transition: all 0.3s;
 
       &:hover {
         background: #2980b9;
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
       }
     }
   }

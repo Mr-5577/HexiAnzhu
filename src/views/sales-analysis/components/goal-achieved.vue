@@ -269,6 +269,8 @@ const initChart = () => {
     chartInstance.value = echarts.init(chartDom.value, null, {
       renderer: "canvas",
       useDirtyRect: false,
+      // 添加硬件加速和性能优化选项
+      useCoarsePointer: true,
     });
 
     setTimeout(() => {

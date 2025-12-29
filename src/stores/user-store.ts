@@ -13,6 +13,7 @@ export const useUserStore = defineStore(
     const userInfo = ref<UserInfo | null>(null);
     const token = ref<string>("");
     const isFullScreen = ref<boolean>(false);
+    const stateTag = ref<string>("");
 
     const setUserInfo = (info: UserInfo) => {
       userInfo.value = info;
@@ -27,8 +28,12 @@ export const useUserStore = defineStore(
       token.value = "";
     };
 
-    const setFullScreen = (state: boolean) => {
-      isFullScreen.value = state;
+    const setFullScreen = (flag: boolean) => {
+      isFullScreen.value = flag;
+    };
+
+    const setStateTag = (stateVal: string) => {
+      stateTag.value = stateVal;
     };
 
     return {
@@ -36,12 +41,14 @@ export const useUserStore = defineStore(
       userInfo,
       token,
       isFullScreen,
+      stateTag,
 
       // 方法
       setUserInfo,
       setToken,
       clearUserInfo,
       setFullScreen,
+      setStateTag,
     };
   },
   {

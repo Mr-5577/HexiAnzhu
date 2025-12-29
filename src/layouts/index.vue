@@ -47,7 +47,6 @@ const route = useRoute();
 const router = useRouter();
 const menuStore = useMenuStore();
 
-const isFullScreen = computed(() => userStore.isFullScreen);
 const currentRoutePath = computed(() => route.path);
 // 判断是否在大屏页面
 const isInLargeScreen = computed(() => {
