@@ -24,9 +24,9 @@
         >
           <el-option
             v-for="item in options"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
+            :key="item.dataType"
+            :label="item.dataTypeName"
+            :value="item.dataType"
           />
         </el-select>
       </el-form-item>
@@ -50,6 +50,8 @@ import { ElForm, ElMessage, type FormRules, ElRow, ElCol } from "element-plus";
 import BaseModal from "@/components/base-modal.vue";
 import type { RoleMemberItem, RoleMemberAdd } from "@/types/role-type";
 import { roleApi } from "@/api/role-api";
+import { useRoleStore } from "@/stores/role-store";
+const roleStore = useRoleStore();
 
 interface Props {
   modelValue: boolean;
@@ -75,12 +77,7 @@ const defaultProps = {
     return data.dataType !== 0;
   },
 };
-const options = [
-  { value: 0, label: "人员" },
-  { value: 1, label: "部门" },
-  { value: 2, label: "公司" },
-  { value: 3, label: "板块" },
-];
+const options = computed(() => roleStore.dataTypeList || []);
 
 // 弹窗显示控制
 const modalVisible = ref(props.modelValue);
@@ -179,8 +176,8 @@ const handleSubmit = async () => {
       roleId: props.roleId,
     };
     if (selectedEmployee) {
-      submitData.memberId = selectedEmployee.value.orgId
-      submitData.memberName = selectedEmployee.value.orgName
+      submitData.memberId = selectedEmployee.value.orgId;
+      submitData.memberName = selectedEmployee.value.orgName;
     }
     // 如果是编辑模式，需要包含 id
     if (props.editData?.id) {

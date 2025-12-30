@@ -8,6 +8,7 @@
       :current-page="currentPage"
       :page-size="pageSize"
       :dictData="dictData"
+      :pagination="false"
       @pagination-change="handlePaginationChange"
       @refresh="handleRefresh"
       @selection-change="handleSelectionChange"
@@ -15,14 +16,20 @@
       <!-- 列表外操作栏 -->
       <template #actionBar>
         <div class="actionBar-buttons">
-          <el-button type="primary" size="small" plain @click="handleAdd()">
+          <el-button
+            type="primary"
+            size="small"
+            plain
+            @click="handleAdd()"
+            :disabled="!menuStore.hasExactPermission('member:add')"
+          >
             新增
           </el-button>
           <el-button
             type="danger"
             size="small"
             plain
-            :disabled="selectionData.length == 0"
+            :disabled="true"
             @click="batchDelete()"
           >
             批量删除
@@ -37,6 +44,7 @@
             type="primary"
             size="small"
             @click="handleEdit(scope.row)"
+            :disabled="!menuStore.hasExactPermission('member:edit')"
           >
             编辑
           </el-button>
@@ -45,6 +53,7 @@
             type="danger"
             size="small"
             @click="handleDelete(scope.row)"
+            :disabled="!menuStore.hasExactPermission('member:del')"
           >
             删除
           </el-button>
@@ -63,13 +72,17 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import BaseTable from "@/components/base-table.vue";
 import type { TableColumnItem } from "@/components/base-table.vue";
 import { roleApi } from "@/api/role-api";
 import { RoleMemberItem } from "@/types/role-type";
 import { ElMessage, ElMessageBox } from "element-plus";
 import AddEditMember from "./components/add-edit-member.vue";
+import { useMenuStore } from "@/stores/menu-store";
+import { useRoleStore } from "@/stores/role-store";
+const menuStore = useMenuStore();
+const roleStore = useRoleStore();
 
 interface Props {
   roleId?: number;
@@ -78,15 +91,18 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   roleId: 0,
 });
+
 // 字典数据
-const dictData = {
-  memberType: [
-    { value: 0, label: "人员" },
-    { value: 1, label: "部门" },
-    { value: 2, label: "公司" },
-    { value: 3, label: "板块" },
-  ],
-};
+const dictData = computed(() => {
+  // 转换 roleStore.dataTypeList 的键为value，label
+  const memberTypeDict = (roleStore.dataTypeList || []).map((item) => ({
+    label: item.dataTypeName,
+    value: item.dataType,
+  }));
+  return {
+    memberType: memberTypeDict,
+  };
+});
 // 响应式数据
 const loading = ref(false);
 const currentPage = ref(1);
@@ -145,6 +161,10 @@ const handleSelectionChange = (selection: RoleMemberItem[]) => {
 };
 // 批量删除
 const batchDelete = () => {
+  if (!selectionData.value?.length) {
+    ElMessage.warning("请先选择成员");
+    return;
+  }
   ElMessageBox.confirm("确定批量删除选中的成员吗?", "提示", {
     confirmButtonText: "确认",
     cancelButtonText: "取消",
@@ -232,6 +252,14 @@ const getEmpTreeData = async () => {
   }
 };
 
+// 获取组织类型
+const getDataTypeList = async () => {
+  const res = await roleApi.getDataTypeList();
+  if (res.code === 200) {
+    roleStore.setDataTypeList(res.data || []);
+  }
+};
+
 watch(
   () => props.roleId,
   (val) => {
@@ -239,6 +267,7 @@ watch(
       // console.log("新的ID：", val);
       getMemberListByRoleId();
       getEmpTreeData();
+      getDataTypeList();
     }
   },
   { immediate: true }

@@ -86,4 +86,8 @@ export const roleApi = {
   editRoleDataPowerUserList: (data: any) => {
     return http.post("/auth/editRoleDataPowerUserList", data);
   },
+  // 获取组织类型列表
+  getDataTypeList: () => {
+    return http.post("/emp/getDataTypeList");
+  },
 };
