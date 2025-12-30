@@ -231,10 +231,17 @@ const generateAndGetQRCode = async () => {
         margin: 2,
         color: { dark: "#000000", light: "#FFFFFF" },
       });
-      qrCodeUrl.value = url;
-
-      // 开始轮询
-      startPolling();
+      if (url) {
+        qrCodeUrl.value = url;
+        ElMessage.success("二维码已刷新，请扫码");
+        await new Promise((resolve) => setTimeout(resolve, 1500)); // 等待两秒
+        // 开始轮询
+        startPolling();
+      } else {
+        qrCodeUrl.value = "";
+        qrMessage.value = "二维码生成失败，请刷新";
+        ElMessage.error("二维码生成失败，请重试");
+      }
     } else {
       qrMessage.value = "二维码生成失败，请刷新";
       ElMessage.error("二维码生成失败，请重试");
@@ -365,7 +372,7 @@ const refreshQRCode = async () => {
 
   // 生成新的二维码
   await generateAndGetQRCode();
-  ElMessage.success("二维码已刷新，请重新扫码");
+  // ElMessage.success("二维码已刷新，请重新扫码");
 };
 
 // 监听tab切换，清理状态
