@@ -116,10 +116,15 @@ const handlePaginationChange = (params: any) => {
 // 处理授权状态变化
 const handlePowerChange = (row: any) => {
   // console.log("授权状态变化isPower:", row.isPower);
-  updateChildrenPower(row.children, row.isPower);
+  if (row.children) {
+    updateChildrenPower(row.children, row.isPower);
+  }
 };
 // 递归更新所有子节点的授权状态
 const updateChildrenPower = (nodes: any[], isPower: boolean) => {
+  if (!nodes || !Array.isArray(nodes)) {
+    return;
+  }
   for (const node of nodes) {
     node.isPower = isPower;
     // 递归处理子节点
