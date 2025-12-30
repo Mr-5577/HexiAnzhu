@@ -144,9 +144,13 @@ export function getFirstRoutePath(
 export function transformMenuDataExact(originalData: any) {
   if (originalData && originalData.length == 0) return [];
   // 先找到所有顶级模块（menuType === 0）menuType:0模块   1菜单   2按钮
+  // const topModules = originalData.filter((node: any) => node.menuType === 0);
+
+  // 过滤出可见的顶级模块
   const topModules = originalData.filter(
-    (node: { menuType: number }) => node.menuType === 0
+    (node: any) => node.menuType === 0 && node.isVisible
   );
+
   const result: any = [];
   topModules.forEach((module: any) => {
     // 构建模块节点

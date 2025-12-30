@@ -312,8 +312,8 @@ onMounted(() => {
 }
 
 .welcome-subtitle {
-  font-size: 14px;
-  color: #606266;
+  font-size: 15px;
+  color: #5f6063;
   margin: 0;
 }
 

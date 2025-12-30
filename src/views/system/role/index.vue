@@ -88,7 +88,7 @@
                 {{ role.roleDesc || "暂无描述" }}
               </div>
             </div>
-
+            <!-- 内置角色不可编辑、删除 -->
             <div class="role-operate" v-if="!role.isInner">
               <el-icon
                 class="edit-btn"
