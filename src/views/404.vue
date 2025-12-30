@@ -1,6 +1,10 @@
 <template>
   <div class="not-found">
-    <el-result icon="warning" title="404" sub-title="抱歉，您访问的页面不存在!">
+    <el-result
+      icon="warning"
+      title="404"
+      sub-title="抱歉，您访问的页面可能不存在，或者没有权限，请联系数字发展部！"
+    >
       <template #extra>
         <el-button type="primary" @click="goBack">返回上一页</el-button>
         <el-button @click="goHome">返回首页</el-button>
@@ -32,9 +36,10 @@ const goHome = () => {
 
 <style lang="scss" scoped>
 .not-found {
+  width: 100%;
+  height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
 }
 </style>

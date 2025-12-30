@@ -9,9 +9,10 @@
           :icon="Sort"
           @click="handleExpandChange"
         >
-          {{ expandAll ? "折叠" : "展开" }}
+          <!-- {{ expandAll ? "折叠" : "展开" }} -->
+          展开/折叠
         </el-button>
-        <el-checkbox v-model="isAll" @change="handleAllChange">
+        <el-checkbox v-model="isSelectAll" @change="handleAllChange">
           全选/全不选
         </el-checkbox>
       </div>
@@ -56,7 +57,7 @@ import { Sort } from "@element-plus/icons-vue";
 const menuStore = useMenuStore();
 
 const treeRef = ref<InstanceType<typeof ElTree>>();
-const isAll = ref(false);
+const isSelectAll = ref(false);
 const expandAll = ref(false);
 
 const defaultProps = {
@@ -89,18 +90,18 @@ const getTreeData = async () => {
         const allChecked = treeData.value.every((item) =>
           checkAllNodes([item])
         );
-        isAll.value = allChecked;
+        isSelectAll.value = allChecked;
       } else {
-        isAll.value = false;
+        isSelectAll.value = false;
       }
     } else {
       treeData.value = [];
-      isAll.value = false;
+      isSelectAll.value = false;
     }
   } catch (error) {
     console.error("获取菜单数据失败:", error);
     treeData.value = [];
-    isAll.value = false;
+    isSelectAll.value = false;
   }
 };
 
@@ -193,29 +194,87 @@ const updateNodePower = (
   return false;
 };
 
-// 处理勾选事件 - 更新 isPower 字段
+/**
+ * @name 处理勾选事件-更新isPower字段
+ * @param nodeData 当前被点击的节点数据
+ * @param checkedStatus 勾选状态对象，包含 checkedKeys(当前已选中的key数组)、halfCheckedKeys(半选状态的key数组)等信息
+ * @description 只更新当前节点
+ */
+// const handleCheck = (nodeData: any, checkedStatus: any) => {
+//   // 确保树数据存在且是数组
+//   if (!Array.isArray(treeData.value)) return;
+//   // 获取当前勾选的节点
+//   const { checkedKeys } = checkedStatus;
+//   // 之前选中的节点ID数组
+//   const previousKeys = initCheckedKeys.value;
+//   // 使用 Set 提高查找性能
+//   const checkedSet = new Set(checkedKeys);
+//   const previousSet = new Set(previousKeys);
+//   // 单次遍历完成更新
+//   const allKeys = new Set([...checkedKeys, ...previousKeys]);
+//   allKeys.forEach((key) => {
+//     const shouldBeChecked = checkedSet.has(key);
+//     const wasChecked = previousSet.has(key);
+//     if (shouldBeChecked !== wasChecked) {
+//       updateNodePower(key, shouldBeChecked);
+//     }
+//   });
+//   // 更新全选状态
+//   updateAllCheckboxState();
+// };
+/**
+ * @name 处理勾选事件-更新isPower字段
+ * @param nodeData 当前被点击的节点数据
+ * @param checkedStatus 勾选状态对象，包含 checkedKeys(当前已选中的key数组)、halfCheckedKeys(半选状态的key数组)等信息
+ * @description 选中父节点，子节点也选中，取消父节点，子节点也全部取消,没有子节点则只更新当前节点
+ */
 const handleCheck = (nodeData: any, checkedStatus: any) => {
-  if (!Array.isArray(treeData.value)) return;
+  if (!treeRef.value || !Array.isArray(treeData.value)) return;
+  // 获取当前节点的选中状态
+  const node = treeRef.value.getNode(nodeData.id);
+  const isChecked = node?.checked || false;
+  // 更新当前节点的 isPower
+  updateNodePower(nodeData.id, isChecked);
 
-  // 获取当前勾选的节点
-  const { checkedKeys } = checkedStatus;
-  const previousKeys = initCheckedKeys.value;
-  // 使用 Set 提高性能
-  const checkedSet = new Set(checkedKeys);
-  const previousSet = new Set(previousKeys);
-
-  // 单次遍历完成更新
-  const allKeys = new Set([...checkedKeys, ...previousKeys]);
-
-  allKeys.forEach((key) => {
-    const shouldBeChecked = checkedSet.has(key);
-    const wasChecked = previousSet.has(key);
-
-    if (shouldBeChecked !== wasChecked) {
-      updateNodePower(key, shouldBeChecked);
+  // 无论选中还是取消选中，都联动子节点
+  if (nodeData.children && nodeData.children.length > 0) {
+    // 获取所有后代节点的ID（使用迭代避免递归爆栈）
+    const getAllDescendantIds = (children: any[]): number[] => {
+      let ids: number[] = [];
+      const stack = [...children];
+      while (stack.length > 0) {
+        const child = stack.pop();
+        if (!child) continue;
+        ids.push(child.id);
+        // 将子节点加入栈
+        if (child.children && child.children.length > 0) {
+          stack.push(...child.children);
+        }
+      }
+      return ids;
+    };
+    const descendantIds = getAllDescendantIds(nodeData.children);
+    // 批量更新所有子节点的 isPower（与父节点状态一致）
+    descendantIds.forEach((descendantId) => {
+      updateNodePower(descendantId, isChecked);
+    });
+    // 更新树组件的选中状态
+    const currentCheckedKeys = treeRef.value.getCheckedKeys() as number[];
+    let newCheckedKeys: number[];
+    if (isChecked) {
+      // 选中：添加所有子节点
+      newCheckedKeys = [...new Set([...currentCheckedKeys, ...descendantIds])];
+    } else {
+      // 取消选中：移除所有子节点
+      const descendantSet = new Set(descendantIds);
+      newCheckedKeys = currentCheckedKeys.filter(
+        (key) => !descendantSet.has(key)
+      );
     }
-  });
-
+    nextTick(() => {
+      treeRef.value?.setCheckedKeys(newCheckedKeys);
+    });
+  }
   // 更新全选状态
   updateAllCheckboxState();
 };
@@ -229,7 +288,7 @@ const updateAllCheckboxState = () => {
     const totalKeys = getAllKeys(treeData.value);
 
     // 如果所有节点都被选中，则勾选全选
-    isAll.value =
+    isSelectAll.value =
       checkedKeys.length === totalKeys.length && totalKeys.length > 0;
   } catch (error) {
     console.error("更新全选状态失败:", error);
@@ -312,7 +371,7 @@ watch(
     } else {
       // 如果 roleId 为 0，清空数据
       treeData.value = [];
-      isAll.value = false;
+      isSelectAll.value = false;
     }
   },
   { immediate: true }
