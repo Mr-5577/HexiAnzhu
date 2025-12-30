@@ -10,7 +10,7 @@
 
     <!-- 主要内容区域 -->
     <div class="welcome-content">
-      <el-card class="welcome-card">
+      <el-card class="welcome-card" v-show="false">
         <template #header>
           <div class="card-header">
             <span class="card-title">📊 工作概览</span>
@@ -317,15 +317,15 @@ onMounted(() => {
   margin: 0;
 }
 
-.welcome-content {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 24px;
+// .welcome-content {
+//   display: grid;
+//   grid-template-columns: 1fr;
+//   gap: 24px;
 
-  @media (min-width: 1200px) {
-    grid-template-columns: 1fr 1fr;
-  }
-}
+//   @media (min-width: 1200px) {
+//     grid-template-columns: 1fr 1fr;
+//   }
+// }
 
 .welcome-card {
   height: 100%;
