@@ -1,10 +1,16 @@
 <template>
   <div class="menu-permissions-page">
     <div class="checkbox-switch">
-      <div>
-        <el-checkbox v-model="isExpand" @change="handleExpandChange">
-          展开/折叠
-        </el-checkbox>
+      <div class="left-btn">
+        <el-button
+          type="info"
+          size="small"
+          plain
+          :icon="Sort"
+          @click="handleExpandChange"
+        >
+          {{ expandAll ? "折叠" : "展开" }}
+        </el-button>
         <el-checkbox v-model="isAll" @change="handleAllChange">
           全选/全不选
         </el-checkbox>
@@ -46,11 +52,12 @@ import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { ElMessage, type ElTree } from "element-plus";
 import { roleApi } from "@/api/role-api";
 import { useMenuStore } from "@/stores/menu-store";
+import { Sort } from "@element-plus/icons-vue";
 const menuStore = useMenuStore();
 
 const treeRef = ref<InstanceType<typeof ElTree>>();
-const isExpand = ref(false);
 const isAll = ref(false);
+const expandAll = ref(false);
 
 const defaultProps = {
   children: "children",
@@ -67,6 +74,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const saveLoading = ref(false);
 const treeData = ref<any[]>([]);
+
 // 获取树形菜单数据
 const getTreeData = async () => {
   try {
@@ -229,14 +237,14 @@ const updateAllCheckboxState = () => {
 };
 
 // 展开/折叠所有节点
-const handleExpandChange = (val: boolean) => {
+const handleExpandChange = () => {
   if (!treeRef.value) return;
-
+  expandAll.value = !expandAll.value;
   try {
     const nodes = treeRef.value.store.nodesMap;
     Object.keys(nodes).forEach((key) => {
       const node = nodes[key];
-      if (val) {
+      if (expandAll.value) {
         node.expand();
       } else {
         node.collapse();
@@ -283,6 +291,7 @@ const handleSave = async () => {
     const res = await roleApi.editRoleMenuPowerList(params);
     if (res.code === 200) {
       ElMessage.success("保存成功");
+      expandAll.value = false;
       getTreeData();
     } else {
       ElMessage.error("保存失败");
@@ -338,6 +347,13 @@ onMounted(() => {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 8px;
+    .left-btn {
+      display: flex;
+      align-items: center;
+      .el-button {
+        margin-right: 20px;
+      }
+    }
   }
 
   .tree-container {
