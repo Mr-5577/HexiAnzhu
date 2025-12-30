@@ -4,9 +4,16 @@
     <div v-if="loading" class="loading-container">
       <span>正在处理登录...</span>
     </div>
-    <div v-else-if="error" class="error-container">
-      <span class="error-message">{{ error }}</span>
+    <div v-else-if="errorMessage" class="error-container">
+      <span class="error-message">{{ errorMessage }}</span>
       <!-- <button class="retry-btn" @click="handleRetry">重试</button> -->
+    </div>
+    <!-- 测试显示信息 -->
+    <div v-show="stateInfo === 'print'">
+      <div>token：{{ tokenInfo }}</div>
+      <div>state：{{ stateInfo }}</div>
+      <div>error：{{ errorInfo }}</div>
+      <div>routeQuery：{{ routeInfo }}</div>
     </div>
   </div>
 </template>
@@ -24,7 +31,13 @@ const route = useRoute();
 const router = useRouter();
 
 const loading = ref(true);
-const error = ref("");
+const errorMessage = ref("");
+
+// 用于展示查看错误信息
+const routeInfo = ref<any>("");
+const tokenInfo = ref("");
+const stateInfo = ref("");
+const errorInfo = ref("");
 
 // 防止重复处理标志
 let isProcessing = false;
@@ -161,7 +174,7 @@ const handleRouteParams = async () => {
     checkIfUnmounted();
 
     loading.value = true;
-    error.value = "";
+    errorMessage.value = "";
 
     const query = route.query;
     const tokenParam = getQueryParam(query.token);
@@ -175,9 +188,15 @@ const handleRouteParams = async () => {
       storedState: userStore.stateTag,
     });
 
+    // 用于展示信息
+    routeInfo.value = query;
+    tokenInfo.value = tokenParam;
+    stateInfo.value = stateParam;
+    errorInfo.value = errorParam;
+
     // 情况1：如果有错误参数，直接显示
     if (errorParam) {
-      error.value = `认证服务错误: ${errorParam}`;
+      errorMessage.value = `认证服务错误: ${errorParam}`;
       ElMessage.error(`认证错误: ${errorParam}`);
       return;
     }
@@ -208,8 +227,8 @@ const handleRouteParams = async () => {
         console.log("超时检查，当前token:", currentToken);
 
         // 如果等待一段时间后仍然没有token，可能是超时
-        if (!currentToken && !error.value) {
-          error.value = "登录超时，请重新登录";
+        if (!currentToken && !errorMessage.value) {
+          errorMessage.value = "登录超时，请重新登录";
           loading.value = false;
           ElMessage.warning("登录超时，请重新登录");
         }
@@ -227,7 +246,7 @@ const handleRouteParams = async () => {
     }
 
     // 其他情况
-    error.value = "无效的登录参数";
+    errorMessage.value = "无效的登录参数";
     ElMessage.error("无效的登录参数");
   } catch (err) {
     // 如果是"组件已卸载"错误，不处理
@@ -237,7 +256,7 @@ const handleRouteParams = async () => {
 
     console.error("登录处理失败:", err);
     if (!isUnmounted) {
-      error.value = err instanceof Error ? err.message : "登录处理失败";
+      errorMessage.value = err instanceof Error ? err.message : "登录处理失败";
     }
   } finally {
     if (!isUnmounted) {
@@ -258,7 +277,7 @@ const handleRetry = () => {
   }
 
   // 清理状态并重新处理
-  error.value = "";
+  errorMessage.value = "";
   userStore.setStateTag("");
   isProcessing = false;
 
@@ -267,7 +286,8 @@ const handleRetry = () => {
 
 onMounted(() => {
   console.log("自动登录页面挂载");
-  handleRouteParams();
+  // handleRouteParams();
+  handleRetry();
 });
 
 onUnmounted(() => {
@@ -280,6 +300,11 @@ onUnmounted(() => {
     clearTimeout(timeoutId);
     timeoutId = null;
   }
+
+  // 清理状态
+  errorMessage.value = "";
+  userStore.setStateTag("");
+  isProcessing = false;
 });
 </script>
 
@@ -288,10 +313,10 @@ onUnmounted(() => {
   width: 100%;
   height: 100vh;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-
   .loading-container,
   .error-container {
     background: white;
