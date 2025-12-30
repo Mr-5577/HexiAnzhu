@@ -67,6 +67,9 @@
           icon="Download"
           :loading="exportLoading"
           @click="handleExport"
+          :disabled="
+            !menuStore.hasExactPermission('subscription-statistics:export')
+          "
         >
           导出
         </el-button>
@@ -102,7 +105,8 @@ import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
 import { ElMessage } from "element-plus";
 import { v4 as uuidv4 } from "uuid";
-
+import { useMenuStore } from "@/stores/menu-store";
+const menuStore = useMenuStore();
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
   name: "subscription-statistics",

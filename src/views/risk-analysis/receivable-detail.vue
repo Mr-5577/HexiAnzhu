@@ -26,6 +26,7 @@
           icon="Download"
           :loading="exportLoading"
           @click="handleExport"
+          :disabled="!menuStore.hasExactPermission('receivable-detail:export')"
         >
           导出
         </el-button>
@@ -53,6 +54,8 @@ import { useSalesData } from "@/composables/use-sales";
 import { ElMessage } from "element-plus";
 import { useRoute } from "vue-router";
 import { v4 as uuidv4 } from "uuid";
+import { useMenuStore } from "@/stores/menu-store";
+const menuStore = useMenuStore();
 const route = useRoute();
 
 // 组件name，需要和菜单配置里面的name一致

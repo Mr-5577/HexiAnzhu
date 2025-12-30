@@ -9,20 +9,31 @@
       :rowKey="'id'"
       :current-page="currentPage"
       :page-size="pageSize"
+      :pagination="false"
       @pagination-change="handlePaginationChange"
       @selection-change="handleSelectionChange"
     >
       <!-- 列表外操作栏 -->
       <template #actionBar>
         <div class="actionBar-buttons">
-          <el-button type="primary" size="small" plain @click="handleAdd()">
+          <el-button
+            type="primary"
+            size="small"
+            plain
+            @click="handleAdd()"
+            :disabled="
+              !menuStore.hasExactPermission('personnel-permissions:add')
+            "
+          >
             新增
           </el-button>
           <el-button
             type="danger"
             size="small"
             plain
-            :disabled="selectionData.length == 0"
+            :disabled="
+              !menuStore.hasExactPermission('personnel-permissions:del')
+            "
             @click="batchDelete()"
           >
             批量删除
@@ -37,6 +48,9 @@
             type="danger"
             size="small"
             @click="handleDelete(scope.row)"
+            :disabled="
+              !menuStore.hasExactPermission('personnel-permissions:del')
+            "
           >
             删除
           </el-button>
@@ -48,6 +62,7 @@
       :tree-data="empTreeData"
       :roleId="props?.roleId"
       :isSuper="props?.isSuper"
+      :tableData="tableData"
       @success="handleSuccess"
     ></add-personnel-permissions>
   </div>
@@ -60,6 +75,8 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import BaseTable from "@/components/base-table.vue";
 import type { TableColumnItem } from "@/components/base-table.vue";
 import AddPersonnelPermissions from "./add-personnel-permissions.vue";
+import { useMenuStore } from "@/stores/menu-store";
+const menuStore = useMenuStore();
 
 interface Props {
   roleId?: number | null;
@@ -169,13 +186,17 @@ const handleDelete = async (row: any) => {
     type: "warning",
   })
     .then(async () => {
-      const params = [
-        {
-          id: row.id,
-          roleId: row.roleId,
-          isDel: true,
-        },
-      ];
+      const params = {
+        isSuper: true,
+        roleId: row.roleId,
+        listUser: [
+          {
+            id: row.id,
+            roleId: row.roleId,
+            isDel: true,
+          },
+        ],
+      };
       const res = await roleApi.editRoleDataPowerUserList(params);
       if (res.code === 200) {
         ElMessage.success("删除成功！");

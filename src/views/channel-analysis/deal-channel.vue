@@ -1,4 +1,4 @@
-<!-- 成交渠道分析页面 -->
+<!-- 认购渠道分析页面 -->
 <template>
   <div class="deal-channel-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
@@ -39,6 +39,7 @@
           icon="Download"
           :loading="exportLoading"
           @click="handleExport"
+          :disabled="!menuStore.hasExactPermission('deal-channel:export')"
         >
           导出
         </el-button>
@@ -66,11 +67,11 @@ import type { DayTableInterface } from "@/types/channel-analysis-type";
 import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
 import { ElMessage } from "element-plus";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import { v4 as uuidv4 } from "uuid";
-
+import { useMenuStore } from "@/stores/menu-store";
+const menuStore = useMenuStore();
 const route = useRoute();
-const router = useRouter();
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({

@@ -41,6 +41,7 @@ interface Props {
   roleId: number | null;
   isSuper: boolean | null;
   treeData: any;
+  tableData: any;
 }
 
 interface Emits {
@@ -125,12 +126,22 @@ const resetForm = () => {
 
 // 表单提交
 const handleSubmit = async () => {
-  console.log("selectedEmployee", selectedEmployee);
+  console.log("selectedEmployee", selectedEmployee, props.tableData);
+  if (!selectedEmployee.value?.orgId) {
+    ElMessage.warning("请先选择人员");
+    return;
+  }
   try {
     // 表单验证
     const valid = await formRef.value?.validate();
     if (!valid) return;
-
+    // 检查重复添加
+    const orgId = selectedEmployee.value.orgId;
+    const isDuplicate = props.tableData.some((item) => item.dataId === orgId);
+    if (isDuplicate) {
+      ElMessage.warning("该人员已存在，请重新选择");
+      return;
+    }
     // 开始提交
     confirmLoading.value = true;
 
@@ -139,7 +150,7 @@ const handleSubmit = async () => {
       isSuper: props.isSuper,
       listUser: [
         {
-          dataId: selectedEmployee.value.orgId,
+          dataId: orgId,
           roleId: props.roleId,
           isPower: true,
         },

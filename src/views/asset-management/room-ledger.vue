@@ -59,6 +59,7 @@
           type="primary"
           icon="Download"
           :loading="exportLoading"
+          :disabled="!menuStore.hasExactPermission('room-ledger:export')"
           @click="handleExport"
         >
           导出
@@ -87,6 +88,8 @@ import type { RoomTableInterface } from "@/types/asset-management-type";
 import { useSalesData } from "@/composables/use-sales";
 import { ElMessage } from "element-plus";
 import { v4 as uuidv4 } from "uuid";
+import { useMenuStore } from "@/stores/menu-store";
+const menuStore = useMenuStore();
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
@@ -172,6 +175,7 @@ const initPageData = async () => {
 const getParams = () => ({
   ...queryParams.value,
   current: currentPage.value,
+  isShowTel: menuStore.hasExactPermission("room-ledger:showTel"), // 控制电话是否显示
 });
 // 获取列表
 const getTableList = async () => {

@@ -9,6 +9,7 @@
       :rowKey="'treeId'"
       :current-page="currentPage"
       :page-size="pageSize"
+      :pagination="false"
       @pagination-change="handlePaginationChange"
     >
       <!-- 列表外操作栏 -->
@@ -21,6 +22,9 @@
             plain
             :loading="saveLoading"
             @click="handleSave"
+            :disabled="
+              !menuStore.hasExactPermission('department-permissions:edit')
+            "
           >
             保存设置
           </el-button>
@@ -51,6 +55,8 @@ import { roleApi } from "@/api/role-api";
 import { ElMessage } from "element-plus";
 import BaseTable from "@/components/base-table.vue";
 import type { TableColumnItem } from "@/components/base-table.vue";
+import { useMenuStore } from "@/stores/menu-store";
+const menuStore = useMenuStore();
 
 interface Props {
   roleId?: number | null;

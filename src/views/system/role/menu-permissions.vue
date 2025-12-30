@@ -16,6 +16,7 @@
         plain
         :loading="saveLoading"
         @click="handleSave"
+        :disabled="!menuStore.hasExactPermission('menu-permissions:edit')"
       >
         保存设置
       </el-button>
@@ -44,6 +45,8 @@
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { ElMessage, type ElTree } from "element-plus";
 import { roleApi } from "@/api/role-api";
+import { useMenuStore } from "@/stores/menu-store";
+const menuStore = useMenuStore();
 
 const treeRef = ref<InstanceType<typeof ElTree>>();
 const isExpand = ref(false);

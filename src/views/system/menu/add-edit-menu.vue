@@ -431,7 +431,7 @@ const treeProps = {
 
     // 新增子级时禁用所有选择
     if (isAddChildType.value) return true;
-    
+
     // 根据当前菜单类型限制父级选择
     if (formData.menuType === 0) {
       // 模块的父级只能是根目录
@@ -524,9 +524,9 @@ const rules = reactive<FormRules<MenuForm>>({
 
         if (formData.menuType === 2) {
           // 按钮标识：允许字母、数字、冒号、下划线
-          pattern = /^[a-zA-Z][a-zA-Z0-9:_]*$/;
+          pattern = /^[a-zA-Z][a-zA-Z0-9:_-]*$/;
           errorMessage =
-            "按钮标识格式为：功能:操作，只能包含字母、数字、冒号和下划线";
+            "按钮标识格式：只能包含字母、数字、冒号、下划线和连字符(-)";
         } else {
           // 模块和菜单标识：允许小写字母、数字、连字符
           pattern = /^[a-z][a-z0-9-]*$/;
@@ -626,7 +626,7 @@ const initForm = () => {
     // 如果是新增子级，查找父级信息
     if (isAddChildType.value && data.pid) {
       parentMenuInfo.value = findMenuById(data.pid, props.menuTree);
-      console.log('父级信息：', parentMenuInfo.value)
+      console.log("父级信息：", parentMenuInfo.value);
       // 根据父级类型设置子级的默认菜单类型
       if (parentMenuInfo.value) {
         if (parentMenuInfo.value.menuType === 0) {
@@ -697,7 +697,6 @@ const handleSubmit = async () => {
 
 // 菜单类型改变时的处理
 const handleMenuTypeChange = (value: number) => {
-
   // 根据菜单类型重置相关字段
   if (value === 0) {
     // 模块：清空组件和路径，父级只能是根目录

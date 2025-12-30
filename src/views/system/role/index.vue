@@ -52,7 +52,12 @@
       >
         <div class="card-header">
           <span class="card-title">角色列表</span>
-          <el-button :icon="Plus" type="primary" @click="handleAddRole">
+          <el-button
+            :icon="Plus"
+            type="primary"
+            @click="handleAddRole"
+            :disabled="!menuStore.hasExactPermission('role:add')"
+          >
             新增
           </el-button>
         </div>
@@ -85,10 +90,18 @@
             </div>
 
             <div class="role-operate" v-if="!role.isInner">
-              <el-icon class="edit-btn" @click.stop="handleEditRole(role)">
+              <el-icon
+                class="edit-btn"
+                @click.stop="handleEditRole(role)"
+                v-if="menuStore.hasExactPermission('role:edit')"
+              >
                 <Edit />
               </el-icon>
-              <el-icon class="delete-btn" @click.stop="handleDeleteRole(role)">
+              <el-icon
+                class="delete-btn"
+                @click.stop="handleDeleteRole(role)"
+                v-if="menuStore.hasExactPermission('role:del')"
+              >
                 <Delete />
               </el-icon>
             </div>
@@ -194,7 +207,8 @@ import { roleApi } from "@/api/role-api";
 import { RoleItem, RoleSearchForm } from "@/types/role-type";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Plus, Delete, Edit, Search, Refresh } from "@element-plus/icons-vue";
-
+import { useMenuStore } from "@/stores/menu-store";
+const menuStore = useMenuStore();
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({
   name: "role",

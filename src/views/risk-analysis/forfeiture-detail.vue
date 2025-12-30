@@ -68,6 +68,7 @@
           icon="Download"
           :loading="exportLoading"
           @click="handleExport"
+          :disabled="!menuStore.hasExactPermission('forfeiture-detail:export')"
         >
           导出
         </el-button>
@@ -98,7 +99,8 @@ import { ForfeitureDetailInterface } from "@/types/risk-analysis-type";
 import { ElMessage } from "element-plus";
 import { v4 as uuidv4 } from "uuid";
 import { useRoute } from "vue-router";
-
+import { useMenuStore } from "@/stores/menu-store";
+const menuStore = useMenuStore();
 const route = useRoute();
 
 // 组件name，需要和菜单配置里面的name一致

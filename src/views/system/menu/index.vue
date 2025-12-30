@@ -52,12 +52,6 @@
         </div>
       </template>
       <!-- 自定义插槽 ==> scope 包含：row, column, $index 等 -->
-      <template #permissionIdentifier="scope">
-        <!-- 权限标识 -->
-        <div v-if="scope.row.menuType === 2">
-          {{ scope.row.name }}
-        </div>
-      </template>
       <template #isInner="scope">
         <!-- 是否内置 -->
         <el-tag :type="scope.row.isInner ? 'success' : 'info'" size="small">
@@ -152,7 +146,7 @@ const isExpandAll = ref(false);
 const columns: TableColumnItem[] = [
   { prop: "title", label: "菜单名称", align: "left" },
   { prop: "sort", label: "排序", width: 60 },
-  { slot: "permissionIdentifier", label: "权限标识" },
+  { prop: "name", label: "权限标识" },
   { prop: "component", label: "组件路径", align: "left" },
   { label: "是否内置", slot: "isInner", width: 90 },
   {
