@@ -117,9 +117,34 @@ export const inventoryStatisticsColumns: any = [
   { prop: "totalMoney", label: "总货值(亿)" },
   { prop: "stockRoomNum", label: "库存套数" },
   { prop: "stockMoney", label: "库存总货值(亿)" },
-  { prop: "costNum", label: "月均去化套数" }, // 提示：近6个月的平均值
-  { prop: "costMoney", label: "月均去化金额(万)" }, // 提示：近6个月的平均值
-  { prop: "saleMonths", label: "存销比" }, // 提示：库存总套数÷月均去化套数
+  {
+    prop: "costNum",
+    label: "月均去化套数",
+    // 方式一：使用配置方式增加表头提示，提示：近6个月的平均值
+    headerTip: {
+      icon: "QuestionFilled",
+      content: "近6个月的平均值",
+      placement: "top",
+      width: "200px",
+    },
+  },
+  {
+    prop: "costMoney",
+    label: "月均去化金额(万)",
+    // 方式二：使用插槽方式，提示：近6个月的平均值
+    headerSlot: "costMoneyHeader",
+  },
+  {
+    prop: "saleMonths",
+    label: "存销比",
+    // 方式一：使用配置方式增加表头提示，提示：存销比=库存总套数÷月均去化套数
+    headerTip: {
+      icon: "QuestionFilled",
+      content: "存销比=库存总套数÷月均去化套数",
+      placement: "top",
+      width: "200px",
+    },
+  },
 ];
 
 // 库存明细表-表头

@@ -62,7 +62,17 @@
       @pagination-change="handlePaginationChange"
       @cell-click="handleCellClick"
       @cell-event="handleCellEventClick"
-    ></base-table>
+    >
+      <!-- 使用表头插槽方式增加表头提示 -->
+      <template #costMoneyHeader="scope">
+        <div class="custom-header">
+          <span>月均去化金额(万)</span>
+          <el-tooltip content="近6个月的平均值" placement="top">
+            <el-icon><QuestionFilled /></el-icon>
+          </el-tooltip>
+        </div>
+      </template>
+    </base-table>
   </div>
 </template>
 
