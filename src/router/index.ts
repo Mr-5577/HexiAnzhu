@@ -56,6 +56,17 @@ const staticRoutes: Array<RouteRecordRaw> = [
     },
   },
   {
+    path: "/403",
+    name: "403",
+    component: () => import("@/views/403.vue"),
+    meta: {
+      title: "无访问权限",
+      requiresAuth: false,
+      hide: true,
+      isKeepAlive: false,
+    },
+  },
+  {
     path: "/404",
     name: "404",
     component: () => import("@/views/404.vue"),
@@ -82,7 +93,12 @@ const cleanupDynamicRoutes = () => {
   // 找出动态路由（根据你的路由特征，比如meta中的标记）
   routes.forEach((route: any) => {
     // 只删除有名称且不是静态路由的路由
-    if (route.name && route.name !== "login" && route.name !== "404") {
+    if (
+      route.name &&
+      route.name !== "login" &&
+      route.name !== "404" &&
+      route.name !== "403"
+    ) {
       router.removeRoute(route.name);
     }
   });
@@ -98,7 +114,14 @@ router.beforeEach(async (to, from, next) => {
   // }
 
   // 白名单路由
-  const whiteListPaths = ["/login", "/test", "/autoLogin", "/scanLogin"];
+  const whiteListPaths = [
+    "/login",
+    "/test",
+    "/autoLogin",
+    "/scanLogin",
+    "/403",
+    "/404",
+  ];
   // 创建大小写不敏感的白名单
   const whiteListLower = whiteListPaths.map((path) => path.toLowerCase());
   if (whiteListLower.includes(to.path.toLowerCase())) {
@@ -148,8 +171,14 @@ router.beforeEach(async (to, from, next) => {
         await addDynamicRoutes(router, exactData);
         // 标记为已加载
         menuLoaded = true;
-        // 重新导航
-        next({ ...to, replace: true });
+        if (exactData.length === 0) {
+          // 没有任何菜单权限，直接跳转到403
+          next("/403");
+          return;
+        } else {
+          // 重新导航
+          next({ ...to, replace: true });
+        }
       }
       return;
     } catch (error) {

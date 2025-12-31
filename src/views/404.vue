@@ -20,11 +20,12 @@ const router = useRouter();
 
 // 返回上一页
 const goBack = () => {
-  if (window.history.length > 1) {
+  // 历史记录少，可能从登录页来
+  if (window.history.length > 2) {
     router.back();
   } else {
-    // 如果没有历史记录，跳转到首页
-    router.push("/home");
+    // 去403页面
+    router.replace("/403");
   }
 };
 
