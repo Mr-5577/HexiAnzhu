@@ -141,8 +141,8 @@ const activeTab = ref<"account" | "qr">("account");
 const signInFormRef = ref<FormInstance>();
 const loading = ref(false);
 const signInForm = reactive({
-  userName: "000001",
-  password: "122809",
+  userName: "",
+  password: "",
 });
 
 // 扫码登录相关状态

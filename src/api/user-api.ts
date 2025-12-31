@@ -39,6 +39,10 @@ export const userApi = {
   getEmpInfo: () => {
     return http.post(`/emp/getEmpInfo`);
   },
+  // 修改密码
+  resetPassword: (data: any) => {
+    return http.post(`/auth/resetPassword`, data);
+  },
   // 获取当前用户的菜单数据
   getUserMenuPowerList: async () => {
     return http.post("/auth/getUserMenuPowerList");

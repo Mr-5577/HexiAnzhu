@@ -29,10 +29,10 @@
           </template>
           <template #default>
             <div class="user-dropdown">
-              <!-- <div class="dropdown-item" @click="handleProfile">
+              <div class="dropdown-item" @click="handleProfile">
                 <el-icon><User /></el-icon>
                 <span>个人中心</span>
-              </div> -->
+              </div>
               <div class="dropdown-item" @click="logout">
                 <el-icon><SwitchButton /></el-icon>
                 <span>退出登录</span>

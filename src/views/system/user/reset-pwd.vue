@@ -9,9 +9,9 @@
       />
     </el-form-item>
 
-    <el-form-item label="新密码" prop="newPassword">
+    <el-form-item label="新密码" prop="password">
       <el-input
-        v-model="formData.newPassword"
+        v-model="formData.password"
         placeholder="请输入新密码"
         type="password"
         show-password
@@ -28,28 +28,41 @@
     </el-form-item>
 
     <el-form-item>
-      <el-button type="primary" @click="handleSubmit">保存</el-button>
-      <el-button type="danger" @click="handleClose">关闭</el-button>
+      <el-button
+        class="save-btn"
+        type="primary"
+        size="small"
+        :loading="saveLoading"
+        @click="handleSubmit"
+      >
+        保 存
+      </el-button>
     </el-form-item>
   </el-form>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from "vue";
+import { ref, reactive, computed } from "vue";
 import type { FormInstance, FormRules } from "element-plus";
 import { ElMessage } from "element-plus";
+import { useUserStore } from "@/stores/user-store";
+import { md5 } from "@/utils/crypto";
+import { userApi } from "@/api/user-api";
+const userStore = useUserStore();
+
+const userInfo = computed(() => userStore.userInfo);
 
 interface PwdForm {
   oldPassword: string;
-  newPassword: string;
+  password: string;
   confirmPassword: string;
 }
 
 const pwdFormRef = ref<FormInstance>();
-
-const formData = reactive<PwdForm>({
+const saveLoading = ref(false);
+const formData = ref<PwdForm>({
   oldPassword: "",
-  newPassword: "",
+  password: "",
   confirmPassword: "",
 });
 
@@ -59,7 +72,7 @@ const validateConfirmPassword = (
   value: string,
   callback: Function
 ) => {
-  if (value !== formData.newPassword) {
+  if (value !== formData.value.password) {
     callback(new Error("两次输入的密码不一致"));
   } else {
     callback();
@@ -78,7 +91,7 @@ const validatePassword = (rule: any, value: string, callback: Function) => {
 
 const rules = reactive<FormRules<PwdForm>>({
   oldPassword: [{ required: true, message: "旧密码不能为空", trigger: "blur" }],
-  newPassword: [
+  password: [
     { required: true, message: "新密码不能为空", trigger: "blur" },
     { min: 6, max: 20, message: "长度在 6 到 20 个字符", trigger: "blur" },
     { validator: validatePassword, trigger: "blur" },
@@ -92,24 +105,25 @@ const rules = reactive<FormRules<PwdForm>>({
 // 提交修改密码
 const handleSubmit = async () => {
   if (!pwdFormRef.value) return;
-
   const valid = await pwdFormRef.value.validate();
   if (!valid) return;
-
-  // 模拟API调用 - 使用静态数据
-  setTimeout(() => {
-    ElMessage.success("密码修改成功");
-    // 重置表单
-    pwdFormRef.value?.resetFields();
-  }, 500);
-};
-
-// 关闭页面
-const handleClose = () => {
-  // 模拟关闭标签页
-  console.log("关闭页面");
-  // 在实际项目中可能需要路由跳转或关闭标签页
-  window.history.back();
+  try {
+    saveLoading.value = true;
+    const params = {
+      username: userInfo.value.empNo,
+      oldPassword: md5(formData.value.oldPassword),
+      password: md5(formData.value.password),
+    };
+    const res = await userApi.resetPassword(params);
+    if (res.code === 200) {
+      ElMessage.success("密码修改成功");
+      // 重置表单
+      pwdFormRef.value?.resetFields();
+    }
+  } catch (error) {
+  } finally {
+    saveLoading.value = false;
+  }
 };
 </script>
 
@@ -119,6 +133,9 @@ const handleClose = () => {
 
   .el-button {
     margin-right: 10px;
+  }
+  .save-btn {
+    margin-top: 22px;
   }
 }
 </style>

@@ -18,16 +18,16 @@
                   <el-icon><User /></el-icon>
                   <span>用户名称</span>
                 </div>
-                <div class="pull-right">{{ userData.userName }}</div>
+                <div class="pull-right">{{ userInfo.empName }}</div>
               </li>
               <li class="list-group-item">
                 <div class="pull-left">
                   <el-icon><Iphone /></el-icon>
                   <span>手机号码</span>
                 </div>
-                <div class="pull-right">{{ userData.phonenumber }}</div>
+                <div class="pull-right">{{ userInfo.mobile }}</div>
               </li>
-              <li class="list-group-item">
+              <!-- <li class="list-group-item">
                 <div class="pull-left">
                   <el-icon><Message /></el-icon>
                   <span>用户邮箱</span>
@@ -56,7 +56,7 @@
                   <span>创建日期</span>
                 </div>
                 <div class="pull-right">{{ userData.createTime }}</div>
-              </li>
+              </li> -->
             </ul>
           </div>
         </el-card>
@@ -69,9 +69,9 @@
             </div>
           </template>
           <el-tabs v-model="selectedTab">
-            <el-tab-pane label="基本资料" name="userinfo">
+            <!-- <el-tab-pane label="基本资料" name="userinfo">
               <UserInfo :user="userData" />
-            </el-tab-pane>
+            </el-tab-pane> -->
             <el-tab-pane label="修改密码" name="resetPwd">
               <ResetPwd />
             </el-tab-pane>
@@ -110,7 +110,7 @@ interface UserInfo {
 }
 
 const route = useRoute();
-const selectedTab = ref<string>("userinfo");
+const selectedTab = ref<string>("resetPwd");
 
 // 静态用户数据
 const userData = reactive<UserInfo>({

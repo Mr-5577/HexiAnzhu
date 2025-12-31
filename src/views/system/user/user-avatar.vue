@@ -3,10 +3,10 @@
     <!-- 头像显示区域 -->
     <div class="avatar-display" @click="handleAvatarClick">
       <img :src="avatarUrl" alt="用户头像" class="avatar-image" />
-      <div class="avatar-overlay">
+      <!-- <div class="avatar-overlay">
         <el-icon size="20"><Camera /></el-icon>
         <span>更换头像</span>
-      </div>
+      </div> -->
     </div>
 
     <!-- 头像上传对话框 -->
@@ -120,7 +120,7 @@ const previewImageUrl = ref<string>("");
 
 // 点击头像
 const handleAvatarClick = () => {
-  dialogVisible.value = true;
+  // dialogVisible.value = true;
 };
 
 // 关闭对话框
