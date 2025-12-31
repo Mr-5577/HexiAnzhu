@@ -29,6 +29,7 @@
               :rules="signInRules"
               ref="signInFormRef"
               class="login-form"
+              @keyup.enter="handleSignIn"
             >
               <el-form-item prop="userName">
                 <el-input
@@ -37,6 +38,7 @@
                   prefix-icon="User"
                   class="custom-input"
                   size="large"
+                  @keyup.enter="handleSignIn"
                 />
               </el-form-item>
 
@@ -49,6 +51,7 @@
                   class="custom-input"
                   size="large"
                   show-password
+                  @keyup.enter="handleSignIn"
                 />
               </el-form-item>
 
