@@ -205,7 +205,7 @@ const getTableList = async () => {
               prop: String(item.pathWayId),
               label: "套数",
               align: "center",
-              width: 90,
+              width: 80,
               showSummary: true,
             },
             {

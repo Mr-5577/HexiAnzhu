@@ -54,7 +54,7 @@ export const VisitingStatisticsMonthColumns = [
 // 转化率统计-表头
 export const conversionRateColumns: any = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "projName", label: "项目名称", width: 200 },
+  { prop: "projName", label: "项目名称", width: 220 },
   { prop: "dylfComeNum", label: "当月来访人数" },
   { prop: "dyrgNum", label: "当月认购套数" },
   { prop: "qqlfrgNum", label: "前期来访本月成交套数" },

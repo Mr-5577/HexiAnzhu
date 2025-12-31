@@ -107,8 +107,8 @@ const queryParams = ref({
 });
 // 固定列
 const tableColumns = ref<any>([
-  { type: "index", label: "序号", width: 80, fixed: "left" },
-  { prop: "proj_name", label: "项目", width: 200, fixed: "left" },
+  { type: "index", label: "序号", width: 60, fixed: "left" },
+  { prop: "proj_name", label: "项目", width: 220, fixed: "left" },
 ]);
 const tableLoading = ref<boolean>(false);
 const exportLoading = ref<boolean>(false);
@@ -210,7 +210,7 @@ const getTableList = async () => {
               prop: String(item.pathWayId),
               label: "套数",
               align: "center",
-              width: 90,
+              width: 80,
               showSummary: true,
             },
             {

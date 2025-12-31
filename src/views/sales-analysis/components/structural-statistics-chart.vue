@@ -323,8 +323,8 @@ const bindChartClickEvent = () => {
     path = "/asset-management/inventory-statistics";
   }
   if (chartType.value === "2") {
-    // 跳转到应收统计表
-    // path = "/risk-analysis/receivables";
+    // 跳转到应收明细表
+    path = "/risk-analysis/receivable-detail";
   }
   if (chartType.value === "3") {
     if (channelType.value === "visit") {
