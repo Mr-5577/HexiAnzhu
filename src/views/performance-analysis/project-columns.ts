@@ -164,12 +164,23 @@ export const AnnualReportColumns: any = [
         label: "成交套数",
         width: 90,
         showSummary: true,
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "order-name-click", // 事件名称
       },
-      { prop: "totalSignNum", label: "签约套数", width: 90, showSummary: true },
+      {
+        prop: "totalSignNum",
+        label: "签约套数",
+        width: 90,
+        showSummary: true,
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "sgin-name-click", // 事件名称
+      },
       {
         prop: "totalRecMoney",
         label: "回款金额",
         width: 90,
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "payment-name-click", // 事件名称
         showSummary: true,
         formatter: (row: any) => formatNumberDisplay(row.totalRecMoney),
       },
@@ -314,11 +325,15 @@ export const dailylReportColumns: any = [
         label: "成交套数",
         width: 120,
         showSummary: true,
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "totalOrderNum-click", // 事件名称
       },
       {
         prop: "totalOrderMoney",
         label: "成交金额",
         width: 120,
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "totalOrderNum-click", // 事件名称
         showSummary: true,
         formatter: (row: any) => formatNumberDisplay(row.totalOrderMoney),
       },
@@ -331,11 +346,20 @@ export const dailylReportColumns: any = [
         clickable: true, // 允许触发单元格事件
         clickEvent: "totalCheckoutNum-click", // 事件名称
       },
-      { prop: "totalSignNum", label: "签约套数", width: 90, showSummary: true },
+      {
+        prop: "totalSignNum",
+        label: "签约套数",
+        width: 90,
+        showSummary: true,
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "totalSignNum-click", // 事件名称
+      },
       {
         prop: "totalSignMoney",
         label: "签约金额",
         width: 90,
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "totalSignNum-click", // 事件名称
         showSummary: true,
         formatter: (row: any) => formatNumberDisplay(row.totalSignMoney),
       },
@@ -345,6 +369,8 @@ export const dailylReportColumns: any = [
         width: 90,
         showSummary: true,
         formatter: (row: any) => formatNumberDisplay(row.totalRecMoney),
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "totalRecMoney-click", // 事件名称
       },
       {
         prop: "totalPemMoney",
@@ -444,12 +470,23 @@ export const dailylReportColumns: any = [
         label: "成交套数",
         width: 90,
         showSummary: true,
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "totalOrderNum-click", // 事件名称
       },
-      { prop: "totalSignNum", label: "签约套数", width: 90, showSummary: true },
+      {
+        prop: "totalSignNum",
+        label: "签约套数",
+        width: 90,
+        showSummary: true,
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "totalSignNum-click", // 事件名称
+      },
       {
         prop: "totalRecMoney",
         label: "回款金额",
         width: 90,
+        clickable: true, // 允许触发单元格事件
+        clickEvent: "totalRecMoney-click", // 事件名称
         showSummary: true,
         formatter: (row: any) => formatNumberDisplay(row.totalRecMoney),
       },

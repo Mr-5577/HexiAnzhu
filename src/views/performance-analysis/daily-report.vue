@@ -117,34 +117,27 @@ const handleCellEventClick = (data: any) => {
   if (!projectId) return;
 
   const timestamp = Date.now().toString(); // 防止路由缓存
+  // 当日
   const day = queryParams.value.day || dateUtil().format("YYYY-MM-DD");
-  const params = {
+  const dayParams = {
     department: [projectId],
     time: [day, day],
   };
+  // 当月
+  const monthTime = [
+    dateUtil(day).startOf("month").format("YYYY-MM-DD"),
+    dateUtil(day).endOf("month").format("YYYY-MM-DD"),
+  ];
+  const monthParams = {
+    department: [projectId],
+    time: monthTime,
+  };
   // 定义事件与路由的映射关系
   const eventRouteMap = {
-    // 认购业绩套数、金额 跳转到 认购业绩明细表
+    // 当日成交套数、金额 跳转到 认购业绩明细表
     "order-name-click": {
       path: "/performance-analysis/sub-detail",
-      params: params,
-    },
-    // 签约业绩套数、金额 跳转到 认签约业绩明细表
-    "sgin-name-click": {
-      path: "/performance-analysis/contract-detail",
-      params: params,
-    },
-    // 回款业绩金额 跳转到 回款业绩明细表
-    "payment-name-click": {
-      path: "/performance-analysis/collection-detail",
-      params: params,
-    },
-    // 总计套数、金额 跳转到 应收明细
-    "total-name-click": {
-      path: "/risk-analysis/receivable-detail",
-      params: {
-        department: [projectId],
-      },
+      params: dayParams,
     },
     // 当日-退房挞定 跳转到 退房挞定明细
     "dayCheckoutNum-click": {
@@ -152,6 +145,23 @@ const handleCellEventClick = (data: any) => {
       params: {
         projIds: [projectId],
         time: [day, day],
+      },
+    },
+    // 当日签约套数、金额 跳转到 认签约业绩明细表
+    "sgin-name-click": {
+      path: "/performance-analysis/contract-detail",
+      params: dayParams,
+    },
+    // 当日回款金额 跳转到 回款业绩明细表
+    "payment-name-click": {
+      path: "/performance-analysis/collection-detail",
+      params: dayParams,
+    },
+    // 总计套数、金额 跳转到 应收明细
+    "total-name-click": {
+      path: "/risk-analysis/receivable-detail",
+      params: {
+        department: [projectId],
       },
     },
     // 当日-溢价金额 跳转到 溢价明细明细
@@ -162,26 +172,35 @@ const handleCellEventClick = (data: any) => {
         time: [day, day],
       },
     },
+    // 当月累计-成交金额、套数 跳转到 认购业绩明细表
+    "totalOrderNum-click": {
+      path: "/performance-analysis/sub-detail",
+      params: monthParams,
+    },
     // 当月-退房挞定 跳转到 退房挞定明细
     "totalCheckoutNum-click": {
       path: "/risk-analysis/forfeiture-detail",
       params: {
         projIds: [projectId],
-        time: [
-          dateUtil(day).startOf("month").format("YYYY-MM-DD"),
-          dateUtil(day).endOf("month").format("YYYY-MM-DD"),
-        ],
+        time: monthTime,
       },
+    },
+    // 当月累计-签约套数、金额 跳转到 认签约业绩明细表
+    "totalSignNum-click": {
+      path: "/performance-analysis/contract-detail",
+      params: monthParams,
+    },
+    // 当日累计-回款金额 跳转到 回款业绩明细表
+    "totalRecMoney-click": {
+      path: "/performance-analysis/collection-detail",
+      params: monthParams,
     },
     // 当月-溢价金额 跳转到 溢价明细明细
     "totalPemMoney-click": {
       path: "/risk-analysis/premium-detail",
       params: {
         projIds: [projectId],
-        time: [
-          dateUtil(day).startOf("month").format("YYYY-MM-DD"),
-          dateUtil(day).endOf("month").format("YYYY-MM-DD"),
-        ],
+        time: monthTime,
       },
     },
   };
