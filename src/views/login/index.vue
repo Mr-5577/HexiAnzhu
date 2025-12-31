@@ -139,7 +139,7 @@ const signInFormRef = ref<FormInstance>();
 const loading = ref(false);
 const signInForm = reactive({
   userName: "000001",
-  password: "666666",
+  password: "122809",
 });
 
 // 扫码登录相关状态

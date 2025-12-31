@@ -13,6 +13,7 @@
       <div>token：{{ tokenInfo }}</div>
       <div>state：{{ stateInfo }}</div>
       <div>error：{{ errorInfo }}</div>
+      <div>storedState{{ userStore.stateTag }}</div>
       <div>routeQuery：{{ routeInfo }}</div>
     </div>
   </div>
@@ -63,16 +64,14 @@ const checkIfUnmounted = () => {
 const redirectToAuth = async () => {
   console.log("进入重定向到认证页面逻辑");
   checkIfUnmounted();
-
   try {
     // 缓存stateTag
     const validState = uuidv4();
+    // const validState = "07504c6c-2303-4cac-be57-3bd96e309d4c";
     userStore.setStateTag(validState);
     console.log("生成新的stateTag:", validState);
-
     // 获取认证地址回调
     const res = await userApi.getAuthRedirectUrl({ state: validState });
-
     checkIfUnmounted();
 
     if (res.code === 200 && res.data) {
@@ -82,7 +81,7 @@ const redirectToAuth = async () => {
       ElMessage.info("正在跳转到认证页面...");
 
       // 短暂延迟让用户看到提示
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       checkIfUnmounted();
 
@@ -91,6 +90,7 @@ const redirectToAuth = async () => {
 
       // 跳转到认证页面
       window.location.href = res.data;
+      // window.location.href = 'http://localhost:3000/autoLogin?token=eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEzLCJ1c2VybmFtZSI6IjAwMDAxMyIsImlhdCI6MTc2NzA4NzcyNCwiZXhwIjoxNzY3MTc0MTI0fQ.GZKqFTu7eSW7D9S4Hssf7awb6Auz8yrVFTCFl0tRD6g&state=07504c6c-2303-4cac-be57-3bd96e309d4c';
       return;
     } else {
       ElMessage.error("获取认证地址失败！");
@@ -101,16 +101,13 @@ const redirectToAuth = async () => {
     if (err.message === "COMPONENT_UNMOUNTED") {
       return;
     }
-
     // 重置处理标志
     isProcessing = false;
-
     // 显示错误消息
     if (!isUnmounted) {
       ElMessage.error("无法连接到认证服务！");
       console.error("重定向到认证页面失败:", err);
     }
-
     throw new Error("无法连接到认证服务");
   }
 };
@@ -124,40 +121,46 @@ const handleTokenLogin = async (token: string, stateParam: string) => {
     stateParam,
     storedState: userStore.stateTag,
   });
+  // 当 state 为 hxaz 时，直接跳转到首页
+  if (stateParam === "hxaz") {
+    // 存储token
+    localStorage.setItem("token", token);
+    // 清理state标记
+    userStore.setStateTag("");
+    // 显示成功提示
+    ElMessage.success("登录成功，正在跳转...");
+    // 短暂延迟让用户看到提示
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    checkIfUnmounted();
+    // 跳转到首页
+    await router.replace("/home");
+    return;
+  }
 
-  // 验证state参数
+  // 验证state参数，不匹配
   if (stateParam !== userStore.stateTag) {
     console.error("state验证失败:", {
       received: stateParam,
       expected: userStore.stateTag,
     });
     ElMessage.error("登录验证失败，请重新登录！");
-
     // 清除可能已存储的token
     localStorage.removeItem("token");
-
     // 清理state标记
     userStore.setStateTag("");
-
     throw new Error("登录验证失败，请重新登录");
   }
 
   // 存储token
   localStorage.setItem("token", token);
-
   // 清理state标记
   userStore.setStateTag("");
-
   console.log("token验证成功，存储token，清理state");
-
   // 显示成功提示
   ElMessage.success("登录成功，正在跳转...");
-
   // 短暂延迟让用户看到提示
   await new Promise((resolve) => setTimeout(resolve, 800));
-
   checkIfUnmounted();
-
   // 跳转到首页
   await router.replace("/home");
 
@@ -286,8 +289,7 @@ const handleRetry = () => {
 
 onMounted(() => {
   console.log("自动登录页面挂载");
-  // handleRouteParams();
-  handleRetry();
+  handleRouteParams();
 });
 
 onUnmounted(() => {
