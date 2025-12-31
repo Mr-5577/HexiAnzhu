@@ -73,7 +73,7 @@
               <el-icon><Avatar /></el-icon>
             </div>
             <div class="role-info">
-              <div class="role-desc">
+              <div class="role-top">
                 <div class="role-name">{{ role.roleName }}</div>
                 <div
                   class="role-status"
@@ -418,7 +418,7 @@ onMounted(() => {
           border-radius: 3px;
         }
         &::-webkit-scrollbar-thumb {
-          background: #cbd5e1;
+          background: #dbdddf;
           border-radius: 3px;
 
           &:hover {
@@ -466,7 +466,7 @@ onMounted(() => {
             flex: 1;
             min-width: 0;
             margin-right: 8px;
-            .role-desc {
+            .role-top {
               display: flex;
               flex-wrap: nowrap;
               .role-name {
@@ -500,6 +500,7 @@ onMounted(() => {
               }
             }
             .role-desc {
+              width: 100%;
               margin-top: 2px;
               font-size: 12px;
               color: #64748b;
