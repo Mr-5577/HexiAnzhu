@@ -117,22 +117,52 @@ import { formatNumber, formatNumberDisplay } from "@/utils/common";
 
 // 定义列接口
 export interface TableColumnItem {
+  /** 字段属性名，对应数据中的键 */
   prop?: string;
+  /** 表头显示的文本内容 */
   label?: string;
+  /** 列类型：selection（多选列）、index（序号列）、expand（可展开列） */
   type?: "selection" | "index" | "expand";
+  /** 列宽度，支持像素(px)或百分比(%) */
   width?: string | number;
+  /** 列最小宽度，支持像素(px)或百分比(%) */
   minWidth?: string | number;
+  /** 列对齐方式：left（左对齐）、center（居中）、right（右对齐） */
   align?: "left" | "center" | "right";
+  /** 是否可排序，true为开启排序，'custom'为自定义排序 */
   sortable?: boolean | "custom";
+  /** 是否固定列：true、'left'（固定在左侧）、'right'（固定在右侧） */
   fixed?: boolean | "left" | "right";
+  /** 是否在内容溢出时显示 tooltip 提示 */
   showOverflowTooltip?: boolean;
+  /** 单元格插槽名称，用于自定义单元格内容渲染 */
   slot?: string;
+  /** 表头插槽名称，用于自定义表头内容渲染 */
+  headerSlot?: string;
+  /** 数据字典键名，用于从 dictData 中获取选项映射 */
   dict?: string;
+  /** 是否显示该列，false 时隐藏 */
   visible?: boolean;
-  clickable?: boolean; // 新增：是否可点击
-  clickHandler?: (row: any, column: TableColumnItem, index: number) => void; // 新增：点击处理函数
+  /** 单元格是否可点击，开启后会添加点击样式和事件 */
+  clickable?: boolean;
+  /** 单元格点击事件处理函数 */
+  clickHandler?: (row: any, column: TableColumnItem, index: number) => void;
+  /** 子列配置，用于多级表头 */
   children?: TableColumnItem[];
+  /** 单元格内容格式化函数 */
   formatter?: (row: any, column: any, index: number) => any;
+  /** 表头提示配置 */
+  headerTip?: {
+    /** 提示图标组件名，默认使用 QuestionFilled */
+    icon?: string;
+    /** 提示文本内容 */
+    content?: string;
+    /** 提示框显示位置：top/top-start/top-end/bottom/bottom-start/bottom-end/left/left-start/left-end/right/right-start/right-end */
+    placement?: string;
+    /** 提示框宽度，支持像素(px)或百分比(%) */
+    width?: string;
+  };
+  /** 其他自定义属性 */
   [key: string]: any;
 }
 
@@ -149,69 +179,91 @@ interface DictData {
 
 // 定义组件属性
 interface Props {
-  // 数据列
+  /** 列配置数组，定义表格的列结构、表头、属性和行为 */
   columns: TableColumnItem[];
-  // 表格数据
+  /** 表格数据数组，每行数据对应一个对象 */
   tableData: any[];
-  // 行数据的 Key
+  /** 行数据的唯一标识字段，用于行选择和展开状态跟踪，默认为 'id' */
   rowKey?: string;
-  // 是否带有纵向边框
+  /** 是否显示表格纵向边框 */
   border?: boolean;
-  // 是否为斑马纹 table
+  /** 是否为斑马纹表格，交替显示不同背景色 */
   stripe?: boolean;
-  // Table 的尺寸
+  /** 表格尺寸：large（大）、default（默认）、small（小） */
   size?: "large" | "default" | "small";
+  /** 表格固定高度，支持数字（像素）或字符串（如 '100%'、'200px'） */
   height?: string | number;
+  /** 表格最大高度，超出将出现滚动条 */
   maxHeight?: string | number;
-  // 是否自动高度
+  /** 是否自动计算高度，开启后会根据容器剩余空间自适应高度 */
   autoHeight?: boolean;
-  // 加载状态
+  /** 是否显示加载状态，true 时显示加载动画 */
   loading?: boolean;
-  // 分页相关
+  /** 是否显示分页组件 */
   pagination?: boolean;
+  /** 数据总条数 */
   total?: number;
+  /** 每页显示条数 */
   pageSize?: number;
+  /** 当前页码 */
   currentPage?: number;
+  /** 每页显示条数选项数组 */
   pageSizes?: number[];
+  /** 分页组件布局，组件间用逗号分隔，可选值：total, sizes, prev, pager, next, jumper */
   paginationLayout?: string;
+  /** 分页按钮是否显示背景色 */
   paginationBackground?: boolean;
-  // 是否显示工具栏
+  /** 是否显示工具栏区域（包含刷新、列设置等按钮） */
   showToolbar?: boolean;
-  // 是否显示操作栏
+  /** 是否显示操作栏区域（通常用于放置搜索表单、新增按钮等） */
   showActionBar?: boolean;
-  // 字典数据
+  /** 数据字典对象，用于选项值到显示文本的映射 */
   dictData?: DictData;
-  // 是否默认展开所有行，当 Table 包含展开行存在或者为树形表格时有效
+  /** 是否默认展开所有行，适用于可展开行或树形表格 */
   isExpandAll?: boolean;
-  // 是否显示合计列
+  /** 是否在表格底部显示合计行 */
   showSummary?: boolean;
+  /** 自定义合计计算方法，接收列信息和数据，返回每列的合计值数组 */
   summaryMethod?: (params: { columns: any[]; data: any[] }) => string[];
-  // 是否开启行点击高亮
+  /** 是否开启行点击高亮效果，点击行时背景色变化 */
   highlightCurrentRow?: boolean;
 }
 
 // 定义组件事件
 interface Emits {
+  /** 当选择项发生变化时触发，返回当前选中的行数据数组 */
   (event: "selection-change", value: any[]): void;
+  /** 当表格排序条件发生变化时触发，返回排序配置对象 */
   (event: "sort-change", value: Sort): void;
+  /** 更新每页显示条数的 v-model 事件 */
   (event: "update:pageSize", value: number): void;
+  /** 更新当前页码的 v-model 事件 */
   (event: "update:currentPage", value: number): void;
+  /** 分页参数变化时触发，包含页大小和当前页码信息 */
   (
     event: "pagination-change",
     value: { pageSize: number; currentPage: number }
   ): void;
+  /** 点击刷新按钮时触发 */
   (event: "refresh"): void;
+  /** 点击表格行时触发，返回点击的行数据和原生事件对象 */
   (event: "row-click", value: { row: any; event: Event }): void;
+  /** 点击表格单元格时触发，返回点击的行数据、列配置和原生事件对象 */
   (
     event: "cell-click",
     value: { row: any; column: TableColumnItem; event: Event }
   ): void;
+  /** 自定义单元格事件，可用于处理单元格内按钮点击等自定义交互 */
   (
     event: "cell-event",
     value: {
+      /** 事件名称，用于区分不同类型的单元格事件 */
       eventName: string;
+      /** 行数据对象 */
       row: any;
+      /** 列配置对象 */
       column: TableColumnItem;
+      /** 行索引位置 */
       index: number;
     }
   ): void;
@@ -349,6 +401,47 @@ const TableColumn = {
 
       // 普通列
       return h(resolveComponent("el-table-column"), columnProps, {
+        // 自定义表头
+        header: (scope: any) => {
+          // 如果有表头插槽
+          if (column.headerSlot) {
+            const headerSlotFunc = props.slots[column.headerSlot];
+            if (headerSlotFunc) {
+              return headerSlotFunc(scope);
+            }
+          }
+          // 如果有表头提示配置
+          if (column.headerTip) {
+            return h("div", { class: "header-with-tip" }, [
+              h("span", { class: "header-label" }, column.label || ""),
+              h(
+                resolveComponent("el-tooltip"),
+                {
+                  content: column.headerTip.content || "",
+                  placement: column.headerTip.placement || "top",
+                  width: column.headerTip.width || "200px",
+                },
+                {
+                  default: () =>
+                    h(
+                      resolveComponent("el-icon"),
+                      { class: "header-tip-icon" },
+                      [
+                        h(
+                          resolveComponent(
+                            column.headerTip?.icon || "QuestionFilled"
+                          )
+                        ),
+                      ]
+                    ),
+                }
+              ),
+            ]);
+          }
+          // 默认表头
+          return h("span", column.label || "");
+        },
+        // 单元格内容
         default: (scope: any) => {
           // 自定义列内容
           if (column.slot) {
