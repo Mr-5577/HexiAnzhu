@@ -117,7 +117,7 @@ const handleCellEventClick = (data: any) => {
   if (eventName === "projName-click") {
     const timestamp = new Date().getTime();
     const params = {
-      projIds: [projectId],
+      department: [projectId],
     };
     router.push({
       path: "/risk-analysis/receivable-detail",
@@ -200,7 +200,7 @@ const getTableList = async () => {
             {
               prop: `${item.groupId}_collectNum`,
               label: "总套数",
-              width: 90,
+              width: 80,
               showSummary: true,
             },
             {
@@ -215,7 +215,7 @@ const getTableList = async () => {
                 {
                   prop: `${item.groupId}_sldCollectNum`,
                   label: "总套数",
-                  width: 90,
+                  width: 80,
                   showSummary: true,
                 },
                 {

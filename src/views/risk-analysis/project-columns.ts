@@ -113,11 +113,11 @@ export const premiumStatsColumns: any = [
     clickable: true, // 允许触发单元格事件
     clickEvent: "projName-click", // 事件名称
   },
-  { prop: "allNum", label: "认购套数", width: 100, showSummary: true },
+  { prop: "allNum", label: "认购套数", width: 90, showSummary: true },
   {
     prop: "saleArea",
     label: "销售面积",
-    width: 120,
+    width: 100,
     showSummary: true,
     formatter: (row: any) => formatNumberDisplay(row.saleArea),
   },
@@ -171,12 +171,12 @@ export const premiumStatsColumns: any = [
     formatter: (row: any) => formatNumberDisplay(row.incMoneyPj),
   },
   {
-    prop: "aaaaaaa",
+    prop: "yjMoney",
     label: "溢价金额(万)",
-    width: 150,
+    width: 110,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.aaaaaaa),
-  }, // 字段调整
+    formatter: (row: any) => formatNumberDisplay(row.yjMoney),
+  },
   {
     prop: "premiumRate",
     label: "溢价比例",
@@ -194,13 +194,13 @@ export const premiumStatsColumns: any = [
 // 溢价明细-表头
 export const premiumDetailColumns: any = [
   { type: "index", label: "序号", width: 60, fixed: "left" },
-  { prop: "projName", label: "项目", width: 240, fixed: "left" },
-  { prop: "bigProductTypeName", label: "业态", width: 100 },
+  { prop: "projName", label: "项目", width: 220, fixed: "left" },
+  { prop: "bigProductTypeName", label: "业态", width: 80 },
   { prop: "roomNum", label: "房号", width: 100 },
-  { prop: "forecastArea", label: "预测面积", width: 120, showSummary: true },
-  { prop: "custName", label: "业主", width: 120 },
+  { prop: "forecastArea", label: "预测面积", width: 90, showSummary: true },
+  { prop: "custName", label: "业主", width: 90 },
   // { prop: "custTel", label: "联系电话", width: 150 },
-  { prop: "saleDate", label: "认购日期", width: 150 },
+  { prop: "saleDate", label: "认购日期", width: 120 },
   {
     prop: "floorMoney",
     label: "底价总价",
@@ -216,20 +216,20 @@ export const premiumDetailColumns: any = [
     formatter: (row: any) => formatNumberDisplay(row.saleMoney),
   },
   {
-    prop: "aaqqqq",
+    prop: "incMoneyRm",
     label: "补贴金额",
     width: 150,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.aaqqqq),
-  }, // 字段调整
+    formatter: (row: any) => formatNumberDisplay(row.incMoneyRm),
+  },
   {
     prop: "saleMoneyAll",
     label: "实际销售金额",
-    width: 150,
+    width: 130,
     showSummary: true,
     formatter: (row: any) => formatNumberDisplay(row.saleMoneyAll),
   },
-  { prop: "premiumStatus", label: "溢价状态", width: 120 },
+  { prop: "premiumStatus", label: "溢价状态", width: 90 },
   {
     prop: "premiumMoney",
     label: "溢价金额",
@@ -237,9 +237,9 @@ export const premiumDetailColumns: any = [
     showSummary: true,
     formatter: (row: any) => formatNumberDisplay(row.premiumMoney),
   },
-  { prop: "name", label: "溢价比例", width: 120 }, // 字段调整
+  { prop: "premiumRate", label: "溢价比例", width: 100 },
   { prop: "sallerName", label: "置业顾问", width: 120 },
-  { prop: "incMoneyMemo", label: "更改总价说明", width: 150, lineClamp: 3 },
+  { prop: "incMoneyMemo", label: "更改总价说明", width: 150 },
   { prop: "name", label: "备注详情", width: 150 }, // 字段调整
 ];
 // 应收统计-表头
@@ -258,7 +258,7 @@ export const receivablesColumns1: any = [
       {
         prop: "totalCollectNum",
         label: "总套数",
-        width: 90,
+        width: 80,
         showSummary: true,
       },
       {
@@ -274,7 +274,7 @@ export const receivablesColumns1: any = [
           {
             prop: "totalSldCollectNum",
             label: "总套数",
-            width: 90,
+            width: 80,
             showSummary: true,
           },
           {
@@ -295,7 +295,7 @@ export const receivablesColumns1: any = [
       {
         prop: "outstdCollectNum",
         label: "总套数",
-        width: 90,
+        width: 80,
         showSummary: true,
       },
       {
@@ -316,7 +316,7 @@ export const receivablesColumns1: any = [
           {
             prop: "rwqGcdkCollectNum",
             label: "总套数",
-            width: 90,
+            width: 80,
             showSummary: true,
           },
           {
@@ -334,7 +334,7 @@ export const receivablesColumns1: any = [
               {
                 prop: "rwqGcdkSldCollectNum",
                 label: "总套数",
-                width: 90,
+                width: 80,
                 showSummary: true,
               },
               {
@@ -355,7 +355,7 @@ export const receivablesColumns1: any = [
           {
             prop: "rwqQtCollectNum",
             label: "总套数",
-            width: 90,
+            width: 80,
             showSummary: true,
           },
           {
@@ -371,7 +371,7 @@ export const receivablesColumns1: any = [
               {
                 prop: "rwqQtSldCollectNum",
                 label: "总套数",
-                width: 90,
+                width: 80,
                 showSummary: true,
               },
               {
@@ -396,7 +396,7 @@ export const receivablesColumns2: any = [
       {
         prop: "qwhGcdkCollectNum",
         label: "总套数",
-        width: 90,
+        width: 80,
         showSummary: true,
       },
       {
@@ -412,7 +412,7 @@ export const receivablesColumns2: any = [
           {
             prop: "qwhGcdkSldCollectNum",
             label: "总套数",
-            width: 90,
+            width: 80,
             showSummary: true,
           },
           {
@@ -433,7 +433,7 @@ export const receivablesColumns2: any = [
       {
         prop: "qwhFpCollectNum",
         label: "总套数",
-        width: 90,
+        width: 80,
         showSummary: true,
       },
       {
@@ -449,7 +449,7 @@ export const receivablesColumns2: any = [
           {
             prop: "qwhFpSldCollectNum",
             label: "总套数",
-            width: 90,
+            width: 80,
             showSummary: true,
           },
           {
@@ -468,10 +468,10 @@ export const receivablesColumns2: any = [
 // 应收明细-表头
 export const receivablesDetailColumns: any = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "projName", label: "项目", width: 240 },
+  { prop: "projName", label: "项目", width: 220 },
   { prop: "bigProductTypeName", label: "业态", width: 100 },
-  { prop: "roomNum", label: "房号", width: 100 },
-  { prop: "buildArea", label: "预测面积", width: 120 },
+  { prop: "roomNum", label: "房号", width: 90 },
+  { prop: "buildArea", label: "预测面积", width: 90 },
   { prop: "custName", label: "业主" },
   // { prop: "custTel", label: "联系电话" },
   { prop: "saleDate", label: "认购日期" },
@@ -525,10 +525,10 @@ export const forfeitureDetailColumns: any = [
     label: "项目",
     width: 240,
   },
-  { prop: "bigProductTypeName", label: "业态" },
+  { prop: "bigProductTypeName", label: "业态", width: 100 },
   { prop: "roomNum", label: "房号" },
-  { prop: "buildArea", label: "建筑面积", showSummary: true },
-  { prop: "custName", label: "业主" },
+  { prop: "buildArea", label: "建筑面积", width: 100, showSummary: true },
+  { prop: "custName", label: "业主", width: 100 },
   // { prop: "custTel", label: "联系电话" },
   { prop: "saleDate", label: "认购日期" },
   {
@@ -543,17 +543,17 @@ export const forfeitureDetailColumns: any = [
     showSummary: true,
     formatter: (row: any) => formatNumberDisplay(row.saleMoney),
   },
-  { prop: "checkOutTypeName", label: "类型" },
+  { prop: "checkOutTypeName", label: "类型", width: 100 },
   { prop: "checkOutDate", label: "退定日期" },
 ];
 // 逾期未回款明细-表头
 export const overdueDetailColumns: any = [
   { type: "index", label: "序号", width: 60, fixed: "left" },
   { prop: "projName", label: "项目", width: 240, fixed: "left" },
-  { prop: "bigProductTypeName", label: "业态", width: 100 },
+  { prop: "bigProductTypeName", label: "业态", width: 90 },
   { prop: "roomNum", label: "房号", width: 100 },
-  { prop: "buildArea", label: "建筑面积", showSummary: true, width: 100 },
-  { prop: "custName", label: "业主", width: 100 },
+  { prop: "buildArea", label: "建筑面积", showSummary: true, width: 90 },
+  { prop: "custName", label: "业主", width: 90 },
   // { prop: "custTel", label: "联系电话", width: 120 },
   { prop: "saleDate", label: "认购日期", width: 120 },
   {

@@ -422,7 +422,7 @@ onMounted(() => {
     background: #fff;
     border-radius: 4px;
     border: 1px solid #ebeef5;
-    min-height: 400px;
+    // min-height: 400px;
 
     .empty-state {
       display: flex;

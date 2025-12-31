@@ -48,7 +48,7 @@ export const roomLedgerColumns: any = [
     formatter: (row: any) => formatNumberDisplay(row.floorMoneyOffer),
   },
   { prop: "saleDate", label: "认购日期", width: 120 },
-  { prop: "aa", label: "成交时系统底价", width: 140 }, // 字段调整
+  { prop: "order_floor_money", label: "成交时系统底价", width: 140 },
   { prop: "asstDate", label: "认购业绩日期", width: 120 },
   { prop: "signDate", label: "签约日期", width: 120 },
   { prop: "netDate", label: "网签日期", width: 120 },
@@ -74,11 +74,11 @@ export const roomLedgerColumns: any = [
   { prop: "custTel", label: "联系电话", width: 120 },
   { prop: "custTels", label: "备用联系", width: 120 },
   {
-    prop: "cc",
+    prop: "receivedMoney",
     label: "已付金额",
     width: 90,
     formatter: (row: any) => formatNumberDisplay(row.cc),
-  }, // 字段调整
+  },
   {
     prop: "cc",
     label: "未付金额",
