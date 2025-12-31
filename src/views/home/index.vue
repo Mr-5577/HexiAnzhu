@@ -275,7 +275,7 @@ onMounted(() => {
   padding: 24px;
   height: 100%;
   box-sizing: border-box;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: linear-gradient(135deg, #f8fafc 0%, #e6edfa 100%);
   min-height: calc(100vh - 64px);
 }
 

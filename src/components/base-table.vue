@@ -112,7 +112,6 @@ import {
   type Slots,
 } from "vue";
 import type { TableInstance, Sort } from "element-plus";
-import { isNumber } from "@/utils/is";
 import { formatNumber, formatNumberDisplay } from "@/utils/common";
 
 // 定义列接口
@@ -422,18 +421,18 @@ const TableColumn = {
                   width: column.headerTip.width || "200px",
                 },
                 {
-                  default: () =>
-                    h(
+                  default: () => {
+                    // 获取图标组件，默认icon QuestionFilled
+                    const iconName = column.headerTip?.icon || "QuestionFilled";
+                    const Icon = resolveComponent(iconName);
+                    // 返回 el-icon 包裹的图标
+                    return h(
                       resolveComponent("el-icon"),
                       { class: "header-tip-icon" },
-                      [
-                        h(
-                          resolveComponent(
-                            column.headerTip?.icon || "QuestionFilled"
-                          )
-                        ),
-                      ]
-                    ),
+                      // 关键：确保返回一个渲染函数
+                      () => h(Icon)
+                    );
+                  },
                 }
               ),
             ]);
