@@ -3,7 +3,8 @@
     <el-header class="header-box">
       <div class="header-left">
         <el-cascader
-          class="custom-cascader"
+          class="custom-cascader fixed-height-cascader"
+          :filterable="true"
           v-model="departmentVal"
           placeholder="请选择"
           :options="options"
@@ -282,7 +283,7 @@ onUnmounted(() => {
       flex-wrap: nowrap;
       align-items: flex-end;
       justify-content: flex-start;
-      padding-left: 2rem;
+      // padding-left: 2rem;
       box-sizing: border-box;
       :deep(.custom-cascader) {
         height: 32px;
@@ -295,6 +296,9 @@ onUnmounted(() => {
           .el-tag {
             color: #d1e0e7;
             background-color: transparent !important;
+          }
+          .el-cascader__search-input {
+            color: #d1e0e7;
           }
         }
       }

@@ -4,7 +4,8 @@
     <el-form :model="queryParams" ref="queryRef" :inline="true">
       <el-form-item label="项目" prop="projIds">
         <el-cascader
-          class="custom-cascader"
+          class="fixed-height-cascader"
+          :filterable="true"
           v-model="queryParams.projIds"
           placeholder="请选择"
           :options="projectOptions"

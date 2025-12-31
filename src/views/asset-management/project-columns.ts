@@ -59,10 +59,10 @@ export const roomLedgerColumns: any = [
     formatter: (row: any) => formatNumberDisplay(row.saleMoney),
   },
   {
-    prop: "saleUnitPrice",
+    prop: "unitPrice",
     label: "销售单价",
     width: 90,
-    formatter: (row: any) => formatNumberDisplay(row.saleUnitPrice),
+    formatter: (row: any) => formatNumberDisplay(row.unitPrice),
   },
   {
     prop: "surveyMoney",
@@ -77,14 +77,14 @@ export const roomLedgerColumns: any = [
     prop: "receivedMoney",
     label: "已付金额",
     width: 90,
-    formatter: (row: any) => formatNumberDisplay(row.cc),
+    formatter: (row: any) => formatNumberDisplay(row.receivedMoney),
   },
   {
-    prop: "cc",
+    prop: "outstdMoney",
     label: "未付金额",
     width: 90,
-    formatter: (row: any) => formatNumberDisplay(row.cc),
-  }, // 字段调整
+    formatter: (row: any) => formatNumberDisplay(row.outstdMoney),
+  },
   {
     prop: "loanPayMoney",
     label: "银行放款",

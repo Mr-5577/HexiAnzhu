@@ -240,7 +240,7 @@ export const premiumDetailColumns: any = [
   { prop: "premiumRate", label: "溢价比例", width: 100 },
   { prop: "sallerName", label: "置业顾问", width: 120 },
   { prop: "incMoneyMemo", label: "更改总价说明", width: 150 },
-  { prop: "name", label: "备注详情", width: 150 }, // 字段调整
+  // { prop: "name", label: "备注详情", width: 150 }, // 字段调整
 ];
 // 应收统计-表头
 export const receivablesColumns1: any = [
