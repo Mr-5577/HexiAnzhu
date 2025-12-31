@@ -2,6 +2,7 @@
 <template>
   <div class="permissions-container">
     <base-table
+      v-if="refreshTable"
       :columns="columns"
       :tableData="tableData"
       :loading="loading"
@@ -11,12 +12,21 @@
       :page-size="pageSize"
       :pagination="false"
       @pagination-change="handlePaginationChange"
+      :isExpandAll="isExpandAll"
     >
       <!-- 列表外操作栏 -->
       <template #actionBar>
         <div class="actionBar-buttons">
           <el-button
-            class="save-btn"
+            type="primary"
+            size="small"
+            plain
+            :icon="Sort"
+            @click="toggleExpandAll"
+          >
+            展开/折叠
+          </el-button>
+          <el-button
             type="primary"
             size="small"
             plain
@@ -50,6 +60,7 @@
 </template>
 
 <script setup lang="ts">
+import { Sort } from "@element-plus/icons-vue";
 import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { roleApi } from "@/api/role-api";
 import { ElMessage } from "element-plus";
@@ -64,7 +75,8 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   roleId: null,
 });
-
+const refreshTable = ref(true);
+const isExpandAll = ref(false);
 const saveLoading = ref(false);
 const loading = ref(false);
 const currentPage = ref(1);
@@ -160,7 +172,13 @@ const handleSave = async () => {
     saveLoading.value = false;
   }
 };
-
+const toggleExpandAll = () => {
+  refreshTable.value = false;
+  isExpandAll.value = !isExpandAll.value;
+  nextTick(() => {
+    refreshTable.value = true;
+  });
+};
 watch(
   () => props.roleId,
   (val) => {
@@ -189,7 +207,8 @@ onUnmounted(() => {});
   .actionBar-buttons {
     height: 24px;
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
   }
 }
 </style>
