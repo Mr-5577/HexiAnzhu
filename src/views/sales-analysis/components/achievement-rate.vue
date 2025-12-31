@@ -138,7 +138,7 @@ defineExpose({
   refreshData,
 });
 
-const typeVal = ref(0);
+const typeVal = ref(1);
 const loading = ref(false);
 const inventoryData = ref({
   roomNum: 0, // 房间库存数量

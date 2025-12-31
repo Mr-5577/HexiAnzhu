@@ -1,6 +1,6 @@
 <template>
   <div class="structuralStatistics-page">
-    <ChartBox title="产权管理" :loading="loading">
+    <ChartBox title="资产与应收统计" :loading="loading">
       <template #content>
         <div class="structuralStatisticsContent">
           <!-- 图表类型切换 -->

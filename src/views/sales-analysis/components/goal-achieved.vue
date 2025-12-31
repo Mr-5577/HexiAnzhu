@@ -202,7 +202,7 @@ const premiumData = ref<PremiumDataInterface>({
   saleArea: 0, // 住宅销售面积
 });
 
-const typeVal = ref(0);
+const typeVal = ref(1);
 const dataList = ref([
   {
     id: 1,

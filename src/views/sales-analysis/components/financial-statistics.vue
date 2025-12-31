@@ -1,7 +1,7 @@
-<!-- 预计指标统计-组件 -->
+<!-- 业务指标-组件 -->
 <template>
   <div class="statistics-page">
-    <ChartBox title="预计指标统计" :loading="loading">
+    <ChartBox title="业务指标" :loading="loading">
       <template #content>
         <div class="statisticsContent">
           <div
