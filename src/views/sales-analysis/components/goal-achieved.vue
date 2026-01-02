@@ -241,7 +241,7 @@ const dataList = ref([
     id: 4,
     img: huikuan,
     symbol: 0,
-    text: "回款(万)",
+    text: "回款(亿)",
     complete: 0,
     goal: 0,
     color: "#e6a23c",
