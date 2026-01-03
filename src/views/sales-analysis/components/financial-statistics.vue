@@ -155,7 +155,20 @@ const getData = async () => {
     loading.value = true;
     const res = await largeScreenApi.getSaleGeneralInfo(params);
     if (res.code === 200) {
-      dataObj.value = { ...dataObj.value, ...res.data };
+      dataObj.value = {
+        signDays: 0,
+        tfNum: 0,
+        tfMoney: 0,
+        tdNum: 0,
+        tdMoney: 0,
+        noSignNum: 0,
+        noSignMoney: 0,
+        collectMoney: 0,
+        collectNum: 0,
+        outstdMoney: 0,
+        outstdNum: 0,
+        ...res.data,
+      };
     }
   } finally {
     isRequesting = false;

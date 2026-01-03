@@ -208,7 +208,7 @@ const initTimeRange = (date?: string) => {
   const baseDate = date ? dateUtil(date) : dateUtil();
   const startTime = baseDate.date(1).format("YYYY-MM-DD");
   const endTime = date
-    ? baseDate.format("YYYY-MM-DD")
+    ? dateUtil(baseDate).endOf("month").format("YYYY-MM-DD")
     : dateUtil().format("YYYY-MM-DD");
   queryParams.value.time = [startTime, endTime];
 };
