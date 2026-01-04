@@ -11,9 +11,9 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    BaseModal: typeof import('./src/components/base-modal.vue')['default']
-    BaseTable: typeof import('./src/components/base-table.vue')['default']
-    ChartBox: typeof import('./src/components/chart-box.vue')['default']
+    BaseChart: typeof import('./src/components/base/base-chart.vue')['default']
+    BaseModal: typeof import('./src/components/base/base-modal.vue')['default']
+    BaseTable: typeof import('./src/components/base/base-table.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElButton: typeof import('element-plus/es')['ElButton']

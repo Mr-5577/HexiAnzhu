@@ -82,7 +82,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import BaseTable from "@/components/base-table.vue";
+
 import { roomLedgerColumns } from "./project-columns";
 import { assetManagementApi } from "@/api/asset-management-api";
 import type { RoomTableInterface } from "@/types/asset-management-type";

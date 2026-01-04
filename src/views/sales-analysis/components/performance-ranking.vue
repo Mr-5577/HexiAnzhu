@@ -1,7 +1,7 @@
 <!-- 业绩排名列表-组件 -->
 <template>
   <div class="ranking-page">
-    <ChartBox title="业绩排名统计" :loading="loading">
+    <BaseChart title="业绩排名统计" :loading="loading">
       <template #content>
         <div class="rankingContent">
           <div class="chart-controls">
@@ -45,13 +45,13 @@
           </div>
         </div>
       </template>
-    </ChartBox>
+    </BaseChart>
   </div>
 </template>
 
 <script setup lang="ts">
-import ChartBox from "@/components/chart-box.vue";
-import BaseTable from "@/components/base-table.vue";
+import BaseChart from "@/components/base/base-chart.vue";
+
 import { ref, computed, watch, onMounted, nextTick, onUnmounted } from "vue";
 import { dateUtil } from "@/utils/date-util";
 import { largeScreenApi } from "@/api/large-screen-api";

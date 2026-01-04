@@ -50,7 +50,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import BaseTable from "@/components/base-table.vue";
+
 import { receivablesColumns1, receivablesColumns2 } from "./project-columns";
 import { assetManagementApi } from "@/api/asset-management-api";
 import { useSalesData } from "@/composables/use-sales";

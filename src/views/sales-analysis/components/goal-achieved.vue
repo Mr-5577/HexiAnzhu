@@ -1,7 +1,7 @@
 <!-- 目标达成情况-组件 -->
 <template>
   <div class="chart-page">
-    <ChartBox title="目标达成情况" :loading="loading">
+    <BaseChart title="目标达成情况" :loading="loading">
       <template #content>
         <div class="goalContent">
           <el-radio-group
@@ -132,7 +132,7 @@
           </div>
         </div>
       </template>
-    </ChartBox>
+    </BaseChart>
   </div>
 </template>
 
@@ -140,7 +140,7 @@
 import laifang from "@/assets/imgs/largeScreenImg/laifang.png";
 import huikuan from "@/assets/imgs/largeScreenImg/huikuan.png";
 import qianyue from "@/assets/imgs/largeScreenImg/qianyue.png";
-import ChartBox from "@/components/chart-box.vue";
+import BaseChart from "@/components/base/base-chart.vue";
 import {
   ref,
   onMounted,

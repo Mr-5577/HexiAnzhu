@@ -64,8 +64,8 @@ import { Sort } from "@element-plus/icons-vue";
 import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { roleApi } from "@/api/role-api";
 import { ElMessage } from "element-plus";
-import BaseTable from "@/components/base-table.vue";
-import type { TableColumnItem } from "@/components/base-table.vue";
+
+import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { useMenuStore } from "@/stores/menu-store";
 const menuStore = useMenuStore();
 

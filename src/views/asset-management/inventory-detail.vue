@@ -65,7 +65,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
-import BaseTable from "@/components/base-table.vue";
+
 import { inventoryDetailColumns } from "./project-columns";
 import { assetManagementApi } from "@/api/asset-management-api";
 import type { InventoryDetailInterface } from "@/types/asset-management-type";

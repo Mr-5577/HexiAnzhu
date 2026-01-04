@@ -6,6 +6,7 @@ import "./assets/styles/button-theme.scss";
 import zhCn from "element-plus/es/locale/lang/zh-cn";
 
 import App from "./App.vue";
+import BaseTable from "@/components/base/base-table.vue";
 // 路由
 import router from "./router";
 // 引入状态管理
@@ -28,4 +29,6 @@ app.use(ElementPlus, {
   locale: zhCn,
 });
 setupPermission(app);
+// 全局注册 BaseTable 组件
+app.component("BaseTable", BaseTable);
 app.mount("#app");

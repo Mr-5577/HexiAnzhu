@@ -71,7 +71,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import BaseTable from "@/components/base-table.vue";
+
 import {
   VisitingStatisticsMonthColumns,
   VisitingStatisticsDayColumns,

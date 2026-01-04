@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import BasicTable from "@/components/base-table.vue";
+import BasicTable from "@/components/base/base-table.vue";
 import { useRouter } from "vue-router";
 import { ref, onMounted, onUnmounted, nextTick } from "vue";
 

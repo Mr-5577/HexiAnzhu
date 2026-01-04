@@ -1,6 +1,6 @@
 <template>
   <div class="performanceTrend-page">
-    <ChartBox title="业绩走势情况" :loading="loading">
+    <BaseChart title="业绩走势情况" :loading="loading">
       <template #content>
         <div class="performanceTrendContent">
           <div class="chart-controls">
@@ -30,12 +30,12 @@
           <div ref="chartDom" class="performanceTrend-chart"></div>
         </div>
       </template>
-    </ChartBox>
+    </BaseChart>
   </div>
 </template>
 
 <script setup lang="ts">
-import ChartBox from "@/components/chart-box.vue";
+import BaseChart from "@/components/base/base-chart.vue";
 import {
   ref,
   shallowRef,

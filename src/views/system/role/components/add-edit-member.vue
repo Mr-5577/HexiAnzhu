@@ -47,7 +47,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from "vue";
 import { ElForm, ElMessage, type FormRules, ElRow, ElCol } from "element-plus";
-import BaseModal from "@/components/base-modal.vue";
+import BaseModal from "@/components/base/base-modal.vue";
 import type { RoleMemberItem, RoleMemberAdd } from "@/types/role-type";
 import { roleApi } from "@/api/role-api";
 import { useRoleStore } from "@/stores/role-store";

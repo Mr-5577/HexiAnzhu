@@ -1,6 +1,6 @@
 <template>
   <div class="structuralStatistics-page">
-    <ChartBox title="资产与应收统计" :loading="loading">
+    <BaseChart title="资产与应收统计" :loading="loading">
       <template #content>
         <div class="structuralStatisticsContent">
           <!-- 图表类型切换 -->
@@ -56,12 +56,12 @@
           <div ref="chartDomRef" class="structuralStatistics-chart"></div>
         </div>
       </template>
-    </ChartBox>
+    </BaseChart>
   </div>
 </template>
 
 <script setup lang="ts">
-import ChartBox from "@/components/chart-box.vue";
+import BaseChart from "@/components/base/base-chart.vue";
 import {
   ref,
   shallowRef,

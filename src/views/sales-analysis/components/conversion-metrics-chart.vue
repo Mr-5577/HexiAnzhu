@@ -1,7 +1,7 @@
 <!-- 转化指标-组件 -->
 <template>
   <div class="conversionMetrics-page">
-    <ChartBox title="转化指标情况" :loading="loading">
+    <BaseChart title="转化指标情况" :loading="loading">
       <template #content>
         <div class="conversionMetricsContent">
           <!-- 当月来访转化率 -->
@@ -26,12 +26,12 @@
           </div>
         </div>
       </template>
-    </ChartBox>
+    </BaseChart>
   </div>
 </template>
 
 <script setup lang="ts">
-import ChartBox from "@/components/chart-box.vue";
+import BaseChart from "@/components/base/base-chart.vue";
 import {
   ref,
   onMounted,

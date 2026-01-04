@@ -1,7 +1,7 @@
 <!-- 业务指标-组件 -->
 <template>
   <div class="statistics-page">
-    <ChartBox title="业务指标" :loading="loading">
+    <BaseChart title="业务指标" :loading="loading">
       <template #content>
         <div class="statisticsContent">
           <div
@@ -20,7 +20,7 @@
           </div>
         </div>
       </template>
-    </ChartBox>
+    </BaseChart>
   </div>
 </template>
 
@@ -32,7 +32,7 @@ import tuifang from "@/assets/imgs/largeScreenImg/tuifang.png";
 import yingshou from "@/assets/imgs/largeScreenImg/yingshou.png";
 import yuqi from "@/assets/imgs/largeScreenImg/yuqi.png";
 import zhouqi from "@/assets/imgs/largeScreenImg/zhouqi.png";
-import ChartBox from "@/components/chart-box.vue";
+import BaseChart from "@/components/base/base-chart.vue";
 import { dateUtil } from "@/utils/date-util";
 import { ref, onMounted, onUnmounted, nextTick, computed } from "vue";
 import { useRouter } from "vue-router";

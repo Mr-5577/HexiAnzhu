@@ -73,8 +73,8 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-import BaseTable from "@/components/base-table.vue";
-import type { TableColumnItem } from "@/components/base-table.vue";
+
+import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { roleApi } from "@/api/role-api";
 import { RoleMemberItem } from "@/types/role-type";
 import { ElMessage, ElMessageBox } from "element-plus";

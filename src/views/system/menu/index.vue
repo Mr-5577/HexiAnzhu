@@ -124,9 +124,9 @@
 import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { Delete, EditPen, Plus, Sort } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import BaseTable from "@/components/base-table.vue";
+
 import AddEditMenu from "./add-edit-menu.vue";
-import type { TableColumnItem } from "@/components/base-table.vue";
+import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { MenuForm, MenuItem } from "@/types/menu-type";
 import { menuApi } from "@/api/menu-api";
 
