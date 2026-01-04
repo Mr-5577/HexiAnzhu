@@ -69,6 +69,7 @@ import {
   onUnmounted,
   computed,
   nextTick,
+  onActivated,
 } from "vue";
 import * as echarts from "echarts";
 import { largeScreenApi } from "@/api/large-screen-api";
@@ -203,6 +204,7 @@ const getChartName = (): string => {
 // 暴露方法给父组件
 defineExpose({
   refreshData: () => fetchData(),
+  resizeChart: () => handleResize(),
 });
 
 // 切换图表类型
@@ -421,7 +423,12 @@ onMounted(() => {
   });
   window.addEventListener("resize", handleResize);
 });
-
+onActivated(() => {
+  // 延迟执行确保 DOM 已渲染
+  setTimeout(() => {
+    handleResize();
+  }, 100);
+});
 onUnmounted(() => {
   window.removeEventListener("resize", handleResize);
   disposeChart();

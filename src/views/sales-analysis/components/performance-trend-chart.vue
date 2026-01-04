@@ -43,6 +43,7 @@ import {
   onUnmounted,
   computed,
   nextTick,
+  onActivated,
 } from "vue";
 import * as echarts from "echarts";
 import { dateUtil } from "@/utils/date-util";
@@ -291,7 +292,10 @@ const chartOption = computed<EChartsOption>(() => {
 });
 
 // 暴露方法
-defineExpose({ refreshData: () => fetchData() });
+defineExpose({
+  refreshData: () => fetchData(),
+  resizeChart: () => handleResize(),
+});
 
 // 图表操作
 const initChart = () => {
@@ -434,7 +438,12 @@ onMounted(() => {
     // fetchData();
   });
 });
-
+onActivated(() => {
+  // 延迟执行确保 DOM 已渲染
+  setTimeout(() => {
+    handleResize();
+  }, 100);
+});
 onUnmounted(() => {
   window.removeEventListener("resize", handleResize);
   disposeChart();

@@ -32,7 +32,14 @@
 
 <script setup lang="ts">
 import ChartBox from "@/components/chart-box.vue";
-import { ref, onMounted, onUnmounted, nextTick, computed } from "vue";
+import {
+  ref,
+  onMounted,
+  onUnmounted,
+  nextTick,
+  computed,
+  onActivated,
+} from "vue";
 import * as echarts from "echarts";
 import { largeScreenApi } from "@/api/large-screen-api";
 import { dateUtil } from "@/utils/date-util";
@@ -54,6 +61,7 @@ const refreshData = () => {
 // 暴露方法给父组件
 defineExpose({
   refreshData,
+  resizeChart: () => handleResize(),
 });
 
 const loading = ref(false);
@@ -326,11 +334,12 @@ const handleOverallTitleClick = () => {
   router.push({
     path: "/channel-analysis/visiting-statistics",
     query: {
-      data: JSON.stringify({...props, type: 'date'}),
+      data: JSON.stringify({ ...props, type: "date" }),
       _t: timestamp.toString(),
     },
   });
 };
+
 // 生命周期
 onMounted(() => {
   nextTick(() => {
@@ -340,7 +349,12 @@ onMounted(() => {
   });
   window.addEventListener("resize", handleResize);
 });
-
+onActivated(() => {
+  // 延迟执行确保 DOM 已渲染
+  setTimeout(() => {
+    handleResize();
+  }, 100);
+});
 // 清理 - 同时清理两个图表
 onUnmounted(() => {
   window.removeEventListener("resize", handleResize);

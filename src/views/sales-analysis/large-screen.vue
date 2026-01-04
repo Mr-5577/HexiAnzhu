@@ -108,7 +108,14 @@ import ConversionMetricsChart from "./components/conversion-metrics-chart.vue";
 import FinancialStatistics from "./components/financial-statistics.vue";
 import StructuralStatisticsChart from "./components/structural-statistics-chart.vue";
 import PerformanceRanking from "./components/performance-ranking.vue";
-import { ref, onMounted, onUnmounted, computed } from "vue";
+import {
+  ref,
+  onMounted,
+  onUnmounted,
+  computed,
+  onDeactivated,
+  onActivated,
+} from "vue";
 import { formatToDateTime, formatToDate } from "@/utils/date-util";
 import { largeScreenApi } from "@/api/large-screen-api";
 
@@ -239,6 +246,25 @@ const handleSearch = () => {
   refreshAllComponents();
 };
 
+// 调整子组件有echarts图表的大小
+const resizeAllCharts = () => {
+  // 延迟执行，确保 DOM 完全渲染
+  setTimeout(() => {
+    const components = [
+      goalAchievedRef.value,
+      performanceTrendChartRef.value,
+      structuralStatisticsChartRef.value,
+      conversionMetricsChartRef.value,
+    ];
+
+    components.forEach((component) => {
+      if (component && typeof component.resizeChart === "function") {
+        component.resizeChart();
+      }
+    });
+  }, 100);
+};
+
 onMounted(() => {
   updateTime();
   getProjList();
@@ -246,6 +272,15 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  if (timer) {
+    clearInterval(timer);
+  }
+});
+onActivated(() => {
+  // 页面激活时重新调整图表大小
+  resizeAllCharts();
+});
+onDeactivated(() => {
   if (timer) {
     clearInterval(timer);
   }

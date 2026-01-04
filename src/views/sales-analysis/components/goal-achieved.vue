@@ -141,7 +141,15 @@ import laifang from "@/assets/imgs/largeScreenImg/laifang.png";
 import huikuan from "@/assets/imgs/largeScreenImg/huikuan.png";
 import qianyue from "@/assets/imgs/largeScreenImg/qianyue.png";
 import ChartBox from "@/components/chart-box.vue";
-import { ref, onMounted, onUnmounted, nextTick, watch, computed } from "vue";
+import {
+  ref,
+  onMounted,
+  onUnmounted,
+  nextTick,
+  watch,
+  computed,
+  onActivated,
+} from "vue";
 import * as echarts from "echarts";
 import { largeScreenApi } from "@/api/large-screen-api";
 import {
@@ -165,6 +173,7 @@ const refreshData = () => {
 // 暴露方法给父组件
 defineExpose({
   refreshData,
+  resizeChart: () => handleResize(),
 });
 
 // 防止重复请求
@@ -503,7 +512,12 @@ onMounted(() => {
     // getData();
   });
 });
-
+onActivated(() => {
+  // 延迟执行确保 DOM 已渲染
+  setTimeout(() => {
+    handleResize();
+  }, 100);
+});
 // 清理
 onUnmounted(() => {
   window.removeEventListener("resize", handleResize);
