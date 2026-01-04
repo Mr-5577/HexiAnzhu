@@ -23,7 +23,7 @@ export const conversionDetailColumns: any = [
   { prop: "roomNum", label: "房号" },
   { prop: "saleArea", label: "预测面积", showSummary: true },
   { prop: "custName", label: "业主" },
-  // { prop: "custTel", label: "联系电话" },
+  { prop: "custTel", label: "联系电话" },
   {
     prop: "floorMoney",
     label: "底价总价",
@@ -82,7 +82,7 @@ export const pendingDetailColumns: any = [
   { prop: "roomNum", label: "房号" },
   { prop: "saleArea", label: "预测面积", showSummary: true },
   { prop: "custName", label: "业主" },
-  // { prop: "custTel", label: "联系电话" },
+  { prop: "custTel", label: "联系电话" },
   { prop: "saleDate", label: "认购日期" },
   {
     prop: "floorMoney",
@@ -199,7 +199,7 @@ export const premiumDetailColumns: any = [
   { prop: "roomNum", label: "房号", width: 100 },
   { prop: "forecastArea", label: "预测面积", width: 90, showSummary: true },
   { prop: "custName", label: "业主", width: 90 },
-  // { prop: "custTel", label: "联系电话", width: 150 },
+  { prop: "custTel", label: "联系电话", width: 150 },
   { prop: "saleDate", label: "认购日期", width: 120 },
   {
     prop: "floorMoney",
@@ -473,7 +473,7 @@ export const receivablesDetailColumns: any = [
   { prop: "roomNum", label: "房号", width: 90 },
   { prop: "buildArea", label: "预测面积", width: 90 },
   { prop: "custName", label: "业主" },
-  // { prop: "custTel", label: "联系电话" },
+  { prop: "custTel", label: "联系电话" },
   { prop: "saleDate", label: "认购日期" },
   {
     prop: "saleMoney",
@@ -529,7 +529,7 @@ export const forfeitureDetailColumns: any = [
   { prop: "roomNum", label: "房号" },
   { prop: "buildArea", label: "建筑面积", width: 100, showSummary: true },
   { prop: "custName", label: "业主", width: 100 },
-  // { prop: "custTel", label: "联系电话" },
+  { prop: "custTel", label: "联系电话" },
   { prop: "saleDate", label: "认购日期" },
   {
     prop: "floorMoney",
@@ -554,7 +554,7 @@ export const overdueDetailColumns: any = [
   { prop: "roomNum", label: "房号", width: 100 },
   { prop: "buildArea", label: "建筑面积", showSummary: true, width: 90 },
   { prop: "custName", label: "业主", width: 90 },
-  // { prop: "custTel", label: "联系电话", width: 120 },
+  { prop: "custTel", label: "联系电话", width: 120 },
   { prop: "saleDate", label: "认购日期", width: 120 },
   {
     prop: "saleMoney",

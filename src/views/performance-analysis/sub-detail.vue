@@ -211,6 +211,7 @@ const getParams = () => {
     day: `${time[0]} 00:00:00`,
     beginDate: `${time[0]} 00:00:00`,
     endDate: `${time[1]} 23:59:59`,
+    isShowTel: menuStore.hasExactPermission("sub-detail:showTel")
   };
 };
 // 获取列表

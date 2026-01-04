@@ -150,6 +150,7 @@ const initPageData = async () => {
 const getParams = () => ({
   ...queryParams.value,
   current: currentPage.value,
+  isShowTel: menuStore.hasExactPermission("receivable-detail:showTel")
 });
 // 获取列表
 const getTableList = async () => {
