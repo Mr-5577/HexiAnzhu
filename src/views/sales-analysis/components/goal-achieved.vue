@@ -11,10 +11,12 @@
             fill="rgb(239, 240, 253)"
             @change="handleChange()"
           >
-            <el-radio-button label="年" :value="0" />
-            <el-radio-button label="月" :value="1" />
-            <el-radio-button label="周" :value="2" />
-            <el-radio-button label="日" :value="3" />
+            <el-radio-button
+              v-for="item in radioGroupList"
+              :key="item.type"
+              :label="item.label"
+              :value="item.value"
+            />
           </el-radio-group>
           <div class="all-goal">
             <div
@@ -212,6 +214,12 @@ const premiumData = ref<PremiumDataInterface>({
 });
 
 const typeVal = ref(1);
+const radioGroupList = [
+  { value: 0, label: "年", type: "month" },
+  { value: 1, label: "月", type: "date" },
+  { value: 2, label: "周", type: "week" },
+  { value: 3, label: "日", type: "day" },
+];
 const dataList = ref([
   {
     id: 1,
@@ -345,10 +353,12 @@ const updateChart = () => {
 // 跳转到项目溢价统计表页面
 const handleTitleClick = () => {
   const timestamp = new Date().getTime();
+  const targetData = radioGroupList.find((v) => v.value === typeVal.value);
+  const type = targetData?.type || "date";
   router.push({
     path: "/risk-analysis/premium-stats",
     query: {
-      data: JSON.stringify(props),
+      data: JSON.stringify({ ...props, type }),
       _t: timestamp.toString(),
     },
   });
@@ -480,7 +490,9 @@ const handleChange = () => {
 };
 const handleLookDetail = (item: any) => {
   const timestamp = new Date().getTime();
-  const type = typeVal.value == 0 ? "month" : "date";
+  // const type = typeVal.value == 0 ? "month" : "date";
+  const targetData = radioGroupList.find((v) => v.value === typeVal.value);
+  const type = targetData?.type || "date";
   router.push({
     path: item.path,
     query: {

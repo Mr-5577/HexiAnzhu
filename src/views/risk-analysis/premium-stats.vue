@@ -187,7 +187,8 @@ const initQueryParams = () => {
       const routeData = JSON.parse(route.query.data as string);
       queryParams.value.projIds = routeData.department || [];
       queryParams.value.productTypes = getAllProductTypeIds();
-      initTimeRange(routeData.data);
+      // 从大屏跳转过来
+      initTimeRange(routeData);
     } catch (error) {
       console.error("解析路由参数失败，使用默认值", error);
       initDefaultParams();
@@ -203,15 +204,65 @@ const initDefaultParams = () => {
   initTimeRange();
 };
 
-const initTimeRange = (date?: string) => {
-  const baseDate = date ? dateUtil(date) : dateUtil();
-  const startTime = baseDate.date(1).format("YYYY-MM-DD");
-  const endTime = date
-    ? baseDate.format("YYYY-MM-DD")
-    : dateUtil().format("YYYY-MM-DD");
-  queryParams.value.time = [startTime, endTime];
+const initTimeRange = (option?: any) => {
+  const { data, type } = option || {};
+  const baseDate = data ? dateUtil(data) : dateUtil();
+  if (data) {
+    const dateTime = getNaturalDateRangeByType(baseDate, type);
+    queryParams.value.time = [dateTime.startDate, dateTime.endDate];
+  } else {
+    const startTime = baseDate.date(1).format("YYYY-MM-DD");
+    const endTime = dateUtil().format("YYYY-MM-DD");
+    queryParams.value.time = [startTime, endTime];
+  }
+  // const baseDate = data ? dateUtil(data) : dateUtil();
+  // const startTime = baseDate.date(1).format("YYYY-MM-DD");
+  // const endTime = data
+  //   ? baseDate.format("YYYY-MM-DD")
+  //   : dateUtil().format("YYYY-MM-DD");
+  // queryParams.value.time = [startTime, endTime];
 };
-
+// 根据时间类型获取自然时间范围
+const getNaturalDateRangeByType = (date: any, type = "date") => {
+  const baseDate = dateUtil(date);
+  if (!baseDate.isValid()) {
+    throw new Error("Invalid date");
+  }
+  switch (type.toLowerCase()) {
+    // 年
+    case "month":
+      return {
+        startDate: baseDate.startOf("year").format("YYYY-MM-DD"),
+        endDate: baseDate.endOf("year").format("YYYY-MM-DD"),
+      };
+    // 月
+    case "date":
+      return {
+        startDate: baseDate.startOf("month").format("YYYY-MM-DD"),
+        endDate: baseDate.endOf("month").format("YYYY-MM-DD"),
+      };
+    // 周
+    case "week":
+      // 周一作为一周的开始，周日作为一周的结束
+      const dayOfWeek = baseDate.day(); // 0=周日, 1=周一, ..., 6=周六
+      // 计算距离周一的偏移量
+      const offsetToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      return {
+        startDate: baseDate.add(offsetToMonday, "day").format("YYYY-MM-DD"),
+        endDate: baseDate.add(offsetToMonday + 6, "day").format("YYYY-MM-DD"),
+      };
+    case "day":
+      return {
+        startDate: baseDate.startOf("day").format("YYYY-MM-DD"),
+        endDate: baseDate.endOf("day").format("YYYY-MM-DD"),
+      };
+    default:
+      return {
+        startDate: baseDate.startOf("month").format("YYYY-MM-DD"),
+        endDate: baseDate.endOf("month").format("YYYY-MM-DD"),
+      };
+  }
+};
 // 初始化数据
 const initPageData = async () => {
   await loadData({
