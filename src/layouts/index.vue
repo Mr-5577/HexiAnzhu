@@ -154,6 +154,14 @@ const clearPageCache = (componentName: string) => {
   }
 };
 
+// 添加缓存恢复方法
+const restorePageCache = (componentName: string) => {
+  if (!cachePages.value.has(componentName)) {
+    cachePages.value.add(componentName);
+    // console.log(`✅ 已重新缓存: ${componentName}`);
+  }
+};
+
 const getUserInfo = async () => {
   const res = await userApi.getEmpInfo();
   if (res.code === 200) {
@@ -162,6 +170,7 @@ const getUserInfo = async () => {
 };
 // 通过 provide 提供给子组件使用
 provide("clearPageCache", clearPageCache);
+provide("restorePageCache", restorePageCache);
 
 // 监听菜单数据变化
 // 监听路由变化 - 修改为监听 fullPath，包含查询参数

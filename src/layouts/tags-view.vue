@@ -49,6 +49,8 @@ import type { TagView } from "@/stores/tags-store";
 // 添加inject注入，用于缓存清理
 const clearPageCache =
   inject<(componentName: string) => void>("clearPageCache");
+const restorePageCache =
+  inject<(componentName: string) => void>("restorePageCache");
 
 const route = useRoute();
 const router = useRouter();
@@ -154,6 +156,15 @@ const closeSelectedTag = (tag: TagView) => {
         path: lastView.path,
         query: extractQueryParams(lastView),
       });
+      // 切换到新标签时，恢复其缓存
+      const newRouteRecord = router
+        .getRoutes()
+        .find((r) => r.path === lastView.path);
+      const newComponentName = newRouteRecord?.components?.default
+        ?.name as string;
+      if (newComponentName && restorePageCache) {
+        restorePageCache(newComponentName);
+      }
     } else {
       router.push("/");
     }
@@ -167,9 +178,18 @@ watch(
     fullPath: route.fullPath,
     meta: route.meta,
   }),
-  () => {
+  (newRoute) => {
     if (route.path && route.path !== "/") {
       tagsStore.addView(route);
+      // 每次路由变化时，确保当前页面被缓存
+      const routeRecord = router
+        .getRoutes()
+        .find((r) => r.path === newRoute.path);
+      const componentName = routeRecord?.components?.default?.name as string;
+
+      if (componentName && restorePageCache) {
+        restorePageCache(componentName);
+      }
     }
   },
   { immediate: true, deep: true }
