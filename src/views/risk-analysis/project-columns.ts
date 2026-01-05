@@ -494,6 +494,56 @@ export const receivablesDetailColumns: any = [
   },
   { prop: "maxYqDays", label: "最大逾期天数" },
 ];
+// 应收账龄明细-表头
+export const arAgingDetailColumns: any = [
+  { type: "index", label: "序号", width: 60, fixed: "left" },
+  {
+    prop: "projName",
+    label: "项目",
+    width: 220,
+    fixed: "left",
+  },
+  { prop: "bigProductTypeName", label: "业态", width: 80 },
+  { prop: "buildName", label: "楼栋", width: 80 },
+  { prop: "roomNum", label: "房号", width: 80 },
+  { prop: "buildArea", label: "建筑面积", width: 90, showSummary: true },
+  { prop: "custName", label: "业主", width: 90 },
+  { prop: "custTel", label: "联系电话", width: 120 },
+  { prop: "saleDate", label: "认购日期", width: 120 },
+  {
+    prop: "saleMoney",
+    label: "认购金额",
+    width: 100,
+    showSummary: true,
+    formatter: (row: any) => formatNumberDisplay(row.saleMoney),
+  },
+  { prop: "salerName", label: "置业顾问", width: 90 },
+  { prop: "payProName", label: "应收款项", width: 90 },
+  { prop: "fnaPayDate", label: "应收日期", width: 120 },
+  {
+    prop: "recMoney",
+    label: "应收金额",
+    width: 100,
+    showSummary: true,
+    formatter: (row: any) => formatNumberDisplay(row.recMoney),
+  },
+  {
+    prop: "receivedMoney",
+    label: "已收金额",
+    width: 100,
+    showSummary: true,
+    formatter: (row: any) => formatNumberDisplay(row.receivedMoney),
+  },
+  {
+    prop: "overstdMoney",
+    label: "应收未收金额",
+    width: 120,
+    showSummary: true,
+    formatter: (row: any) => formatNumberDisplay(row.overstdMoney),
+  },
+  { prop: "overdueDays", label: "账龄(天)", width: 90 },
+  { prop: "overdueTypeName", label: "账龄类型", width: 120 },
+];
 // 退房挞定统计-表头
 export const forfeitureStatslColumns = [
   {

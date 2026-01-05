@@ -383,6 +383,22 @@ export const assetManagementApi = {
       "post"
     );
   },
+  // 应收账龄明细（房间明细）
+  getSaleOutStdFundsInfoYsAging: (data: any) => {
+    return http.post("/sale/getSaleOutStdFundsInfoYsAging", data);
+  },
+  // 应收账龄明细（房间明细）-导出
+  exportSaleOutStdFundsInfoYsAging: (
+    data: any,
+    filename: string = "应收账龄明细表.xlsx"
+  ) => {
+    return http.exportFile(
+      "/sale/getSaleOutStdFundsInfoYsAging",
+      data,
+      filename || "数据列表.xlsx",
+      "post"
+    );
+  },
   // 退房、挞定统计-项目
   getCheckOutInfoProj: (data: any) => {
     return http.post("/sale/getCheckOutInfoProj", data);
