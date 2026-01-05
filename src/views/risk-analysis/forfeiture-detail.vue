@@ -3,7 +3,7 @@
   <div class="forfeiture-detail-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
       <el-form-item label="项目" prop="projIds">
-        <el-cascader
+        <!-- <el-cascader
           class="fixed-height-cascader"
           :filterable="true"
           v-model="queryParams.projIds"
@@ -15,7 +15,13 @@
           clearable
           :show-all-levels="false"
           :max-collapse-tags="1"
-        />
+        /> -->
+        <project-tree-selector
+          v-model="queryParams.projIds"
+          :project-list="projectOptions"
+          placeholder="请选择项目"
+          width="220px"
+        ></project-tree-selector>
       </el-form-item>
       <el-form-item label="业态" prop="productTypes">
         <el-select
@@ -91,7 +97,6 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
-
 import { forfeitureDetailColumns } from "./project-columns";
 import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
@@ -215,7 +220,7 @@ const getParams = () => {
     day: `${time[0]} 00:00:00`,
     beginDate: `${time[0]} 00:00:00`,
     endDate: `${time[1]} 23:59:59`,
-    isShowTel: menuStore.hasExactPermission("forfeiture-detail:showTel")
+    isShowTel: menuStore.hasExactPermission("forfeiture-detail:showTel"),
   };
 };
 // 获取列表

@@ -47,7 +47,7 @@ export const roomLedgerColumns: any = [
     width: 100,
     formatter: (row: any) => formatNumberDisplay(row.floorMoneyOffer),
   },
-  { prop: "order_floor_money", label: "成交时系统底价", width: 140 },
+  { prop: "orderFloorMoney", label: "成交时系统底价", width: 140 },
   { prop: "saleDate", label: "认购日期", width: 120 },
   { prop: "asstDate", label: "成交日期", width: 120 },
   { prop: "signDate", label: "签约日期", width: 120 },

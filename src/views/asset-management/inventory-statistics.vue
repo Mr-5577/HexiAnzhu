@@ -3,7 +3,7 @@
   <div class="inventory-statistics-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
       <el-form-item label="项目" prop="projIds">
-        <el-cascader
+        <!-- <el-cascader
           class="fixed-height-cascader"
           :filterable="true"
           v-model="queryParams.projIds"
@@ -15,7 +15,13 @@
           clearable
           :show-all-levels="false"
           :max-collapse-tags="1"
-        ></el-cascader>
+        ></el-cascader> -->
+        <project-tree-selector
+          v-model="queryParams.projIds"
+          :project-list="projectOptions"
+          placeholder="请选择项目"
+          width="220px"
+        ></project-tree-selector>
       </el-form-item>
       <el-form-item label="业态" prop="productTypes">
         <el-select
@@ -79,7 +85,6 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
-
 import { inventoryStatisticsColumns } from "./project-columns";
 import { assetManagementApi } from "@/api/asset-management-api";
 import type { InventoryStatisticsInterface } from "@/types/asset-management-type";
@@ -94,9 +99,7 @@ const route = useRoute();
 const router = useRouter();
 
 // 组件name，需要和菜单配置里面的name一致
-defineOptions({
-  name: "inventory-statistics",
-});
+defineOptions({ name: "inventory-statistics" });
 
 // 使用共享的 data hook
 const {

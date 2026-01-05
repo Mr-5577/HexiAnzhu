@@ -3,7 +3,7 @@
   <div class="forfeiture-stats-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
       <el-form-item label="项目" prop="projIds">
-        <el-cascader
+        <!-- <el-cascader
           class="fixed-height-cascader"
           :filterable="true"
           v-model="queryParams.projIds"
@@ -15,7 +15,13 @@
           clearable
           :show-all-levels="false"
           :max-collapse-tags="1"
-        />
+        /> -->
+        <project-tree-selector
+          v-model="queryParams.projIds"
+          :project-list="projectOptions"
+          placeholder="请选择项目"
+          width="220px"
+        ></project-tree-selector>
       </el-form-item>
       <el-form-item label="业态" prop="productTypes">
         <el-select
@@ -92,7 +98,6 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
-
 import { forfeitureStatslColumns } from "./project-columns";
 import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
@@ -108,9 +113,7 @@ const route = useRoute();
 const router = useRouter();
 
 // 组件name，需要和菜单配置里面的name一致
-defineOptions({
-  name: "forfeiture-stats",
-});
+defineOptions({ name: "forfeiture-stats" });
 
 // 使用共享的 data hook
 const {

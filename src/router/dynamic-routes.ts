@@ -143,7 +143,7 @@ export function transformMenuToRoutes(
     }
   });
 
-  console.log("生成的路由配置:", routes);
+  // console.log("生成的路由配置:", routes);
   return routes;
 }
 

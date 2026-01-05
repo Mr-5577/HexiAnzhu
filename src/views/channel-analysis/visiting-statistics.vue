@@ -3,7 +3,7 @@
   <div class="visitor-statistics-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
       <el-form-item label="项目" prop="projIds">
-        <el-cascader
+        <!-- <el-cascader
           class="fixed-height-cascader"
           :filterable="true"
           v-model="queryParams.projIds"
@@ -15,7 +15,13 @@
           clearable
           :show-all-levels="false"
           :max-collapse-tags="1"
-        ></el-cascader>
+        ></el-cascader> -->
+        <project-tree-selector
+          v-model="queryParams.projIds"
+          :project-list="projectOptions"
+          placeholder="请选择项目"
+          width="220px"
+        ></project-tree-selector>
       </el-form-item>
       <el-form-item label="统计维度" prop="type">
         <el-select
@@ -71,7 +77,6 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
-
 import {
   VisitingStatisticsMonthColumns,
   VisitingStatisticsDayColumns,
@@ -91,9 +96,7 @@ const menuStore = useMenuStore();
 const route = useRoute();
 
 // 组件name，需要和菜单配置里面的name一致
-defineOptions({
-  name: "visiting-statistics",
-});
+defineOptions({ name: "visiting-statistics" });
 
 // 使用共享的 data hook
 const {

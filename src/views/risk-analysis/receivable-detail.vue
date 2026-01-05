@@ -3,7 +3,7 @@
   <div class="receivable-detail-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
       <el-form-item label="项目" prop="projIds">
-        <el-cascader
+        <!-- <el-cascader
           class="fixed-height-cascader"
           :filterable="true"
           v-model="queryParams.projIds"
@@ -15,7 +15,13 @@
           clearable
           :show-all-levels="false"
           :max-collapse-tags="1"
-        ></el-cascader>
+        ></el-cascader> -->
+        <project-tree-selector
+          v-model="queryParams.projIds"
+          :project-list="projectOptions"
+          placeholder="请选择项目"
+          width="220px"
+        ></project-tree-selector>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleQuery">
@@ -48,7 +54,6 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
-
 import { receivablesDetailColumns } from "./project-columns";
 import { assetManagementApi } from "@/api/asset-management-api";
 import { useSalesData } from "@/composables/use-sales";
@@ -60,9 +65,7 @@ const menuStore = useMenuStore();
 const route = useRoute();
 
 // 组件name，需要和菜单配置里面的name一致
-defineOptions({
-  name: "receivable-detail",
-});
+defineOptions({ name: "receivable-detail" });
 
 // 使用共享的 data hook
 const {
@@ -150,7 +153,7 @@ const initPageData = async () => {
 const getParams = () => ({
   ...queryParams.value,
   current: currentPage.value,
-  isShowTel: menuStore.hasExactPermission("receivable-detail:showTel")
+  isShowTel: menuStore.hasExactPermission("receivable-detail:showTel"),
 });
 // 获取列表
 const getTableList = async () => {

@@ -447,122 +447,123 @@ defineExpose({
 <style scoped lang="scss">
 .project-tree-selector {
   width: v-bind(width);
-}
-.selector-wrapper {
-  position: relative;
-  cursor: pointer;
-  border: 1px solid var(--el-border-color);
-  border-radius: var(--el-border-radius-base);
-  padding: 4px 30px 4px 4px;
-  height: 32px;
-  background-color: var(--el-fill-color-blank);
-  display: flex;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  transition: border-color 0.2s;
-  box-sizing: border-box;
-  &:hover:not(.is-disabled) {
-    border-color: var(--el-border-color-hover);
+  .selector-wrapper {
+    position: relative;
+    cursor: pointer;
+    border: 1px solid var(--el-border-color);
+    border-radius: var(--el-border-radius-base);
+    padding: 4px 30px 4px 4px;
+    height: 32px;
+    background-color: var(--el-fill-color-blank);
+    display: flex;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+    &:hover:not(.is-disabled) {
+      border-color: var(--el-border-color-hover);
+    }
+    &.is-disabled {
+      cursor: not-allowed;
+      background-color: var(--el-disabled-bg-color);
+      border-color: var(--el-disabled-border-color);
+    }
+    .selector-input {
+      flex: 1;
+      display: flex;
+      flex-wrap: nowrap;
+      align-items: center;
+      height: 22px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      &.is-placeholder {
+        color: var(--el-text-color-placeholder);
+        line-height: 22px;
+      }
+    }
+    .placeholder {
+      font-size: var(--el-font-size-base);
+    }
+    .selector-arrow {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--el-text-color-placeholder);
+      font-size: 12px;
+      transition: transform 0.3s;
+    }
+    .more-count {
+      color: var(--el-text-color-secondary);
+      font-size: 12px;
+      margin-left: 4px;
+      background-color: #f0f2f5;
+      border-radius: 2px 2px;
+      padding: 0 4px;
+      box-sizing: border-box;
+    }
   }
-  &.is-disabled {
-    cursor: not-allowed;
-    background-color: var(--el-disabled-bg-color);
-    border-color: var(--el-disabled-border-color);
-  }
 }
-.selector-input {
-  flex: 1;
-  display: flex;
-  flex-wrap: nowrap;
-  align-items: center;
-  height: 22px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  &.is-placeholder {
-    color: var(--el-text-color-placeholder);
-    line-height: 22px;
-  }
-}
-.placeholder {
-  font-size: var(--el-font-size-base);
-}
-.selector-arrow {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--el-text-color-placeholder);
-  font-size: 12px;
-  transition: transform 0.3s;
-}
-.more-count {
-  color: var(--el-text-color-secondary);
-  font-size: 12px;
-  margin-left: 4px;
-  background-color: #f0f2f5;
-  border-radius: 2px 2px;
-  padding: 0 4px;
-  box-sizing: border-box;
-}
+
 // 对话框样式
 .dialog-content {
   display: flex;
   flex-direction: column;
   height: 500px;
-}
-.dialog-header {
-  margin-bottom: 8px;
-  .selection-info {
-    margin-top: 8px;
-    color: var(--el-text-color-regular);
-    font-size: 13px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-}
-.tree-container {
-  flex: 1;
-  border: 1px solid var(--el-border-color-light);
-  border-radius: var(--el-border-radius-base);
-  overflow: auto;
-  padding: 12px 12px 12px 0;
-  :deep(.el-tree) {
-    .tree-node {
+  .dialog-header {
+    margin-bottom: 8px;
+    .selection-info {
+      margin-top: 8px;
+      color: var(--el-text-color-regular);
+      font-size: 13px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      flex: 1;
+    }
+  }
+  .tree-container {
+    flex: 1;
+    border: 1px solid var(--el-border-color-light);
+    border-radius: var(--el-border-radius-base);
+    overflow: auto;
+    padding: 12px 12px 12px 0;
+    :deep(.el-tree) {
+      .tree-node {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex: 1;
 
-      .type-tag {
-        margin-left: 8px;
+        .type-tag {
+          margin-left: 8px;
+        }
       }
     }
   }
-}
-.dialog-footer {
-  margin-top: 16px;
-  .selected-preview {
-    margin-bottom: 16px;
-    max-height: 120px;
-    overflow-y: auto;
-    padding: 8px;
-    border: 1px solid var(--el-border-color-light);
-    border-radius: var(--el-border-radius-base);
-    background-color: var(--el-fill-color-lighter);
-    & > span:first-child {
-      display: block;
-      //   margin-bottom: 8px;
-      color: var(--el-text-color-regular);
-      font-weight: 500;
+  .dialog-footer {
+    margin-top: 16px;
+    .selected-preview {
+      margin-bottom: 16px;
+      max-height: 120px;
+      overflow-y: auto;
+      padding: 8px;
+      border: 1px solid var(--el-border-color-light);
+      border-radius: var(--el-border-radius-base);
+      background-color: var(--el-fill-color-lighter);
+      & > span:first-child {
+        display: block;
+        //   margin-bottom: 8px;
+        color: var(--el-text-color-regular);
+        font-weight: 500;
+      }
+      .preview-tag {
+        margin: 2px 4px 2px 0;
+      }
     }
-    .preview-tag {
-      margin: 2px 4px 2px 0;
+    .footer-actions {
+      text-align: right;
     }
-  }
-  .footer-actions {
-    text-align: right;
   }
 }
 // 滚动条样式

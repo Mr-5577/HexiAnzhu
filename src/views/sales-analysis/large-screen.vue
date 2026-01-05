@@ -2,7 +2,7 @@
   <div class="homePage">
     <el-header class="header-box">
       <div class="header-left">
-        <el-cascader
+        <!-- <el-cascader
           class="custom-cascader fixed-height-cascader"
           :filterable="true"
           v-model="departmentVal"
@@ -14,7 +14,14 @@
           clearable
           :show-all-levels="false"
           :max-collapse-tags="1"
-        ></el-cascader>
+        ></el-cascader> -->
+        <project-tree-selector
+          class="large-screen-project-tree"
+          v-model="departmentVal"
+          :project-list="options"
+          placeholder="请选择项目"
+          width="220px"
+        ></project-tree-selector>
         <el-date-picker
           v-model="dataVal"
           type="date"
@@ -118,7 +125,6 @@ import {
 } from "vue";
 import { formatToDateTime, formatToDate } from "@/utils/date-util";
 import { largeScreenApi } from "@/api/large-screen-api";
-
 import { ElMessage } from "element-plus";
 import fullScreenIcon from "@/assets/imgs/largeScreenImg/full-screen.png";
 import exitFullScreenIcon from "@/assets/imgs/largeScreenImg/small-screen.png";
@@ -126,9 +132,7 @@ import { useUserStore } from "@/stores/user-store";
 const userStore = useUserStore();
 
 // 组件name，需要和菜单配置里面的name一致
-defineOptions({
-  name: "large-screen",
-});
+defineOptions({ name: "large-screen" });
 
 const yearMonthDay = ref("");
 const time = ref("");
@@ -311,6 +315,7 @@ onDeactivated(() => {
     background-position: center;
     background-repeat: no-repeat;
     position: relative;
+
     .header-left {
       width: 33%;
       height: 50px;
@@ -320,33 +325,33 @@ onDeactivated(() => {
       justify-content: flex-start;
       // padding-left: 2rem;
       box-sizing: border-box;
-      :deep(.custom-cascader) {
-        height: 32px;
+      // :deep(.custom-cascader) {
+      //   height: 32px;
+      //   .el-input__wrapper {
+      //     padding: 0 11px;
+      //   }
+      //   .el-cascader__tags {
+      //     display: flex;
+      //     flex-wrap: nowrap;
+      //     .el-tag {
+      //       color: #d1e0e7;
+      //       background-color: transparent !important;
+      //     }
+      //     .el-cascader__search-input {
+      //       color: #d1e0e7;
+      //     }
+      //   }
+      // }
+      :deep(.custom-data-picker) {
         .el-input__wrapper {
-          padding: 0 11px;
+          background-color: #0f3b56 !important;
+          border: 1px solid #0f3b56 !important;
+          box-shadow: 0 0 0 1px #1c5e85 inset !important;
         }
-        .el-cascader__tags {
-          display: flex;
-          flex-wrap: nowrap;
-          .el-tag {
-            color: #d1e0e7;
-            background-color: transparent !important;
-          }
-          .el-cascader__search-input {
-            color: #d1e0e7;
-          }
+        .el-input__inner {
+          color: #dbe9ef !important;
         }
       }
-      :deep(.el-input__wrapper) {
-        background-color: #0f3b56 !important;
-        border: 1px solid #0f3b56 !important;
-        box-shadow: 0 0 0 1px #1c5e85 inset !important;
-      }
-      // 如果需要修改输入框文字颜色
-      :deep(.el-input__inner) {
-        color: #dbe9ef !important;
-      }
-
       .search-btn {
         color: #fff;
         cursor: pointer;
@@ -414,6 +419,18 @@ onDeactivated(() => {
       width: 40%;
       padding: 0 15px;
       box-sizing: border-box;
+    }
+  }
+}
+</style>
+<style lang="scss">
+.large-screen-project-tree {
+  .selector-wrapper {
+    border: none !important;
+    background-color: #0f3b56 !important;
+    color: #dbe9ef;
+    .placeholder {
+      color: #dbe9ef;
     }
   }
 }
