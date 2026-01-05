@@ -124,10 +124,11 @@ const handleCellEventClick = (data: any) => {
     department: [projectId],
     time: [day, day],
   };
-  // 当月
+  // 当月累计跳转结束日期为选中的截止日期
   const monthTime = [
     dateUtil(day).startOf("month").format("YYYY-MM-DD"),
-    dateUtil(day).endOf("month").format("YYYY-MM-DD"),
+    // dateUtil(day).endOf("month").format("YYYY-MM-DD"),
+    dateUtil(day).format("YYYY-MM-DD"),
   ];
   const monthParams = {
     department: [projectId],
@@ -178,7 +179,7 @@ const handleCellEventClick = (data: any) => {
       path: "/performance-analysis/sub-detail",
       params: monthParams,
     },
-    // 当月-退房挞定 跳转到 退房挞定明细
+    // 当月累计-退房挞定 跳转到 退房挞定明细
     "totalCheckoutNum-click": {
       path: "/risk-analysis/forfeiture-detail",
       params: {
