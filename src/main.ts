@@ -6,7 +6,10 @@ import "./assets/styles/button-theme.scss";
 import zhCn from "element-plus/es/locale/lang/zh-cn";
 
 import App from "./App.vue";
+// 基础表格组件
 import BaseTable from "@/components/base/base-table.vue";
+// 项目树组件
+import ProjectTreeSelector from "@/components/business/project-tree-selector.vue";
 // 路由
 import router from "./router";
 // 引入状态管理
@@ -31,4 +34,5 @@ app.use(ElementPlus, {
 setupPermission(app);
 // 全局注册 BaseTable 组件
 app.component("BaseTable", BaseTable);
+app.component("ProjectTreeSelector", ProjectTreeSelector);
 app.mount("#app");

@@ -1,13 +1,13 @@
 /**
  * @name 防抖函数 - 在等待时间内只执行最后一次调用
  * @param func 要防抖的函数
- * @param wait 等待时间(毫秒)，默认300ms
+ * @param wait 等待时间(毫秒)，默认500ms
  * @param immediate 是否立即执行，默认false
  * @returns 防抖后的函数
  */
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
-  wait: number = 300,
+  wait: number = 500,
   immediate: boolean = false
 ): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout | null = null;
