@@ -469,12 +469,13 @@ export const receivablesColumns2: any = [
 export const receivablesDetailColumns: any = [
   { type: "index", label: "序号", width: 60 },
   { prop: "projName", label: "项目", width: 220 },
-  { prop: "bigProductTypeName", label: "业态", width: 100 },
+  { prop: "bigProductTypeName", label: "业态", width: 80 },
   { prop: "roomNum", label: "房号", width: 90 },
   { prop: "buildArea", label: "预测面积", width: 90 },
-  { prop: "custName", label: "业主" },
+  { prop: "custName", label: "业主", width: 80 },
   { prop: "custTel", label: "联系电话" },
   { prop: "saleDate", label: "认购日期" },
+  { prop: "signDate", label: "签约时间" },
   {
     prop: "saleMoney",
     label: "认购金额",
@@ -510,7 +511,6 @@ export const arAgingDetailColumns: any = [
   { prop: "custName", label: "业主", width: 90 },
   { prop: "custTel", label: "联系电话", width: 120 },
   { prop: "saleDate", label: "认购日期", width: 120 },
-  { prop: "signDate", label: "签约时间", width: 120 },
   {
     prop: "saleMoney",
     label: "认购金额",
