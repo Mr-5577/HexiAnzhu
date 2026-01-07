@@ -510,6 +510,7 @@ export const arAgingDetailColumns: any = [
   { prop: "custName", label: "业主", width: 90 },
   { prop: "custTel", label: "联系电话", width: 120 },
   { prop: "saleDate", label: "认购日期", width: 120 },
+  { prop: "signDate", label: "签约时间", width: 120 },
   {
     prop: "saleMoney",
     label: "认购金额",
@@ -535,11 +536,11 @@ export const arAgingDetailColumns: any = [
     formatter: (row: any) => formatNumberDisplay(row.receivedMoney),
   },
   {
-    prop: "overstdMoney",
+    prop: "outstdMoney",
     label: "应收未收金额",
     width: 120,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.overstdMoney),
+    formatter: (row: any) => formatNumberDisplay(row.outstdMoney),
   },
   { prop: "overdueDays", label: "账龄(天)", width: 90 },
   { prop: "overdueTypeName", label: "账龄类型", width: 120 },
