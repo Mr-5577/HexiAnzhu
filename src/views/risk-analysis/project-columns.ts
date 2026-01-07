@@ -511,6 +511,7 @@ export const arAgingDetailColumns: any = [
   { prop: "custName", label: "业主", width: 90 },
   { prop: "custTel", label: "联系电话", width: 120 },
   { prop: "saleDate", label: "认购日期", width: 120 },
+  { prop: "signDate", label: "签约时间", width: 120 },
   {
     prop: "saleMoney",
     label: "认购金额",
