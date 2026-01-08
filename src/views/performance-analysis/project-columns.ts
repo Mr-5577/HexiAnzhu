@@ -141,6 +141,24 @@ export const AnnualReportColumns: any = [
           },
         ],
       },
+      {
+        label: "物业借款",
+        children: [
+          {
+            prop: "loanNum",
+            label: "套数",
+            width: 80,
+            showSummary: true,
+          },
+          {
+            prop: "loanOutstdMoney",
+            label: "金额",
+            width: 100,
+            showSummary: true,
+            formatter: (row: any) => formatNumberDisplay(row.loanOutstdMoney),
+          },
+        ],
+      },
     ],
   },
   {
@@ -444,6 +462,24 @@ export const dailylReportColumns: any = [
             formatter: (row: any) => formatNumberDisplay(row.totalOutstdMoney),
             clickable: true, // 允许触发单元格事件
             clickEvent: "total-name-click", // 事件名称
+          },
+        ],
+      },
+      {
+        label: "物业借款",
+        children: [
+          {
+            prop: "loanNum",
+            label: "套数",
+            width: 80,
+            showSummary: true,
+          },
+          {
+            prop: "loanOutstdMoney",
+            label: "金额",
+            width: 100,
+            showSummary: true,
+            formatter: (row: any) => formatNumberDisplay(row.loanOutstdMoney),
           },
         ],
       },
