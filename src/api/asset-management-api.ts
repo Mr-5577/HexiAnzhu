@@ -168,6 +168,19 @@ export const assetManagementApi = {
       "post"
     );
   },
+  // 销售年报表(树)
+  getSaleYearReportTree: (data: any) => {
+    return http.post("/sale/getSaleYearReportTree", data);
+  },
+  // 销售年报表(树)-导出
+  exportSaleYearReportTree: (data: any, filename: string = "销售年报表(树).xlsx") => {
+    return http.exportFile(
+      "/sale/getSaleYearReportTree",
+      data,
+      filename || "数据列表.xlsx",
+      "post"
+    );
+  },
   // 销售日报表
   getSaleDailyReport: (data: any) => {
     return http.post("/sale/getSaleDailyReport", data);
@@ -176,6 +189,19 @@ export const assetManagementApi = {
   exportSaleDailyReport: (data: any, filename: string = "销售日报表.xlsx") => {
     return http.exportFile(
       "/sale/getSaleDailyReport",
+      data,
+      filename || "数据列表.xlsx",
+      "post"
+    );
+  },
+  // 销售日报表(树)
+  getSaleDailyReportTree: (data: any) => {
+    return http.post("/sale/getSaleDailyReportTree", data);
+  },
+  // 销售日报表(树)-导出
+  exportSaleDailyReportTree: (data: any, filename: string = "销售日报表(树).xlsx") => {
+    return http.exportFile(
+      "/sale/getSaleDailyReportTree",
       data,
       filename || "数据列表.xlsx",
       "post"

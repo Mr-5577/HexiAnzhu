@@ -3,7 +3,7 @@ import { formatNumber, formatNumberDisplay } from "@/utils/common";
 // 销售年报表-表头
 export const AnnualReportColumns: any = [
   { type: "index", label: "序号", width: 60, fixed: "left" },
-  { prop: "projName", label: "项目", width: 220, fixed: "left" },
+  { prop: "projName", label: "项目", width: 220, align: "left", fixed: "left" },
   { prop: "productTypeName", label: "考核业态", width: 120 },
   {
     label: "年度累计数据(万元)",
@@ -263,7 +263,7 @@ export const AnnualReportColumns: any = [
 // 销售日报表-表头
 export const dailylReportColumns: any = [
   { type: "index", label: "序号", width: 60, fixed: "left" },
-  { prop: "projName", label: "项目", width: 220, fixed: "left" },
+  { prop: "projName", label: "项目", width: 220, align: "left", fixed: "left" },
   { prop: "productTypeName", label: "考核业态", width: 120 },
   {
     label: "当日销售数据(万元)",
