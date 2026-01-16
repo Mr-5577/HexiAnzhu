@@ -216,11 +216,11 @@ export const premiumDetailColumns: any = [
     formatter: (row: any) => formatNumberDisplay(row.saleMoney),
   },
   {
-    prop: "incMoneyRm",
-    label: "补贴金额",
+    prop: "incMoney",
+    label: "补贴总金额",
     width: 150,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.incMoneyRm),
+    formatter: (row: any) => formatNumberDisplay(row.incMoney),
   },
   {
     prop: "saleMoneyAll",
