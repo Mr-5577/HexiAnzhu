@@ -4,6 +4,19 @@ This template should help get you started developing with Vue 3 and TypeScript i
 
 Learn more about the recommended Project Setup and IDE Support in the [Vue Docs TypeScript Guide](https://vuejs.org/guide/typescript/overview.html#project-setup).
 
+# 技术栈
+框架: Vue 3 + Composition API
+
+构建工具: Vite 5
+
+语言: TypeScript 5.x
+
+UI 框架: 按需引入
+
+包管理器: npm (Node.js 22.20.0+)
+
+代码规范: ESLint + Prettier
+
 # 开发环境
 npm run dev
 # 访问: http://localhost:3000
