@@ -98,8 +98,10 @@ const cascaderProps = computed(() => ({
 const queryParams = ref({
   projIds: [],
 });
-// 固定列
-const tableColumns = ref<any>(receivablesColumns1);
+
+const dynamicColumns = ref<any>([]);
+const tableColumns = computed(() => [...receivablesColumns1, ...dynamicColumns.value]);
+
 const tableLoading = ref<boolean>(false);
 const exportLoading = ref<boolean>(false);
 const currentPage = ref<number>(1);
@@ -192,13 +194,13 @@ const getTableList = async () => {
     if (res.code === 200) {
       const { header = [], records = [] } = res.data;
       // 动态列 - 多级表头形式
-      let dynamicColumns = {
+      let newDynamicColumns = {
         label: "已签约未回款", // 一级表头名称
         align: "center",
         children: [] as any[],
       };
       header.map((item: any) => {
-        dynamicColumns.children.push({
+        newDynamicColumns.children.push({
           label: item.groupName, // 二级表头
           children: [
             {
@@ -234,9 +236,9 @@ const getTableList = async () => {
         });
       });
       // 合并固定表头
-      dynamicColumns.children.push(...receivablesColumns2);
-      // 合并列
-      tableColumns.value = [...tableColumns.value, dynamicColumns];
+      newDynamicColumns.children.push(...receivablesColumns2);
+
+      dynamicColumns.value = newDynamicColumns;
 
       // 原始数据
       allTableList.value = records;

@@ -109,11 +109,14 @@ const queryParams = ref({
   projIds: [],
   time: [],
 });
-// 固定列
-const tableColumns = ref<any>([
+
+const fixedColumns = [
   { type: "index", label: "序号", width: 60, fixed: "left" },
   { prop: "proj_name", label: "项目", width: 220, fixed: "left" },
-]);
+];
+const dynamicColumns = ref<any[]>([]);
+const tableColumns = computed(() => [...fixedColumns, ...dynamicColumns.value]);
+
 const tableLoading = ref<boolean>(false);
 const exportLoading = ref<boolean>(false);
 const currentPage = ref<number>(1);
@@ -200,7 +203,7 @@ const getTableList = async () => {
     if (res.code === 200) {
       const { header = [], records = [] } = res.data;
       // 动态列 - 多级表头形式
-      const dynamicColumns = header
+      const newDynamicColumns = header
         .filter((item: any) => {
           // 先过滤掉不匹配的字段值
           const key = String(item.pathWayId);
@@ -226,8 +229,7 @@ const getTableList = async () => {
             },
           ],
         }));
-      // 合并列
-      tableColumns.value = [...tableColumns.value, ...dynamicColumns];
+      dynamicColumns.value = newDynamicColumns;
 
       // 原始数据
       allTableList.value = records;
