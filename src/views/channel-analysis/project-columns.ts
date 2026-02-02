@@ -1,7 +1,5 @@
 // 来访统计-天-表头
 export const VisitingStatisticsDayColumns = [
-  { prop: "projName", label: "项目", width: 200, fixed: "left" },
-  { prop: "total", label: "总计", showSummary: true }, // 新增
   { prop: "d1", label: "1日", showSummary: true },
   { prop: "d2", label: "2日", showSummary: true },
   { prop: "d3", label: "3日", showSummary: true },

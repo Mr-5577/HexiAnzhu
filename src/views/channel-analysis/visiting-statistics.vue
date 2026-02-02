@@ -161,11 +161,11 @@ const initParams = () => {
       queryParams.value.projIds = routeData.department || [];
       if (routeData.type === "month") {
         queryParams.value.day = dateUtil(routeData.data || new Date()).format(
-          "YYYY-MM"
+          "YYYY-MM",
         );
       } else {
         queryParams.value.day = dateUtil(routeData.data || new Date()).format(
-          "YYYY-MM-DD"
+          "YYYY-MM-DD",
         );
       }
       queryParams.value.type = routeData.type;
@@ -257,14 +257,14 @@ const tableColumns = computed(() => {
   if (queryParams.value.type === "month") {
     return VisitingStatisticsMonthColumns;
   } else {
+    // 前两列作为固定列
+    const fixedColumns = [
+      { prop: "projName", label: "项目", width: 200, fixed: "left" },
+      { prop: "total", label: "总计", showSummary: true },
+    ];
     const currentLastDay = dateUtil(queryParams.value.day).daysInMonth();
-    // 前1列是固定列（项目名），后面31列是日期列
-    const fixedColumns = VisitingStatisticsDayColumns.slice(0, 1); // 固定列
     // 日期列
-    const dateColumns = VisitingStatisticsDayColumns.slice(
-      1,
-      1 + currentLastDay
-    );
+    const dateColumns = VisitingStatisticsDayColumns.slice(0, currentLastDay);
     return [...fixedColumns, ...dateColumns];
   }
 });
@@ -272,10 +272,10 @@ watch(
   () => queryParams.value.type,
   (newVal) => {
     queryParams.value.day = dateUtil().format(
-      newVal === "month" ? "YYYY-MM" : "YYYY-MM-DD"
+      newVal === "month" ? "YYYY-MM" : "YYYY-MM-DD",
     );
     getTableList();
-  }
+  },
   // { immediate: true }
 );
 // 生命周期

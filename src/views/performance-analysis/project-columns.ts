@@ -712,8 +712,6 @@ export const CollectionDetailColumns: any = [
 ];
 // 认购达成统计-天-表头
 export const SubscriptionStatisticsDayColumns = [
-  { prop: "projName", label: "项目", width: 240, fixed: "left" },
-  { prop: "total", label: "总计", showSummary: true },
   { prop: "d1", label: "1日", showSummary: true },
   { prop: "d2", label: "2日", showSummary: true },
   { prop: "d3", label: "3日", showSummary: true },
