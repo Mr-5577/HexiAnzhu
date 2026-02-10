@@ -6,6 +6,7 @@
         placeholder="请输入旧密码"
         type="password"
         show-password
+        @keyup.enter="handleSubmit"
       />
     </el-form-item>
 
@@ -15,6 +16,7 @@
         placeholder="请输入新密码"
         type="password"
         show-password
+        @keyup.enter="handleSubmit"
       />
     </el-form-item>
 
@@ -24,6 +26,7 @@
         placeholder="请确认新密码"
         type="password"
         show-password
+        @keyup.enter="handleSubmit"
       />
     </el-form-item>
 
@@ -81,9 +84,11 @@ const validateConfirmPassword = (
 
 // 密码不能包含的非法字符
 const validatePassword = (rule: any, value: string, callback: Function) => {
-  const illegalChars = /[<>"'|\\]/;
-  if (illegalChars.test(value)) {
-    callback(new Error("不能包含非法字符：< > \" ' \\ |"));
+  const illegalChars = /^[A-Za-z0-9!@$.+\-*]+$/;
+  if (!illegalChars.test(value)) {
+    callback(new Error("密码只能包含英文字母、数字和 !@$.+-*"));
+  } else if (value === formData.value.oldPassword) {
+    callback(new Error("新密码不能和旧密码一样！"));
   } else {
     callback();
   }

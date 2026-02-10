@@ -200,9 +200,19 @@ const handleSignIn = async () => {
     const response = await userApi.login(formData);
     const { code, data } = response;
     if (code === 200 && data) {
-      ElMessage.success("登录成功！");
-      localStorage.setItem("token", data);
-      router.replace("/home");
+      localStorage.setItem("accountNonExpired", data.accountNonExpired);
+      localStorage.setItem("token", data.token);
+      userStore.setEmpNo(signInForm.userName);
+      // 判断密码未过期，accountNonExpired:true没有过期  accountNonExpired:false过期
+      if (data?.accountNonExpired) {
+        ElMessage.success("登录成功！");
+        router.replace("/home");
+      } else {
+        ElMessage.warning("密码已过期，请重置密码！");
+        router.replace("/reset-password");
+      }
+    } else {
+      ElMessage.error("登录失败，请重试");
     }
   } catch (error) {
     console.error("登录失败:", error);

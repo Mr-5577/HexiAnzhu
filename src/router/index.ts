@@ -1,4 +1,5 @@
 import { useMenuStore } from "@/stores/menu-store";
+import { useUserStore } from "@/stores/user-store";
 import {
   transformMenuDataExact,
   extractButtonPermissions,
@@ -44,6 +45,14 @@ const staticRoutes: Array<RouteRecordRaw> = [
     component: () => import("@/views/login/scan-login.vue"),
     meta: {
       title: "扫码登录",
+    },
+  },
+  {
+    path: "/reset-password",
+    name: "resetPassword",
+    component: () => import("@/views/login/reset-password.vue"),
+    meta: {
+      title: "重置密码",
     },
   },
   {
@@ -97,7 +106,10 @@ const cleanupDynamicRoutes = () => {
       route.name &&
       route.name !== "login" &&
       route.name !== "404" &&
-      route.name !== "403"
+      route.name !== "403" &&
+      route.name !== "resetPassword" &&
+      route.name !== "autoLogin" &&
+      route.name !== "scanLogin"
     ) {
       router.removeRoute(route.name);
     }
@@ -105,6 +117,29 @@ const cleanupDynamicRoutes = () => {
 };
 
 let menuLoaded = false;
+
+// 检查密码是否过期
+const isPasswordExpired = () => {
+  // 检查密码是否过期,accountNonExpired:true没有过期  accountNonExpired:false过期
+  const accountNonExpired = localStorage.getItem("accountNonExpired");
+  // 注意：localStorage存储的是字符串 "true" 或 "false"
+  // 需要转换为布尔值，然后取反（因为 accountNonExpired:false 表示过期）
+  if (accountNonExpired === null) {
+    return true; // 如果没有这个值，默认认为需要重置
+  }
+  return accountNonExpired == "false";
+};
+
+// 白名单路由
+const whiteListPaths = [
+  "/login",
+  "/test",
+  "/autoLogin",
+  "/scanLogin",
+  "/403",
+  "/404",
+  "/reset-password", // 重置密码
+];
 router.beforeEach(async (to, from, next) => {
   // console.log("路由切换:", from.path, "->", to.path);
 
@@ -113,15 +148,6 @@ router.beforeEach(async (to, from, next) => {
   //   document.title = to.meta.title as string;
   // }
 
-  // 白名单路由
-  const whiteListPaths = [
-    "/login",
-    "/test",
-    "/autoLogin",
-    "/scanLogin",
-    "/403",
-    "/404",
-  ];
   // 创建大小写不敏感的白名单
   const whiteListLower = whiteListPaths.map((path) => path.toLowerCase());
   if (whiteListLower.includes(to.path.toLowerCase())) {
@@ -136,7 +162,15 @@ router.beforeEach(async (to, from, next) => {
     return;
   }
 
+  // 有token，检查密码是否过期
+  const passwordExpired = isPasswordExpired();
+  if (passwordExpired) {
+    next("/reset-password");
+    return;
+  }
+
   const menuStore = useMenuStore();
+  const userStore = useUserStore();
 
   // 只需要这个判断：菜单没加载过，就加载一次
   if (!menuLoaded) {
