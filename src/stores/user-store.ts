@@ -25,6 +25,7 @@ export const useUserStore = defineStore(
     const token = ref<string>("");
     const isFullScreen = ref<boolean>(false);
     const stateTag = ref<string>("");
+    const isQueryFast = ref<boolean>(true); // 请求是否加速,初始值需要和大屏头部的加速字段值保持一致
 
     const setUserInfo = (info: UserInfo) => {
       userInfo.value = info;
@@ -46,6 +47,9 @@ export const useUserStore = defineStore(
     const setStateTag = (stateVal: string) => {
       stateTag.value = stateVal;
     };
+    const setQueryFast = (state: boolean) => {
+      isQueryFast.value = state;
+    };
 
     return {
       // 数据
@@ -53,6 +57,7 @@ export const useUserStore = defineStore(
       token,
       isFullScreen,
       stateTag,
+      isQueryFast,
 
       // 方法
       setUserInfo,
@@ -60,6 +65,7 @@ export const useUserStore = defineStore(
       clearUserInfo,
       setFullScreen,
       setStateTag,
+      setQueryFast,
     };
   },
   {

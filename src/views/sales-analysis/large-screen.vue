@@ -33,6 +33,14 @@
           :clearable="false"
           class="custom-data-picker"
         ></el-date-picker>
+        <div class="checkbox-folder">
+          <el-checkbox
+            v-model="isQueryFast"
+            label="加速"
+            size="large"
+            @change="changeQueryFast"
+          />
+        </div>
         <el-button
           text
           size="default"
@@ -140,6 +148,7 @@ const week = ref("");
 const departmentVal = ref<number[]>([]);
 const dataVal = ref("");
 const options = ref<any[]>([]);
+const isQueryFast = ref(true);
 
 // 定义多个 ref
 const goalAchievedRef = ref<InstanceType<typeof GoalAchieved>>();
@@ -269,7 +278,12 @@ const resizeAllCharts = () => {
   }, 100);
 };
 
+const changeQueryFast = (value: boolean) => {
+  isQueryFast.value = value;
+  userStore.setQueryFast(value);
+};
 onMounted(() => {
+  userStore.setQueryFast(isQueryFast.value);
   updateTime();
   getProjList();
   timer = setInterval(updateTimeAndRefresh, 5 * 60 * 1000);
@@ -367,6 +381,15 @@ onDeactivated(() => {
       .search-btn.active {
         color: #409eff;
         font-weight: 700;
+      }
+      .checkbox-folder {
+        height: 36px;
+        display: flex;
+        align-items: center;
+        margin-left: 10px;
+        :deep(.el-checkbox__label) {
+          color: #fff;
+        }
       }
     }
     .header-title {

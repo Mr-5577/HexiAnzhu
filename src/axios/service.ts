@@ -41,7 +41,7 @@ function getFilenameFromHeaders(headers: any): string {
     headers["content-disposition"] || headers["Content-Disposition"];
   if (contentDisposition) {
     const filenameMatch = contentDisposition.match(
-      /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/
+      /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/,
     );
     if (filenameMatch && filenameMatch[1]) {
       let filename = filenameMatch[1].replace(/['"]/g, "");
@@ -85,6 +85,40 @@ service.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // 统一增加请求加速参数
+    // console.log(JSON.parse(localStorage.getItem("user-store")).isQueryFast);
+    const isQueryFast = JSON.parse(localStorage.getItem("user-store") || "{}")?.isQueryFast;
+    // // 根据请求方法添加到相应位置
+    if (
+      config.method?.toLowerCase() === "get" ||
+      config.method?.toLowerCase() === "delete"
+    ) {
+      // GET/DELETE 请求：添加到 params
+      config.params = {
+        ...config.params,
+        isQueryFast: isQueryFast, // 参数名和值
+      };
+    } else {
+      // POST/PUT/PATCH 请求：添加到 data
+      if (config.data instanceof FormData) {
+        // FormData 用 append
+        if (!config.data.has("isQueryFast")) {
+          config.data.append("isQueryFast", isQueryFast);
+        }
+      } else if (typeof config.data === "object" && config.data !== null) {
+        // 普通对象直接合并
+        config.data = {
+          ...config.data,
+          isQueryFast: isQueryFast,
+        };
+      } else {
+        // 其他情况（字符串、数组等）包装成对象
+        config.data = {
+          data: config.data,
+          isQueryFast: isQueryFast,
+        };
+      }
+    }
 
     // 添加请求时间戳，防止缓存
     if (config.method?.toLowerCase() === "get" && config.params) {
@@ -106,7 +140,7 @@ service.interceptors.request.use(
   },
   (error) => {
     return Promise.reject(error);
-  }
+  },
 );
 
 // 响应拦截器
@@ -129,7 +163,7 @@ service.interceptors.response.use(
         // 显示成功消息
         if (response.config.showSuccessMessage) {
           ElMessage.success(
-            response.config.successMessage || resMessage || "操作成功"
+            response.config.successMessage || resMessage || "操作成功",
           );
         }
         return data;
@@ -240,7 +274,7 @@ service.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 // 封装通用请求方法
@@ -248,7 +282,7 @@ export const http = {
   get<T = any>(
     url: string,
     params?: any,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<T> {
     return service.get(url, { params, ...config });
   },
@@ -256,7 +290,7 @@ export const http = {
   post<T = any>(
     url: string,
     data?: any,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<T> {
     return service.post(url, data, config);
   },
@@ -264,7 +298,7 @@ export const http = {
   put<T = any>(
     url: string,
     data?: any,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<T> {
     return service.put(url, data, config);
   },
@@ -272,7 +306,7 @@ export const http = {
   patch<T = any>(
     url: string,
     data?: any,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<T> {
     return service.patch(url, data, config);
   },
@@ -280,7 +314,7 @@ export const http = {
   delete<T = any>(
     url: string,
     params?: any,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<T> {
     return service.delete(url, { params, ...config });
   },
@@ -289,7 +323,7 @@ export const http = {
   upload<T = any>(
     url: string,
     formData: FormData,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<T> {
     return service.post(url, formData, {
       headers: {
@@ -304,7 +338,7 @@ export const http = {
     url: string,
     params?: any,
     filename?: string,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<Blob> {
     const response = await service.get(url, {
       params,
@@ -326,7 +360,7 @@ export const http = {
     data?: any,
     filename?: string,
     method: "get" | "post" = "post",
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<Blob> {
     const requestConfig: AxiosRequestConfig = {
       responseType: "blob",
@@ -355,7 +389,7 @@ export const http = {
   getFileBlob(
     url: string,
     params?: any,
-    config?: AxiosRequestConfig
+    config?: AxiosRequestConfig,
   ): Promise<Blob> {
     return service
       .get(url, {
@@ -379,7 +413,7 @@ export const http = {
     data: any,
     filename: string,
     onProgress?: (progress: number) => void,
-    method: "get" | "post" = "post"
+    method: "get" | "post" = "post",
   ): Promise<Blob> {
     const response = await service.request({
       url,
