@@ -111,6 +111,29 @@ const redirectToAuth = async () => {
     throw new Error("无法连接到认证服务");
   }
 };
+// 判断当前终端是PC还是移动端
+const detectDeviceType = () => {
+  const userAgent = navigator.userAgent;
+  const screenWidth = window.screen.width;
+  const touchPoints = navigator.maxTouchPoints || 0;
+
+  // 判断条件优先级
+  const isMobileUA =
+    /Mobi|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i.test(userAgent);
+  const isTabletUA = /Tablet|iPad/i.test(userAgent);
+  const hasTouch = touchPoints > 0 || "ontouchstart" in window;
+
+  if (isMobileUA && !isTabletUA) {
+    return "mobile";
+  } else if (
+    isTabletUA ||
+    (hasTouch && screenWidth >= 768 && screenWidth <= 1024)
+  ) {
+    return "tablet";
+  } else {
+    return "desktop";
+  }
+};
 
 // 处理token验证和登录
 const handleTokenLogin = async (token: string, stateParam: string) => {
@@ -161,9 +184,20 @@ const handleTokenLogin = async (token: string, stateParam: string) => {
   // 短暂延迟让用户看到提示
   await new Promise((resolve) => setTimeout(resolve, 800));
   checkIfUnmounted();
-  // 跳转到首页
+  // 跳转到PC端首页
   await router.replace("/home");
-
+  /**
+   * 移动端和PC端共用一套自动登录逻辑
+   * 这里需要判断终端设备是PC还是移动端
+   */
+  // const deviceType = detectDeviceType();
+  // if (deviceType === "tablet" || deviceType === "mobile") {
+  //   // 这里应该跳转到H5首页
+  //   await router.replace("/home");
+  // } else {
+  //   // 跳转到PC端首页
+  //   await router.replace("/home");
+  // }
   // 这里的代码不会执行，因为页面已经跳转了
 };
 
@@ -288,6 +322,7 @@ const handleRetry = () => {
 };
 
 onMounted(() => {
+  console.log("终端类型", detectDeviceType());
   console.log("自动登录页面挂载");
   handleRouteParams();
 });
