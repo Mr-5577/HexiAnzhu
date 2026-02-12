@@ -96,6 +96,7 @@ import { ElMessage } from "element-plus";
 import { v4 as uuidv4 } from "uuid";
 import { useMenuStore } from "@/stores/menu-store";
 const menuStore = useMenuStore();
+import pako from "pako";
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({ name: "room-ledger" });
@@ -179,6 +180,8 @@ const initPageData = async () => {
 const getParams = () => ({
   ...queryParams.value,
   current: currentPage.value,
+  // size: pageSize.value,
+  size: 99999,
   isShowTel: menuStore.hasExactPermission("room-ledger:showTel"), // 控制电话是否显示
 });
 // 获取列表
@@ -187,15 +190,41 @@ const getTableList = async () => {
     tableLoading.value = true;
     const params = getParams();
     const res = await assetManagementApi.getRoomAccountBook(params);
-    if (res.code === 200) {
-      allTableList.value = res.data?.records || [];
-      currentPage.value = res.data.current;
-      total.value = res.data?.total || 0;
+    if (res.code === 200 && res.data) {
+      // allTableList.value = res.data?.records || [];
+      // currentPage.value = res.data?.currPage;
+      // total.value = res.data?.total || 0;
+
+      // pako 解压
+      pakoData(res.data);
     }
   } catch (error) {
   } finally {
     tableLoading.value = false;
   }
+};
+// 使用 pako 用于GZIP解压
+const pakoData = (data: string) => {
+  if (!data) {
+    allTableList.value = [];
+    currentPage.value = 1;
+    total.value = 0;
+    return;
+  }
+  // Base64 解码
+  const binaryString = atob(data);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) {
+    bytes[i] = binaryString.charCodeAt(i);
+  }
+  // GZIP 解压
+  const decompressed = pako.inflate(bytes, { to: "string" });
+  // 解析 JSON
+  const jsonData = JSON.parse(decompressed);
+  console.log("jsonData", jsonData);
+  allTableList.value = jsonData?.records || [];
+  currentPage.value = jsonData?.currPage;
+  total.value = jsonData?.total || 0;
 };
 // 导出
 const handleExport = async () => {
