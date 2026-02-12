@@ -99,8 +99,11 @@ const queryParams = ref({
   projIds: [],
 });
 
-const dynamicColumns = ref<any>([]);
-const tableColumns = computed(() => [...receivablesColumns1, ...dynamicColumns.value]);
+const dynamicColumns = ref<any[]>([]);
+const tableColumns = computed(() => [
+  ...receivablesColumns1,
+  ...dynamicColumns.value,
+]);
 
 const tableLoading = ref<boolean>(false);
 const exportLoading = ref<boolean>(false);
@@ -193,58 +196,66 @@ const getTableList = async () => {
     const res = await assetManagementApi.getSaleOutStdFundsInfoYsProj(params);
     if (res.code === 200) {
       const { header = [], records = [] } = res.data;
-      // 动态列 - 多级表头形式
-      let newDynamicColumns = {
+
+      // 创建一级表头对象
+      const firstLevelHeader: any = {
         label: "已签约未回款", // 一级表头名称
         align: "center",
         children: [] as any[],
       };
-      header.map((item: any) => {
-        newDynamicColumns.children.push({
-          label: item.groupName, // 二级表头
-          children: [
-            {
-              prop: `${item.groupId}_collectNum`,
-              label: "总套数",
-              width: 80,
-              showSummary: true,
-            },
-            {
-              prop: `${item.groupId}_collectMoney`,
-              label: "总金额",
-              width: 100,
-              showSummary: true,
-            },
-            {
-              label: "预计回款", // 三级表头
-              children: [
-                {
-                  prop: `${item.groupId}_sldCollectNum`,
-                  label: "总套数",
-                  width: 80,
-                  showSummary: true,
-                },
-                {
-                  prop: `${item.groupId}_sldCollectMoney`,
-                  label: "总金额",
-                  width: 100,
-                  showSummary: true,
-                },
-              ],
-            },
-          ],
-        });
-      });
-      // 合并固定表头
-      newDynamicColumns.children.push(...receivablesColumns2);
 
-      dynamicColumns.value = newDynamicColumns;
+      // 添加动态列到 children
+      header.forEach((item: any) => {
+        if (item && typeof item === "object") {
+          firstLevelHeader.children.push({
+            label: item.groupName || "", // 二级表头
+            children: [
+              {
+                prop: `${item.groupId}_collectNum`,
+                label: "总套数",
+                width: 80,
+                showSummary: true,
+              },
+              {
+                prop: `${item.groupId}_collectMoney`,
+                label: "总金额",
+                width: 100,
+                showSummary: true,
+              },
+              {
+                label: "预计回款", // 三级表头
+                children: [
+                  {
+                    prop: `${item.groupId}_sldCollectNum`,
+                    label: "总套数",
+                    width: 80,
+                    showSummary: true,
+                  },
+                  {
+                    prop: `${item.groupId}_sldCollectMoney`,
+                    label: "总金额",
+                    width: 100,
+                    showSummary: true,
+                  },
+                ],
+              },
+            ],
+          });
+        }
+      });
+
+      // 合并固定表头到同一个一级表头下
+      firstLevelHeader.children.push(...receivablesColumns2);
+
+      // dynamicColumns 是数组，包含一个一级表头对象
+      dynamicColumns.value = [firstLevelHeader];
 
       // 原始数据
       allTableList.value = records;
       total.value = records.length;
     }
   } catch (error) {
+    console.error("获取列表失败:", error);
   } finally {
     tableLoading.value = false;
   }
@@ -255,9 +266,8 @@ const handleExport = async () => {
   try {
     exportLoading.value = true;
     const params = { ...getParams(), isExport: true };
-    const fileBlob = await assetManagementApi.exportSaleOutStdFundsInfoYsProj(
-      params
-    );
+    const fileBlob =
+      await assetManagementApi.exportSaleOutStdFundsInfoYsProj(params);
     if (!fileBlob || fileBlob.size === 0) {
       ElMessage.warning("导出文件为空，请检查数据");
     } else {
