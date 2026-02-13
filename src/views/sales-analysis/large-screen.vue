@@ -163,7 +163,7 @@ const conversionMetricsChartRef =
 const financialStatisticsRef = ref<InstanceType<typeof FinancialStatistics>>();
 
 // 更新时间
-let timer: string | number | NodeJS.Timeout | null | undefined = null;
+const timer = ref<any>(null);
 const updateTime = () => {
   const newDate = new Date();
   yearMonthDay.value = formatToDateTime(newDate, "YYYY年MM月DD日");
@@ -282,26 +282,50 @@ const changeQueryFast = (value: boolean) => {
   isQueryFast.value = value;
   userStore.setQueryFast(value);
 };
+// 启动定时器
+const startTimer = () => {
+  // 先清除已有定时器
+  if (timer.value) {
+    clearInterval(timer.value);
+    timer.value = null;
+  }
+  // 启动新定时器（15分钟）
+  timer.value = setInterval(
+    () => {
+      updateTime();
+      refreshAllComponents();
+    },
+    15 * 60 * 1000,
+  );
+};
+
+// 停止定时器
+const stopTimer = () => {
+  if (timer.value) {
+    clearInterval(timer.value);
+    timer.value = null;
+  }
+};
+// 组件挂载（keepalive场景）
 onMounted(() => {
   userStore.setQueryFast(isQueryFast.value);
   updateTime();
   getProjList();
-  timer = setInterval(updateTimeAndRefresh, 5 * 60 * 1000);
+  startTimer(); // 启动定时器
 });
-
+// 组件卸载（无keepalive场景）
 onUnmounted(() => {
-  if (timer) {
-    clearInterval(timer);
-  }
+  stopTimer();
 });
+// 页面激活时的处理（keepalive场景）
 onActivated(() => {
+  startTimer();
   // 页面激活时重新调整图表大小
   resizeAllCharts();
 });
+// 页面停用时的处理（keepalive场景）
 onDeactivated(() => {
-  if (timer) {
-    clearInterval(timer);
-  }
+  stopTimer();
 });
 </script>
 
