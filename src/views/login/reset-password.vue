@@ -4,7 +4,7 @@
       <div class="reset-card">
         <div class="header">
           <h2>重置密码</h2>
-          <p class="subtitle">您的密码已过期，请设置新密码</p>
+          <p class="subtitle">根据企业信息安全规范，密码每90天重置一次。<br />请立即重置以继续使用系统！</p>
         </div>
 
         <div class="form-container">
@@ -230,7 +230,7 @@ onMounted(() => {});
 
     .subtitle {
       margin-top: 8px;
-      color: #666;
+      color: #f30915;
       font-size: 14px;
     }
   }

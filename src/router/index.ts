@@ -122,11 +122,7 @@ let menuLoaded = false;
 const isPasswordExpired = () => {
   // 检查密码是否过期,accountNonExpired:true没有过期  accountNonExpired:false过期
   const accountNonExpired = localStorage.getItem("accountNonExpired");
-  // 注意：localStorage存储的是字符串 "true" 或 "false"
-  // 需要转换为布尔值，然后取反（因为 accountNonExpired:false 表示过期）
-  if (accountNonExpired === null) {
-    return true; // 如果没有这个值，默认认为需要重置
-  }
+  // localStorage存储的是字符串 "true" 或 "false"
   return accountNonExpired == "false";
 };
 

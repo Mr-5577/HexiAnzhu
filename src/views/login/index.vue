@@ -209,7 +209,7 @@ const handleSignIn = async () => {
         router.replace("/home");
       } else {
         ElMessage.warning("密码已过期，请重置密码！");
-        router.replace("/reset-password");
+        router.push("/reset-password");
       }
     } else {
       ElMessage.error("登录失败，请重试");
