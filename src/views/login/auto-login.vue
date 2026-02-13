@@ -6,6 +6,23 @@
     </div>
     <div v-else-if="errorMessage" class="error-container">
       <span class="error-message">{{ errorMessage }}</span>
+      <!-- 失败信息 -->
+      <!-- <el-popover placement="top" width="800" trigger="click">
+        <template #default>
+          <div class="error-info">
+            <div>token信息：{{ tokenInfo }}</div>
+            <div>state信息：{{ stateInfo }}</div>
+            <div>error信息：{{ errorInfo }}</div>
+            <div>storedState信息：{{ userStore.stateTag }}</div>
+            <div>routeQuery信息：{{ routeInfo }}</div>
+            <div>URL信息：{{ urlInfo }}</div>
+            <div>currentTokenInfo信息：{{ currentTokenInfo }}</div>
+          </div>
+        </template>
+        <template #reference>
+          <el-button>查看失败信息</el-button>
+        </template>
+      </el-popover> -->
       <!-- <button class="retry-btn" @click="handleRetry">重试</button> -->
     </div>
     <!-- 测试显示信息 -->
@@ -39,13 +56,13 @@ const routeInfo = ref<any>("");
 const tokenInfo = ref("");
 const stateInfo = ref("");
 const errorInfo = ref("");
+const urlInfo = ref("");
+const currentTokenInfo = ref("");
 
 // 防止重复处理标志
 let isProcessing = false;
 // 组件是否已卸载
 let isUnmounted = false;
-// 超时定时器引用
-let timeoutId: NodeJS.Timeout | null = null;
 
 // 安全获取查询参数
 const getQueryParam = (param: string | string[] | undefined): string => {
@@ -79,9 +96,14 @@ const redirectToAuth = async () => {
 
       // 显示跳转提示
       ElMessage.info("正在跳转到认证页面...");
+      // ElMessage.info({
+      //   message: `正在跳转到认证页面...<br/>${res.data}`,
+      //   dangerouslyUseHTMLString: true,
+      //   duration: 100,
+      // });
 
       // 短暂延迟让用户看到提示
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       checkIfUnmounted();
 
@@ -238,7 +260,7 @@ const handleRouteParams = async () => {
       return;
     }
 
-    // 情况:2：有token和state，进行登录验证
+    // 情况2：有token和state，进行登录验证
     if (tokenParam && stateParam) {
       console.log("有token和state，开始验证登录");
       await handleTokenLogin(tokenParam, stateParam);
@@ -248,30 +270,8 @@ const handleRouteParams = async () => {
     // 情况3：首次访问，没有token但有state标记（可能是刷新页面）
     if (!tokenParam && userStore.stateTag) {
       console.log("等待token返回，已有stateTag:", userStore.stateTag);
-
-      // 清理之前的定时器
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-        timeoutId = null;
-      }
-
-      // 等待token返回，设置合理超时
-      timeoutId = setTimeout(() => {
-        // 检查组件是否已卸载
-        if (isUnmounted) return;
-
-        const currentToken = getQueryParam(route.query.token);
-        console.log("超时检查，当前token:", currentToken);
-
-        // 如果等待一段时间后仍然没有token，可能是超时
-        if (!currentToken && !errorMessage.value) {
-          errorMessage.value = "登录超时，请重新登录";
-          loading.value = false;
-          ElMessage.warning("登录超时，请重新登录");
-        }
-      }, 3000);
-
-      return;
+      userStore.setStateTag("");
+      // ElMessage.warning('state异常');
     }
 
     // 情况4：首次访问，没有token也没有state标记
@@ -307,12 +307,6 @@ const handleRouteParams = async () => {
 const handleRetry = () => {
   console.log("用户点击重试");
 
-  // 清理定时器
-  if (timeoutId) {
-    clearTimeout(timeoutId);
-    timeoutId = null;
-  }
-
   // 清理状态并重新处理
   errorMessage.value = "";
   userStore.setStateTag("");
@@ -321,9 +315,11 @@ const handleRetry = () => {
   handleRouteParams();
 };
 
+const handleCancel = () => {};
 onMounted(() => {
   console.log("终端类型", detectDeviceType());
   console.log("自动登录页面挂载");
+  urlInfo.value = window.location.href;
   handleRouteParams();
 });
 
@@ -331,12 +327,6 @@ onUnmounted(() => {
   console.log("自动登录页面卸载");
   // 标记组件已卸载
   isUnmounted = true;
-
-  // 清理定时器
-  if (timeoutId) {
-    clearTimeout(timeoutId);
-    timeoutId = null;
-  }
 
   // 清理状态
   errorMessage.value = "";
