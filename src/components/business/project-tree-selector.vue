@@ -120,7 +120,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, PropType } from "vue";
-import { ElTree } from "element-plus";
+import { ElTree, ElMessage } from "element-plus";
 import { ArrowDown, Search } from "@element-plus/icons-vue";
 import { debounce } from "@/utils/common";
 
@@ -199,9 +199,12 @@ const treeRef = ref<InstanceType<typeof ElTree>>();
 
 // 已确认的选中项目（显示在选择框中）
 const selectedItems = computed(() => {
-  return props.projectList.filter((item) =>
-    selectedKeys.value.includes(item.id)
-  );
+  // return props.projectList.filter((item) =>
+  // selectedKeys.value.includes(item.id)
+  // );
+  // 使用 Set 提高查找效率
+  const selectedSet = new Set(selectedKeys.value);
+  return props.projectList.filter((item) => selectedSet.has(item.id));
 });
 
 // 临时选中的项目（显示在弹窗中）
@@ -406,6 +409,11 @@ const cancel = () => {
 };
 
 const confirm = () => {
+  // 必选验证
+  if (tempSelectedKeys.value.length === 0) {
+    ElMessage.warning("请至少选择一个项目");
+    return;
+  }
   // 点击确定时，将临时选择应用到已确认选择
   selectedKeys.value = [...tempSelectedKeys.value];
   updateValue();
@@ -415,6 +423,12 @@ const confirm = () => {
 const handleDialogClosed = () => {
   // 弹窗关闭时重置搜索和全选状态
   filterText.value = "";
+
+  // 重置树组件的过滤
+  if (treeRef.value) {
+    treeRef.value.filter("");
+  }
+
   // 重置全选复选框状态为当前临时选择的状态
   if (tempSelectedKeys.value.length === allProjectIds.value.length) {
     isSelectAll.value = true;
