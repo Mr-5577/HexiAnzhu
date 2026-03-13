@@ -35,6 +35,10 @@ export const userApi = {
   getAuthRedirectUrl: (data: any) => {
     return http.post(`/callback/getAuthRedirectUrl`, data);
   },
+  // 一键登录（测试）
+  getAuthRedirectUrlTest: (data: any) => {
+    return http.post(`/callback/getAuthRedirectUrlTest`, data);
+  },
   // 获取用户信息
   getEmpInfo: () => {
     return http.post(`/emp/getEmpInfo`);

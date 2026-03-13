@@ -16,7 +16,6 @@
             <div>storedState信息：{{ userStore.stateTag }}</div>
             <div>routeQuery信息：{{ routeInfo }}</div>
             <div>URL信息：{{ urlInfo }}</div>
-            <div>currentTokenInfo信息：{{ currentTokenInfo }}</div>
           </div>
         </template>
         <template #reference>
@@ -57,7 +56,6 @@ const tokenInfo = ref("");
 const stateInfo = ref("");
 const errorInfo = ref("");
 const urlInfo = ref("");
-const currentTokenInfo = ref("");
 
 // 防止重复处理标志
 let isProcessing = false;
@@ -79,28 +77,31 @@ const checkIfUnmounted = () => {
 
 // 处理重定向到认证页面
 const redirectToAuth = async () => {
-  console.log("进入重定向到认证页面逻辑");
   checkIfUnmounted();
   try {
     // 缓存stateTag
     const validState = uuidv4();
-    // const validState = "07504c6c-2303-4cac-be57-3bd96e309d4c";
     userStore.setStateTag(validState);
-    console.log("生成新的stateTag:", validState);
+
+    const CALLBACK_URL =
+      import.meta.env.MODE === "development"
+        ? "http://192.168.1.24:3000/autoLogin"
+        : `http://sys.hexianzhu.com/autoLogin`;
+
+    const paramsObj = {
+      data: validState,
+      home: "/home",
+      autoLoginPage: CALLBACK_URL,
+      isQrCode: false, // 是否扫码
+    };
     // 获取认证地址回调
-    const res = await userApi.getAuthRedirectUrl({ state: validState });
+    const res = await userApi.getAuthRedirectUrl(paramsObj); // 正式接口
+    // const res = await userApi.getAuthRedirectUrlTest(paramsObj); // 测试接口
     checkIfUnmounted();
 
     if (res.code === 200 && res.data) {
-      console.log("获取到认证地址，开始重定向:", res.data);
-
       // 显示跳转提示
       ElMessage.info("正在跳转到认证页面...");
-      // ElMessage.info({
-      //   message: `正在跳转到认证页面...<br/>${res.data}`,
-      //   dangerouslyUseHTMLString: true,
-      //   duration: 100,
-      // });
 
       // 短暂延迟让用户看到提示
       await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -112,7 +113,10 @@ const redirectToAuth = async () => {
 
       // 跳转到认证页面
       window.location.href = res.data;
-      // window.location.href = 'http://localhost:3000/autoLogin?token=eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjEzLCJ1c2VybmFtZSI6IjAwMDAxMyIsImlhdCI6MTc2NzA4NzcyNCwiZXhwIjoxNzY3MTc0MTI0fQ.GZKqFTu7eSW7D9S4Hssf7awb6Auz8yrVFTCFl0tRD6g&state=07504c6c-2303-4cac-be57-3bd96e309d4c';
+
+      // const stateVal = res.data.split("state=")[1] || "";
+      // window.location.href = `${CALLBACK_URL}?token=eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjE1LCJ1c2VybmFtZSI6IjAwMDAxNSIsImlhdCI6MTc3MzM2NTc5OCwiZXhwIjoxNzczNDUyMTk4fQ.FGb5tGiel4BsFVVPhDGVigj_ZmN3l1a7UPs7lFMxoN0&state=${stateVal}`;
+
       return;
     } else {
       ElMessage.error("获取认证地址失败！");
@@ -133,41 +137,17 @@ const redirectToAuth = async () => {
     throw new Error("无法连接到认证服务");
   }
 };
-// 判断当前终端是PC还是移动端
-const detectDeviceType = () => {
-  const userAgent = navigator.userAgent;
-  const screenWidth = window.screen.width;
-  const touchPoints = navigator.maxTouchPoints || 0;
-
-  // 判断条件优先级
-  const isMobileUA =
-    /Mobi|Android|iPhone|iPad|iPod|BlackBerry|Windows Phone/i.test(userAgent);
-  const isTabletUA = /Tablet|iPad/i.test(userAgent);
-  const hasTouch = touchPoints > 0 || "ontouchstart" in window;
-
-  if (isMobileUA && !isTabletUA) {
-    return "mobile";
-  } else if (
-    isTabletUA ||
-    (hasTouch && screenWidth >= 768 && screenWidth <= 1024)
-  ) {
-    return "tablet";
-  } else {
-    return "desktop";
-  }
-};
 
 // 处理token验证和登录
-const handleTokenLogin = async (token: string, stateParam: string) => {
+const handleTokenLogin = async (token: string, dataParams: string) => {
   checkIfUnmounted();
-
   console.log("开始验证token和state", {
     token,
-    stateParam,
+    dataParams,
     storedState: userStore.stateTag,
   });
   // 当 state 为 hxaz 时，直接跳转到首页
-  if (stateParam === "hxaz") {
+  if (dataParams === "hxaz") {
     // 存储token
     localStorage.setItem("token", token);
     // 清理state标记
@@ -183,9 +163,9 @@ const handleTokenLogin = async (token: string, stateParam: string) => {
   }
 
   // 验证state参数，不匹配
-  if (stateParam !== userStore.stateTag) {
+  if (dataParams !== userStore.stateTag) {
     console.error("state验证失败:", {
-      received: stateParam,
+      received: dataParams,
       expected: userStore.stateTag,
     });
     ElMessage.error("登录验证失败，请重新登录！");
@@ -198,9 +178,8 @@ const handleTokenLogin = async (token: string, stateParam: string) => {
 
   // 存储token
   localStorage.setItem("token", token);
-  // 清理state标记
+  // 验证成功需要清理state标记
   userStore.setStateTag("");
-  console.log("token验证成功，存储token，清理state");
   // 显示成功提示
   ElMessage.success("登录成功，正在跳转...");
   // 短暂延迟让用户看到提示
@@ -208,19 +187,6 @@ const handleTokenLogin = async (token: string, stateParam: string) => {
   checkIfUnmounted();
   // 跳转到PC端首页
   await router.replace("/home");
-  /**
-   * 移动端和PC端共用一套自动登录逻辑
-   * 这里需要判断终端设备是PC还是移动端
-   */
-  // const deviceType = detectDeviceType();
-  // if (deviceType === "tablet" || deviceType === "mobile") {
-  //   // 这里应该跳转到H5首页
-  //   await router.replace("/home");
-  // } else {
-  //   // 跳转到PC端首页
-  //   await router.replace("/home");
-  // }
-  // 这里的代码不会执行，因为页面已经跳转了
 };
 
 // 主处理逻辑
@@ -237,20 +203,28 @@ const handleRouteParams = async () => {
 
     const query = route.query;
     const tokenParam = getQueryParam(query.token);
-    const stateParam = getQueryParam(query.state);
+    const stateParam = getQueryParam(query.state); // 得到的是{autoLoginPage:'',data:'',home:'',isQrCode:false}的base64编码的字符串
     const errorParam = getQueryParam(query.error);
+
+    // 解码base64
+    const atobJson = atob(stateParam || "");
+    const atobObj = atobJson ? JSON.parse(atobJson) : null;
+    const dataParams = atobObj && atobObj.data ? atobObj.data : "";
+    const homeParams = atobObj && atobObj.home ? atobObj.home : "";
 
     console.log("路由参数:", {
       tokenParam,
       stateParam,
       errorParam,
       storedState: userStore.stateTag,
+      dataParams,
+      homeParams,
     });
 
     // 用于展示信息
     routeInfo.value = query;
     tokenInfo.value = tokenParam;
-    stateInfo.value = stateParam;
+    stateInfo.value = atobJson;
     errorInfo.value = errorParam;
 
     // 情况1：如果有错误参数，直接显示
@@ -260,23 +234,20 @@ const handleRouteParams = async () => {
       return;
     }
 
-    // 情况2：有token和state，进行登录验证
-    if (tokenParam && stateParam) {
-      console.log("有token和state，开始验证登录");
-      await handleTokenLogin(tokenParam, stateParam);
+    // 情况2：有token和data，进行登录验证
+    if (tokenParam && dataParams) {
+      await handleTokenLogin(tokenParam, dataParams);
       return;
     }
 
     // 情况3：首次访问，没有token但有state标记（可能是刷新页面）
     if (!tokenParam && userStore.stateTag) {
-      console.log("等待token返回，已有stateTag:", userStore.stateTag);
       userStore.setStateTag("");
       // ElMessage.warning('state异常');
     }
 
     // 情况4：首次访问，没有token也没有state标记
     if (!tokenParam && !userStore.stateTag) {
-      console.log("首次访问，开始重定向到认证页面");
       // 重定向到认证页面
       await redirectToAuth();
       return;
@@ -303,10 +274,8 @@ const handleRouteParams = async () => {
   }
 };
 
-// 重试函数
+// 重试
 const handleRetry = () => {
-  console.log("用户点击重试");
-
   // 清理状态并重新处理
   errorMessage.value = "";
   userStore.setStateTag("");
@@ -315,16 +284,12 @@ const handleRetry = () => {
   handleRouteParams();
 };
 
-const handleCancel = () => {};
 onMounted(() => {
-  console.log("终端类型", detectDeviceType());
-  console.log("自动登录页面挂载");
   urlInfo.value = window.location.href;
   handleRouteParams();
 });
 
 onUnmounted(() => {
-  console.log("自动登录页面卸载");
   // 标记组件已卸载
   isUnmounted = true;
 

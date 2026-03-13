@@ -234,8 +234,12 @@ const generateAndGetQRCode = async () => {
     userStore.setStateTag(validState);
     console.log("扫码生成新的stateTag:", validState);
 
+    const params = {
+      data: validState,
+      isQrCode: true, // 是否扫码
+    };
     // 获取二维码路径地址
-    const qrRes = await userApi.createQrCode({ state: validState });
+    const qrRes = await userApi.createQrCode(params);
     console.log("qrRes", qrRes);
     if (qrRes.code === 200 && qrRes.data) {
       // 生成二维码图片
@@ -278,7 +282,7 @@ const checkQRLoginStatus = async () => {
 
   try {
     const statusRes = await userApi.getTokenForAutoLogin({
-      state: userStore.stateTag,
+      data: userStore.stateTag,
     });
     console.log("扫码状态检查结果:", statusRes);
 
