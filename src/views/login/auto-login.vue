@@ -76,7 +76,7 @@ const checkIfUnmounted = () => {
 };
 
 // 处理重定向到认证页面
-const redirectToAuth = async () => {
+const redirectToAuth = async (homeUrl: string) => {
   checkIfUnmounted();
   try {
     // 缓存stateTag
@@ -90,7 +90,7 @@ const redirectToAuth = async () => {
 
     const paramsObj = {
       data: validState,
-      home: "/home",
+      home: homeUrl || "/home", // 作为参数传递
       autoLoginPage: CALLBACK_URL,
       isQrCode: false, // 是否扫码
     };
@@ -98,7 +98,7 @@ const redirectToAuth = async () => {
     const res = await userApi.getAuthRedirectUrl(paramsObj); // 正式接口
     // const res = await userApi.getAuthRedirectUrlTest(paramsObj); // 测试接口
     checkIfUnmounted();
-
+    // paramsObj参数从res.data.state返回
     if (res.code === 200 && res.data) {
       // 显示跳转提示
       ElMessage.info("正在跳转到认证页面...");
@@ -115,7 +115,7 @@ const redirectToAuth = async () => {
       window.location.href = res.data;
 
       // const stateVal = res.data.split("state=")[1] || "";
-      // window.location.href = `${CALLBACK_URL}?token=eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjE1LCJ1c2VybmFtZSI6IjAwMDAxNSIsImlhdCI6MTc3MzM2NTc5OCwiZXhwIjoxNzczNDUyMTk4fQ.FGb5tGiel4BsFVVPhDGVigj_ZmN3l1a7UPs7lFMxoN0&state=${stateVal}`;
+      // window.location.href = `${CALLBACK_URL}?token=eyJhbGciOiJIUzI1NiJ9.eyJ1c2VySWQiOjE1LCJ1c2VybmFtZSI6IjAwMDAxNSIsImlhdCI6MTc3MzkwMjExNywiZXhwIjoxNzczOTg4NTE3fQ.Q9pDJ97FXrVaov_JaXNX91KaoOK1Y4P7twP_KYYlajw&state=${stateVal}`;
 
       return;
     } else {
@@ -139,7 +139,7 @@ const redirectToAuth = async () => {
 };
 
 // 处理token验证和登录
-const handleTokenLogin = async (token: string, dataParams: string) => {
+const handleTokenLogin = async (token: string, dataParams: string, homeParams: string) => {
   checkIfUnmounted();
   console.log("开始验证token和state", {
     token,
@@ -186,7 +186,8 @@ const handleTokenLogin = async (token: string, dataParams: string) => {
   await new Promise((resolve) => setTimeout(resolve, 800));
   checkIfUnmounted();
   // 跳转到PC端首页
-  await router.replace("/home");
+  const homeUrl = homeParams || '/home'
+  await router.replace(homeUrl);
 };
 
 // 主处理逻辑
@@ -204,6 +205,7 @@ const handleRouteParams = async () => {
     const query = route.query;
     const tokenParam = getQueryParam(query.token);
     const stateParam = getQueryParam(query.state); // 得到的是{autoLoginPage:'',data:'',home:'',isQrCode:false}的base64编码的字符串
+    const homeUrl = getQueryParam(query.home); // 是否有自定义目标页路径
     const errorParam = getQueryParam(query.error);
 
     // 解码base64
@@ -236,7 +238,7 @@ const handleRouteParams = async () => {
 
     // 情况2：有token和data，进行登录验证
     if (tokenParam && dataParams) {
-      await handleTokenLogin(tokenParam, dataParams);
+      await handleTokenLogin(tokenParam, dataParams, homeParams);
       return;
     }
 
@@ -249,7 +251,7 @@ const handleRouteParams = async () => {
     // 情况4：首次访问，没有token也没有state标记
     if (!tokenParam && !userStore.stateTag) {
       // 重定向到认证页面
-      await redirectToAuth();
+      await redirectToAuth(homeUrl);
       return;
     }
 
