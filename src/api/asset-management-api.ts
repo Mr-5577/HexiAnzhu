@@ -29,13 +29,13 @@ export const assetManagementApi = {
   // 导出房间台账
   exportRoomAccountBook: (
     data: ParamsInterface,
-    filename: string = "房间台账表.xlsx"
+    filename: string = "房间台账表.xlsx",
   ) => {
     return http.exportFile(
       "/sale/getRoomAccountBook",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 获取项目库存统计
@@ -50,13 +50,13 @@ export const assetManagementApi = {
    */
   exportRoomStockGroupProj: (
     data: StatisticsInterface,
-    filename: string = "库存统计表.xlsx"
+    filename: string = "库存统计表.xlsx",
   ) => {
     return http.exportFile(
       "/sale/getRoomStockGroupProj",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 获取库存明细
@@ -66,13 +66,26 @@ export const assetManagementApi = {
   // 导出库存明细
   exportRoomStockList: (
     data: StatisticsInterface,
-    filename: string = "库存明细表.xlsx"
+    filename: string = "库存明细表.xlsx",
   ) => {
     return http.exportFile(
       "/sale/getRoomStockList",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
+    );
+  },
+  // 产值统计表
+  getFinaAssetReport: (data: any) => {
+    return http.post("/sale/getFinaAssetReport", data);
+  },
+  // 导出产值统计表
+  exportFinaAssetReport: (data: any, filename: string = "产值统计表.xlsx") => {
+    return http.exportFile(
+      "/sale/getFinaAssetReport",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
     );
   },
   // 来访统计-按天
@@ -82,13 +95,13 @@ export const assetManagementApi = {
   // 导出 来访统计-按天
   exportCustomerComeMonthCount: (
     data: any,
-    filename: string = "来访统计-按天.xlsx"
+    filename: string = "来访统计-按天.xlsx",
   ) => {
     return http.exportFile(
       "/sale/getCustomerComeMonthCount",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 来访统计-按月
@@ -98,13 +111,13 @@ export const assetManagementApi = {
   // 导出 来访统计-按月
   exportCustomerComeYearCount: (
     data: any,
-    filename: string = "来访统计-按月.xlsx"
+    filename: string = "来访统计-按月.xlsx",
   ) => {
     return http.exportFile(
       "/sale/getCustomerComeYearCount",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 来访渠道统计
@@ -114,13 +127,13 @@ export const assetManagementApi = {
   // 来访渠道统计-导出
   exportComePathWayProjCount: (
     data: any,
-    filename: string = "来访渠道统计表.xlsx"
+    filename: string = "来访渠道统计表.xlsx",
   ) => {
     return http.exportFile(
       "/sale/getComePathWayProjCount",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 成交渠道统计
@@ -130,13 +143,13 @@ export const assetManagementApi = {
   // 成交渠道统计-导出
   exportOrderPathWayProjCount: (
     data: any,
-    filename: string = "成交渠道统计表.xlsx"
+    filename: string = "成交渠道统计表.xlsx",
   ) => {
     return http.exportFile(
       "/sale/getOrderPathWayProjCount",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 获取来访数量（项目）== 转化率统计
@@ -146,13 +159,13 @@ export const assetManagementApi = {
   // 导出转化率统计
   exportCustomerComeZhl: (
     data: any,
-    filename: string = "转化率统计表.xlsx"
+    filename: string = "转化率统计表.xlsx",
   ) => {
     return http.exportFile(
       "/sale/getCustomerComeZhl",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 销售年报表
@@ -165,7 +178,7 @@ export const assetManagementApi = {
       "/sale/getSaleYearReport",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 销售年报表(树)
@@ -173,12 +186,15 @@ export const assetManagementApi = {
     return http.post("/sale/getSaleYearReportTree", data);
   },
   // 销售年报表(树)-导出
-  exportSaleYearReportTree: (data: any, filename: string = "销售年报表(树).xlsx") => {
+  exportSaleYearReportTree: (
+    data: any,
+    filename: string = "销售年报表(树).xlsx",
+  ) => {
     return http.exportFile(
       "/sale/getSaleYearReportTree",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 销售日报表
@@ -191,7 +207,7 @@ export const assetManagementApi = {
       "/sale/getSaleDailyReport",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 销售日报表(树)
@@ -199,12 +215,15 @@ export const assetManagementApi = {
     return http.post("/sale/getSaleDailyReportTree", data);
   },
   // 销售日报表(树)-导出
-  exportSaleDailyReportTree: (data: any, filename: string = "销售日报表(树).xlsx") => {
+  exportSaleDailyReportTree: (
+    data: any,
+    filename: string = "销售日报表(树).xlsx",
+  ) => {
     return http.exportFile(
       "/sale/getSaleDailyReportTree",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 认购业绩明细
@@ -214,13 +233,13 @@ export const assetManagementApi = {
   // 认购业绩明细-导出
   exportSaleAsstListOrder: (
     data: any,
-    filename: string = "认购业绩明细.xlsx"
+    filename: string = "认购业绩明细.xlsx",
   ) => {
     return http.exportFile(
       "/sale/getSaleAsstListOrder",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 签约业绩明细
@@ -230,13 +249,13 @@ export const assetManagementApi = {
   // 签约业绩明细-导出
   exportSaleAsstListSign: (
     data: any,
-    filename: string = "签约业绩明细.xlsx"
+    filename: string = "签约业绩明细.xlsx",
   ) => {
     return http.exportFile(
       "/sale/getSaleAsstListSign",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 回款业绩明细
@@ -246,13 +265,13 @@ export const assetManagementApi = {
   // 回款业绩明细-导出
   exportSaleAsstListPay: (
     data: any,
-    filename: string = "回款业绩明细.xlsx"
+    filename: string = "回款业绩明细.xlsx",
   ) => {
     return http.exportFile(
       "/sale/getSaleAsstListPay",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 认购统计表（月度）
@@ -262,13 +281,13 @@ export const assetManagementApi = {
   // 认购统计表（月度）-导出
   exportOrderNumMonthCount: (
     data: any,
-    filename: string = "认购达成统计(按天).xlsx"
+    filename: string = "认购达成统计(按天).xlsx",
   ) => {
     return http.exportFile(
       "/sale/getOrderNumMonthCount",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 认购统计表（年度）
@@ -278,13 +297,13 @@ export const assetManagementApi = {
   // 认购统计表（年度）-导出
   exportOrderNumYearCount: (
     data: any,
-    filename: string = "认购达成统计(按月).xlsx"
+    filename: string = "认购达成统计(按月).xlsx",
   ) => {
     return http.exportFile(
       "/sale/getOrderNumYearCount",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 认购转签约统计
@@ -294,13 +313,13 @@ export const assetManagementApi = {
   // 认购转签约统计-导出
   exportOrderToSignPeriodProj: (
     data: any,
-    filename: string = "认购转签约统计.xlsx"
+    filename: string = "认购转签约统计.xlsx",
   ) => {
     return http.exportFile(
       "/sale/getOrderToSignPeriodProj",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 认购转签约明细
@@ -310,13 +329,13 @@ export const assetManagementApi = {
   // 认购转签约明细-导出
   exportOrderToSignPeriodRoom: (
     data: any,
-    filename: string = "认购转签约明细.xlsx"
+    filename: string = "认购转签约明细.xlsx",
   ) => {
     return http.exportFile(
       "/sale/getOrderToSignPeriodRoom",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 认购未签约统计
@@ -326,13 +345,13 @@ export const assetManagementApi = {
   // 认购未签约统计-导出
   exportOrderNotSignInfoProj: (
     data: any,
-    filename: string = "认购未签约统计.xlsx"
+    filename: string = "认购未签约统计.xlsx",
   ) => {
     return http.exportFile(
       "/sale/getOrderNotSignInfoProj",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 认购未签约明细
@@ -342,13 +361,13 @@ export const assetManagementApi = {
   // 认购未签约明细-导出
   exportOrderNotSignInfoRoom: (
     data: any,
-    filename: string = "认购未签约明细.xlsx"
+    filename: string = "认购未签约明细.xlsx",
   ) => {
     return http.exportFile(
       "/sale/getOrderNotSignInfoRoom",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 溢价统计（项目）
@@ -361,7 +380,7 @@ export const assetManagementApi = {
       "/sale/getPremiumCountProj",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 溢价明细（房间）
@@ -374,7 +393,7 @@ export const assetManagementApi = {
       "/sale/getPremiumCountRoom",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 应收统计（项目汇总）
@@ -384,13 +403,13 @@ export const assetManagementApi = {
   // 应收统计（项目汇总）-导出
   exportSaleOutStdFundsInfoYsProj: (
     data: any,
-    filename: string = "应收统计表.xlsx"
+    filename: string = "应收统计表.xlsx",
   ) => {
     return http.exportFile(
       "/sale/getSaleOutStdFundsInfoYsProj",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 应收统计（房间明细）
@@ -400,13 +419,13 @@ export const assetManagementApi = {
   // 应收统计（房间明细）-导出
   exportSaleOutStdFundsInfoYsRoom: (
     data: any,
-    filename: string = "应收明细表.xlsx"
+    filename: string = "应收明细表.xlsx",
   ) => {
     return http.exportFile(
       "/sale/getSaleOutStdFundsInfoYsRoom",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 应收账龄明细（房间明细）
@@ -416,13 +435,13 @@ export const assetManagementApi = {
   // 应收账龄明细（房间明细）-导出
   exportSaleOutStdFundsInfoYsAging: (
     data: any,
-    filename: string = "应收账龄明细表.xlsx"
+    filename: string = "应收账龄明细表.xlsx",
   ) => {
     return http.exportFile(
       "/sale/getSaleOutStdFundsInfoYsAging",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 退房、挞定统计-项目
@@ -432,13 +451,13 @@ export const assetManagementApi = {
   // 退房、挞定统计-项目-导出
   exportCheckOutInfoProj: (
     data: any,
-    filename: string = "退房挞定统计表.xlsx"
+    filename: string = "退房挞定统计表.xlsx",
   ) => {
     return http.exportFile(
       "/sale/getCheckOutInfoProj",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 退房、挞定明细-房间
@@ -448,13 +467,13 @@ export const assetManagementApi = {
   // 退房、挞定明细-房间-导出
   exportCheckOutInfoRoom: (
     data: any,
-    filename: string = "退房挞定明细表.xlsx"
+    filename: string = "退房挞定明细表.xlsx",
   ) => {
     return http.exportFile(
       "/sale/getCheckOutInfoRoom",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 逾期未回款明细
@@ -464,13 +483,13 @@ export const assetManagementApi = {
   // 逾期未回款明细-导出
   exportSaleOutStdFundsInfoRoom: (
     data: any,
-    filename: string = "逾期未回款明细.xlsx"
+    filename: string = "逾期未回款明细.xlsx",
   ) => {
     return http.exportFile(
       "/sale/getSaleOutStdFundsInfoRoom",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
 };

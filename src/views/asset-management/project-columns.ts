@@ -164,3 +164,287 @@ export const inventoryDetailColumns: any = [
   { prop: "areaType", label: "面积段" },
   { prop: "moneyType", label: "总价段" },
 ];
+
+// 产值统计表-表头
+export const outputStatisticsColumns: any = [
+  {
+    prop: "projName",
+    label: "项目名称",
+    width: 220,
+    align: "left",
+    fixed: "left",
+  },
+  { prop: "bigProductTypeName", label: "业态", width: 90, fixed: "left" },
+  {
+    label: "总产值",
+    children: [
+      { prop: "totalNum", label: "套数", width: 90 },
+      {
+        prop: "totalArea",
+        label: "面积",
+        width: 120,
+        formatter: (row: any) => formatNumberDisplay(row.totalArea),
+      },
+      { prop: "totalPrice", label: "单价", width: 100 },
+      {
+        prop: "totalMoney",
+        label: "产值",
+        width: 150,
+        formatter: (row: any) => formatNumberDisplay(row.totalMoney),
+      },
+    ],
+  },
+  {
+    label: "年初销售数据",
+    children: [
+      {
+        label: "认购销售数据",
+        children: [
+          { prop: "pYearNum", label: "认购套数", width: 90 },
+          {
+            prop: "pYearArea",
+            label: "认购面积",
+            width: 120,
+            formatter: (row: any) => formatNumberDisplay(row.pYearArea),
+          },
+          { prop: "pYearPrice", label: "认购均价", width: 100 },
+          {
+            prop: "pYearMoney",
+            label: "认购金额",
+            width: 150,
+            formatter: (row: any) => formatNumberDisplay(row.pYearMoney),
+          },
+          {
+            prop: "pYearSkMoney",
+            label: "已收款",
+            width: 150,
+            formatter: (row: any) => formatNumberDisplay(row.pYearSkMoney),
+          },
+          {
+            prop: "pYearSkMoneyUn",
+            label: "未收款",
+            width: 150,
+            formatter: (row: any) => formatNumberDisplay(row.pYearSkMoneyUn),
+          },
+        ],
+      },
+      {
+        label: "网签销售数据",
+        children: [
+          { prop: "pYearNetNum", label: "网签套数", width: 100 },
+          {
+            prop: "pYearNetMoney",
+            label: "网签金额",
+            width: 150,
+            formatter: (row: any) => formatNumberDisplay(row.pYearNetMoney),
+          },
+        ],
+      },
+    ],
+  },
+  {
+    label: "月初销售数据",
+    children: [
+      {
+        label: "认购销售数据",
+        children: [
+          { prop: "pMonthNum", label: "认购套数", width: 90 },
+          {
+            prop: "pMonthArea",
+            label: "认购面积",
+            width: 120,
+            formatter: (row: any) => formatNumberDisplay(row.pMonthArea),
+          },
+          { prop: "pMonthPrice", label: "认购均价", width: 100 },
+          {
+            prop: "pMonthMoney",
+            label: "认购金额",
+            width: 150,
+            formatter: (row: any) => formatNumberDisplay(row.pMonthMoney),
+          },
+          {
+            prop: "pMonthSkMoney",
+            label: "已收款",
+            width: 150,
+            formatter: (row: any) => formatNumberDisplay(row.pMonthSkMoney),
+          },
+          {
+            prop: "pMonthSkMoneyUn",
+            label: "未收款",
+            width: 150,
+            formatter: (row: any) => formatNumberDisplay(row.pMonthSkMoneyUn),
+          },
+        ],
+      },
+      {
+        label: "网签销售数据",
+        children: [
+          { prop: "pMonthNetNum", label: "网签套数", width: 90 },
+          {
+            prop: "pMonthNetMoney",
+            label: "网签金额",
+            width: 150,
+            formatter: (row: any) => formatNumberDisplay(row.pMonthNetMoney),
+          },
+        ],
+      },
+    ],
+  },
+  {
+    label: "本月销售数据",
+    children: [
+      {
+        label: "认购销售数据",
+        children: [
+          { prop: "cMonthNum", label: "认购套数", width: 90 },
+          {
+            prop: "cMonthArea",
+            label: "认购面积",
+            width: 120,
+            formatter: (row: any) => formatNumberDisplay(row.cMonthArea),
+          },
+          { prop: "cMonthPrice", label: "认购均价", width: 100 },
+          {
+            prop: "cMonthMoney",
+            label: "认购金额",
+            width: 150,
+            formatter: (row: any) => formatNumberDisplay(row.cMonthMoney),
+          },
+          {
+            prop: "cMonthSkMoney",
+            label: "已收款",
+            width: 150,
+            formatter: (row: any) => formatNumberDisplay(row.cMonthSkMoney),
+          },
+          {
+            prop: "cMonthSkMoneyUn",
+            label: "未收款",
+            width: 150,
+            formatter: (row: any) => formatNumberDisplay(row.cMonthSkMoneyUn),
+          },
+        ],
+      },
+      {
+        label: "网签销售数据",
+        children: [
+          { prop: "cMonthNetNum", label: "网签套数", width: 90 },
+          {
+            prop: "cMonthNetMoney",
+            label: "网签金额",
+            width: 150,
+            formatter: (row: any) => formatNumberDisplay(row.cMonthNetMoney),
+          },
+        ],
+      },
+    ],
+  },
+  {
+    label: "本年销售数据",
+    children: [
+      {
+        label: "认购销售数据",
+        children: [
+          { prop: "cYearNum", label: "认购套数", width: 90 },
+          {
+            prop: "cYearArea",
+            label: "认购面积",
+            width: 120,
+            formatter: (row: any) => formatNumberDisplay(row.cYearArea),
+          },
+          { prop: "cYearPrice", label: "认购均价", width: 100 },
+          {
+            prop: "cYearMoney",
+            label: "认购金额",
+            width: 150,
+            formatter: (row: any) => formatNumberDisplay(row.cYearMoney),
+          },
+          {
+            prop: "cYearSkMoney",
+            label: "已收款",
+            width: 150,
+            formatter: (row: any) => formatNumberDisplay(row.cYearSkMoney),
+          },
+        ],
+      },
+      {
+        label: "网签销售数据",
+        children: [
+          { prop: "cYearNetNum", label: "网签套数", width: 90 },
+          {
+            prop: "cYearNetMoney",
+            label: "网签金额",
+            width: 150,
+            formatter: (row: any) => formatNumberDisplay(row.cYearNetMoney),
+          },
+        ],
+      },
+    ],
+  },
+  {
+    label: "累计销售数据",
+    children: [
+      {
+        label: "认购销售数据",
+        children: [
+          { prop: "allNum", label: "认购套数", width: 90 },
+          {
+            prop: "allArea",
+            label: "认购面积",
+            width: 120,
+            formatter: (row: any) => formatNumberDisplay(row.allArea),
+          },
+          { prop: "allPrice", label: "认购均价", width: 100 },
+          {
+            prop: "allMoney",
+            label: "认购金额",
+            width: 150,
+            formatter: (row: any) => formatNumberDisplay(row.allMoney),
+          },
+          {
+            prop: "allSkMoney",
+            label: "已收款",
+            width: 150,
+            formatter: (row: any) => formatNumberDisplay(row.allSkMoney),
+          },
+          {
+            prop: "allSkMoneyUn",
+            label: "未收款",
+            width: 150,
+            formatter: (row: any) => formatNumberDisplay(row.allSkMoneyUn),
+          },
+        ],
+      },
+      {
+        label: "网签销售数据",
+        children: [
+          { prop: "allNetNum", label: "网签套数", width: 90 },
+          {
+            prop: "allNetMoney",
+            label: "网签金额",
+            width: 150,
+            formatter: (row: any) => formatNumberDisplay(row.allNetMoney),
+          },
+        ],
+      },
+    ],
+  },
+  {
+    label: "未售产值",
+    children: [
+      { prop: "notSaleNum", label: "套数", width: 90 },
+      {
+        prop: "notSaleArea",
+        label: "面积",
+        width: 120,
+        formatter: (row: any) => formatNumberDisplay(row.notSaleArea),
+      },
+      { prop: "notSalePrice", label: "均价", width: 100 },
+      {
+        prop: "notSaleMoney",
+        label: "金额",
+        width: 150,
+        formatter: (row: any) => formatNumberDisplay(row.notSaleMoney),
+      },
+    ],
+  },
+];
