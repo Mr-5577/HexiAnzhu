@@ -58,6 +58,7 @@
             :disabled="
               !menuStore.hasExactPermission('tree-daily-report:export')
             "
+            style="margin-left: 12px"
           >
             导出
           </el-button>
@@ -340,10 +341,15 @@ const getTableList = async () => {
 };
 // 导出
 const handleExport = async (type: string) => {
+  const typeText = type === "PERFORMANCE" ? "汇报模版" : "默认模版";
+  const fileName = `销售日报表（树）- ${typeText}.xlsx`;
   try {
     exportLoading.value = true;
     const params = { ...getParams(), isExport: true, exportType: type };
-    const fileBlob = await assetManagementApi.exportSaleDailyReportTree(params);
+    const fileBlob = await assetManagementApi.exportSaleDailyReportTree(
+      params,
+      fileName,
+    );
     if (!fileBlob || fileBlob.size === 0) {
       ElMessage.warning("导出文件为空，请检查数据");
     } else {
