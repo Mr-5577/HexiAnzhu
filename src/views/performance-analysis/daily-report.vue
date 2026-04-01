@@ -244,14 +244,20 @@ const initParams = () => {
     try {
       const routeData = JSON.parse(route.query.data as string);
       queryParams.value.projIds = routeData.projIds || [];
-      queryParams.value.day = dateUtil(routeData.data || new Date()).format(
-        "YYYY-MM-DD"
-      );
+      queryParams.value.day = dateUtil(routeData.data || new Date()).format("YYYY-MM-DD");
     } catch (error) {
       console.error("解析路由参数失败，使用默认值", error);
       queryParams.value.projIds = getAllLeafProjectIds();
       queryParams.value.day = dateUtil().format("YYYY-MM-DD");
     }
+  } else if (route.query.day) {
+    // 获取 URL 中的 day 参数，这里是从企业微信销售业绩卡片过来的判断处理
+    queryParams.value.projIds = getAllLeafProjectIds();
+    const urlDay = route.query.day as string;
+    // 如果 urlDay 无效，使用当前日期
+    queryParams.value.day = dateUtil(urlDay).isValid()
+      ? dateUtil(urlDay).format("YYYY-MM-DD")
+      : dateUtil().format("YYYY-MM-DD");
   } else {
     // 没有路由参数，使用全选
     queryParams.value.projIds = getAllLeafProjectIds();
