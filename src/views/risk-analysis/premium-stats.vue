@@ -155,7 +155,7 @@ const handleCellEventClick = (data: any) => {
     const timestamp = new Date().getTime();
     const params = {
       projIds: [projectId],
-      time: queryParams.value.time,
+      data: queryParams.value.time,
       productTypes: queryParams.value.productTypes,
     };
     router.push({
@@ -190,7 +190,7 @@ const initQueryParams = () => {
   if (route.query.data) {
     try {
       const routeData = JSON.parse(route.query.data as string);
-      queryParams.value.projIds = routeData.department || [];
+      queryParams.value.projIds = routeData.projIds || [];
       queryParams.value.productTypes = getAllProductTypeIds();
       // 从大屏跳转过来
       initTimeRange(routeData);

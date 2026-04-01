@@ -213,10 +213,14 @@ const handleToPage = () => {
       ? "/performance-analysis/daily-report"
       : "/performance-analysis/agent-ranking";
   const timestamp = new Date().getTime();
+  const params = {
+    data: props.data,
+    projIds: props.department,
+  };
   router.push({
     path: path,
     query: {
-      data: JSON.stringify(props),
+      data: JSON.stringify(params),
       _t: timestamp.toString(),
     },
   });

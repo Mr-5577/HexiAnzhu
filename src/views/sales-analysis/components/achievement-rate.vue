@@ -232,10 +232,14 @@ const handleChange = () => {
 };
 const handelToListPage = (path: string) => {
   const timestamp = new Date().getTime();
+  const params = {
+    data: props.data,
+    projIds: props.department,
+  };
   router.push({
     path: path,
     query: {
-      data: JSON.stringify(props),
+      data: JSON.stringify(params),
       _t: timestamp.toString(),
     },
   });
@@ -246,10 +250,14 @@ const handleToPage = () => {
       ? "/performance-analysis/annual-report"
       : "/performance-analysis/daily-report";
   const timestamp = new Date().getTime();
+  const params = {
+    data: props.data,
+    projIds: props.department,
+  };
   router.push({
     path: path,
     query: {
-      data: JSON.stringify(props),
+      data: JSON.stringify(params),
       _t: timestamp.toString(),
     },
   });
@@ -263,7 +271,7 @@ watch(
       // });
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 // 生命周期
 onMounted(() => {

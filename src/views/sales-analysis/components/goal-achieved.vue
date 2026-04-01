@@ -355,10 +355,15 @@ const handleTitleClick = () => {
   const timestamp = new Date().getTime();
   const targetData = radioGroupList.find((v) => v.value === typeVal.value);
   const type = targetData?.type || "date";
+  const params = {
+    data: props.data,
+    projIds: props.department,
+    type
+  };
   router.push({
     path: "/risk-analysis/premium-stats",
     query: {
-      data: JSON.stringify({ ...props, type }),
+      data: JSON.stringify(params),
       _t: timestamp.toString(),
     },
   });

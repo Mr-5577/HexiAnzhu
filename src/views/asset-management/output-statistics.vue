@@ -111,7 +111,7 @@ const initParams = () => {
   if (route.query.data) {
     try {
       const routeData = JSON.parse(route.query.data as string);
-      queryParams.value.projIds = routeData.department || [];
+      queryParams.value.projIds = routeData.projIds || [];
       queryParams.value.day = dateUtil(routeData.data || new Date()).format(
         "YYYY-MM-DD",
       );

@@ -126,7 +126,7 @@ const handleCellEventClick = (data: any) => {
   if (eventName === "projName-click") {
     const timestamp = new Date().getTime();
     const params = {
-      department: [projectId],
+      projIds: [projectId],
     };
     router.push({
       path: "/risk-analysis/receivable-detail",
@@ -159,7 +159,7 @@ const initQueryParams = () => {
   if (route.query.data) {
     try {
       const routeData = JSON.parse(route.query.data as string);
-      queryParams.value.projIds = routeData.department || [];
+      queryParams.value.projIds = routeData.projIds || [];
     } catch (error) {
       console.error("解析路由参数失败，使用默认值", error);
       queryParams.value.projIds = getAllLeafProjectIds();

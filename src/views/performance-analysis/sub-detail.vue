@@ -159,11 +159,11 @@ const initQueryParams = () => {
   if (route.query.data) {
     try {
       const routeData = JSON.parse(route.query.data as string);
-      queryParams.value.projIds = routeData.department || [];
+      queryParams.value.projIds = routeData.projIds || [];
       queryParams.value.productTypes = getAllProductTypeIds();
-      if (routeData.time) {
+      if (routeData.data) {
         // 从销售年报表跳转过来
-        queryParams.value.time = routeData.time || [];
+        queryParams.value.time = routeData.data || [];
       } else {
         // 从大屏跳转过来
         initTimeRange(routeData);

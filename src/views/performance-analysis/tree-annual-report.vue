@@ -124,8 +124,8 @@ const handleCellEventClick = (data: any) => {
   const timestamp = Date.now().toString(); // 防止路由缓存
   const year = queryParams.value.day || new Date().getFullYear().toString();
   const params = {
-    department: projectIdArr,
-    time: [`${year}-01-01`, `${year}-12-31`],
+    projIds: projectIdArr,
+    data: [`${year}-01-01`, `${year}-12-31`],
   };
   // 定义事件与路由的映射关系
   const eventRouteMap = {
@@ -148,7 +148,7 @@ const handleCellEventClick = (data: any) => {
     "total-name-click": {
       path: "/risk-analysis/receivable-detail",
       params: {
-        department: projectIdArr,
+        projIds: projectIdArr,
       },
     },
     // 年度-退房挞定 跳转到 退房挞定明细
@@ -156,7 +156,7 @@ const handleCellEventClick = (data: any) => {
       path: "/risk-analysis/forfeiture-detail",
       params: {
         projIds: projectIdArr,
-        time: [`${year}-01-01`, `${year}-12-31`],
+        data: [`${year}-01-01`, `${year}-12-31`],
       },
     },
     // 年度-溢价金额 跳转到 溢价明细明细
@@ -164,7 +164,7 @@ const handleCellEventClick = (data: any) => {
       path: "/risk-analysis/premium-detail",
       params: {
         projIds: projectIdArr,
-        time: [`${year}-01-01`, `${year}-12-31`],
+        data: [`${year}-01-01`, `${year}-12-31`],
       },
     },
   };
@@ -203,7 +203,7 @@ const initParams = () => {
   if (route.query.data) {
     try {
       const routeData = JSON.parse(route.query.data as string);
-      queryParams.value.projIds = routeData.department || [];
+      queryParams.value.projIds = routeData.projIds || [];
       queryParams.value.day = dateUtil(routeData.data || new Date()).format(
         "YYYY"
       );

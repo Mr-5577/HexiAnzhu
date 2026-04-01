@@ -320,10 +320,14 @@ const getData = async () => {
 // 跳转到 转化率统计
 const handleMonthTitleClick = () => {
   const timestamp = new Date().getTime();
+  const params = {
+    data: props.data,
+    projIds: props.department,
+  };
   router.push({
     path: "/channel-analysis/conversion-rate",
     query: {
-      data: JSON.stringify(props),
+      data: JSON.stringify(params),
       _t: timestamp.toString(),
     },
   });
@@ -331,10 +335,15 @@ const handleMonthTitleClick = () => {
 // 跳转到 来访统计
 const handleOverallTitleClick = () => {
   const timestamp = new Date().getTime();
+  const params = {
+    data: props.data,
+    projIds: props.department,
+    type: "date",
+  };
   router.push({
     path: "/channel-analysis/visiting-statistics",
     query: {
-      data: JSON.stringify({ ...props, type: "date" }),
+      data: JSON.stringify(params),
       _t: timestamp.toString(),
     },
   });
