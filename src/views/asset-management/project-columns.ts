@@ -364,6 +364,12 @@ export const outputStatisticsColumns: any = [
             width: 150,
             formatter: (row: any) => formatNumberDisplay(row.cYearSkMoney),
           },
+          {
+            prop: "cYearSkMoneyUn",
+            label: "未收款",
+            width: 150,
+            formatter: (row: any) => formatNumberDisplay(row.cYearSkMoneyUn),
+          },
         ],
       },
       {
