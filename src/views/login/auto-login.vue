@@ -76,7 +76,7 @@ const checkIfUnmounted = () => {
 };
 
 // 处理重定向到认证页面
-const redirectToAuth = async (homeUrl: string, dayParam: string) => {
+const redirectToAuth = async (homeUrl: String) => {
   checkIfUnmounted();
   try {
     // 缓存stateTag
@@ -87,10 +87,10 @@ const redirectToAuth = async (homeUrl: string, dayParam: string) => {
       import.meta.env.MODE === "development"
         ? "http://192.168.1.24:3000/autoLogin"
         : `http://sys.hexianzhu.com/autoLogin`;
-    const urlStr = homeUrl || "/home"; // 默认跳转到首页
+
     const paramsObj = {
       data: validState,
-      home: dayParam ? `${urlStr}?day=${dayParam}` : urlStr, // 跳转页面参数 + 可选的日期参数
+      home: homeUrl || "/home", // 跳转页面参数 + 可选的日期参数
       autoLoginPage: CALLBACK_URL,
       isQrCode: false, // 是否扫码
     };
@@ -210,7 +210,6 @@ const handleRouteParams = async () => {
     const tokenParam = getQueryParam(query.token);
     const stateParam = getQueryParam(query.state); // 得到的是{autoLoginPage:'',data:'',home:'',isQrCode:false}的base64编码的字符串
     const homeUrl = getQueryParam(query.home); // 是否有自定义目标页路径
-    const dayParam = getQueryParam(query.day); // 是否有day参数
     const errorParam = getQueryParam(query.error);
 
     // 解码base64
@@ -256,7 +255,7 @@ const handleRouteParams = async () => {
     // 情况4：首次访问，没有token也没有state标记
     if (!tokenParam && !userStore.stateTag) {
       // 重定向到认证页面
-      await redirectToAuth(homeUrl, dayParam);
+      await redirectToAuth(homeUrl);
       return;
     }
 
