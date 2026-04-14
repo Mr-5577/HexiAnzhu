@@ -102,3 +102,19 @@ export const conversionRateColumns: any = [
     },
   },
 ];
+
+// 来访记录-表头
+export const visitingRecordColumns: any = [
+  { type: "index", label: "序号", width: 60 },
+  { label: "项目名称", slot: "projName", width: 220 },
+  { prop: "custName", label: "客户姓名" },
+  { prop: "custTel", label: "客户电话" },
+  { prop: "custTel2", label: "客户电话2" },
+  { label: "到访方式", slot: "visitTypeName" },
+  { label: "置业顾问", slot: "salerName" },
+  { prop: "bringMan", label: "带访人" },
+  { prop: "bringTel", label: "带访人电话" },
+  { prop: "visitTime", label: "来访时间", width: 180 },
+  { label: "知晓途径", slot: "knowWayName" },
+  { label: "操作", slot: "action", width: 120 },
+];

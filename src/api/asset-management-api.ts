@@ -168,6 +168,26 @@ export const assetManagementApi = {
       "post",
     );
   },
+  // 来访记录列表
+  getVisitHis: (data: any) => {
+    return http.post("/visit/getVisitHis", data);
+  },
+  // 获取项目列表,isAll 为true时获取所有项目，false时获取当前用户所属项目
+  getProjList: (data: any) => {
+    return http.post("/visit/getProjList", data);
+  },
+  // 获取来访方式
+  getVisitType: () => {
+    return http.post("/visit/getVisitType");
+  },
+  // 置业顾问列表
+  getSalerList: (data: any) => {
+    return http.post("/visit/getSalerList", data);
+  },
+  // 知晓途径数据
+  getKnowWay: () => {
+    return http.post("/visit/getKnowWay");
+  },
   // 销售年报表
   getSaleYearReport: (data: any) => {
     return http.post("/sale/getSaleYearReport", data);

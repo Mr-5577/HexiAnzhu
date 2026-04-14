@@ -89,6 +89,7 @@ function transformMenuToSidebar(
         title: item.meta.title,
         path: currentPath,
         icon: item.meta.icon,
+        name: item.name,
         isVisible: item.meta.isVisible || false,
       };
 
