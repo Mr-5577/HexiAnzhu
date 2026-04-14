@@ -136,7 +136,7 @@
           </el-descriptions-item>
           <el-descriptions-item>
             <template #label>
-              <div class="cell-item">客户电话2</div>
+              <div class="cell-item">备用电话</div>
             </template>
             {{ currentPrintRow.custTel2 || "-" }}
           </el-descriptions-item>
