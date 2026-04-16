@@ -110,12 +110,17 @@
     >
       <template v-if="currentPrintRow">
         <el-descriptions
-          :title="getProjectName(currentPrintRow.visitProjId)"
           :column="2"
           :size="'default'"
           border
           id="custom-descriptions-detail"
         >
+          <template #title>
+            <div>
+              {{ getProjectName(currentPrintRow.visitProjId) || "-" }} -
+              来访确认单
+            </div>
+          </template>
           <el-descriptions-item :span="2">
             <template #label>
               <div class="cell-item">项目名称</div>
@@ -190,23 +195,42 @@
             </template>
             {{ currentPrintRow.visitComName || "-" }}
           </el-descriptions-item>
-          <el-descriptions-item :span="2">
+          <el-descriptions-item>
             <template #label>
               <div class="cell-item">乙方</div>
             </template>
             {{ currentPrintRow.reportCom || "-" }}
           </el-descriptions-item>
-          <el-descriptions-item :span="2">
+          <el-descriptions-item>
+            <template #label>
+              <div class="cell-item">渠道门店</div>
+            </template>
+            {{ currentPrintRow.reportComArea || "-" }}
+          </el-descriptions-item>
+          <el-descriptions-item>
             <template #label>
               <div class="cell-item">打印人</div>
             </template>
-            {{ userStore?.userInfo?.empName || "-" }}
+            {{ userName }}
           </el-descriptions-item>
-          <el-descriptions-item :span="2">
+          <el-descriptions-item>
             <template #label>
               <div class="cell-item">打印时间</div>
             </template>
             {{ dateUtil().format("YYYY-MM-DD HH:mm:ss") }}
+          </el-descriptions-item>
+
+          <el-descriptions-item label="甲方签字">
+            <div style="height: 60px"></div>
+          </el-descriptions-item>
+          <el-descriptions-item label="乙方签字">
+            <div style="height: 60px"></div>
+          </el-descriptions-item>
+          <el-descriptions-item label="甲方签字时间">
+            <div style="height: 60px"></div>
+          </el-descriptions-item>
+          <el-descriptions-item label="乙方签字时间">
+            <div style="height: 60px"></div>
           </el-descriptions-item>
         </el-descriptions>
       </template>
@@ -250,6 +274,11 @@ const modalVisible = ref<boolean>(false);
 const confirmLoading = ref<boolean>(false);
 const currentPrintRow = ref(null);
 const printInstance = ref<any>(null);
+
+const userName = computed(() => {
+  const name = userStore?.userInfo?.empName || "";
+  return name ? name.replace(/\(.*\)/, "") : '-';
+});
 
 const handleProjectChange = (value: any) => {
   queryParams.value.projId = value;
@@ -481,8 +510,14 @@ onUnmounted(() => {
 }
 #custom-descriptions-detail {
   padding: 20px;
+  :deep(.el-descriptions__header) {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
   :deep(.el-descriptions__label) {
-    width: 100px; /* 设置固定宽度 */
+    width: 120px; /* 设置固定宽度 */
   }
 }
 </style>
