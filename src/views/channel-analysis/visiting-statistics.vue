@@ -158,7 +158,7 @@ const initParams = () => {
   if (route.query.data) {
     try {
       const routeData = JSON.parse(route.query.data as string);
-      queryParams.value.projIds = routeData.department || [];
+      queryParams.value.projIds = routeData.projIds || [];
       if (routeData.type === "month") {
         queryParams.value.day = dateUtil(routeData.data || new Date()).format(
           "YYYY-MM",

@@ -417,7 +417,10 @@ const handleToPage = () => {
       ? "/performance-analysis/annual-report"
       : "/channel-analysis/visiting-statistics";
   const timestamp = new Date().getTime();
-  const params: any = { ...props };
+  let params: any = {
+    data: props.data,
+    projIds: props.department,
+  };
   if (chartType.value === "month") {
     params.type = "date";
   }

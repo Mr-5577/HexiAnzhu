@@ -76,7 +76,7 @@ const checkIfUnmounted = () => {
 };
 
 // 处理重定向到认证页面
-const redirectToAuth = async (homeUrl: string) => {
+const redirectToAuth = async (homeUrl: String) => {
   checkIfUnmounted();
   try {
     // 缓存stateTag
@@ -90,7 +90,7 @@ const redirectToAuth = async (homeUrl: string) => {
 
     const paramsObj = {
       data: validState,
-      home: homeUrl || "/home", // 作为参数传递
+      home: homeUrl || "/home", // 跳转页面参数 + 可选的日期参数
       autoLoginPage: CALLBACK_URL,
       isQrCode: false, // 是否扫码
     };
@@ -139,7 +139,11 @@ const redirectToAuth = async (homeUrl: string) => {
 };
 
 // 处理token验证和登录
-const handleTokenLogin = async (token: string, dataParams: string, homeParams: string) => {
+const handleTokenLogin = async (
+  token: string,
+  dataParams: string,
+  homeParams: string,
+) => {
   checkIfUnmounted();
   console.log("开始验证token和state", {
     token,
@@ -185,8 +189,8 @@ const handleTokenLogin = async (token: string, dataParams: string, homeParams: s
   // 短暂延迟让用户看到提示
   await new Promise((resolve) => setTimeout(resolve, 800));
   checkIfUnmounted();
-  // 跳转到PC端首页
-  const homeUrl = homeParams || '/home'
+  // 跳转到PC端目标页
+  const homeUrl = homeParams || "/home";
   await router.replace(homeUrl);
 };
 

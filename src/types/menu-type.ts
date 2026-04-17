@@ -32,6 +32,7 @@ export interface BackendMenuItem {
 export interface SidebarMenuItem {
   index: string;
   title: string;
+  name: string;
   path?: string;
   icon: string;
   isVisible?: boolean;

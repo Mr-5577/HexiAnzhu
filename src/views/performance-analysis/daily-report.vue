@@ -124,8 +124,8 @@ const handleCellEventClick = (data: any) => {
   // 当日
   const day = queryParams.value.day || dateUtil().format("YYYY-MM-DD");
   const dayParams = {
-    department: [projectId],
-    time: [day, day],
+    projIds: [projectId],
+    data: [day, day],
   };
   // 当月累计跳转结束日期为选中的截止日期
   const monthTime = [
@@ -134,8 +134,8 @@ const handleCellEventClick = (data: any) => {
     dateUtil(day).format("YYYY-MM-DD"),
   ];
   const monthParams = {
-    department: [projectId],
-    time: monthTime,
+    projIds: [projectId],
+    data: monthTime,
   };
   // 定义事件与路由的映射关系
   const eventRouteMap = {
@@ -149,7 +149,7 @@ const handleCellEventClick = (data: any) => {
       path: "/risk-analysis/forfeiture-detail",
       params: {
         projIds: [projectId],
-        time: [day, day],
+        data: [day, day],
       },
     },
     // 当日签约套数、金额 跳转到 认签约业绩明细表
@@ -166,7 +166,7 @@ const handleCellEventClick = (data: any) => {
     "total-name-click": {
       path: "/risk-analysis/receivable-detail",
       params: {
-        department: [projectId],
+        projIds: [projectId],
       },
     },
     // 当日-溢价金额 跳转到 溢价明细明细
@@ -174,7 +174,7 @@ const handleCellEventClick = (data: any) => {
       path: "/risk-analysis/premium-detail",
       params: {
         projIds: [projectId],
-        time: [day, day],
+        data: [day, day],
       },
     },
     // 当月累计-成交金额、套数 跳转到 认购业绩明细表
@@ -187,7 +187,7 @@ const handleCellEventClick = (data: any) => {
       path: "/risk-analysis/forfeiture-detail",
       params: {
         projIds: [projectId],
-        time: monthTime,
+        data: monthTime,
       },
     },
     // 当月累计-签约套数、金额 跳转到 认签约业绩明细表
@@ -205,7 +205,7 @@ const handleCellEventClick = (data: any) => {
       path: "/risk-analysis/premium-detail",
       params: {
         projIds: [projectId],
-        time: monthTime,
+        data: monthTime,
       },
     },
   };
@@ -243,15 +243,21 @@ const initParams = () => {
   if (route.query.data) {
     try {
       const routeData = JSON.parse(route.query.data as string);
-      queryParams.value.projIds = routeData.department || [];
-      queryParams.value.day = dateUtil(routeData.data || new Date()).format(
-        "YYYY-MM-DD"
-      );
+      queryParams.value.projIds = routeData.projIds || [];
+      queryParams.value.day = dateUtil(routeData.data || new Date()).format("YYYY-MM-DD");
     } catch (error) {
       console.error("解析路由参数失败，使用默认值", error);
       queryParams.value.projIds = getAllLeafProjectIds();
       queryParams.value.day = dateUtil().format("YYYY-MM-DD");
     }
+  } else if (route.query.day) {
+    // 获取 URL 中的 day 参数，这里是从企业微信销售业绩卡片过来的判断处理
+    queryParams.value.projIds = getAllLeafProjectIds();
+    const urlDay = route.query.day as string;
+    // 如果 urlDay 无效，使用当前日期
+    queryParams.value.day = dateUtil(urlDay).isValid()
+      ? dateUtil(urlDay).format("YYYY-MM-DD")
+      : dateUtil().format("YYYY-MM-DD");
   } else {
     // 没有路由参数，使用全选
     queryParams.value.projIds = getAllLeafProjectIds();

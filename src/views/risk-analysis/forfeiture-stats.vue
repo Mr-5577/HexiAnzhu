@@ -168,7 +168,7 @@ const handleCellEventClick = (data: any) => {
     const timestamp = new Date().getTime();
     const params = {
       projIds: [projectId],
-      time: queryParams.value.time,
+      data: queryParams.value.time,
       checkOutType: queryParams.value.checkOutType,
       productTypes: queryParams.value.productTypes,
     };
@@ -204,7 +204,7 @@ const initQueryParams = () => {
   if (route.query.data) {
     try {
       const routeData = JSON.parse(route.query.data as string);
-      queryParams.value.projIds = routeData.department || [];
+      queryParams.value.projIds = routeData.projIds || [];
       queryParams.value.productTypes = getAllProductTypeIds();
       initTimeRange(routeData.data);
     } catch (error) {

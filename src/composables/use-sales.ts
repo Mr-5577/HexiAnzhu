@@ -21,7 +21,7 @@ export function useSalesData() {
   // 通用请求封装
   const fetchData = async <T>(
     apiFunc: () => Promise<{ code: number; data?: T }>,
-    defaultValue: T
+    defaultValue: T,
   ): Promise<T> => {
     try {
       const res = await apiFunc();
@@ -52,40 +52,49 @@ export function useSalesData() {
   /**
    * 按需加载数据
    * @param options 配置需要加载的数据类型
+   * @param options.projects - 是否加载项目树数据，默认 false
+   * @param options.productTypes - 是否加载业态列表数据，默认 false
+   * @param options.saleStatus - 是否加载销售状态列表数据，默认 false
+   * @returns Promise<void> 无返回值，数据会直接更新到对应的响应式变量中
    */
   const loadData = async (options: {
     projects?: boolean;
     productTypes?: boolean;
     saleStatus?: boolean;
   }) => {
+    const {
+      projects = false,
+      productTypes = false,
+      saleStatus = false,
+    } = options;
     loading.value = true;
     const promises = [];
     // 获取项目数据
-    if (options.projects) {
+    if (projects) {
       promises.push(
         fetchData(() => largeScreenApi.getProjTree(), []).then((data) => {
           projectOptions.value = data;
-        })
+        }),
       );
     }
     // 获取业态数据
-    if (options.productTypes) {
+    if (productTypes) {
       promises.push(
         fetchData(() => assetManagementApi.getProductTypeList(), []).then(
           (data) => {
             productTypeList.value = data;
-          }
-        )
+          },
+        ),
       );
     }
     // 获取状态数据
-    if (options.saleStatus) {
+    if (saleStatus) {
       promises.push(
         fetchData(() => assetManagementApi.getSaleStatusList(), []).then(
           (data) => {
             saleStatusList.value = data;
-          }
-        )
+          },
+        ),
       );
     }
 
@@ -97,7 +106,7 @@ export function useSalesData() {
   };
 
   /**
-   * 快速加载全部数据（兼容旧代码）
+   * 快速加载全部数据
    */
   const loadAllData = async () => {
     return loadData({

@@ -38,7 +38,7 @@
           搜索
         </el-button>
         <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-        <el-button
+        <!-- <el-button
           type="primary"
           icon="Download"
           :loading="exportLoading"
@@ -46,7 +46,39 @@
           :disabled="!menuStore.hasExactPermission('tree-daily-report:export')"
         >
           导出
-        </el-button>
+        </el-button> -->
+        <el-dropdown
+          placement="bottom-start"
+          :disabled="!menuStore.hasExactPermission('tree-daily-report:export')"
+        >
+          <el-button
+            type="primary"
+            icon="Download"
+            :loading="exportLoading"
+            :disabled="
+              !menuStore.hasExactPermission('tree-daily-report:export')
+            "
+            style="margin-left: 12px"
+          >
+            导出
+          </el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item
+                command="default"
+                @click="handleExport('DEFAULT')"
+              >
+                默认模版
+              </el-dropdown-item>
+              <el-dropdown-item
+                command="simple"
+                @click="handleExport('PERFORMANCE')"
+              >
+                汇报模版
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
       </el-form-item>
     </el-form>
     <base-table
@@ -117,7 +149,7 @@ const handleCellEventClick = (data: any) => {
   if (!row.projIds) return;
 
   // 查找项目ID映射
-  const idArr = row.projIds.split(',').map(Number);
+  const idArr = row.projIds.split(",").map(Number);
   const projectIdArr = findProjectIdsByXsProjIds(projectOptions.value, idArr);
   if (projectIdArr.length == 0) return;
 
@@ -125,8 +157,8 @@ const handleCellEventClick = (data: any) => {
   // 当日
   const day = queryParams.value.day || dateUtil().format("YYYY-MM-DD");
   const dayParams = {
-    department: projectIdArr,
-    time: [day, day],
+    projIds: projectIdArr,
+    data: [day, day],
   };
   // 当月累计跳转结束日期为选中的截止日期
   const monthTime = [
@@ -135,8 +167,8 @@ const handleCellEventClick = (data: any) => {
     dateUtil(day).format("YYYY-MM-DD"),
   ];
   const monthParams = {
-    department: projectIdArr,
-    time: monthTime,
+    projIds: projectIdArr,
+    data: monthTime,
   };
   // 定义事件与路由的映射关系
   const eventRouteMap = {
@@ -150,7 +182,7 @@ const handleCellEventClick = (data: any) => {
       path: "/risk-analysis/forfeiture-detail",
       params: {
         projIds: projectIdArr,
-        time: [day, day],
+        data: [day, day],
       },
     },
     // 当日签约套数、金额 跳转到 认签约业绩明细表
@@ -167,7 +199,7 @@ const handleCellEventClick = (data: any) => {
     "total-name-click": {
       path: "/risk-analysis/receivable-detail",
       params: {
-        department: projectIdArr,
+        projIds: projectIdArr,
       },
     },
     // 当日-溢价金额 跳转到 溢价明细明细
@@ -175,7 +207,7 @@ const handleCellEventClick = (data: any) => {
       path: "/risk-analysis/premium-detail",
       params: {
         projIds: projectIdArr,
-        time: [day, day],
+        data: [day, day],
       },
     },
     // 当月累计-成交金额、套数 跳转到 认购业绩明细表
@@ -188,7 +220,7 @@ const handleCellEventClick = (data: any) => {
       path: "/risk-analysis/forfeiture-detail",
       params: {
         projIds: projectIdArr,
-        time: monthTime,
+        data: monthTime,
       },
     },
     // 当月累计-签约套数、金额 跳转到 认签约业绩明细表
@@ -206,7 +238,7 @@ const handleCellEventClick = (data: any) => {
       path: "/risk-analysis/premium-detail",
       params: {
         projIds: projectIdArr,
-        time: monthTime,
+        data: monthTime,
       },
     },
   };
@@ -244,15 +276,23 @@ const initParams = () => {
   if (route.query.data) {
     try {
       const routeData = JSON.parse(route.query.data as string);
-      queryParams.value.projIds = routeData.department || [];
+      queryParams.value.projIds = routeData.projIds || [];
       queryParams.value.day = dateUtil(routeData.data || new Date()).format(
-        "YYYY-MM-DD"
+        "YYYY-MM-DD",
       );
     } catch (error) {
       console.error("解析路由参数失败，使用默认值", error);
       queryParams.value.projIds = getAllLeafProjectIds();
       queryParams.value.day = dateUtil().format("YYYY-MM-DD");
     }
+  } else if (route.query.day) {
+    // 获取 URL 中的 day 参数，这里是从企业微信销售业绩卡片过来的判断处理
+    queryParams.value.projIds = getAllLeafProjectIds();
+    const urlDay = route.query.day as string;
+    // 如果 urlDay 无效，使用当前日期
+    queryParams.value.day = dateUtil(urlDay).isValid()
+      ? dateUtil(urlDay).format("YYYY-MM-DD")
+      : dateUtil().format("YYYY-MM-DD");
   } else {
     // 没有路由参数，使用全选
     queryParams.value.projIds = getAllLeafProjectIds();
@@ -300,11 +340,16 @@ const getTableList = async () => {
   }
 };
 // 导出
-const handleExport = async () => {
+const handleExport = async (type: string) => {
+  const typeText = type === "PERFORMANCE" ? "汇报模版" : "默认模版";
+  const fileName = `销售日报表（树）- ${typeText}.xlsx`;
   try {
     exportLoading.value = true;
-    const params = { ...getParams(), isExport: true };
-    const fileBlob = await assetManagementApi.exportSaleDailyReportTree(params);
+    const params = { ...getParams(), isExport: true, exportType: type };
+    const fileBlob = await assetManagementApi.exportSaleDailyReportTree(
+      params,
+      fileName,
+    );
     if (!fileBlob || fileBlob.size === 0) {
       ElMessage.warning("导出文件为空，请检查数据");
     } else {

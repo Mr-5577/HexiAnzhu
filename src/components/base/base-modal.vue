@@ -22,7 +22,7 @@
 
     <!-- 内容区域 -->
     <div class="modal-body">
-      <slot />
+      <slot></slot>
     </div>
 
     <!-- 底部 -->
@@ -140,7 +140,8 @@ defineExpose({
 
 .modal-body {
   padding: 20px;
-  max-height: 70vh;
+  box-sizing: border-box;
+  max-height: 60vh;
   overflow-y: auto;
 
   &:deep(*) {
