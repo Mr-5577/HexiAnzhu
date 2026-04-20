@@ -23,6 +23,8 @@ import { computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import type { SidebarMenuItem } from "@/types/menu-type";
 import SidebarItem from "./sidebar-menu-item.vue";
+import { useTagsStore } from "@/stores/tags-store";
+const tagsStore = useTagsStore();
 
 interface Props {
   menuData: SidebarMenuItem[];
@@ -51,7 +53,22 @@ const findActiveIndex = (currentPath: string): string => {
 };
 
 const handleMenuClick = (item: SidebarMenuItem) => {
-  if (item.path) router.push(item.path);
+  // console.log("菜单点击:", item);
+  // console.log("tagsStore:", tagsStore);
+  // if (item.path) router.push(item.path); // 直接跳转路由
+
+  // 查找相同路径下，所有带参数的页签（fullPath 不等于 path 说明带了参数）
+  const existingTabs = tagsStore.visitedViews.filter(
+    (tab) => tab.path === item.path && tab.fullPath !== tab.path
+  );
+  if (existingTabs.length > 0) {
+    // 跳转到最后一个（最近使用的）带参数的页签
+    const lastTab = existingTabs[existingTabs.length - 1];
+    router.push(lastTab.fullPath);
+  } else {
+    // 没有，正常跳转
+    router.push(item.path);
+  }
 };
 </script>
 
