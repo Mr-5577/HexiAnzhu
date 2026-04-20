@@ -34,6 +34,7 @@
 import BaseChart from "@/components/base/base-chart.vue";
 import {
   ref,
+  shallowRef,
   onMounted,
   onUnmounted,
   nextTick,
@@ -78,8 +79,8 @@ const monthChartRef = ref<HTMLDivElement | null>(null);
 const overallChartRef = ref<HTMLDivElement | null>(null);
 
 // 为每个图表创建独立的实例
-const monthChartInstance = ref<echarts.ECharts | null>(null);
-const overallChartInstance = ref<echarts.ECharts | null>(null);
+const monthChartInstance = shallowRef<echarts.ECharts | null>(null);
+const overallChartInstance = shallowRef<echarts.ECharts | null>(null);
 
 const conversionRates = computed(() => {
   const total = conversionData.value.dylfComeNum;

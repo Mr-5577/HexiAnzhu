@@ -48,7 +48,6 @@ import {
 import * as echarts from "echarts";
 import { dateUtil } from "@/utils/date-util";
 import { largeScreenApi } from "@/api/large-screen-api";
-import type { ECharts, EChartsOption } from "echarts";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
@@ -86,7 +85,7 @@ const loading = ref(false);
 // 请求锁
 let isRequesting = false;
 const chartType = ref("year");
-const chartInstance = shallowRef<ECharts | null>(null);
+const chartInstance = shallowRef<echarts.ECharts | null>(null);
 const chartDom = ref<HTMLDivElement | null>(null);
 
 // 图表数据
@@ -121,7 +120,7 @@ const numMax = computed(() => {
 });
 
 // 图表配置
-const chartOption = computed<EChartsOption>(() => {
+const chartOption = computed(() => {
   if (chartType.value === "year") {
     return {
       tooltip: { trigger: "axis" },

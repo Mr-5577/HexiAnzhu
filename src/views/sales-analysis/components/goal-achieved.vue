@@ -145,6 +145,7 @@ import qianyue from "@/assets/imgs/largeScreenImg/qianyue.png";
 import BaseChart from "@/components/base/base-chart.vue";
 import {
   ref,
+  shallowRef,
   onMounted,
   onUnmounted,
   nextTick,
@@ -267,7 +268,7 @@ const dataList = ref([
   },
 ]);
 
-const chartInstance = ref<echarts.ECharts | null>(null);
+const chartInstance = shallowRef<echarts.ECharts | null>(null);
 const chartDom = ref<HTMLDivElement | null>(null);
 
 // 初始化图表

@@ -73,7 +73,6 @@ import {
 } from "vue";
 import * as echarts from "echarts";
 import { largeScreenApi } from "@/api/large-screen-api";
-import type { ECharts, EChartsOption } from "echarts";
 import { dateUtil } from "@/utils/date-util";
 import { useRoute, useRouter } from "vue-router";
 
@@ -136,7 +135,7 @@ const loading = ref(false);
 const chartType = ref("1");
 const inventoryType = ref("time");
 const channelType = ref("visit");
-const chartInstance = shallowRef<ECharts | null>(null);
+const chartInstance = shallowRef<echarts.ECharts | null>(null);
 const chartDomRef = ref<HTMLDivElement | null>(null);
 
 // API返回的原始数据 - 包含7个维度
@@ -241,7 +240,7 @@ const disposeChart = () => {
 };
 
 // 获取基础图表配置
-const getBaseChartOption = (): EChartsOption => {
+const getBaseChartOption = (): any => {
   const chartData = currentChartData.value;
   const chartName = getChartName();
 
