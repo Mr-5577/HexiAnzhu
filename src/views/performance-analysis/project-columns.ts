@@ -634,6 +634,7 @@ export const SubDetailColumns: any = [
   { prop: "syearMonth", label: "业绩年月", width: 100 },
   { prop: "saleNum", label: "业绩套数", width: 90, showSummary: true },
   { prop: "signDate", label: "签约日期", width: 120 },
+  { prop: "teamName", label: "团队名称", width: 100 },
   { prop: "salerName", label: "置业顾问", width: 150 },
   { prop: "typeName", label: "业务类型", width: 100 },
 ];
@@ -678,6 +679,7 @@ export const ContractDetailColumns: any = [
     showSummary: true,
     formatter: (row: any) => formatNumberDisplay(row.saleMoneyInc),
   },
+  { prop: "teamName", label: "团队名称", width: 100 },
   { prop: "salerName", label: "置业顾问", width: 150 },
   { prop: "typeName", label: "业务类型", width: 100 },
 ];
@@ -707,6 +709,7 @@ export const CollectionDetailColumns: any = [
     showSummary: true,
     formatter: (row: any) => formatNumberDisplay(row.collectMoney),
   },
+  { prop: "teamName", label: "团队名称", width: 100 },
   { prop: "salerName", label: "置业顾问", width: 150 },
   { prop: "typeName", label: "业务类型", width: 100 },
 ];

@@ -1,7 +1,12 @@
 <!-- 认购业绩明细 -->
 <template>
   <div class="sub-detail-page">
-    <el-form :model="queryParams" ref="queryRef" :inline="true">
+    <el-form
+      :model="queryParams"
+      ref="queryRef"
+      :inline="true"
+      label-width="70px"
+    >
       <el-form-item label="项目" prop="projIds">
         <!-- <el-cascader
           class="fixed-height-cascader"
@@ -30,7 +35,7 @@
           clearable
           multiple
           collapse-tags
-          style="width: 200px"
+          style="width: 220px"
         >
           <el-option
             v-for="item in productTypeList"
@@ -40,7 +45,7 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="认购业绩日期" prop="time">
+      <el-form-item label="认购日期" prop="time">
         <el-date-picker
           v-model="queryParams.time"
           type="daterange"
@@ -53,8 +58,45 @@
           :clearable="false"
         />
       </el-form-item>
+      <el-form-item label="业主姓名" prop="custName">
+        <el-input
+          v-model="queryParams.custName"
+          placeholder="业主姓名"
+          clearable
+          style="width: 220px"
+        />
+      </el-form-item>
+      <el-form-item label="业主房号" prop="roomNum">
+        <el-input
+          v-model="queryParams.roomNum"
+          placeholder="房号"
+          clearable
+          style="width: 220px"
+        />
+      </el-form-item>
+      <el-form-item label="置业顾问" prop="salerName">
+        <el-input
+          v-model="queryParams.salerName"
+          placeholder="置业顾问"
+          clearable
+          style="width: 220px"
+        />
+      </el-form-item>
+      <el-form-item label="团队名称" prop="teamName">
+        <el-input
+          v-model="queryParams.teamName"
+          placeholder="团队名称"
+          clearable
+          style="width: 220px"
+        />
+      </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleQuery">
+        <el-button
+          type="primary"
+          icon="Search"
+          @click="handleQuery"
+          :loading="tableLoading"
+        >
           搜索
         </el-button>
         <el-button icon="Refresh" @click="resetQuery">重置</el-button>
@@ -75,7 +117,7 @@
       :columns="SubDetailColumns"
       :tableData="paginatedData"
       :loading="tableLoading"
-      :total="total"
+      :total="filteredTotal"
       :current-page="currentPage"
       :page-size="pageSize"
       @pagination-change="handlePaginationChange"
@@ -84,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue";
 import { SubDetailColumns } from "./project-columns";
 import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
@@ -129,14 +171,17 @@ const queryParams = ref({
   projIds: [],
   productTypes: [],
   time: [],
+  custName: "", // 业主姓名
+  roomNum: "", // 房号
+  salerName: "", // 置业顾问
+  teamName: "", // 团队
 });
 const tableLoading = ref<boolean>(false);
 const exportLoading = ref<boolean>(false);
 const currentPage = ref<number>(1);
 const pageSize = ref<number>(20);
-const total = ref<number>(0);
-const tableData = ref<any[]>([]);
-const allTableList = ref<any[]>([]);
+const allTableList = shallowRef<any[]>([]);
+const filteredData = ref<any[]>([]);
 
 const handlePaginationChange = (params: any) => {
   currentPage.value = params.currentPage;
@@ -149,6 +194,11 @@ const handleQuery = () => {
   getTableList();
 };
 const resetQuery = () => {
+  if (tableLoading.value) return; // 防止重复请求
+  queryParams.value.custName = "";
+  queryParams.value.roomNum = "";
+  queryParams.value.salerName = "";
+  queryParams.value.teamName = "";
   initQueryParams();
   currentPage.value = 1;
   pageSize.value = 20;
@@ -276,19 +326,21 @@ const getTableList = async () => {
     const { time } = queryParams.value;
     if (!time || time.length < 2) {
       allTableList.value = [];
-      total.value = 0;
+      filteredData.value = [];
       return;
     }
     const params = getParams();
     const res = await assetManagementApi.getSaleAsstListOrder(params);
     if (res.code === 200) {
       allTableList.value = res.data || [];
-      total.value = res.data?.length || 0;
+      filteredData.value = dataProcessing(); // 过滤数据处理
+    } else {
+      allTableList.value = [];
+      filteredData.value = [];
     }
   } catch (error) {
-    console.error("获取数据失败:", error);
     allTableList.value = [];
-    total.value = 0;
+    filteredData.value = [];
   } finally {
     tableLoading.value = false;
   }
@@ -315,12 +367,41 @@ const handleExport = async () => {
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value;
   const end = start + pageSize.value;
-  return allTableList.value.slice(start, end).map((item) => ({
+  return filteredData.value.slice(start, end).map((item) => ({
     ...item,
     uuid: uuidv4(), // 为当前页的每一行生成 UUID
   }));
 });
-
+// 计算总数（基于过滤后的数据）
+const filteredTotal = computed(() => filteredData.value.length || 0);
+// 手动过滤数据
+const dataProcessing = () => {
+  const data = allTableList.value || [];
+  const { custName, roomNum, salerName, teamName } = queryParams.value;
+  // 如果没有过滤条件，直接返回原数据
+  if (!custName && !roomNum && !salerName && !teamName) {
+    return data;
+  }
+  return data.filter((item) => {
+    // 业主姓名过滤
+    if (custName && !item.custName?.includes(custName)) {
+      return false;
+    }
+    // 房号过滤
+    if (roomNum && !item.roomNum?.includes(roomNum)) {
+      return false;
+    }
+    // 置业顾问过滤
+    if (salerName && !item.salerName?.includes(salerName)) {
+      return false;
+    }
+    // 团队名称过滤
+    if (teamName && !item.teamName?.includes(teamName)) {
+      return false;
+    }
+    return true;
+  });
+};
 // 生命周期
 onMounted(() => {
   initPageData();
