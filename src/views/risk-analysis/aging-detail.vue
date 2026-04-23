@@ -24,10 +24,17 @@
         ></project-tree-selector>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleQuery">
+        <el-button
+          type="primary"
+          icon="Search"
+          :loading="tableLoading"
+          @click="handleQuery"
+        >
           搜索
         </el-button>
-        <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+        <el-button icon="Refresh" :loading="tableLoading" @click="resetQuery">
+          重置
+        </el-button>
         <el-button
           type="primary"
           icon="Download"
@@ -178,9 +185,8 @@ const handleExport = async () => {
   try {
     exportLoading.value = true;
     const params = { ...getParams(), isExport: true };
-    const fileBlob = await assetManagementApi.exportSaleOutStdFundsInfoYsAging(
-      params
-    );
+    const fileBlob =
+      await assetManagementApi.exportSaleOutStdFundsInfoYsAging(params);
     if (!fileBlob || fileBlob.size === 0) {
       ElMessage.warning("导出文件为空，请检查数据");
     } else {

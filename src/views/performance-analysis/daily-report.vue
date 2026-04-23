@@ -34,10 +34,17 @@
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleQuery">
+        <el-button
+          type="primary"
+          icon="Search"
+          :loading="tableLoading"
+          @click="handleQuery"
+        >
           搜索
         </el-button>
-        <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+        <el-button icon="Refresh" :loading="tableLoading" @click="resetQuery">
+          重置
+        </el-button>
         <el-button
           type="primary"
           icon="Download"
@@ -244,7 +251,9 @@ const initParams = () => {
     try {
       const routeData = JSON.parse(route.query.data as string);
       queryParams.value.projIds = routeData.projIds || [];
-      queryParams.value.day = dateUtil(routeData.data || new Date()).format("YYYY-MM-DD");
+      queryParams.value.day = dateUtil(routeData.data || new Date()).format(
+        "YYYY-MM-DD",
+      );
     } catch (error) {
       console.error("解析路由参数失败，使用默认值", error);
       queryParams.value.projIds = getAllLeafProjectIds();

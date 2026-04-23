@@ -51,10 +51,17 @@
         </el-select>
       </el-form-item> -->
       <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleQuery">
+        <el-button
+          type="primary"
+          icon="Search"
+          :loading="tableLoading"
+          @click="handleQuery"
+        >
           搜索
         </el-button>
-        <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+        <el-button icon="Refresh" :loading="tableLoading" @click="resetQuery">
+          重置
+        </el-button>
         <el-button
           type="primary"
           icon="Download"
@@ -158,7 +165,7 @@ const initQueryParams = () => {
       queryParams.value.projIds = routeData.projIds || [];
       queryParams.value.productTypes = getAllProductTypeIds();
       queryParams.value.day = dateUtil(routeData.data || new Date()).format(
-        "YYYY-MM"
+        "YYYY-MM",
       );
     } catch (error) {
       console.error("解析路由参数失败，使用默认值", error);
