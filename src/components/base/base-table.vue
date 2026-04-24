@@ -1,5 +1,5 @@
 <template>
-  <div class="pro-table-container">
+  <div class="pro-table-container" ref="containerRef">
     <!-- 操作栏 -->
     <div class="action-bar" v-if="$slots.actionBar || showActionBar">
       <slot name="actionBar"></slot>
@@ -58,7 +58,10 @@
         @row-click="handleRowClick"
       >
         <!-- 递归渲染多级表头 -->
-        <template v-for="item in visibleColumns" :key="item.prop || item.type">
+        <template
+          v-for="(item, index) in visibleColumns"
+          :key="item.prop ?? item.type ?? index"
+        >
           <component
             :is="TableColumn"
             :column="item"
@@ -99,6 +102,7 @@
 
 <script setup lang="ts">
 import {
+  nextTick,
   ref,
   computed,
   useAttrs,
@@ -241,16 +245,18 @@ interface Emits {
   /** 分页参数变化时触发，包含页大小和当前页码信息 */
   (
     event: "pagination-change",
-    value: { pageSize: number; currentPage: number }
+    value: { pageSize: number; currentPage: number },
   ): void;
   /** 点击刷新按钮时触发 */
   (event: "refresh"): void;
+  /** 点击列设置按钮时触发 */
+  (event: "column-setting"): void;
   /** 点击表格行时触发，返回点击的行数据和原生事件对象 */
   (event: "row-click", value: { row: any; event: Event }): void;
   /** 点击表格单元格时触发，返回点击的行数据、列配置和原生事件对象 */
   (
     event: "cell-click",
-    value: { row: any; column: TableColumnItem; event: Event }
+    value: { row: any; column: TableColumnItem; event: Event },
   ): void;
   /** 自定义单元格事件，可用于处理单元格内按钮点击等自定义交互 */
   (
@@ -264,7 +270,7 @@ interface Emits {
       column: TableColumnItem;
       /** 行索引位置 */
       index: number;
-    }
+    },
   ): void;
 }
 
@@ -311,7 +317,7 @@ const TableColumn = {
       row: any,
       column: TableColumnItem,
       index: number,
-      event: Event
+      event: Event,
     ) => {
       // 如果有 clickEvent，则触发特定事件
       if (column.clickable && column.clickEvent) {
@@ -373,9 +379,9 @@ const TableColumn = {
                 ? expandSlot(scope)
                 : h(
                     "span",
-                    `Expand content for ${scope.row.id || scope.$index}`
+                    `Expand content for ${scope.row.id || scope.$index}`,
                   ),
-          }
+          },
         );
       }
 
@@ -394,7 +400,7 @@ const TableColumn = {
       // 如果有子列，递归渲染
       if (column.children && column.children.length > 0) {
         return h(resolveComponent("el-table-column"), columnProps, () =>
-          column.children!.map((child) => renderColumn(child))
+          column.children!.map((child) => renderColumn(child)),
         );
       }
 
@@ -429,11 +435,11 @@ const TableColumn = {
                     return h(
                       resolveComponent("el-icon"),
                       { class: "header-tip-icon" },
-                      // 关键：确保返回一个渲染函数
-                      () => h(Icon)
+                      // 确保返回一个渲染函数
+                      () => h(Icon),
                     );
                   },
-                }
+                },
               ),
             ]);
           }
@@ -458,7 +464,7 @@ const TableColumn = {
             contentValue = column.formatter(
               scope.row,
               scope.column,
-              scope.$index
+              scope.$index,
             );
           } else if (column.dict) {
             contentValue = getDictLabel(column.dict, scope.row[column.prop!]);
@@ -479,7 +485,7 @@ const TableColumn = {
               onClick: (event: Event) =>
                 handleColumnCellClick(scope.row, column, scope.$index, event),
             },
-            [contentValue]
+            [contentValue],
           );
 
           return content;
@@ -519,6 +525,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>();
 
 const tableRef = ref<TableInstance>();
+const containerRef = ref<HTMLElement | null>(null);
 const selectedRows = ref<any[]>([]);
 const currentRowKey = ref<string | number>(""); // 当前选中行的key
 
@@ -536,7 +543,7 @@ let resizeObserver: ResizeObserver | null = null;
 const calculateTableHeight = (): number | null => {
   if (!props.autoHeight) return props.height as number | null;
 
-  const container = document.querySelector(".pro-table-container");
+  const container = containerRef.value;
   if (!container) return null;
 
   const containerRect = container.getBoundingClientRect();
@@ -591,7 +598,7 @@ const calculateTableHeight = (): number | null => {
 // 计算表格容器样式
 const tableWrapperStyle = computed<Record<string, any>>(() => {
   if (!props.autoHeight) return {};
-
+  if (tableHeight.value === null) return {};
   return {
     height: `${tableHeight.value}px`,
     overflow: "hidden", // 确保容器本身不产生滚动
@@ -600,7 +607,7 @@ const tableWrapperStyle = computed<Record<string, any>>(() => {
 
 // 计算属性
 const visibleColumns = computed(() =>
-  columnSettings.value.filter((col) => col.visible)
+  columnSettings.value.filter((col) => col.visible),
 );
 
 const getTableProps = computed(() => {
@@ -634,18 +641,18 @@ const getRowClassName = ({ row }: { row: any }): string => {
 };
 
 // 更新表格高度
-const updateTableHeight = (): void => {
-  if (props.autoHeight) {
-    setTimeout(() => {
-      tableHeight.value = calculateTableHeight();
-    }, 100); // 稍微延迟确保 DOM 已更新
-  }
+const updateTableHeight = async (): Promise<void> => {
+  if (!props.autoHeight) return;
+  await nextTick();
+  requestAnimationFrame(() => {
+    tableHeight.value = calculateTableHeight();
+  });
 };
 
 // 添加一个递归查找函数
 const findColumnConfig = (
   columns: TableColumnItem[],
-  property: string
+  property: string,
 ): TableColumnItem | null => {
   for (const col of columns) {
     // 如果是当前列
@@ -724,7 +731,10 @@ watch(
   () => {
     updateTableHeight();
   },
-  { immediate: true }
+  {
+    immediate: true,
+    flush: "post", // flush: 'post' 确保 DOM 更新后再执行
+  },
 );
 
 // 监听窗口大小变化
@@ -736,7 +746,7 @@ const handleWindowResize = (): void => {
 const observeResize = (): void => {
   if (!props.autoHeight) return;
 
-  const container = document.querySelector(".pro-table-container");
+  const container = containerRef.value;
   if (!container) return;
 
   resizeObserver = new ResizeObserver(() => {
@@ -821,7 +831,7 @@ const handleRefresh = (): void => {
 
 // 表格列设置
 const handleColumnSetting = (): void => {
-  console.log("打开列设置");
+  emit("column-setting");
 };
 
 // 清除当前选中行
