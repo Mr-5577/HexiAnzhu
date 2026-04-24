@@ -46,7 +46,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useTagsStore } from "@/stores/tags-store";
 import type { TagView } from "@/stores/tags-store";
 
-// 添加inject注入，用于缓存清理
+// 添加inject注入，用于清理缓存和恢复缓存
 const clearPageCache =
   inject<(componentName: string) => void>("clearPageCache");
 const restorePageCache =
@@ -84,7 +84,15 @@ const closeCurrent = () => {
 // 关闭其他标签
 const closeOthers = () => {
   if (currentTag.value) {
+    // 先清理其他标签的缓存
+    const otherTags = visitedViews.value.filter(
+      (tag) => tag.path !== currentTag.value?.path && !tag.affix,
+    );
+    otherTags.forEach((tag) => clearTagCache(tag));
+
+    // 再删除 store 中的记录
     tagsStore.delOtherViews(currentTag.value);
+
     // 跳转到当前标签
     router.push({
       path: currentTag.value.path,
@@ -95,8 +103,14 @@ const closeOthers = () => {
 };
 // 关闭全部标签
 const closeAll = () => {
+  // 先清理所有非固定标签的缓存
+  const nonAffixTags = visitedViews.value.filter((tag) => !tag.affix);
+  nonAffixTags.forEach((tag) => clearTagCache(tag));
+
+  // 再删除 store 中的记录
   tagsStore.delAllViews();
-  // 如果有固定标签，跳转到最后一个固定标签
+
+  // 跳转到固定标签或首页
   const affixTags = visitedViews.value.filter((tag) => tag.affix);
   if (affixTags.length > 0) {
     const lastAffixTag = affixTags[affixTags.length - 1];
@@ -134,20 +148,29 @@ const extractQueryParams = (tag: TagView) => {
 
   return query;
 };
+// 根据路径获取组件名
+const getComponentNameByPath = (path: string): string | null => {
+  const routeRecord = router.getRoutes().find((r) => r.path === path);
+  return (routeRecord?.components?.default?.name as string) || null;
+};
+
+// 清理指定标签的缓存
+const clearTagCache = (tag: TagView) => {
+  if (!clearPageCache) return;
+
+  const componentName = getComponentNameByPath(tag.path);
+  if (componentName) {
+    clearPageCache(componentName);
+  }
+};
 
 // 关闭选中的标签，关闭标签时需要清除页面的缓存，等从路由重新进入时再次缓存
 const closeSelectedTag = (tag: TagView) => {
-  // 获取当前标签对应的组件名称（从路由配置中）
-  const routeRecord = router.getRoutes().find((r) => r.path === tag.path);
-  const componentName = routeRecord?.components?.default?.name as string;
+  // 清理缓存
+  clearTagCache(tag);
 
   // 删除标签
   tagsStore.delView(tag);
-
-  // 如果有关联的组件名称，清理缓存
-  if (componentName && clearPageCache) {
-    clearPageCache(componentName);
-  }
 
   if (isActive(tag)) {
     const lastView = visitedViews.value[visitedViews.value.length - 1];
@@ -157,11 +180,7 @@ const closeSelectedTag = (tag: TagView) => {
         query: extractQueryParams(lastView),
       });
       // 切换到新标签时，恢复其缓存
-      const newRouteRecord = router
-        .getRoutes()
-        .find((r) => r.path === lastView.path);
-      const newComponentName = newRouteRecord?.components?.default
-        ?.name as string;
+      const newComponentName = getComponentNameByPath(lastView.path);
       if (newComponentName && restorePageCache) {
         restorePageCache(newComponentName);
       }
@@ -192,7 +211,7 @@ watch(
       }
     }
   },
-  { immediate: true, deep: true }
+  { immediate: true, deep: true },
 );
 
 // 添加事件监听
@@ -260,7 +279,7 @@ onUnmounted(() => {
 
       &:hover {
         background: #f5f5f5;
-        color: #333333;
+        color: #1890ff;
       }
 
       &.active {
@@ -352,30 +371,6 @@ onUnmounted(() => {
 
     &:hover {
       background: linear-gradient(135deg, #0a649c 0%, #063958 100%) !important;
-    }
-  }
-}
-
-// 响应式设计
-@media (max-width: 768px) {
-  .tags-view-container {
-    height: 36px;
-
-    .tags-view-wrapper {
-      :deep(.el-scrollbar__view) {
-        padding: 0 8px;
-      }
-
-      .tags-view-item {
-        height: 26px;
-        padding: 0 10px;
-        font-size: 12px;
-        margin-right: 2px;
-
-        .tag-title {
-          max-width: 80px;
-        }
-      }
     }
   }
 }

@@ -172,7 +172,6 @@ const getUserInfo = async () => {
 provide("clearPageCache", clearPageCache);
 provide("restorePageCache", restorePageCache);
 
-// 监听菜单数据变化
 // 监听路由变化 - 修改为监听 fullPath，包含查询参数
 watch(
   () => [route.fullPath, menuStore.menuData],
