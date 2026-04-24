@@ -7,6 +7,7 @@
       :default-active="activeIndex"
       text-color="#78c6dc"
       :unique-opened="true"
+      :collapse="false"
     >
       <sidebar-item
         v-for="item in menuData"
@@ -89,8 +90,8 @@ const handleMenuClick = (item: SidebarMenuItem) => {
 
     // 修改菜单项样式
     :deep(.el-menu-item) {
-      height: 45px;
-      line-height: 45px;
+      height: 40px;
+      line-height: 40px;
       margin: 2px 8px;
       border-radius: 4px;
       transition: all 0.3s ease;
@@ -131,8 +132,8 @@ const handleMenuClick = (item: SidebarMenuItem) => {
         background-color: transparent !important;
       }
       .el-sub-menu__title {
-        height: 45px;
-        line-height: 45px;
+        height: 40px;
+        line-height: 40px;
         margin: 2px 8px;
         border-radius: 4px;
         transition: all 0.3s ease;

@@ -1,5 +1,4 @@
 import { useMenuStore } from "@/stores/menu-store";
-import { useUserStore } from "@/stores/user-store";
 import {
   transformMenuDataExact,
   extractButtonPermissions,
@@ -94,7 +93,7 @@ const router = createRouter({
   routes: staticRoutes,
 });
 
-// 在路由守卫开始添加一个全局清理函数
+// 清理动态路由的函数
 const cleanupDynamicRoutes = () => {
   // 获取所有路由
   const routes = router.getRoutes();
@@ -116,6 +115,7 @@ const cleanupDynamicRoutes = () => {
   });
 };
 
+// 菜单是否加载
 let menuLoaded = false;
 
 // 检查密码是否过期
@@ -166,9 +166,8 @@ router.beforeEach(async (to, from, next) => {
   }
 
   const menuStore = useMenuStore();
-  const userStore = useUserStore();
 
-  // 只需要这个判断：菜单没加载过，就加载一次
+  // 菜单没加载过，就加载一次
   if (!menuLoaded) {
     let loadingInstance = null;
     try {

@@ -53,9 +53,11 @@ import { useMenuStore } from "@/stores/menu-store";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { userApi } from "@/api/user-api";
 import { useUserStore } from "@/stores/user-store";
+import { useSalesData } from "@/composables/use-sales";
 
 const menuStore = useMenuStore();
 const userStore = useUserStore();
+const { resetData } = useSalesData();
 
 interface Props {
   activeModuleId?: number;
@@ -88,7 +90,7 @@ watch(
       activeNav.value = newId;
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // 处理导航点击
@@ -109,7 +111,7 @@ const handleProfile = () => {
 };
 
 const logout = () => {
-  ElMessageBox.confirm("确定现在退出系统吗?", "退出", {
+  ElMessageBox.confirm("确定要退出当前系统吗？", "退出", {
     confirmButtonText: "确认",
     cancelButtonText: "取消",
     type: "warning",
@@ -124,8 +126,8 @@ const logout = () => {
             ElMessage.success("退出成功，即将跳转到登录页！");
             localStorage.clear();
             sessionStorage.clear();
-            // 关闭弹窗
-            done();
+            resetData(); // 重置共享数据
+            done(); // 关闭弹窗
             setTimeout(() => {
               // 跳转到登录页并刷新
               router.push("/login").then(() => {
@@ -168,7 +170,7 @@ const logout = () => {
 
   .logo-content {
     height: 64px;
-    padding: 0px 19px;
+    padding-left: 20px;
     box-sizing: border-box;
     flex-shrink: 0;
     display: flex;

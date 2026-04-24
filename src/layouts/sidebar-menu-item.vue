@@ -63,10 +63,16 @@ const handleClick = () => {
   .el-icon {
     font-size: 16px;
     flex-shrink: 0;
+    color: #a0bcd0;
   }
 
   .menu-title {
     flex: 1;
+  }
+}
+.menu-content:hover {
+  .el-icon {
+    color: #fff;
   }
 }
 </style>
