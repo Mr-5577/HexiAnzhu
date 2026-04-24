@@ -166,12 +166,10 @@ router.beforeEach(async (to, from, next) => {
   }
 
   const menuStore = useMenuStore();
-
-  // 菜单没加载过，就加载一次
+  // 菜单没加载过，就加载菜单数据并添加动态路由
   if (!menuLoaded) {
     let loadingInstance = null;
     try {
-      // console.log("加载菜单数据...");
       // 创建加载实例 - 全屏加载
       loadingInstance = ElLoading.service({
         lock: true,
@@ -195,7 +193,6 @@ router.beforeEach(async (to, from, next) => {
         // 存储到store
         menuStore.setMenuData(exactData);
         menuStore.setPermissionData(buttonPermission);
-
         // 添加动态路由
         await addDynamicRoutes(router, exactData);
         // 标记为已加载

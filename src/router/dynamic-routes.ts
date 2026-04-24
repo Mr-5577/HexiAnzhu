@@ -1,42 +1,55 @@
 import { RouteRecordRaw } from "vue-router";
+import type { Component } from "vue";
 import AdminLayout from "@/layouts/index.vue";
 import type { BackendMenuItem } from "@/types/menu-type";
 import { extractAllMenus } from "@/utils/menu-util";
 
 // 使用 glob 动态导入所有 Vue 组件
 const modules = import.meta.glob("@/views/**/*.vue");
+// 构建索引映射
+const componentIndex = new Map<string, () => Promise<Component>>();
+// 预处理建立索引（只执行一次）
+Object.entries(modules).forEach(([filePath, loader]) => {
+  // 提取相对路径: /src/views/asset-management/inventory-detail.vue --> asset-management/inventory-detail
+  let path = filePath.replace(/^.*\/views\//, "").replace(/\.vue$/, "");
 
-/**
- * 根据组件路径获取对应的组件
- */
-function getComponent(componentPath?: string) {
+  // 存储多种格式便于匹配
+  componentIndex.set(path, loader); // 路径一：asset-management/inventory-detail
+  componentIndex.set(`/${path}`, loader); // 路径二：/asset-management/inventory-detail
+});
+// 根据路径获取组件（O(1)查找）
+function getComponentByPath(componentPath?: string) {
   if (!componentPath) return undefined;
-
-  // 构建搜索路径
-  const searchPath = componentPath.replace(/\//g, "/");
-
-  // 查找匹配的组件
-  for (const [path, component] of Object.entries(modules)) {
-    if (path.includes(searchPath)) {
-      // console.log("找到组件:", path);
-      return component;
-    }
+  // 标准化路径
+  const normalized = componentPath.replace(/^\/+/, "");
+  const loader =
+    componentIndex.get(normalized) || componentIndex.get(componentPath);
+  if (!loader) {
+    console.warn(`未找到组件: ${componentPath}`);
+    return undefined;
   }
-
-  console.warn(`未找到组件: ${componentPath}`);
-  return undefined;
+  return loader;
 }
 
 /**
  * 将后端菜单数据转换为Vue路由配置
  */
 export function transformMenuToRoutes(
-  menuData: BackendMenuItem[]
+  menuData: BackendMenuItem[],
 ): RouteRecordRaw[] {
   const allMenus = extractAllMenus(menuData);
   const routes: RouteRecordRaw[] = [];
-
   // console.log("allMenus", allMenus);
+
+  // 建立父子关系索引，避免多次遍历
+  const childrenMap = new Map<number, BackendMenuItem[]>();
+  allMenus.forEach((menu) => {
+    if (menu.parentId) {
+      const children = childrenMap.get(menu.parentId) || [];
+      children.push(menu);
+      childrenMap.set(menu.parentId, children);
+    }
+  });
 
   // 找到所有顶级菜单
   const topLevelMenus = allMenus.filter((item) => item.pid === 0);
@@ -47,7 +60,8 @@ export function transformMenuToRoutes(
     const routePath = menu.path?.startsWith("/") ? menu.path : `/${menu.path}`;
 
     // 找到该菜单的所有子菜单
-    const childMenus = allMenus.filter((item) => item.parentId === menu.id);
+    // const childMenus = allMenus.filter((item) => item.parentId === menu.id);
+    const childMenus = childrenMap.get(menu.id) || [];
 
     // 如果菜单有子菜单，创建嵌套路由结构
     if (childMenus.length > 0) {
@@ -68,7 +82,7 @@ export function transformMenuToRoutes(
 
       // 为每个子菜单创建路由
       childMenus.forEach((child) => {
-        const childComponent = getComponent(child.component);
+        const childComponent = getComponentByPath(child.component);
 
         if (childComponent) {
           // 计算子路由路径（相对于父路径）
@@ -79,7 +93,7 @@ export function transformMenuToRoutes(
           // 移除父路径前缀，得到相对路径
           const relativePath = childPath.replace(
             new RegExp(`^${routePath}/?`),
-            ""
+            "",
           );
 
           route.children!.push({
@@ -107,7 +121,7 @@ export function transformMenuToRoutes(
       routes.push(route);
     } else {
       // 没有子菜单，创建单一路由
-      const menuComponent = getComponent(menu.component);
+      const menuComponent = getComponentByPath(menu.component);
 
       if (menuComponent) {
         const route: RouteRecordRaw = {
@@ -150,7 +164,10 @@ export function transformMenuToRoutes(
 /**
  * 添加动态路由到路由器
  */
-export function addDynamicRoutes(router: any, menuData: BackendMenuItem[]) {
+export async function addDynamicRoutes(
+  router: any,
+  menuData: BackendMenuItem[],
+) {
   const dynamicRoutes = transformMenuToRoutes(menuData);
 
   dynamicRoutes.forEach((route) => {

@@ -144,10 +144,7 @@ export function getFirstRoutePath(
  */
 export function transformMenuDataExact(originalData: any) {
   if (originalData && originalData.length == 0) return [];
-  // 先找到所有顶级模块（menuType === 0）menuType:0模块   1菜单   2按钮
-  // const topModules = originalData.filter((node: any) => node.menuType === 0);
-
-  // 过滤出可见的顶级模块
+  // 先找到所有可见的顶级模块 menuType:0模块 1菜单 2按钮  isVisible:是否可见  true可见 false不可见
   const topModules = originalData.filter(
     (node: any) => node.menuType === 0 && node.isVisible
   );
