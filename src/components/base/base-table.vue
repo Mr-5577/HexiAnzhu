@@ -115,6 +115,7 @@ import {
   type VNode,
   type Slots,
 } from "vue";
+import { Setting, Refresh } from '@element-plus/icons-vue'
 import type { TableInstance, Sort } from "element-plus";
 import { formatNumber, formatNumberDisplay } from "@/utils/common";
 

@@ -41,6 +41,7 @@
 </template>
 
 <script setup lang="ts">
+import { Close } from "@element-plus/icons-vue";
 import { computed, ref, onMounted, onUnmounted, watch, inject } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useTagsStore } from "@/stores/tags-store";

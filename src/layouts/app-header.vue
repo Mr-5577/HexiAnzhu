@@ -46,6 +46,7 @@
 </template>
 
 <script setup lang="ts">
+import { User, SwitchButton } from "@element-plus/icons-vue";
 import { ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import { extractModules, getFirstRoutePath } from "@/utils/menu-util";
