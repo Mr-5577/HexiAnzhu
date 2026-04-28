@@ -99,6 +99,7 @@ const setTreeCheckedState = async () => {
 
 // 获取树形菜单数据
 const getTreeData = async () => {
+  if (dataLoading.value) return; // 防止重复请求
   dataLoading.value = true;
   try {
     const res = await roleApi.getRoleMenuPowerList({ roleId: props.roleId });

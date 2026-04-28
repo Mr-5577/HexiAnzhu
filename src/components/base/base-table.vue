@@ -115,7 +115,7 @@ import {
   type VNode,
   type Slots,
 } from "vue";
-import { Setting, Refresh } from '@element-plus/icons-vue'
+import { Setting, Refresh } from "@element-plus/icons-vue";
 import type { TableInstance, Sort } from "element-plus";
 import { formatNumber, formatNumberDisplay } from "@/utils/common";
 
@@ -395,7 +395,8 @@ const TableColumn = {
         align: column.align || "center",
         sortable: column.sortable || false,
         fixed: column.fixed,
-        showOverflowTooltip: true, // 鼠标移入显示全部内容
+        // 空值合并运算符，value ?? defaultValue，当 value 为 null 或 undefined 时，返回 defaultValue，否则返回 value 本身
+        showOverflowTooltip: column.showOverflowTooltip ?? true, // 鼠标移入显示全部内容
       };
 
       // 如果有子列，递归渲染
@@ -920,6 +921,11 @@ defineExpose({
         background-color: #f8f8f9 !important;
         .el-table__cell {
           padding: 1px 0; // 调整内边距来控制高度
+          // 固定内容区高度，确保行高一致
+          .cell {
+            height: 26px;
+            line-height: 26px;
+          }
         }
         thead {
           background-color: #f8f8f9 !important;
@@ -939,7 +945,11 @@ defineExpose({
     .el-table__body {
       .el-table__cell {
         padding: 1px 0; // 调整内边距来控制高度
-
+        // 固定内容区高度，确保行高一致
+        .cell {
+          height: 26px;
+          line-height: 26px;
+        }
         // 可点击单元格样式
         .clickable-cell {
           cursor: pointer;
