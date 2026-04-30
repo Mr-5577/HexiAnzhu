@@ -1,3 +1,4 @@
+<!-- 基础表格组件 -->
 <template>
   <div class="pro-table-container" ref="containerRef">
     <!-- 操作栏 -->
@@ -166,6 +167,8 @@ export interface TableColumnItem {
     /** 提示框宽度，支持像素(px)或百分比(%) */
     width?: string;
   };
+  /** 是否显示合计行 */
+  showSummary?: boolean;
   /** 其他自定义属性 */
   [key: string]: any;
 }
@@ -177,7 +180,7 @@ interface DictItem {
   [key: string]: any;
 }
 
-interface DictData {
+export interface DictData {
   [key: string]: DictItem[];
 }
 
@@ -231,6 +234,12 @@ interface Props {
   summaryMethod?: (params: { columns: any[]; data: any[] }) => string[];
   /** 是否开启行点击高亮效果，点击行时背景色变化 */
   highlightCurrentRow?: boolean;
+  /** 树形表格配置，直接传递给 el-table 的 tree-props 属性 */
+  treeProps?: {
+    hasChildren?: string;
+    children?: string;
+    checkStrictly?: boolean;
+  };
 }
 
 // 定义组件事件
@@ -305,7 +314,7 @@ const TableColumn = {
     },
   },
   emits: ["cell-click", "cell-event"],
-  setup(props: TableColumnProps & { slots: any }, { emit }) {
+  setup(props: TableColumnProps, { emit }) {
     const getDictLabel = (dictKey: string, value: any): string => {
       const dict = props.dictData[dictKey];
       if (!dict) return String(value);
@@ -454,7 +463,8 @@ const TableColumn = {
           if (column.slot) {
             const slotFunc = props.slots[column.slot];
             if (slotFunc) {
-              return slotFunc(scope);
+              return slotFunc({ row: scope.row, column: column, $index: scope.$index });
+              // return slotFunc(scope);
             }
           }
 
@@ -522,6 +532,12 @@ const props = withDefaults(defineProps<Props>(), {
   isExpandAll: false,
   showSummary: false,
   highlightCurrentRow: true,
+  // treeProps 默认值
+  treeProps: () => ({
+    hasChildren: "hasChildren",
+    children: "children",
+    checkStrictly: false,
+  }),
 });
 
 const emit = defineEmits<Emits>();
@@ -627,6 +643,8 @@ const getTableProps = computed(() => {
   if (props.height || props.maxHeight) {
     baseProps.height = props.height;
   }
+  // 传递 tree-props 属性（使用默认值）
+  baseProps["tree-props"] = props.treeProps;
 
   return baseProps;
 });
@@ -875,9 +893,11 @@ defineExpose({
   height: 100%;
   display: flex;
   flex-direction: column;
+  padding-bottom: 5px;
+  box-sizing: border-box;
 }
 .action-bar {
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   flex-shrink: 0;
 }
 .toolbar {
@@ -923,8 +943,8 @@ defineExpose({
           padding: 1px 0; // 调整内边距来控制高度
           // 固定内容区高度，确保行高一致
           .cell {
-            height: 26px;
-            line-height: 26px;
+            height: 28px;
+            line-height: 28px;
           }
         }
         thead {
@@ -947,8 +967,8 @@ defineExpose({
         padding: 1px 0; // 调整内边距来控制高度
         // 固定内容区高度，确保行高一致
         .cell {
-          height: 26px;
-          line-height: 26px;
+          height: 28px;
+          line-height: 28px;
         }
         // 可点击单元格样式
         .clickable-cell {
@@ -985,7 +1005,7 @@ defineExpose({
   flex-shrink: 0;
   :deep(.el-pager) {
     .is-active {
-      background: linear-gradient(135deg, #032c46 0%, #05456e 100%);
+      background: linear-gradient(135deg, #05456e 0%, #4096cc 100%);
     }
   }
 }

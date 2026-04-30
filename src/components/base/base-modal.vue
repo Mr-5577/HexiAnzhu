@@ -139,8 +139,8 @@ defineExpose({
 }
 
 .modal-body {
-  padding: 20px;
-  box-sizing: border-box;
+  // padding: 20px;
+  // box-sizing: border-box;
   max-height: 60vh;
   overflow-y: auto;
 
