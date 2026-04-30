@@ -8,15 +8,27 @@
 import { getEnvironmentName } from "@/utils/config";
 // 应用根组件
 console.log(getEnvironmentName(), import.meta.env.VITE_APP_TITLE);
-console.log('config==>', import.meta.env);
+console.log("config==>", import.meta.env);
 </script>
 
 <style lang="scss">
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+}
 #app {
   width: 100%;
   min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
 }
 // 全局的cascader的class属性为fixed-height-cascader的样式
 .fixed-height-cascader {

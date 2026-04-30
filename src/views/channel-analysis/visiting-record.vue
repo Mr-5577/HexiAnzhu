@@ -96,7 +96,6 @@
           <el-button
             link
             type="primary"
-            size="small"
             @click="handlePrint(scope.row)"
           >
             打印
