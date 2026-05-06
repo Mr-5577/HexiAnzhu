@@ -1,3 +1,4 @@
+<!-- 数据字典列表 -->
 <template>
   <div class="dictionary-list-container">
     <base-table

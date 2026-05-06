@@ -14,6 +14,7 @@ declare module 'vue' {
     BaseChart: typeof import('./src/components/base/base-chart.vue')['default']
     BaseModal: typeof import('./src/components/base/base-modal.vue')['default']
     BaseTable: typeof import('./src/components/base/base-table.vue')['default']
+    BaseUploadFile: typeof import('./src/components/base/base-upload-file.vue')['default']
     EditableTable: typeof import('./src/components/base/editable-table.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']
     ElAside: typeof import('element-plus/es')['ElAside']

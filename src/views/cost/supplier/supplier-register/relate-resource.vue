@@ -4,8 +4,9 @@
       <el-button type="primary" @click="handleAdd">新增资源</el-button>
     </div>
     
-    <EditableTable
+    <editable-table
       ref="editableTableRef"
+      :rowKey="'id'"
       :table-data="tableData"
       :columns="columns"
       :dict-data="dictData"
@@ -41,6 +42,7 @@ const columns: EditableColumn[] = [
     prop: "name", 
     label: "姓名", 
     editable: true, 
+    showOverflowTooltip: false,
     editType: "input", 
     placeholder: "请输入姓名" 
   },
@@ -48,12 +50,14 @@ const columns: EditableColumn[] = [
     prop: "age", 
     label: "年龄", 
     editable: true, 
+    showOverflowTooltip: false,
     editType: "number" 
   },
   { 
     prop: "email", 
     label: "邮箱", 
     editable: true, 
+    showOverflowTooltip: false,
     editType: "input",
     placeholder: "请输入邮箱"
   },
@@ -61,6 +65,7 @@ const columns: EditableColumn[] = [
     prop: "status", 
     label: "状态", 
     editable: true, 
+    showOverflowTooltip: false,
     editType: "select",
     dict: "status",  // 使用字典
     options: [
@@ -72,18 +77,21 @@ const columns: EditableColumn[] = [
     prop: "birthday", 
     label: "生日", 
     editable: true, 
+    showOverflowTooltip: false,
     editType: "date" 
   },
   { 
     prop: "active", 
     label: "启用", 
     editable: true, 
+    showOverflowTooltip: false,
     editType: "switch" 
   },
   { 
     prop: "gender", 
     label: "性别", 
     editable: true, 
+    showOverflowTooltip: false,
     editType: "radio",
     options: [
       { label: "男", value: "male" },
@@ -94,6 +102,7 @@ const columns: EditableColumn[] = [
     prop: "remark", 
     label: "备注", 
     editable: true, 
+    showOverflowTooltip: false,
     editType: "textarea",
     placeholder: "请输入备注"
   },

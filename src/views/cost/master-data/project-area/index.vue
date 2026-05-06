@@ -109,9 +109,9 @@
 import { ref, onMounted } from "vue";
 import { HomeFilled, Search, OfficeBuilding } from "@element-plus/icons-vue";
 import type { ElTree } from "element-plus";
-import VersionManagement from "./version-management.vue";
-import BuildingMetrics from "./building-metrics.vue";
-import AreaDetail from "./area-detail.vue";
+import VersionManagement from "./components/version-management/index.vue";
+import BuildingMetrics from "./components/building-metrics/index.vue";
+import AreaDetail from "./components/area-detail/index.vue";
 
 defineOptions({ name: "project-area" });
 

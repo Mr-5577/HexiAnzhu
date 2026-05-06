@@ -1,3 +1,4 @@
+<!-- 供应商登记 -->
 <template>
   <div class="supplier-register">
     <el-container>

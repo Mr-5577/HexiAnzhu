@@ -1,4 +1,4 @@
-<!-- EditableTable.vue -->
+<!-- 可编辑表格，在基础表格组件上二次封装为可编辑表格 -->
 <template>
   <base-table
     ref="baseTableRef"
