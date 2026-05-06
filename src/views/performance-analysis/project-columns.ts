@@ -629,6 +629,7 @@ export const SubDetailColumns: any = [
     showSummary: true, // 标记需要合计
     formatter: (row: any) => formatNumberDisplay(row.saleUnitPrice),
   },
+  { prop: "payWayName", label: "付款方式", width: 120 },
   { prop: "saleDate", label: "认购日期", width: 120 },
   { prop: "asstDate", label: "成交日期", width: 120 },
   { prop: "syearMonth", label: "业绩年月", width: 100 },
@@ -668,6 +669,7 @@ export const ContractDetailColumns: any = [
     showSummary: true,
     formatter: (row: any) => formatNumberDisplay(row.saleUnitPrice),
   },
+  { prop: "payWayName", label: "付款方式", width: 120 },
   { prop: "saleDate", label: "认购日期", width: 120 },
   { prop: "signTime", label: "签约日期", width: 120 },
   { prop: "syearMonth", label: "业绩年月", width: 100 },
@@ -699,6 +701,7 @@ export const CollectionDetailColumns: any = [
     showSummary: true,
     formatter: (row: any) => formatNumberDisplay(row.saleMoney),
   },
+  { prop: "payWayName", label: "付款方式", width: 120 },
   { prop: "saleDate", label: "认购日期", width: 120 },
   { prop: "collectDate", label: "回款日期", width: 120 },
   { prop: "syearMonth", label: "业绩年月", width: 100 },
