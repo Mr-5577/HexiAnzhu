@@ -9,6 +9,7 @@
     :append-to-body="true"
     destroy-on-close
     @close="handleClose"
+    class="base-modal-dialog"
   >
     <!-- 头部 -->
     <template #header>
@@ -21,9 +22,7 @@
     </template>
 
     <!-- 内容区域 -->
-    <div class="modal-body">
-      <slot></slot>
-    </div>
+    <slot></slot>
 
     <!-- 底部 -->
     <template #footer>
@@ -82,7 +81,7 @@ watch(
   () => props.modelValue,
   (val) => {
     modalVisible.value = val;
-  }
+  },
 );
 
 watch(modalVisible, (val) => {
@@ -138,27 +137,17 @@ defineExpose({
   }
 }
 
-.modal-body {
-  // padding: 20px;
-  // box-sizing: border-box;
-  max-height: 60vh;
-  overflow-y: auto;
-
-  &:deep(*) {
-    &:first-child {
-      margin-top: 0;
-    }
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-}
-
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   padding: 0 20px 20px;
+}
+</style>
+<style lang="scss">
+// 不加 scoped，专门写 dialog 的样式
+.base-modal-dialog .el-dialog__body {
+  max-height: 70vh;
+  overflow-y: auto;
 }
 </style>
