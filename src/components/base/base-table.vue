@@ -169,6 +169,10 @@ export interface TableColumnItem {
   };
   /** 是否显示合计行 */
   showSummary?: boolean;
+  /** 选择列专用：判断该行是否可选，优先级高于 disabledField */
+  selectable?: (row: any, index: number) => boolean;
+  /** 选择列专用：根据行数据的字段名判断是否可选，值为 true 表示不可选 */
+  disabledField?: string;
   /** 其他自定义属性 */
   [key: string]: any;
 }
@@ -356,6 +360,15 @@ const TableColumn = {
         if (column.fixed) {
           selectionColumnProps.fixed = column.fixed;
         }
+        // 支持两种方式：优先使用 selectable 回调，其次使用 disabledField 字段
+        if (column.selectable) {
+          selectionColumnProps.selectable = column.selectable;
+        } else if (column.disabledField) {
+          selectionColumnProps.selectable = (row: any) => {
+            return !row[column.disabledField!]; // 字段值为 true 时不可选
+          };
+        }
+
         return h(resolveComponent("el-table-column"), selectionColumnProps);
       }
 
@@ -463,7 +476,11 @@ const TableColumn = {
           if (column.slot) {
             const slotFunc = props.slots[column.slot];
             if (slotFunc) {
-              return slotFunc({ row: scope.row, column: column, $index: scope.$index });
+              return slotFunc({
+                row: scope.row,
+                column: column,
+                $index: scope.$index,
+              });
               // return slotFunc(scope);
             }
           }
@@ -615,6 +632,10 @@ const calculateTableHeight = (): number | null => {
 
 // 计算表格容器样式
 const tableWrapperStyle = computed<Record<string, any>>(() => {
+  // 如果设置了 maxHeight，不设置 wrapper 高度，让表格自己管理滚动
+  if (props.maxHeight) {
+    return {};
+  }
   if (!props.autoHeight) return {};
   if (tableHeight.value === null) return {};
   return {
