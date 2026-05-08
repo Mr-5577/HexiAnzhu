@@ -154,7 +154,8 @@ const handleAdd = () => {
   background: #ffffff;
   border-radius: 16px;
   overflow: hidden;
-  padding: 20px;
+  padding: 15px;
+  box-sizing: border-box;
 
   .header-actions {
     display: flex;

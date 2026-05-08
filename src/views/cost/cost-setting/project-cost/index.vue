@@ -16,7 +16,6 @@
       </el-form-item>
     </el-form>
     <base-table
-      v-if="refreshTable"
       :columns="columns"
       :tableData="tableData"
       :loading="loading"
@@ -56,19 +55,12 @@ import ProductSelectionDialog from "./product-selection-dialog.vue";
 defineOptions({ name: "project-cost" });
 
 // 使用共享的 data hook
-const {
-  projectOptions,
-  // loading: dataLoading,
-  // getLeafNodeIds,
-  loadData,
-  getAllLeafProjectIds,
-} = useSalesData();
+const { projectOptions } = useSalesData();
 
 const queryParams = ref({
   projIds: [],
 });
 const modalVisible = ref(false);
-const refreshTable = ref(true);
 const isExpandAll = ref(false);
 const loading = ref(false);
 const currentPage = ref(1);

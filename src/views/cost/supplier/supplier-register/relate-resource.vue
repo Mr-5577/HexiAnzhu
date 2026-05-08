@@ -37,7 +37,7 @@ const dictData = {
 };
 
 const columns: EditableColumn[] = [
-  { type: "index", label: "序号", width: 80 },
+  { type: "index", label: "序号", width: 60 },
   { 
     prop: "name", 
     label: "姓名", 
@@ -161,7 +161,8 @@ const handleDataChange = (data) => {
   flex-direction: column;
   background: #ffffff;
   border-radius: 16px;
-  padding: 20px;
+  padding: 15px;
+  box-sizing: border-box;
   overflow: auto;
 
   .header-actions {

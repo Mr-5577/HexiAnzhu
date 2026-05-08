@@ -1,5 +1,6 @@
+<!-- 招标管理 -->
 <template>
-  <div class="project-area-page">
+  <div class="bidding-management-page">
     <!-- 城市项目 -->
     <div class="left-content">
       <div class="search-box">
@@ -36,7 +37,7 @@
               }"
             >
               <el-icon v-if="data.type === 'city'"><OfficeBuilding /></el-icon>
-              <el-icon v-else><HomeFilled /></el-icon>
+              <el-icon v-else><House /></el-icon>
               <span>{{ node.label }}</span>
               <span v-if="data.type === 'city'" class="node-count">
                 ({{ data.children?.length || 0 }}个项目)
@@ -47,56 +48,77 @@
       </div>
     </div>
 
-    <!-- 项目详细信息 -->
     <div class="right-content" v-if="selectedProject">
-      <div class="project-overview">
-        <div class="overview-card">
-          <div class="card-left">
-            <div class="project-name">{{ selectedProject.label }}</div>
-            <div class="company-name">
-              {{ selectedProject.companyName || "待填写" }}
-            </div>
-          </div>
-          <div class="card-right">
-            <div class="stat-item">
-              <div class="stat-value">
-                {{ formatNumber(selectedProject.totalArea) }}
-              </div>
-              <div class="stat-label">总建筑面积(m²)</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">
-                {{ formatNumber(selectedProject.saleableArea) }}
-              </div>
-              <div class="stat-label">总可销售面积(m²)</div>
-            </div>
-            <div class="stat-item">
-              <div class="stat-value">
-                {{ formatNumber(selectedProject.totalUnits) }}
-              </div>
-              <div class="stat-label">总户数(户)</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="detail-tab">
-        <el-tabs v-model="activeTab">
-          <el-tab-pane label="版本管理" name="version" style="height: 100%">
-            <version-management />
-          </el-tab-pane>
-          <el-tab-pane
-            label="楼栋指标管理"
-            name="building"
-            style="height: 100%"
+      <el-form :model="queryParams" ref="queryRef" :inline="true">
+        <!-- <el-form-item label="项目" prop="projIds">
+          <project-tree-selector
+            v-model="queryParams.projIds"
+            :project-list="projectOptions"
+            placeholder="请选择项目"
+            width="220px"
+          ></project-tree-selector>
+        </el-form-item> -->
+        <el-form-item label="业务板块" prop="sss">
+          <el-select
+            v-model="queryParams.sss"
+            placeholder="请选择业务板块"
+            :clearable="false"
+            style="width: 200px"
           >
-            <building-metrics />
-          </el-tab-pane>
-          <el-tab-pane label="面积详情" name="area" style="height: 100%">
-            <area-detail />
-          </el-tab-pane>
-        </el-tabs>
-      </div>
+            <el-option label="1" value="1" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="合同分类" prop="sss">
+          <el-select
+            v-model="queryParams.sss"
+            placeholder="请选择合同分类"
+            :clearable="false"
+            style="width: 200px"
+          >
+            <el-option label="2" value="2" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="关键信息" prop="sss">
+          <el-input
+            v-model="queryParams.sss"
+            placeholder="请输入关键信息"
+            clearable
+            style="width: 200px"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" icon="Search"> 搜索 </el-button>
+          <el-button icon="Refresh"> 重置 </el-button>
+          <el-button type="primary"> 新增事项 </el-button>
+        </el-form-item>
+      </el-form>
+      <base-table
+        v-if="refreshTable"
+        :columns="columns"
+        :tableData="tableData"
+        :loading="loading"
+        :total="total"
+        :rowKey="'treeId'"
+        :current-page="currentPage"
+        :page-size="pageSize"
+        :pagination="false"
+        @pagination-change="handlePaginationChange"
+        :isExpandAll="isExpandAll"
+      >
+        <!-- 自定义插槽 ==> scope 包含：row, column, $index 等 -->
+        <template #actions="{ row }">
+          <el-button type="primary" link> 审核 </el-button>
+          <!-- <el-button type="primary" link> 招标 </el-button> -->
+          <!-- <el-button type="primary" link> 退回 </el-button>
+          <el-button type="primary" link> 定标 </el-button>
+          <el-button type="primary" link> 签约 </el-button> -->
+          <el-button type="primary" link> 编辑 </el-button>
+          <el-button type="primary" link @click="handleDetail(row)">
+            详情
+          </el-button>
+          <el-button type="danger" link> 删除 </el-button>
+        </template>
+      </base-table>
     </div>
 
     <div class="right-content empty" v-else>
@@ -106,51 +128,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
-import { HomeFilled, Search, OfficeBuilding } from "@element-plus/icons-vue";
-import type { ElTree } from "element-plus";
-import VersionManagement from "./components/version-management/index.vue";
-import BuildingMetrics from "./components/building-metrics/index.vue";
-import AreaDetail from "./components/area-detail/index.vue";
+import { onMounted, onUnmounted, ref } from "vue";
+import type { TableColumnItem } from "@/components/base/base-table.vue";
+import { useSalesData } from "@/composables/use-sales";
+import { useRoute, useRouter } from "vue-router";
 
-defineOptions({ name: "project-area" });
+const route = useRoute();
+const router = useRouter();
+// 组件name，需要和菜单配置里面的name一致
+defineOptions({ name: "bidding-management" });
 
-// 类型定义
-interface CityNode {
-  id: number;
-  label: string;
-  type: string;
-  disabled: boolean;
-  isLeaf: boolean;
-  children?: VillageNode[];
-}
+// 使用共享的 data hook
+const { projectOptions } = useSalesData();
 
-interface VillageNode {
-  id: number;
-  label: string;
-  city_id: number;
-  type: string;
-  area: number;
-  isLeaf: boolean;
-  disabled: boolean;
-}
-
-interface SelectedProject {
-  id: number;
-  label: string;
-  cityName: string;
-  area: number;
-  companyName: string;
-  totalArea: number;
-  saleableArea: number;
-  totalUnits: number;
-}
-
-// 数据
-const treeRef = ref<InstanceType<typeof ElTree>>();
+const treeRef = ref(null);
 const searchKeyword = ref("");
-const treeData = ref<CityNode[]>([]);
-const selectedProject = ref<SelectedProject | null>(null);
+const treeData = ref([]);
+const selectedProject = ref(null);
 const activeTab = ref("version");
 const currentNodeKey = ref<string | number | null>(null);
 
@@ -161,9 +155,8 @@ const treeProps = {
   disabled: "disabled",
   isLeaf: "isLeaf",
 };
-
 // 过滤节点
-const filterNode = (value: string, data: CityNode | VillageNode) => {
+const filterNode = (value: string, data: any) => {
   if (!value) return true;
   return data.label.includes(value);
 };
@@ -174,10 +167,10 @@ const handleSearch = () => {
 };
 
 // 点击节点
-const handleNodeClick = (data: CityNode | VillageNode) => {
+const handleNodeClick = (data: any) => {
   // 只处理项目节点（小区）
   if (data.type === "village") {
-    const village = data as VillageNode;
+    const village = data;
     // 设置当前高亮的节点key
     currentNodeKey.value = village.id;
     // 查找所属城市名称
@@ -197,12 +190,6 @@ const handleNodeClick = (data: CityNode | VillageNode) => {
     // 点击城市节点时，清除高亮
     // currentNodeKey.value = null;
   }
-};
-
-// 格式化数字
-const formatNumber = (num: number) => {
-  if (!num) return "0";
-  return num.toLocaleString();
 };
 
 // 加载数据
@@ -392,13 +379,165 @@ const loadData = () => {
   ];
 };
 
+const queryParams = ref({
+  projIds: [],
+  sss: "",
+});
+const modalVisible = ref(false);
+const refreshTable = ref(true);
+const isExpandAll = ref(false);
+const loading = ref(false);
+const currentPage = ref(1);
+const pageSize = ref(10);
+const total = ref(0);
+const columns: TableColumnItem[] = [
+  { type: "index", label: "序号", width: 60 },
+  { prop: "orgName", label: "业务板块", width: 100 },
+  { prop: "orgName", label: "项目", width: 200 },
+  { prop: "orgName", label: "合同分类", width: 100 },
+  { prop: "orgName", label: "采购事项", width: 150 },
+  { prop: "orgName", label: "采购方式", width: 100 },
+  { prop: "orgName", label: "招标方式", width: 100 },
+  { prop: "orgName", label: "计划金额", width: 100 },
+  { prop: "orgName", label: "清单模式", width: 100 },
+  { prop: "orgName", label: "需求时间", width: 150 },
+  { prop: "operDate", label: "招采开始日期", width: 160 },
+  { prop: "operDate", label: "招采结束日期", width: 160 },
+  { prop: "orgName", label: "招采负责人", width: 120 },
+  { prop: "orgName", label: "采购状态", width: 100 },
+  {
+    label: "操作",
+    prop: "actions",
+    width: 200,
+    slot: "actions",
+    fixed: "right",
+  },
+];
+const tableData = ref<any[]>([]);
+// 获取数据列表
+const getDataList = async () => {
+  try {
+    loading.value = true;
+    const res = {
+      code: 200,
+      message: "success",
+      data: [
+        {
+          isDel: false,
+          createId: 1,
+          createDate: "2025-12-31 10:52:11",
+          operId: 11,
+          operDate: "2025-12-31 11:07:41",
+          id: 329,
+          roleId: 1,
+          dataType: 4,
+          dataId: 1,
+          treeId: "1",
+          treePid: "root",
+          orgName: "总部",
+          sort: "1",
+          orgId: 1,
+          orgPid: 0,
+        },
+        {
+          isDel: false,
+          createId: 1,
+          createDate: "2025-12-31 10:52:11",
+          operId: 11,
+          operDate: "2025-12-31 11:07:41",
+          id: 361,
+          roleId: 1,
+          dataType: 4,
+          dataId: 2,
+          treeId: "2",
+          treePid: "root",
+          orgName: "地产",
+          sort: "2",
+          orgId: 2,
+          orgPid: 0,
+        },
+        {
+          isDel: false,
+          createId: 1,
+          createDate: "2025-12-31 10:52:11",
+          operId: 11,
+          operDate: "2025-12-31 11:07:41",
+          id: 373,
+          roleId: 1,
+          dataType: 4,
+          dataId: 3,
+          treeId: "3",
+          treePid: "root",
+          orgName: "商业",
+          sort: "3",
+          orgId: 3,
+          orgPid: 0,
+        },
+        {
+          isDel: false,
+          createId: 1,
+          createDate: "2025-12-31 10:52:11",
+          operId: 11,
+          operDate: "2025-12-31 11:07:41",
+          id: 374,
+          roleId: 1,
+          dataType: 4,
+          dataId: 4,
+          treeId: "4",
+          treePid: "root",
+          orgName: "物业",
+          sort: "4",
+          orgId: 4,
+          orgPid: 0,
+        },
+        {
+          isDel: false,
+          createId: 1,
+          createDate: "2025-12-31 10:52:11",
+          operId: 11,
+          operDate: "2025-12-31 11:07:41",
+          id: 376,
+          roleId: 1,
+          dataType: 4,
+          dataId: 5,
+          treeId: "5",
+          treePid: "root",
+          orgName: "合作伙伴",
+          sort: "5",
+          orgId: 5,
+          orgPid: 0,
+        },
+      ],
+    };
+    if (res.code === 200) {
+      tableData.value = res.data || [];
+    }
+  } finally {
+    loading.value = false;
+  }
+};
+// 分页变化
+const handlePaginationChange = (params: any) => {
+  currentPage.value = params.currentPage;
+  pageSize.value = params.pageSize;
+};
+
+const handleDetail = (row: any) => {
+  // 这里可以根据 row 的数据进行路由跳转或显示详情弹窗
+  console.log("查看详情，数据行：", row);
+  router.push({
+    path: "/cost/bidding-detail",
+  });
+};
 onMounted(() => {
   loadData();
+  getDataList();
 });
+onUnmounted(() => {});
 </script>
 
 <style lang="scss" scoped>
-.project-area-page {
+.bidding-management-page {
   width: 100%;
   height: 100%;
   display: flex;
@@ -406,7 +545,6 @@ onMounted(() => {
   padding: 10px;
   box-sizing: border-box;
   background: #f0f2f6;
-
   .left-content {
     width: 248px;
     flex-shrink: 0;
@@ -485,9 +623,10 @@ onMounted(() => {
       }
     }
   }
-
   .right-content {
     flex: 1;
+    padding: 15px 15px;
+    box-sizing: border-box;
     background: #fff;
     border-radius: 8px;
     display: flex;
@@ -497,107 +636,6 @@ onMounted(() => {
     &.empty {
       justify-content: center;
       align-items: center;
-    }
-
-    .project-overview {
-      padding: 15px;
-      box-sizing: border-box;
-      .overview-card {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background: linear-gradient(135deg, #f5f9ff 0%, #e8f2ff 100%);
-        border-radius: 12px;
-        padding: 24px 32px;
-        border: 1px solid #d9ecff;
-
-        .card-left {
-          flex-shrink: 0;
-
-          .project-name {
-            font-size: 18px;
-            font-weight: 600;
-            color: #303133;
-            margin-bottom: 8px;
-          }
-
-          .company-name {
-            font-size: 14px;
-            color: #606266;
-          }
-        }
-
-        .card-right {
-          display: flex;
-          gap: 30px;
-
-          .stat-item {
-            text-align: center;
-            min-width: 100px;
-
-            .stat-value {
-              font-size: 24px;
-              font-weight: 600;
-              color: #409eff;
-              margin-bottom: 6px;
-              line-height: 1.2;
-            }
-
-            .stat-label {
-              font-size: 12px;
-              color: #606266;
-              white-space: nowrap;
-            }
-          }
-        }
-      }
-    }
-
-    .detail-tab {
-      flex: 1;
-      padding: 0 15px 15px;
-      box-sizing: border-box;
-      overflow: hidden;
-      :deep(.el-tabs) {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        .el-tabs__header {
-          margin: 0 0 16px 0;
-          .el-tabs__active-bar {
-            background-color: #409eff;
-          }
-
-          .el-tabs__item {
-            font-size: 14px;
-
-            &:hover {
-              color: #409eff;
-            }
-
-            &.is-active {
-              color: #409eff;
-            }
-          }
-        }
-
-        .el-tabs__content {
-          flex: 1;
-          //   overflow-y: auto;
-          overflow: hidden;
-        }
-      }
-
-      .tab-placeholder {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 200px;
-        color: #909399;
-        background: #fafafa;
-        border-radius: 8px;
-        border: 1px dashed #dcdfe6;
-      }
     }
   }
 }

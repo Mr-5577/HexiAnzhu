@@ -280,7 +280,7 @@ onMounted(() => {
   height: 100%;
   display: flex;
   gap: 10px;
-  padding: 16px;
+  padding: 10px;
   background: #f0f2f6;
 
   .left-tree {
