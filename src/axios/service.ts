@@ -87,7 +87,9 @@ service.interceptors.request.use(
     }
     // 统一增加请求加速参数
     // console.log(JSON.parse(localStorage.getItem("user-store")).isQueryFast);
-    const isQueryFast = JSON.parse(localStorage.getItem("user-store") || "{}")?.isQueryFast;
+    const isQueryFast = JSON.parse(
+      localStorage.getItem("user-store") || "{}",
+    )?.isQueryFast;
     // // 根据请求方法添加到相应位置
     if (
       config.method?.toLowerCase() === "get" ||
@@ -293,6 +295,42 @@ export const http = {
     config?: AxiosRequestConfig,
   ): Promise<T> {
     return service.post(url, data, config);
+  },
+
+  /**
+   * 发送 FormData 格式的 POST 请求
+   * @param url 请求地址
+   * @param data 对象数据（会自动转为 FormData）
+   * @param config 配置项
+   */
+  formPost<T = any>(
+    url: string,
+    data: Record<string, any>,
+    config?: AxiosRequestConfig,
+  ): Promise<T> {
+    const formData = new FormData();
+    Object.keys(data).forEach((key) => {
+      const value = data[key];
+      if (value !== null && value !== undefined) {
+        // 处理不同类型的值
+        if (value instanceof File || value instanceof Blob) {
+          formData.append(key, value);
+        } else if (Array.isArray(value)) {
+          value.forEach((v) => formData.append(`${key}[]`, String(v)));
+        } else if (typeof value === "object") {
+          formData.append(key, JSON.stringify(value));
+        } else {
+          formData.append(key, String(value));
+        }
+      } else {
+        formData.append(key, "");
+      }
+    });
+
+    return this.post(url, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      ...config,
+    });
   },
 
   put<T = any>(
