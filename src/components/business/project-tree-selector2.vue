@@ -580,22 +580,22 @@ defineExpose({
   }
 }
 // 滚动条样式
-.tree-container,
-.selected-preview {
-  &::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  &::-webkit-scrollbar-track {
-    background: var(--el-fill-color-light);
-    border-radius: 3px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: var(--el-border-color-dark);
-    border-radius: 3px;
-    &:hover {
-      background: var(--el-border-color-darker);
-    }
-  }
-}
+// .tree-container,
+// .selected-preview {
+//   &::-webkit-scrollbar {
+//     width: 6px;
+//     height: 6px;
+//   }
+//   &::-webkit-scrollbar-track {
+//     background: var(--el-fill-color-light);
+//     border-radius: 3px;
+//   }
+//   &::-webkit-scrollbar-thumb {
+//     background: var(--el-border-color-dark);
+//     border-radius: 3px;
+//     &:hover {
+//       background: var(--el-border-color-darker);
+//     }
+//   }
+// }
 </style>

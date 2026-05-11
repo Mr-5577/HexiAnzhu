@@ -149,24 +149,24 @@ defineExpose({
 .base-modal-dialog .el-dialog__body {
   max-height: 60vh;
   overflow-y: auto;
-  // 内容区滚动条美化
-  &::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
+  // // 内容区滚动条美化
+  // &::-webkit-scrollbar {
+  //   width: 6px;
+  //   height: 6px;
+  // }
 
-  &::-webkit-scrollbar-track {
-    background: var(--el-fill-color-light);
-    border-radius: 3px;
-  }
+  // &::-webkit-scrollbar-track {
+  //   background: var(--el-fill-color-light);
+  //   border-radius: 3px;
+  // }
 
-  &::-webkit-scrollbar-thumb {
-    background: var(--el-border-color-dark);
-    border-radius: 3px;
+  // &::-webkit-scrollbar-thumb {
+  //   background: var(--el-border-color-dark);
+  //   border-radius: 3px;
 
-    &:hover {
-      background: var(--el-border-color-darker);
-    }
-  }
+  //   &:hover {
+  //     background: var(--el-border-color-darker);
+  //   }
+  // }
 }
 </style>

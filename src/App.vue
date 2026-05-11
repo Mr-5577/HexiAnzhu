@@ -32,7 +32,7 @@ body {
 }
 // 全局的cascader的class属性为fixed-height-cascader的样式
 .fixed-height-cascader {
-  /* 关键：使用 flex 布局实现完美垂直居中 */
+  /* 使用 flex 布局实现垂直居中 */
   .el-input {
     height: 32px !important;
 
@@ -129,6 +129,25 @@ body {
     .el-cascader__search-input {
       min-width: 30px;
     }
+  }
+}
+// 全局滚动条样式
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--el-fill-color-light);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--el-border-color-dark);
+  border-radius: 3px;
+
+  &:hover {
+    background: var(--el-border-color-darker);
   }
 }
 </style>
