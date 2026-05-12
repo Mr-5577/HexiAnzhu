@@ -4,7 +4,9 @@
     <div class="detail-header">
       <div class="header-title">
         <div class="title-main">业态详情</div>
-        <div class="title-sub">录入 1# 的各业态面积指标</div>
+        <div class="title-sub">
+          {{ props.selectedBuilding?.bldName || "--" }} 的各业态面积指标
+        </div>
       </div>
       <div class="header-actions">
         <div class="building-info">
@@ -15,83 +17,163 @@
           <div class="building-detail-info">
             <div class="building-name">
               <el-icon><OfficeBuilding /></el-icon>
-              <span>1#</span>
+              <span>{{ props.selectedBuilding?.bldName || "" }}</span>
             </div>
-            <div class="building-floor">
+            <!-- <div class="building-floor">
               <el-icon><Grid /></el-icon>
               <span>楼层：</span>
               <span>32层</span>
-            </div>
+            </div> -->
           </div>
         </div>
-        <el-button type="primary">
-          <el-icon><Plus /></el-icon>
-          添加业态
+        <div>
+          <el-button type="primary" plain @click="handleAddBusiness">
+            新增业态
+          </el-button>
+          <el-button
+            type="primary"
+            :loading="saveLoading"
+            @click="handleBatchSave"
+          >
+            批量保存
+          </el-button>
+        </div>
+      </div>
+    </div>
+    <!-- <base-table
+      ref="businessDetailtableRef"
+      :columns="tableColumns"
+      :tableData="tableList"
+      rowKey="uuid"
+      :border="true"
+      :loading="tableLoading"
+      :pagination="false"
+      :showSummary="true"
+    ></base-table> -->
+    <editable-table
+      ref="businessDetailtableRef"
+      :rowKey="'uuid'"
+      :table-data="tableList"
+      :columns="tableColumns"
+      :loading="tableLoading"
+      :pagination="false"
+      :highlight-current-row="false"
+      :showSummary="true"
+      :on-save="handleSave"
+      @data-change="handleDataChange"
+      @update:table-data="handleDataUpdate"
+    >
+      <!-- 操作列 -->
+      <template #actions="{ row }">
+        <el-button link type="danger" @click="handleDelete(row)">
+          删除
         </el-button>
-      </div>
-    </div>
-
-    <div class="business-cards" v-loading="loading">
-      <div class="card-content" v-for="item in listData" :key="item.id">
-        <div class="area-info">
-          <div class="area-label">{{ item.text }}</div>
-          <div class="area-value">{{ item.totalArea }}</div>
-        </div>
-        <div class="area-detail" v-if="item.aboveArea">
-          <span>地上{{ item.aboveArea }}</span>
-          <span>/</span>
-          <span>地下{{ item.underArea }}</span>
-        </div>
-      </div>
-    </div>
+      </template></editable-table
+    >
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { ElMessage } from "element-plus";
-import { Plus, OfficeBuilding, Grid, ArrowLeft } from "@element-plus/icons-vue";
+import { v4 as uuidv4 } from "uuid";
+import { OfficeBuilding, ArrowLeft } from "@element-plus/icons-vue";
+import EditableTable from "@/components/base/editable-table.vue";
+import type { EditableColumn } from "@/components/base/editable-table.vue";
+import { projectAreaApi } from "@/api/cost/project-area-api";
+import { ProjectBuilding } from "@/types/cost/project-area-type";
 
 defineOptions({ name: "business-detail" });
 
 // 定义 props
 const props = defineProps<{
-  projectId?: string | number;
+  selectedBuilding?: ProjectBuilding | null;
+  projectId?: number;
 }>();
 
 // 定义 emits
 const emit = defineEmits<{
   (e: "back"): void;
+  (e: "saveSuccess"): void;
 }>();
 
 // 数据
-const loading = ref(false);
-const listData = ref([
+const saveLoading = ref(false);
+const tableLoading = ref(false);
+const tableList = ref([]);
+const tableColumns: EditableColumn[] = [
+  { type: "index", label: "序号", width: 60, editable: false },
   {
-    id: 1,
-    text: "建筑面积",
-    totalArea: "15000 m²",
-    aboveArea: 12000,
-    underArea: 3000,
+    prop: "prodName",
+    label: "业态名称",
+    editable: true,
+    editType: "input",
+    showOverflowTooltip: false,
   },
   {
-    id: 2,
-    text: "可售面积",
-    totalArea: "8000 m²",
-    aboveArea: 6000,
-    underArea: 2000,
+    label: "建筑面积(m²)",
+    children: [
+      {
+        prop: "agBuildArea",
+        label: "地上",
+        showSummary: true,
+        editable: true,
+        editType: "number",
+        showOverflowTooltip: false,
+      },
+      {
+        prop: "ugBuildArea",
+        label: "地下",
+        showSummary: true,
+        editable: true,
+        editType: "number",
+        showOverflowTooltip: false,
+      },
+    ],
   },
   {
-    id: 3,
-    text: "总户数",
-    totalArea: 600,
+    label: "可售面积(m²)",
+    children: [
+      {
+        prop: "agSaleArea",
+        label: "地上",
+        showSummary: true,
+        editable: true,
+        editType: "number",
+        showOverflowTooltip: false,
+      },
+      {
+        prop: "ugSaleArea",
+        label: "地下",
+        showSummary: true,
+        editable: true,
+        editType: "number",
+        showOverflowTooltip: false,
+      },
+    ],
   },
   {
-    id: 4,
-    text: "电梯数",
-    totalArea: 20,
+    prop: "houseNum",
+    label: "户数",
+    showSummary: true,
+    editable: true,
+    editType: "number",
+    showOverflowTooltip: false,
   },
-]);
+  {
+    prop: "elvNum",
+    label: "电梯数",
+    editable: true,
+    editType: "number",
+    showOverflowTooltip: false,
+  },
+  {
+    label: "操作",
+    width: 100,
+    slot: "actions",
+    fixed: "right",
+  },
+];
 
 // 返回
 const handleBack = () => {
@@ -100,15 +182,96 @@ const handleBack = () => {
 
 // 加载数据
 const loadData = async () => {
-  loading.value = true;
   try {
-    // TODO: 调用接口获取业态列表
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    tableLoading.value = true;
+    tableList.value = [];
+    const params = {
+      bldId: props.selectedBuilding?.id || 0,
+      prodId: props.projectId,
+    };
+    const res = await projectAreaApi.getNetByBldId(params);
+    if (res.code === 200) {
+      const list = res.data || [];
+      const newData = list.map((item) => {
+        return {
+          ...item,
+          uuid: uuidv4(),
+        };
+      });
+      tableList.value = newData;
+    }
   } catch (error) {
     ElMessage.error("加载数据失败");
   } finally {
-    loading.value = false;
+    tableLoading.value = false;
   }
+};
+
+// 生成空数据行
+const createEmptyRow = () => {
+  return {
+    uuid: uuidv4(),
+    prodName: "", // 业态名称
+    agBuildArea: 0, // 地上建筑面积
+    ugBuildArea: 0, // 地下建筑面积
+    agSaleArea: 0, // 地上可售面积
+    ugSaleArea: 0, // 地下可售面积
+    houseNum: 0, // 户数
+    elvNum: 0, // 电梯数
+    isNew: true, // 标记为新增行
+  };
+};
+
+// 新增业态
+const handleAddBusiness = () => {
+  // 检查是否已有空行未填写
+  // const hasEmptyRow = tableList.value.some(
+  //   (item) => item.prodName === "" && item.isNew,
+  // );
+  // if (hasEmptyRow) {
+  //   ElMessage.warning("请先完成当前新增业态的填写");
+  //   return;
+  // }
+
+  // 添加空行到表格底部
+  const newRow = createEmptyRow();
+  tableList.value = [...tableList.value, newRow];
+};
+
+// 批量保存
+const handleBatchSave = async () => {
+  console.log("tableList.value", tableList.value);
+  try {
+    saveLoading.value = true;
+    const res = await projectAreaApi.batchSaveNet(tableList.value);
+    if (res.code === 200) {
+      ElMessage.success("保存成功");
+      emit("saveSuccess");
+    }
+  } catch (error) {
+  } finally {
+    saveLoading.value = false;
+  }
+};
+
+// 保存到服务器
+const handleSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
+  // console.log("保存:", { row, column, newValue, oldValue, rowIndex });
+};
+
+// 数据变化回调
+const handleDataChange = (data) => {
+  // console.log("当前行数据更新", data);
+};
+// 数据更新回调
+const handleDataUpdate = (newData) => {
+  // console.log("table数据更新", newData);
+  tableList.value = newData;
+};
+
+// 删除行
+const handleDelete = (row) => {
+  tableList.value = tableList.value.filter((item) => item.uuid !== row.uuid);
 };
 
 onMounted(() => {
@@ -169,11 +332,15 @@ defineExpose({
           gap: 6px;
           cursor: pointer;
           color: #606266;
+          font-weight: 600;
           font-size: 14px;
           padding: 8px 0px;
           border-radius: 6px;
           transition: all 0.3s;
-
+          .el-icon {
+            font-size: 16px;
+            font-weight: 600;
+          }
           &:hover {
             background-color: #f5f7fa;
             color: #409eff;
@@ -195,78 +362,13 @@ defineExpose({
             color: #606266;
 
             .el-icon {
-              color: #909399;
+              color: #606266;
+              font-size: 18px;
             }
           }
         }
       }
     }
-  }
-
-  .business-cards {
-    flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 16px;
-    align-content: flex-start;
-
-    .card-content {
-      background: #fff;
-      border: 1px solid #ebeef5;
-      border-radius: 12px;
-      padding: 16px;
-      box-sizing: border-box;
-      transition: all 0.3s;
-
-      .area-info {
-        text-align: center;
-        margin-bottom: 6px;
-        .area-label {
-          font-size: 13px;
-          color: #909399;
-        }
-        .area-value {
-          font-size: 21px;
-          font-weight: 600;
-          color: #409eff;
-        }
-      }
-      .area-detail {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 8px;
-        font-size: 14px;
-        color: #606266;
-        background: #f5f7fa;
-        padding: 6px 12px;
-        border-radius: 8px;
-
-        span:first-child {
-          color: #67c23a;
-        }
-
-        span:last-child {
-          color: #e6a23c;
-        }
-      }
-    }
-  }
-
-  // 滚动条样式
-  .business-cards::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .business-cards::-webkit-scrollbar-thumb {
-    background-color: #dcdfe6;
-    border-radius: 3px;
-  }
-
-  .business-cards::-webkit-scrollbar-track {
-    background-color: #f5f7fa;
   }
 }
 </style>

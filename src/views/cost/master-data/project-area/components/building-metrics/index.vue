@@ -7,188 +7,247 @@
           <span class="title">楼栋指标管理</span>
           <span class="subtitle">维护楼栋基础信息，录入各业态面积指标</span>
         </div>
-        <div class="header-actions">
-          <span class="building-count">共 {{ buildingCount }} 栋楼</span>
-          <el-button type="primary" class="add-btn">
-            <el-icon><Plus /></el-icon>
-            新增楼栋
-          </el-button>
-        </div>
-      </div>
-      <div class="cards-container" v-loading="loading">
-        <div class="building-card" v-for="item in listData" :key="item.id">
-          <div class="card-header">
-            <div class="building-name">
-              <el-icon><OfficeBuilding /></el-icon>
-              <span>{{ item.name }}</span>
-            </div>
-            <el-checkbox
-              v-model="item.isBasement"
-              label="地下室"
-              true-value="Y"
-              false-value="N"
+        <el-form :model="queryParams" ref="queryRef" :inline="true">
+          <el-form-item label="楼栋名称" prop="sss">
+            <el-input
+              v-model="queryParams.bldName"
+              placeholder="请输入楼栋名称"
+              clearable
+              style="width: 200px"
             />
-          </div>
-          <div class="card-body">
-            <div class="info-item">
-              <el-icon><Grid /></el-icon>
-              <span class="label">楼层：</span>
-              <span class="value">{{ item.floorDesc }}</span>
-            </div>
-            <div class="info-item">
-              <el-icon><Tickets /></el-icon>
-              <span class="label">业态数量：</span>
-              <span class="value">{{ item.businessCount }}个</span>
-            </div>
-          </div>
-          <div class="card-footer">
-            <el-button
-              type="primary"
-              round
-              size="small"
-              @click="handleViewDetail(item)"
-              style="width: 120px"
-            >
-              业态详情
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" icon="Search" @click="handleSearch">
+              搜索
             </el-button>
-            <div class="card-actions">
-              <el-button link type="primary" @click="handleEdit(item)">
-                <el-icon><Edit /></el-icon>
-                编辑
-              </el-button>
-              <el-button link type="danger" @click="handleDelete(item)">
-                <el-icon><Delete /></el-icon>
-                删除
-              </el-button>
-            </div>
-          </div>
-        </div>
+            <el-button icon="Refresh" @click="handleReset"> 重置 </el-button>
+            <el-button type="primary" @click="handleAdd"> 新增楼栋 </el-button>
+          </el-form-item>
+        </el-form>
       </div>
+
+      <base-table
+        ref="tableRef"
+        :columns="tableColumns"
+        :tableData="tableList"
+        rowKey="id"
+        :border="true"
+        :loading="tableLoading"
+        :pagination="false"
+        :total="total"
+        :pageSize="pageSize"
+        :currentPage="currentPage"
+        @pagination-change="handlePageChange"
+      >
+        <!-- 是否地下室列 -->
+        <template #isUnderGround="{ row }">
+          <el-tag :type="row.isUnderGround ? 'success' : 'info'" size="small">
+            {{ row.isUnderGround ? "是" : "否" }}
+          </el-tag>
+        </template>
+
+        <!-- 操作列 -->
+        <template #actions="{ row }">
+          <el-button link type="primary" @click="handleViewDetail(row)">
+            业态详情
+          </el-button>
+          <el-button link type="primary" @click="handleEdit(row)">
+            编辑
+          </el-button>
+          <el-button link type="danger" @click="handleDelete(row)">
+            删除
+          </el-button>
+        </template>
+      </base-table>
     </template>
+
     <!-- 业态详情 -->
-    <business-detail v-else @back="currentView = 'list'" />
+    <business-detail
+      v-else
+      :selected-building="selectedBuilding"
+      :project-id="props.projectId"
+      @back="handleBackToList"
+      @saveSuccess="saveSuccess"
+    />
+
+    <!-- 新增/编辑 楼栋弹窗 -->
+    <add-edit-building-dialog
+      v-model="dialogVisible"
+      :project-id="props.projectId"
+      :edit-data="currentEditData"
+      @success="handleSaveSuccess"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import {
-  Plus,
-  OfficeBuilding,
-  Grid,
-  Tickets,
-  Edit,
-  Delete,
-} from "@element-plus/icons-vue";
+import type { TableColumnItem } from "@/components/base/base-table.vue";
+import type { ProjectBuilding } from "@/types/cost/project-area-type";
 import BusinessDetail from "./business-detail.vue";
+import AddEditBuildingDialog from "./add-edit-building-dialog.vue";
+import { projectAreaApi } from "@/api/cost/project-area-api";
 
 defineOptions({ name: "building-metrics" });
 
-// 定义 props
+// Props
 const props = defineProps<{
-  projectId?: string | number;
+  projectId: number;
 }>();
 
-// 类型定义
-interface BuildingItem {
-  id: number;
-  name: string;
-  floorCount: number;
-  floorDesc: string;
-  businessCount: number;
-  isBasement: "Y" | "N";
-}
-
 // 数据
-const loading = ref(false);
-const listData = ref<BuildingItem[]>([]);
+const tableLoading = ref(false);
+const tableList = ref<ProjectBuilding[]>([]);
+const total = ref(0);
+const currentPage = ref(1);
+const pageSize = ref(10);
+const queryParams = ref({
+  projId: props.projectId,
+  bldName: "",
+});
+
+// 弹窗相关
+const dialogVisible = ref(false);
+const currentEditData = ref<ProjectBuilding | null>(null);
+
+// 业态详情相关
 const currentView = ref<"list" | "detail">("list");
+const selectedBuilding = ref<ProjectBuilding | null>(null);
 
-// 楼栋数量
-const buildingCount = computed(() => listData.value.length);
+// 表格列配置
+const tableColumns: TableColumnItem[] = [
+  { type: "index", label: "序号", width: 60, align: "center" },
+  { prop: "bldName", label: "楼栋名称" },
+  {
+    prop: "isUnderGround",
+    label: "是否地下室",
+    align: "center",
+    slot: "isUnderGround",
+  },
+  { prop: "createDate", label: "创建时间", align: "center" },
+  {
+    label: "操作",
+    width: 280,
+    align: "center",
+    slot: "actions",
+    fixed: "right",
+  },
+];
 
-// 加载数据
-const loadData = async () => {
-  loading.value = true;
+// 获取楼栋列表
+const getBuildingList = async () => {
+  if (!props.projectId) return;
   try {
-    // TODO: 调用接口获取楼栋列表
-    // const res = await getBuildingList({ projectId: props.projectId });
-    // listData.value = res.data;
-
-    // 模拟数据
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    listData.value = [
-      {
-        id: 1,
-        name: "1#",
-        floorCount: 32,
-        floorDesc: "32层",
-        businessCount: 2,
-        isBasement: "N",
-      },
-      {
-        id: 2,
-        name: "2#",
-        floorCount: 18,
-        floorDesc: "18层",
-        businessCount: 1,
-        isBasement: "N",
-      },
-      {
-        id: 3,
-        name: "地下室",
-        floorCount: 2,
-        floorDesc: "2层（地下）",
-        businessCount: 2,
-        isBasement: "Y",
-      },
-    ];
+    tableLoading.value = true;
+    tableList.value = [];
+    const res = await projectAreaApi.getBuildingList(queryParams.value);
+    if (res.code === 200) {
+      tableList.value = res.data || [];
+    }
   } catch (error) {
     ElMessage.error("加载数据失败");
   } finally {
-    loading.value = false;
+    tableLoading.value = false;
   }
 };
+// 搜索
+const handleSearch = () => {
+  currentPage.value = 1;
+  getBuildingList();
+};
 
-// 查看业态详情
-const handleViewDetail = (item: BuildingItem) => {
-  ElMessage.info(`查看 ${item.name} 业态详情`);
-  currentView.value = "detail";
+// 重置
+const handleReset = () => {
+  queryParams.value.bldName = "";
+  handleSearch();
+};
+
+// 新增楼栋
+const handleAdd = () => {
+  currentEditData.value = null;
+  dialogVisible.value = true;
 };
 
 // 编辑楼栋
-const handleEdit = (item: BuildingItem) => {
-  ElMessage.info(`编辑楼栋：${item.name}`);
+const handleEdit = (row: ProjectBuilding) => {
+  currentEditData.value = row;
+  dialogVisible.value = true;
 };
 
 // 删除楼栋
-const handleDelete = (item: BuildingItem) => {
-  ElMessageBox.confirm(`确定删除楼栋"${item.name}"吗？`, "提示", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
-    type: "warning",
-  })
+const handleDelete = async (row: ProjectBuilding) => {
+  ElMessageBox.confirm(
+    `确定删除楼栋"${row.bldName}"吗？删除后该楼栋下的业态面积数据也将被删除。`,
+    "提示",
+    {
+      confirmButtonText: "确认",
+      cancelButtonText: "取消",
+      type: "warning",
+    },
+  )
     .then(async () => {
-      try {
-        // TODO: 调用删除接口
+      const res = await projectAreaApi.delBuilding({ id: row.id });
+      if (res.code === 200) {
         ElMessage.success("删除成功");
-        await loadData();
-      } catch (error) {
-        ElMessage.error("删除失败");
+        getBuildingList();
       }
     })
     .catch(() => {});
 };
 
-onMounted(() => {
-  loadData();
-});
+// 查看业态详情
+const handleViewDetail = (row: ProjectBuilding) => {
+  selectedBuilding.value = row;
+  currentView.value = "detail";
+};
 
-// 暴露方法给父组件
-defineExpose({
-  refresh: loadData,
-});
+// 返回列表
+const handleBackToList = () => {
+  currentView.value = "list";
+  selectedBuilding.value = null;
+};
+// 保存成功回调
+const saveSuccess = () => {
+  currentView.value = "list";
+  selectedBuilding.value = null;
+  getBuildingList();
+};
+
+// 分页变化
+const handlePageChange = (params: {
+  currentPage: number;
+  pageSize: number;
+}) => {
+  currentPage.value = params.currentPage;
+  pageSize.value = params.pageSize;
+  getBuildingList();
+};
+
+// 保存成功回调
+const handleSaveSuccess = () => {
+  getBuildingList();
+};
+
+// 刷新数据
+const refresh = () => {
+  currentPage.value = 1;
+  getBuildingList();
+};
+watch(
+  () => props.projectId,
+  (newVal) => {
+    if (newVal) {
+      currentView.value = "list";
+      getBuildingList();
+    }
+  },
+  { immediate: true, deep: true },
+);
+
+onMounted(() => {});
+
+defineExpose({ refresh });
 </script>
 
 <style lang="scss" scoped>
@@ -205,13 +264,14 @@ defineExpose({
   border: 1px solid #e6e6e6;
 
   .header-section {
-    margin-bottom: 10px;
-    flex-shrink: 0; // 防止 header 被压缩
+    flex-shrink: 0;
+
     .header-title {
       display: flex;
       flex-direction: column;
       gap: 4px;
       margin-bottom: 20px;
+
       .title {
         font-size: 20px;
         font-weight: 600;
@@ -221,97 +281,6 @@ defineExpose({
       .subtitle {
         font-size: 14px;
         color: #909399;
-      }
-    }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-
-      .building-count {
-        font-size: 14px;
-        color: #606266;
-      }
-    }
-  }
-
-  .cards-container {
-    flex: 1;
-    min-height: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    overflow-y: auto;
-    gap: 15px;
-
-    .building-card {
-      height: 190px;
-      border: 1px solid #ebeef5;
-      border-radius: 8px;
-      padding: 20px;
-      background: #fff;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-
-      .card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-
-        .building-name {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 18px;
-          font-weight: 600;
-          color: #303133;
-
-          .el-icon {
-            font-size: 20px;
-            color: #67c23a;
-          }
-        }
-      }
-
-      .card-body {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-
-        .info-item {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          font-size: 14px;
-
-          .el-icon {
-            color: #909399;
-            font-size: 16px;
-          }
-
-          .label {
-            color: #606266;
-          }
-
-          .value {
-            color: #303133;
-            font-weight: 500;
-          }
-        }
-      }
-
-      .card-footer {
-        margin-top: auto;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 40px;
-        .card-actions {
-          display: flex;
-          gap: 12px;
-        }
       }
     }
   }

@@ -60,8 +60,7 @@
 import { ref, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import { Folder } from "@element-plus/icons-vue";
-import { useRoute, useRouter } from "vue-router";
-const route = useRoute();
+import { useRouter } from "vue-router";
 const router = useRouter();
 
 // 组件name，需要和菜单配置里面的name一致

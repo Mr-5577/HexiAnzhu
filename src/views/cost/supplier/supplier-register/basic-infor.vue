@@ -325,25 +325,6 @@ const handleReset = () => {
   flex: 1;
   overflow-y: auto;
   padding: 24px 32px 0 32px;
-
-  &::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: #f5f7fa;
-    border-radius: 4px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: #c1c9d2;
-    border-radius: 4px;
-
-    &:hover {
-      background: #a8b0b8;
-    }
-  }
 }
 
 // 表单样式

@@ -143,26 +143,6 @@ const handleTabChange = (tab) => {
   padding: 10px;
   box-sizing: border-box;
   //   overflow-y: auto;
-
-  //   // 内容区滚动条美化
-  //   &::-webkit-scrollbar {
-  //     width: 6px;
-  //     height: 6px;
-  //   }
-
-  //   &::-webkit-scrollbar-track {
-  //     background: #f0f2f6;
-  //     border-radius: 3px;
-  //   }
-
-  //   &::-webkit-scrollbar-thumb {
-  //     background: #c1c9d2;
-  //     border-radius: 3px;
-
-  //     &:hover {
-  //       background: #a8b0b8;
-  //     }
-  //   }
 }
 
 // 响应式：窄屏时左侧菜单变窄

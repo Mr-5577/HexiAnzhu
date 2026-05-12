@@ -5,7 +5,7 @@
       <div class="search-box">
         <el-input
           v-model="searchKeyword"
-          placeholder="搜索城市或项目"
+          placeholder="搜索项目"
           clearable
           size="default"
         >
@@ -24,7 +24,7 @@
           node-key="id"
           :highlight-current="false"
           :default-expand-all="false"
-          accordion
+          :accordion="false"
           @node-click="handleNodeClick"
         >
           <template #default="{ node, data }">
@@ -83,17 +83,17 @@
       <div class="detail-tab">
         <el-tabs v-model="activeTab">
           <el-tab-pane label="版本管理" name="version" style="height: 100%">
-            <version-management />
+            <version-management :project-id="1" />
           </el-tab-pane>
           <el-tab-pane
             label="楼栋指标管理"
             name="building"
             style="height: 100%"
           >
-            <building-metrics />
+            <building-metrics :project-id="1" />
           </el-tab-pane>
           <el-tab-pane label="面积详情" name="area" style="height: 100%">
-            <area-detail />
+            <area-detail :project-id="1" />
           </el-tab-pane>
         </el-tabs>
       </div>
