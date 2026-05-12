@@ -961,7 +961,7 @@ defineExpose({
       .el-table__header {
         background-color: #f8f8f9 !important;
         .el-table__cell {
-          padding: 1px 0; // 调整内边距来控制高度
+          padding: 0; // 调整内边距来控制高度
           // 固定内容区高度，确保行高一致
           .cell {
             height: 28px;
@@ -985,7 +985,7 @@ defineExpose({
     }
     .el-table__body {
       .el-table__cell {
-        padding: 1px 0; // 调整内边距来控制高度
+        padding: 0; // 调整内边距来控制高度
         // 固定内容区高度，确保行高一致
         .cell {
           height: 28px;
@@ -1039,7 +1039,7 @@ defineExpose({
     .el-table__footer-wrapper {
       // 调整整个合计行区域的高度
       .el-table__cell {
-        padding: 2px 0; // 调整内边距来控制高度
+        padding: 0; // 调整内边距来控制高度
         .cell {
           line-height: 1.5; // 调整行高
           min-height: 32px; // 最小高度
