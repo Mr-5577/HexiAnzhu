@@ -434,25 +434,52 @@ defineExpose({
 .inline-editor {
   width: 100%;
   margin: -2px 0;
-  
-  :deep(.el-input__wrapper) {
+
+  :deep(.el-input__wrapper),
+  :deep(.el-select .el-input__wrapper) {
     border-radius: 0;
     padding: 0 8px;
     // 强制设置高度与单元格一致
     height: 28px;
   }
-  
+
   :deep(.el-input__inner) {
     height: 28px;
     line-height: 28px;
   }
-  
+
   :deep(.el-input-number) {
     width: 100%;
-    
+
     .el-input-number__wrapper {
       padding: 0;
       border-radius: 0;
+      height: 28px;
+    }
+  }
+  // 选择器特殊样式处理
+  :deep(.el-select) {
+    width: 100%;
+
+    // 确保 select 的输入包装器样式一致
+    .el-select__wrapper {
+      border-radius: 0;
+      padding: 0 8px;
+      height: 28px;
+    }
+
+    // 选择器图标位置调整
+    .el-select__caret {
+      line-height: 28px;
+    }
+  }
+   // 日期选择器样式
+  :deep(.el-date-editor) {
+    width: 100%;
+    
+    .el-date__wrapper {
+      border-radius: 0;
+      padding: 0 8px;
       height: 28px;
     }
   }

@@ -3,6 +3,7 @@
     v-model="modalVisible"
     :title="title"
     :width="width"
+    :top="top"
     :close-on-click-modal="closeOnClickModal"
     :close-on-press-escape="closeOnPressEscape"
     :show-close="false"
@@ -51,6 +52,7 @@ interface Props {
   modelValue: boolean;
   title?: string;
   width?: string;
+  top?: string;
   closeOnClickModal?: boolean;
   closeOnPressEscape?: boolean;
   confirmText?: string;
@@ -61,6 +63,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   title: "提示",
   width: "600px",
+  top: "15vh",
   closeOnClickModal: false,
   closeOnPressEscape: false,
   confirmText: "确定",
