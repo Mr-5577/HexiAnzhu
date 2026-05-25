@@ -41,13 +41,16 @@
             v-model="row[column.prop]"
             size="small"
             :placeholder="column.placeholder"
+            :multiple="column.multiple || false"
+            :collapse-tags="column.collapseTags || true"
+            :clearable="column.clearable !== false"
             @change="handleSave(row, column, $index)"
           >
             <el-option
-              v-for="opt in column.options"
-              :key="opt.value"
-              :label="opt.label"
-              :value="opt.value"
+              v-for="opt in getColumnOptions(column, row)"
+              :key="getOptionValue(column, opt)"
+              :label="getOptionLabel(column, opt)"
+              :value="getOptionValue(column, opt)"
             />
           </el-select>
 
@@ -112,11 +115,11 @@
             @change="handleSave(row, column, $index)"
           >
             <el-radio
-              v-for="opt in column.options"
-              :key="opt.value"
-              :value="opt.value"
+              v-for="opt in getColumnOptions(column, row)"
+              :key="getOptionValue(column, opt)"
+              :value="getOptionValue(column, opt)"
             >
-              {{ opt.label }}
+              {{ getOptionLabel(column, opt) }}
             </el-radio>
           </el-radio-group>
 
@@ -156,8 +159,20 @@ export interface EditableColumn extends TableColumnItem {
     | "radio";
   /** 占位符 */
   placeholder?: string;
-  /** 选项列表（用于 select/radio） */
-  options?: Array<{ label: string; value: any }>;
+  /** 选项列表（用于 select/radio）- 支持静态数组或动态函数 */
+  options?: Array<any> | ((row: any) => Array<any>);
+  /** 选项的标签字段名，默认 'label' */
+  optionLabelField?: string;
+  /** 选项的值字段名，默认 'value' */
+  optionValueField?: string;
+  /** 是否多选（仅 select 类型有效） */
+  multiple?: boolean;
+  /** 多选时是否折叠标签 */
+  collapseTags?: boolean;
+  /** 是否可清空 */
+  clearable?: boolean;
+  /** 动态获取选项的函数（优先级高于 options） */
+  getOptions?: (row: any) => Array<any>;
   /** 子列配置（递归支持多级表头） */
   children?: EditableColumn[];
 }
@@ -172,6 +187,10 @@ interface Props {
   rowKey?: string;
   /** 数据字典对象 */
   dictData?: DictData;
+  /** 全局选项标签字段名，默认 'label' */
+  globalOptionLabelField?: string;
+  /** 全局选项值字段名，默认 'value' */
+  globalOptionValueField?: string;
   /** 保存回调 */
   onSave?: (data: {
     row: any;
@@ -200,6 +219,8 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   rowKey: "id",
   dictData: () => ({}),
+  globalOptionLabelField: "label",
+  globalOptionValueField: "value",
 });
 
 const emit = defineEmits<Emits>();
@@ -238,6 +259,55 @@ const clearOldValue = (row: any, prop: string) => {
 // 清除所有旧值
 const clearAllOldValues = () => {
   Object.keys(oldValueMap).forEach((key) => delete oldValueMap[key]);
+};
+
+/**
+ * 获取选项的标签字段名
+ */
+const getOptionLabelField = (column: EditableColumn): string => {
+  return column.optionLabelField || props.globalOptionLabelField;
+};
+
+/**
+ * 获取选项的值字段名
+ */
+const getOptionValueField = (column: EditableColumn): string => {
+  return column.optionValueField || props.globalOptionValueField;
+};
+
+/**
+ * 获取选项的标签
+ */
+const getOptionLabel = (column: EditableColumn, option: any): string => {
+  const labelField = getOptionLabelField(column);
+  return option[labelField];
+};
+
+/**
+ * 获取选项的值
+ */
+const getOptionValue = (column: EditableColumn, option: any): any => {
+  const valueField = getOptionValueField(column);
+  return option[valueField];
+};
+
+/**
+ * 获取列的所有选项
+ */
+const getColumnOptions = (column: EditableColumn, row?: any): any[] => {
+  let options: any[] = [];
+  // 优先使用 getOptions 动态函数
+  if (column.getOptions && row) {
+    options = column.getOptions(row);
+  }
+  // 其次使用 options
+  else if (typeof column.options === "function") {
+    options = column.options(row);
+  } else if (Array.isArray(column.options)) {
+    options = column.options;
+  }
+
+  return options;
 };
 
 /**
@@ -473,10 +543,10 @@ defineExpose({
       line-height: 28px;
     }
   }
-   // 日期选择器样式
+  // 日期选择器样式
   :deep(.el-date-editor) {
     width: 100%;
-    
+
     .el-date__wrapper {
       border-radius: 0;
       padding: 0 8px;
