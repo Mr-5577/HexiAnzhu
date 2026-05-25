@@ -238,6 +238,8 @@ interface Props {
   summaryMethod?: (params: { columns: any[]; data: any[] }) => string[];
   /** 是否开启行点击高亮效果，点击行时背景色变化 */
   highlightCurrentRow?: boolean;
+  /** 选择模式：single 单选、multiple 多选 */
+  selectionMode?: "single" | "multiple";
   /** 树形表格配置，直接传递给 el-table 的 tree-props 属性 */
   treeProps?: {
     hasChildren?: string;
@@ -549,6 +551,7 @@ const props = withDefaults(defineProps<Props>(), {
   isExpandAll: false,
   showSummary: false,
   highlightCurrentRow: true,
+  selectionMode: "multiple",
   // treeProps 默认值
   treeProps: () => ({
     hasChildren: "hasChildren",
@@ -563,6 +566,7 @@ const tableRef = ref<TableInstance>();
 const containerRef = ref<HTMLElement | null>(null);
 const selectedRows = ref<any[]>([]);
 const currentRowKey = ref<string | number>(""); // 当前选中行的key
+const isProgrammaticSelection = ref(false);
 
 const columnSettings = computed(() => {
   return props.columns.map((col) => ({
@@ -821,8 +825,24 @@ const handleTableCellEvent = (payload: {
   emit("cell-event", payload);
 };
 
-// 多选方法
+// 多选/单选方法
 const handleSelectionChange = (val: any[]): void => {
+  if (isProgrammaticSelection.value) {
+    selectedRows.value = val;
+    return;
+  }
+  if (props.selectionMode === "single" && val.length > 1) {
+    const last = val[val.length - 1];
+    selectedRows.value = [last];
+    isProgrammaticSelection.value = true;
+    tableRef.value?.clearSelection();
+    tableRef.value?.toggleRowSelection(last, true);
+    nextTick(() => {
+      isProgrammaticSelection.value = false;
+    });
+    emit("selection-change", selectedRows.value);
+    return;
+  }
   selectedRows.value = val;
   emit("selection-change", val);
 };
