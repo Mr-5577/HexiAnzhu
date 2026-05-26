@@ -88,6 +88,7 @@ export const roleApi = {
   },
   // 获取组织类型列表
   getDataTypeList: () => {
-    return http.post("/emp/getDataTypeList");
+    // return http.post("/emp/getDataTypeList");
+    return http.post("/mainData/getDataTypeList");
   },
 };

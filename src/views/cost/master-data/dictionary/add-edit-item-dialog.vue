@@ -91,7 +91,6 @@
           placeholder="数字越小越靠前"
           style="width: 100%"
         />
-        <div class="form-tip">排序号数字越小越靠前，不填默认为0</div>
       </el-form-item>
 
       <!-- 是否默认 -->
@@ -176,7 +175,7 @@ const dialogTitle = computed(() => {
 const validateDicCode = (_rule: any, value: string, callback: any) => {
   if (!value) {
     callback(new Error("请输入字典编码"));
-  } else if (!/^[a-z][a-z0-9_]*$/i.test(value)) {
+  } else if (!/^[A-Za-z][A-Za-z0-9_]*$/i.test(value)) {
     callback(new Error("字典编码只能包含字母、数字和下划线，且必须以字母开头"));
   } else {
     callback();
@@ -186,7 +185,7 @@ const validateDicCode = (_rule: any, value: string, callback: any) => {
 const validateDicValue = (_rule: any, value: string, callback: any) => {
   if (!value) {
     callback(new Error("请输入字典值"));
-  } else if (!/^[a-z][a-z0-9_]*$/i.test(value)) {
+  } else if (!/^[A-Za-z][A-Za-z0-9_]*$/i.test(value)) {
     callback(new Error("字典值只能包含字母、数字和下划线，且必须以字母开头"));
   } else {
     callback();

@@ -49,75 +49,32 @@
     </div>
 
     <div class="right-content">
-      <base-table
-        :columns="columns"
-        :tableData="tableData"
-        :loading="loading"
-        :total="total"
-        :rowKey="'treeId'"
-        :current-page="currentPage"
-        :page-size="pageSize"
-        :pagination="false"
-        @pagination-change="handlePaginationChange"
-        :isExpandAll="isExpandAll"
-      >
-        <template #actionBar>
-          <div class="actionBar-buttons">
-            <el-button type="primary" plain @click="modalVisible = true">
-              选择项目产品
-            </el-button>
-          </div>
-        </template>
-        <!-- 自定义插槽 ==> scope 包含：row, column, $index 等 -->
-        <template #actions="{ row }">
-          <el-button type="danger" link> 删除 </el-button>
-        </template>
-      </base-table>
-
-      <product-selection-dialog
-        v-model="modalVisible"
-      ></product-selection-dialog>
+      <div class="radio-group-wrapper">
+        <el-radio-group v-model="activeTab" text-color="#fff" fill="#3382b6">
+          <el-radio-button label="版本列表" value="version" />
+          <el-radio-button label="目标成本" value="goal" />
+        </el-radio-group>
+      </div>
+      <div class="list-wrapper">
+        <keep-alive>
+          <component :is="currentComponent" />
+        </keep-alive>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref, computed } from "vue";
 import { HomeFilled, Search, OfficeBuilding } from "@element-plus/icons-vue";
 import type { ElTree } from "element-plus";
-import type { TableColumnItem } from "@/components/base/base-table.vue";
-import ProductSelectionDialog from "./product-selection-dialog.vue";
 import { projectAreaApi } from "@/api/cost/project-area-api";
 import { ProjectTreeNode } from "@/types/cost/project-area-type";
+import VersionList from "./version-list.vue";
+import GoalCostList from "./goal-cost-list.vue";
 
 // 组件name，需要和菜单配置里面的name一致
-defineOptions({ name: "project-cost" });
-
-// 左侧树相关
-const projectTreeRef = ref<InstanceType<typeof ElTree>>();
-const searchKeyword = ref("");
-const treeData = ref<ProjectTreeNode[]>([]);
-const currentNodeKey = ref<string | number | null>(null);
-const selectedProjectId = ref<number | null>(null);
-
-// 右侧表格相关
-const queryParams = ref({
-  projIds: [],
-});
-const modalVisible = ref(false);
-const isExpandAll = ref(false);
-const loading = ref(false);
-const currentPage = ref(1);
-const pageSize = ref(10);
-const total = ref(0);
-const columns: TableColumnItem[] = [
-  { prop: "orgName", label: "项目", align: "left" },
-  { prop: "orgName1", label: "产品类别" },
-  { prop: "orgName1", label: "产品名称" },
-  { prop: "orgName1", label: "说明" },
-  { label: "操作", prop: "actions", width: 180, slot: "actions" },
-];
-const tableData = ref<any[]>([]);
+defineOptions({ name: "goal-cost" });
 
 // 树配置
 const treeProps = {
@@ -126,6 +83,20 @@ const treeProps = {
   disabled: false,
   isLeaf: (data: ProjectTreeNode) => data.dataType === 1,
 };
+// 左侧树相关
+const projectTreeRef = ref<InstanceType<typeof ElTree>>();
+const searchKeyword = ref("");
+const treeData = ref<ProjectTreeNode[]>([]);
+const currentNodeKey = ref<string | number | null>(null);
+const selectedProjectId = ref<number | null>(null);
+const activeTab = ref("version");
+
+const tabComponents = {
+  version: VersionList,
+  goal: GoalCostList,
+};
+
+const currentComponent = computed(() => tabComponents[activeTab.value]);
 
 // 过滤节点
 const filterNode = (value: string, data: ProjectTreeNode) => {
@@ -143,29 +114,7 @@ const handleNodeClick = (data: ProjectTreeNode) => {
   if (data.dataType === 1) {
     currentNodeKey.value = data.treeId;
     selectedProjectId.value = data.orgId;
-    queryParams.value.projIds = [data.orgId];
-    getDataList();
   }
-};
-
-// 获取数据列表
-const getDataList = async () => {
-  try {
-    loading.value = true;
-    // TODO: 调用实际的API获取数据
-    // const res = await yourApi.getList(queryParams.value);
-    // tableData.value = res.data;
-    // total.value = res.total;
-  } finally {
-    loading.value = false;
-  }
-};
-
-// 分页变化
-const handlePaginationChange = (params: any) => {
-  currentPage.value = params.currentPage;
-  pageSize.value = params.pageSize;
-  getDataList();
 };
 
 // 递归处理后端返回的数据
@@ -254,7 +203,11 @@ onMounted(() => {
       border-bottom: 1px solid #e4e7ed;
       :deep(.el-input-group__append) {
         padding: 0;
-        background: linear-gradient(135deg, var(--harmony-primary-dark) 0%, var(--harmony-primary-light));
+        background: linear-gradient(
+          135deg,
+          var(--harmony-primary-dark) 0%,
+          var(--harmony-primary-light)
+        );
         border-color: var(--harmony-primary-light);
         .el-icon {
           width: 50px;
@@ -317,7 +270,8 @@ onMounted(() => {
   }
 
   .right-content {
-    flex: 1;
+    width: 100%;
+    height: 100%;
     background: #fff;
     border-radius: 8px;
     display: flex;
@@ -325,17 +279,9 @@ onMounted(() => {
     overflow: hidden;
     padding: 15px;
     box-sizing: border-box;
-
-    .actionBar-buttons {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      margin-bottom: 10px;
-    }
-
-    :deep(.base-table) {
+    .list-wrapper {
       flex: 1;
-      overflow: auto;
+      overflow: hidden;
     }
   }
 }

@@ -10,7 +10,7 @@ import {
 } from "@/types/cost/project-area-type";
 
 export const projectAreaApi = {
-  /** 获取公司-项目树形结构 */
+  /** 获取公司-项目 树形结构 */
   getMguProjList: () => {
     return http.post("/mainData/project/getMguProjList");
   },
@@ -53,8 +53,8 @@ export const projectAreaApi = {
     return http.formPost("/mainData/areaVerM/del", data);
   },
   /** 设置面积版本生效 */
-  setAreaVerMEnable: (id: number | string) => {
-    return http.post(`/mainData/areaVerM/setEnable?id=${id}`);
+  setAreaVerMEnable: (data: { id: number | string }) => {
+    return http.formPost(`/mainData/areaVerM/setEnable`, data);
   },
 
   /** 获取楼栋面积明细网状结构 */
@@ -62,11 +62,19 @@ export const projectAreaApi = {
     return http.formPost("/mainData/areaVerD/getNetByBldId", data);
   },
   /** 批量保存面积明细网状结构 */
-  batchSaveNet: (data: ProjectAreaDetail[]) => {
-    return http.formPost("/mainData/areaVerD/saveNet", data);
+  batchSaveNet: (
+    data: ProjectAreaDetail[], // 列表数据
+    bldId: number | string, // 楼栋ID
+    verMid: number | string, // 版本ID
+  ) => {
+    return http.post(
+      `/mainData/areaVerD/saveNet?bldId=${bldId}&verMid=${verMid}`,
+      data,
+      { addQueryFast: false },
+    );
   },
   /** 查询面积版本明细列表 */
-  getAreaVerDList: (data: ProjectAreaDetailQueryParams) => {
+  getAreaVerDList: (data: { verMid: number | string }) => {
     return http.formPost("/mainData/areaVerD/getList", data);
   },
 };

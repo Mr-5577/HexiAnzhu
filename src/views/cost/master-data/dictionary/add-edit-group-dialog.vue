@@ -204,7 +204,7 @@ const findNodeById = (tree: DictGroupTreeNode[], id: number): DictGroupTreeNode 
 const validateDicCode = (_rule: any, value: string, callback: any) => {
   if (!value) {
     callback(new Error("请输入分组编码"));
-  } else if (!/^[a-z][a-z0-9_]*$/i.test(value)) {
+  } else if (!/^[A-Za-z][A-Za-z0-9_]*$/i.test(value)) {
     callback(new Error("分组编码只能包含字母、数字和下划线，且必须以字母开头"));
   } else {
     callback();

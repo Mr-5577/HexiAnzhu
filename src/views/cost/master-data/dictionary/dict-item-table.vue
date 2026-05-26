@@ -81,6 +81,7 @@ import type {
   DictItemTreeNode,
 } from "@/types/cost/dict-type";
 import AddEditItemDialog from "./add-edit-item-dialog.vue";
+import { buildTree } from "@/utils/tree";
 
 // Props
 const props = defineProps<{
@@ -118,32 +119,6 @@ const tableColumns = [
   { label: "是否启用", width: 100, slot: "status" },
   { label: "操作", width: 200, slot: "actions", fixed: "right" },
 ];
-
-// 扁平数据转树形结构
-const buildTree = (list: DictItem[]): DictItemTreeNode[] => {
-  if (!list?.length) return [];
-  const map = new Map<number, DictItemTreeNode>();
-  const tree: DictItemTreeNode[] = [];
-  list.forEach((item) => {
-    map.set(item.id, { ...item, children: [] });
-  });
-  list.forEach((item) => {
-    const node = map.get(item.id)!;
-    // 判断是否为根节点：pid 为 null 或 0 或 undefined 都视为根节点
-    const isRoot = item.pid === null || item.pid === 0 || item.pid === undefined;
-    if (isRoot) {
-      tree.push(node);
-    } else {
-      const parent = map.get(item.pid);
-      if (parent) {
-        parent.children!.push(node);
-      } else {
-        tree.push(node);
-      }
-    }
-  });
-  return tree;
-};
 
 // 获取字典项数据
 const getDictItemData = async () => {

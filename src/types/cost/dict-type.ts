@@ -58,20 +58,6 @@ export interface DictGroupQueryParams {
   groupName?: string;
   /** 是否启用 */
   isEnabled?: boolean;
-  /** 页码 */
-  pageNum?: number;
-  /** 每页条数 */
-  pageSize?: number;
-}
-
-/**
- * 查询数据字典分组响应
- */
-export interface DictGroupQueryResponse {
-  /** 数据列表 */
-  list: DictGroup[];
-  /** 总数 */
-  total: number;
 }
 
 /**
@@ -168,20 +154,6 @@ export interface DictItemQueryParams {
   id?: number;
   /** 是否启用 */
   isEnabled?: boolean;
-  /** 页码 */
-  pageNum?: number;
-  /** 每页条数 */
-  pageSize?: number;
-}
-
-/**
- * 查询数据字典项响应
- */
-export interface DictItemQueryResponse {
-  /** 数据列表 */
-  list: DictItem[];
-  /** 总数 */
-  total: number;
 }
 
 /**
@@ -190,14 +162,6 @@ export interface DictItemQueryResponse {
 export interface DictItemDeleteParams {
   /** 字典项ID */
   id: number;
-}
-
-/**
- * 批量删除数据字典项请求参数
- */
-export interface DictItemBatchDeleteParams {
-  /** 字典项ID列表 */
-  ids: number[];
 }
 
 /**
@@ -217,70 +181,3 @@ export interface DictItemsByGroupCodeParams {
   /** 是否只返回启用的 */
   onlyEnabled?: boolean;
 }
-
-// ==================== 字典选项类型（用于下拉框） ====================
-
-/**
- * 字典选项
- */
-export interface DictOption {
-  /** 字典值 */
-  value: string;
-  /** 字典标签 */
-  label: string;
-  /** 排序 */
-  sort?: number;
-  /** 是否默认 */
-  isDefault?: boolean;
-  /** 原始数据 */
-  raw?: DictItem;
-}
-
-// ==================== 字典分组Map类型 ====================
-
-/**
- * 字典分组Map
- */
-export interface DictGroupMap {
-  [groupCode: string]: {
-    /** 分组信息 */
-    group: DictGroup;
-    /** 字典选项列表 */
-    items: DictOption[];
-    /** 值到选项的映射 */
-    itemMap: Map<string, DictOption>;
-  };
-}
-
-// ==================== 数据字典状态常量 ====================
-
-/**
- * 数据字典状态常量
- */
-export const DictStatus = {
-  /** 默认状态 */
-  DEFAULT: {
-    YES: true, // 是默认
-    NO: false, // 非默认
-  },
-  /** 启用状态 */
-  ENABLED: {
-    YES: true, // 启用
-    NO: false, // 禁用
-  },
-  /** 删除状态 */
-  DEL: {
-    NOT_DELETED: false, // 未删除
-    DELETED: true, // 已删除
-  },
-} as const;
-
-/**
- * 数据字典默认状态类型
- */
-export type DictDefaultStatus = boolean;
-
-/**
- * 数据字典启用状态类型
- */
-export type DictEnabledStatus = boolean;

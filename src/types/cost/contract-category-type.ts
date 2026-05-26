@@ -94,10 +94,6 @@ export interface ContractTypeQueryParams {
   isNeedOutValue?: boolean;
   /** 是否启用 */
   isEnabled?: boolean;
-  /** 页码 */
-  pageNum?: number;
-  /** 每页条数 */
-  pageSize?: number;
 }
 
 /**
@@ -107,36 +103,3 @@ export interface ContractTypeDeleteParams {
   /** 主键ID */
   id: number;
 }
-
-/**
- * 移动合同类别请求参数
- */
-export interface ContractTypeMoveParams {
-  /** 要移动的节点ID */
-  id: number;
-  /** 目标父节点ID */
-  targetPid: number;
-  /** 新的排序位置 */
-  newSort?: number;
-}
-
-/**
- * 合同类别状态常量
- */
-export const ContractTypeStatus = {
-  /** 产值上报状态 */
-  NEED_OUT_VALUE: {
-    YES: true, // 需要报产值
-    NO: false, // 不需要报产值
-  },
-  /** 启用状态 */
-  ENABLED: {
-    YES: true, // 启用
-    NO: false, // 禁用
-  },
-  /** 删除状态 */
-  DEL: {
-    NOT_DELETED: false, // 未删除
-    DELETED: true, // 已删除
-  },
-} as const;

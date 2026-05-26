@@ -81,43 +81,9 @@ export interface SupplierTypeQueryParams {
 }
 
 /**
- * 查询供应商类别响应
- */
-export interface SupplierTypeQueryResponse {
-  /** 数据列表 */
-  list: SupplierType[];
-  /** 总数 */
-  total: number;
-}
-
-/**
  * 删除供应商类别请求参数
  */
 export interface SupplierTypeDeleteParams {
   /** 主键ID */
   id: number;
 }
-
-/**
- * 批量删除供应商类别请求参数
- */
-export interface SupplierTypeBatchDeleteParams {
-  /** 主键ID列表 */
-  ids: number[];
-}
-
-/**
- * 供应商类别状态常量
- */
-export const SupplierTypeStatus = {
-  /** 启用状态 */
-  ENABLED: {
-    YES: true, // 启用
-    NO: false, // 禁用
-  },
-  /** 删除状态 */
-  DEL: {
-    NOT_DELETED: false, // 未删除
-    DELETED: true, // 已删除
-  },
-} as const;

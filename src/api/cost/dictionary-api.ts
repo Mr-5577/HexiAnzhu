@@ -47,4 +47,9 @@ export const dictionaryApi = {
   getDicItemByGroupCode: (data: DictItemsByGroupCodeParams) => {
     return http.formPost("/system/getDicItem", data);
   },
+
+  /** 查询业务板块列表 */
+  getsegmentList: () => {
+    return http.formPost("/mainData/segment/getList");
+  },
 };

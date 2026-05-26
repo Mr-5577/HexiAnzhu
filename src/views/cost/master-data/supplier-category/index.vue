@@ -88,6 +88,7 @@ import type {
 } from "@/types/cost/supplier-category-type";
 import SupplierTypeDialog from "./supplier-type-dialog.vue";
 import { supTypeApi } from "@/api/cost/supplier-category-api";
+import { buildTree } from "@/utils/tree";
 
 defineOptions({ name: "supplier-category" });
 
@@ -116,41 +117,11 @@ const parentId = ref<number>(0);
 const columns: TableColumnItem[] = [
   { type: "index", label: "序号", width: "60" },
   { prop: "supTypeName", label: "类别名称", align: "left" },
-  { prop: "supTypeCode", label: "类别编码", width: 150 },
+  { prop: "supTypeCode", label: "类别编码", width: 260 },
   { prop: "remark", label: "备注", minWidth: 200 },
   { label: "是否启用", width: 100, slot: "isEnabled" },
   { label: "操作", width: 200, slot: "actions", fixed: "right" },
 ];
-
-// 扁平数据转树形结构
-const buildTree = (list: SupplierType[]): SupplierTypeTreeNode[] => {
-  if (!list?.length) return [];
-
-  const map = new Map<number, SupplierTypeTreeNode>();
-  const tree: SupplierTypeTreeNode[] = [];
-
-  list.forEach((item) => {
-    map.set(item.id, { ...item, children: [] });
-  });
-
-  list.forEach((item) => {
-    const node = map.get(item.id)!;
-    // 判断是否为根节点：pid 为 null 或 0 或 undefined 都视为根节点
-    const isRoot = item.pid === null || item.pid === 0 || item.pid === undefined;
-    if (isRoot) {
-      tree.push(node);
-    } else {
-      const parent = map.get(item.pid);
-      if (parent) {
-        parent.children!.push(node);
-      } else {
-        tree.push(node);
-      }
-    }
-  });
-
-  return tree;
-};
 
 // 获取数据列表
 const getDataList = async () => {
@@ -159,7 +130,7 @@ const getDataList = async () => {
     tableData.value = [];
     const res = await supTypeApi.getSupTypeList(queryParams.value);
     if (res.code === 200) {
-      tableData.value = buildTree(res.data);
+      tableData.value = buildTree(res.data || []);
     }
   } finally {
     loading.value = false;

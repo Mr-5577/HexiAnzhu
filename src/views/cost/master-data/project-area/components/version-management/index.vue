@@ -1,68 +1,88 @@
 <!-- 版本管理 -->
 <template>
   <div class="version-management-page">
-    <div class="table-header">
-      <div class="header-title">
-        <span class="title">项目版本管理</span>
-        <span class="subtitle">
-          管理项目不同阶段的面积指标版本，支持版本创建和生效切换
-        </span>
+    <template v-if="currentView === 'list'">
+      <div class="table-header">
+        <div class="header-title">
+          <span class="title">项目版本管理</span>
+          <span class="subtitle">
+            管理项目不同阶段的面积指标版本，支持版本创建和生效切换
+          </span>
+        </div>
+        <el-form :model="queryParams" ref="queryRef" :inline="true">
+          <el-form-item label="版本类型" prop="verTypeId">
+            <el-select
+              v-model="queryParams.verTypeId"
+              placeholder="请选择版本类型"
+              style="width: 200px"
+            >
+              <el-option
+                v-for="item in verTypeList"
+                :key="item.id"
+                :label="item.dicLabel"
+                :value="item.id"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" icon="Search" @click="handleSearch">
+              搜索
+            </el-button>
+            <el-button icon="Refresh" @click="handleReset"> 重置 </el-button>
+            <el-button type="primary" @click="handleCreate">
+              创建版本
+            </el-button>
+          </el-form-item>
+        </el-form>
       </div>
-      <el-form :model="queryParams" ref="queryRef" :inline="true">
-        <el-form-item label="版本标题" prop="sss">
-          <el-input
-            v-model="queryParams.verTitle"
-            placeholder="请输入版本标题"
-            clearable
-            style="width: 200px"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" icon="Search" @click="handleSearch">
-            搜索
+      <base-table
+        ref="tableRef"
+        :columns="tableColumns"
+        :tableData="listData"
+        rowKey="id"
+        :border="true"
+        :loading="tableLoading"
+        :pagination="false"
+      >
+        <!-- 是否启用渲染 -->
+        <template #isEnabled="{ row }">
+          <el-tag :type="row.isEnabled ? 'success' : 'danger'" size="small">
+            {{ row.isEnabled ? "生效" : "未生效" }}
+          </el-tag>
+        </template>
+
+        <!-- 操作列 -->
+        <template #actions="{ row }">
+          <el-button link type="primary" @click="handleViewDetail(row)">
+            面积设置
           </el-button>
-          <el-button icon="Refresh" @click="handleReset"> 重置 </el-button>
-          <el-button type="primary" @click="handleCreate"> 创建版本 </el-button>
-        </el-form-item>
-      </el-form>
-    </div>
+          <el-button
+            link
+            type="primary"
+            :disabled="row.isEnabled"
+            @click="handleEnableSetting(row)"
+          >
+            设置生效
+          </el-button>
+          <el-button link type="primary" @click="handleEdit(row)">
+            编辑
+          </el-button>
+          <el-button link type="danger" @click="handleDelete(row)">
+            删除
+          </el-button>
+        </template>
+      </base-table>
+    </template>
 
-    <base-table
-      ref="tableRef"
-      :columns="tableColumns"
-      :tableData="listData"
-      rowKey="id"
-      :border="true"
-      :loading="tableLoading"
-      :pagination="false"
-      :total="total"
-      :pageSize="pageSize"
-      :currentPage="currentPage"
-      @pagination-change="handlePageChange"
-    >
-      <!-- 是否启用渲染 -->
-      <template #isEnabled="{ row }">
-        <!-- <el-tag :type="row.isEnabled ? 'success' : 'info'" size="small">
-          {{ row.isEnabled ? "启用" : "停用" }}
-        </el-tag> -->
-        <el-switch
-          v-model="row.isEnabled"
-          :active-value="true"
-          :inactive-value="false"
-          size="small"
-          :loading="enabledLoading"
-          @change="handleEnabledChange(row)"
-        />
-      </template>
-
-      <!-- 操作列 -->
-      <template #actions="{ row }">
-        <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
-        <el-button link type="danger" @click="handleDelete(row)">
-          删除
-        </el-button>
-      </template>
-    </base-table>
+    <template v-if="currentView === 'setting'">
+      <!-- 面积设置 -->
+      <area-setting
+        :current-data="currentEditData"
+        :project-id="props.projectId"
+        @back="handleBackToList"
+        @saveSuccess="saveSuccess"
+      />
+    </template>
 
     <!-- 新增/编辑 版本弹窗 -->
     <add-edit-version-dialog
@@ -85,6 +105,7 @@ import type {
 } from "@/types/cost/project-area-type";
 import AddEditVersionDialog from "./add-edit-version-dialog.vue";
 import { projectAreaApi } from "@/api/cost/project-area-api";
+import AreaSetting from "./area-setting.vue";
 
 defineOptions({ name: "version-management" });
 
@@ -95,20 +116,19 @@ const props = defineProps<{
 
 // 数据
 const verTypeList = ref<VersionTypeOption[]>([]);
-const enabledLoading = ref(false);
 const tableLoading = ref(false);
 const listData = ref<ProjectAreaVersion[]>([]);
-const total = ref(0);
-const currentPage = ref(1);
-const pageSize = ref(10);
 const queryParams = ref({
   projId: props.projectId,
-  verTitle: "",
+  verTypeId: null,
 });
 
 // 弹窗相关
 const dialogVisible = ref(false);
 const currentEditData = ref<ProjectAreaVersion | null>(null);
+
+// 面积设置相关
+const currentView = ref<"list" | "setting">("list");
 
 // 表格列配置
 const tableColumns: TableColumnItem[] = [
@@ -116,11 +136,11 @@ const tableColumns: TableColumnItem[] = [
   { prop: "verTitle", label: "版本标题", minWidth: 200 },
   { prop: "verTypeName", label: "版本类型", width: 150 },
   { prop: "remark", label: "版本说明", minWidth: 250 },
-  { label: "是否启用", width: 150, slot: "isEnabled" },
-  { prop: "createDate", label: "创建时间", width: 200 },
+  { label: "是否生效", width: 120, slot: "isEnabled" },
+  { prop: "createDate", label: "创建时间", width: 180 },
   {
     label: "操作",
-    width: 200,
+    width: 250,
     slot: "actions",
     fixed: "right",
   },
@@ -157,35 +177,13 @@ const handleSearch = () => {
 };
 // 重置
 const handleReset = () => {
-  queryParams.value.verTitle = "";
+  queryParams.value.verTypeId = null;
   getVersionList();
 };
 // 创建版本
 const handleCreate = () => {
   currentEditData.value = null;
   dialogVisible.value = true;
-};
-
-// 启用/禁用
-const handleEnabledChange = async (row: ProjectAreaVersion) => {
-  // try {
-  //   enabledLoading.value = true;
-  //   const res = await projectAreaApi.setAreaVerMEnable(row.id);
-  //   if (res.code === 200) {
-  //     ElMessage.success(`已${row.isEnabled ? "启用" : "禁用"}成功`);
-  //     await getVersionList();
-  //   } else {
-  //     // 失败时回滚状态
-  //     row.isEnabled = !row.isEnabled;
-  //     ElMessage.error(res.message || "操作失败");
-  //   }
-  // } catch (error) {
-  //   // 出错时回滚状态
-  //   row.isEnabled = !row.isEnabled;
-  //   ElMessage.error("操作失败");
-  // } finally {
-  //   enabledLoading.value = false;
-  // }
 };
 
 // 编辑版本
@@ -196,10 +194,6 @@ const handleEdit = (row: ProjectAreaVersion) => {
 
 // 删除版本
 const handleDelete = async (row: ProjectAreaVersion) => {
-  // if (row.isEnabled) {
-  //   ElMessage.warning("启用版本不能删除");
-  //   return;
-  // }
   ElMessageBox.confirm(
     `确定删除版本"${row.verTitle}"吗？删除后不可恢复。`,
     "提示",
@@ -218,15 +212,23 @@ const handleDelete = async (row: ProjectAreaVersion) => {
     })
     .catch(() => {});
 };
-
-// 分页变化
-const handlePageChange = (params: {
-  currentPage: number;
-  pageSize: number;
-}) => {
-  currentPage.value = params.currentPage;
-  pageSize.value = params.pageSize;
-  getVersionList();
+// 设置版本生效
+const handleEnableSetting = async (row: ProjectAreaVersion) => {
+  ElMessageBox.confirm(
+    `确定设置版本"${row.verTitle}"生效吗？设置成功后之前已生效的版本将自动失效。`,
+    "提示",
+    {
+      confirmButtonText: "确认",
+      cancelButtonText: "取消",
+      type: "warning",
+    },
+  ).then(async () => {
+    const res = await projectAreaApi.setAreaVerMEnable({ id: row.id });
+    if (res.code === 200) {
+      ElMessage.success("设置生效成功");
+      getVersionList();
+    }
+  });
 };
 
 // 保存成功回调
@@ -234,9 +236,26 @@ const handleSaveSuccess = () => {
   getVersionList();
 };
 
+// 查看面积设置
+const handleViewDetail = (row: ProjectAreaVersion) => {
+  currentEditData.value = row;
+  currentView.value = "setting";
+};
+
+// 返回列表
+const handleBackToList = () => {
+  currentView.value = "list";
+  currentEditData.value = null;
+};
+// 保存成功回调
+const saveSuccess = () => {
+  currentView.value = "list";
+  currentEditData.value = null;
+  getVersionList();
+};
+
 // 刷新数据
 const refresh = () => {
-  currentPage.value = 1;
   getVersionList();
 };
 const getVerTypeList = async () => {
@@ -246,21 +265,19 @@ const getVerTypeList = async () => {
     if (res.code === 200) {
       verTypeList.value = res.data || [];
     }
-  } catch (error) {
-    ElMessage.error("版本类型数据加载失败！");
-  }
+  } catch (error) {}
 };
 
 watch(
   () => props.projectId,
   async (newVal) => {
     if (newVal) {
-      // 版本列表-接口
-      await getVerTypeList();
+      queryParams.value.projId = newVal;
+      await getVerTypeList(); // 先获取版本类型列表
       getVersionList();
     }
   },
-  { immediate: true, deep: true },
+  { immediate: true },
 );
 
 onMounted(() => {});

@@ -1,74 +1,63 @@
 <!-- 楼栋指标管理 -->
 <template>
   <div class="building-metrics-page">
-    <template v-if="currentView === 'list'">
-      <div class="header-section">
-        <div class="header-title">
-          <span class="title">楼栋指标管理</span>
-          <span class="subtitle">维护楼栋基础信息，录入各业态面积指标</span>
-        </div>
-        <el-form :model="queryParams" ref="queryRef" :inline="true">
-          <el-form-item label="楼栋名称" prop="sss">
-            <el-input
-              v-model="queryParams.bldName"
-              placeholder="请输入楼栋名称"
-              clearable
-              style="width: 200px"
-            />
-          </el-form-item>
-          <el-form-item>
-            <el-button type="primary" icon="Search" @click="handleSearch">
-              搜索
-            </el-button>
-            <el-button icon="Refresh" @click="handleReset"> 重置 </el-button>
-            <el-button type="primary" @click="handleAdd"> 新增楼栋 </el-button>
-          </el-form-item>
-        </el-form>
+    <div class="header-section">
+      <div class="header-title">
+        <span class="title">楼栋指标管理</span>
+        <span class="subtitle">维护楼栋基础信息，录入各业态面积指标</span>
       </div>
-
-      <base-table
-        ref="tableRef"
-        :columns="tableColumns"
-        :tableData="tableList"
-        rowKey="id"
-        :border="true"
-        :loading="tableLoading"
-        :pagination="false"
-        :total="total"
-        :pageSize="pageSize"
-        :currentPage="currentPage"
-        @pagination-change="handlePageChange"
-      >
-        <!-- 是否地下室列 -->
-        <template #isUnderGround="{ row }">
-          <el-tag :type="row.isUnderGround ? 'success' : 'info'" size="small">
-            {{ row.isUnderGround ? "是" : "否" }}
-          </el-tag>
-        </template>
-
-        <!-- 操作列 -->
-        <template #actions="{ row }">
-          <el-button link type="primary" @click="handleViewDetail(row)">
-            业态详情
+      <el-form :model="queryParams" ref="queryRef" :inline="true">
+        <el-form-item label="楼栋名称" prop="sss">
+          <el-input
+            v-model="queryParams.bldName"
+            placeholder="请输入楼栋名称"
+            clearable
+            style="width: 200px"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" icon="Search" @click="handleSearch">
+            搜索
           </el-button>
-          <el-button link type="primary" @click="handleEdit(row)">
-            编辑
-          </el-button>
-          <el-button link type="danger" @click="handleDelete(row)">
-            删除
-          </el-button>
-        </template>
-      </base-table>
-    </template>
+          <el-button icon="Refresh" @click="handleReset"> 重置 </el-button>
+          <el-button type="primary" @click="handleAdd"> 新增楼栋 </el-button>
+        </el-form-item>
+      </el-form>
+    </div>
 
-    <!-- 业态详情 -->
-    <business-detail
-      v-else
-      :selected-building="selectedBuilding"
-      :project-id="props.projectId"
-      @back="handleBackToList"
-      @saveSuccess="saveSuccess"
-    />
+    <base-table
+      ref="tableRef"
+      :columns="tableColumns"
+      :tableData="tableList"
+      rowKey="id"
+      :border="true"
+      :loading="tableLoading"
+      :pagination="false"
+      :total="total"
+      :pageSize="pageSize"
+      :currentPage="currentPage"
+      @pagination-change="handlePageChange"
+    >
+      <!-- 是否地下室列 -->
+      <template #isUnderGround="{ row }">
+        <el-tag :type="row.isUnderGround ? 'success' : 'info'" size="small">
+          {{ row.isUnderGround ? "是" : "否" }}
+        </el-tag>
+      </template>
+
+      <!-- 操作列 -->
+      <template #actions="{ row }">
+        <!-- <el-button link type="primary" @click="handleViewDetail(row)">
+            面积设置
+          </el-button> -->
+        <el-button link type="primary" @click="handleEdit(row)">
+          编辑
+        </el-button>
+        <el-button link type="danger" @click="handleDelete(row)">
+          删除
+        </el-button>
+      </template>
+    </base-table>
 
     <!-- 新增/编辑 楼栋弹窗 -->
     <add-edit-building-dialog
@@ -85,7 +74,6 @@ import { ref, onMounted, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import type { ProjectBuilding } from "@/types/cost/project-area-type";
-import BusinessDetail from "./business-detail.vue";
 import AddEditBuildingDialog from "./add-edit-building-dialog.vue";
 import { projectAreaApi } from "@/api/cost/project-area-api";
 
@@ -111,10 +99,6 @@ const queryParams = ref({
 const dialogVisible = ref(false);
 const currentEditData = ref<ProjectBuilding | null>(null);
 
-// 业态详情相关
-const currentView = ref<"list" | "detail">("list");
-const selectedBuilding = ref<ProjectBuilding | null>(null);
-
 // 表格列配置
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60, align: "center" },
@@ -128,7 +112,7 @@ const tableColumns: TableColumnItem[] = [
   { prop: "createDate", label: "创建时间", align: "center" },
   {
     label: "操作",
-    width: 280,
+    width: 200,
     align: "center",
     slot: "actions",
     fixed: "right",
@@ -196,24 +180,6 @@ const handleDelete = async (row: ProjectBuilding) => {
     .catch(() => {});
 };
 
-// 查看业态详情
-const handleViewDetail = (row: ProjectBuilding) => {
-  selectedBuilding.value = row;
-  currentView.value = "detail";
-};
-
-// 返回列表
-const handleBackToList = () => {
-  currentView.value = "list";
-  selectedBuilding.value = null;
-};
-// 保存成功回调
-const saveSuccess = () => {
-  currentView.value = "list";
-  selectedBuilding.value = null;
-  getBuildingList();
-};
-
 // 分页变化
 const handlePageChange = (params: {
   currentPage: number;
@@ -238,11 +204,11 @@ watch(
   () => props.projectId,
   (newVal) => {
     if (newVal) {
-      currentView.value = "list";
+      queryParams.value.projId = newVal;
       getBuildingList();
     }
   },
-  { immediate: true, deep: true },
+  { immediate: true },
 );
 
 onMounted(() => {});

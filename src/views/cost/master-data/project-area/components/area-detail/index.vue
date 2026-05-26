@@ -6,7 +6,7 @@
         <span class="title">楼栋业态面积详情</span>
         <span class="subtitle"> 查看楼栋业态面积指标汇总 </span>
       </div>
-      <div class="header-actions">
+      <!-- <div class="header-actions">
         <el-button type="primary" @click="modalVisible = true">
           <el-icon><Upload /></el-icon>
           导入
@@ -15,13 +15,13 @@
           <el-icon><Download /></el-icon>
           导出
         </el-button>
-      </div>
+      </div> -->
     </div>
     <base-table
       ref="tableRef"
       :columns="tableColumns"
       :tableData="tableList"
-      rowKey="uuid"
+      rowKey="id"
       :loading="tableLoading"
       :showSummary="true"
       :pagination="false"
@@ -34,7 +34,6 @@
 </template>
 
 <script setup lang="ts">
-import { v4 as uuidv4 } from "uuid";
 import { ref, watch, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import ImportIndicatorDialog from "./import-indicator-dialog.vue";
@@ -45,7 +44,7 @@ defineOptions({ name: "area-detail" });
 
 // 定义 props
 const props = defineProps<{
-  projectId?: number;
+  projectId: number;
 }>();
 
 // 数据
@@ -76,24 +75,17 @@ const tableColumns: TableColumnItem[] = [
   { prop: "elvNum", label: "电梯数" },
 ];
 
-// 加载数据
-const loadData = async () => {
+// 加载数据列表
+const getDataList = async (verMid: number) => {
   try {
     tableLoading.value = true;
     tableList.value = [];
     const params = {
-      prodId: props.projectId,
+      verMid: verMid, // 版本ID
     };
     const res = await projectAreaApi.getAreaVerDList(params);
     if (res.code === 200) {
-      const list = res.data || [];
-      const newData = list.map((item) => {
-        return {
-          ...item,
-          uuid: uuidv4(),
-        };
-      });
-      tableList.value = newData;
+      tableList.value = res.data || [];
     }
   } catch (error) {
     ElMessage.error("加载数据失败");
@@ -101,22 +93,37 @@ const loadData = async () => {
     tableLoading.value = false;
   }
 };
+// 查询版本列表
+const getCurrentVersionId = async () => {
+  try {
+    const res = await projectAreaApi.getAreaVerMList({
+      projId: props.projectId,
+    });
+    if (res.code === 200) {
+      const list = res.data || [];
+      // 获取当前生效版本的版本
+      const currentVersion = list.find((item) => item.isEnabled);
+      if (currentVersion) {
+        const verMid = currentVersion.id;
+        getDataList(verMid); // 获取数据列表
+      }
+    }
+  } catch (error) {
+    ElMessage.error("获取当前版本失败");
+    return null;
+  }
+};
 watch(
   () => props.projectId,
   async (newVal) => {
     if (newVal) {
-      loadData();
+      getCurrentVersionId(); // 获取当前生效版本ID
     }
   },
-  { immediate: true, deep: true },
+  { immediate: true },
 );
 
 onMounted(() => {});
-
-// 暴露方法给父组件
-defineExpose({
-  refresh: loadData,
-});
 </script>
 
 <style lang="scss" scoped>

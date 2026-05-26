@@ -1,9 +1,15 @@
 import { http } from "@/axios/service";
 import {
+  SupplierAnnexDeleteParams,
+  SupplierAnnexQueryParams,
+  SupplierAnnexSaveParams,
   SupplierBankDeleteParams,
   SupplierBankQueryParams,
   SupplierBankSaveParams,
   SupplierDeleteParams,
+  SupplierPerfDeleteParams,
+  SupplierPerfQueryParams,
+  SupplierPerfSaveParams,
   SupplierQueryParams,
   SupplierSaveParams,
   SupplierSegmentDeleteParams,
@@ -61,5 +67,39 @@ export const supplierApi = {
   /** 删除供应商银行账户 */
   delBank: (data: SupplierBankDeleteParams) => {
     return http.formPost("/sup/bank/del", data);
+  },
+
+  /** 查询供应商资质列表 */
+  getAnnexList: (data: SupplierAnnexQueryParams) => {
+    return http.formPost("/sup/annex/getList", data);
+  },
+  /** 新增供应商资质 */
+  addAnnex: (data: SupplierAnnexSaveParams) => {
+    return http.post("/sup/annex/add", data);
+  },
+  /** 修改供应商资质 */
+  editAnnex: (data: SupplierAnnexSaveParams) => {
+    return http.post("/sup/annex/edit", data);
+  },
+  /** 删除供应商资质 */
+  delAnnex: (data: SupplierAnnexDeleteParams) => {
+    return http.formPost("/sup/annex/del", data);
+  },
+
+  /** 查询供应商项目业绩列表 */
+  getPerfList: (data: SupplierPerfQueryParams) => {
+    return http.formPost("/sup/perf/getList", data);
+  },
+  /** 新增供应商项目业绩 */
+  addPerf: (data: SupplierPerfSaveParams) => {
+    return http.post("/sup/perf/add", data);
+  },
+  /** 修改供应商项目业绩 */
+  editPerf: (data: SupplierPerfSaveParams) => {
+    return http.post("/sup/perf/edit", data);
+  },
+  /** 删除供应商项目业绩 */
+  delPerf: (data: SupplierPerfDeleteParams) => {
+    return http.formPost("/sup/perf/del", data);
   },
 };

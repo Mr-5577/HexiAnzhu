@@ -1,10 +1,10 @@
-<!-- 银行账户 -->
+<!-- 供应商项目业绩 -->
 <template>
-  <div class="bank-account-page">
+  <div class="project-performance-page">
     <el-form :inline="true">
       <el-form-item>
         <el-button type="primary" @click="handleAdd" v-if="!isView">
-          新增银行账户
+          新增业绩
         </el-button>
         <el-button icon="Refresh" @click="handleRefresh">刷新列表</el-button>
       </el-form-item>
@@ -19,18 +19,18 @@
       :loading="tableLoading"
       :pagination="false"
     >
-      <!-- 是否默认 -->
-      <template #isDefault="{ row }">
-        <el-tag :type="row.isDefault ? 'success' : 'info'" size="small">
-          {{ row.isDefault ? "是" : "否" }}
-        </el-tag>
+      <!-- 合同金额格式化 -->
+      <template #conAmount="{ row }">
+        <span>{{ row.conAmount ? row.conAmount.toFixed(2) : "-" }}</span>
       </template>
 
-      <!-- 是否启用 -->
-      <template #isEnabled="{ row }">
-        <el-tag :type="row.isEnabled ? 'success' : 'danger'" size="small">
-          {{ row.isEnabled ? "启用" : "禁用" }}
-        </el-tag>
+      <!-- 日期格式化 -->
+      <template #startDate="{ row }">
+        <span>{{ row.startDate || "-" }}</span>
+      </template>
+
+      <template #endDate="{ row }">
+        <span>{{ row.endDate || "-" }}</span>
       </template>
 
       <!-- 操作列 -->
@@ -42,10 +42,10 @@
       </template>
     </base-table>
 
-    <!-- 新增/编辑 银行账户弹窗 -->
-    <add-edit-bank-dialog
+    <!-- 新增/编辑 业绩弹窗 -->
+    <add-edit-performance-dialog
       v-model="modalVisible"
-      :edit-data="editBankData"
+      :edit-data="editPerfData"
       :sup-id="props.supplierId"
       @success="handleModalSuccess"
     />
@@ -55,45 +55,45 @@
 <script setup lang="ts">
 import { ref, watch, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import type { SupplierBank } from "@/types/cost/supplier-ledger-type";
-import AddEditBankDialog from "./add-edit-bank-dialog.vue";
+import type { SupplierPerf } from "@/types/cost/supplier-ledger-type";
+import AddEditPerformanceDialog from "./add-edit-performance-dialog.vue";
 import { supplierApi } from "@/api/cost/supplier-ledger-api";
 
-defineOptions({ name: "bank-account" });
+defineOptions({ name: "project-performance" });
 
 // Props
 const props = defineProps<{
   supplierId: number; // 供应商ID
-  mode?: "add" | "edit" | "view"; // 模式
+  mode?: "add" | "edit" | "view";
 }>();
 
 const isView = computed(() => props.mode === "view"); // 是否为查看模式
 
 const tableLoading = ref(false);
 const modalVisible = ref(false);
-const editBankData = ref<SupplierBank | null>(null);
+const editPerfData = ref<SupplierPerf | null>(null);
 
 // 列表数据
-const tableData = ref<SupplierBank[]>([]);
+const tableData = ref<SupplierPerf[]>([]);
 // 表格列配置
 const tableColumns = ref([
   { type: "index", label: "序号", width: 60 },
-  { label: "银行户名", prop: "accountName", minWidth: 120 },
-  { label: "开户银行", prop: "bankName", minWidth: 150 },
-  { label: "银行账号", prop: "bankAccount", minWidth: 150 },
-  { label: "是否默认", slot: "isDefault", width: 120 },
-  { label: "是否启用", slot: "isEnabled", width: 120 },
-  { label: "备注", prop: "remark", minWidth: 150 },
+  { label: "项目名称", prop: "projName", minWidth: 200 },
+  { label: "合作单位", prop: "companyName", minWidth: 150 },
+  { label: "合同金额(元)", slot: "conAmount", width: 150 },
+  { label: "合同概述", prop: "conDesc", minWidth: 200 },
+  { label: "开始日期", slot: "startDate", width: 120 },
+  { label: "结束日期", slot: "endDate", width: 120 },
   { label: "操作", slot: "actions", width: 180, fixed: "right" },
 ]);
 
 // 加载数据
-const getBankAccountList = async () => {
+const getPerfList = async () => {
   if (!props.supplierId) return;
   try {
     tableLoading.value = true;
     tableData.value = [];
-    const res = await supplierApi.getBankList({
+    const res = await supplierApi.getPerfList({
       supId: props.supplierId,
     });
     if (res.code === 200) {
@@ -105,20 +105,21 @@ const getBankAccountList = async () => {
     tableLoading.value = false;
   }
 };
+
 // 刷新
 const handleRefresh = () => {
-  getBankAccountList();
+  getPerfList();
 };
 
 // 新增
 const handleAdd = () => {
-  editBankData.value = null;
+  editPerfData.value = null;
   modalVisible.value = true;
 };
 
 // 编辑
-const handleEdit = (row: SupplierBank) => {
-  editBankData.value = row;
+const handleEdit = (row: SupplierPerf) => {
+  editPerfData.value = row;
   modalVisible.value = true;
 };
 
@@ -128,15 +129,19 @@ const handleModalSuccess = () => {
 };
 
 // 删除
-const handleDelete = (row: SupplierBank) => {
-  ElMessageBox.confirm(`确定要删除账户"${row.accountName}"吗？`, "提示", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
-    type: "warning",
-  })
+const handleDelete = (row: SupplierPerf) => {
+  ElMessageBox.confirm(
+    `确定要删除项目"${row.projName}"的业绩记录吗？`,
+    "提示",
+    {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      type: "warning",
+    },
+  )
     .then(async () => {
       try {
-        const res = await supplierApi.delBank({ id: row.id });
+        const res = await supplierApi.delPerf({ id: row.id });
         if (res.code === 200) {
           ElMessage.success("删除成功");
           handleRefresh();
@@ -152,7 +157,7 @@ watch(
   () => props.supplierId,
   (newVal) => {
     if (newVal) {
-      getBankAccountList();
+      getPerfList();
     } else {
       tableData.value = [];
     }
@@ -162,7 +167,7 @@ watch(
 </script>
 
 <style lang="scss" scoped>
-.bank-account-page {
+.project-performance-page {
   height: 100%;
   width: 100%;
   display: flex;

@@ -13,19 +13,23 @@
             <el-icon><Document /></el-icon>
             <span>基本信息</span>
           </el-menu-item>
-          <el-menu-item index="contact">
+          <el-menu-item index="serve" :disabled="!supplierId">
+            <el-icon><Briefcase /></el-icon>
+            <span>服务板块</span>
+          </el-menu-item>
+          <!-- <el-menu-item index="contact" :disabled="!supplierId">
             <el-icon><Phone /></el-icon>
             <span>联系方式</span>
-          </el-menu-item>
-          <el-menu-item index="bank">
+          </el-menu-item> -->
+          <el-menu-item index="bank" :disabled="!supplierId">
             <el-icon><CreditCard /></el-icon>
             <span>银行账户</span>
           </el-menu-item>
-          <el-menu-item index="resource">
+          <el-menu-item index="qualification" :disabled="!supplierId">
             <el-icon><Folder /></el-icon>
-            <span>相关资源</span>
+            <span>相关资质</span>
           </el-menu-item>
-          <el-menu-item index="project" disabled>
+          <el-menu-item index="performance" :disabled="!supplierId">
             <el-icon><Trophy /></el-icon>
             <span>项目业绩</span>
           </el-menu-item>
@@ -35,38 +39,74 @@
       <!-- 右侧内容区 -->
       <el-main class="content-area">
         <keep-alive>
-          <component :is="currentComponent" @update="handleDataUpdate" />
+          <component
+            :is="currentComponent"
+            :supplier-id="supplierId"
+            :mode="mode"
+            @save-success="handleSaveSuccess"
+          />
         </keep-alive>
       </el-main>
     </el-container>
   </div>
 </template>
 
-<script setup>
-import { ref, computed } from "vue";
+<script setup lang="ts">
+import { ref, computed, Ref, watch } from "vue";
+import { useRoute } from "vue-router";
+import { ElMessage } from "element-plus";
 import BasicInfo from "./basic-infor.vue";
+import SupplierServe from "./supplier-serve.vue";
 import ContactWay from "./contact-way.vue";
 import BankTable from "./bank-account.vue";
-import RelateResource from "./relate-resource.vue";
+import RelateQualification from "./relate-qualification.vue";
+import ProjectPerformance from "./project-performance.vue";
 
+const route = useRoute();
 const activeTab = ref("basic");
+const supplierId = ref<number | null>(null);
+const mode = ref<"add" | "edit" | "view">("add");
 
 const tabComponents = {
   basic: BasicInfo,
+  serve: SupplierServe,
   contact: ContactWay,
   bank: BankTable,
-  resource: RelateResource,
+  qualification: RelateQualification,
+  performance: ProjectPerformance,
 };
 
 const currentComponent = computed(() => tabComponents[activeTab.value]);
 
-const handleTabChange = (tab) => {
-  activeTab.value = tab;
+const syncRouteState = () => {
+  const queryMode = route.query.mode as string;
+  mode.value = queryMode === "edit" || queryMode === "view" ? queryMode : "add";
+  const idValue = route.query.id ? Number(route.query.id) : null;
+  supplierId.value = idValue || null;
+  if (mode.value === "add") {
+    activeTab.value = "basic";
+  }
 };
 
-const handleDataUpdate = ({ module, data }) => {
-  // 更新store中对应模块的数据
-  store[module] = data;
+syncRouteState();
+watch(
+  () => [route.query.mode, route.query.id],
+  syncRouteState,
+);
+
+const handleTabChange = (tab) => {
+  // 如果点击的是非基本信息菜单，且还没有供应商ID，则不允许切换
+  if (tab !== "basic" && !supplierId.value) {
+    ElMessage.warning("请先保存基本信息");
+    return;
+  }
+  activeTab.value = tab;
+};
+// 新增供应商保存成功后的回调，只有先保存了供应商才能操作其他信息
+const handleSaveSuccess = (id) => {
+  supplierId.value = id;
+  // 保存成功后跳转到下一个菜单
+  activeTab.value = "serve";
 };
 </script>
 

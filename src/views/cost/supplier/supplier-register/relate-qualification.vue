@@ -1,10 +1,10 @@
-<!-- 银行账户 -->
+<!-- 供应商资质 -->
 <template>
-  <div class="bank-account-page">
+  <div class="relate-qualification-page">
     <el-form :inline="true">
       <el-form-item>
         <el-button type="primary" @click="handleAdd" v-if="!isView">
-          新增银行账户
+          新增资质
         </el-button>
         <el-button icon="Refresh" @click="handleRefresh">刷新列表</el-button>
       </el-form-item>
@@ -19,33 +19,19 @@
       :loading="tableLoading"
       :pagination="false"
     >
-      <!-- 是否默认 -->
-      <template #isDefault="{ row }">
-        <el-tag :type="row.isDefault ? 'success' : 'info'" size="small">
-          {{ row.isDefault ? "是" : "否" }}
-        </el-tag>
-      </template>
-
-      <!-- 是否启用 -->
-      <template #isEnabled="{ row }">
-        <el-tag :type="row.isEnabled ? 'success' : 'danger'" size="small">
-          {{ row.isEnabled ? "启用" : "禁用" }}
-        </el-tag>
-      </template>
-
       <!-- 操作列 -->
       <template #actions="{ row }" v-if="!isView">
         <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
-        <el-button link type="danger" @click="handleDelete(row)">
-          删除
-        </el-button>
+        <el-button link type="danger" @click="handleDelete(row)"
+          >删除</el-button
+        >
       </template>
     </base-table>
 
-    <!-- 新增/编辑 银行账户弹窗 -->
-    <add-edit-bank-dialog
+    <!-- 新增/编辑 资质弹窗 -->
+    <add-edit-annex-dialog
       v-model="modalVisible"
-      :edit-data="editBankData"
+      :edit-data="editAnnexData"
       :sup-id="props.supplierId"
       @success="handleModalSuccess"
     />
@@ -55,45 +41,42 @@
 <script setup lang="ts">
 import { ref, watch, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import type { SupplierBank } from "@/types/cost/supplier-ledger-type";
-import AddEditBankDialog from "./add-edit-bank-dialog.vue";
+import type { SupplierAnnex } from "@/types/cost/supplier-ledger-type";
+import AddEditAnnexDialog from "./add-edit-annex-dialog.vue";
 import { supplierApi } from "@/api/cost/supplier-ledger-api";
 
-defineOptions({ name: "bank-account" });
+defineOptions({ name: "relate-qualification" });
 
 // Props
 const props = defineProps<{
   supplierId: number; // 供应商ID
-  mode?: "add" | "edit" | "view"; // 模式
+  mode?: "add" | "edit" | "view";
 }>();
 
 const isView = computed(() => props.mode === "view"); // 是否为查看模式
 
 const tableLoading = ref(false);
 const modalVisible = ref(false);
-const editBankData = ref<SupplierBank | null>(null);
+const editAnnexData = ref<SupplierAnnex | null>(null);
 
 // 列表数据
-const tableData = ref<SupplierBank[]>([]);
+const tableData = ref<SupplierAnnex[]>([]);
 // 表格列配置
 const tableColumns = ref([
   { type: "index", label: "序号", width: 60 },
-  { label: "银行户名", prop: "accountName", minWidth: 120 },
-  { label: "开户银行", prop: "bankName", minWidth: 150 },
-  { label: "银行账号", prop: "bankAccount", minWidth: 150 },
-  { label: "是否默认", slot: "isDefault", width: 120 },
-  { label: "是否启用", slot: "isEnabled", width: 120 },
-  { label: "备注", prop: "remark", minWidth: 150 },
+  { label: "附件类型", prop: "annexType", minWidth: 150 },
+  { label: "附件名称", prop: "annexName", minWidth: 200 },
+  { label: "备注", prop: "remark", minWidth: 200 },
   { label: "操作", slot: "actions", width: 180, fixed: "right" },
 ]);
 
 // 加载数据
-const getBankAccountList = async () => {
+const getAnnexList = async () => {
   if (!props.supplierId) return;
   try {
     tableLoading.value = true;
     tableData.value = [];
-    const res = await supplierApi.getBankList({
+    const res = await supplierApi.getAnnexList({
       supId: props.supplierId,
     });
     if (res.code === 200) {
@@ -105,20 +88,21 @@ const getBankAccountList = async () => {
     tableLoading.value = false;
   }
 };
+
 // 刷新
 const handleRefresh = () => {
-  getBankAccountList();
+  getAnnexList();
 };
 
 // 新增
 const handleAdd = () => {
-  editBankData.value = null;
+  editAnnexData.value = null;
   modalVisible.value = true;
 };
 
 // 编辑
-const handleEdit = (row: SupplierBank) => {
-  editBankData.value = row;
+const handleEdit = (row: SupplierAnnex) => {
+  editAnnexData.value = row;
   modalVisible.value = true;
 };
 
@@ -128,15 +112,15 @@ const handleModalSuccess = () => {
 };
 
 // 删除
-const handleDelete = (row: SupplierBank) => {
-  ElMessageBox.confirm(`确定要删除账户"${row.accountName}"吗？`, "提示", {
+const handleDelete = (row: SupplierAnnex) => {
+  ElMessageBox.confirm(`确定要删除资质"${row.annexName}"吗？`, "提示", {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
     type: "warning",
   })
     .then(async () => {
       try {
-        const res = await supplierApi.delBank({ id: row.id });
+        const res = await supplierApi.delAnnex({ id: row.id });
         if (res.code === 200) {
           ElMessage.success("删除成功");
           handleRefresh();
@@ -152,7 +136,7 @@ watch(
   () => props.supplierId,
   (newVal) => {
     if (newVal) {
-      getBankAccountList();
+      getAnnexList();
     } else {
       tableData.value = [];
     }
@@ -162,7 +146,7 @@ watch(
 </script>
 
 <style lang="scss" scoped>
-.bank-account-page {
+.relate-qualification-page {
   height: 100%;
   width: 100%;
   display: flex;

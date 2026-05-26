@@ -1,11 +1,11 @@
-<!-- 业态详情 -->
+<!-- 面积设置 -->
 <template>
   <div class="business-detail-page">
     <div class="detail-header">
       <div class="header-title">
-        <div class="title-main">业态详情</div>
+        <div class="title-main">面积设置</div>
         <div class="title-sub">
-          {{ props.selectedBuilding?.bldName || "--" }} 的各业态面积指标
+          {{ props.currentData?.verTitle || "--" }} 的各业态面积指标
         </div>
       </div>
       <div class="header-actions">
@@ -15,21 +15,23 @@
             <span>返回</span>
           </div>
           <div class="building-detail-info">
-            <div class="building-name">
-              <el-icon><OfficeBuilding /></el-icon>
-              <span>{{ props.selectedBuilding?.bldName || "" }}</span>
-            </div>
-            <!-- <div class="building-floor">
-              <el-icon><Grid /></el-icon>
-              <span>楼层：</span>
-              <span>32层</span>
-            </div> -->
+            <span class="label">楼栋</span>
+            <el-select
+              v-model="queryParams.bldId"
+              placeholder="请选择楼栋"
+              style="width: 200px"
+              @change="getTableData"
+            >
+              <el-option
+                v-for="item in buildingList"
+                :key="item.id"
+                :label="item.bldName"
+                :value="item.id"
+              />
+            </el-select>
           </div>
         </div>
         <div>
-          <el-button type="primary" plain @click="handleAddBusiness">
-            新增业态
-          </el-button>
           <el-button
             type="primary"
             :loading="saveLoading"
@@ -40,16 +42,7 @@
         </div>
       </div>
     </div>
-    <!-- <base-table
-      ref="businessDetailtableRef"
-      :columns="tableColumns"
-      :tableData="tableList"
-      rowKey="uuid"
-      :border="true"
-      :loading="tableLoading"
-      :pagination="false"
-      :showSummary="true"
-    ></base-table> -->
+    <!-- 可编辑表格 -->
     <editable-table
       ref="businessDetailtableRef"
       :rowKey="'uuid'"
@@ -63,31 +56,25 @@
       @data-change="handleDataChange"
       @update:table-data="handleDataUpdate"
     >
-      <!-- 操作列 -->
-      <template #actions="{ row }">
-        <el-button link type="danger" @click="handleDelete(row)">
-          删除
-        </el-button>
-      </template></editable-table
-    >
+    </editable-table>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { ElMessage } from "element-plus";
 import { v4 as uuidv4 } from "uuid";
-import { OfficeBuilding, ArrowLeft } from "@element-plus/icons-vue";
 import EditableTable from "@/components/base/editable-table.vue";
 import type { EditableColumn } from "@/components/base/editable-table.vue";
 import { projectAreaApi } from "@/api/cost/project-area-api";
-import { ProjectBuilding } from "@/types/cost/project-area-type";
+import { ProjectAreaVersion } from "@/types/cost/project-area-type";
+import { productTypeApi } from "@/api/cost/product-type-api";
 
-defineOptions({ name: "business-detail" });
+defineOptions({ name: "area-setting" });
 
 // 定义 props
 const props = defineProps<{
-  selectedBuilding?: ProjectBuilding | null;
+  currentData?: ProjectAreaVersion | null;
   projectId?: number;
 }>();
 
@@ -98,17 +85,27 @@ const emit = defineEmits<{
 }>();
 
 // 数据
+const queryParams = ref({
+  bldId: null as number | null,
+});
+const productProjList = ref([]);
+const buildingList = ref([]);
 const saveLoading = ref(false);
 const tableLoading = ref(false);
 const tableList = ref([]);
-const tableColumns: EditableColumn[] = [
+const tableColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {
-    prop: "prodName",
+    prop: "prodId",
     label: "业态名称",
     editable: true,
-    editType: "input",
     showOverflowTooltip: false,
+    // 自定义键名
+    optionLabelField: "prodName",
+    optionValueField: "id",
+    editType: "select",
+    clearable: false,
+    options: productProjList.value || [],
   },
   {
     label: "建筑面积(m²)",
@@ -167,13 +164,7 @@ const tableColumns: EditableColumn[] = [
     editType: "number",
     showOverflowTooltip: false,
   },
-  {
-    label: "操作",
-    width: 100,
-    slot: "actions",
-    fixed: "right",
-  },
-];
+]);
 
 // 返回
 const handleBack = () => {
@@ -181,12 +172,13 @@ const handleBack = () => {
 };
 
 // 加载数据
-const loadData = async () => {
+const getTableData = async () => {
   try {
     tableLoading.value = true;
     tableList.value = [];
     const params = {
-      bldId: props.selectedBuilding?.id || 0,
+      verMid: props.currentData?.id,
+      bldId: queryParams.value.bldId,
       prodId: props.projectId,
     };
     const res = await projectAreaApi.getNetByBldId(params);
@@ -207,46 +199,23 @@ const loadData = async () => {
   }
 };
 
-// 生成空数据行
-const createEmptyRow = () => {
-  return {
-    uuid: uuidv4(),
-    prodName: "", // 业态名称
-    agBuildArea: 0, // 地上建筑面积
-    ugBuildArea: 0, // 地下建筑面积
-    agSaleArea: 0, // 地上可售面积
-    ugSaleArea: 0, // 地下可售面积
-    houseNum: 0, // 户数
-    elvNum: 0, // 电梯数
-    isNew: true, // 标记为新增行
-  };
-};
-
-// 新增业态
-const handleAddBusiness = () => {
-  // 检查是否已有空行未填写
-  // const hasEmptyRow = tableList.value.some(
-  //   (item) => item.prodName === "" && item.isNew,
-  // );
-  // if (hasEmptyRow) {
-  //   ElMessage.warning("请先完成当前新增业态的填写");
-  //   return;
-  // }
-
-  // 添加空行到表格底部
-  const newRow = createEmptyRow();
-  tableList.value = [...tableList.value, newRow];
-};
-
 // 批量保存
 const handleBatchSave = async () => {
-  console.log("tableList.value", tableList.value);
+  if (!tableList.value.length) {
+    ElMessage.warning("请先填写数据");
+    return;
+  }
   try {
     saveLoading.value = true;
-    const res = await projectAreaApi.batchSaveNet(tableList.value);
+    const res = await projectAreaApi.batchSaveNet(
+      tableList.value,
+      queryParams.value.bldId,
+      props.currentData?.id,
+    );
     if (res.code === 200) {
       ElMessage.success("保存成功");
-      emit("saveSuccess");
+      getTableData();
+      // emit("saveSuccess");
     }
   } catch (error) {
   } finally {
@@ -254,33 +223,74 @@ const handleBatchSave = async () => {
   }
 };
 
-// 保存到服务器
+// 保存
 const handleSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
   // console.log("保存:", { row, column, newValue, oldValue, rowIndex });
+  if (column === "prodId") {
+    const selectedOption = productProjList.value.find(
+      (option) => option.id === newValue,
+    );
+    row.prodName = selectedOption ? selectedOption.prodName : "";
+  }
 };
 
 // 数据变化回调
-const handleDataChange = (data) => {
+const handleDataChange = (data: any) => {
   // console.log("当前行数据更新", data);
 };
 // 数据更新回调
-const handleDataUpdate = (newData) => {
+const handleDataUpdate = (newData: any) => {
   // console.log("table数据更新", newData);
   tableList.value = newData;
 };
 
-// 删除行
-const handleDelete = (row) => {
-  tableList.value = tableList.value.filter((item) => item.uuid !== row.uuid);
+// 获取项目产品类型
+const getProductProjList = async () => {
+  try {
+    productProjList.value = [];
+    const res = await productTypeApi.getProductProjList({
+      projId: props.projectId,
+      withDetail: true,
+    });
+    if (res.code === 200) {
+      productProjList.value = res.data || [];
+    } else {
+      ElMessage.error(res.msg || "获取数据失败");
+    }
+  } catch (error) {
+    console.error("获取数据失败:", error);
+  }
 };
-
-onMounted(() => {
-  loadData();
+// 获取楼栋列表
+const getBuildingList = async () => {
+  if (!props.projectId) return;
+  try {
+    buildingList.value = [];
+    const res = await projectAreaApi.getBuildingList({
+      projId: props.projectId,
+    });
+    if (res.code === 200) {
+      buildingList.value = res.data || [];
+      if (buildingList.value.length > 0) {
+        queryParams.value.bldId = buildingList.value[0].id; // 默认选中第一个楼栋
+        await getTableData(); // 获取默认选中楼栋的数据
+      } else {
+        ElMessage.warning("该项目下没有楼栋数据");
+      }
+    }
+  } catch (error) {
+    ElMessage.error("加载数据失败");
+  }
+};
+onMounted(async () => {
+  await getProductProjList(); // 获取产品类型
+  await getBuildingList(); // 先获取楼栋列表
+  // await getTableData(); // 默认查询选中的第一个楼栋下的数据
 });
 
 // 暴露方法给父组件
 defineExpose({
-  refresh: loadData,
+  refresh: getTableData,
 });
 </script>
 
@@ -349,22 +359,13 @@ defineExpose({
 
         .building-detail-info {
           display: flex;
-          flex-direction: column;
+          align-items: center;
           padding-left: 20px;
           border-left: 1px solid #e4e7ed;
-
-          .building-name,
-          .building-floor {
-            display: flex;
-            align-items: center;
-            gap: 6px;
+          .label {
             font-size: 14px;
             color: #606266;
-
-            .el-icon {
-              color: #606266;
-              font-size: 18px;
-            }
+            margin-right: 8px;
           }
         }
       }

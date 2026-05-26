@@ -7,7 +7,7 @@ import {
 
 export const conTypeApi = {
   /** 获取合同类别列表 */
-  getConTypeList: (data: ContractTypeQueryParams) => {
+  getConTypeList: (data?: ContractTypeQueryParams) => {
     return http.formPost("/mainData/conType/getList", data);
   },
   /** 新增合同类别 */

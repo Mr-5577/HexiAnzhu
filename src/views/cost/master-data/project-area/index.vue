@@ -5,7 +5,7 @@
       <div class="search-box">
         <el-input
           v-model="searchKeyword"
-          placeholder="搜索项目"
+          placeholder="搜索项目名称"
           clearable
           size="default"
         >
@@ -16,12 +16,12 @@
       </div>
       <div class="tree-wrapper">
         <el-tree
-          ref="treeRef"
+          ref="projectTreeRef"
           :data="treeData"
           :props="treeProps"
           :filter-node-method="filterNode"
           :current-node-key="currentNodeKey"
-          node-key="id"
+          node-key="treeId"
           :highlight-current="false"
           :default-expand-all="false"
           :accordion="false"
@@ -32,13 +32,13 @@
               class="tree-node"
               :class="{
                 'project-active':
-                  currentNodeKey === data.id && data.type === 'village',
+                  currentNodeKey === data.treeId && data.dataType === 1,
               }"
             >
-              <el-icon v-if="data.type === 'city'"><OfficeBuilding /></el-icon>
+              <el-icon v-if="data.dataType === 3"><OfficeBuilding /></el-icon>
               <el-icon v-else><HomeFilled /></el-icon>
               <span>{{ node.label }}</span>
-              <span v-if="data.type === 'city'" class="node-count">
+              <span v-if="data.dataType === 3" class="node-count">
                 ({{ data.children?.length || 0 }}个项目)
               </span>
             </span>
@@ -48,7 +48,13 @@
     </div>
 
     <!-- 项目详细信息 -->
-    <div class="right-content" v-if="selectedProject">
+    <div
+      class="right-content"
+      v-loading="dataLoading"
+      :element-loading-text="'数据加载中...'"
+      :element-loading-background="'rgba(255, 255, 255, 0.6)'"
+      v-if="selectedProject"
+    >
       <div class="project-overview">
         <div class="overview-card">
           <div class="card-left">
@@ -83,17 +89,26 @@
       <div class="detail-tab">
         <el-tabs v-model="activeTab">
           <el-tab-pane label="版本管理" name="version" style="height: 100%">
-            <version-management :project-id="1" />
+            <version-management
+              v-if="activeTab === 'version'"
+              :project-id="selectedProject?.id"
+            />
           </el-tab-pane>
           <el-tab-pane
             label="楼栋指标管理"
             name="building"
             style="height: 100%"
           >
-            <building-metrics :project-id="1" />
+            <building-metrics
+              v-if="activeTab === 'building'"
+              :project-id="selectedProject?.id"
+            />
           </el-tab-pane>
           <el-tab-pane label="面积详情" name="area" style="height: 100%">
-            <area-detail :project-id="1" />
+            <area-detail
+              v-if="activeTab === 'area'"
+              :project-id="selectedProject?.id"
+            />
           </el-tab-pane>
         </el-tabs>
       </div>
@@ -108,94 +123,135 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { HomeFilled, Search, OfficeBuilding } from "@element-plus/icons-vue";
-import type { ElTree } from "element-plus";
+import { ElMessage, type ElTree } from "element-plus";
 import VersionManagement from "./components/version-management/index.vue";
 import BuildingMetrics from "./components/building-metrics/index.vue";
 import AreaDetail from "./components/area-detail/index.vue";
+import { projectAreaApi } from "@/api/cost/project-area-api";
+import { ProjectTreeNode } from "@/types/cost/project-area-type";
 
 defineOptions({ name: "project-area" });
 
-// 类型定义
-interface CityNode {
-  id: number;
-  label: string;
-  type: string;
-  disabled: boolean;
-  isLeaf: boolean;
-  children?: VillageNode[];
-}
-
-interface VillageNode {
-  id: number;
-  label: string;
-  city_id: number;
-  type: string;
-  area: number;
-  isLeaf: boolean;
-  disabled: boolean;
-}
-
 interface SelectedProject {
-  id: number;
-  label: string;
-  cityName: string;
-  area: number;
-  companyName: string;
-  totalArea: number;
-  saleableArea: number;
-  totalUnits: number;
+  id: number; // 项目ID
+  label: string; // 项目名称
+  companyName: string; // 所属公司名称
+  companyId: number; // 所属公司ID
+  totalArea: number; // 总建筑面积
+  saleableArea: number; // 总可销售面积
+  totalUnits: number; // 总户数
 }
 
 // 数据
-const treeRef = ref<InstanceType<typeof ElTree>>();
+const projectTreeRef = ref<InstanceType<typeof ElTree>>();
 const searchKeyword = ref("");
-const treeData = ref<CityNode[]>([]);
+const treeData = ref<ProjectTreeNode[]>([]);
 const selectedProject = ref<SelectedProject | null>(null);
 const activeTab = ref("version");
 const currentNodeKey = ref<string | number | null>(null);
+const dataLoading = ref(false);
 
-// 树配置
+// 树配置 - 根据新接口调整
 const treeProps = {
   children: "children",
-  label: "label",
-  disabled: "disabled",
-  isLeaf: "isLeaf",
+  label: "orgName",
+  disabled: false,
+  isLeaf: (data: ProjectTreeNode) => data.dataType === 1, // 项目节点为叶子节点
 };
 
 // 过滤节点
-const filterNode = (value: string, data: CityNode | VillageNode) => {
+const filterNode = (value: string, data: ProjectTreeNode) => {
   if (!value) return true;
-  return data.label.includes(value);
+  return data.orgName.includes(value);
 };
 
 // 搜索
 const handleSearch = () => {
-  treeRef.value?.filter(searchKeyword.value);
+  projectTreeRef.value?.filter(searchKeyword.value.trim());
 };
 
 // 点击节点
-const handleNodeClick = (data: CityNode | VillageNode) => {
-  // 只处理项目节点（小区）
-  if (data.type === "village") {
-    const village = data as VillageNode;
+const handleNodeClick = async (data: ProjectTreeNode) => {
+  // 只处理项目节点（dataType === 1）
+  if (data.dataType === 1) {
     // 设置当前高亮的节点key
-    currentNodeKey.value = village.id;
-    // 查找所属城市名称
-    const city = treeData.value.find((c) => c.id === village.city_id);
+    currentNodeKey.value = data.treeId;
+
     selectedProject.value = {
-      id: village.id,
-      label: village.label,
-      cityName: city?.label || "",
-      area: village.area,
-      // 模拟数据，实际从接口获取
-      companyName: `${city?.label}公司`,
-      totalArea: village.area * 10000,
-      saleableArea: village.area * 8500,
-      totalUnits: Math.floor(village.area * 80),
+      id: data.orgId,
+      label: data.orgName,
+      companyName: data.companyName || "",
+      companyId: data.orgPid,
+      totalArea: 0,
+      saleableArea: 0,
+      totalUnits: 0,
     };
-  } else {
-    // 点击城市节点时，清除高亮
-    // currentNodeKey.value = null;
+    // 获取项目下的版本列表，查询当前生效版本
+    getCurrentVersionId(data.orgId);
+  }
+};
+// 查询版本列表
+const getCurrentVersionId = async (projId: number) => {
+  try {
+    const res = await projectAreaApi.getAreaVerMList({
+      projId: projId,
+    });
+    if (res.code === 200) {
+      const list = res.data || [];
+      // 获取当前生效版本的版本
+      const currentVersion = list.find((item) => item.isEnabled);
+      if (currentVersion) {
+        const verMid = currentVersion.id;
+        getDetailByProjectId(verMid); // 获取详情列表
+      } else {
+        ElMessage.warning("当前项目没有生效的版本");
+      }
+    }
+  } catch (error) {
+    return null;
+  }
+};
+
+// 选中节点后获取当前项目下的详情数据，计算总面积、户数
+const getDetailByProjectId = async (verMid: number) => {
+  try {
+    dataLoading.value = true;
+    const res = await projectAreaApi.getAreaVerDList({ verMid: verMid });
+    if (res.code === 200 && res.data) {
+      const dataList = res.data || [];
+
+      // 累加各项指标
+      let totalArea = 0; // 总建筑面积 = 地上 + 地下
+      let saleableArea = 0; // 总可售面积 = 地上 + 地下
+      let totalUnits = 0; // 总户数
+
+      dataList.forEach((item: any) => {
+        // 累加建筑面积（地上 + 地下）
+        const agBuildArea = Number(item.agBuildArea) || 0;
+        const ugBuildArea = Number(item.ugBuildArea) || 0;
+        totalArea += agBuildArea + ugBuildArea;
+
+        // 累加可售面积（地上 + 地下）
+        const agSaleArea = Number(item.agSaleArea) || 0;
+        const ugSaleArea = Number(item.ugSaleArea) || 0;
+        saleableArea += agSaleArea + ugSaleArea;
+
+        // 累加户数
+        const houseNum = Number(item.houseNum) || 0;
+        totalUnits += houseNum;
+      });
+
+      // 更新选中的项目数据
+      if (selectedProject.value) {
+        selectedProject.value.totalArea = totalArea;
+        selectedProject.value.saleableArea = saleableArea;
+        selectedProject.value.totalUnits = totalUnits;
+      }
+    }
+  } catch (error) {
+    console.error("获取项目详情失败:", error);
+  } finally {
+    dataLoading.value = false;
   }
 };
 
@@ -205,195 +261,72 @@ const formatNumber = (num: number) => {
   return num.toLocaleString();
 };
 
-// 加载数据
-const loadData = () => {
-  // 模拟接口返回的数据结构
-  treeData.value = [
-    {
-      id: 16,
-      label: "成都",
-      type: "city",
-      disabled: true,
-      isLeaf: false,
-      children: [
-        {
-          id: 59,
-          label: "测试小区",
-          city_id: 16,
-          type: "village",
-          area: 425,
-          isLeaf: true,
-          disabled: false,
-        },
-        {
-          id: 68,
-          label: "和喜·翡翠观澜(弃)",
-          city_id: 16,
-          type: "village",
-          area: 428,
-          isLeaf: true,
-          disabled: false,
-        },
-        {
-          id: 999,
-          label: "新系统测试小区",
-          city_id: 16,
-          type: "village",
-          area: 5,
-          isLeaf: true,
-          disabled: false,
-        },
-        {
-          id: 1001,
-          label: "测试小区2",
-          city_id: 16,
-          type: "village",
-          area: 5,
-          isLeaf: true,
-          disabled: false,
-        },
-      ],
-    },
-    {
-      id: 17,
-      label: "武胜",
-      type: "city",
-      disabled: true,
-      isLeaf: false,
-      children: [
-        {
-          id: 66,
-          label: "和喜·御荣府",
-          city_id: 17,
-          type: "village",
-          area: 1001,
-          isLeaf: true,
-          disabled: false,
-        },
-        {
-          id: 67,
-          label: "和喜·公园学府",
-          city_id: 17,
-          type: "village",
-          area: 1001,
-          isLeaf: true,
-          disabled: false,
-        },
-        {
-          id: 1009,
-          label: "和喜·翰林学府",
-          city_id: 17,
-          type: "village",
-          area: 1001,
-          isLeaf: true,
-          disabled: false,
-        },
-      ],
-    },
-    {
-      id: 18,
-      label: "沅陵",
-      type: "city",
-      disabled: true,
-      isLeaf: false,
-      children: [
-        {
-          id: 1002,
-          label: "和喜·翡翠观澜",
-          city_id: 18,
-          type: "village",
-          area: 1002,
-          isLeaf: true,
-          disabled: false,
-        },
-        {
-          id: 1011,
-          label: "和喜·江山墅",
-          city_id: 18,
-          type: "village",
-          area: 1002,
-          isLeaf: true,
-          disabled: false,
-        },
-      ],
-    },
-    {
-      id: 19,
-      label: "内江",
-      type: "city",
-      disabled: true,
-      isLeaf: false,
-      children: [
-        {
-          id: 62,
-          label: "和喜·御景台",
-          city_id: 19,
-          type: "village",
-          area: 1002,
-          isLeaf: true,
-          disabled: false,
-        },
-        {
-          id: 65,
-          label: "和喜·御珑台",
-          city_id: 19,
-          type: "village",
-          area: 1002,
-          isLeaf: true,
-          disabled: false,
-        },
-        {
-          id: 1003,
-          label: "胜利·光耀城",
-          city_id: 19,
-          type: "village",
-          area: 1002,
-          isLeaf: true,
-          disabled: false,
-        },
-        {
-          id: 1012,
-          label: "和喜·紫宸大院",
-          city_id: 19,
-          type: "village",
-          area: 1002,
-          isLeaf: true,
-          disabled: false,
-        },
-        {
-          id: 1014,
-          label: "和喜·十里江湾",
-          city_id: 19,
-          type: "village",
-          area: 1002,
-          isLeaf: true,
-          disabled: false,
-        },
-        {
-          id: 1016,
-          label: "和喜·奥特莱斯广场",
-          city_id: 19,
-          type: "village",
-          area: 1002,
-          isLeaf: true,
-          disabled: false,
-        },
-        {
-          id: 1018,
-          label: "奥莱·华悦",
-          city_id: 19,
-          type: "village",
-          area: 1002,
-          isLeaf: true,
-          disabled: false,
-        },
-      ],
-    },
-  ];
+// 递归处理后端返回的数据，过滤掉没有项目的节点
+const processTreeData = (
+  nodes: any[],
+  parentCompanyName?: string,
+): ProjectTreeNode[] => {
+  return nodes
+    .map((node) => {
+      // 确定当前节点的公司名称
+      let currentCompanyName = parentCompanyName;
+      if (node.dataType === 3) {
+        // 公司节点，更新公司名称
+        currentCompanyName = node.orgName;
+      }
+
+      // 处理子节点，传递当前公司名称
+      let processedChildren: ProjectTreeNode[] = [];
+      if (node.children && node.children.length > 0) {
+        processedChildren = processTreeData(node.children, currentCompanyName);
+      }
+
+      // 创建处理后的节点
+      const processedNode: ProjectTreeNode = {
+        treeId: node.treeId,
+        treePid: node.treePid,
+        orgName: node.orgName,
+        orgId: node.orgId,
+        orgPid: node.orgPid,
+        sort: node.sort,
+        dataTypeName: node.dataTypeName,
+        dataType: node.dataType,
+        dataId: node.dataId,
+        children: processedChildren,
+        // 如果是项目节点，直接存储公司名称
+        companyName: node.dataType === 1 ? currentCompanyName : undefined,
+      };
+      return processedNode;
+    })
+    .filter((node) => {
+      // 如果是项目节点（dataType === 1），保留
+      if (node.dataType === 1) {
+        return true;
+      }
+      // 如果是公司节点（dataType === 3），只有当它有子项目时才保留
+      if (node.dataType === 3) {
+        return node.children && node.children.length > 0;
+      }
+      // 其他类型节点（如果有），保留
+      return true;
+    });
+};
+
+// 加载项目数据
+const loadprojectData = async () => {
+  try {
+    const res = await projectAreaApi.getMguProjList();
+    if (res.code === 200 && res.data) {
+      // 处理接口返回的数据
+      treeData.value = processTreeData(res.data || []);
+    }
+  } catch (error) {
+    console.error("加载项目数据失败:", error);
+  }
 };
 
 onMounted(() => {
-  loadData();
+  loadprojectData();
 });
 </script>
 
@@ -422,8 +355,12 @@ onMounted(() => {
       border-bottom: 1px solid #e4e7ed;
       :deep(.el-input-group__append) {
         padding: 0;
-        background-color: #409eff;
-        border-color: #409eff;
+        background: linear-gradient(
+          135deg,
+          var(--harmony-primary-dark) 0%,
+          var(--harmony-primary-light)
+        );
+        border-color: var(--harmony-primary-light);
         .el-icon {
           width: 50px;
           height: 100%;
@@ -432,7 +369,7 @@ onMounted(() => {
           align-items: center;
           color: #fff;
           cursor: pointer;
-          border-color: #409eff;
+          font-size: 16px;
         }
       }
     }
@@ -487,6 +424,8 @@ onMounted(() => {
   }
 
   .right-content {
+    width: 100%;
+    height: 100%;
     flex: 1;
     background: #fff;
     border-radius: 8px;
@@ -583,7 +522,6 @@ onMounted(() => {
 
         .el-tabs__content {
           flex: 1;
-          //   overflow-y: auto;
           overflow: hidden;
         }
       }

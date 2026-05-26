@@ -79,6 +79,7 @@ import type {
 } from "@/types/cost/contract-category-type";
 import ContractCategoryDialog from "./contract-category-dialog.vue";
 import { conTypeApi } from "@/api/cost/contract-category-api";
+import { buildTree } from "@/utils/tree";
 
 defineOptions({ name: "contract-category" });
 
@@ -118,32 +119,6 @@ const columns: TableColumnItem[] = [
   { label: "是否启用", width: 100, slot: "isEnabled" },
   { label: "操作", width: 200, slot: "actions", fixed: "right" },
 ];
-
-// 扁平数据转树形结构
-const buildTree = (list: ContractType[]): ContractTypeTreeNode[] => {
-  if (!list?.length) return [];
-  const map = new Map<number, ContractTypeTreeNode>();
-  const tree: ContractTypeTreeNode[] = [];
-  list.forEach((item) => {
-    map.set(item.id, { ...item, children: [] });
-  });
-  list.forEach((item) => {
-    const node = map.get(item.id)!;
-    // 判断是否为根节点：pid 为 null 或 0 或 undefined 都视为根节点
-    const isRoot = item.pid === null || item.pid === 0 || item.pid === undefined;
-    if (isRoot) {
-      tree.push(node);
-    } else {
-      const parent = map.get(item.pid);
-      if (parent) {
-        parent.children!.push(node);
-      } else {
-        tree.push(node);
-      }
-    }
-  });
-  return tree;
-};
 
 // 获取数据列表
 const getDataList = async () => {

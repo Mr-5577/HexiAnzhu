@@ -46,13 +46,6 @@
           show-word-limit
         />
       </el-form-item>
-
-      <el-form-item prop="isEnabled" label="是否启用">
-        <el-radio-group v-model="formData.isEnabled">
-          <el-radio :value="true">启用</el-radio>
-          <el-radio :value="false">禁用</el-radio>
-        </el-radio-group>
-      </el-form-item>
     </el-form>
   </base-modal>
 </template>
@@ -92,7 +85,7 @@ const formData = ref<ProjectAreaVersionSaveParams>({
   projId: props.projectId,
   verTypeId: null,
   verTitle: "",
-  isEnabled: true,
+  isEnabled: false,
   remark: "",
 });
 
@@ -118,6 +111,7 @@ const handleSubmit = async () => {
     submitLoading.value = true;
 
     const submitData = { ...formData.value };
+    
     if (!isEditMode.value) {
       delete submitData.id;
     }
@@ -160,7 +154,7 @@ watch(
           projId: props.projectId,
           verTypeId: null,
           verTitle: "",
-          isEnabled: true,
+          isEnabled: false,
           remark: "",
         };
         formRef.value?.resetFields();

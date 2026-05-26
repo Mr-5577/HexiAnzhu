@@ -1,3 +1,18 @@
+/** 城市-项目信息 */
+export interface ProjectTreeNode {
+  treeId: string;
+  treePid: string;
+  orgName: string;
+  orgId: number;
+  orgPid: number;
+  sort: string;
+  dataTypeName: string;
+  dataType: number; // 3: 公司, 1: 项目
+  dataId: number;
+  companyName?: string;
+  children?: ProjectTreeNode[];
+}
+
 // ==================== 项目楼栋类型定义 ====================
 
 /**
@@ -145,10 +160,6 @@ export interface ProjectAreaVersionQueryParams {
   verTitle?: string;
   /** 是否当前生效版本 */
   isEnabled?: boolean;
-  /** 页码 */
-  pageNum?: number;
-  /** 每页条数 */
-  pageSize?: number;
 }
 /**
  * 删除项目面积版本请求参数
@@ -156,16 +167,6 @@ export interface ProjectAreaVersionQueryParams {
 export interface ProjectBuildingDeleteParams {
   /** 版本ID */
   id: number;
-}
-
-/**
- * 查询项目面积版本响应
- */
-export interface ProjectAreaVersionQueryResponse {
-  /** 数据列表 */
-  list: ProjectAreaVersion[];
-  /** 总数 */
-  total: number;
 }
 
 // ==================== 项目面积明细表类型定义 ====================
@@ -250,102 +251,5 @@ export interface ProjectAreaDetailQueryParams {
   bldId?: number;
   /** 产品类型ID */
   prodId?: number;
-  /** 页码 */
-  pageNum?: number;
-  /** 每页条数 */
-  pageSize?: number;
 }
 
-/**
- * 查询项目面积明细响应
- */
-export interface ProjectAreaDetailQueryResponse {
-  /** 数据列表 */
-  list: ProjectAreaDetail[];
-  /** 总数 */
-  total: number;
-}
-
-// ==================== 项目面积完整版本类型 ====================
-
-/**
- * 项目面积完整版本（包含明细）
- */
-export interface ProjectAreaFullVersion extends ProjectAreaVersion {
-  /** 面积明细列表 */
-  details: ProjectAreaDetail[];
-}
-
-/**
- * 楼栋面积汇总
- */
-export interface BuildingAreaSummary {
-  /** 楼栋ID */
-  bldId: number;
-  /** 楼栋名称 */
-  bldName: string;
-  /** 地上建筑面积 */
-  agBuildArea: number;
-  /** 地下建筑面积 */
-  ugBuildArea: number;
-  /** 地上可售面积 */
-  agSaleArea: number;
-  /** 地下可售面积 */
-  ugSaleArea: number;
-  /** 总建筑面积 */
-  totalBuildArea: number;
-  /** 总可售面积 */
-  totalSaleArea: number;
-  /** 户数 */
-  houseNum: number;
-  /** 电梯数 */
-  elvNum: number;
-}
-
-/**
- * 项目面积总汇总
- */
-export interface ProjectAreaTotal {
-  /** 地上建筑面积总和 */
-  totalAgBuildArea: number;
-  /** 地下建筑面积总和 */
-  totalUgBuildArea: number;
-  /** 地上可售面积总和 */
-  totalAgSaleArea: number;
-  /** 地下可售面积总和 */
-  totalUgSaleArea: number;
-  /** 总建筑面积 */
-  totalBuildArea: number;
-  /** 总可售面积 */
-  totalSaleArea: number;
-  /** 总户数 */
-  totalHouseNum: number;
-  /** 总电梯数 */
-  totalElvNum: number;
-}
-
-// ==================== 项目面积版本状态常量 ====================
-
-/**
- * 项目面积版本状态常量
- */
-export const ProjectAreaVersionStatus = {
-  /** 是否生效版本 */
-  IS_ENABLED: {
-    YES: true, // 生效版本
-    NO: false, // 非生效版本
-  },
-  /** 删除状态 */
-  DEL: {
-    NOT_DELETED: false, // 未删除
-    DELETED: true, // 已删除
-  },
-} as const;
-
-/**
- * 是否地下室常量
- */
-export const IsUnderGround = {
-  YES: true, // 是地下室
-  NO: false, // 非地下室
-} as const;

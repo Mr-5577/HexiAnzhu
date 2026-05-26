@@ -168,7 +168,7 @@ export function useSalesData() {
       // 加载项目数据（仅当需要且未加载时）
       if (pendingConfig.projects && globalProjectOptions === null) {
         promises.push(
-          fetchData(() => largeScreenApi.getProjTree(), []).then((data) => {
+          fetchData(() => largeScreenApi.getProjList(), []).then((data) => {
             globalProjectOptions = data;
             projectOptions.value = data;
           }),

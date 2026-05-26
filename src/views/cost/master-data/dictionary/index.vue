@@ -304,13 +304,17 @@ onMounted(() => {
       border-bottom: 1px solid #e4e7ed;
       :deep(.el-input-group__append) {
         padding: 0;
+        background: linear-gradient(135deg, var(--harmony-primary-dark) 0%, var(--harmony-primary-light));
+        border-color: var(--harmony-primary-light);
         .el-icon {
           width: 50px;
           height: 100%;
           display: flex;
           justify-content: center;
           align-items: center;
+          color: #fff;
           cursor: pointer;
+          font-size: 16px;
         }
       }
       .el-input {
