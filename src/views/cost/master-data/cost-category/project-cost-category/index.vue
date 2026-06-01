@@ -1,6 +1,6 @@
-<!-- 项目产品类型列表 -->
+<!-- 项目成本科目列表 -->
 <template>
-  <div class="project-product-type-page">
+  <div class="project-cost-category-page">
     <el-form :model="queryParams" inline>
       <el-form-item label="项目名称">
         <el-tree-select
@@ -46,7 +46,7 @@
     </base-table>
 
     <!-- 新增/编辑弹窗 -->
-    <add-edit-project-type-dialog
+    <add-edit-project-category-dialog
       v-model="dialogVisible"
       :project-tree-data="projectTreeData"
       :project-id="queryParams.projId"
@@ -58,21 +58,20 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { productTypeApi } from "@/api/cost/product-type-api";
-import type { ProductProjDetail } from "@/types/cost/product-type";
-import AddEditProjectTypeDialog from "./add-edit-project-type-dialog.vue";
+import { costCategoryApi } from "@/api/cost/cost-category-api.ts";
+import AddEditProjectCategoryDialog from "./add-edit-project-category-dialog.vue";
 import { projectAreaApi } from "@/api/cost/project-area-api";
 
-defineOptions({ name: "project-product-type" });
+defineOptions({ name: "project-cost-category" });
 
 // 查询参数
 const queryParams = ref({
   projId: undefined as number | undefined,
 });
 
-const tableData = ref<ProductProjDetail[]>([]);
+const tableData = ref([]);
 const tableLoading = ref(false);
-const projectTreeData = ref<any[]>([]);
+const projectTreeData = ref([]);
 
 // 弹窗相关
 const dialogVisible = ref(false);
@@ -80,8 +79,8 @@ const dialogVisible = ref(false);
 // 表格列配置
 const tableColumns = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "prodName", label: "产品名称" },
-  { prop: "prodCode", label: "产品编码" },
+  { prop: "subName", label: "名称" },
+  { prop: "subCode", label: "编码" },
   { label: "是否启用", width: 120, slot: "status" },
   { label: "操作", width: 200, slot: "actions" },
 ];
@@ -136,7 +135,7 @@ const getProjectTree = async () => {
 };
 
 /**
- * 获取项目产品类型列表
+ * 获取列表
  */
 const getProjectProductList = async () => {
   if (!queryParams.value.projId) {
@@ -147,7 +146,7 @@ const getProjectProductList = async () => {
 
   try {
     tableLoading.value = true;
-    const res = await productTypeApi.getProductProjList({
+    const res = await costCategoryApi.getCostSubjectProjList({
       projId: queryParams.value.projId,
       withDetail: true,
     });
@@ -175,6 +174,7 @@ const handleSearch = () => {
  * 重置
  */
 const handleReset = async () => {
+  queryParams.value.projId = undefined;
   tableData.value = [];
   // 重置为第一个项目ID
   const firstProjectId = getFirstProjectId(projectTreeData.value);
@@ -195,17 +195,16 @@ const handleAdd = () => {
 /**
  * 删除
  */
-const handleDelete = async (row: ProductProjDetail) => {
-  await ElMessageBox.confirm(`确定移除产品"${row.prodName}"吗？`, "提示", {
+const handleDelete = async (row) => {
+  await ElMessageBox.confirm(`确定删除"${row.subName}"吗？`, "提示", {
     confirmButtonText: "确认",
     cancelButtonText: "取消",
     type: "warning",
   });
 
   try {
-    const res = await productTypeApi.delProductProj({
-      projId: queryParams.value.projId,
-      prodId: row.id,
+    const res = await costCategoryApi.delCostSubjectProj({
+      id: row.id,
     });
     if (res.code === 200) {
       ElMessage.success("删除成功");
@@ -233,12 +232,11 @@ defineExpose({
 // 初始化
 onMounted(() => {
   getProjectTree();
-  //   getProjectProductList();
 });
 </script>
 
 <style lang="scss" scoped>
-.project-product-type-page {
+.project-cost-category-page {
   width: 100%;
   height: 100%;
   background: #fff;
