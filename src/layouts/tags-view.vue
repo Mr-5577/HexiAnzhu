@@ -303,6 +303,7 @@ onUnmounted(() => {
         text-overflow: ellipsis;
         max-width: 100px;
         line-height: 1;
+        margin-top: -2px;
       }
 
       .close-icon {
