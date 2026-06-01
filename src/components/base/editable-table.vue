@@ -30,6 +30,7 @@
             v-if="column.editType === 'input'"
             v-model="row[column.prop]"
             size="small"
+            :disabled="column.disabled"
             :placeholder="column.placeholder"
             @blur="handleSave(row, column, $index)"
             @keyup.enter="handleSave(row, column, $index)"
@@ -40,6 +41,7 @@
             v-else-if="column.editType === 'select'"
             v-model="row[column.prop]"
             size="small"
+            :disabled="column.disabled"
             :placeholder="column.placeholder"
             :multiple="column.multiple || false"
             :collapse-tags="column.collapseTags || true"
@@ -59,10 +61,12 @@
             v-else-if="column.editType === 'number'"
             v-model="row[column.prop]"
             size="small"
+            :disabled="column.disabled"
             controls-position="right"
-            :controls="true"
+            :controls="false"
             :precision="2"
             :min="0"
+            :placeholder="column.placeholder"
             @change="handleSave(row, column, $index)"
           />
 
@@ -73,6 +77,7 @@
             type="textarea"
             :rows="2"
             size="small"
+            :disabled="column.disabled"
             :placeholder="column.placeholder"
             @blur="handleSave(row, column, $index)"
           />
@@ -83,6 +88,7 @@
             v-model="row[column.prop]"
             type="date"
             size="small"
+            :disabled="column.disabled"
             :placeholder="column.placeholder"
             value-format="YYYY-MM-DD"
             @change="handleSave(row, column, $index)"
@@ -94,6 +100,7 @@
             v-model="row[column.prop]"
             type="datetime"
             size="small"
+            :disabled="column.disabled"
             :placeholder="column.placeholder"
             value-format="YYYY-MM-DD HH:mm:ss"
             @change="handleSave(row, column, $index)"
@@ -104,6 +111,7 @@
             v-else-if="column.editType === 'switch'"
             v-model="row[column.prop]"
             size="small"
+            :disabled="column.disabled"
             @change="handleSave(row, column, $index)"
           />
 
@@ -112,6 +120,7 @@
             v-else-if="column.editType === 'radio'"
             v-model="row[column.prop]"
             size="small"
+            :disabled="column.disabled"
             @change="handleSave(row, column, $index)"
           >
             <el-radio
@@ -128,6 +137,8 @@
             v-else
             v-model="row[column.prop]"
             size="small"
+            :disabled="column.disabled"
+            :placeholder="column.placeholder"
             @blur="handleSave(row, column, $index)"
             @keyup.enter="handleSave(row, column, $index)"
           />
@@ -395,7 +406,11 @@ const updateCell = async (
   const oldValue = getOldValue(row, prop);
 
   // 没有旧值或值未变化，不处理
-  if (oldValue === undefined || newValue === oldValue) {
+  // if (oldValue === undefined || newValue === oldValue) {
+  //   clearOldValue(row, prop);
+  //   return;
+  // }
+  if (newValue === oldValue) {
     clearOldValue(row, prop);
     return;
   }
