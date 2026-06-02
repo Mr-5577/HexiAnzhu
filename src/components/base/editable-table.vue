@@ -25,123 +25,138 @@
       >
         <!-- 默认编辑组件 -->
         <div class="inline-editor" @click.stop>
-          <!-- 输入框 -->
-          <el-input
-            v-if="column.editType === 'input'"
-            v-model="row[column.prop]"
-            size="small"
-            :disabled="column.disabled"
-            :placeholder="column.placeholder"
-            @blur="handleSave(row, column, $index)"
-            @keyup.enter="handleSave(row, column, $index)"
-          />
-
-          <!-- 选择器 -->
-          <el-select
-            v-else-if="column.editType === 'select'"
-            v-model="row[column.prop]"
-            size="small"
-            :disabled="column.disabled"
-            :placeholder="column.placeholder"
-            :multiple="column.multiple || false"
-            :collapse-tags="column.collapseTags || true"
-            :clearable="column.clearable !== false"
-            @change="handleSave(row, column, $index)"
-          >
-            <el-option
-              v-for="opt in getColumnOptions(column, row)"
-              :key="getOptionValue(column, opt)"
-              :label="getOptionLabel(column, opt)"
-              :value="getOptionValue(column, opt)"
-            />
-          </el-select>
-
-          <!-- 数字输入 -->
-          <el-input-number
-            v-else-if="column.editType === 'number'"
-            v-model="row[column.prop]"
-            size="small"
-            :disabled="column.disabled"
-            controls-position="right"
-            :controls="false"
-            :precision="2"
-            :min="0"
-            :placeholder="column.placeholder"
-            @change="handleSave(row, column, $index)"
-          />
-
-          <!-- 文本域 -->
-          <el-input
-            v-else-if="column.editType === 'textarea'"
-            v-model="row[column.prop]"
-            type="textarea"
-            :rows="2"
-            size="small"
-            :disabled="column.disabled"
-            :placeholder="column.placeholder"
-            @blur="handleSave(row, column, $index)"
-          />
-
-          <!-- 日期 -->
-          <el-date-picker
-            v-else-if="column.editType === 'date'"
-            v-model="row[column.prop]"
-            type="date"
-            size="small"
-            :disabled="column.disabled"
-            :placeholder="column.placeholder"
-            value-format="YYYY-MM-DD"
-            @change="handleSave(row, column, $index)"
-          />
-
-          <!-- 日期时间 -->
-          <el-date-picker
-            v-else-if="column.editType === 'datetime'"
-            v-model="row[column.prop]"
-            type="datetime"
-            size="small"
-            :disabled="column.disabled"
-            :placeholder="column.placeholder"
-            value-format="YYYY-MM-DD HH:mm:ss"
-            @change="handleSave(row, column, $index)"
-          />
-
-          <!-- 开关 -->
-          <el-switch
-            v-else-if="column.editType === 'switch'"
-            v-model="row[column.prop]"
-            size="small"
-            :disabled="column.disabled"
-            @change="handleSave(row, column, $index)"
-          />
-
-          <!-- 单选 -->
-          <el-radio-group
-            v-else-if="column.editType === 'radio'"
-            v-model="row[column.prop]"
-            size="small"
-            :disabled="column.disabled"
-            @change="handleSave(row, column, $index)"
-          >
-            <el-radio
-              v-for="opt in getColumnOptions(column, row)"
-              :key="getOptionValue(column, opt)"
-              :value="getOptionValue(column, opt)"
+          <!-- 如果是 clickable 类型，使用带弹窗的 input 框 -->
+          <div v-if="column.clickable" class="clickable-input-wrapper">
+            <el-input
+              :model-value="row[column.prop]"
+              :placeholder="column.placeholder || '请选择'"
+              size="small"
+              :disabled="column.disabled"
+              readonly
+              class="clickable-input"
+              @click.stop="handleCellClick(row, column, $index)"
             >
-              {{ getOptionLabel(column, opt) }}
-            </el-radio>
-          </el-radio-group>
+            </el-input>
+          </div>
+          <template v-else>
+            <!-- 输入框 -->
+            <el-input
+              v-if="column.editType === 'input'"
+              v-model="row[column.prop]"
+              size="small"
+              :disabled="column.disabled"
+              :placeholder="column.placeholder"
+              @blur="handleSave(row, column, $index)"
+              @keyup.enter="handleSave(row, column, $index)"
+            />
 
-          <!-- 默认输入框 -->
-          <el-input
-            v-else
-            v-model="row[column.prop]"
-            size="small"
-            :disabled="column.disabled"
-            :placeholder="column.placeholder"
-            @blur="handleSave(row, column, $index)"
-            @keyup.enter="handleSave(row, column, $index)"
-          />
+            <!-- 选择器 -->
+            <el-select
+              v-else-if="column.editType === 'select'"
+              v-model="row[column.prop]"
+              size="small"
+              :disabled="column.disabled"
+              :placeholder="column.placeholder"
+              :multiple="column.multiple || false"
+              :collapse-tags="column.collapseTags || true"
+              :clearable="column.clearable !== false"
+              @change="handleSave(row, column, $index)"
+            >
+              <el-option
+                v-for="opt in getColumnOptions(column, row)"
+                :key="getOptionValue(column, opt)"
+                :label="getOptionLabel(column, opt)"
+                :value="getOptionValue(column, opt)"
+              />
+            </el-select>
+
+            <!-- 数字输入 -->
+            <el-input-number
+              v-else-if="column.editType === 'number'"
+              v-model="row[column.prop]"
+              size="small"
+              :disabled="column.disabled"
+              controls-position="right"
+              :controls="false"
+              :precision="2"
+              :min="0"
+              :placeholder="column.placeholder"
+              @change="handleSave(row, column, $index)"
+            />
+
+            <!-- 文本域 -->
+            <el-input
+              v-else-if="column.editType === 'textarea'"
+              v-model="row[column.prop]"
+              type="textarea"
+              :rows="2"
+              size="small"
+              :disabled="column.disabled"
+              :placeholder="column.placeholder"
+              @blur="handleSave(row, column, $index)"
+            />
+
+            <!-- 日期 -->
+            <el-date-picker
+              v-else-if="column.editType === 'date'"
+              v-model="row[column.prop]"
+              type="date"
+              size="small"
+              :disabled="column.disabled"
+              :placeholder="column.placeholder"
+              value-format="YYYY-MM-DD"
+              @change="handleSave(row, column, $index)"
+            />
+
+            <!-- 日期时间 -->
+            <el-date-picker
+              v-else-if="column.editType === 'datetime'"
+              v-model="row[column.prop]"
+              type="datetime"
+              size="small"
+              :disabled="column.disabled"
+              :placeholder="column.placeholder"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              @change="handleSave(row, column, $index)"
+            />
+
+            <!-- 开关 -->
+            <el-switch
+              v-else-if="column.editType === 'switch'"
+              v-model="row[column.prop]"
+              size="small"
+              :disabled="column.disabled"
+              @change="handleSave(row, column, $index)"
+            />
+
+            <!-- 单选 -->
+            <el-radio-group
+              v-else-if="column.editType === 'radio'"
+              v-model="row[column.prop]"
+              size="small"
+              :disabled="column.disabled"
+              @change="handleSave(row, column, $index)"
+            >
+              <el-radio
+                v-for="opt in getColumnOptions(column, row)"
+                :key="getOptionValue(column, opt)"
+                :value="getOptionValue(column, opt)"
+              >
+                {{ getOptionLabel(column, opt) }}
+              </el-radio>
+            </el-radio-group>
+
+            <!-- 默认输入框 -->
+            <el-input
+              v-else
+              v-model="row[column.prop]"
+              size="small"
+              :disabled="column.disabled"
+              :placeholder="column.placeholder"
+              @blur="handleSave(row, column, $index)"
+              @keyup.enter="handleSave(row, column, $index)"
+            />
+          </template>
         </div>
       </slot>
     </template>
@@ -225,6 +240,7 @@ interface Emits {
     },
   ): void;
   (e: "update:tableData", data: any[]): void;
+  (e: "editable-cell-click", payload: any): void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -459,6 +475,14 @@ const handleSave = (row: any, column: EditableColumn, rowIndex: number) => {
 const handleCellEvent = (payload: any) => {
   // 可以在这里处理自定义事件
   console.log("cell-event:", payload);
+};
+
+const handleCellClick = (
+  row: any,
+  column: EditableColumn,
+  rowIndex: number,
+) => {
+  emit("editable-cell-click", { row, column, rowIndex });
 };
 
 // 监听外部数据变化
