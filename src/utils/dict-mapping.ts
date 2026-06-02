@@ -17,6 +17,10 @@ export const dictMapping = {
   tenderMethod: "TENDER_METHOD",
   /** 清单模式 */
   billMode: "BILL_MODE",
+  /** 缴纳方式 */
+  payMethod: "PAY_METHOD",
+  /** 退还方式 */
+  refundMethod: "REFUND_METHOD",
 } as const;
 
 // 导出类型，用于类型提示
