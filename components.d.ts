@@ -68,6 +68,7 @@ declare module 'vue' {
     ProjectTreeSelector2: typeof import('./src/components/business/project-tree-selector2.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    UrbanProjectTree: typeof import('./src/components/business/urban-project-tree.vue')['default']
   }
   export interface GlobalDirectives {
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']
