@@ -181,7 +181,6 @@ watch(
     }
   },
   { immediate: true }
-  //  { deep: true }
 );
 
 // 监听路由配置变化，更新缓存

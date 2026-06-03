@@ -1,0 +1,573 @@
+<!-- 招标参考价--新增/编辑/详情 -->
+<template>
+  <div class="reference-price-form-page">
+    <!-- 基本信息 -->
+    <basic-info
+      :data="detailData"
+      :project-options="projectOptions"
+    ></basic-info>
+
+    <div class="form-section">
+      <h3 class="section-title">计划列表</h3>
+      <template v-if="isDetail">
+        <base-table
+          :columns="detailColumns"
+          :tableData="tableData"
+          :rowKey="'id'"
+          :pagination="false"
+        />
+      </template>
+      <template v-else>
+        <!-- 可编辑表格 -->
+        <editable-table
+          ref="detailtableRef"
+          :row-key="'id'"
+          :table-data="tableData"
+          :columns="dynamicColumns"
+          :loading="tableLoading"
+          :pagination="false"
+          :highlight-current-row="false"
+          :show-summary="false"
+          :on-save="handleSave"
+          @data-change="handleDataChange"
+          @update:table-data="handleDataUpdate"
+        >
+          <!-- 列表外操作栏 -->
+          <template #actionBar>
+            <div class="actionBar-buttons">
+              <el-button
+                type="primary"
+                icon="DocumentAdd"
+                :loading="saveLoading"
+                @click="handleBatchSave"
+              >
+                保存
+              </el-button>
+            </div>
+          </template>
+          <template #actions="{ row }">
+            <el-button link type="primary" @click="handleAmount(row)">
+              组价明细
+            </el-button>
+          </template>
+        </editable-table>
+      </template>
+    </div>
+    <!-- 组价明细弹窗 -->
+    <amount-dialog
+      v-model="amountDialogVisible"
+      :currentRowData="currentRowData"
+      @confirm="amountConfirm"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, computed, onMounted } from "vue";
+import BasicInfo from "../basic-info.vue";
+import { BidTenderFormParams } from "@/types/cost/bidding-management-type";
+import EditableTable from "@/components/base/editable-table.vue";
+import type { EditableColumn } from "@/components/base/editable-table.vue";
+import { projectAreaApi } from "@/api/cost/project-area-api";
+import { biddingManageApi } from "@/api/cost/bidding-management-api";
+import { ElMessage } from "element-plus";
+import { useRoute } from "vue-router";
+import { largeScreenApi } from "@/api/large-screen-api";
+import { debounce } from "@/utils/common";
+import AmountDialog from "./amount-dialog.vue";
+
+defineOptions({ name: "reference-price-form" });
+
+type TenderDetailData = {
+  tender: BidTenderFormParams;
+  items: any[];
+  projIds: number[];
+};
+
+const route = useRoute();
+// 页面模式：add-新增，edit-编辑，detail-详情
+const mode = ref<"add" | "edit" | "detail">("add");
+const tenderId = ref<number | null>(null); // 事项ID，新增使用
+const billId = ref<number | null>(null); // 单据ID，编辑使用
+const detailData = ref<TenderDetailData | null>(null); // 详情数据
+const projectOptions = ref([]); // 项目列表
+const billData = ref(null); // 单据数据
+const isDetail = computed(() => mode.value === "detail");
+const isEdit = computed(() => mode.value === "edit");
+// 当前行的组价明细
+const currentRowData = ref(null);
+const amountDialogVisible = ref(false);
+
+const dynamicColumns = computed<EditableColumn[]>(() => [
+  { type: "index", label: "序号", width: 60 },
+  {
+    prop: "projId",
+    label: "项目",
+    editable: true,
+    editType: "select",
+    showOverflowTooltip: false,
+    // 自定义键名
+    optionLabelField: "projName",
+    optionValueField: "id",
+    disabled: !!isEdit.value,
+    options: optionalProjList.value || [],
+  },
+  {
+    prop: "tenderItemName",
+    label: "招标明细",
+    editable: true,
+    editType: "input",
+    disabled: !!isEdit.value,
+    showOverflowTooltip: false,
+    placeholder: "请输入招标明细",
+  },
+  {
+    prop: "bldIds",
+    label: "楼栋",
+    width: 150,
+    editable: true,
+    editType: "select",
+    showOverflowTooltip: false,
+    // 自定义键名
+    optionLabelField: "bldName",
+    optionValueField: "id",
+    multiple: true,
+    collapseTags: true,
+    disabled: !!isEdit.value,
+    getOptions: (row: any) => row.buildingOptions || [],
+  },
+  {
+    prop: "referAmount",
+    label: "不含税参考价",
+    width: 150,
+    showSummary: true,
+    editable: true,
+    editType: "number",
+    showOverflowTooltip: false,
+  },
+  {
+    prop: "costAlert",
+    label: "成本预警",
+    width: 150,
+    editable: true,
+    editType: "select",
+    disabled: !!isEdit.value,
+    showOverflowTooltip: false,
+    options: [
+      { label: "红灯", value: 1 },
+      { label: "绿灯", value: 2 },
+    ],
+  },
+  {
+    prop: "referRemark",
+    label: "参考说明",
+    editable: true,
+    editType: "input",
+    showOverflowTooltip: false,
+    placeholder: "请输入参考说明",
+  },
+  {
+    label: "组价明细",
+    width: 150,
+    slot: "actions",
+    fixed: "right",
+  },
+]);
+
+const detailColumns = [
+  { type: "index", label: "序号", width: 60 },
+  { prop: "projName", label: "项目" },
+  { prop: "tenderItemName", label: "招标明细" },
+  { prop: "bldNames", label: "楼栋" },
+  { prop: "referAmount", label: "不含税参考价" },
+  { prop: "costAlert", label: "成本预警" },
+  { prop: "referRemark", label: "参考说明" },
+];
+
+// 明细表
+const tableData = ref([]);
+const tableLoading = ref(false);
+const saveLoading = ref(false);
+
+// 筛选详情里面选中的项目数据
+const optionalProjList = computed(() => {
+  const selectedProjectIds = detailData.value?.projIds || [];
+  if (selectedProjectIds.length === 0) {
+    return [];
+  }
+  // 从 projectOptions 中过滤出选中的项目
+  return projectOptions.value.filter((project) =>
+    selectedProjectIds.includes(project.id),
+  );
+});
+// 更新筛选行数据
+const updateRow = (rowIndex: number, data: any) => {
+  const newData = [...tableData.value];
+  newData[rowIndex] = { ...tableData.value[rowIndex], ...data };
+  tableData.value = newData;
+};
+
+const debouncedMap = new Map(); // 存储每行的防抖函数
+// 根据选中的项目获取楼栋数据，每一行数据楼栋分开获取
+const getDebouncedFetch = (rowIndex: number) => {
+  if (!debouncedMap.has(rowIndex)) {
+    debouncedMap.set(
+      rowIndex,
+      debounce(async (projId: number, idx: number) => {
+        try {
+          const res = await projectAreaApi.getBuildingList({ projId });
+          if (res.code === 200 && tableData.value[idx]?.projId === projId) {
+            updateRow(idx, { buildingOptions: res.data || [] });
+          }
+        } catch (error) {
+          ElMessage.error("获取楼栋列表失败");
+        }
+      }, 500),
+    );
+  }
+  return debouncedMap.get(rowIndex);
+};
+
+const handleSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
+  console.log("保存:", row, column, newValue, oldValue, rowIndex);
+  if (newValue === oldValue) return;
+  if (column === "projId") {
+    if (!newValue) {
+      updateRow(rowIndex, {
+        projId: null,
+        buildingOptions: [],
+        bldIds: [],
+        bldNames: "",
+      });
+    } else {
+      updateRow(rowIndex, { projId: newValue, bldIds: [], bldNames: "" });
+      getDebouncedFetch(rowIndex)(newValue, rowIndex);
+    }
+    return;
+  }
+
+  if (column === "bldIds") {
+    const bldNames = newValue?.length
+      ? row.buildingOptions
+          .filter((item: any) => newValue.includes(item.id))
+          .map((item: any) => item.bldName)
+          .join(",")
+      : "";
+    updateRow(rowIndex, { bldIds: newValue || [], bldNames });
+    return;
+  }
+
+  updateRow(rowIndex, { [column]: newValue });
+};
+
+const handleDataChange = (data) => {
+  // console.log("表格数据变化:", data);
+};
+
+const handleDataUpdate = (newData) => {
+  tableData.value = newData;
+};
+const handleAmount = (row) => {
+  console.log("选择行数据:", row);
+  currentRowData.value = row; // 保存当前行数据
+  amountDialogVisible.value = true;
+};
+// 组价明细确认
+const amountConfirm = (amounts) => {
+  console.log("组价明细数据:", amounts);
+  if (currentRowData.value) {
+    const updatedRow = {
+      ...currentRowData.value,
+      amounts: amounts || [],
+    };
+    const rowIndex = tableData.value.findIndex(
+      (item) => item.id === currentRowData.value.id,
+    );
+    if (rowIndex !== -1) {
+      updateRow(rowIndex, updatedRow);
+    }
+  }
+};
+// 保存
+const handleBatchSave = async () => {
+  if (tableData.value.length === 0) {
+    ElMessage.warning("暂无数据保存");
+    return;
+  }
+  if (tableData.value.some((item) => !item.tenderItemName)) {
+    ElMessage.error("请填写列表中的招标明细名称");
+    return;
+  }
+  if (tableData.value.some((item) => !item.projId)) {
+    ElMessage.error("请为列表中的每一项选择一个项目");
+    return;
+  }
+  if (
+    tableData.value.some((item) => !item.bldIds || item.bldIds.length === 0)
+  ) {
+    ElMessage.error("请选择列表中的楼栋");
+    return;
+  }
+  if (tableData.value.some((item) => !item.referAmount)) {
+    ElMessage.error("请填写列表中的不含税参考价");
+    return;
+  }
+  if (tableData.value.some((item) => !item.costAlert)) {
+    ElMessage.error("请为列表中的每一项选择成本预警状态");
+    return;
+  }
+  if (
+    tableData.value.some((item) => !item.amounts || item.amounts.length === 0)
+  ) {
+    ElMessage.error("请为列表中的每一项添加组价明细");
+    return;
+  }
+  try {
+    saveLoading.value = true;
+    if (mode.value === "add") {
+      debugger;
+      const dataList = tableData.value.map((item) => {
+        const bldIds = Array.isArray(item.bldIds) ? item.bldIds : [];
+        return {
+          tenderId: item.tenderId, // 事项ID
+          tenderItemId: item.id, // 事项明细ID
+          projId: item.projId,
+          bldIds: bldIds.join(","),
+          bldNames: item.bldNames || "",
+          tenderItemName: item.tenderItemName || "",
+          referRemark: item.referRemark || "",
+          itemRemark: item.itemRemark || "",
+          bidBondAmount: item.bidBondAmount ?? 0,
+          perfBondAmount: item.perfBondAmount ?? 0,
+          referAmount: item.referAmount ?? 0,
+          costAlert: item.costAlert,
+          amounts: item.amounts || [],
+        };
+      });
+      const params = {
+        bizItemCode: "ZB_CK",
+        tenderId: tenderId.value, // 事项ID
+        childData: dataList,
+      };
+      const res = await biddingManageApi.addBill(params);
+      if (res.code === 200) {
+        ElMessage.success("保存成功");
+      } else {
+        ElMessage.error("保存失败");
+      }
+    }
+    if (mode.value === "edit") {
+      const dataList = tableData.value.map((item) => {
+        const bldIds = Array.isArray(item.bldIds) ? item.bldIds : [];
+        return {
+          ...item,
+          bldIds: bldIds.join(","),
+        };
+      });
+      const params = {
+        bizItemCode: "ZB_CK",
+        tenderId: billData.value.tenderId, // 事项ID
+        id: billData.value.id, // 单据ID
+        childData: dataList,
+      };
+      debugger;
+      const res = await biddingManageApi.editBill(params);
+      if (res.code === 200) {
+        ElMessage.success("保存成功");
+      } else {
+        ElMessage.error("保存失败");
+      }
+    }
+  } catch (error) {
+    ElMessage.error("保存失败");
+  } finally {
+    saveLoading.value = false;
+  }
+};
+// 编辑/详情时获取招标计划列表通过ID进行过滤
+const initEditTableData = async () => {
+  try {
+    const params = {
+      tenderId: tenderId.value,
+      bizItemCode: "ZB_CK", // 招标参考价
+    };
+    const res = await biddingManageApi.getBillList(params);
+    if (res.code === 200) {
+      const listData = res.data || [];
+      const targetData = listData.find((item) => item.bill.id === billId.value);
+      if (targetData) {
+        billData.value = targetData.bill || null;
+        detailData.value = {
+          tender: targetData.bill || null,
+          projIds:
+            targetData.bill && targetData.bill.projIds
+              ? targetData.bill.projIds.split(",").map(Number)
+              : [],
+          items: [],
+        };
+        const list = targetData.refers || [];
+        if (mode.value === "edit") {
+          if (list && list.length > 0) {
+            const initialTableList = list.map((item) => ({
+              ...item,
+              bldIds: item.bldIds ? item.bldIds.split(",").map(Number) : [],
+              buildingOptions: [],
+            }));
+            // 并行加载所有楼栋数据
+            const buildingPromises = initialTableList.map(
+              async (item, index) => {
+                if (item.projId) {
+                  try {
+                    const buildingRes = await projectAreaApi.getBuildingList({
+                      projId: item.projId,
+                    });
+                    if (buildingRes.code === 200) {
+                      initialTableList[index].buildingOptions =
+                        buildingRes.data || [];
+                    }
+                  } catch (error) {
+                    console.error("获取楼栋列表失败:", error);
+                  }
+                }
+                return initialTableList[index];
+              },
+            );
+            tableData.value = await Promise.all(buildingPromises);
+          } else {
+            tableData.value = [];
+          }
+        } else {
+          tableData.value = list;
+        }
+      }
+    }
+  } catch (error) {}
+};
+// 新增时获取详情中的items列表并初始化表格数据
+const initAddTableData = async () => {
+  if (!detailData.value) {
+    tableData.value = [];
+    return;
+  }
+  const { items } = detailData.value;
+  if (items && items.length > 0) {
+    const initialTableList = items.map((item) => ({
+      ...item,
+      bldIds: item.bldIds ? item.bldIds.split(",").map(Number) : [],
+      buildingOptions: [],
+      costAlert: null,
+      referRemark: "",
+      referAmount: 0,
+    }));
+    // 并行加载所有楼栋数据
+    const buildingPromises = initialTableList.map(async (item, index) => {
+      if (item.projId) {
+        try {
+          const buildingRes = await projectAreaApi.getBuildingList({
+            projId: item.projId,
+          });
+          if (buildingRes.code === 200) {
+            const buildingList = buildingRes.data || [];
+            initialTableList[index].buildingOptions = buildingList;
+          }
+        } catch (error) {
+          console.error("获取楼栋列表失败:", error);
+        }
+      }
+      return initialTableList[index];
+    });
+    tableData.value = await Promise.all(buildingPromises);
+  } else {
+    tableData.value = [];
+  }
+};
+// 获取详情数据
+const getDetailData = async () => {
+  try {
+    const res = await biddingManageApi.getTenderInfo({
+      tenderId: tenderId.value,
+    });
+    if (res.code === 200 && res.data) {
+      detailData.value = res.data;
+      // 使用详情信息初始化表格数据
+      await initAddTableData();
+    } else {
+      ElMessage.error(res.message || "获取详情失败");
+    }
+  } catch (error) {
+    console.error("获取详情失败:", error);
+  }
+};
+// 获取项目列表
+const getProjectOptions = async () => {
+  try {
+    const res = await largeScreenApi.getProjList();
+    if (res.code === 200) {
+      projectOptions.value = res.data || [];
+    }
+  } catch (error) {
+    console.error("获取项目列表失败:", error);
+  }
+};
+
+// 初始化页面
+const initPage = async () => {
+  const queryMode = route.query.mode as string; // 保存模式到状态中
+  const queryTenderId = route.query.tenderId; // 保存事项ID到状态中
+  const queryBillId = route.query.id; // 保存单据ID到状态中
+
+  tenderId.value = queryTenderId ? Number(queryTenderId) : null; // 保存事项ID到状态中
+  billId.value = queryBillId ? Number(queryBillId) : null; // 保存单据ID到状态中
+  mode.value = ["add", "edit", "detail"].includes(queryMode)
+    ? (queryMode as "add" | "edit" | "detail")
+    : "add"; // 保存模式到状态中
+
+  // 获取项目列表数据
+  await getProjectOptions();
+
+  if (mode.value === "add") {
+    // 新增模式：获取详情数据（用于基本信息），表格初始为详情内的items
+    await getDetailData();
+  } else {
+    // 编辑或详情模式
+    await initEditTableData();
+  }
+};
+
+onMounted(() => {
+  initPage();
+});
+</script>
+
+<style scoped lang="scss">
+.reference-price-form-page {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 20px 20px;
+  box-sizing: border-box;
+  overflow: hidden;
+
+  .section-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 0;
+    color: #333;
+  }
+
+  .form-section {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+  }
+  .actionBar-buttons {
+    display: flex;
+    justify-content: flex-end;
+  }
+}
+</style>

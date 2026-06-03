@@ -1,3 +1,4 @@
+<!-- 基础表格组件 -->
 <template>
   <div class="pro-table-container" ref="containerRef">
     <!-- 操作栏 -->
@@ -166,6 +167,12 @@ export interface TableColumnItem {
     /** 提示框宽度，支持像素(px)或百分比(%) */
     width?: string;
   };
+  /** 是否显示合计行 */
+  showSummary?: boolean;
+  /** 选择列专用：判断该行是否可选，优先级高于 disabledField */
+  selectable?: (row: any, index: number) => boolean;
+  /** 选择列专用：根据行数据的字段名判断是否可选，值为 true 表示不可选 */
+  disabledField?: string;
   /** 其他自定义属性 */
   [key: string]: any;
 }
@@ -177,7 +184,7 @@ interface DictItem {
   [key: string]: any;
 }
 
-interface DictData {
+export interface DictData {
   [key: string]: DictItem[];
 }
 
@@ -231,6 +238,14 @@ interface Props {
   summaryMethod?: (params: { columns: any[]; data: any[] }) => string[];
   /** 是否开启行点击高亮效果，点击行时背景色变化 */
   highlightCurrentRow?: boolean;
+  /** 选择模式：single 单选、multiple 多选 */
+  selectionMode?: "single" | "multiple";
+  /** 树形表格配置，直接传递给 el-table 的 tree-props 属性 */
+  treeProps?: {
+    hasChildren?: string;
+    children?: string;
+    checkStrictly?: boolean;
+  };
 }
 
 // 定义组件事件
@@ -305,7 +320,7 @@ const TableColumn = {
     },
   },
   emits: ["cell-click", "cell-event"],
-  setup(props: TableColumnProps & { slots: any }, { emit }) {
+  setup(props: TableColumnProps, { emit }) {
     const getDictLabel = (dictKey: string, value: any): string => {
       const dict = props.dictData[dictKey];
       if (!dict) return String(value);
@@ -347,6 +362,15 @@ const TableColumn = {
         if (column.fixed) {
           selectionColumnProps.fixed = column.fixed;
         }
+        // 支持两种方式：优先使用 selectable 回调，其次使用 disabledField 字段
+        if (column.selectable) {
+          selectionColumnProps.selectable = column.selectable;
+        } else if (column.disabledField) {
+          selectionColumnProps.selectable = (row: any) => {
+            return !row[column.disabledField!]; // 字段值为 true 时不可选
+          };
+        }
+
         return h(resolveComponent("el-table-column"), selectionColumnProps);
       }
 
@@ -454,7 +478,12 @@ const TableColumn = {
           if (column.slot) {
             const slotFunc = props.slots[column.slot];
             if (slotFunc) {
-              return slotFunc(scope);
+              return slotFunc({
+                row: scope.row,
+                column: column,
+                $index: scope.$index,
+              });
+              // return slotFunc(scope);
             }
           }
 
@@ -522,6 +551,13 @@ const props = withDefaults(defineProps<Props>(), {
   isExpandAll: false,
   showSummary: false,
   highlightCurrentRow: true,
+  selectionMode: "multiple",
+  // treeProps 默认值
+  treeProps: () => ({
+    hasChildren: "hasChildren",
+    children: "children",
+    checkStrictly: false,
+  }),
 });
 
 const emit = defineEmits<Emits>();
@@ -530,6 +566,7 @@ const tableRef = ref<TableInstance>();
 const containerRef = ref<HTMLElement | null>(null);
 const selectedRows = ref<any[]>([]);
 const currentRowKey = ref<string | number>(""); // 当前选中行的key
+const isProgrammaticSelection = ref(false);
 
 const columnSettings = computed(() => {
   return props.columns.map((col) => ({
@@ -599,6 +636,10 @@ const calculateTableHeight = (): number | null => {
 
 // 计算表格容器样式
 const tableWrapperStyle = computed<Record<string, any>>(() => {
+  // 如果设置了 maxHeight，不设置 wrapper 高度，让表格自己管理滚动
+  if (props.maxHeight) {
+    return {};
+  }
   if (!props.autoHeight) return {};
   if (tableHeight.value === null) return {};
   return {
@@ -627,6 +668,8 @@ const getTableProps = computed(() => {
   if (props.height || props.maxHeight) {
     baseProps.height = props.height;
   }
+  // 传递 tree-props 属性（使用默认值）
+  baseProps["tree-props"] = props.treeProps;
 
   return baseProps;
 });
@@ -782,8 +825,24 @@ const handleTableCellEvent = (payload: {
   emit("cell-event", payload);
 };
 
-// 多选方法
+// 多选/单选方法
 const handleSelectionChange = (val: any[]): void => {
+  if (isProgrammaticSelection.value) {
+    selectedRows.value = val;
+    return;
+  }
+  if (props.selectionMode === "single" && val.length > 1) {
+    const last = val[val.length - 1];
+    selectedRows.value = [last];
+    isProgrammaticSelection.value = true;
+    tableRef.value?.clearSelection();
+    tableRef.value?.toggleRowSelection(last, true);
+    nextTick(() => {
+      isProgrammaticSelection.value = false;
+    });
+    emit("selection-change", selectedRows.value);
+    return;
+  }
   selectedRows.value = val;
   emit("selection-change", val);
 };
@@ -875,9 +934,11 @@ defineExpose({
   height: 100%;
   display: flex;
   flex-direction: column;
+  padding-bottom: 5px;
+  box-sizing: border-box;
 }
 .action-bar {
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   flex-shrink: 0;
 }
 .toolbar {
@@ -920,11 +981,11 @@ defineExpose({
       .el-table__header {
         background-color: #f8f8f9 !important;
         .el-table__cell {
-          padding: 1px 0; // 调整内边距来控制高度
+          padding: 0; // 调整内边距来控制高度
           // 固定内容区高度，确保行高一致
           .cell {
-            height: 26px;
-            line-height: 26px;
+            height: 28px;
+            line-height: 28px;
           }
         }
         thead {
@@ -944,11 +1005,11 @@ defineExpose({
     }
     .el-table__body {
       .el-table__cell {
-        padding: 1px 0; // 调整内边距来控制高度
+        padding: 0; // 调整内边距来控制高度
         // 固定内容区高度，确保行高一致
         .cell {
-          height: 26px;
-          line-height: 26px;
+          height: 28px;
+          line-height: 28px;
         }
         // 可点击单元格样式
         .clickable-cell {
@@ -985,7 +1046,7 @@ defineExpose({
   flex-shrink: 0;
   :deep(.el-pager) {
     .is-active {
-      background: linear-gradient(135deg, #032c46 0%, #05456e 100%);
+      background: linear-gradient(135deg, #05456e 0%, #4096cc 100%);
     }
   }
 }
@@ -998,7 +1059,7 @@ defineExpose({
     .el-table__footer-wrapper {
       // 调整整个合计行区域的高度
       .el-table__cell {
-        padding: 2px 0; // 调整内边距来控制高度
+        padding: 0; // 调整内边距来控制高度
         .cell {
           line-height: 1.5; // 调整行高
           min-height: 32px; // 最小高度

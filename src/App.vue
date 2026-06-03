@@ -8,19 +8,31 @@
 import { getEnvironmentName } from "@/utils/config";
 // 应用根组件
 console.log(getEnvironmentName(), import.meta.env.VITE_APP_TITLE);
-console.log('config==>', import.meta.env);
+console.log("config==>", import.meta.env);
 </script>
 
 <style lang="scss">
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+}
 #app {
   width: 100%;
   min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
 }
 // 全局的cascader的class属性为fixed-height-cascader的样式
 .fixed-height-cascader {
-  /* 关键：使用 flex 布局实现完美垂直居中 */
+  /* 使用 flex 布局实现垂直居中 */
   .el-input {
     height: 32px !important;
 
@@ -117,6 +129,25 @@ console.log('config==>', import.meta.env);
     .el-cascader__search-input {
       min-width: 30px;
     }
+  }
+}
+// 全局滚动条样式
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--el-fill-color-light);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--el-border-color-dark);
+  border-radius: 3px;
+
+  &:hover {
+    background: var(--el-border-color-darker);
   }
 }
 </style>

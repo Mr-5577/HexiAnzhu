@@ -6,7 +6,7 @@ import axios, {
 import { ElMessage } from "element-plus";
 import { saveAs } from "file-saver";
 
-// 扩展 AxiosRequestConfig 类型
+// 扩展 AxiosRequestConfig 和 InternalAxiosRequestConfig 类型
 declare module "axios" {
   interface AxiosRequestConfig {
     // 是否显示错误消息
@@ -17,13 +17,22 @@ declare module "axios" {
     errorMessage?: string;
     // 自定义成功消息
     successMessage?: string;
+    // 是否添加 isQueryFast 参数，默认 true
+    addQueryFast?: boolean;
+  }
+
+  // 扩展 InternalAxiosRequestConfig 以支持在拦截器中使用 addQueryFast
+  interface InternalAxiosRequestConfig {
+    // 是否添加 isQueryFast 参数，默认 true
+    addQueryFast?: boolean;
   }
 }
+
 // 创建 Axios 实例
 const service = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
-  timeout: 90000, // 超时时间
-  withCredentials: true, // 所有通过这个实例的请求都会自动携带 Cookie
+  timeout: 90000,
+  withCredentials: true,
 });
 
 // 请求队列，用于取消请求
@@ -85,38 +94,49 @@ service.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    // 统一增加请求加速参数
-    // console.log(JSON.parse(localStorage.getItem("user-store")).isQueryFast);
-    const isQueryFast = JSON.parse(localStorage.getItem("user-store") || "{}")?.isQueryFast;
-    // // 根据请求方法添加到相应位置
-    if (
-      config.method?.toLowerCase() === "get" ||
-      config.method?.toLowerCase() === "delete"
-    ) {
-      // GET/DELETE 请求：添加到 params
-      config.params = {
-        ...config.params,
-        isQueryFast: isQueryFast, // 参数名和值
-      };
-    } else {
-      // POST/PUT/PATCH 请求：添加到 data
-      if (config.data instanceof FormData) {
-        // FormData 用 append
-        if (!config.data.has("isQueryFast")) {
-          config.data.append("isQueryFast", isQueryFast);
-        }
-      } else if (typeof config.data === "object" && config.data !== null) {
-        // 普通对象直接合并
-        config.data = {
-          ...config.data,
+
+    // 判断是否需要添加 isQueryFast 参数（默认为 true）
+    const shouldAddQueryFast = config.addQueryFast !== false;
+
+    if (shouldAddQueryFast) {
+      const isQueryFast = JSON.parse(
+        localStorage.getItem("user-store") || "{}",
+      )?.isQueryFast;
+
+      // 根据请求方法添加到相应位置
+      if (
+        config.method?.toLowerCase() === "get" ||
+        config.method?.toLowerCase() === "delete"
+      ) {
+        // GET/DELETE 请求：添加到 params
+        config.params = {
+          ...config.params,
           isQueryFast: isQueryFast,
         };
       } else {
-        // 其他情况（字符串、数组等）包装成对象
-        config.data = {
-          data: config.data,
-          isQueryFast: isQueryFast,
-        };
+        // POST/PUT/PATCH 请求
+        if (config.data instanceof FormData) {
+          // FormData 用 append
+          if (!config.data.has("isQueryFast")) {
+            config.data.append("isQueryFast", isQueryFast);
+          }
+        } else if (
+          typeof config.data === "object" &&
+          config.data !== null &&
+          !Array.isArray(config.data)
+        ) {
+          // 只对普通对象添加参数
+          config.data = {
+            ...config.data,
+            isQueryFast: isQueryFast,
+          };
+        } else if (config.data === undefined || config.data === null) {
+          // 没有数据时创建对象
+          config.data = {
+            isQueryFast: isQueryFast,
+          };
+        }
+        // 字符串、数字等原始类型不添加参数，避免破坏数据结构
       }
     }
 
@@ -171,7 +191,6 @@ service.interceptors.response.use(
         ElMessage.warning("登录已过期，请重新登录");
         localStorage.clear();
         sessionStorage.clear();
-        // 跳转到登录页
         setTimeout(() => {
           window.location.href = "/login";
         }, 1500);
@@ -293,6 +312,37 @@ export const http = {
     config?: AxiosRequestConfig,
   ): Promise<T> {
     return service.post(url, data, config);
+  },
+
+  formPost<T = any>(
+    url: string,
+    data?: Record<string, any>,
+    config?: AxiosRequestConfig,
+  ): Promise<T> {
+    const formData = new FormData();
+    if (data && typeof data === "object") {
+      Object.keys(data).forEach((key) => {
+        const value = data[key];
+        if (value !== null && value !== undefined) {
+          if (value instanceof File || value instanceof Blob) {
+            formData.append(key, value);
+          } else if (Array.isArray(value)) {
+            value.forEach((v) => formData.append(`${key}[]`, String(v)));
+          } else if (typeof value === "object") {
+            formData.append(key, JSON.stringify(value));
+          } else {
+            formData.append(key, String(value));
+          }
+        } else {
+          formData.append(key, "");
+        }
+      });
+    }
+
+    return this.post(url, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      ...config,
+    });
   },
 
   put<T = any>(

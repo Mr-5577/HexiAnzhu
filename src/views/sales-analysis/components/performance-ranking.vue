@@ -107,25 +107,34 @@ const tableCache = ref({
 // 计算表格高度
 const tableHeight = ref("100%");
 
-// 添加防抖函数（简单实现）
+// 添加防抖函数
 let resizeTimer: NodeJS.Timeout | null = null;
 
+// 获取正确的容器高度
 const updateTableHeight = () => {
   if (resizeTimer) clearTimeout(resizeTimer);
   resizeTimer = setTimeout(() => {
     nextTick(() => {
       const tableContainer = document.querySelector(
         ".performance-ranking-table-list"
-      );
-
+      ) as HTMLElement;
+      
       if (tableContainer) {
-        // 直接使用容器高度，避免复杂计算
-        const containerHeight = tableContainer.clientHeight;
-        // 简单减去固定的控制栏高度（约40px）
-        tableHeight.value = `${Math.max(containerHeight - 4, 100)}px`;
+        // 获取父容器 .rankingContent 的高度
+        const rankingContent = tableContainer.closest('.rankingContent') as HTMLElement;
+        if (rankingContent) {
+          const controlsHeight = 32; // chart-controls 固定高度
+          const contentHeight = rankingContent.clientHeight;
+          // 减去控制栏高度，得到表格容器可用高度
+          const availableHeight = contentHeight - controlsHeight - 8; // 减去8px的间距
+          tableHeight.value = `${Math.max(availableHeight, 150)}px`;
+          
+          // 设置表格容器高度
+          tableContainer.style.height = `${availableHeight}px`;
+        }
       }
     });
-  }, 100); // 100ms 防抖延迟
+  }, 100);
 };
 
 const tableColumn = computed(() => {
@@ -170,7 +179,8 @@ const tableData = computed(() => {
 const switchChartType = (type: string) => {
   chartType.value = type;
   getTableList();
-  updateTableHeight(); // 切换时更新高度
+  // 切换后延迟更新高度
+  setTimeout(() => updateTableHeight(), 50);
 };
 
 const getTableList = async () => {
@@ -203,7 +213,7 @@ const getTableList = async () => {
   } finally {
     isRequesting = false;
     loading.value = false;
-    updateTableHeight(); // 数据加载完成后更新高度
+    setTimeout(() => updateTableHeight(), 50);
   }
 };
 
@@ -226,26 +236,34 @@ const handleToPage = () => {
   });
 };
 
-watch(
-  () => [props.data, props.department],
-  ([data, department]) => {
-    if (data && department) {
-      updateTableHeight();
-    }
-  },
-  { immediate: true }
-);
+// 监听容器大小变化
 let resizeObserver: ResizeObserver | null = null;
 
+// 监听滚动条事件，防止页面滚动
+const preventScrollBubbling = (e: Event) => {
+  const target = e.target as HTMLElement;
+  if (target.classList?.contains('el-scrollbar__thumb') || 
+      target.closest?.('.el-scrollbar__wrap')) {
+    e.stopPropagation();
+  }
+};
+
 onMounted(() => {
-  updateTableHeight();
+  setTimeout(() => updateTableHeight(), 100);
+  
   // 监听表格容器大小变化
   const tableContainer = document.querySelector(
     ".performance-ranking-table-list"
   );
   if (tableContainer) {
-    resizeObserver = new ResizeObserver(updateTableHeight);
+    resizeObserver = new ResizeObserver(() => updateTableHeight());
     resizeObserver.observe(tableContainer);
+  }
+  
+  // 防止表格滚动条滚动事件冒泡到页面
+  const scrollWrap = document.querySelector('.el-table__body-wrapper');
+  if (scrollWrap) {
+    scrollWrap.addEventListener('wheel', preventScrollBubbling, { passive: false });
   }
 });
 
@@ -256,19 +274,27 @@ onUnmounted(() => {
   if (resizeTimer) {
     clearTimeout(resizeTimer);
   }
+  const scrollWrap = document.querySelector('.el-table__body-wrapper');
+  if (scrollWrap) {
+    scrollWrap.removeEventListener('wheel', preventScrollBubbling);
+  }
 });
 </script>
+
 <style lang="scss" scoped>
 .ranking-page {
   width: 100%;
   height: 34%;
+  overflow: hidden; // 防止溢出
   .rankingContent {
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
+    overflow: hidden; // 防止内容溢出
+    
     .chart-controls {
-      height: 32px; // 固定高度
+      height: 32px;
       display: flex;
       justify-content: space-between;
       flex-shrink: 0;
@@ -329,10 +355,10 @@ onUnmounted(() => {
                 }
               }
             }
-
-            // 表格主体部分
+            
+            // 表格主体部分 - 唯一滚动区域
             .el-table__body-wrapper {
-              height: calc(100% - 39px) !important;
+              flex: 1;
               overflow-y: auto !important;
               .el-table__body {
                 background-color: transparent !important;

@@ -3,12 +3,14 @@
     v-model="modalVisible"
     :title="title"
     :width="width"
+    :top="top"
     :close-on-click-modal="closeOnClickModal"
     :close-on-press-escape="closeOnPressEscape"
     :show-close="false"
     :append-to-body="true"
     destroy-on-close
     @close="handleClose"
+    class="base-modal-dialog"
   >
     <!-- 头部 -->
     <template #header>
@@ -21,9 +23,7 @@
     </template>
 
     <!-- 内容区域 -->
-    <div class="modal-body">
-      <slot></slot>
-    </div>
+    <slot></slot>
 
     <!-- 底部 -->
     <template #footer>
@@ -52,6 +52,7 @@ interface Props {
   modelValue: boolean;
   title?: string;
   width?: string;
+  top?: string;
   closeOnClickModal?: boolean;
   closeOnPressEscape?: boolean;
   confirmText?: string;
@@ -62,6 +63,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   title: "提示",
   width: "600px",
+  top: "15vh",
   closeOnClickModal: false,
   closeOnPressEscape: false,
   confirmText: "确定",
@@ -82,7 +84,7 @@ watch(
   () => props.modelValue,
   (val) => {
     modalVisible.value = val;
-  }
+  },
 );
 
 watch(modalVisible, (val) => {
@@ -118,7 +120,6 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-right: 20px;
 }
 
 .modal-title {
@@ -138,27 +139,37 @@ defineExpose({
   }
 }
 
-.modal-body {
-  padding: 20px;
-  box-sizing: border-box;
-  max-height: 60vh;
-  overflow-y: auto;
-
-  &:deep(*) {
-    &:first-child {
-      margin-top: 0;
-    }
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-}
-
 .modal-footer {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding: 0 20px 20px;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+</style>
+<style lang="scss">
+// 不加 scoped，专门写 dialog 的样式
+.base-modal-dialog .el-dialog__body {
+  max-height: 60vh;
+  overflow-y: auto;
+  // // 内容区滚动条美化
+  // &::-webkit-scrollbar {
+  //   width: 6px;
+  //   height: 6px;
+  // }
+
+  // &::-webkit-scrollbar-track {
+  //   background: var(--el-fill-color-light);
+  //   border-radius: 3px;
+  // }
+
+  // &::-webkit-scrollbar-thumb {
+  //   background: var(--el-border-color-dark);
+  //   border-radius: 3px;
+
+  //   &:hover {
+  //     background: var(--el-border-color-darker);
+  //   }
+  // }
 }
 </style>

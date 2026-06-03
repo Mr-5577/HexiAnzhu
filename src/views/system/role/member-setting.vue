@@ -42,7 +42,6 @@
           <el-button
             link
             type="primary"
-            size="small"
             @click="handleEdit(scope.row)"
             :disabled="!menuStore.hasExactPermission('member:edit')"
           >
@@ -51,7 +50,6 @@
           <el-button
             link
             type="danger"
-            size="small"
             @click="handleDelete(scope.row)"
             :disabled="!menuStore.hasExactPermission('member:del')"
           >

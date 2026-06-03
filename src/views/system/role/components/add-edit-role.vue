@@ -235,6 +235,8 @@ defineExpose({
 
 <style lang="scss" scoped>
 .role-form {
+  padding: 0 20px;
+  box-sizing: border-box;
   .el-form-item {
     margin-bottom: 18px;
 
