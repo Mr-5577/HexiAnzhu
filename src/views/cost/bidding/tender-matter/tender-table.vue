@@ -70,9 +70,9 @@
         <span>{{ getTenderStatusText(row.tenderStatus) }}</span>
       </template>
       <template #actions="{ row }">
-        <el-button type="primary" link @click="handleReview(row)">
+        <!-- <el-button type="primary" link @click="handleReview(row)">
           审核
-        </el-button>
+        </el-button> -->
         <el-button type="primary" link @click="handleEdit(row)">
           编辑
         </el-button>

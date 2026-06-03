@@ -21,6 +21,12 @@ export const dictMapping = {
   payMethod: "PAY_METHOD",
   /** 退还方式 */
   refundMethod: "REFUND_METHOD",
+  /** 目标成本版本类型 */
+  goalCostVersionType: "CST_VER",
+  /** 分摊规则 */
+  allocationRule: "FTGZ",
+  /** 业务归属 */
+  businessSegment: "YWGS",
 } as const;
 
 // 导出类型，用于类型提示

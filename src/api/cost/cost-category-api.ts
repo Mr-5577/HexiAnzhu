@@ -34,6 +34,8 @@ export const costCategoryApi = {
   },
   /** 删除项目成本科目 */
   delCostSubjectProj: (data: { id: number }) => {
-    return http.formPost("/mainData/costSubjectProj/del", data, {addQueryFast:false});
+    return http.formPost("/mainData/costSubjectProj/del", data, {
+      addQueryFast: false,
+    });
   },
 };
