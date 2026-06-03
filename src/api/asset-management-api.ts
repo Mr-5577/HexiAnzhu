@@ -172,8 +172,17 @@ export const assetManagementApi = {
   getVisitHis: (data: any) => {
     return http.post("/visit/getVisitHis", data);
   },
+  // 导出来访记录 Excel
+  exportVisitHis: (data: any, filename: string = "来访记录.xlsx") => {
+    return http.exportFile(
+      "/visit/getVisitHisExcel",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
+    );
+  },
   // 获取项目列表,isAll 为true时获取所有项目，false时获取当前用户所属项目
-  getProjList: (data: any) => {
+  getVisitProjList: (data: any) => {
     return http.post("/visit/getProjList", data);
   },
   // 获取来访方式
