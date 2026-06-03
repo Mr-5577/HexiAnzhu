@@ -12,6 +12,7 @@ import {
 import { addDynamicRoutes } from "./dynamic-routes";
 import { userApi } from "@/api/user-api";
 import { ElLoading } from "element-plus";
+import { costStaticRoutes } from "./static-routes";
 
 // 静态路由（登录页等）
 const staticRoutes: Array<RouteRecordRaw> = [
@@ -181,7 +182,11 @@ router.beforeEach(async (to, from, next) => {
       const res = await userApi.getUserMenuPowerList();
       // console.log("获取到菜单数据:", res);
       if (res.code === 200) {
-        const menuData = res.data || [];
+        let menuData = res.data || [];
+        // 手动管理成本模块的权限，管理员拥有成本模块的权限
+        if (localStorage.getItem("admin") === "1") {
+          menuData.push(costStaticRoutes);
+        }
         // 提取按钮权限
         const buttonPermission = extractButtonPermissions(menuData);
         // console.log("权限列表:", buttonPermission);
