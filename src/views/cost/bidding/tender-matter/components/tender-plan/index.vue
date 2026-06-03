@@ -175,7 +175,7 @@ const handleReset = () => {
 const handleAdd = () => {
   // 跳转到新增页面，传递事项ID
   router.push({
-    path: "/cost/tender-plan/add",
+    path: "/bidding/tender-plan/add",
     query: { tenderId: props.tenderId, mode: "add" },
   });
 };
@@ -183,7 +183,7 @@ const handleAdd = () => {
 const handleEdit = (row) => {
   // 跳转到编辑页面，把当前点击的数据作为参数传递过去
   router.push({
-    path: "/cost/tender-plan/edit",
+    path: "/bidding/tender-plan/edit",
     query: { tenderId: props.tenderId, id: row.id, mode: "edit" },
   });
 };
@@ -205,7 +205,7 @@ const handleDelete = (row) => {
 const handleDetail = (row) => {
   // 跳转到详情页面，把当前点击的数据作为参数传递过去
   router.push({
-    path: "/cost/tender-plan/detail",
+    path: "/bidding/tender-plan/detail",
     query: { tenderId: props.tenderId, id: row.id, mode: "detail" },
   });
 };

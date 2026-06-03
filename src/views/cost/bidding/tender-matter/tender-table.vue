@@ -250,7 +250,7 @@ const handleEdit = (row: BidTender) => {
 
 const handleDetail = (row: BidTender) => {
   // 跳转到详情页面并传递事项ID参数
-  router.push({ path: "/cost/bidding-detail", query: { tenderId: row.id } });
+  router.push({ path: "/bidding/bidding-detail", query: { tenderId: row.id } });
 };
 
 const handleDelete = (row: BidTender) => {
