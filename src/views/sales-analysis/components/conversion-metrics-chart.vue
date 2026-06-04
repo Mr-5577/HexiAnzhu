@@ -49,11 +49,11 @@ const router = useRouter();
 
 interface Props {
   data: string;
-  department: number[];
+  projIds: number[];
 }
 const props = withDefaults(defineProps<Props>(), {
   data: "",
-  department: () => [],
+  projIds: () => [],
 });
 // 定义一个需要暴露的方法
 const refreshData = () => {
@@ -293,9 +293,9 @@ const getData = async () => {
   // 检查是否已有请求在进行
   if (isRequesting) return;
 
-  const { data, department } = props;
+  const { data, projIds } = props;
   const params = {
-    projIds: department,
+    projIds: projIds,
     type: 1, // 0:年  1:月  2:周  3:日
     day: `${data} 00:00:00`,
     beginDate:
@@ -323,7 +323,7 @@ const handleMonthTitleClick = () => {
   const timestamp = new Date().getTime();
   const params = {
     data: props.data,
-    projIds: props.department,
+    projIds: props.projIds,
   };
   router.push({
     path: "/channel-analysis/conversion-rate",
@@ -338,7 +338,7 @@ const handleOverallTitleClick = () => {
   const timestamp = new Date().getTime();
   const params = {
     data: props.data,
-    projIds: props.department,
+    projIds: props.projIds,
     type: "date",
   };
   router.push({
