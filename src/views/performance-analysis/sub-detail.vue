@@ -211,12 +211,12 @@ const initQueryParams = () => {
       const routeData = JSON.parse(route.query.data as string);
       queryParams.value.projIds = routeData.projIds || [];
       queryParams.value.productTypes = getAllProductTypeIds();
-      if (routeData.data) {
-        // 从销售年报表跳转过来
-        queryParams.value.time = routeData.data || [];
-      } else {
+      if (routeData.type) {
         // 从大屏跳转过来
         initTimeRange(routeData);
+      } else {
+        // 从销售年报表跳转过来
+        queryParams.value.time = routeData.data || [];
       }
     } catch (error) {
       console.error("解析路由参数失败，使用默认值", error);

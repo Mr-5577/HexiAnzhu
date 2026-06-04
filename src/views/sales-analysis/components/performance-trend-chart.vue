@@ -54,7 +54,7 @@ const router = useRouter();
 
 interface Props {
   data: string;
-  department: number[];
+  projIds: number[];
 }
 
 interface YearData {
@@ -71,7 +71,7 @@ interface DayData {
 
 const props = withDefaults(defineProps<Props>(), {
   data: "",
-  department: () => [],
+  projIds: () => [],
 });
 
 // 常量定义
@@ -371,7 +371,7 @@ const getRequestParams = () => {
     .format("YYYY-MM-DD");
 
   return {
-    projIds: props.department,
+    projIds: props.projIds,
     type: 0, // 0:年  1:月  2:周  3:日
     day: `${props.data} 00:00:00`,
     beginDate: `${startDate} 00:00:00`,
@@ -418,7 +418,7 @@ const handleToPage = () => {
   const timestamp = new Date().getTime();
   let params: any = {
     data: props.data,
-    projIds: props.department,
+    projIds: props.projIds,
   };
   if (chartType.value === "month") {
     params.type = "date";

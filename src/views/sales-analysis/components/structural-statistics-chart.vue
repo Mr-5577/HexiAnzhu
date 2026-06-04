@@ -81,7 +81,7 @@ const router = useRouter();
 
 interface Props {
   data: string;
-  department: number[];
+  projIds: number[];
 }
 
 interface ApiDataItem {
@@ -97,7 +97,7 @@ interface PieDataItem {
 
 const props = withDefaults(defineProps<Props>(), {
   data: "",
-  department: () => [],
+  projIds: () => [],
 });
 
 // 常量定义
@@ -341,7 +341,7 @@ const bindChartClickEvent = () => {
     const timestamp = new Date().getTime();
     const params = {
       data: props.data,
-      projIds: props.department,
+      projIds: props.projIds,
     };
     router.push({
       path: path,
@@ -363,8 +363,8 @@ const handleResize = () => {
 const fetchData = async () => {
   if (isRequesting) return;
 
-  const { data, department } = props;
-  if (!data || department.length === 0) {
+  const { data, projIds } = props;
+  if (!data || projIds.length === 0) {
     // 如果没有必要参数，清空数据
     apiRawData.value = [[], [], [], [], [], [], []];
     nextTick(() => {
@@ -373,7 +373,7 @@ const fetchData = async () => {
     return;
   }
   const params = {
-    projIds: department,
+    projIds: projIds,
     type: 1, // 0:年  1:月  2:周  3:日
     day: `${data} 00:00:00`,
     beginDate:

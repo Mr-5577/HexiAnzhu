@@ -123,11 +123,11 @@ const router = useRouter();
 
 interface Props {
   data: string;
-  department: number[];
+  projIds: number[];
 }
 const props = withDefaults(defineProps<Props>(), {
   data: "",
-  department: () => [],
+  projIds: () => [],
 });
 // 定义一个需要暴露的方法
 const refreshData = () => {
@@ -188,7 +188,7 @@ const getData = async () => {
     loading.value = true;
     const seleckData = props.data;
     const params = {
-      projIds: props.department,
+      projIds: props.projIds,
       type: typeVal.value,
       day: `${seleckData} 00:00:00`,
     };
@@ -197,7 +197,7 @@ const getData = async () => {
       .endOf("month")
       .format("YYYY-MM-DD");
     const inventoryParams = {
-      projIds: props.department,
+      projIds: props.projIds,
       type: 0, // 0:年  1:月  2:周  3:日
       day: `${seleckData} 00:00:00`,
       beginDate:
@@ -234,7 +234,7 @@ const handelToListPage = (path: string) => {
   const timestamp = new Date().getTime();
   const params = {
     data: props.data,
-    projIds: props.department,
+    projIds: props.projIds,
   };
   router.push({
     path: path,
@@ -252,7 +252,7 @@ const handleToPage = () => {
   const timestamp = new Date().getTime();
   const params = {
     data: props.data,
-    projIds: props.department,
+    projIds: props.projIds,
   };
   router.push({
     path: path,
@@ -263,9 +263,9 @@ const handleToPage = () => {
   });
 };
 watch(
-  () => [props.data, props.department],
-  ([data, department]) => {
-    if (data && department) {
+  () => [props.data, props.projIds],
+  ([data, projIds]) => {
+    if (data && projIds) {
       // nextTick(() => {
       //   getData();
       // });

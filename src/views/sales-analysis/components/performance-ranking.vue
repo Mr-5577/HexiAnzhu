@@ -61,11 +61,11 @@ const router = useRouter();
 
 interface Props {
   data: string;
-  department: number[];
+  projIds: number[];
 }
 const props = withDefaults(defineProps<Props>(), {
   data: "",
-  department: () => [],
+  projIds: () => [],
 });
 
 // 定义一个需要暴露的方法
@@ -192,7 +192,7 @@ const getTableList = async () => {
   // const time = dateUtil(props.data).subtract(1, "month").format("YYYY-MM-DD"); // 上月
   const time = dateUtil(props.data || new Date()).format("YYYY-MM-DD"); // 当月
   const params = {
-    projIds: props.department,
+    projIds: props.projIds,
     type: 1,
     day: `${time} 00:00:00`,
     beginDate:
@@ -225,7 +225,7 @@ const handleToPage = () => {
   const timestamp = new Date().getTime();
   const params = {
     data: props.data,
-    projIds: props.department,
+    projIds: props.projIds,
   };
   router.push({
     path: path,
