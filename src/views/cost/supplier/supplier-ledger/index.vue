@@ -84,9 +84,6 @@
           :page-size="pageSize"
           @pagination-change="handlePaginationChange"
         >
-          <template #supTypeId="{ row }">
-            <span>{{ getSupTypeName(row.supTypeId) }}</span>
-          </template>
           <template #actions="{ row }">
             <el-button link type="primary" @click="handleEdit(row)">
               编辑
@@ -162,7 +159,7 @@ const tableColumns = [
   // { type: "selection", width: 55 }, // 多选框
   { label: "供应商编码", prop: "supCode", width: 150 },
   { label: "供应商名称", prop: "supName", width: 200 },
-  { label: "供应商类别", slot: "supTypeId", width: 150 },
+  { label: "供应商类别", prop: "supTypeName", width: 150 },
   { label: "企业性质", prop: "supNatureName", width: 120 },
   { label: "纳税类型", prop: "taxTypeName", width: 120 },
   { label: "来源类型", prop: "sourceTypeName", width: 120 },
@@ -308,12 +305,6 @@ const handleViewDetail = (row: Supplier) => {
     path: "/supplier/supplier-register",
     query: { mode: "view", id: row.id },
   });
-};
-
-// 供应商类别名称
-const getSupTypeName = (id: number | null) => {
-  if (!id) return "-";
-  return listData.value.find((item) => item.id === id)?.supTypeName || id;
 };
 
 onMounted(() => {

@@ -254,8 +254,8 @@ const getSupplierList = async () => {
     tableLoading.value = true;
     const res = await supplierApi.getSupplierList({ ...queryParams.value });
     if (res.code === 200) {
-      tableData.value = res.data?.records || res.data?.list || res.data || [];
-      total.value = res.data?.total || tableData.value.length;
+      tableData.value = res.data || [];
+      total.value = tableData.value.length;
     } else {
       ElMessage.error(res.message || "加载供应商列表失败");
     }
