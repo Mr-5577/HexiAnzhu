@@ -254,6 +254,8 @@ import BaseModal from "@/components/base/base-modal.vue";
 import { VuePrintNext } from "vue-print-next";
 import { useUserStore } from "@/stores/user-store";
 import { ElMessage } from "element-plus";
+import { useMenuStore } from "@/stores/menu-store";
+const menuStore = useMenuStore();
 
 const userStore = useUserStore();
 // 组件name，需要和菜单配置里面的name一致
@@ -310,7 +312,11 @@ const resetQuery = () => {
 const exportExcel = async () => {
   try {
     exportLoading.value = true;
-    const params = { ...queryParams.value, isExport: true };
+    const params = {
+      ...queryParams.value,
+      isExport: true,
+      isShowTel: menuStore.hasExactPermission("visiting-record:showAllTel"),
+    };
     const fileBlob = await assetManagementApi.exportVisitHis(params);
     console.log("fileBlob", fileBlob);
     if (!fileBlob || fileBlob.size === 0) {
@@ -396,6 +402,7 @@ const getTableList = async () => {
       custTel: custTel,
       visitTimeStart: day ? `${day} 00:00:00` : "",
       visitTimeEnd: day ? `${day} 23:59:59` : "",
+      isShowTel: menuStore.hasExactPermission("visiting-record:showAllTel")
     };
     const res = await assetManagementApi.getVisitHis(params);
     if (res.code === 200) {
@@ -430,7 +437,9 @@ const getProjectName = (projId: string) => {
   return project ? project.projName : "-";
 };
 const getVisitTypeName = (visitTypeId: string) => {
-  const visit = visitMethodList.value.find((item) => item.valueStr == visitTypeId);
+  const visit = visitMethodList.value.find(
+    (item) => item.valueStr == visitTypeId,
+  );
   return visit ? visit.optionStr : "-";
 };
 const getSalerName = (salerId: string) => {
