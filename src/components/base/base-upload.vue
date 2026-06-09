@@ -69,7 +69,7 @@ const props = withDefaults(
     limit: 3,
     accept: ".pdf,.jpg,.png,.dwg,.doc,.docx",
     maxSize: 10,
-    action: "/api/common/upload",
+    action: "/system/bindAttachment",
     disabled: false,
     showTip: true,
     tipText: "",

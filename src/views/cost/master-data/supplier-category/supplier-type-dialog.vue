@@ -30,7 +30,7 @@
           maxlength="50"
           show-word-limit
         />
-        <div class="form-tip">建议使用英文小写+下划线命名</div>
+        <div class="form-tip">建议使用英文、数字、下划线命名</div>
       </el-form-item>
 
       <el-form-item prop="isEnabled" label="是否启用">

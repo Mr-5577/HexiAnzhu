@@ -1,6 +1,6 @@
 <!-- 合同台账列表 -->
 <template>
-  <div class="demand-table-wrapper">
+  <div class="ledger-table-wrapper">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
       <el-form-item label="业务板块" prop="segId">
         <el-select
@@ -17,22 +17,7 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="公司" prop="companyId">
-        <el-select
-          v-model="queryParams.companyId"
-          placeholder="请选择公司"
-          clearable
-          style="width: 180px"
-        >
-          <el-option
-            v-for="item in projectOptions"
-            :key="item.orgId"
-            :label="item.orgName"
-            :value="item.orgId"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="项目" prop="projId">
+      <!-- <el-form-item label="项目" prop="projId">
         <el-cascader
           v-model="queryParams.projId"
           :options="projectOptions"
@@ -49,19 +34,34 @@
           style="width: 180px"
           clearable
         />
-      </el-form-item>
-      <el-form-item label="招标事项" prop="tenderName">
+      </el-form-item> -->
+      <el-form-item label="合同名称" prop="conName">
         <el-input
-          v-model="queryParams.tenderName"
-          placeholder="请输入招标事项"
+          v-model="queryParams.conName"
+          placeholder="请输入合同名称"
           clearable
           style="width: 180px"
         />
       </el-form-item>
+      <el-form-item label="合同状态" prop="conStatus">
+        <el-select
+          v-model="queryParams.conStatus"
+          placeholder="请选择合同状态"
+          clearable
+          style="width: 180px"
+        >
+          <el-option
+            v-for="item in ConStatusEnum"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="handleSearch"> 搜索 </el-button>
         <el-button @click="handleReset">重置</el-button>
-        <el-button type="primary" @click="handleDemand">新增台账</el-button>
+        <el-button type="primary" @click="handleAdd">新增</el-button>
       </el-form-item>
     </el-form>
 
@@ -70,18 +70,26 @@
       :tableData="tableData"
       :loading="tableLoading"
       :rowKey="'id'"
-      :total="total"
-      :current-page="currentPage"
-      :page-size="pageSize"
       :pagination="false"
-      @pagination-change="handlePaginationChange"
     >
+      <template #conProperty="{ row }">
+        {{ getLabel(ConPropertyEnum, row.conProperty) }}
+      </template>
+      <template #priceType="{ row }">
+        {{ getLabel(PriceTypeEnum, row.priceType) }}
+      </template>
+      <template #conStatus="{ row }">
+        {{ getLabel(ConStatusEnum, row.conStatus) }}
+      </template>
       <template #actions="{ row }">
         <el-button type="primary" link @click="handleEdit(row)">
           编辑
         </el-button>
         <el-button type="danger" link @click="handleDelete(row)">
           删除
+        </el-button>
+        <el-button type="primary" link @click="handleDetail(row)">
+          台账详情
         </el-button>
       </template>
     </base-table>
@@ -93,16 +101,19 @@ import { ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { useRouter } from "vue-router";
-import type {
-  BidDemandQueryParams,
-  BidDemand,
-} from "@/types/cost/bidding-management-type";
-import { biddingManageApi } from "@/api/cost/bidding-management-api";
 import { dictionaryApi } from "@/api/cost/dictionary-api";
 import { projectAreaApi } from "@/api/cost/project-area-api";
 import { largeScreenApi } from "@/api/large-screen-api";
+import { contractLedgerApi } from "@/api/cost/contract-ledger-api";
+import {
+  ConPropertyEnum,
+  PriceTypeEnum,
+  ConStatusEnum,
+  getLabel,
+} from "@/constants/contract-manage/enums";
+import { HConMain, HConMainQuery } from "@/types/cost/contract-ledger-type";
 
-defineOptions({ name: "demand-table" });
+defineOptions({ name: "contract-ledger-table" });
 
 const props = defineProps<{
   projectId: number | null;
@@ -115,18 +126,13 @@ const emit = defineEmits<{
 const router = useRouter();
 
 const tableLoading = ref(false);
-const currentPage = ref(1);
-const pageSize = ref(10);
-const total = ref(0);
-const tableData = ref<BidDemand[]>([]);
-const editData = ref<BidDemand | null>(null);
-const demandDialogVisible = ref(false);
+const tableData = ref([]);
 
-const queryParams = ref<BidDemandQueryParams>({
+const queryParams = ref<HConMainQuery>({
   segId: undefined,
-  companyId: undefined,
+  conStatus: undefined,
   projId: undefined,
-  tenderName: "",
+  conName: "",
 });
 // 业务板块
 const segOptions = ref([]);
@@ -135,12 +141,23 @@ const projectOptions = ref([]);
 
 const columns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "segName", label: "业务板块", width: 120 },
+  { prop: "segName", label: "业务板块", width: 150 },
   { prop: "projName", label: "项目名称", width: 200 },
-  { prop: "companyName", label: "公司名称", width: 200 },
-  { prop: "tenderName", label: "招标事项", minWidth: 200 },
-  { prop: "demandDate", label: "需求时间", width: 150 },
-  { prop: "demandRemark", label: "需求说明", minWidth: 200 },
+  { prop: "conTypeId", label: "合同分类", width: 150 },
+  { prop: "conSysNo", label: "合同编号", minWidth: 220 },
+  { prop: "conName", label: "合同名称", width: 150 },
+  { slot: "conProperty", label: "合同类型", width: 150 },
+  { prop: "supName", label: "供应商名称", minWidth: 150 },
+  { prop: "demandRemark", label: "预结算合同金额", minWidth: 150 },
+  { prop: "signAmt", label: "签约金额", minWidth: 150 },
+  { prop: "demandRemark", label: "补充合同金额", minWidth: 150 },
+  { prop: "demandRemark", label: "变更金额", minWidth: 150 },
+  { prop: "settleAmt", label: "结算金额", minWidth: 150 },
+  { slot: "priceType", label: "计价方式", minWidth: 150 },
+  { prop: "signDate", label: "签订日期", minWidth: 150 },
+  { prop: "effectiveDate", label: "生效日期", minWidth: 150 },
+  { prop: "expiryDate", label: "到期日期", minWidth: 150 },
+  { slot: "conStatus", label: "合同状态", minWidth: 150 },
   {
     label: "操作",
     prop: "actions",
@@ -149,7 +166,7 @@ const columns: TableColumnItem[] = [
     fixed: "right",
   },
 ];
-// 获取招标需求列表
+// 获取列表数据
 const getDataList = async () => {
   if (!props.projectId) {
     return;
@@ -157,7 +174,11 @@ const getDataList = async () => {
   try {
     tableLoading.value = true;
     tableData.value = [];
-    const res = await biddingManageApi.getDemandList(queryParams.value);
+    const params = {
+      ...queryParams.value,
+      projId: props.projectId,
+    };
+    const res = await contractLedgerApi.getContractLedgerList(params);
     if (res.code === 200) {
       tableData.value = res.data || [];
     }
@@ -169,43 +190,52 @@ const getDataList = async () => {
 };
 
 const handleSearch = () => {
-  currentPage.value = 1;
   getDataList();
 };
 
 const handleReset = () => {
   queryParams.value = {
     segId: undefined,
-    companyId: undefined,
+    conStatus: undefined,
     projId: undefined,
-    tenderName: "",
+    conName: "",
   };
-  currentPage.value = 1;
   getDataList();
 };
 
-const handlePaginationChange = (params: any) => {
-  currentPage.value = params.currentPage;
-  pageSize.value = params.pageSize;
-  getDataList();
+const handleAdd = () => {
+  router.push({
+    path: "/contract/contract-ledger/add",
+    query: {
+      mode: "add",
+    },
+  });
 };
 
-const handleDemand = () => {
-  editData.value = null;
-  demandDialogVisible.value = true;
+const handleEdit = (row: HConMain) => {
+  router.push({
+    path: "/contract/contract-ledger/edit",
+    query: {
+      mode: "edit",
+      conId: row.id,
+    },
+  });
 };
 
-const handleEdit = (row: BidDemand) => {
-  editData.value = row;
-  demandDialogVisible.value = true;
+const handleDetail = (row: HConMain) => {
+  router.push({
+    path: "/contract/contract-ledger-detail",
+    query: {
+      conId: row.id,
+      mode: "detail",
+    },
+  });
 };
 
-const handleDetail = (row: BidDemand) => {};
-
-const handleDelete = (row: BidDemand) => {
-  ElMessageBox.confirm("确定删除该招标需求吗？", "提示", { type: "warning" })
+const handleDelete = (row: HConMain) => {
+  ElMessageBox.confirm("确定删除该合同数据吗？", "提示", { type: "warning" })
     .then(async () => {
-      const res = await biddingManageApi.delDemand({ id: row.id });
+      const res = await contractLedgerApi.delContractLedger({ id: row.id });
       if (res.code === 200) {
         ElMessage.success("删除成功");
         getDataList();
@@ -214,9 +244,6 @@ const handleDelete = (row: BidDemand) => {
     .catch(() => {});
 };
 
-const handleDialogSuccess = () => {
-  getDataList();
-};
 // 获取业务板块列表
 const getSegOptions = async () => {
   try {
@@ -247,7 +274,7 @@ watch(
     if (val) {
       getSegOptions();
       getProjectOptions();
-    //   getDataList();
+      getDataList();
     }
   },
   { immediate: true },
@@ -255,7 +282,7 @@ watch(
 </script>
 
 <style lang="scss" scoped>
-.demand-table-wrapper {
+.ledger-table-wrapper {
   width: 100%;
   height: 100%;
   display: flex;

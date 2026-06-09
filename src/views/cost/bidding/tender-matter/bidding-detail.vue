@@ -140,7 +140,6 @@ const handleTabChange = (tab: string) => {
 };
 
 const initData = () => {
-  console.log("路由参数:", route.query);
   // 从路由参数中获取 tenderId
   const queryTenderId = route.query.tenderId;
   if (queryTenderId) {

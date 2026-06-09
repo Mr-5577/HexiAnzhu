@@ -2,7 +2,7 @@
 // 合同台账主表
 export interface HConMain {
   /** 主键，自增 */
-  id: number;
+  id?: number;
   /** 业务板块 */
   segId?: number;
   /** 项目ID(外键) */
@@ -53,7 +53,7 @@ export interface HConMain {
   flowId?: number;
   /** 经办人 */
   agentId?: number;
-  /** 生产专业-结构、景观... */
+  /** 生产专业-（结构、景观） */
   proProf?: number;
   /** 楼栋ID */
   bldIds?: string;
@@ -66,20 +66,20 @@ export interface HConMain {
   /** 付款方式（1-按进度支付 2-按节点支付） */
   payType: number;
   /** 创建人 */
-  createId: number;
+  createId?: number;
   /** 创建时间 */
-  createDate: string;
+  createDate?: string;
   /** 更新人 */
   operId?: number;
   /** 更新时间 */
   operDate?: string;
   /** 删除标识 */
-  isDel: boolean;
+  isDel?: boolean;
 }
 // 合同台账扩展表
 export interface HConMainExt {
   /** 主键，自增 */
-  id: number;
+  id?: number;
   /** 合同ID(外键) 与h_con_main一对一 */
   conId: number;
   /** 是否需要用印 */
@@ -99,13 +99,30 @@ export interface HConMainExt {
   /** 备注 */
   remark?: string;
   /** 创建人 */
-  createId: number;
+  createId?: number;
   /** 创建时间 */
-  createDate: string;
+  createDate?: string;
   /** 更新人 */
   operId?: number;
   /** 更新时间 */
   operDate?: string;
   /** 删除标识 */
-  isDel: boolean;
+  isDel?: boolean;
+}
+
+// 查询合同台账列表参数
+export interface HConMainQuery {
+  /** 板块ID */
+  segId?: number;
+  /** 项目ID */
+  projId: number;
+  /** 合同名称 */
+  conName?: string;
+  /** 合同状态 */
+  conStatus?: number;
+}
+// 新增/编辑合同台账参数
+export interface HConMainSave {
+  conMain: HConMain;
+  conMainExt: HConMainExt;
 }

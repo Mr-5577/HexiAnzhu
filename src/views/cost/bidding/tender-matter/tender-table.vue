@@ -18,19 +18,22 @@
         </el-select>
       </el-form-item>
       <el-form-item label="合同分类" prop="conTypeId">
-        <el-select
+        <el-cascader
           v-model="queryParams.conTypeId"
+          :options="conTypeOptions"
+          :show-all-levels="false"
+          :props="{
+            expandTrigger: 'hover',
+            emitPath: false,
+            checkStrictly: false,
+            value: 'id',
+            label: 'conTypeName',
+            children: 'children',
+          }"
           placeholder="请选择合同分类"
-          clearable
           style="width: 180px"
-        >
-          <el-option
-            v-for="item in conTypeOptions"
-            :key="item.id"
-            :label="item.conTypeName"
-            :value="item.id"
-          />
-        </el-select>
+          clearable
+        />
       </el-form-item>
       <el-form-item label="招标单号" prop="tenderNo">
         <el-input
@@ -204,7 +207,7 @@ const getDataList = async () => {
     const params = {
       ...queryParams.value,
       projId: props.projectId,
-    }
+    };
     const res = await biddingManageApi.getTenderList(params);
     if (res.code === 200) {
       tableData.value = res.data || [];

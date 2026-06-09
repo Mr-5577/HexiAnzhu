@@ -278,7 +278,7 @@ const handleRegister = () => {
 const handleEdit = (row: Supplier) => {
   router.push({
     path: "/supplier/supplier-register",
-    query: { mode: "edit", id: row.id },
+    query: { mode: "edit", supplierId: row.id },
   });
 };
 const handleDelete = (row: Supplier) => {
@@ -303,7 +303,7 @@ const handleDelete = (row: Supplier) => {
 const handleViewDetail = (row: Supplier) => {
   router.push({
     path: "/supplier/supplier-register",
-    query: { mode: "view", id: row.id },
+    query: { mode: "view", supplierId: row.id },
   });
 };
 

@@ -1,3 +1,4 @@
+import { ContractType } from "./../types/cost/contract-category-type";
 /**
  * 数据字典类型映射
  * 前端类型 => 后端参数类型
@@ -11,6 +12,10 @@ export const dictMapping = {
   supplierSource: "SUPPLIER_SOURCE",
   /** 法人证件类型 */
   legalCardType: "LEGAL_CARD_TYPE",
+  /** 面积版本 */
+  areaVersion: "AREA_VER",
+  /** 目标成本版本 */
+  goalCostVersionType: "CST_VER",
   /** 采购方式 */
   purchaseMethod: "PURCHASE_METHOD",
   /** 招标方式 */
@@ -21,12 +26,16 @@ export const dictMapping = {
   payMethod: "PAY_METHOD",
   /** 退还方式 */
   refundMethod: "REFUND_METHOD",
-  /** 目标成本版本类型 */
-  goalCostVersionType: "CST_VER",
   /** 分摊规则 */
   allocationRule: "FTGZ",
   /** 业务归属 */
   businessSegment: "YWGS",
+  /** 生产专业 */
+  proProf: "PRO_PROF",
+  /** 核算项目 */
+  acctProj: "ACCT_PROJ",
+  /** 附件类型 */
+  annexType: "ANNEX_TYPE",
 } as const;
 
 // 导出类型，用于类型提示

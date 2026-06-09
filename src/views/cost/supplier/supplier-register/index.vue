@@ -81,16 +81,15 @@ const currentComponent = computed(() => tabComponents[activeTab.value]);
 const syncRouteState = () => {
   const queryMode = route.query.mode as string;
   mode.value = queryMode === "edit" || queryMode === "view" ? queryMode : "add";
-  const idValue = route.query.id ? Number(route.query.id) : null;
+  const idValue = route.query.supplierId ? Number(route.query.supplierId) : null;
   supplierId.value = idValue || null;
   if (mode.value === "add") {
     activeTab.value = "basic";
   }
 };
 
-syncRouteState();
 watch(
-  () => [route.query.mode, route.query.id],
+  () => [route.query.mode, route.query.supplierId],
   syncRouteState,
 );
 
