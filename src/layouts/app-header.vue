@@ -29,7 +29,11 @@
           </template>
           <template #default>
             <div class="user-dropdown">
-              <div class="dropdown-item" @click="handleProfile">
+              <div
+                class="dropdown-item"
+                @click="handleProfile"
+                v-if="hasPersonalCenter"
+              >
                 <el-icon><User /></el-icon>
                 <span>个人中心</span>
               </div>
@@ -79,8 +83,33 @@ const activeNav = ref<number>(0);
 
 const menuList = computed(() => {
   const menu = menuStore.menuData;
+  // console.log("menu", menu);
   // console.log("extractModules(menu)", extractModules(menu));
   return extractModules(menu);
+});
+// 检查是否有个人中心菜单权限
+const hasPersonalCenter = computed(() => {
+  // 递归查找菜单树中是否存在个人中心相关的菜单
+  const findPersonalCenter = (menus: any[]): boolean => {
+    for (const menu of menus) {
+      // 根据 meta.title 或 name 判断是否为个人中心
+      if (
+        menu.meta?.title === "个人中心" ||
+        menu.path === "system/user" ||
+        menu.path === "/system/user"
+      ) {
+        return true;
+      }
+      if (menu.children && menu.children.length > 0) {
+        if (findPersonalCenter(menu.children)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  return findPersonalCenter(menuStore.menuData || []);
 });
 
 // 监听外部传入的activeModuleId
