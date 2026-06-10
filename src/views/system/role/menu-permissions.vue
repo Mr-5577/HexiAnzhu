@@ -55,7 +55,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch, shallowRef } from "vue";
 import { ElMessage, type ElTree } from "element-plus";
 import { roleApi } from "@/api/role-api";
 import { useMenuStore } from "@/stores/menu-store";
@@ -82,7 +82,235 @@ const props = withDefaults(defineProps<Props>(), {
   roleId: 0,
 });
 
-const treeData = ref<any[]>([]);
+// 使用 shallowRef 减少深度响应式开销
+const treeData = shallowRef<any[]>([]);
+
+// ==================== 性能优化：节点映射表 ====================
+// 节点映射表：id -> 节点对象
+const nodeMap = ref<Map<number, any>>(new Map());
+// 父节点映射表：子节点id -> 父节点id
+const parentMap = ref<Map<number, number>>(new Map());
+// 子节点映射表：父节点id -> 子节点id数组
+const childrenMap = ref<Map<number, number[]>>(new Map());
+// 所有后代节点缓存（懒加载）
+const descendantsCache = ref<Map<number, number[]>>(new Map());
+
+/**
+ * 构建节点映射表，建立快速索引
+ * 时间复杂度：O(n)，只在数据加载时执行一次
+ */
+const buildNodeMaps = (nodes: any[], parentId: number | null = null) => {
+  if (!nodes || !Array.isArray(nodes)) return;
+
+  nodes.forEach((node) => {
+    if (!node || node.id === undefined) return;
+
+    // 存储节点映射
+    nodeMap.value.set(node.id, node);
+
+    // 存储父子关系
+    if (parentId !== null) {
+      parentMap.value.set(node.id, parentId);
+    }
+
+    // 存储子节点列表
+    if (
+      node.children &&
+      Array.isArray(node.children) &&
+      node.children.length > 0
+    ) {
+      const childIds = node.children
+        .map((c: any) => c.id)
+        .filter((id: number) => id !== undefined);
+      childrenMap.value.set(node.id, childIds);
+      // 递归处理子节点
+      buildNodeMaps(node.children, node.id);
+    } else {
+      childrenMap.value.set(node.id, []);
+    }
+  });
+};
+
+/**
+ * 清空所有缓存映射表
+ */
+const clearMaps = () => {
+  nodeMap.value.clear();
+  parentMap.value.clear();
+  childrenMap.value.clear();
+  descendantsCache.value.clear();
+};
+
+/**
+ * 获取节点的所有直接子节点ID（O(1)）
+ */
+const getDirectChildrenIds = (nodeId: number): number[] => {
+  return childrenMap.value.get(nodeId) || [];
+};
+
+/**
+ * 获取节点的所有后代节点ID（包括所有层级）
+ * 使用 BFS 算法 + 缓存，首次获取 O(n)，后续 O(1)
+ */
+const getAllDescendantIds = (nodeId: number): number[] => {
+  // 检查缓存
+  if (descendantsCache.value.has(nodeId)) {
+    return descendantsCache.value.get(nodeId) || [];
+  }
+
+  const result: number[] = [];
+  const queue = [...getDirectChildrenIds(nodeId)];
+
+  while (queue.length > 0) {
+    const currentId = queue.shift()!;
+    result.push(currentId);
+    // 添加当前节点的子节点到队列
+    const grandchildren = getDirectChildrenIds(currentId);
+    if (grandchildren.length > 0) {
+      queue.push(...grandchildren);
+    }
+  }
+
+  // 缓存结果
+  descendantsCache.value.set(nodeId, result);
+  return result;
+};
+
+/**
+ * 获取节点的父节点ID（O(1)）
+ */
+const getParentId = (nodeId: number): number | null => {
+  return parentMap.value.get(nodeId) || null;
+};
+
+/**
+ * 根据ID查找节点（O(1)）
+ */
+const findNodeById = (nodeId: number): any => {
+  return nodeMap.value.get(nodeId);
+};
+
+/**
+ * 获取节点路径（从根节点到当前节点）
+ */
+const getNodePath = (nodeId: number): number[] => {
+  const path: number[] = [];
+  let currentId: number | null = nodeId;
+
+  while (currentId !== null) {
+    path.unshift(currentId);
+    currentId = getParentId(currentId);
+  }
+
+  return path;
+};
+
+// ==================== 节点状态更新方法 ====================
+
+/**
+ * 更新单个节点的 isPower（O(1)）
+ */
+const updateNodePower = (nodeId: number, isPower: boolean): boolean => {
+  const node = findNodeById(nodeId);
+  if (node) {
+    node.isPower = isPower;
+    return true;
+  }
+  return false;
+};
+
+/**
+ * 批量更新节点的 isPower
+ */
+const batchUpdateNodesPower = (nodeIds: number[], isPower: boolean) => {
+  nodeIds.forEach((nodeId) => {
+    const node = findNodeById(nodeId);
+    if (node) {
+      node.isPower = isPower;
+    }
+  });
+};
+
+/**
+ * 更新所有节点的 isPower
+ */
+const updateAllNodesPower = (isPower: boolean) => {
+  nodeMap.value.forEach((node) => {
+    node.isPower = isPower;
+  });
+};
+
+/**
+ * 获取所有节点的key（O(n)）
+ */
+const getAllKeys = (): number[] => {
+  return Array.from(nodeMap.value.keys());
+};
+
+/**
+ * 更新父节点状态（根据子节点选中情况）
+ * 使用映射表优化，避免递归遍历
+ */
+const updateParentNodeState = (childId: number) => {
+  const parentId = getParentId(childId);
+  if (!parentId) return;
+
+  const parentNode = findNodeById(parentId);
+  if (!parentNode || parentNode.menuType === 2) return; // 按钮类型不联动
+
+  // 获取父节点的所有直接子节点
+  const directChildrenIds = getDirectChildrenIds(parentId);
+  if (directChildrenIds.length === 0) return;
+
+  // 获取当前树中所有选中的节点ID
+  const checkedKeys = (treeRef.value?.getCheckedKeys() as number[]) || [];
+
+  // 检查子节点的选中情况
+  let anyChildChecked = false;
+  let allChildrenChecked = true;
+
+  for (const childId of directChildrenIds) {
+    const isChecked = checkedKeys.includes(childId);
+    if (isChecked) {
+      anyChildChecked = true;
+    } else {
+      allChildrenChecked = false;
+    }
+  }
+
+  // 根据规则设置父节点状态
+  let shouldCheckParent = false;
+
+  if (allChildrenChecked && directChildrenIds.length > 0) {
+    shouldCheckParent = true;
+  } else if (anyChildChecked) {
+    shouldCheckParent = true;
+  } else {
+    shouldCheckParent = false;
+  }
+
+  const isParentChecked = checkedKeys.includes(parentId);
+
+  // 只在状态需要改变时才更新
+  if (shouldCheckParent !== isParentChecked) {
+    const newCheckedKeys = shouldCheckParent
+      ? [...checkedKeys, parentId]
+      : checkedKeys.filter((key) => key !== parentId);
+
+    updateNodePower(parentId, shouldCheckParent);
+
+    nextTick(() => {
+      if (treeRef.value) {
+        treeRef.value.setCheckedKeys(newCheckedKeys);
+      }
+    });
+  }
+
+  // 继续向上传递
+  updateParentNodeState(parentId);
+};
+
+// ==================== 生命周期和数据处理 ====================
 
 // 设置树的选中状态
 const setTreeCheckedState = async () => {
@@ -99,12 +327,17 @@ const setTreeCheckedState = async () => {
 
 // 获取树形菜单数据
 const getTreeData = async () => {
-  if (dataLoading.value) return; // 防止重复请求
+  if (dataLoading.value) return;
   dataLoading.value = true;
   try {
     const res = await roleApi.getRoleMenuPowerList({ roleId: props.roleId });
     if (res.code === 200) {
       const data = res.data || [];
+
+      // 清空缓存并重新构建映射表
+      clearMaps();
+      buildNodeMaps(data);
+
       treeData.value = data;
 
       // 等待数据渲染后设置选中状态
@@ -112,9 +345,7 @@ const getTreeData = async () => {
 
       // 初始化全选状态
       if (data.length > 0) {
-        const allChecked = treeData.value.every((item) =>
-          checkAllNodes([item])
-        );
+        const allChecked = checkAllNodes(data);
         isSelectAll.value = allChecked;
       } else {
         isSelectAll.value = false;
@@ -122,7 +353,7 @@ const getTreeData = async () => {
     } else {
       treeData.value = [];
       isSelectAll.value = false;
-      // 清空选中状态
+      clearMaps();
       if (treeRef.value) {
         treeRef.value.setCheckedKeys([]);
       }
@@ -131,6 +362,7 @@ const getTreeData = async () => {
     console.error("获取菜单数据失败:", error);
     treeData.value = [];
     isSelectAll.value = false;
+    clearMaps();
     if (treeRef.value) {
       treeRef.value.setCheckedKeys([]);
     }
@@ -139,175 +371,93 @@ const getTreeData = async () => {
   }
 };
 
-// 判断isPower是否选中
+// 判断是否所有节点都选中
 const checkAllNodes = (nodes: any[]): boolean => {
-  return nodes.every((node) => {
-    const currentChecked = node.isPower === true;
-    const childrenChecked = node.children ? checkAllNodes(node.children) : true;
-    return currentChecked && childrenChecked;
-  });
+  if (!nodes || nodes.length === 0) return false;
+
+  for (const node of nodes) {
+    if (node.isPower !== true) return false;
+    if (node.children && node.children.length > 0) {
+      if (!checkAllNodes(node.children)) return false;
+    }
+  }
+  return true;
 };
 
-// 初始化时根据 isPower 设置默认选中的节点
+// 初始化时根据 isPower 设置默认选中的节点（使用映射表优化）
 const initCheckedKeys = computed(() => {
-  const data = treeData.value;
-  if (!Array.isArray(data) || data.length === 0) {
-    return [];
-  }
   const keys: number[] = [];
-  const findCheckedNodes = (nodes: any[]) => {
-    nodes.forEach((node) => {
-      if (node.isPower) {
-        keys.push(node.id);
-      }
-      const children = node.children;
-      if (Array.isArray(children) && children.length > 0) {
-        findCheckedNodes(children);
-      }
-    });
-  };
-
-  findCheckedNodes(data);
+  nodeMap.value.forEach((node, id) => {
+    if (node.isPower === true) {
+      keys.push(id);
+    }
+  });
   return keys;
 });
 
-// 获取所有节点的key
-const getAllKeys = (data: any[]): number[] => {
-  if (!data || !Array.isArray(data)) {
-    return [];
-  }
-
-  let keys: number[] = [];
-  data.forEach((item) => {
-    if (item && item.id !== undefined) {
-      keys.push(item.id);
-    }
-    const children = item?.children;
-    if (Array.isArray(children) && children.length > 0) {
-      keys = keys.concat(getAllKeys(children));
-    }
-  });
-  return keys;
-};
-
-// 更新所有节点的 isPower
-const updateAllNodesPower = (nodes: any[], isPower: boolean) => {
-  if (!nodes || !Array.isArray(nodes)) return;
-
-  nodes.forEach((node) => {
-    if (node) {
-      node.isPower = isPower;
-      const children = node?.children;
-      if (Array.isArray(children) && children.length > 0) {
-        updateAllNodesPower(node.children, isPower);
-      }
-    }
-  });
-};
-
-// 更新单个节点的 isPower
-const updateNodePower = (
-  nodeId: number,
-  isPower: boolean,
-  nodes = treeData.value
-): boolean => {
-  if (!Array.isArray(nodes)) return false;
-
-  for (const node of nodes) {
-    if (!node) continue;
-    if (node.id === nodeId) {
-      node.isPower = isPower;
-      return true;
-    }
-    if (Array.isArray(node.children)) {
-      const found = updateNodePower(nodeId, isPower, node.children);
-      if (found) return true;
-    }
-  }
-  return false;
-};
-
 /**
- * @name 处理勾选事件-更新isPower字段
- * @param nodeData 当前被点击的节点数据
- * @param checkedStatus 勾选状态对象，包含 checkedKeys(当前已选中的key数组)、halfCheckedKeys(半选状态的key数组)等信息
- * @description 只更新当前节点
- */
-// const handleCheck = (nodeData: any, checkedStatus: any) => {
-//   // 确保树数据存在且是数组
-//   if (!Array.isArray(treeData.value)) return;
-//   // 获取当前勾选的节点
-//   const { checkedKeys } = checkedStatus;
-//   // 之前选中的节点ID数组
-//   const previousKeys = initCheckedKeys.value;
-//   // 使用 Set 提高查找性能
-//   const checkedSet = new Set(checkedKeys);
-//   const previousSet = new Set(previousKeys);
-//   // 单次遍历完成更新
-//   const allKeys = new Set([...checkedKeys, ...previousKeys]);
-//   allKeys.forEach((key) => {
-//     const shouldBeChecked = checkedSet.has(key);
-//     const wasChecked = previousSet.has(key);
-//     if (shouldBeChecked !== wasChecked) {
-//       updateNodePower(key, shouldBeChecked);
-//     }
-//   });
-//   // 更新全选状态
-//   updateAllCheckboxState();
-// };
-
-/**
- * @name 处理勾选事件-更新isPower字段
+ * @name 处理勾选事件
  * @param nodeData 当前被点击的节点数据
  * @param checkedStatus 勾选状态对象
- * @description 选中父节点，子节点也选中，取消父节点，子节点也全部取消,没有子节点则只更新当前节点
+ * @description 点击按钮时。只更新按钮的状态，不联动任何节点，点击菜单时，联动子节点，联动父节点
  */
 const handleCheck = (nodeData: any, checkedStatus: any) => {
-  if (!treeRef.value || !Array.isArray(treeData.value)) return;
+  if (!treeRef.value) return;
+
   // 获取当前节点的选中状态
   const node = treeRef.value.getNode(nodeData.id);
   const isChecked = node?.checked || false;
+
   // 更新当前节点的 isPower
   updateNodePower(nodeData.id, isChecked);
 
-  // 无论选中还是取消选中，都联动子节点
-  if (nodeData.children && nodeData.children.length > 0) {
-    // 获取所有后代节点的ID
-    const getAllDescendantIds = (children: any[]): number[] => {
-      let ids: number[] = [];
-      const stack = [...children];
-      while (stack.length > 0) {
-        const child = stack.pop();
-        if (!child) continue;
-        ids.push(child.id);
-        if (child.children && child.children.length > 0) {
-          stack.push(...child.children);
-        }
-      }
-      return ids;
-    };
-    const descendantIds = getAllDescendantIds(nodeData.children);
-    // 批量更新所有子节点的 isPower
-    descendantIds.forEach((descendantId) => {
-      updateNodePower(descendantId, isChecked);
-    });
-    // 更新树组件的选中状态
-    const currentCheckedKeys = treeRef.value.getCheckedKeys() as number[];
-    let newCheckedKeys: number[];
-    if (isChecked) {
-      newCheckedKeys = [...new Set([...currentCheckedKeys, ...descendantIds])];
-    } else {
-      const descendantSet = new Set(descendantIds);
-      newCheckedKeys = currentCheckedKeys.filter(
-        (key) => !descendantSet.has(key)
-      );
-    }
-    nextTick(() => {
-      treeRef.value?.setCheckedKeys(newCheckedKeys);
-    });
+  // 判断是否为按钮类型（menuType === 2）
+  const isButtonNode = nodeData.menuType === 2;
+
+  if (isButtonNode) {
+    // 按钮节点：只更新自身，不联动任何节点
+    updateAllCheckboxState();
+    return;
   }
-  // 更新全选状态
-  updateAllCheckboxState();
+
+  // 菜单节点（menuType: 0 或 1）：联动子节点
+  if (nodeData.children && nodeData.children.length > 0) {
+    // 使用优化的方法获取所有后代节点ID
+    const descendantIds = getAllDescendantIds(nodeData.id);
+
+    if (descendantIds.length > 0) {
+      // 批量更新所有子节点的 isPower
+      batchUpdateNodesPower(descendantIds, isChecked);
+
+      // 更新树组件的选中状态
+      const currentCheckedKeys = treeRef.value.getCheckedKeys() as number[];
+      let newCheckedKeys: number[];
+
+      if (isChecked) {
+        newCheckedKeys = [
+          ...new Set([...currentCheckedKeys, ...descendantIds]),
+        ];
+      } else {
+        const descendantSet = new Set(descendantIds);
+        newCheckedKeys = currentCheckedKeys.filter(
+          (key) => !descendantSet.has(key),
+        );
+      }
+
+      // 使用 requestAnimationFrame 优化批量更新
+      requestAnimationFrame(() => {
+        if (treeRef.value) {
+          treeRef.value.setCheckedKeys(newCheckedKeys);
+        }
+      });
+    }
+  }
+
+  // 菜单节点：向上联动父节点
+  requestAnimationFrame(() => {
+    updateParentNodeState(nodeData.id);
+    updateAllCheckboxState();
+  });
 };
 
 // 更新全选复选框状态
@@ -316,10 +466,10 @@ const updateAllCheckboxState = () => {
 
   try {
     const checkedKeys = treeRef.value.getCheckedKeys();
-    const totalKeys = getAllKeys(treeData.value);
+    const totalKeysCount = nodeMap.value.size;
 
     isSelectAll.value =
-      checkedKeys.length === totalKeys.length && totalKeys.length > 0;
+      checkedKeys.length === totalKeysCount && totalKeysCount > 0;
   } catch (error) {
     console.error("更新全选状态失败:", error);
   }
@@ -350,13 +500,14 @@ const handleAllChange = (val: boolean) => {
 
   try {
     if (val) {
-      const allKeys = getAllKeys(treeData.value);
+      const allKeys = getAllKeys();
       treeRef.value.setCheckedKeys(allKeys);
-      updateAllNodesPower(treeData.value, true);
+      updateAllNodesPower(true);
     } else {
       treeRef.value.setCheckedKeys([]);
-      updateAllNodesPower(treeData.value, false);
+      updateAllNodesPower(false);
     }
+    updateAllCheckboxState();
   } catch (error) {
     console.error("全选/全不选操作失败:", error);
   }
@@ -397,20 +548,16 @@ watch(
       // 清空数据和状态
       treeData.value = [];
       isSelectAll.value = false;
+      clearMaps();
       if (treeRef.value) {
         treeRef.value.setCheckedKeys([]);
       }
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
-onMounted(() => {
-  // 初始加载数据
-  if (props.roleId) {
-    getTreeData();
-  }
-});
+onMounted(() => {});
 </script>
 
 <style lang="scss" scoped>
@@ -427,7 +574,6 @@ onMounted(() => {
     flex: 1;
     min-height: 0;
 
-    // 自定义 loading 样式（如果 v-loading 指令样式不生效，可以添加这个）
     :deep(.el-loading-mask) {
       background-color: rgba(255, 255, 255, 0.6);
     }
