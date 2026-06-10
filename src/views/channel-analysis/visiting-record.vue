@@ -62,7 +62,14 @@
         <el-button icon="Refresh" :loading="tableLoading" @click="resetQuery">
           重置
         </el-button>
-        <el-button type="primary" :loading="exportLoading" @click="exportExcel">
+        <el-button
+          type="primary"
+          :loading="exportLoading"
+          @click="exportExcel"
+          :disabled="
+            !menuStore.hasExactPermission('visiting-record:export')
+          "
+        >
           导出
         </el-button>
       </el-form-item>
@@ -342,7 +349,8 @@ const initDefaultParams = () => {
 // 获取项目列表
 const getProjectList = async () => {
   try {
-    const res = await assetManagementApi.getVisitProjList({ isAll: true });
+    // isAll：true获取所有项目，false获取当前用户所属项目
+    const res = await assetManagementApi.getVisitProjList({ isAll: false });
     if (res.code === 200) {
       projectList.value = res.data || [];
     }
@@ -402,7 +410,7 @@ const getTableList = async () => {
       custTel: custTel,
       visitTimeStart: day ? `${day} 00:00:00` : "",
       visitTimeEnd: day ? `${day} 23:59:59` : "",
-      isShowTel: menuStore.hasExactPermission("visiting-record:showAllTel")
+      isShowTel: menuStore.hasExactPermission("visiting-record:showAllTel"),
     };
     const res = await assetManagementApi.getVisitHis(params);
     if (res.code === 200) {
