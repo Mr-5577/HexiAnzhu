@@ -70,10 +70,10 @@
 import { ref, watch } from "vue";
 import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import BaseModal from "@/components/base/base-modal.vue";
-import type { CostCategoryBaseNode } from "@/types/cost/cost-category-type";
-import { costCategoryApi } from "@/api/cost/cost-category-api";
+import type { CostCategoryBaseNode } from "@/types/cost/master-data/cost-category-type";
+import { costCategoryApi } from "@/api/cost/master-data/cost-category-api";
 import { buildTree } from "@/utils/tree";
-import { dictionaryApi } from "@/api/cost/dictionary-api";
+import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 
 // Props
 interface Props {

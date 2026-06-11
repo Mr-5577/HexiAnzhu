@@ -3,8 +3,11 @@ import {
   ContractTypeQueryParams,
   ContractTypeSaveParams,
   ContractTypeDeleteParams,
-} from "@/types/cost/contract-category-type";
+} from "@/types/cost/master-data/contract-category-type";
 
+/** 
+ * 合同类别相关接口
+ */
 export const conTypeApi = {
   /** 获取合同类别列表 */
   getConTypeList: (data?: ContractTypeQueryParams) => {

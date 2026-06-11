@@ -139,8 +139,8 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { ElMessage, type FormInstance, type FormRules } from "element-plus";
-import type { BidDemandFormParams } from "@/types/cost/bidding-management-type";
-import { biddingManageApi } from "@/api/cost/bidding-management-api";
+import type { BidDemandFormParams } from "@/types/cost/bidding/bidding-management-type";
+import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api";
 
 interface Props {
   modelValue: boolean;

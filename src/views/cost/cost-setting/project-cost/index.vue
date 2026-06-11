@@ -87,8 +87,8 @@ import { HomeFilled, Search, OfficeBuilding } from "@element-plus/icons-vue";
 import type { ElTree } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import ProductSelectionDialog from "./product-selection-dialog.vue";
-import { projectAreaApi } from "@/api/cost/project-area-api";
-import { ProjectTreeNode } from "@/types/cost/project-area-type";
+import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
+import { ProjectTreeNode } from "@/types/cost/master-data/project-area-type.ts";
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({ name: "project-cost" });

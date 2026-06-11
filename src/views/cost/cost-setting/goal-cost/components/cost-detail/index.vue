@@ -98,11 +98,11 @@ import type { TableColumnItem } from "@/components/base/base-table.vue";
 import type {
   HCstProjectCostD,
   HCstProjectCostM,
-} from "@/types/cost/goal-cost-type.ts";
+} from "@/types/cost/cost-setting/goal-cost-type.ts";
 import AddEditDetailDialog from "./add-edit-detail-dialog.vue";
-import { goalCostApi } from "@/api/cost/goal-cost-api.ts";
-import { costCategoryApi } from "@/api/cost/cost-category-api.ts";
-import { productTypeApi } from "@/api/cost/product-type-api.ts";
+import { goalCostApi } from "@/api/cost/cost-setting/goal-cost-api.ts";
+import { costCategoryApi } from "@/api/cost/master-data/cost-category-api.ts";
+import { productTypeApi } from "@/api/cost/master-data/product-type-api.ts";
 import { formatNumberDisplay } from "@/utils/common.ts";
 
 defineOptions({ name: "cost-detail" });

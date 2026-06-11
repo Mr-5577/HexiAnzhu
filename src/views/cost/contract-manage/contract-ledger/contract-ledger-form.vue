@@ -504,10 +504,10 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
 import { ElMessage } from "element-plus";
-import { dictionaryApi } from "@/api/cost/dictionary-api";
-import { conTypeApi } from "@/api/cost/contract-category-api";
-import { supplierApi } from "@/api/cost/supplier-ledger-api";
-import { projectAreaApi } from "@/api/cost/project-area-api";
+import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
+import { conTypeApi } from "@/api/cost/master-data/contract-category-api";
+import { supplierApi } from "@/api/cost/supplier/supplier-ledger-api";
+import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 import { useRoute } from "vue-router";
 import {
   ConPropertyEnum,
@@ -518,9 +518,9 @@ import {
 } from "@/constants/contract-manage/enums";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";
-import { contractLedgerApi } from "@/api/cost/contract-ledger-api";
+import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api";
 import { commonApi } from "@/api/cost/common-api";
-import { manageunitApi } from "@/api/cost/management-unit-api";
+import { manageunitApi } from "@/api/cost/master-data/management-unit-api";
 import { buildTree } from "@/utils/tree";
 import { useUserStore } from "@/stores/user-store";
 
@@ -1041,7 +1041,7 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 16px 24px 40px;
+  padding: 16px 24px 30px;
   border-top: 1px solid #eef2f6;
   background: #ffffff;
   flex-shrink: 0;

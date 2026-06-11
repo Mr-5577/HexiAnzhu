@@ -14,9 +14,7 @@
           <el-button type="primary" icon="Refresh" @click="handleRefresh">
             刷新列表
           </el-button>
-          <el-button type="primary" icon="Plus" @click="handleUpload">
-            上传附件
-          </el-button>
+          <el-button type="primary" @click="handleUpload"> 上传附件 </el-button>
         </div>
       </template>
       <template #actions="{ row }">
@@ -45,8 +43,8 @@
 import { ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
-import { attachmentApi } from "@/api/cost/attachment-api";
-import { ContractAnnex } from "@/types/cost/attachment-type";
+import { attachmentApi } from "@/api/cost/contract-manage/attachment-api.ts";
+import { ContractAnnex } from "@/types/cost/contract-manage/attachment-type.ts";
 import AddAttachmentDialog from "./add-attachment-dialog.vue";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";

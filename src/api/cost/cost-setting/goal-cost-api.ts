@@ -4,7 +4,7 @@ import {
   HCstProjectCostDQueryParams,
   HCstProjectCostMAddEditParams,
   HCstProjectCostMQueryParams,
-} from "@/types/cost/goal-cost-type";
+} from "@/types/cost/cost-setting/goal-cost-type";
 
 export const goalCostApi = {
   /** 查询目标成本版本 */

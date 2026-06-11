@@ -47,9 +47,9 @@ import { v4 as uuidv4 } from "uuid";
 import { Plus } from "@element-plus/icons-vue";
 import EditableTable from "@/components/base/editable-table.vue";
 import type { EditableColumn } from "@/components/base/editable-table.vue";
-import type { AmountItem } from "@/types/cost/bidding-management-type";
-import { costCategoryApi } from "@/api/cost/cost-category-api";
-import { goalCostApi } from "@/api/cost/goal-cost-api";
+import type { AmountItem } from "@/types/cost/bidding/bidding-management-type";
+import { costCategoryApi } from "@/api/cost/master-data/cost-category-api";
+import { goalCostApi } from "@/api/cost/cost-setting/goal-cost-api";
 import { ElMessage } from "element-plus";
 
 // Props

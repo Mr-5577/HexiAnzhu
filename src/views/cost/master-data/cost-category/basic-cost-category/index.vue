@@ -71,11 +71,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { costCategoryApi } from "@/api/cost/cost-category-api.ts";
+import { costCategoryApi } from "@/api/cost/master-data/cost-category-api.ts";
 import type {
   CostCategoryBase,
   CostCategoryBaseNode,
-} from "@/types/cost/cost-category-type.ts";
+} from "@/types/cost/master-data/cost-category-type.ts";
 import AddEditBasicCategoryDialog from "./add-edit-basic-category-dialog.vue";
 import { buildTree } from "@/utils/tree";
 

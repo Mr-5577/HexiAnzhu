@@ -4,8 +4,10 @@ import {
   CostCategoryBaseSaveParams,
   CostCategoryProjQueryParams,
   CostCategoryProjSaveParams,
-} from "@/types/cost/cost-category-type";
-
+} from "@/types/cost/master-data/cost-category-type";
+/**
+ * 成本科目API
+ */
 export const costCategoryApi = {
   /** 查询基准成本科目列表 */
   getCostSubjectBaseList: (data: CostCategoryBaseQueryParams) => {

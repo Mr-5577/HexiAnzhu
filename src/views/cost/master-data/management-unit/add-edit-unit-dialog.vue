@@ -88,8 +88,8 @@ import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import {
   ManageUnitFormData,
   ManageUnitTreeNode,
-} from "@/types/cost/management-unit-type";
-import { manageunitApi } from "@/api/cost/management-unit-api";
+} from "@/types/cost/master-data/management-unit-type";
+import { manageunitApi } from "@/api/cost/master-data/management-unit-api";
 
 const props = defineProps<{
   modelValue: boolean;

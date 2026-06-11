@@ -113,10 +113,10 @@ import AddEditTenderDialog from "./add-edit-tender-dialog.vue";
 import type {
   BidTender,
   BidTenderQueryParams,
-} from "@/types/cost/bidding-management-type";
-import { biddingManageApi } from "@/api/cost/bidding-management-api";
-import { conTypeApi } from "@/api/cost/contract-category-api";
-import { dictionaryApi } from "@/api/cost/dictionary-api";
+} from "@/types/cost/bidding/bidding-management-type.ts";
+import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api.ts";
+import { conTypeApi } from "@/api/cost/master-data/contract-category-api.ts";
+import { dictionaryApi } from "@/api/cost/master-data/dictionary-api.ts";
 import { largeScreenApi } from "@/api/large-screen-api";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";

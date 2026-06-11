@@ -156,10 +156,10 @@ import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import type {
   HCstProjectCostM,
   HCstProjectCostMAddEditParams,
-} from "@/types/cost/goal-cost-type.ts";
-import { goalCostApi } from "@/api/cost/goal-cost-api.ts";
-import { dictionaryApi } from "@/api/cost/dictionary-api";
-import { projectAreaApi } from "@/api/cost/project-area-api";
+} from "@/types/cost/cost-setting/goal-cost-type";
+import { goalCostApi } from "@/api/cost/cost-setting/goal-cost-api";
+import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
+import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 import { commonApi } from "@/api/cost/common-api";
 
 const props = defineProps<{

@@ -15,8 +15,10 @@ import {
   SupplierSegmentDeleteParams,
   SupplierSegmentQueryParams,
   SupplierSegmentSaveParams,
-} from "@/types/cost/supplier-ledger-type";
-
+} from "@/types/cost/supplier/supplier-ledger-type";
+/**
+ * 供应商台账API
+ */
 export const supplierApi = {
   /** 查询供应商列表 */
   getSupplierList: (data: SupplierQueryParams) => {

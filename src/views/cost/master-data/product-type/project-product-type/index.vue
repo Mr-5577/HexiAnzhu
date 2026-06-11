@@ -58,10 +58,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { productTypeApi } from "@/api/cost/product-type-api";
-import type { ProductProjDetail } from "@/types/cost/product-type";
+import { productTypeApi } from "@/api/cost/master-data/product-type-api.ts";
+import type { ProductProjDetail } from "@/types/cost/master-data/product-type.ts";
 import AddEditProjectTypeDialog from "./add-edit-project-type-dialog.vue";
-import { projectAreaApi } from "@/api/cost/project-area-api";
+import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
 
 defineOptions({ name: "project-product-type" });
 

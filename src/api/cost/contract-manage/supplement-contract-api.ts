@@ -1,4 +1,5 @@
 import { http } from "@/axios/service";
+import { SupplementProcessForm } from "@/types/cost/contract-manage/supplement-contract-type";
 
 /**
  * 补充合同 相关接口
@@ -30,11 +31,11 @@ export const supplementContractApi = {
     return http.formPost("/con/addProcess/list", data);
   },
   /** 新增补充合同明细事项 */
-  addAddProcess: (data: any) => {
+  addAddProcess: (data: SupplementProcessForm) => {
     return http.post("/con/addProcess/add", data);
   },
   /** 修改补充合同明细事项 */
-  editAddProcess: (data: any) => {
+  editAddProcess: (data: SupplementProcessForm) => {
     return http.post("/con/addProcess/edit", data);
   },
   /** 删除补充合同明细事项 */

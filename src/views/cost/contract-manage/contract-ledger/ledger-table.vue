@@ -101,17 +101,17 @@ import { ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { useRouter } from "vue-router";
-import { dictionaryApi } from "@/api/cost/dictionary-api";
-import { projectAreaApi } from "@/api/cost/project-area-api";
+import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
+import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 import { largeScreenApi } from "@/api/large-screen-api";
-import { contractLedgerApi } from "@/api/cost/contract-ledger-api";
+import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api";
 import {
   ConPropertyEnum,
   PriceTypeEnum,
   ConStatusEnum,
   getLabel,
 } from "@/constants/contract-manage/enums";
-import { HConMain, HConMainQuery } from "@/types/cost/contract-ledger-type";
+import { HConMain, HConMainQuery } from "@/types/cost/contract-manage/contract-ledger-type";
 
 defineOptions({ name: "contract-ledger-table" });
 

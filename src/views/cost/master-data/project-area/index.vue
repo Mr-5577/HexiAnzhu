@@ -127,8 +127,8 @@ import { ElMessage, type ElTree } from "element-plus";
 import VersionManagement from "./components/version-management/index.vue";
 import BuildingMetrics from "./components/building-metrics/index.vue";
 import AreaDetail from "./components/area-detail/index.vue";
-import { projectAreaApi } from "@/api/cost/project-area-api";
-import { ProjectTreeNode } from "@/types/cost/project-area-type";
+import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
+import { ProjectTreeNode } from "@/types/cost/master-data/project-area-type.ts";
 
 defineOptions({ name: "project-area" });
 

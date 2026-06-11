@@ -283,9 +283,9 @@
 import { ref, onMounted, reactive, computed, watch } from "vue";
 import { ElMessage } from "element-plus";
 import { phoneRegex, emailRegex, uscRegex, idCardRegex } from "@/utils/regex";
-import { supTypeApi } from "@/api/cost/supplier-category-api";
-import type { SupplierTypeTreeNode } from "@/types/cost/supplier-category-type";
-import { supplierApi } from "@/api/cost/supplier-ledger-api";
+import { supTypeApi } from "@/api/cost/master-data/supplier-category-api";
+import type { SupplierTypeTreeNode } from "@/types/cost/master-data/supplier-category-type";
+import { supplierApi } from "@/api/cost/supplier/supplier-ledger-api";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";
 import { buildTree } from "@/utils/tree";

@@ -1,5 +1,7 @@
 import { http } from "@/axios/service";
-
+/**
+ * 公共接口
+ */
 export const commonApi = {
   /** 上传文件到临时目录 */
   uploadFile: (data: { file: File }) => {

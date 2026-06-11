@@ -7,8 +7,10 @@ import {
   ProjectAreaVersionSaveParams,
   ProjectAreaDetailQueryParams,
   ProjectAreaDetail,
-} from "@/types/cost/project-area-type";
-
+} from "@/types/cost/master-data/project-area-type";
+/**
+ * 项目面积
+ */
 export const projectAreaApi = {
   /** 获取公司-项目 树形结构 */
   getMguProjList: () => {

@@ -77,16 +77,16 @@
 import { ref, watch } from "vue";
 import { ElMessage } from "element-plus";
 import { buildTree } from "@/utils/tree";
-import { supTypeApi } from "@/api/cost/supplier-category-api";
-import { supplierApi } from "@/api/cost/supplier-ledger-api";
+import { supTypeApi } from "@/api/cost/master-data/supplier-category-api";
+import { supplierApi } from "@/api/cost/supplier/supplier-ledger-api";
 import type {
   Supplier,
   SupplierQueryParams,
-} from "@/types/cost/supplier-ledger-type";
+} from "@/types/cost/supplier/supplier-ledger-type";
 import type {
   SupplierTypeTreeNode,
   SupplierType,
-} from "@/types/cost/supplier-category-type";
+} from "@/types/cost/master-data/supplier-category-type";
 
 // Props
 interface Props {

@@ -71,11 +71,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { productTypeApi } from "@/api/cost/product-type-api";
+import { productTypeApi } from "@/api/cost/master-data/product-type-api.ts";
 import type {
   ProductBase,
   ProductBaseTreeNode,
-} from "@/types/cost/product-type";
+} from "@/types/cost/master-data/product-type.ts";
 import AddEditBasicTypeDialog from "./add-edit-basic-type-dialog.vue";
 import { buildTree } from "@/utils/tree";
 

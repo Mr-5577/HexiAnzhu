@@ -71,10 +71,10 @@ import { onMounted, ref } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import AddEditUnitDialog from "./add-edit-unit-dialog.vue";
-import { manageunitApi } from "@/api/cost/management-unit-api.ts";
+import { manageunitApi } from "@/api/cost/master-data/management-unit-api.ts";
 import { buildTree } from "@/utils/tree";
-import { ManageUnitTreeNode } from "@/types/cost/management-unit-type.ts";
-import { dictionaryApi } from "@/api/cost/dictionary-api.ts";
+import { ManageUnitTreeNode } from "@/types/cost/master-data/management-unit-type.ts";
+import { dictionaryApi } from "@/api/cost/master-data/dictionary-api.ts";
 
 defineOptions({ name: "supplier-category" });
 

@@ -60,8 +60,8 @@ import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import type {
   SupplierType,
   SupplierTypeSaveParams,
-} from "@/types/cost/supplier-category-type";
-import { supTypeApi } from "@/api/cost/supplier-category-api";
+} from "@/types/cost/master-data/supplier-category-type";
+import { supTypeApi } from "@/api/cost/master-data/supplier-category-api";
 
 const props = defineProps<{
   modelValue: boolean;

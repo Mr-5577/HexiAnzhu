@@ -4,8 +4,10 @@ import {
   ProductBaseSaveParams,
   ProductProjQueryParams,
   ProductProjSaveParams,
-} from "@/types/cost/product-type";
-
+} from "@/types/cost/master-data/product-type";
+/**
+ * 产品类型API
+ */
 export const productTypeApi = {
   /** 查询基础产品类型列表 */
   getProductBaseList: (data: ProductBaseQueryParams) => {

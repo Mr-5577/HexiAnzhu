@@ -109,17 +109,17 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { Search, Folder } from "@element-plus/icons-vue";
 import { useRouter } from "vue-router";
 import { buildTree } from "@/utils/tree";
-import { ContractTypeTreeNode } from "@/types/cost/contract-category-type";
-import { supTypeApi } from "@/api/cost/supplier-category-api";
+import { ContractTypeTreeNode } from "@/types/cost/master-data/contract-category-type";
+import { supTypeApi } from "@/api/cost/master-data/supplier-category-api";
 import type {
   SupplierType,
   SupplierTypeTreeNode,
-} from "@/types/cost/supplier-category-type";
-import { supplierApi } from "@/api/cost/supplier-ledger-api";
+} from "@/types/cost/master-data/supplier-category-type";
+import { supplierApi } from "@/api/cost/supplier/supplier-ledger-api";
 import type {
   Supplier,
   SupplierQueryParams,
-} from "@/types/cost/supplier-ledger-type";
+} from "@/types/cost/supplier/supplier-ledger-type";
 
 const router = useRouter();
 

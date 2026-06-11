@@ -167,8 +167,8 @@ import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import type {
   HCstProjectCostDAddEditParams,
   HCstProjectCostM,
-} from "@/types/cost/goal-cost-type";
-import { goalCostApi } from "@/api/cost/goal-cost-api.ts";
+} from "@/types/cost/cost-setting/goal-cost-type";
+import { goalCostApi } from "@/api/cost/cost-setting/goal-cost-api";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";
 

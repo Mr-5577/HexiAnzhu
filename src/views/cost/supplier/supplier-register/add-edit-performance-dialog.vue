@@ -100,8 +100,8 @@ import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import type {
   SupplierPerf,
   SupplierPerfSaveParams,
-} from "@/types/cost/supplier-ledger-type";
-import { supplierApi } from "@/api/cost/supplier-ledger-api";
+} from "@/types/cost/supplier/supplier-ledger-type";
+import { supplierApi } from "@/api/cost/supplier/supplier-ledger-api";
 
 // Props
 interface Props {

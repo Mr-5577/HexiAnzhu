@@ -7,8 +7,10 @@ import {
   DictItemDeleteParams,
   DictItemSaveParams,
   DictItemsByGroupCodeParams,
-} from "@/types/cost/dict-type";
-
+} from "@/types/cost/master-data/dict-type";
+/**
+ * 数据字典API
+ */
 export const dictionaryApi = {
   /** 获取字典组数据 */
   getDicMList: (data: DictGroupQueryParams) => {

@@ -1,117 +1,22 @@
-<!-- 合同详情 -->
 <template>
   <div class="contract-ledger-detail">
     <el-container>
-      <!-- 左侧Tab导航 -->
+      <!-- 左侧菜单切换 -->
       <el-aside width="220px" class="tab-sidebar">
-        <el-menu
-          :default-active="activeTab"
-          @select="handleTabChange"
-          class="vertical-tabs"
-        >
-          <!-- <el-sub-menu index="basicInfo">
-            <template #title>
-              <span>基本信息</span>
-            </template>
-            <el-menu-item index="basic">
-              <el-icon><Document /></el-icon>
-              <span>基本信息</span>
-            </el-menu-item>
-            <el-menu-item index="attachment">
-              <el-icon><Paperclip /></el-icon>
-              <span>合同附件</span>
-            </el-menu-item>
-          </el-sub-menu> -->
-
-          <el-menu-item index="basic">
-            <el-icon><Document /></el-icon>
-            <span>基本信息</span>
-          </el-menu-item>
-          <el-menu-item index="attachment">
-            <el-icon><Paperclip /></el-icon>
-            <span>合同附件</span>
-          </el-menu-item>
-
-          <!-- <el-menu-item index="contractApproval">
-              <el-icon><Checked /></el-icon>
-              <span>合同审批</span>
-            </el-menu-item> -->
-          <el-menu-item index="supplementContract">
-            <el-icon><Calendar /></el-icon>
-            <span>补充合同</span>
-          </el-menu-item>
-
-          <el-menu-item index="payPlan">
-            <el-icon><Calendar /></el-icon>
-            <span>应付计划</span>
-          </el-menu-item>
-          <el-menu-item index="costAllocation">
-            <el-icon><DataAnalysis /></el-icon>
-            <span>成本分摊</span>
-          </el-menu-item>
-
-          <el-menu-item index="disputeApproval">
-            <el-icon><Warning /></el-icon>
-            <span>争议审批</span>
-          </el-menu-item>
-          <el-menu-item index="engineeringPrice">
-            <el-icon><PriceTag /></el-icon>
-            <span>工程核价</span>
-          </el-menu-item>
-          <el-menu-item index="quantityAcceptance">
-            <el-icon><ScaleToOriginal /></el-icon>
-            <span>收方</span>
-          </el-menu-item>
-
-          <el-menu-item index="changeOrder">
-            <el-icon><DocumentAdd /></el-icon>
-            <span>变更指令</span>
-          </el-menu-item>
-          <el-menu-item index="visaManagement">
-            <el-icon><Postcard /></el-icon>
-            <span>签证管理</span>
-          </el-menu-item>
-
-          <el-menu-item index="documents">
-            <el-icon><Message /></el-icon>
-            <span>收文发文</span>
-          </el-menu-item>
-
-          <el-menu-item index="preSettlementAdjust">
-            <el-icon><DataLine /></el-icon>
-            <span>预结算调整</span>
-          </el-menu-item>
-          <el-menu-item index="contractSettlement">
-            <el-icon><Finished /></el-icon>
-            <span>合同结算</span>
-          </el-menu-item>
-          <el-menu-item index="contractTermination">
-            <el-icon><CircleClose /></el-icon>
-            <span>合同解除</span>
-          </el-menu-item>
-
-          <el-menu-item index="outputDeclaration">
-            <el-icon><Upload /></el-icon>
-            <span>产值申报</span>
-          </el-menu-item>
-
-          <el-menu-item index="paymentAdjust">
-            <el-icon><Money /></el-icon>
-            <span>款项调整</span>
-          </el-menu-item>
-          <el-menu-item index="performanceBond">
-            <el-icon><Lock /></el-icon>
-            <span>履约保证金</span>
-          </el-menu-item>
-
-          <el-menu-item index="paymentApplication">
-            <el-icon><Money /></el-icon>
-            <span>付款申请</span>
-          </el-menu-item>
-        </el-menu>
+        <div class="menu-scroll-wrapper">
+          <div
+            v-for="item in menuItems"
+            :key="item.index"
+            class="menu-item"
+            :class="{ 'is-active': activeTab === item.index }"
+            @click="handleTabChange(item.index)"
+          >
+            <el-icon><component :is="item.icon" /></el-icon>
+            <span>{{ item.label }}</span>
+          </div>
+        </div>
       </el-aside>
 
-      <!-- 右侧内容区 -->
       <el-main class="content-area">
         <keep-alive>
           <component :is="currentComponent" :conId="conId" />
@@ -122,47 +27,146 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import {
+  ref,
+  computed,
+  watch,
+  markRaw,
+  type Component,
+  defineAsyncComponent,
+} from "vue";
 import { useRoute } from "vue-router";
-import BasicInfo from "./contract-ledger-form.vue";
-import Attachment from "./attachment/index.vue";
-import ContractApproval from "./contract-approval/index.vue";
-import SupplementContract from "./supplement-contract/index.vue";
-import PayPlan from "./pay-plan/index.vue";
+import * as Icons from "@element-plus/icons-vue";
+
+// 菜单配置
+const menuItems = [
+  {
+    index: "basic",
+    icon: markRaw(Icons.Document),
+    label: "基本信息",
+    component: () => import("./contract-ledger-form.vue"),
+  },
+  {
+    index: "attachment",
+    icon: markRaw(Icons.Paperclip),
+    label: "合同附件",
+    component: () => import("./attachment/index.vue"),
+  },
+  {
+    index: "supplementContract",
+    icon: markRaw(Icons.Calendar),
+    label: "补充合同",
+    component: () => import("./supplement-contract/index.vue"),
+  },
+  {
+    index: "payPlan",
+    icon: markRaw(Icons.List),
+    label: "应付计划",
+    component: () => import("./pay-plan/index.vue"),
+  },
+  {
+    index: "costAllocation",
+    icon: markRaw(Icons.DataAnalysis),
+    label: "成本分摊",
+    component: () => import("./cost-allocation/index.vue"),
+  },
+  {
+    index: "engineeringPrice",
+    icon: markRaw(Icons.PriceTag),
+    label: "工程核价",
+    component: () => import("./engineering-price/index.vue"),
+  },
+  {
+    index: "changeOrder",
+    icon: markRaw(Icons.DocumentAdd),
+    label: "变更指令",
+    component: () => import("./change-order/index.vue"),
+  },
+  {
+    index: "visaManagement",
+    icon: markRaw(Icons.Postcard),
+    label: "签证管理",
+    component: () => import("./visa-management/index.vue"),
+  },
+  {
+    index: "documents",
+    icon: markRaw(Icons.Message),
+    label: "收文发文",
+    component: () => import("./documents/index.vue"),
+  },
+  {
+    index: "disputeApproval",
+    icon: markRaw(Icons.Warning),
+    label: "争议审批",
+    component: () => import("./disput-approval/index.vue"),
+  },
+  {
+    index: "contractSettlement",
+    icon: markRaw(Icons.Finished),
+    label: "合同结算",
+    component: () => import("./contract-settlement/index.vue"),
+  },
+  {
+    index: "contractTermination",
+    icon: markRaw(Icons.CircleClose),
+    label: "合同解除",
+    component: () => import("./contract-termination/index.vue"),
+  },
+  {
+    index: "outputDeclaration",
+    icon: markRaw(Icons.Upload),
+    label: "产值申报",
+    component: () => import("./output-declaration/index.vue"),
+  },
+  {
+    index: "paymentAdjust",
+    icon: markRaw(Icons.Coin),
+    label: "款项调整",
+    component: () => import("./payment-adjust/index.vue"),
+  },
+  {
+    index: "paymentApplication",
+    icon: markRaw(Icons.Money),
+    label: "付款申请",
+    component: () => import("./payment-application/index.vue"),
+  },
+  {
+    index: "performanceBond",
+    icon: markRaw(Icons.Lock),
+    label: "履约保证金",
+    component: () => import("./performance-bond/index.vue"),
+  },
+];
+
+// 动态组件映射--懒加载
+const componentMap = new Map<string, Component>();
+menuItems.forEach((item) => {
+  componentMap.set(item.index, defineAsyncComponent(item.component));
+});
 
 const route = useRoute();
-const activeTab = ref("basic");
-const conId = ref<number | null>(null); // 合同台账ID
+const activeTab = ref("basic"); // 默认显示基本信息
+const conId = ref<number | null>(null); // 合同ID
 
-const tabComponents = {
-  basic: BasicInfo,
-  attachment: Attachment, // 合同附件
-  contractApproval: ContractApproval, // 合同审批
-  supplementContract: SupplementContract, // 补充合同
-  payPlan: PayPlan, // 应付计划
-};
+const currentComponent = computed(() => componentMap.get(activeTab.value));
 
-const currentComponent = computed(() => tabComponents[activeTab.value]);
-
-const handleTabChange = (tab) => {
+const handleTabChange = (tab: string) => {
   activeTab.value = tab;
 };
 
 const syncRouteState = () => {
-  const idValue = route.query.conId ? Number(route.query.conId) : null;
-  conId.value = idValue || null;
+  conId.value = route.query.conId ? Number(route.query.conId) : null;
 };
 
 watch(() => route.query.conId, syncRouteState, { immediate: true });
 </script>
-
 <style scoped lang="scss">
 .contract-ledger-detail {
   height: 100%;
   background: #f0f2f6;
+
   :deep(.el-container) {
     height: 100%;
-    display: flex;
   }
 
   .tab-sidebar {
@@ -170,80 +174,60 @@ watch(() => route.query.conId, syncRouteState, { immediate: true });
     border-right: 1px solid #e6e9f0;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.02);
     overflow: hidden;
-    padding: 10px 0;
-    box-sizing: border-box;
-    :deep(.vertical-tabs) {
+
+    .menu-scroll-wrapper {
       height: 100%;
-      border-right: none;
-      background: transparent;
       overflow-y: auto;
-      // 菜单项样式优化
-      .el-sub-menu {
-        .el-sub-menu__title {
-          height: 46px !important;
-          line-height: 46px !important;
-        }
+      padding: 10px 0;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      height: 46px;
+      padding: 0 20px;
+      margin: 4px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: #606266;
+
+      .el-icon {
+        margin-right: 12px;
+        font-size: 18px;
       }
-      .el-menu-item {
-        height: 46px;
-        line-height: 46px;
-        // margin: 4px 12px;
-        border-radius: 10px;
-        transition: all 0.2s ease;
 
-        &:hover {
-          background: #f0f2f6;
-          color: #1e6fff;
-        }
-
-        &.is-active {
-          background: #eef3ff;
-          color: #1e6fff;
-          font-weight: 500;
-          position: relative;
-
-          // &::before {
-          //   content: "";
-          //   position: absolute;
-          //   left: 8px;
-          //   top: 12px;
-          //   bottom: 12px;
-          //   width: 3px;
-          //   background: #1e6fff;
-          //   border-radius: 0 2px 2px 0;
-          // }
-        }
-
-        .el-icon {
-          margin-right: 12px;
-          font-size: 18px;
-        }
-
-        span {
-          font-size: 14px;
-        }
+      span {
+        font-size: 14px;
       }
-      // 不可点击时的透明度
-      .el-menu-item.is-disabled {
-        opacity: 0.45;
+
+      &:hover {
+        background: #f0f2f6;
+        color: #1e6fff;
+      }
+
+      &.is-active {
+        background: #eef3ff;
+        color: #1e6fff;
+        font-weight: 500;
       }
     }
   }
+
   .content-area {
     height: 100%;
     background: #f0f2f6;
     padding: 10px;
-    box-sizing: border-box;
-    //   overflow-y: auto;
+    overflow-y: auto;
   }
 }
 
-// 响应式：窄屏时左侧菜单变窄
+// 响应式适配
 @media (max-width: 768px) {
   .tab-sidebar {
     width: 72px !important;
 
-    .el-menu-item {
+    .menu-item {
       justify-content: center;
       padding: 0 !important;
 

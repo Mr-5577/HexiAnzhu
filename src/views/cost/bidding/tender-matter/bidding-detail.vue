@@ -75,9 +75,9 @@ import ReferencePrice from "./components/reference-price/index.vue";
 import AwardApproval from "./components/award-approval/index.vue";
 import BidBondPay from "./components/bid-bond-pay/index.vue";
 import BidBondRefund from "./components/bid-bond-refund/index.vue";
-import { biddingManageApi } from "@/api/cost/bidding-management-api";
+import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api.ts";
 import { largeScreenApi } from "@/api/large-screen-api";
-import { BidTenderFormParams } from "@/types/cost/bidding-management-type";
+import { BidTenderFormParams } from "@/types/cost/bidding/bidding-management-type.ts";
 
 defineOptions({ name: "bidding-detail" });
 type TenderDetailData = {

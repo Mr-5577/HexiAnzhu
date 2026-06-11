@@ -1,6 +1,6 @@
 import { ref, reactive, onMounted } from "vue";
-import { dictionaryApi } from "@/api/cost/dictionary-api";
-import type { DictItem, DictItemTreeNode } from "@/types/cost/dict-type";
+import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
+import type { DictItem, DictItemTreeNode } from "@/types/cost/master-data/dict-type";
 import { buildTree } from "@/utils/tree";
 
 export interface UseDictOptions {

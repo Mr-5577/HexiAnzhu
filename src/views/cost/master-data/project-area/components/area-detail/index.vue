@@ -38,7 +38,7 @@ import { ref, watch, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import ImportIndicatorDialog from "./import-indicator-dialog.vue";
 import { TableColumnItem } from "@/components/base/base-table.vue";
-import { projectAreaApi } from "@/api/cost/project-area-api";
+import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
 
 defineOptions({ name: "area-detail" });
 

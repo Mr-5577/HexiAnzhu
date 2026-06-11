@@ -24,7 +24,7 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import BasicInfo from "../basic-info.vue";
-import { BidTenderFormParams } from "@/types/cost/bidding-management-type";
+import { BidTenderFormParams } from "@/types/cost/bidding/bidding-management-type.ts";
 
 defineOptions({ name: "overview" });
 

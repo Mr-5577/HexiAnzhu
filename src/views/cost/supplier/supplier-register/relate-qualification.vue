@@ -41,9 +41,9 @@
 <script setup lang="ts">
 import { ref, watch, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import type { SupplierAnnex } from "@/types/cost/supplier-ledger-type";
+import type { SupplierAnnex } from "@/types/cost/supplier/supplier-ledger-type.ts";
 import AddEditAnnexDialog from "./add-edit-annex-dialog.vue";
-import { supplierApi } from "@/api/cost/supplier-ledger-api";
+import { supplierApi } from "@/api/cost/supplier/supplier-ledger-api.ts";
 
 defineOptions({ name: "relate-qualification" });
 

@@ -64,8 +64,8 @@
 import { onMounted, ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
-import type { HCstProjectCostM } from "@/types/cost/goal-cost-type.ts";
-import { goalCostApi } from "@/api/cost/goal-cost-api.ts";
+import type { HCstProjectCostM } from "@/types/cost/cost-setting/goal-cost-type.ts";
+import { goalCostApi } from "@/api/cost/cost-setting/goal-cost-api.ts";
 import AddEditVersionDialog from "./add-edit-version-dialog.vue";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";

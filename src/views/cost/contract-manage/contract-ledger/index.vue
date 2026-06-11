@@ -21,7 +21,7 @@
 import { onMounted, ref } from "vue";
 import UrbanProjectTree from "@/components/business/urban-project-tree.vue";
 import LedgerTable from "./ledger-table.vue";
-import { ProjectTreeNode } from "@/types/cost/project-area-type.ts";
+import { ProjectTreeNode } from "@/types/cost/master-data/project-area-type.ts";
 
 defineOptions({ name: "contract-ledger" });
 

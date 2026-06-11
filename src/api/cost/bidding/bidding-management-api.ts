@@ -9,8 +9,10 @@ import type {
   BidTenderDeleteParams,
   BidTenderQueryParams,
   BidTenderSaveParams,
-} from "@/types/cost/bidding-management-type";
-
+} from "@/types/cost/bidding/bidding-management-type";
+/**
+ * 招标管理API
+ */
 export const biddingManageApi = {
   /** 查询招标事项列表 */
   getTenderList: (data: BidTenderQueryParams) => {

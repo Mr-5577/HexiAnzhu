@@ -1,4 +1,4 @@
-import { ContractType } from "./../types/cost/contract-category-type";
+import { ContractType } from "../types/cost/master-data/contract-category-type";
 /**
  * 数据字典类型映射
  * 前端类型 => 后端参数类型
@@ -36,6 +36,10 @@ export const dictMapping = {
   acctProj: "ACCT_PROJ",
   /** 附件类型 */
   annexType: "ANNEX_TYPE",
+  /** 无效成本原因 */
+  invalidCostReason: "INVALID_COST_REASON",
+  /** 变更原因原因 */
+  changeReason: "CHANGE_REASON",
 } as const;
 
 // 导出类型，用于类型提示

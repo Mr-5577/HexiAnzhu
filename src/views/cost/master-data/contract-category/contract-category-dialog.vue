@@ -80,8 +80,8 @@ import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import type {
   ContractType,
   ContractTypeSaveParams,
-} from "@/types/cost/contract-category-type";
-import { conTypeApi } from "@/api/cost/contract-category-api";
+} from "@/types/cost/master-data/contract-category-type";
+import { conTypeApi } from "@/api/cost/master-data/contract-category-api";
 
 const props = defineProps<{
   modelValue: boolean;

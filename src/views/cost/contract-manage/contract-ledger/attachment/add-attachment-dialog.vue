@@ -53,7 +53,7 @@
 import { ref, watch } from "vue";
 import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import { FileSourceEnum } from "@/constants/contract-manage/enums";
-import { attachmentApi } from "@/api/cost/attachment-api";
+import { attachmentApi } from "@/api/cost/contract-manage/attachment-api";
 import BaseUpload from "@/components/base/base-upload.vue";
 
 const props = defineProps<{

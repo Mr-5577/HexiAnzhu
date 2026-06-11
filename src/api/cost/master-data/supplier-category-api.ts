@@ -3,7 +3,7 @@ import {
   SupplierTypeQueryParams,
   SupplierTypeSaveParams,
   SupplierTypeDeleteParams,
-} from "@/types/cost/supplier-category-type";
+} from "@/types/cost/master-data/supplier-category-type";
 
 /**
  * 供应商类别API

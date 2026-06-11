@@ -36,7 +36,7 @@ import { ref, onMounted } from "vue";
 import UrbanProjectTree from "@/components/business/urban-project-tree.vue";
 import CostVersion from "./components/cost-version/index.vue";
 import CostDetail from "./components/cost-detail/index.vue";
-import { ProjectTreeNode } from "@/types/cost/project-area-type";
+import { ProjectTreeNode } from "@/types/cost/master-data/project-area-type.ts";
 
 defineOptions({ name: "goal-cost" });
 

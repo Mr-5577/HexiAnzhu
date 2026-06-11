@@ -1,5 +1,5 @@
 import { http } from "@/axios/service";
-import { ContractAnnexFormData } from "@/types/cost/attachment-type";
+import { ContractAnnexFormData } from "@/types/cost/contract-manage/attachment-type";
 
 /**
  * 合同附件相关接口

@@ -102,9 +102,9 @@ import type { TableColumnItem } from "@/components/base/base-table.vue";
 import type {
   ProjectAreaVersion,
   VersionTypeOption,
-} from "@/types/cost/project-area-type";
+} from "@/types/cost/master-data/project-area-type.ts";
 import AddEditVersionDialog from "./add-edit-version-dialog.vue";
-import { projectAreaApi } from "@/api/cost/project-area-api";
+import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
 import AreaSetting from "./area-setting.vue";
 
 defineOptions({ name: "version-management" });

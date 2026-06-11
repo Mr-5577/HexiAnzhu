@@ -109,10 +109,10 @@ import AddEditDemandDialog from "./add-edit-demand-dialog.vue";
 import type {
   BidDemandQueryParams,
   BidDemand,
-} from "@/types/cost/bidding-management-type";
-import { biddingManageApi } from "@/api/cost/bidding-management-api";
-import { dictionaryApi } from "@/api/cost/dictionary-api";
-import { projectAreaApi } from "@/api/cost/project-area-api";
+} from "@/types/cost/bidding/bidding-management-type.ts";
+import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api.ts";
+import { dictionaryApi } from "@/api/cost/master-data/dictionary-api.ts";
+import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
 import { largeScreenApi } from "@/api/large-screen-api";
 
 defineOptions({ name: "demand-table" });

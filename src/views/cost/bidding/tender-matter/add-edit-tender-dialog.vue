@@ -269,9 +269,9 @@ import type {
   BidTender,
   BidTenderFormParams,
   BidTenderSaveParams,
-} from "@/types/cost/bidding-management-type";
-import { biddingManageApi } from "@/api/cost/bidding-management-api";
-import { projectAreaApi } from "@/api/cost/project-area-api";
+} from "@/types/cost/bidding/bidding-management-type";
+import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api";
+import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 
 // ==================== Props & Emits ====================
 interface Props {

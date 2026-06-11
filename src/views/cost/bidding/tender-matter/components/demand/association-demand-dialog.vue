@@ -34,8 +34,8 @@ import type { TableColumnItem } from "@/components/base/base-table.vue";
 import type {
   BidDemand,
   BidDemandQueryParams,
-} from "@/types/cost/bidding-management-type";
-import { biddingManageApi } from "@/api/cost/bidding-management-api";
+} from "@/types/cost/bidding/bidding-management-type";
+import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api";
 
 interface Props {
   /** 弹窗显示状态 */

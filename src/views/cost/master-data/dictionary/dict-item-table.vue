@@ -74,12 +74,12 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { dictionaryApi } from "@/api/cost/dictionary-api";
+import { dictionaryApi } from "@/api/cost/master-data/dictionary-api.ts";
 import type {
   DictItem,
   DictGroupTreeNode,
   DictItemTreeNode,
-} from "@/types/cost/dict-type";
+} from "@/types/cost/master-data/dict-type.ts";
 import AddEditItemDialog from "./add-edit-item-dialog.vue";
 import { buildTree } from "@/utils/tree";
 

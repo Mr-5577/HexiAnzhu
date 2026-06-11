@@ -2,7 +2,7 @@ import { http } from "@/axios/service";
 import {
   ManageUnitFormData,
   ManageUnitQueryParams,
-} from "@/types/cost/management-unit-type";
+} from "@/types/cost/master-data/management-unit-type";
 
 /**
  * 管理单元API

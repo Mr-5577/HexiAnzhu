@@ -1,5 +1,5 @@
 import { http } from "@/axios/service";
-import { HConMainQuery, HConMainSave } from "@/types/cost/contract-ledger-type";
+import { HConMainQuery, HConMainSave } from "@/types/cost/contract-manage/contract-ledger-type";
 
 /**
  * 合同台账相关接口

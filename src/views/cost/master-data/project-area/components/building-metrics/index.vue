@@ -73,9 +73,9 @@
 import { ref, onMounted, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
-import type { ProjectBuilding } from "@/types/cost/project-area-type";
+import type { ProjectBuilding } from "@/types/cost/master-data/project-area-type.ts";
 import AddEditBuildingDialog from "./add-edit-building-dialog.vue";
-import { projectAreaApi } from "@/api/cost/project-area-api";
+import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
 
 defineOptions({ name: "building-metrics" });
 

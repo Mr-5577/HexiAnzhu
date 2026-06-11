@@ -39,7 +39,9 @@
         <el-button type="danger" link @click="handleDelete(row)">
           删除
         </el-button>
-        <el-button type="primary" link> 补充合同详情 </el-button>
+        <el-button type="primary" link @click="handleDetail(row)">
+          详情
+        </el-button>
       </template>
     </base-table>
   </div>
@@ -50,8 +52,8 @@ import { ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { useRouter } from "vue-router";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
-import { supplementContractApi } from "@/api/cost/supplement-contract-api";
-import { SupplementContract } from "@/types/cost/supplement-contract-type";
+import { supplementContractApi } from "@/api/cost/contract-manage/supplement-contract-api";
+import { SupplementContract } from "@/types/cost/contract-manage/supplement-contract-type";
 import {
   ConPropertyEnum,
   PriceTypeEnum,
@@ -160,6 +162,8 @@ const handleDelete = (row) => {
     })
     .catch(() => {});
 };
+const handleDetail = (row) => {};
+
 watch(
   () => props.conId,
   (val) => {

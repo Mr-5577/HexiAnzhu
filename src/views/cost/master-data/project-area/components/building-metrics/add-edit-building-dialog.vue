@@ -41,8 +41,8 @@ import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import type {
   ProjectBuilding,
   ProjectBuildingSaveParams,
-} from "@/types/cost/project-area-type";
-import { projectAreaApi } from "@/api/cost/project-area-api";
+} from "@/types/cost/master-data/project-area-type";
+import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 
 const props = defineProps<{
   modelValue: boolean;

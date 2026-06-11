@@ -47,10 +47,23 @@ export const FileSourceEnum = [
   { value: 1, label: "审批流程" },
   { value: 2, label: "手工上传" },
 ] as const;
+
 // 补充合同类型
 export const AddTypeEnum = [
   { value: 1, label: "变更转补充" },
   { value: 2, label: "普通补充合同" },
+] as const;
+
+// 签证类型
+export const VisaTypeEnum = [
+  { value: 1, label: "签证" },
+  { value: 2, label: "反签证" },
+] as const;
+
+// 变更类型
+export const ChangeTypeEnum = [
+  { value: 1, label: "工程指令" },
+  { value: 2, label: "设计变更" },
 ] as const;
 
 // 辅助函数：根据value获取label

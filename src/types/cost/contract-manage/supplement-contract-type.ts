@@ -114,41 +114,7 @@ export interface SupplementContractExt {
   /** 删除标识 */
   isDel: boolean;
 }
-/**
- * 补充合同明细事项 对应数据库表: h_con_add_process
- */
-export interface SupplementContractProcess {
-  /** 主键ID */
-  id: number;
-  /** 单据ID */
-  conBillId?: number;
-  /** 签证ID */
-  visaId?: number;
-  /** 事项名称 */
-  processName?: string;
-  /** 事项金额（含税） */
-  processAmt?: number;
-  /** 事项金额（不含税） */
-  processExclAmt?: number;
-  /** 签证申请人ID */
-  visaApplyId?: number;
-  /** 签证申请人姓名 */
-  visaApplyName?: string;
-  /** 签证申请日期 */
-  visaApplyDate?: string; // datetime格式
-  /** 备注 */
-  remark?: string;
-  /** 创建人ID */
-  createId: number;
-  /** 创建时间 */
-  createDate: string;
-  /** 更新人ID */
-  operId?: number;
-  /** 更新时间 */
-  operDate?: string;
-  /** 删除标识 */
-  isDel: boolean;
-}
+
 /**
  * 新增/编辑补充合同 - 表单数据
  */
@@ -207,6 +173,64 @@ export interface SupplementContractFormData {
   supCmanTel?: string;
   /** 供应商联系人职务 */
   supCmanJob?: string;
+  /** 备注 */
+  remark?: string;
+}
+
+/**
+ * 补充合同明细事项 对应数据库表: h_con_add_process
+ */
+export interface SupplementContractProcess {
+  /** 主键ID */
+  id: number;
+  /** 单据ID */
+  conBillId?: number;
+  /** 签证ID */
+  visaId?: number;
+  /** 事项名称 */
+  processName?: string;
+  /** 事项金额（含税） */
+  processAmt?: number;
+  /** 事项金额（不含税） */
+  processExclAmt?: number;
+  /** 签证申请人ID */
+  visaApplyId?: number;
+  /** 签证申请人姓名 */
+  visaApplyName?: string;
+  /** 签证申请日期 */
+  visaApplyDate?: string; // datetime格式
+  /** 备注 */
+  remark?: string;
+  /** 创建人ID */
+  createId: number;
+  /** 创建时间 */
+  createDate: string;
+  /** 更新人ID */
+  operId?: number;
+  /** 更新时间 */
+  operDate?: string;
+  /** 删除标识 */
+  isDel: boolean;
+}
+
+/** 新增/编辑 补充合同事项明细 */
+export interface SupplementProcessForm {
+  /** 主键ID（编辑时必填） */
+  id?: number;
+  /** 单据ID */
+  conBillId?: number;
+  /** 签证ID */
+  visaId?: number;
+  /** 事项名称 */
+  processName?: string;
+  /** 事项金额（含税） */
+  processAmt?: number | string;
+  /** 事项金额（不含税） */
+  processExclAmt?: number | string;
+  /** 签证申请人ID */
+  visaApplyId?: number;
+  /** 签证申请日期 */
+  visaApplyDate?: string;
   /** 备注 */
   remark?: string;
 }

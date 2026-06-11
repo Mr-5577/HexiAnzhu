@@ -73,11 +73,11 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
-import { biddingManageApi } from "@/api/cost/bidding-management-api";
+import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api";
 import { largeScreenApi } from "@/api/large-screen-api";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { BidBondRecvBill } from "@/types/cost/bidding-management-type";
+import { BidBondRecvBill } from "@/types/cost/bidding/bidding-management-type";
 
 defineOptions({ name: "bid-bond-pay" });
 
