@@ -31,7 +31,8 @@ export const ManageTypeEnum = [
 // 付款方式
 export const PayTypeEnum = [
   { value: 1, label: "按进度支付" },
-  { value: 2, label: "按节点支付" },
+  { value: 2, label: "按材料到货支付" },
+  { value: 3, label: "按节点支付" },
 ] as const;
 
 // 印章类型
@@ -65,6 +66,7 @@ export const ChangeTypeEnum = [
   { value: 1, label: "工程指令" },
   { value: 2, label: "设计变更" },
 ] as const;
+
 
 // 辅助函数：根据value获取label
 export const getLabel = <T extends { value: number | string; label: string }>(

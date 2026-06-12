@@ -53,28 +53,16 @@ const menuItems = [
     component: () => import("./attachment/index.vue"),
   },
   {
+    index: "paymentAccount",
+    icon: markRaw(Icons.CreditCard),
+    label: "收款账号",
+    component: () => import("./payment-account/index.vue"),
+  },
+  {
     index: "supplementContract",
     icon: markRaw(Icons.Calendar),
     label: "补充合同",
     component: () => import("./supplement-contract/index.vue"),
-  },
-  {
-    index: "payPlan",
-    icon: markRaw(Icons.List),
-    label: "应付计划",
-    component: () => import("./pay-plan/index.vue"),
-  },
-  {
-    index: "costAllocation",
-    icon: markRaw(Icons.DataAnalysis),
-    label: "成本分摊",
-    component: () => import("./cost-allocation/index.vue"),
-  },
-  {
-    index: "engineeringPrice",
-    icon: markRaw(Icons.PriceTag),
-    label: "工程核价",
-    component: () => import("./engineering-price/index.vue"),
   },
   {
     index: "changeOrder",
@@ -88,6 +76,25 @@ const menuItems = [
     label: "签证管理",
     component: () => import("./visa-management/index.vue"),
   },
+  {
+    index: "outputDeclaration",
+    icon: markRaw(Icons.Upload),
+    label: "产值申报",
+    component: () => import("./output-declaration/index.vue"),
+  },
+  {
+    index: "costAllocation",
+    icon: markRaw(Icons.DataAnalysis),
+    label: "成本分摊",
+    component: () => import("./cost-allocation/index.vue"),
+  },
+  {
+    index: "engineeringPrice",
+    icon: markRaw(Icons.PriceTag),
+    label: "工程核价",
+    component: () => import("./engineering-price/index.vue"),
+  },
+
   {
     index: "documents",
     icon: markRaw(Icons.Message),
@@ -112,12 +119,7 @@ const menuItems = [
     label: "合同解除",
     component: () => import("./contract-termination/index.vue"),
   },
-  {
-    index: "outputDeclaration",
-    icon: markRaw(Icons.Upload),
-    label: "产值申报",
-    component: () => import("./output-declaration/index.vue"),
-  },
+
   {
     index: "paymentAdjust",
     icon: markRaw(Icons.Coin),

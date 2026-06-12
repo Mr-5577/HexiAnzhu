@@ -1,4 +1,3 @@
-import { ContractType } from "../types/cost/master-data/contract-category-type";
 /**
  * 数据字典类型映射
  * 前端类型 => 后端参数类型
@@ -40,6 +39,8 @@ export const dictMapping = {
   invalidCostReason: "INVALID_COST_REASON",
   /** 变更原因原因 */
   changeReason: "CHANGE_REASON",
+  /** 款项类型 */
+  paymentType: "PAYMENT_TYPE",
 } as const;
 
 // 导出类型，用于类型提示

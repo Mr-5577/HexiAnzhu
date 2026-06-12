@@ -82,7 +82,13 @@
         {{ getLabel(ConStatusEnum, row.conStatus) }}
       </template>
       <template #actions="{ row }">
-        <el-button type="primary" link @click="handleEdit(row)">
+        <!-- 草稿状态才可以编辑,0-草稿 5-审批中 10-已审批 20-已结算 30-已作废 -->
+        <el-button
+          type="primary"
+          link
+          @click="handleEdit(row)"
+          :disabled="row.conStatus !== 0"
+        >
           编辑
         </el-button>
         <el-button type="danger" link @click="handleDelete(row)">
@@ -111,7 +117,10 @@ import {
   ConStatusEnum,
   getLabel,
 } from "@/constants/contract-manage/enums";
-import { HConMain, HConMainQuery } from "@/types/cost/contract-manage/contract-ledger-type";
+import {
+  HConMain,
+  HConMainQuery,
+} from "@/types/cost/contract-manage/contract-ledger-type";
 
 defineOptions({ name: "contract-ledger-table" });
 
@@ -233,7 +242,9 @@ const handleDetail = (row: HConMain) => {
 };
 
 const handleDelete = (row: HConMain) => {
-  ElMessageBox.confirm("确定删除该合同数据吗？", "提示", { type: "warning" })
+  ElMessageBox.confirm(`确定删除“${row.conName}”合同吗？`, "提示", {
+    type: "warning",
+  })
     .then(async () => {
       const res = await contractLedgerApi.delContractLedger({ id: row.id });
       if (res.code === 200) {
