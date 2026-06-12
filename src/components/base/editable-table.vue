@@ -45,7 +45,7 @@
               v-model="row[column.prop]"
               size="small"
               :disabled="column.disabled"
-              :placeholder="column.placeholder"
+              :placeholder="column.placeholder || '请输入'"
               @blur="handleSave(row, column, $index)"
               @keyup.enter="handleSave(row, column, $index)"
             />
@@ -56,7 +56,7 @@
               v-model="row[column.prop]"
               size="small"
               :disabled="column.disabled"
-              :placeholder="column.placeholder"
+              :placeholder="column.placeholder || '请选择'"
               :multiple="column.multiple || false"
               :collapse-tags="column.collapseTags || true"
               :clearable="column.clearable !== false"
@@ -78,9 +78,9 @@
               :disabled="column.disabled"
               controls-position="right"
               :controls="false"
-              :precision="2"
+              :precision="getNumberPrecision(column)"
               :min="0"
-              :placeholder="column.placeholder"
+              :placeholder="column.placeholder || '请输入'"
               @change="handleSave(row, column, $index)"
             />
 
@@ -92,7 +92,7 @@
               :rows="2"
               size="small"
               :disabled="column.disabled"
-              :placeholder="column.placeholder"
+              :placeholder="column.placeholder || '请输入'"
               @blur="handleSave(row, column, $index)"
             />
 
@@ -103,7 +103,7 @@
               type="date"
               size="small"
               :disabled="column.disabled"
-              :placeholder="column.placeholder"
+              :placeholder="column.placeholder || '请选择日期'"
               value-format="YYYY-MM-DD"
               @change="handleSave(row, column, $index)"
             />
@@ -115,7 +115,7 @@
               type="datetime"
               size="small"
               :disabled="column.disabled"
-              :placeholder="column.placeholder"
+              :placeholder="column.placeholder || '请选择时间'"
               value-format="YYYY-MM-DD HH:mm:ss"
               @change="handleSave(row, column, $index)"
             />
@@ -152,7 +152,7 @@
               v-model="row[column.prop]"
               size="small"
               :disabled="column.disabled"
-              :placeholder="column.placeholder"
+              :placeholder="column.placeholder || '请输入'"
               @blur="handleSave(row, column, $index)"
               @keyup.enter="handleSave(row, column, $index)"
             />
@@ -197,6 +197,8 @@ export interface EditableColumn extends TableColumnItem {
   collapseTags?: boolean;
   /** 是否可清空 */
   clearable?: boolean;
+  /** 数字精度（小数位数），不设置或设置为0表示整数 */
+  precision?: number;
   /** 动态获取选项的函数（优先级高于 options） */
   getOptions?: (row: any) => Array<any>;
   /** 子列配置（递归支持多级表头） */
@@ -335,6 +337,19 @@ const getColumnOptions = (column: EditableColumn, row?: any): any[] => {
   }
 
   return options;
+};
+/**
+ * 获取数字输入框的精度
+ * 如果设置了 precision 且大于 0，则使用该值作为小数位数
+ * 如果未设置或设置为 0，则返回 undefined（表示整数）
+ */
+const getNumberPrecision = (column: EditableColumn): number | undefined => {
+  if (column.precision !== undefined) {
+    // precision 为 0 或负数时，返回 undefined 表示整数
+    return column.precision > 0 ? column.precision : undefined;
+  }
+  // 默认返回 2 位小数
+  return 2;
 };
 
 /**
@@ -544,19 +559,23 @@ defineExpose({
   width: 100%;
   margin: -2px 0;
 
+  // 统一所有编辑组件的基础样式
   :deep(.el-input__wrapper),
-  :deep(.el-select .el-input__wrapper) {
+  :deep(.el-select__wrapper),
+  :deep(.el-date-editor .el-input__wrapper),
+  :deep(.el-input-number .el-input__wrapper) {
     border-radius: 0;
     padding: 0 8px;
-    // 强制设置高度与单元格一致
     height: 28px;
   }
 
+  // 输入框基础样式
   :deep(.el-input__inner) {
     height: 28px;
     line-height: 28px;
   }
 
+  // 数字输入框样式
   :deep(.el-input-number) {
     width: 100%;
 
@@ -565,34 +584,124 @@ defineExpose({
       border-radius: 0;
       height: 28px;
     }
+
+    .el-input-number__increase,
+    .el-input-number__decrease {
+      display: none;
+    }
   }
-  // 选择器特殊样式处理
+
+  // 选择器样式
   :deep(.el-select) {
     width: 100%;
 
-    // 确保 select 的输入包装器样式一致
     .el-select__wrapper {
       border-radius: 0;
       padding: 0 8px;
       height: 28px;
     }
 
-    // 选择器图标位置调整
     .el-select__caret {
       line-height: 28px;
     }
   }
+
   // 日期选择器样式
   :deep(.el-date-editor) {
     width: 100%;
-
-    .el-date__wrapper {
+    height: 28px;
+    .el-date__wrapper,
+    .el-input__wrapper {
+      width: 100%;
       border-radius: 0;
       padding: 0 8px;
       height: 28px;
     }
+
+    .el-input__prefix {
+      margin-right: 4px;
+    }
+
+    .el-input__suffix {
+      margin-left: 4px;
+    }
+  }
+
+  // 日期范围选择器样式
+  :deep(.el-date-editor--daterange),
+  :deep(.el-date-editor--timerange),
+  :deep(.el-date-editor--datetimerange) {
+    .el-input__wrapper {
+      padding: 0 8px;
+
+      .el-input__prefix {
+        margin-right: 4px;
+      }
+
+      .el-range-input {
+        height: 24px;
+        font-size: 12px;
+      }
+
+      .el-range-separator {
+        padding: 0 4px;
+        line-height: 24px;
+      }
+
+      .el-input__suffix {
+        margin-left: 4px;
+      }
+    }
+  }
+
+  // 文本域样式
+  :deep(.el-textarea) {
+    .el-textarea__inner {
+      border-radius: 0;
+      padding: 4px 8px;
+      font-size: 12px;
+      resize: vertical;
+    }
+  }
+
+  // 开关样式调整
+  :deep(.el-switch) {
+    display: inline-flex;
+    align-items: center;
+    height: 28px;
+  }
+
+  // 单选组样式
+  :deep(.el-radio-group) {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+
+    .el-radio {
+      margin-right: 0;
+      height: auto;
+
+      .el-radio__label {
+        font-size: 12px;
+      }
+    }
+  }
+
+  // 可点击输入框样式
+  .clickable-input-wrapper {
+    :deep(.el-input__wrapper) {
+      cursor: pointer;
+      background-color: var(--el-fill-color-light);
+
+      &:hover {
+        background-color: var(--el-fill-color);
+      }
+    }
   }
 }
+
+// 表格单元格样式
 :deep(.el-table) {
   .cell {
     padding: 0;
