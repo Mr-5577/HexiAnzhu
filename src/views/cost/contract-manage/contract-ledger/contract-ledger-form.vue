@@ -1969,7 +1969,6 @@ const handleSubmit = async () => {
 
     submitLoading.value = true;
     const params = buildSubmitParams();
-    debugger;
     if (formData.value.id) {
       const editRes = await contractLedgerApi.editContractLedger(params);
       if (editRes.code === 200) {
