@@ -39,9 +39,9 @@
         <el-button type="danger" link @click="handleDelete(row)">
           删除
         </el-button>
-        <el-button type="primary" link @click="handleDetail(row)">
+        <!-- <el-button type="primary" link @click="handleDetail(row)">
           详情
-        </el-button>
+        </el-button> -->
       </template>
     </base-table>
   </div>
@@ -106,7 +106,6 @@ const getDataList = async () => {
     tableLoading.value = true;
     const res = await supplementContractApi.getSupplementContractList({
       ...queryParams.value,
-      conId: props.conId,
     });
     if (res.code === 200) {
       tableData.value = res.data || [];

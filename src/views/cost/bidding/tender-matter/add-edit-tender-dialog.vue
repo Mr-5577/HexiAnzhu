@@ -244,6 +244,7 @@
           :pagination="false"
           :highlight-current-row="false"
           :show-summary="false"
+          :compactEmpty="true"
           :on-save="handleSave"
           @data-change="handleDataChange"
           @update:table-data="handleDataUpdate"

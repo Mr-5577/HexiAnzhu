@@ -9,269 +9,270 @@
         label-width="130px"
         class="adapt-form"
       >
-        <div class="section-title">基本信息</div>
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="补充合同名称" prop="addName" required>
-              <el-input
-                v-model="formData.addName"
-                :disabled="isDetail"
-                clearable
-                placeholder="请输入补充合同名称"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="补充合同类型" prop="addType" required>
-              <el-select
-                v-model="formData.addType"
-                :disabled="isDetail"
-                placeholder="请选择补充合同类型"
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="item in AddTypeEnum"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
+        <div>
+          <div class="section-title">基本信息</div>
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="补充合同名称" prop="addName" required>
+                <el-input
+                  v-model="formData.addName"
+                  :disabled="isDetail"
+                  clearable
+                  placeholder="请输入补充合同名称"
                 />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="合同系统编号" prop="addSysNo" required>
-              <el-input
-                v-model="formData.addSysNo"
-                :disabled="isDetail"
-                placeholder="请输入合同系统编号"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="合同物理编号" prop="addPhyNo" required>
-              <el-input
-                v-model="formData.addPhyNo"
-                :disabled="isDetail"
-                placeholder="请输入合同物理编号"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="补充合同类型" prop="addType" required>
+                <el-select
+                  v-model="formData.addType"
+                  :disabled="isDetail"
+                  placeholder="请选择补充合同类型"
+                  style="width: 100%"
+                >
+                  <el-option
+                    v-for="item in AddTypeEnum"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="合同系统编号" prop="addSysNo" required>
+                <el-input
+                  v-model="formData.addSysNo"
+                  :disabled="isDetail"
+                  placeholder="请输入合同系统编号"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="合同物理编号" prop="addPhyNo" required>
+                <el-input
+                  v-model="formData.addPhyNo"
+                  :disabled="isDetail"
+                  placeholder="请输入合同物理编号"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
 
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="主合同签约公司" prop="companyId" required>
-              <el-cascader
-                v-model="formData.companyId"
-                :disabled="true"
-                :options="companyOptions"
-                :show-all-levels="false"
-                :props="{
-                  expandTrigger: 'hover',
-                  emitPath: false,
-                  checkStrictly: false,
-                  value: 'id',
-                  label: 'mguName',
-                  children: 'children',
-                }"
-                placeholder="请选择主合同签约公司"
-                style="width: 100%"
-                clearable
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="主合同分类" prop="conTypeId" required>
-              <el-cascader
-                v-model="formData.conTypeId"
-                :disabled="true"
-                :options="conTypeOptions"
-                :show-all-levels="false"
-                :props="{
-                  expandTrigger: 'hover',
-                  emitPath: false,
-                  checkStrictly: false,
-                  value: 'id',
-                  label: 'conTypeName',
-                  children: 'children',
-                }"
-                placeholder="请选择主合同分类"
-                style="width: 100%"
-                clearable
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="主合同类型" prop="conProperty" required>
-              <el-select
-                v-model="formData.conProperty"
-                :disabled="true"
-                placeholder="请选择主合同类型"
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="item in ConPropertyEnum"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="主合同签约公司" prop="companyId" required>
+                <el-cascader
+                  v-model="formData.companyId"
+                  :disabled="true"
+                  :options="companyOptions"
+                  :show-all-levels="false"
+                  :props="{
+                    expandTrigger: 'hover',
+                    emitPath: false,
+                    checkStrictly: false,
+                    value: 'id',
+                    label: 'mguName',
+                    children: 'children',
+                  }"
+                  placeholder="请选择主合同签约公司"
+                  style="width: 100%"
+                  clearable
                 />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="主合同供应商" prop="supId" required>
-              <el-select
-                v-model="formData.supId"
-                :disabled="true"
-                placeholder="请选择主合同供应商"
-                style="width: 100%"
-                filterable
-              >
-                <el-option
-                  v-for="item in supplierOptions"
-                  :key="item.id"
-                  :label="item.supName"
-                  :value="item.id"
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="主合同分类" prop="conTypeId" required>
+                <el-cascader
+                  v-model="formData.conTypeId"
+                  :disabled="true"
+                  :options="conTypeOptions"
+                  :show-all-levels="false"
+                  :props="{
+                    expandTrigger: 'hover',
+                    emitPath: false,
+                    checkStrictly: false,
+                    value: 'id',
+                    label: 'conTypeName',
+                    children: 'children',
+                  }"
+                  placeholder="请选择主合同分类"
+                  style="width: 100%"
+                  clearable
                 />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="主合同类型" prop="conProperty" required>
+                <el-select
+                  v-model="formData.conProperty"
+                  :disabled="true"
+                  placeholder="请选择主合同类型"
+                  style="width: 100%"
+                >
+                  <el-option
+                    v-for="item in ConPropertyEnum"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="主合同供应商" prop="supId" required>
+                <el-select
+                  v-model="formData.supId"
+                  :disabled="true"
+                  placeholder="请选择主合同供应商"
+                  style="width: 100%"
+                  filterable
+                >
+                  <el-option
+                    v-for="item in supplierOptions"
+                    :key="item.id"
+                    :label="item.supName"
+                    :value="item.id"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
 
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="主合同计价方式" prop="priceType" required>
-              <el-select
-                v-model="formData.priceType"
-                :disabled="true"
-                placeholder="请选择计价方式"
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="item in PriceTypeEnum"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="主合同计价方式" prop="priceType" required>
+                <el-select
+                  v-model="formData.priceType"
+                  :disabled="true"
+                  placeholder="请选择计价方式"
+                  style="width: 100%"
+                >
+                  <el-option
+                    v-for="item in PriceTypeEnum"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="主合同付款方式" prop="payType" required>
+                <el-select
+                  v-model="formData.payType"
+                  :disabled="true"
+                  placeholder="请选择付款方式"
+                  style="width: 100%"
+                >
+                  <el-option
+                    v-for="item in PayTypeEnum"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="主合同生产专业" prop="proProf">
+                <el-cascader
+                  v-model="formData.proProf"
+                  :disabled="true"
+                  :options="proProfOptions"
+                  :show-all-levels="false"
+                  :props="{
+                    expandTrigger: 'hover',
+                    emitPath: false,
+                    checkStrictly: false,
+                    value: 'id',
+                    label: 'dicLabel',
+                    children: 'children',
+                  }"
+                  placeholder="请选择生产专业"
+                  style="width: 100%"
+                  clearable
                 />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="主合同付款方式" prop="payType" required>
-              <el-select
-                v-model="formData.payType"
-                :disabled="true"
-                placeholder="请选择付款方式"
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="item in PayTypeEnum"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="主合同生产专业" prop="proProf">
-              <el-cascader
-                v-model="formData.proProf"
-                :disabled="true"
-                :options="proProfOptions"
-                :show-all-levels="false"
-                :props="{
-                  expandTrigger: 'hover',
-                  emitPath: false,
-                  checkStrictly: false,
-                  value: 'id',
-                  label: 'dicLabel',
-                  children: 'children',
-                }"
-                placeholder="请选择生产专业"
-                style="width: 100%"
-                clearable
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="楼栋范围" prop="bldIds">
-              <el-select
-                v-model="formData.bldIds"
-                :disabled="isDetail"
-                multiple
-                collapse-tags
-                collapse-tags-tooltip
-                placeholder="请选择楼栋"
-                style="width: 100%"
-                @change="handleBuildingChange"
-              >
-                <el-option
-                  v-for="item in buildingOptions"
-                  :key="item.id"
-                  :label="item.bldName"
-                  :value="item.id"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="楼栋范围" prop="bldIds">
+                <el-select
+                  v-model="formData.bldIds"
+                  :disabled="isDetail"
+                  multiple
+                  collapse-tags
+                  collapse-tags-tooltip
+                  placeholder="请选择楼栋"
+                  style="width: 100%"
+                  @change="handleBuildingChange"
+                >
+                  <el-option
+                    v-for="item in buildingOptions"
+                    :key="item.id"
+                    :label="item.bldName"
+                    :value="item.id"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
 
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="签约金额(含税)" prop="addAmt" required>
-              <el-input-number
-                v-model="formData.addAmt"
-                :disabled="isDetail"
-                :min="0"
-                :precision="2"
-                :controls="false"
-                placeholder="请输入签约金额"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="签约金额(不含税)" prop="addExclAmt" required>
-              <el-input-number
-                v-model="formData.addExclAmt"
-                :disabled="isDetail"
-                :min="0"
-                :precision="2"
-                :controls="false"
-                placeholder="请输入不含税金额"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="税额" prop="taxAmt" required>
-              <el-input-number
-                v-model="formData.taxAmt"
-                :disabled="isDetail"
-                :min="0"
-                :precision="2"
-                :controls="false"
-                placeholder="请输入税额"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="签订日期" prop="signDate" required>
-              <el-date-picker
-                v-model="formData.signDate"
-                :disabled="isDetail"
-                type="date"
-                placeholder="请选择签订日期"
-                style="width: 100%"
-                value-format="YYYY-MM-DD"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="签约金额(含税)" prop="addAmt" required>
+                <el-input-number
+                  v-model="formData.addAmt"
+                  :disabled="isDetail"
+                  :min="0"
+                  :precision="2"
+                  :controls="false"
+                  placeholder="请输入签约金额"
+                  style="width: 100%"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="签约金额(不含税)" prop="addExclAmt" required>
+                <el-input-number
+                  v-model="formData.addExclAmt"
+                  :disabled="isDetail"
+                  :min="0"
+                  :precision="2"
+                  :controls="false"
+                  placeholder="请输入不含税金额"
+                  style="width: 100%"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="税额" prop="taxAmt" required>
+                <el-input-number
+                  v-model="formData.taxAmt"
+                  :disabled="isDetail"
+                  :min="0"
+                  :precision="2"
+                  :controls="false"
+                  placeholder="请输入税额"
+                  style="width: 100%"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="签订日期" prop="signDate" required>
+                <el-date-picker
+                  v-model="formData.signDate"
+                  :disabled="isDetail"
+                  type="date"
+                  placeholder="请选择签订日期"
+                  style="width: 100%"
+                  value-format="YYYY-MM-DD"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
 
-        <!-- <el-row :gutter="24">
+          <!-- <el-row :gutter="24">
           <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
             <el-form-item label="经办人" prop="agentId">
                 <el-input
@@ -283,106 +284,141 @@
             </el-form-item>
           </el-col>
         </el-row> -->
-
-        <div class="section-title">扩展信息</div>
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="是否需要用印" prop="needSeal">
-              <el-select
-                v-model="formData.needSeal"
-                :disabled="isDetail"
-                placeholder="请选择"
-                style="width: 100%"
-              >
-                <el-option label="是" :value="true" />
-                <el-option label="否" :value="false" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="印章类型" prop="sealTypes">
-              <el-select
-                v-model="formData.sealTypes"
-                :disabled="isDetail || !formData.needSeal"
-                multiple
-                collapse-tags
-                placeholder="请选择印章类型"
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="item in SealTypesEnum"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
+        </div>
+        <div>
+          <div class="section-title">扩展信息</div>
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="是否需要用印" prop="needSeal">
+                <el-select
+                  v-model="formData.needSeal"
+                  :disabled="isDetail"
+                  placeholder="请选择"
+                  style="width: 100%"
+                >
+                  <el-option label="是" :value="true" />
+                  <el-option label="否" :value="false" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="印章类型" prop="sealTypes">
+                <el-select
+                  v-model="formData.sealTypes"
+                  :disabled="isDetail || !formData.needSeal"
+                  multiple
+                  collapse-tags
+                  placeholder="请选择印章类型"
+                  style="width: 100%"
+                >
+                  <el-option
+                    v-for="item in SealTypesEnum"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="签约地点" prop="signAddr">
+                <el-input
+                  v-model="formData.signAddr"
+                  :disabled="isDetail"
+                  placeholder="请输入签约地点"
                 />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="签约地点" prop="signAddr">
-              <el-input
-                v-model="formData.signAddr"
-                :disabled="isDetail"
-                placeholder="请输入签约地点"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
+              </el-form-item>
+            </el-col>
+          </el-row>
 
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="供应商联系人" prop="supCmanName">
-              <el-input
-                v-model="formData.supCmanName"
-                :disabled="isDetail"
-                placeholder="请输入联系人姓名"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="联系人电话" prop="supCmanTel">
-              <el-input
-                v-model="formData.supCmanTel"
-                :disabled="isDetail"
-                placeholder="请输入联系电话"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="联系人身份证" prop="supCmanIdno">
-              <el-input
-                v-model="formData.supCmanIdno"
-                :disabled="isDetail"
-                placeholder="请输入身份证号码"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="联系人职务" prop="supCmanJob">
-              <el-input
-                v-model="formData.supCmanJob"
-                :disabled="isDetail"
-                placeholder="请输入职务"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="供应商联系人" prop="supCmanName">
+                <el-input
+                  v-model="formData.supCmanName"
+                  :disabled="isDetail"
+                  placeholder="请输入联系人姓名"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="联系人电话" prop="supCmanTel">
+                <el-input
+                  v-model="formData.supCmanTel"
+                  :disabled="isDetail"
+                  placeholder="请输入联系电话"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="联系人身份证" prop="supCmanIdno">
+                <el-input
+                  v-model="formData.supCmanIdno"
+                  :disabled="isDetail"
+                  placeholder="请输入身份证号码"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="联系人职务" prop="supCmanJob">
+                <el-input
+                  v-model="formData.supCmanJob"
+                  :disabled="isDetail"
+                  placeholder="请输入职务"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
 
-        <el-row :gutter="24">
-          <el-col :span="24">
-            <el-form-item label="备注" prop="remark">
-              <el-input
-                v-model="formData.remark"
-                :disabled="isDetail"
-                type="textarea"
-                :rows="5"
-                maxlength="500"
-                show-word-limit
-                placeholder="其他需要补充说明的信息"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
+          <el-row :gutter="24">
+            <el-col :span="24">
+              <el-form-item label="备注" prop="remark">
+                <el-input
+                  v-model="formData.remark"
+                  :disabled="isDetail"
+                  type="textarea"
+                  :rows="3"
+                  maxlength="500"
+                  show-word-limit
+                  placeholder="其他需要补充说明的信息"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </div>
+
+        <div>
+          <div class="section-title">明细信息</div>
+          <div class="detail-table">
+            <div class="header-content">
+              <span class="header-title">补充合同明细</span>
+              <el-button type="primary" size="small" @click="handleAdd">
+                新增
+              </el-button>
+            </div>
+            <editable-table
+              ref="detailtableRef"
+              :row-key="'uuid'"
+              :height="'230px'"
+              :table-data="tableList"
+              :columns="dynamicColumns"
+              :loading="tableLoading"
+              :pagination="false"
+              :highlight-current-row="false"
+              :show-summary="false"
+              :compactEmpty="true"
+              :on-save="handleSave"
+              @data-change="handleDataChange"
+              @update:table-data="handleDataUpdate"
+            >
+              <!-- <template #actions="{ row }">
+                <el-button link type="danger" @click="handleDelete(row)">
+                  删除
+                </el-button>
+              </template> -->
+            </editable-table>
+          </div>
+        </div>
       </el-form>
     </div>
 
@@ -416,6 +452,9 @@ import { manageunitApi } from "@/api/cost/master-data/management-unit-api";
 import { buildTree } from "@/utils/tree";
 import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api";
 import { useUserStore } from "@/stores/user-store";
+import { v4 as uuidv4 } from "uuid";
+import EditableTable from "@/components/base/editable-table.vue";
+import type { EditableColumn } from "@/components/base/editable-table.vue";
 
 const userStore = useUserStore();
 
@@ -482,7 +521,83 @@ const formData = ref(initFormData());
 // 表单引用
 const formRef = ref<any>(null);
 const submitLoading = ref(false);
-
+const tableLoading = ref(false);
+const tableList = ref([]);
+const dynamicColumns = computed<EditableColumn[]>(() => [
+  { type: "index", label: "序号", width: 60, editable: false },
+  {
+    prop: "visaId",
+    label: "签证单据",
+    editable: true,
+    editType: "select",
+    showOverflowTooltip: false,
+    // 自定义键名
+    optionLabelField: "dicLabel",
+    optionValueField: "id",
+    options: [],
+    width: 200,
+  },
+  {
+    prop: "processName",
+    label: "事项名称",
+    editable: true,
+    editType: "input",
+    showOverflowTooltip: false,
+    width: 200,
+  },
+  {
+    prop: "processAmt",
+    label: "事项含税金额",
+    showSummary: true,
+    editable: true,
+    editType: "number",
+    showOverflowTooltip: false,
+    width: 150,
+  },
+  {
+    prop: "processExclAmt",
+    label: "事项不含税金额",
+    showSummary: true,
+    editable: true,
+    editType: "number",
+    showOverflowTooltip: false,
+    width: 150,
+  },
+  {
+    prop: "visaApplyId",
+    label: "签证申请人",
+    editable: true,
+    editType: "select",
+    showOverflowTooltip: false,
+    // 自定义键名
+    optionLabelField: "dicLabel",
+    optionValueField: "id",
+    options: [],
+    width: 150,
+  },
+  {
+    prop: "visaApplyDate",
+    label: "签证申请日期",
+    showSummary: true,
+    editable: true,
+    editType: "date",
+    showOverflowTooltip: false,
+  },
+  {
+    prop: "remark",
+    label: "备注",
+    showSummary: true,
+    editable: true,
+    editType: "input",
+    showOverflowTooltip: false,
+  },
+  // {
+  //   label: "操作",
+  //   width: 100,
+  //   slot: "actions",
+  //   fixed: "right",
+  // },
+]);
 // 表单校验规则
 const formRules = ref({
   addName: [{ required: true, message: "请输入补充合同名称", trigger: "blur" }],
@@ -621,6 +736,32 @@ const createConNo = async () => {
   }
 };
 
+const handleSave = async (rowData: any) => {
+  const { row, column, newValue, oldValue, rowIndex } = rowData;
+};
+
+const handleDataChange = (data: any) => {};
+
+const handleDataUpdate = (newData: any) => {
+  tableList.value = newData;
+};
+const handleAdd = () => {
+  const newRow = {
+    uuid: uuidv4(),
+    conBillId: null,
+    conId: null,
+    estChangeAmt: 0,
+    wasteCostAmt: 0,
+    wasteCostReasonId: null,
+    needVisa: false,
+    remark: "",
+  };
+  tableList.value = [...tableList.value, newRow];
+};
+const handleDelete = (row: any) => {
+  tableList.value = tableList.value.filter((item) => item.uuid !== row.uuid);
+};
+
 // 初始化数据字典数据
 const initDictData = async () => {
   await loadDicts();
@@ -659,7 +800,7 @@ const getSupplementContractDetail = async () => {
         proProf: conAdd.proProf,
         bldIds: conAdd.bldIds ? conAdd.bldIds.split(",").map(Number) : [],
         bldNames: conAdd.bldNames,
-        payType: conAdd.payType,
+        payType: conAdd.payMethod,
         addAmt: conAdd.addAmt,
         addExclAmt: conAdd.addExclAmt,
         taxAmt: conAdd.taxAmt,
@@ -698,7 +839,7 @@ const getContractDetail = async () => {
           conProperty: conMain.conProperty,
           supId: conMain.supId,
           priceType: conMain.priceType,
-          payType: conMain.payType,
+          payType: conMain.payMethod,
           proProf: conMain.proProf,
           bldIds: conMain.bldIds ? conMain.bldIds.split(",").map(Number) : [],
           bldNames: conMain.bldNames,
@@ -716,7 +857,6 @@ const getContractDetail = async () => {
           remark: conMainExt?.remark || "",
         };
       }
-      
     }
   } catch (error) {}
 };
@@ -771,22 +911,22 @@ const handleSubmit = async () => {
     // 根据是否有ID判断是新增还是编辑
     if (formData.value.id) {
       // 编辑
-      const editRes =
-        await supplementContractApi.editSupplementContract(params);
-      if (editRes.code === 200) {
-        ElMessage.success("提交成功");
-        // 重置表单
-        // formData.value = {
-        //   ...initFormData(),
-        // };
-        // formRef.value.resetFields();
-      }
+      // const editRes =
+      //   await supplementContractApi.editSupplementContract(params);
+      // if (editRes.code === 200) {
+      //   ElMessage.success("提交成功");
+      //   // 重置表单
+      //   // formData.value = {
+      //   //   ...initFormData(),
+      //   // };
+      //   // formRef.value.resetFields();
+      // }
     } else {
       // 新增
-      const addRes = await supplementContractApi.addSupplementContract(params);
-      if (addRes.code === 200) {
-        ElMessage.success("提交成功");
-      }
+      // const addRes = await supplementContractApi.addSupplementContract(params);
+      // if (addRes.code === 200) {
+      //   ElMessage.success("提交成功");
+      // }
     }
   } catch (error) {
     console.log("表单验证失败：", error);
@@ -863,7 +1003,31 @@ onMounted(() => {
   color: #303133;
   margin: 10px 0 10px 0;
   padding-left: 10px;
-  border-left: 4px solid #409eff;
+  position: relative;
+  &::before {
+    content: "";
+    width: 4px;
+    height: 16px;
+    background: #409eff;
+    border-radius: 2px;
+    position: absolute;
+    left: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+}
+.detail-table {
+  .header-content {
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    .header-title {
+      font-size: 15px;
+      color: #333;
+      font-weight: 600;
+    }
+  }
 }
 
 .btn-row {

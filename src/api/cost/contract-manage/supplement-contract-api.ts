@@ -1,12 +1,18 @@
 import { http } from "@/axios/service";
-import { SupplementProcessForm } from "@/types/cost/contract-manage/supplement-contract-type";
+import {
+  SupplementContractRequest,
+  SupplementProcessForm,
+} from "@/types/cost/contract-manage/supplement-contract-type";
 
 /**
  * 补充合同 相关接口
  */
 export const supplementContractApi = {
   /** 查询补充合同列表 */
-  getSupplementContractList: (data: any) => {
+  getSupplementContractList: (data: {
+    addName?: string;
+    companyId?: number;
+  }) => {
     return http.formPost("/con/add/list", data);
   },
   /** 查询单个补充合同 */
@@ -14,11 +20,11 @@ export const supplementContractApi = {
     return http.formPost("/con/add/get", data);
   },
   /** 新增补充合同 */
-  addSupplementContract: (data: any) => {
+  addSupplementContract: (data: SupplementContractRequest) => {
     return http.post("/con/add/add", data);
   },
   /** 修改补充合同 */
-  editSupplementContract: (data: any) => {
+  editSupplementContract: (data: SupplementContractRequest) => {
     return http.post("/con/add/edit", data);
   },
   /** 删除补充合同 */
