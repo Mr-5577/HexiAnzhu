@@ -62,9 +62,9 @@ export interface ContractVisa {
 }
 
 /**
- * 新增/编辑合同签证 - 表单数据 
+ * 签证表单信息
  */
-export interface ContractVisaFormData {
+export interface ContractVisaInfo {
   /** 签证ID（编辑时存在） */
   id?: number;
   /** 单据ID */
@@ -72,7 +72,7 @@ export interface ContractVisaFormData {
   /** 状态：0-草稿 5-审批中 10-已审批 30-已作废 */
   status: number;
   /** 变更单ID（关联选择） */
-  changeId?: string;
+  changeId?: number;
   /** 签证类型：1-签证 2-反签证 */
   visaType: number;
   /** 签证申报金额 */
@@ -95,4 +95,17 @@ export interface ContractVisaFormData {
   auditCutAmt?: number;
   /** 审计审核意见 */
   auditOpinion?: string;
+}
+/**
+ * 新增合同签证 - 表单数据
+ */
+export interface ContractVisaFormData {
+  conId: number;
+  visa: ContractVisaInfo;
+}
+/**
+ * 编辑合同签证 - 表单数据
+ */
+export interface ContractVisaFormEdit extends ContractVisaInfo {
+  conId: number;
 }

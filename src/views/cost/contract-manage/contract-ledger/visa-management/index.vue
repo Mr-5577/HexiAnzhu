@@ -17,6 +17,9 @@
           <el-button type="primary" @click="handleAdd"> 发起流程 </el-button>
         </div>
       </template>
+      <template #status="{ row }">
+        {{ getStatusText(row.status) }}
+      </template>
       <template #actions="{ row }">
         <el-button type="primary" link @click="handleEdit(row)">
           编辑
@@ -58,7 +61,7 @@ const tableData = ref<ContractVisa[]>([]);
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "status", label: "状态", width: 100 },
+  { slot: "status", label: "状态", width: 100 },
   { prop: "visaType", label: "签证类型", width: 120 },
   { prop: "visaApplyAmt", label: "签证申报金额", width: 120 },
   { prop: "visaApplyDesc", label: "签证申报说明", width: 120 },
@@ -77,6 +80,21 @@ const tableColumns: TableColumnItem[] = [
     fixed: "right",
   },
 ];
+const getStatusText = (status: number) => {
+  //  状态：0-草稿 5-审批中 10-已审批 30-已作废
+  switch (status) {
+    case 0:
+      return "草稿";
+    case 5:
+      return "审批中";
+    case 10:
+      return "已审批";
+    case 30:
+      return "已作废";
+    default:
+      return "未知状态";
+  }
+};
 // 获取列表数据
 const getDataList = async () => {
   if (!props.conId) {

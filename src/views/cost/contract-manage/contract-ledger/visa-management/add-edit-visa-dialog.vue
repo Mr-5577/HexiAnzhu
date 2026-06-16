@@ -19,6 +19,22 @@
       >
         <el-row>
           <el-col :span="12">
+            <el-form-item prop="changeId" label="变更合同" required>
+              <el-select
+                v-model="formData.changeId"
+                placeholder="请选择变更合同"
+                style="width: 100%"
+              >
+                <el-option
+                  v-for="item in changeOrderOptions"
+                  :key="item.id"
+                  :label="item.changeName"
+                  :value="item.id"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
             <el-form-item prop="visaType" label="签证类型" required>
               <el-select
                 v-model="formData.visaType"
@@ -34,6 +50,8 @@
               </el-select>
             </el-form-item>
           </el-col>
+        </el-row>
+        <el-row>
           <el-col :span="12">
             <el-form-item prop="visaApplyAmt" label="签证申报金额" required>
               <el-input-number
@@ -43,6 +61,7 @@
                 :controls="false"
                 placeholder="请输入签证申报金额"
                 style="width: 100%"
+                @change="handleCostingCutAmtChange"
               />
             </el-form-item>
           </el-col>
@@ -73,6 +92,7 @@
                 :controls="false"
                 placeholder="请输入成本审核金额"
                 style="width: 100%"
+                @change="handleCostingCutAmtChange"
               />
             </el-form-item>
           </el-col>
@@ -83,8 +103,9 @@
                 :min="0"
                 :precision="2"
                 :controls="false"
-                placeholder="成本审减金额"
+                placeholder="自动计算"
                 style="width: 100%"
+                :disabled="true"
               />
             </el-form-item>
           </el-col>
@@ -152,6 +173,7 @@
                 :controls="false"
                 placeholder="请输入审计审核金额"
                 style="width: 100%"
+                @change="handleAuditCutAmtChange"
               />
             </el-form-item>
           </el-col>
@@ -162,8 +184,9 @@
                 :min="0"
                 :precision="2"
                 :controls="false"
-                placeholder="审计审减金额"
+                placeholder="自动计算"
                 style="width: 100%"
+                :disabled="true"
               />
             </el-form-item>
           </el-col>
@@ -195,11 +218,12 @@ import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import { visaManagementApi } from "@/api/cost/contract-manage/visa-management-api";
 import {
   ContractVisa,
-  ContractVisaFormData,
+  ContractVisaInfo,
 } from "@/types/cost/contract-manage/visa-management-type";
 import { VisaTypeEnum } from "@/constants/contract-manage/enums";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";
+import { changeOrderApi } from "@/api/cost/contract-manage/change-order-api";
 
 interface Props {
   modelValue: boolean;
@@ -221,34 +245,30 @@ const emit = defineEmits<{
 const dialogVisible = ref(props.modelValue);
 const formRef = ref<FormInstance>();
 const submitLoading = ref(false);
-// 无效成本原因
-const wasteCostReasonOptions = ref([]);
+const wasteCostReasonOptions = ref([]); // 无效成本原因
+const changeOrderOptions = ref([]); // 变更合同列表
 
-// 状态常量
-const STATUS = {
-  DRAFT: 0, // 草稿
-  APPROVING: 5, // 审批中
-  APPROVED: 10, // 已审批
-  CANCELLED: 30, // 已作废
+const initForm = () => {
+  return {
+    id: null,
+    conBillId: null, // 单据ID
+    status: 0, // 状态 0 草稿，5 审批中，10 已审批，30 已作废
+    changeId: null, // 变更ID
+    visaType: null, // 签证类型
+    visaApplyAmt: 0, // 签证申报金额
+    visaApplyDesc: "", // 签证申报说明
+    costingReviewAmt: 0, // 成本审核金额
+    costingCutAmt: 0, // 成本审减金额
+    costingOpinion: "", // 成本审核意见
+    wasteCostAmt: 0, // 无效成本金额
+    wasteCostReasonId: null, // 无效成本原因
+    auditReviewAmt: 0, // 审计审核金额
+    auditCutAmt: 0, // 审计审减金额
+    auditOpinion: "", // 审计审核意见
+  };
 };
 
-const formData = ref<ContractVisaFormData>({
-  id: null,
-  conBillId: null, // 合同ID
-  status: STATUS.DRAFT, // 状态
-  changeId: null, // 变更ID
-  visaType: null, // 签证类型
-  visaApplyAmt: 0, // 签证申报金额
-  visaApplyDesc: "", // 签证申报说明
-  costingReviewAmt: 0, // 成本审核金额
-  costingCutAmt: 0, // 成本审减金额
-  costingOpinion: "", // 成本审核意见
-  wasteCostAmt: 0, // 无效成本金额
-  wasteCostReasonId: null, // 无效成本原因
-  auditReviewAmt: 0, // 审计审核金额
-  auditCutAmt: 0, // 审计审减金额
-  auditOpinion: "", // 审计审核意见
-});
+const formData = ref<ContractVisaInfo>(initForm());
 
 // 数据字典
 const { getDictList, loadDicts } = useDict(
@@ -260,7 +280,38 @@ const { getDictList, loadDicts } = useDict(
   },
 );
 
-const formRules: FormRules<ContractVisaFormData> = {
+// 计算成本审减金额
+const calculateCostingCutAmt = () => {
+  const visaApplyAmt: number = Number(formData.value.visaApplyAmt || 0);
+  const costingReviewAmt: number = Number(formData.value.costingReviewAmt || 0);
+  const costingCutAmt = costingReviewAmt - visaApplyAmt;
+  // 如果计算结果为负数，则设为0（审减金额不能为负）
+  formData.value.costingCutAmt = costingCutAmt < 0 ? 0 : costingCutAmt;
+};
+
+// 计算审计审减金额
+const calculateAuditCutAmt = () => {
+  const costingReviewAmt = formData.value.costingReviewAmt || 0;
+  const auditReviewAmt = formData.value.auditReviewAmt || 0;
+  const auditCutAmt = auditReviewAmt - costingReviewAmt;
+  // 如果计算结果为负数，则设为0（审减金额不能为负）
+  formData.value.auditCutAmt = auditCutAmt < 0 ? 0 : auditCutAmt;
+};
+
+// 处理成本相关金额变化
+const handleCostingCutAmtChange = () => {
+  calculateCostingCutAmt();
+  // 成本审核金额变化后，需要重新计算审计审减金额
+  calculateAuditCutAmt();
+};
+
+// 处理审计相关金额变化
+const handleAuditCutAmtChange = () => {
+  calculateAuditCutAmt();
+};
+
+const formRules: FormRules<ContractVisaInfo> = {
+  changeId: [{ required: true, message: "请选择变更合同", trigger: "change" }],
   visaType: [{ required: true, message: "请选择签证类型", trigger: "change" }],
   visaApplyAmt: [
     { required: true, message: "请输入签证申报金额", trigger: "blur" },
@@ -313,46 +364,41 @@ const dialogTitle = computed(() => {
   }
 });
 
+// 获取当前签证详情
+const getVisaDetailData = async () => {
+  try {
+    const res = await visaManagementApi.getVisaDetail({
+      id: props.editData?.id,
+    });
+    if (res.code === 200) {
+      formData.value = {
+        id: res.data?.id,
+        conBillId: res.data?.conBillId,
+        status: res.data?.status ?? 0,
+        changeId: res.data?.changeId ? Number(res.data?.changeId) : null,
+        visaType: res.data?.visaType ?? null,
+        visaApplyAmt: res.data?.visaApplyAmt ?? 0,
+        visaApplyDesc: res.data?.visaApplyDesc || "",
+        costingReviewAmt: res.data?.costingReviewAmt ?? 0,
+        costingCutAmt: res.data?.costingCutAmt ?? 0,
+        costingOpinion: res.data?.costingOpinion || "",
+        wasteCostAmt: res.data?.wasteCostAmt ?? 0,
+        wasteCostReasonId: res.data?.wasteCostReasonId ?? null,
+        auditReviewAmt: res.data?.auditReviewAmt ?? 0,
+        auditCutAmt: res.data?.auditCutAmt ?? 0,
+        auditOpinion: res.data?.auditOpinion || "",
+      };
+    }
+  } catch (error) {}
+};
 // 初始化表单数据
-const initFormData = () => {
+const initFormData = async () => {
   if (isEditMode.value && props.editData) {
     // 编辑模式：填充已有数据
-    formData.value = {
-      id: props.editData.id,
-      conBillId: props.editData.conBillId,
-      status: props.editData.status ?? STATUS.DRAFT,
-      changeId: props.editData.changeId,
-      visaType: props.editData.visaType ?? null,
-      visaApplyAmt: props.editData.visaApplyAmt ?? 0,
-      visaApplyDesc: props.editData.visaApplyDesc || "",
-      costingReviewAmt: props.editData.costingReviewAmt ?? 0,
-      costingCutAmt: props.editData.costingCutAmt ?? 0,
-      costingOpinion: props.editData.costingOpinion || "",
-      wasteCostAmt: props.editData.wasteCostAmt ?? 0,
-      wasteCostReasonId: props.editData.wasteCostReasonId ?? null,
-      auditReviewAmt: props.editData.auditReviewAmt ?? 0,
-      auditCutAmt: props.editData.auditCutAmt ?? 0,
-      auditOpinion: props.editData.auditOpinion || "",
-    };
+    await getVisaDetailData();
   } else {
     // 新增模式：重置表单
-    formData.value = {
-      id: null,
-      conBillId: props.conId,
-      status: STATUS.DRAFT,
-      changeId: null,
-      visaType: null,
-      visaApplyAmt: 0,
-      visaApplyDesc: "",
-      costingReviewAmt: 0,
-      costingCutAmt: 0,
-      costingOpinion: "",
-      wasteCostAmt: 0,
-      wasteCostReasonId: null,
-      auditReviewAmt: 0,
-      auditCutAmt: 0,
-      auditOpinion: "",
-    };
+    formData.value = initForm();
   }
 
   // 清空验证
@@ -367,17 +413,27 @@ const handleClose = () => {
 };
 
 const handleSubmit = async () => {
+  console.log("formData.value", formData.value);
   if (!formRef.value) return;
 
   try {
     await formRef.value.validate();
     submitLoading.value = true;
 
-    const interfaceApi = isEditMode.value
-      ? visaManagementApi.editVisa
-      : visaManagementApi.addVisa;
-
-    const res = await interfaceApi(formData.value);
+    let res;
+    if (isEditMode.value) {
+      const editParams = {
+        ...formData.value,
+        conId: props.conId,
+      };
+      res = await visaManagementApi.editVisa(editParams);
+    } else {
+      const params = {
+        conId: props.conId,
+        visa: formData.value,
+      };
+      res = await visaManagementApi.addVisa(params);
+    }
     if (res.code === 200) {
       ElMessage.success(isEditMode.value ? "修改成功" : "新增成功");
       emit("success");
@@ -396,6 +452,24 @@ const initDictData = async () => {
   wasteCostReasonOptions.value = getDictList(dictMapping.invalidCostReason); // 无效成本原因
 };
 
+// 获取变更合同列表
+const getChangeOrderList = async () => {
+  if (!props.conId) {
+    changeOrderOptions.value = [];
+    return;
+  }
+  try {
+    const res = await changeOrderApi.getChangeConList({
+      conId: props.conId,
+    });
+    if (res.code === 200) {
+      changeOrderOptions.value = res.data || [];
+    }
+  } catch (error) {
+    console.error("获取变更合同列表失败:", error);
+  }
+};
+
 // 监听弹窗显示状态
 watch(
   () => props.modelValue,
@@ -403,7 +477,8 @@ watch(
     dialogVisible.value = val;
     if (val) {
       await initDictData();
-      initFormData();
+      await getChangeOrderList();
+      await initFormData();
     }
   },
 );

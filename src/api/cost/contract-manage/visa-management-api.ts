@@ -1,5 +1,8 @@
 import { http } from "@/axios/service";
-import { ContractVisaFormData } from "@/types/cost/contract-manage/visa-management-type";
+import {
+  ContractVisaFormData,
+  ContractVisaFormEdit,
+} from "@/types/cost/contract-manage/visa-management-type";
 
 /**
  * 签证管理 相关接口
@@ -18,7 +21,7 @@ export const visaManagementApi = {
     return http.post("/con/visa/add", data);
   },
   /** 编辑签证管理 */
-  editVisa: (data: ContractVisaFormData) => {
+  editVisa: (data: ContractVisaFormEdit) => {
     return http.post("/con/visa/edit", data);
   },
   /** 删除签证管理 */
