@@ -236,6 +236,7 @@ const handleDetail = (row: HConMain) => {
     path: "/contract/contract-ledger-detail",
     query: {
       conId: row.id,
+      projId: props.projectId,
       mode: "detail",
     },
   });

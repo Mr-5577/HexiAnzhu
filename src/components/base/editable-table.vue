@@ -692,10 +692,10 @@ defineExpose({
   .clickable-input-wrapper {
     :deep(.el-input__wrapper) {
       cursor: pointer;
-      background-color: var(--el-fill-color-light);
+      // background-color: var(--el-fill-color-light);
 
       &:hover {
-        background-color: var(--el-fill-color);
+        // background-color: var(--el-fill-color);
       }
     }
   }

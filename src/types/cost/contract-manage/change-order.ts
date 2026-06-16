@@ -72,7 +72,7 @@ export interface ContractChangeDetailFormData {
  */
 export interface ContractChange {
   /** 主键ID */
-  id: number;
+  id?: number;
   /** 单据ID */
   conBillId?: number;
   /** 状态：0-草稿 5-审批中 10-已审批 30-已作废 */
@@ -135,6 +135,7 @@ export interface ContractChangeData {
 
 /** 新增/编辑 变更合同 */
 export interface ContractChangeFormData {
+  conId: number;
   change: ContractChangeData;
   conlist: ContractChangeDetailFormData[];
 }
