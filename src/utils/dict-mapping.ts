@@ -31,8 +31,6 @@ export const dictMapping = {
   businessSegment: "YWGS",
   /** 生产专业 */
   proProf: "PRO_PROF",
-  /** 核算项目 */
-  acctProj: "ACCT_PROJ",
   /** 附件类型 */
   annexType: "ANNEX_TYPE",
   /** 无效成本原因 */

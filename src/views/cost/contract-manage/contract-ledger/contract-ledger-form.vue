@@ -731,7 +731,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { ElMessage } from "element-plus";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user-store";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import { conTypeApi } from "@/api/cost/master-data/contract-category-api";
@@ -760,6 +760,7 @@ defineOptions({ name: "contract-ledger-form" });
 
 // 路由与状态
 const route = useRoute();
+const router = useRouter();
 const userStore = useUserStore();
 
 const conId = ref(null);
@@ -829,7 +830,10 @@ const conTypeOptions = ref([]);
 const projectOptions = ref([]);
 const supplierOptions = ref([]);
 const proProfOptions = ref([]);
-const acctProjOptions = ref([]);
+const acctProjOptions = ref([
+  { id: 1, dicLabel: "项目1" },
+  { id: 2, dicLabel: "项目2" },
+]);
 const paymentTypeOptions = ref([]);
 
 const priceTable = ref<any[]>([]); // 合同价格明细
@@ -1292,7 +1296,7 @@ const paynodeColumns = computed<EditableColumn[]>(() => [
 
 // 数据字典
 const { getDictList, loadDicts } = useDict(
-  [dictMapping.proProf, dictMapping.acctProj, dictMapping.paymentType],
+  [dictMapping.proProf, dictMapping.paymentType],
   { treeDictCodes: [] },
 );
 
@@ -1486,7 +1490,6 @@ const getBuildingList = async (projId: number) => {
 const initDictData = async () => {
   await loadDicts();
   proProfOptions.value = getDictList(dictMapping.proProf); // 生产专业
-  acctProjOptions.value = getDictList(dictMapping.acctProj); // 核算项目
   paymentTypeOptions.value = getDictList(dictMapping.paymentType); // 款项类型
 };
 
@@ -1962,10 +1965,10 @@ const handleSubmit = async () => {
   try {
     await formRef.value.validate();
     // 校验各个明细表
-    if (!validatePriceTable()) return;
-    if (!validatePayrateTable()) return;
-    if (!validateMaterialTable()) return;
-    if (!validatePaynodeTable()) return;
+    // if (!validatePriceTable()) return;
+    // if (!validatePayrateTable()) return;
+    // if (!validateMaterialTable()) return;
+    // if (!validatePaynodeTable()) return;
 
     submitLoading.value = true;
     const params = buildSubmitParams();

@@ -36,6 +36,14 @@
         <el-tag :type="row.isEnabled ? 'success' : 'danger'" size="small">
           {{ row.isEnabled ? "启用" : "禁用" }}
         </el-tag>
+        <!-- <el-switch
+          v-model="row.isEnabled"
+          :active-value="true"
+          :inactive-value="false"
+          size="small"
+          :loading="enabledLoading"
+          @change="handleEnabledChange(row)"
+        /> -->
       </template>
       <!-- 操作列 -->
       <template #actions="{ row }">
@@ -73,6 +81,7 @@ const queryParams = ref({
 const tableData = ref<ProductProjDetail[]>([]);
 const tableLoading = ref(false);
 const projectTreeData = ref<any[]>([]);
+const enabledLoading = ref(false);
 
 // 弹窗相关
 const dialogVisible = ref(false);
@@ -190,6 +199,13 @@ const handleReset = async () => {
  */
 const handleAdd = () => {
   dialogVisible.value = true;
+};
+
+/**
+ * 启用/禁用
+ */
+const handleEnabledChange = async (row: ProductProjDetail) => {
+  console.log(row);
 };
 
 /**

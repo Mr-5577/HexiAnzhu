@@ -52,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, Ref, watch } from "vue";
+import { ref, computed, Ref, watch, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import BasicInfo from "./basic-infor.vue";
@@ -78,21 +78,6 @@ const tabComponents = {
 
 const currentComponent = computed(() => tabComponents[activeTab.value]);
 
-const syncRouteState = () => {
-  const queryMode = route.query.mode as string;
-  mode.value = queryMode === "edit" || queryMode === "view" ? queryMode : "add";
-  const idValue = route.query.supplierId ? Number(route.query.supplierId) : null;
-  supplierId.value = idValue || null;
-  if (mode.value === "add") {
-    activeTab.value = "basic";
-  }
-};
-
-watch(
-  () => [route.query.mode, route.query.supplierId],
-  syncRouteState,
-);
-
 const handleTabChange = (tab) => {
   // 如果点击的是非基本信息菜单，且还没有供应商ID，则不允许切换
   if (tab !== "basic" && !supplierId.value) {
@@ -107,6 +92,23 @@ const handleSaveSuccess = (id) => {
   // 保存成功后跳转到下一个菜单
   activeTab.value = "serve";
 };
+
+const syncRouteState = () => {
+  const queryMode = route.query.mode as string;
+  mode.value = queryMode === "edit" || queryMode === "view" ? queryMode : "add";
+  const idValue = route.query.supplierId
+    ? Number(route.query.supplierId)
+    : null;
+  supplierId.value = idValue || null;
+  if (mode.value === "add") {
+    activeTab.value = "basic";
+  }
+};
+
+// watch(() => [route.query.mode, route.query.supplierId], syncRouteState);
+onMounted(() => {
+  syncRouteState();
+});
 </script>
 
 <style scoped lang="scss">

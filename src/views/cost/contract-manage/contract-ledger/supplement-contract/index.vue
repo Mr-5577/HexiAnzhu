@@ -23,14 +23,17 @@
       :rowKey="'id'"
       :pagination="false"
     >
+      <template #addType="{ row }">
+        {{ getLabel(AddTypeEnum, row.addType) }}
+      </template>
       <template #conProperty="{ row }">
         {{ getLabel(ConPropertyEnum, row.conProperty) }}
       </template>
       <template #priceType="{ row }">
         {{ getLabel(PriceTypeEnum, row.priceType) }}
       </template>
-      <template #payType="{ row }">
-        {{ getLabel(PayTypeEnum, row.payType) }}
+      <template #payMethod="{ row }">
+        {{ getLabel(PayTypeEnum, row.payMethod) }}
       </template>
       <template #actions="{ row }">
         <el-button type="primary" link @click="handleEdit(row)">
@@ -59,6 +62,7 @@ import {
   PriceTypeEnum,
   PayTypeEnum,
   getLabel,
+  AddTypeEnum,
 } from "@/constants/contract-manage/enums";
 
 defineOptions({ name: "supplement-contract" });
@@ -79,8 +83,8 @@ const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
   { prop: "addName", label: "补充合同名称", width: 150 },
   { prop: "addSysNo", label: "补充合同编号", width: 220 },
-  { prop: "addType", label: "补充合同类型", width: 150 },
-  { prop: "companyName", label: "甲方签约公司", width: 180 },
+  { slot: "addType", label: "补充合同类型", width: 150 },
+  { prop: "companyId", label: "甲方签约公司", width: 180 },
 
   { prop: "supId", label: "供应商", width: 150 },
   { prop: "addAmt", label: "补充合同签约金额(含税)", width: 150 },
@@ -89,7 +93,7 @@ const tableColumns: TableColumnItem[] = [
   { prop: "signDate", label: "签订日期", width: 150 },
   { slot: "conProperty", label: "主合同类型", width: 180 },
   { slot: "priceType", label: "主合同计价方式", width: 180 },
-  { slot: "payType", label: "主合同付款方式", width: 180 },
+  { slot: "payMethod", label: "主合同付款方式", width: 180 },
   {
     label: "操作",
     width: 220,

@@ -158,9 +158,9 @@
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="主合同付款方式" prop="payType" required>
+              <el-form-item label="主合同付款方式" prop="payMethod" required>
                 <el-select
-                  v-model="formData.payType"
+                  v-model="formData.payMethod"
                   :disabled="true"
                   placeholder="请选择付款方式"
                   style="width: 100%"
@@ -399,7 +399,7 @@
             <editable-table
               ref="detailtableRef"
               :row-key="'uuid'"
-              :height="'230px'"
+              :height="'200px'"
               :table-data="tableList"
               :columns="dynamicColumns"
               :loading="tableLoading"
@@ -411,11 +411,11 @@
               @data-change="handleDataChange"
               @update:table-data="handleDataUpdate"
             >
-              <!-- <template #actions="{ row }">
+              <template #actions="{ row }">
                 <el-button link type="danger" @click="handleDelete(row)">
                   删除
                 </el-button>
-              </template> -->
+              </template>
             </editable-table>
           </div>
         </div>
@@ -455,6 +455,7 @@ import { useUserStore } from "@/stores/user-store";
 import { v4 as uuidv4 } from "uuid";
 import EditableTable from "@/components/base/editable-table.vue";
 import type { EditableColumn } from "@/components/base/editable-table.vue";
+import { visaManagementApi } from "@/api/cost/contract-manage/visa-management-api";
 
 const userStore = useUserStore();
 
@@ -472,14 +473,12 @@ const userName = computed(() => {
   return name ? name.replace(/\(.*\)/, "") : "-";
 });
 
-// 下拉选项数据
 const companyOptions = ref([]); // 签约公司选项
 const conTypeOptions = ref([]); // 合同分类选项
 const supplierOptions = ref([]); // 供应商选项
 const buildingOptions = ref([]); // 楼栋选项
-
-// 生产专业列表
-const proProfOptions = ref([]);
+const proProfOptions = ref([]); // 生产专业列表
+const visaList = ref([]); // 签证单据列表
 // 数据字典
 const { getDictList, loadDicts } = useDict([dictMapping.proProf], {
   treeDictCodes: [],
@@ -500,7 +499,7 @@ const initFormData = () => ({
   proProf: null, // 生产专业
   bldIds: [], // 楼栋ID列表
   bldNames: "", // 楼栋名称
-  payType: null, // 付款方式
+  payMethod: null, // 付款方式
   addAmt: 0, // 签约金额
   addExclAmt: 0, // 不含税金额
   taxAmt: 0, // 税额
@@ -518,7 +517,6 @@ const initFormData = () => ({
 
 const formData = ref(initFormData());
 
-// 表单引用
 const formRef = ref<any>(null);
 const submitLoading = ref(false);
 const tableLoading = ref(false);
@@ -532,9 +530,9 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
     editType: "select",
     showOverflowTooltip: false,
     // 自定义键名
-    optionLabelField: "dicLabel",
+    optionLabelField: "visaApplyDesc",
     optionValueField: "id",
-    options: [],
+    options: visaList.value || [],
     width: 200,
   },
   {
@@ -563,18 +561,18 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
     showOverflowTooltip: false,
     width: 150,
   },
-  {
-    prop: "visaApplyId",
-    label: "签证申请人",
-    editable: true,
-    editType: "select",
-    showOverflowTooltip: false,
-    // 自定义键名
-    optionLabelField: "dicLabel",
-    optionValueField: "id",
-    options: [],
-    width: 150,
-  },
+  // {
+  //   prop: "visaApplyId",
+  //   label: "签证申请人",
+  //   editable: true,
+  //   editType: "select",
+  //   showOverflowTooltip: false,
+  //   // 自定义键名
+  //   optionLabelField: "dicLabel",
+  //   optionValueField: "id",
+  //   options: [],
+  //   width: 150,
+  // },
   {
     prop: "visaApplyDate",
     label: "签证申请日期",
@@ -631,7 +629,7 @@ const formRules = ref({
   ],
   supId: [{ required: true, message: "请选择主合同供应商", trigger: "change" }],
   priceType: [{ required: true, message: "请选择计价方式", trigger: "change" }],
-  payType: [{ required: true, message: "请选择付款方式", trigger: "change" }],
+  payMethod: [{ required: true, message: "请选择付款方式", trigger: "change" }],
   proProf: [{ required: true, message: "请选择生产专业", trigger: "change" }],
   addAmt: [
     { required: true, message: "请输入签约金额", trigger: "blur" },
@@ -722,6 +720,19 @@ const getBuildingList = async (projId: number) => {
   }
 };
 
+// 获取签证单据列表
+const getVisaData = async () => {
+  try {
+    const res = await visaManagementApi.getVisaList({
+      conId: conId.value,
+    });
+    if (res.code === 200) {
+      visaList.value = res.data || [];
+    }
+  } catch (error) {
+    console.error("获取签证单据列表失败:", error);
+  }
+};
 // 生成合同编号
 const createConNo = async () => {
   try {
@@ -749,16 +760,18 @@ const handleAdd = () => {
   const newRow = {
     uuid: uuidv4(),
     conBillId: null,
-    conId: null,
-    estChangeAmt: 0,
-    wasteCostAmt: 0,
-    wasteCostReasonId: null,
-    needVisa: false,
+    conId: conId.value,
+    visaId: null,
+    processName: "",
+    processAmt: 0,
+    processExclAmt: 0,
+    visaApplyId: userStore?.userInfo?.id, // 当前登录人ID
+    visaApplyDate: "",
     remark: "",
   };
   tableList.value = [...tableList.value, newRow];
 };
-const handleDelete = (row: any) => {
+const handleDelete = (row) => {
   tableList.value = tableList.value.filter((item) => item.uuid !== row.uuid);
 };
 
@@ -784,7 +797,7 @@ const getSupplementContractDetail = async () => {
       id: addId.value,
     });
     if (res.code === 200 && res.data) {
-      const { conAdd, conAddExt } = res.data;
+      const { conAdd, conAddExt, addProcesses = [] } = res.data;
       // 回填主表数据
       formData.value = {
         id: conAdd.id,
@@ -800,7 +813,7 @@ const getSupplementContractDetail = async () => {
         proProf: conAdd.proProf,
         bldIds: conAdd.bldIds ? conAdd.bldIds.split(",").map(Number) : [],
         bldNames: conAdd.bldNames,
-        payType: conAdd.payMethod,
+        payMethod: conAdd.payMethod,
         addAmt: conAdd.addAmt,
         addExclAmt: conAdd.addExclAmt,
         taxAmt: conAdd.taxAmt,
@@ -815,6 +828,10 @@ const getSupplementContractDetail = async () => {
         supCmanJob: conAddExt?.supCmanJob || "",
         remark: conAddExt?.remark || "",
       };
+      tableList.value = addProcesses?.map((item) => ({
+        ...item,
+        uuid: uuidv4(),
+      }));
     }
   } catch (error) {
     console.error("获取补充合同详情失败:", error);
@@ -839,7 +856,7 @@ const getContractDetail = async () => {
           conProperty: conMain.conProperty,
           supId: conMain.supId,
           priceType: conMain.priceType,
-          payType: conMain.payMethod,
+          payMethod: conMain.payMethod,
           proProf: conMain.proProf,
           bldIds: conMain.bldIds ? conMain.bldIds.split(",").map(Number) : [],
           bldNames: conMain.bldNames,
@@ -884,9 +901,9 @@ const handleSubmit = async () => {
         supId: formData.value.supId,
         priceType: formData.value.priceType,
         proProf: formData.value.proProf,
-        bldIds: formData.value.bldIds?.join(",") || [],
+        bldIds: formData.value.bldIds?.join(",") || "",
         bldNames: formData.value.bldNames,
-        payType: formData.value.payType,
+        payMethod: formData.value.payMethod,
         addAmt: formData.value.addAmt,
         addExclAmt: formData.value.addExclAmt,
         taxAmt: formData.value.taxAmt,
@@ -895,6 +912,7 @@ const handleSubmit = async () => {
       },
       conAddExt: {
         id: formData.value.id,
+        conBillId: conId.value,
         addId: formData.value.id,
         needSeal: formData.value.needSeal,
         sealTypes: formData.value.sealTypes?.join(",") || "",
@@ -905,28 +923,29 @@ const handleSubmit = async () => {
         supCmanJob: formData.value.supCmanJob || "",
         remark: formData.value.remark || "",
       },
+      addProcesses: tableList.value,
     };
 
     console.log("提交参数:", params);
     // 根据是否有ID判断是新增还是编辑
-    if (formData.value.id) {
+    if (mode.value === "edit") {
       // 编辑
-      // const editRes =
-      //   await supplementContractApi.editSupplementContract(params);
-      // if (editRes.code === 200) {
-      //   ElMessage.success("提交成功");
-      //   // 重置表单
-      //   // formData.value = {
-      //   //   ...initFormData(),
-      //   // };
-      //   // formRef.value.resetFields();
-      // }
+      const editRes =
+        await supplementContractApi.editSupplementContract(params);
+      if (editRes.code === 200) {
+        ElMessage.success("编辑成功");
+        // 重置表单
+        // formData.value = {
+        //   ...initFormData(),
+        // };
+        // formRef.value.resetFields();
+      }
     } else {
       // 新增
-      // const addRes = await supplementContractApi.addSupplementContract(params);
-      // if (addRes.code === 200) {
-      //   ElMessage.success("提交成功");
-      // }
+      const addRes = await supplementContractApi.addSupplementContract(params);
+      if (addRes.code === 200) {
+        ElMessage.success("新增成功");
+      }
     }
   } catch (error) {
     console.log("表单验证失败：", error);
@@ -946,6 +965,7 @@ const syncRouteState = async () => {
   await initOptions(); // 初始化下拉框选项
 
   await getContractDetail(); // 获取合同台账详情，相同数据回填
+  await getVisaData(); // 获取签证数据
   // 编辑或详情
   if (mode.value === "edit" || mode.value === "detail") {
     await getSupplementContractDetail();
@@ -963,14 +983,6 @@ watch(
   },
 );
 
-// 监听路由变化
-// watch(
-//   () => [route.query.mode, route.query.addId, route.query.conId],
-//   async () => {
-//     syncRouteState();
-//   },
-//   { immediate: true },
-// );
 onMounted(() => {
   syncRouteState();
 });

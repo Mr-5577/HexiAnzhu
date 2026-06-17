@@ -171,7 +171,7 @@ const tableColumns = [
   {
     label: "操作",
     prop: "actions",
-    width: 180,
+    width: 200,
     slot: "actions",
     fixed: "right",
   },
@@ -268,7 +268,7 @@ const handlePaginationChange = (page: number, size: number) => {
 // 供应商登记
 const handleRegister = () => {
   router.push({
-    path: "/supplier/supplier-register",
+    path: "/supplier/supplier-register/add",
     query: {
       mode: "add",
     },
@@ -277,7 +277,7 @@ const handleRegister = () => {
 
 const handleEdit = (row: Supplier) => {
   router.push({
-    path: "/supplier/supplier-register",
+    path: "/supplier/supplier-register/edit",
     query: { mode: "edit", supplierId: row.id },
   });
 };

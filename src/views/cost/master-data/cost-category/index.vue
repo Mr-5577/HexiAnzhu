@@ -25,11 +25,13 @@
 
       <!-- 右侧内容区 -->
       <el-main class="content-area">
-        <component
-          :is="currentComponent"
-          :has-product-base-data="hasProductBaseData"
-          @data-changed="handleDataChanged"
-        />
+        <keep-alive>
+          <component
+            :is="currentComponent"
+            :has-product-base-data="hasProductBaseData"
+            @data-changed="handleDataChanged"
+          />
+        </keep-alive>
       </el-main>
     </el-container>
   </div>

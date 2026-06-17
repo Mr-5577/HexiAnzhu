@@ -19,7 +19,7 @@
 
       <el-main class="content-area">
         <keep-alive>
-          <component :is="currentComponent" :conId="conId" />
+          <component :is="currentComponent" :conId="conId" :projId="projId" />
         </keep-alive>
       </el-main>
     </el-container>
@@ -83,23 +83,16 @@ const menuItems = [
     component: () => import("./output-declaration/index.vue"),
   },
   {
+    index: "paymentAdjust",
+    icon: markRaw(Icons.Coin),
+    label: "款项调整",
+    component: () => import("./payment-adjust/index.vue"),
+  },
+  {
     index: "costAllocation",
     icon: markRaw(Icons.DataAnalysis),
     label: "成本分摊",
     component: () => import("./cost-allocation/index.vue"),
-  },
-  {
-    index: "engineeringPrice",
-    icon: markRaw(Icons.PriceTag),
-    label: "工程核价",
-    component: () => import("./engineering-price/index.vue"),
-  },
-
-  {
-    index: "documents",
-    icon: markRaw(Icons.Message),
-    label: "收文发文",
-    component: () => import("./documents/index.vue"),
   },
   {
     index: "disputeApproval",
@@ -108,23 +101,16 @@ const menuItems = [
     component: () => import("./disput-approval/index.vue"),
   },
   {
-    index: "contractSettlement",
-    icon: markRaw(Icons.Finished),
-    label: "合同结算",
-    component: () => import("./contract-settlement/index.vue"),
+    index: "engineeringPrice",
+    icon: markRaw(Icons.PriceTag),
+    label: "工程核价",
+    component: () => import("./engineering-price/index.vue"),
   },
   {
-    index: "contractTermination",
-    icon: markRaw(Icons.CircleClose),
-    label: "合同解除",
-    component: () => import("./contract-termination/index.vue"),
-  },
-
-  {
-    index: "paymentAdjust",
-    icon: markRaw(Icons.Coin),
-    label: "款项调整",
-    component: () => import("./payment-adjust/index.vue"),
+    index: "documents",
+    icon: markRaw(Icons.Message),
+    label: "收文发文",
+    component: () => import("./documents/index.vue"),
   },
   {
     index: "paymentApplication",
@@ -138,6 +124,18 @@ const menuItems = [
     label: "履约保证金",
     component: () => import("./performance-bond/index.vue"),
   },
+  {
+    index: "contractSettle",
+    icon: markRaw(Icons.Finished),
+    label: "合同结算",
+    component: () => import("./contract-settle/index.vue"),
+  },
+  {
+    index: "contractTermination",
+    icon: markRaw(Icons.CircleClose),
+    label: "合同解除",
+    component: () => import("./contract-void/index.vue"),
+  },
 ];
 
 // 动态组件映射--懒加载
@@ -149,6 +147,7 @@ menuItems.forEach((item) => {
 const route = useRoute();
 const activeTab = ref("basic"); // 默认显示基本信息
 const conId = ref<number | null>(null); // 合同ID
+const projId = ref<number | null>(null); // 项目ID
 
 const currentComponent = computed(() => componentMap.get(activeTab.value));
 
@@ -158,9 +157,12 @@ const handleTabChange = (tab: string) => {
 
 const syncRouteState = () => {
   conId.value = route.query.conId ? Number(route.query.conId) : null;
+  projId.value = route.query.projId ? Number(route.query.projId) : null;
 };
 
-watch(() => route.query.conId, syncRouteState, { immediate: true });
+watch(() => [route.query.conId, route.query.projId], syncRouteState, {
+  immediate: true,
+});
 </script>
 <style scoped lang="scss">
 .contract-ledger-detail {
@@ -206,12 +208,13 @@ watch(() => route.query.conId, syncRouteState, { immediate: true });
       &:hover {
         background: #f0f2f6;
         color: #1e6fff;
+        font-weight: 500;
       }
 
       &.is-active {
         background: #eef3ff;
         color: #1e6fff;
-        font-weight: 500;
+        font-weight: 600;
       }
     }
   }

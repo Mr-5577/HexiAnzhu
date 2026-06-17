@@ -203,8 +203,6 @@ const getCurrentVersionId = async (projId: number) => {
       if (currentVersion) {
         const verMid = currentVersion.id;
         getDetailByProjectId(verMid); // 获取详情列表
-      } else {
-        ElMessage.warning("当前项目没有生效的版本");
       }
     }
   } catch (error) {

@@ -233,7 +233,7 @@ const handleEdit = (row: HConMain) => {
 
 const handleDetail = (row: HConMain) => {
   router.push({
-    path: "/contract/contract-ledger-detail",
+    path: "/contract/contract-ledger/detail",
     query: {
       conId: row.id,
       projId: props.projectId,

@@ -5,7 +5,7 @@
  */
 export interface SupplementContract {
   /** 主键ID */
-  id: number;
+  id?: number;
   /** 单据ID */
   conBillId: number;
   /** 补充合同名称 */
@@ -33,7 +33,7 @@ export interface SupplementContract {
   /** 主合同楼栋名称（多个用逗号分隔） */
   bldNames: string;
   /** 主合同付款方式：1-按进度支付 2-按节点支付 */
-  payType: number;
+  payMethod: number;
   /** 补充合同签约金额（含税） */
   addAmt: number;
   /** 补充合同签约金额（不含税） */
@@ -45,15 +45,15 @@ export interface SupplementContract {
   /** 经办人ID */
   agentId: number;
   /** 创建人ID */
-  createId: number;
+  createId?: number;
   /** 创建时间 */
-  createDate: string;
+  createDate?: string;
   /** 更新人ID */
-  operId: number;
+  operId?: number;
   /** 更新时间 */
-  operDate: string;
+  operDate?: string;
   /** 删除标识 */
-  isDel: boolean;
+  isDel?: boolean;
 }
 
 /**
@@ -61,11 +61,11 @@ export interface SupplementContract {
  */
 export interface SupplementContractExt {
   /** 主键ID */
-  id: number;
+  id?: number;
   /** 单据ID */
   conBillId: number;
   /** 是否需要用印 */
-  needSeal: number | string;
+  needSeal: boolean;
   /** 印章类型，多个以逗号隔开 */
   sealTypes: string;
   /** 签约地点 */
@@ -81,15 +81,15 @@ export interface SupplementContractExt {
   /** 备注 */
   remark: string;
   /** 创建人ID */
-  createId: number;
+  createId?: number;
   /** 创建时间 */
-  createDate: string;
+  createDate?: string;
   /** 更新人ID */
-  operId: number;
+  operId?: number;
   /** 更新时间 */
-  operDate: string;
+  operDate?: string;
   /** 删除标识 */
-  isDel: boolean;
+  isDel?: boolean;
 }
 
 /**
@@ -98,9 +98,9 @@ export interface SupplementContractExt {
  */
 export interface SupplementContractProcess {
   /** 主键ID */
-  id: number;
+  id?: number;
   /** 单据ID */
-  conBillId: number;
+  conBillId?: number;
   /** 签证ID */
   visaId: number;
   /** 事项名称 */
@@ -116,15 +116,15 @@ export interface SupplementContractProcess {
   /** 备注 */
   remark: string;
   /** 创建人ID */
-  createId: number;
+  createId?: number;
   /** 创建时间 */
-  createDate: string;
+  createDate?: string;
   /** 更新人ID */
-  operId: number;
+  operId?: number;
   /** 更新时间 */
-  operDate: string;
+  operDate?: string;
   /** 删除标识 */
-  isDel: boolean;
+  isDel?: boolean;
 }
 
 /**
