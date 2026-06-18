@@ -94,30 +94,30 @@ const menuItems = [
     label: "成本分摊",
     component: () => import("./cost-allocation/index.vue"),
   },
-  {
-    index: "disputeApproval",
-    icon: markRaw(Icons.Warning),
-    label: "争议审批",
-    component: () => import("./disput-approval/index.vue"),
-  },
+  // {
+  //   index: "disputeApproval",
+  //   icon: markRaw(Icons.Warning),
+  //   label: "争议审批",
+  //   component: () => import("./disput-approval/index.vue"),
+  // },
   {
     index: "engineeringPrice",
     icon: markRaw(Icons.PriceTag),
     label: "工程核价",
     component: () => import("./engineering-price/index.vue"),
   },
-  {
-    index: "documents",
-    icon: markRaw(Icons.Message),
-    label: "收文发文",
-    component: () => import("./documents/index.vue"),
-  },
-  {
-    index: "paymentApplication",
-    icon: markRaw(Icons.Money),
-    label: "付款申请",
-    component: () => import("./payment-application/index.vue"),
-  },
+  // {
+  //   index: "documents",
+  //   icon: markRaw(Icons.Message),
+  //   label: "收文发文",
+  //   component: () => import("./documents/index.vue"),
+  // },
+  // {
+  //   index: "paymentApplication",
+  //   icon: markRaw(Icons.Money),
+  //   label: "付款申请",
+  //   component: () => import("./payment-application/index.vue"),
+  // },
   {
     index: "performanceBond",
     icon: markRaw(Icons.Lock),

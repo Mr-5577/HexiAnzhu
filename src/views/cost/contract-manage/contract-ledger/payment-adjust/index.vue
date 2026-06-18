@@ -1,4 +1,4 @@
-<!-- 款项调整 列表 -->
+<!-- 款项调整/合同奖罚 列表 -->
 <template>
   <div class="payment-adjust-wrapper">
     <base-table
@@ -29,6 +29,14 @@
         </el-button>
       </template>
     </base-table>
+
+    <!-- 新增/编辑 款项调整/合同奖惩弹窗 -->
+    <add-edit-ded-dialog
+      v-model="dialogVisible"
+      :conId="props.conId"
+      :editData="editData"
+      @success="handleRefresh"
+    />
   </div>
 </template>
 
@@ -36,6 +44,8 @@
 import { ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
+import AddEditDedDialog from "./add-edit-ded-dialog.vue";
+import { paymentAdjustApi } from "@/api/cost/contract-manage/payment-adjust-api.ts";
 
 defineOptions({ name: "payment-adjust" });
 
@@ -57,8 +67,6 @@ const tableColumns: TableColumnItem[] = [
   { prop: "changeAmt", label: "是否兑现" },
   { prop: "changeAmt", label: "兑现金额" },
   { prop: "changeAmt", label: "审批状态" },
-  { prop: "status", label: "申请人" },
-  { prop: "changeReasonId", label: "申请时间" },
 ];
 // 获取列表数据
 const getDataList = async () => {
@@ -68,6 +76,10 @@ const getDataList = async () => {
   try {
     tableLoading.value = true;
     tableData.value = [];
+    const res = await paymentAdjustApi.getDedList({ conId: props.conId });
+    if (res.code === 200) {
+      tableData.value = res.data || [];
+    }
   } catch (error) {
     console.error("获取列表失败:", error);
   } finally {
@@ -82,6 +94,7 @@ const handleRefresh = () => {
 
 // 发起流程
 const handleInitiate = () => {
+  editData.value = null;
   dialogVisible.value = true;
 };
 // 编辑
@@ -94,8 +107,11 @@ const handleDelete = (row) => {
   ElMessageBox.confirm("确定删除该数据吗？", "提示", { type: "warning" })
     .then(async () => {
       try {
-        ElMessage.success("删除成功");
-        getDataList();
+        const res = await paymentAdjustApi.delDed({ id: row.id });
+        if (res.code === 200) {
+          ElMessage.success("删除成功");
+          getDataList();
+        }
       } catch (error) {
         console.error("删除失败:", error);
       }

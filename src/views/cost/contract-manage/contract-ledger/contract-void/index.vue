@@ -45,6 +45,7 @@ import { ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import AddEditVoidDialog from "./add-edit-void-dialog.vue";
+import { contractVoidApi } from "@/api/cost/contract-manage/contract-void-api.ts";
 
 defineOptions({ name: "contract-void" });
 
@@ -73,6 +74,10 @@ const getDataList = async () => {
   try {
     tableLoading.value = true;
     tableData.value = [];
+    const res = await contractVoidApi.getVoidist({ conId: props.conId });
+    if (res.code === 200) {
+      tableData.value = res.data || [];
+    }
   } catch (error) {
     console.error("获取列表失败:", error);
   } finally {
@@ -100,8 +105,11 @@ const handleDelete = (row) => {
   ElMessageBox.confirm("确定删除该数据吗？", "提示", { type: "warning" })
     .then(async () => {
       try {
-        ElMessage.success("删除成功");
-        getDataList();
+        const res = await contractVoidApi.delVoid({ id: row.id });
+        if (res.code === 200) {
+          ElMessage.success("删除成功");
+          getDataList();
+        }
       } catch (error) {
         console.error("删除失败:", error);
       }

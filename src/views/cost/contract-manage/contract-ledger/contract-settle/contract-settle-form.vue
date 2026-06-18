@@ -593,8 +593,6 @@ const formRules = ref({
   ],
 });
 
-// ==================== 计算逻辑 ====================
-
 /**
  * 计算成本一审审减金额
  * 成本一审审减金额 = 成本一审金额 - 申报结算金额
@@ -627,8 +625,6 @@ const calculateAuditDecAmt = () => {
   const result = auditAmt - costSecondAmt;
   formData.value.auditDecAmt = Math.max(0, result); // 审减金额不能为负数
 };
-
-// ==================== 事件处理 ====================
 
 /**
  * 申报结算金额变更
@@ -667,8 +663,6 @@ const handleCostSecondAmtChange = () => {
 const handleAuditAmtChange = () => {
   calculateAuditDecAmt();
 };
-
-// ==================== 监听器 ====================
 
 // 监听申报结算金额变化（使用 watch 作为补充，确保在非 change 事件触发的场景下也能更新）
 watch(
@@ -713,8 +707,6 @@ watch(
   },
 );
 
-// ==================== 提交方法 ====================
-
 // 构建提交参数
 const buildSubmitParams = () => {
   const data = { ...formData.value };
@@ -752,8 +744,6 @@ const handleSubmit = async () => {
     submitLoading.value = false;
   }
 };
-
-// ==================== 数据加载 ====================
 
 // 加载合同结算详情
 const loadSettleDetail = async () => {

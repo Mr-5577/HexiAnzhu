@@ -195,8 +195,8 @@
 
       <!-- 合同附件 -->
       <div class="section-title">合同附件</div>
-      <el-descriptions :column="1" border class="info-descriptions">
-        <el-descriptions-item label="上传合同附件"> </el-descriptions-item>
+      <el-descriptions :column="1" class="info-descriptions">
+        <el-descriptions-item label="合同附件："> 13213 </el-descriptions-item>
       </el-descriptions>
     </div>
   </div>

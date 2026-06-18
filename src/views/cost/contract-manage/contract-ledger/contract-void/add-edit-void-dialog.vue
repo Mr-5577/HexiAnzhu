@@ -124,14 +124,17 @@
 import { ref, computed, watch } from "vue";
 import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import type { ContractVoidParams } from "@/types/cost/contract-manage/contract-void-type";
+import { contractVoidApi } from "@/api/cost/contract-manage/contract-void-api";
 
 interface Props {
   modelValue: boolean;
+  conId?: number;
   editData?: ContractVoidParams | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
+  conId: undefined,
   editData: null,
 });
 
@@ -144,7 +147,7 @@ const dialogVisible = ref(props.modelValue);
 const formRef = ref<FormInstance>();
 const submitLoading = ref(false);
 
-// 经办人选项（实际项目中从接口获取）
+// 经办人选项
 const agentOptions = ref<Array<{ id: number; name: string }>>([
   { id: 1, name: "张三" },
   { id: 2, name: "李四" },
@@ -154,7 +157,7 @@ const agentOptions = ref<Array<{ id: number; name: string }>>([
 // 表单数据
 const formData = ref<ContractVoidParams>({
   id: undefined,
-  conBillId: 0,
+  conBillId: null,
   status: 0,
   signAmt: 0,
   sumProdVal: 0,
@@ -215,7 +218,7 @@ const initFormData = () => {
   } else {
     formData.value = {
       id: undefined,
-      conBillId: 0,
+      conBillId: props.conId,
       status: 0,
       signAmt: 0,
       sumProdVal: 0,
@@ -245,21 +248,17 @@ const handleSubmit = async () => {
     await formRef.value.validate();
     submitLoading.value = true;
 
-    // 模拟接口调用，实际使用时替换为真实API
-    // const api = isEditMode.value
-    //   ? contractVoidApi.editVoid
-    //   : contractVoidApi.addVoid;
-    // const res = await api(formData.value);
+    const interfaceApi = isEditMode.value
+      ? contractVoidApi.editVoid
+      : contractVoidApi.addVoid;
 
-    // 模拟请求延迟
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const res = await interfaceApi(formData.value);
 
-    // 模拟成功
-    // if (res.code === 200) {
-    ElMessage.success(isEditMode.value ? "修改成功" : "新增成功");
-    emit("success");
-    handleClose();
-    // }
+    if (res.code === 200) {
+      ElMessage.success(isEditMode.value ? "修改成功" : "新增成功");
+      emit("success");
+      handleClose();
+    }
   } catch (error) {
     console.error("表单验证失败:", error);
   } finally {
