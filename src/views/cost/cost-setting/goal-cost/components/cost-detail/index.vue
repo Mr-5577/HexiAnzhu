@@ -172,7 +172,11 @@ const getDataList = async () => {
   if (!props.projectId) return;
   try {
     tableLoading.value = true;
-    const res = await goalCostApi.getProjectCostDList(queryParams.value);
+    const params = {
+      ...queryParams.value,
+      // projId: props.projectId,
+    };
+    const res = await goalCostApi.getProjectCostDList(params);
     if (res.code === 200) {
       tableData.value = res.data || [];
     }

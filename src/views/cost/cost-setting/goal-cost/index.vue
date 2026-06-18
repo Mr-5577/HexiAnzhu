@@ -15,12 +15,12 @@
               :project-id="selectedProjectId"
             />
           </el-tab-pane>
-          <el-tab-pane label="目标成本明细" name="detail" style="height: 100%">
+          <!-- <el-tab-pane label="目标成本明细" name="detail" style="height: 100%">
             <cost-detail
               v-if="activeTab === 'detail'"
               :project-id="selectedProjectId"
             />
-          </el-tab-pane>
+          </el-tab-pane> -->
         </el-tabs>
       </div>
     </div>

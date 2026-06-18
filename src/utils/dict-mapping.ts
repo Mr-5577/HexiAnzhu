@@ -25,10 +25,6 @@ export const dictMapping = {
   payMethod: "PAY_METHOD",
   /** 退还方式 */
   refundMethod: "REFUND_METHOD",
-  /** 分摊规则 */
-  allocationRule: "FTGZ",
-  /** 业务归属 */
-  businessSegment: "YWGS",
   /** 生产专业 */
   proProf: "PRO_PROF",
   /** 附件类型 */

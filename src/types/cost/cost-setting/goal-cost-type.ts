@@ -156,10 +156,16 @@ export interface HCstProjectCostDAddEditParams {
   costMid?: number;
   /** 科目ID */
   subId?: number;
+  /** 科目名称 */
+  subName?: string;
   /** 业态ID */
   prodId?: number;
-  /** 业务归属 */
+  /** 业态名称 */
+  prodName?: string;
+  /** 业务归属ID */
   busiSegId?: number;
+  /** 业务归属名称 */
+  busiSegName?: string;
   /** 目标成本总额(含税) */
   costAmt?: number;
   /** 目标成本总额(不含税) */
@@ -170,6 +176,8 @@ export interface HCstProjectCostDAddEditParams {
   costDynExclAmt?: number;
   /** 分摊规则 */
   allocRule?: string;
+  /** 分摊规则名称 */
+  allocRuleName?: string;
 }
 
 /**

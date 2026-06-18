@@ -58,7 +58,7 @@ export interface ContractProdVal extends BaseEntity {
   /** 应付比例 */
   payRate: number;
   /** 是否强控：false-否，true-是 */
-  isCtrl: boolean;
+  isCtrl: number;
   /** 支付周期(月) */
   payIntvl: number;
   /** 本次申报产值金额 */
@@ -198,9 +198,9 @@ export interface ContractProdValParams {
   /** 产值信息 */
   prodVal: ContractProdVal;
   /** 合同支付比例 */
-  billPayrates?: ContractBillPayRate[];
+  billPayrates: ContractBillPayRate[];
   /** 材料合同产值 */
-  billMaterials?: ContractBillMaterial[];
+  billMaterials: ContractBillMaterial[];
   /** 合同支付节点 */
-  billPaynodes?: ContractBillPayNode[];
+  billPaynodes: ContractBillPayNode[];
 }
