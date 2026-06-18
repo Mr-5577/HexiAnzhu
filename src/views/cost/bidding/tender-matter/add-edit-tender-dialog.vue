@@ -244,6 +244,7 @@
           :pagination="false"
           :highlight-current-row="false"
           :show-summary="false"
+          :compactEmpty="true"
           :on-save="handleSave"
           @data-change="handleDataChange"
           @update:table-data="handleDataUpdate"
@@ -269,9 +270,9 @@ import type {
   BidTender,
   BidTenderFormParams,
   BidTenderSaveParams,
-} from "@/types/cost/bidding-management-type";
-import { biddingManageApi } from "@/api/cost/bidding-management-api";
-import { projectAreaApi } from "@/api/cost/project-area-api";
+} from "@/types/cost/bidding/bidding-management-type";
+import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api";
+import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 
 // ==================== Props & Emits ====================
 interface Props {
@@ -581,13 +582,8 @@ const handleAddDetail = () => {
   tableList.value = [...tableList.value, newRow];
 };
 
-const handleSave = async ({
-  row,
-  column,
-  newValue,
-  oldValue,
-  rowIndex,
-}: any) => {
+const handleSave = async (data: any) => {
+  const { row, column, newValue, oldValue, rowIndex } = data;
   // 当项目发生变化时，获取对应的楼栋数据
   if (column === "projId") {
     if (newValue) {
@@ -621,9 +617,7 @@ const handleSave = async ({
   }
 };
 
-const handleDataChange = (data: any) => {
-  // 数据变化回调
-};
+const handleDataChange = (data: any) => {};
 
 const handleDataUpdate = (newData: any) => {
   tableList.value = newData;

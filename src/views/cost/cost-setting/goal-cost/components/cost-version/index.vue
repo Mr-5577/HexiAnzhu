@@ -46,6 +46,12 @@
         <el-button type="danger" link @click="handleDelete(row)">
           删除
         </el-button>
+        <el-button type="primary" link @click="handleDetail(row)">
+          明细
+        </el-button>
+        <el-button type="primary" link @click="viewDetails(row)">
+          详情
+        </el-button>
       </template>
     </base-table>
 
@@ -64,11 +70,12 @@
 import { onMounted, ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
-import type { HCstProjectCostM } from "@/types/cost/goal-cost-type.ts";
-import { goalCostApi } from "@/api/cost/goal-cost-api.ts";
+import type { HCstProjectCostM } from "@/types/cost/cost-setting/goal-cost-type.ts";
+import { goalCostApi } from "@/api/cost/cost-setting/goal-cost-api.ts";
 import AddEditVersionDialog from "./add-edit-version-dialog.vue";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";
+import { useRouter } from "vue-router";
 
 defineOptions({ name: "cost-version" });
 
@@ -76,6 +83,8 @@ defineOptions({ name: "cost-version" });
 const props = defineProps<{
   projectId: number;
 }>();
+
+const router = useRouter();
 
 const verTypeOptions = ref([]); // 目标成本版本类型
 // 数据字典
@@ -124,22 +133,22 @@ const tableColumns: TableColumnItem[] = [
       return row.costExclAmt?.toLocaleString() || "-";
     },
   },
-  {
-    prop: "costDynAmt",
-    label: "动态成本总额(含税)",
-    width: 150,
-    formatter: (row: HCstProjectCostM) => {
-      return row.costDynAmt?.toLocaleString() || "-";
-    },
-  },
-  {
-    prop: "costDynExclAmt",
-    label: "动态成本总额(不含税)",
-    width: 180,
-    formatter: (row: HCstProjectCostM) => {
-      return row.costDynExclAmt?.toLocaleString() || "-";
-    },
-  },
+  // {
+  //   prop: "costDynAmt",
+  //   label: "动态成本总额(含税)",
+  //   width: 150,
+  //   formatter: (row: HCstProjectCostM) => {
+  //     return row.costDynAmt?.toLocaleString() || "-";
+  //   },
+  // },
+  // {
+  //   prop: "costDynExclAmt",
+  //   label: "动态成本总额(不含税)",
+  //   width: 180,
+  //   formatter: (row: HCstProjectCostM) => {
+  //     return row.costDynExclAmt?.toLocaleString() || "-";
+  //   },
+  // },
   { prop: "segName", label: "业务板块", width: 120 },
   {
     prop: "isEnabled",
@@ -150,7 +159,7 @@ const tableColumns: TableColumnItem[] = [
     },
   },
   { prop: "remark", label: "备注", width: 200 },
-  { label: "操作", width: 150, slot: "actions", fixed: "right" },
+  { label: "操作", width: 200, slot: "actions", fixed: "right" },
 ];
 
 // 获取数据列表
@@ -217,7 +226,26 @@ const handleDelete = async (row: HCstProjectCostM) => {
     }
   }
 };
-
+const handleDetail = (row: HCstProjectCostM) => {
+  router.push({
+    path: "/cost/cost-detail/add",
+    query: {
+      mode: "add",
+      projId: props.projectId, // 项目ID
+      costMid: row.id, // 成本版本ID
+    },
+  });
+};
+const viewDetails = (row: HCstProjectCostM) => {
+  router.push({
+    path: "/cost/cost-detail/view",
+    query: {
+      mode: "detail",
+      projId: props.projectId, // 项目ID
+      costMid: row.id, // 成本版本ID
+    },
+  });
+};
 // 操作成功回调
 const handleSuccess = () => {
   getDataList();

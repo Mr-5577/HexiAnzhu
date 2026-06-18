@@ -58,9 +58,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { costCategoryApi } from "@/api/cost/cost-category-api.ts";
+import { costCategoryApi } from "@/api/cost/master-data/cost-category-api.ts";
 import AddEditProjectCategoryDialog from "./add-edit-project-category-dialog.vue";
-import { projectAreaApi } from "@/api/cost/project-area-api";
+import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
 
 defineOptions({ name: "project-cost-category" });
 

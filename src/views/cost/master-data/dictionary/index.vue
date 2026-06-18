@@ -119,10 +119,10 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { dictionaryApi } from "@/api/cost/dictionary-api";
+import { dictionaryApi } from "@/api/cost/master-data/dictionary-api.ts";
 import DictItemTable from "./dict-item-table.vue";
 import AddEditGroupDialog from "./add-edit-group-dialog.vue";
-import type { DictGroup, DictGroupTreeNode } from "@/types/cost/dict-type";
+import type { DictGroup, DictGroupTreeNode } from "@/types/cost/master-data/dict-type.ts";
 
 defineOptions({ name: "dictionary" });
 

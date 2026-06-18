@@ -65,11 +65,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import BasicInfo from "../basic-info.vue";
-import { BidTenderFormParams } from "@/types/cost/bidding-management-type";
+import { BidTenderFormParams } from "@/types/cost/bidding/bidding-management-type.ts";
 import EditableTable from "@/components/base/editable-table.vue";
 import type { EditableColumn } from "@/components/base/editable-table.vue";
-import { projectAreaApi } from "@/api/cost/project-area-api";
-import { biddingManageApi } from "@/api/cost/bidding-management-api";
+import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
+import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api.ts";
 import { ElMessage } from "element-plus";
 import { useRoute } from "vue-router";
 import { largeScreenApi } from "@/api/large-screen-api";

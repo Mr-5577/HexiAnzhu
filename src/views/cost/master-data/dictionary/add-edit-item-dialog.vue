@@ -121,8 +121,8 @@ import type {
   DictItem,
   DictItemSaveParams,
   DictGroupTreeNode,
-} from "@/types/cost/dict-type";
-import { dictionaryApi } from "@/api/cost/dictionary-api";
+} from "@/types/cost/master-data/dict-type";
+import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 
 interface Props {
   /** 弹窗是否可见 */

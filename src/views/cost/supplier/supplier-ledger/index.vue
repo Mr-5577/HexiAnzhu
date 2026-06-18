@@ -84,9 +84,6 @@
           :page-size="pageSize"
           @pagination-change="handlePaginationChange"
         >
-          <template #supTypeId="{ row }">
-            <span>{{ getSupTypeName(row.supTypeId) }}</span>
-          </template>
           <template #actions="{ row }">
             <el-button link type="primary" @click="handleEdit(row)">
               编辑
@@ -112,17 +109,17 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { Search, Folder } from "@element-plus/icons-vue";
 import { useRouter } from "vue-router";
 import { buildTree } from "@/utils/tree";
-import { ContractTypeTreeNode } from "@/types/cost/contract-category-type";
-import { supTypeApi } from "@/api/cost/supplier-category-api";
+import { ContractTypeTreeNode } from "@/types/cost/master-data/contract-category-type";
+import { supTypeApi } from "@/api/cost/master-data/supplier-category-api";
 import type {
   SupplierType,
   SupplierTypeTreeNode,
-} from "@/types/cost/supplier-category-type";
-import { supplierApi } from "@/api/cost/supplier-ledger-api";
+} from "@/types/cost/master-data/supplier-category-type";
+import { supplierApi } from "@/api/cost/supplier/supplier-ledger-api";
 import type {
   Supplier,
   SupplierQueryParams,
-} from "@/types/cost/supplier-ledger-type";
+} from "@/types/cost/supplier/supplier-ledger-type";
 
 const router = useRouter();
 
@@ -162,7 +159,7 @@ const tableColumns = [
   // { type: "selection", width: 55 }, // 多选框
   { label: "供应商编码", prop: "supCode", width: 150 },
   { label: "供应商名称", prop: "supName", width: 200 },
-  { label: "供应商类别", slot: "supTypeId", width: 150 },
+  { label: "供应商类别", prop: "supTypeName", width: 150 },
   { label: "企业性质", prop: "supNatureName", width: 120 },
   { label: "纳税类型", prop: "taxTypeName", width: 120 },
   { label: "来源类型", prop: "sourceTypeName", width: 120 },
@@ -174,7 +171,7 @@ const tableColumns = [
   {
     label: "操作",
     prop: "actions",
-    width: 180,
+    width: 200,
     slot: "actions",
     fixed: "right",
   },
@@ -271,7 +268,7 @@ const handlePaginationChange = (page: number, size: number) => {
 // 供应商登记
 const handleRegister = () => {
   router.push({
-    path: "/supplier/supplier-register",
+    path: "/supplier/supplier-register/add",
     query: {
       mode: "add",
     },
@@ -280,8 +277,8 @@ const handleRegister = () => {
 
 const handleEdit = (row: Supplier) => {
   router.push({
-    path: "/supplier/supplier-register",
-    query: { mode: "edit", id: row.id },
+    path: "/supplier/supplier-register/edit",
+    query: { mode: "edit", supplierId: row.id },
   });
 };
 const handleDelete = (row: Supplier) => {
@@ -306,14 +303,8 @@ const handleDelete = (row: Supplier) => {
 const handleViewDetail = (row: Supplier) => {
   router.push({
     path: "/supplier/supplier-register",
-    query: { mode: "view", id: row.id },
+    query: { mode: "view", supplierId: row.id },
   });
-};
-
-// 供应商类别名称
-const getSupTypeName = (id: number | null) => {
-  if (!id) return "-";
-  return listData.value.find((item) => item.id === id)?.supTypeName || id;
 };
 
 onMounted(() => {

@@ -66,9 +66,9 @@ import { ElMessage } from "element-plus";
 import { v4 as uuidv4 } from "uuid";
 import EditableTable from "@/components/base/editable-table.vue";
 import type { EditableColumn } from "@/components/base/editable-table.vue";
-import { projectAreaApi } from "@/api/cost/project-area-api";
-import { ProjectAreaVersion } from "@/types/cost/project-area-type";
-import { productTypeApi } from "@/api/cost/product-type-api";
+import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
+import { ProjectAreaVersion } from "@/types/cost/master-data/project-area-type";
+import { productTypeApi } from "@/api/cost/master-data/product-type-api";
 
 defineOptions({ name: "area-setting" });
 

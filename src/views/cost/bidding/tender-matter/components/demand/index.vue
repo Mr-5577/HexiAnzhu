@@ -48,8 +48,8 @@ import BasicInfo from "../basic-info.vue";
 import {
   BidDemand,
   BidTenderFormParams,
-} from "@/types/cost/bidding-management-type";
-import { biddingManageApi } from "@/api/cost/bidding-management-api";
+} from "@/types/cost/bidding/bidding-management-type.ts";
+import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api.ts";
 import AssociationDemandDialog from "./association-demand-dialog.vue";
 import { ElMessage } from "element-plus";
 

@@ -46,8 +46,8 @@
 import { ref, computed, watch } from "vue";
 import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import BaseModal from "@/components/base/base-modal.vue";
-import type { ProductBase } from "@/types/cost/product-type";
-import { productTypeApi } from "@/api/cost/product-type-api";
+import type { ProductBase } from "@/types/cost/master-data/product-type";
+import { productTypeApi } from "@/api/cost/master-data/product-type-api";
 import { buildTree } from "@/utils/tree";
 
 // Props

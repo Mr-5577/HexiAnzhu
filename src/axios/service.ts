@@ -204,6 +204,9 @@ service.interceptors.response.use(
       case 500:
         ElMessage.error(resMessage || "服务器内部错误");
         return Promise.reject(new Error("服务器错误"));
+      case 502:
+        ElMessage.error("正在升级中，请稍后再试...");
+        return Promise.reject(new Error("正在升级中，请稍后再试..."));
       case 503:
         ElMessage.error("服务不可用");
         return Promise.reject(new Error("服务不可用"));

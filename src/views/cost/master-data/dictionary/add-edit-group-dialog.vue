@@ -85,8 +85,8 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { ElMessage, type FormInstance, type FormRules } from "element-plus";
-import { dictionaryApi } from "@/api/cost/dictionary-api";
-import type { DictGroup, DictGroupTreeNode } from "@/types/cost/dict-type";
+import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
+import type { DictGroup, DictGroupTreeNode } from "@/types/cost/master-data/dict-type";
 
 // Props
 interface Props {

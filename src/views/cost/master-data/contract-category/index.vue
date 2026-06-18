@@ -76,9 +76,9 @@ import type { TableColumnItem } from "@/components/base/base-table.vue";
 import type {
   ContractType,
   ContractTypeTreeNode,
-} from "@/types/cost/contract-category-type";
+} from "@/types/cost/master-data/contract-category-type.ts";
 import ContractCategoryDialog from "./contract-category-dialog.vue";
-import { conTypeApi } from "@/api/cost/contract-category-api";
+import { conTypeApi } from "@/api/cost/master-data/contract-category-api.ts";
 import { buildTree } from "@/utils/tree";
 
 defineOptions({ name: "contract-category" });

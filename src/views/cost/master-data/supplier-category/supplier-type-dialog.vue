@@ -30,7 +30,7 @@
           maxlength="50"
           show-word-limit
         />
-        <div class="form-tip">建议使用英文小写+下划线命名</div>
+        <div class="form-tip">建议使用英文、数字、下划线命名</div>
       </el-form-item>
 
       <el-form-item prop="isEnabled" label="是否启用">
@@ -60,8 +60,8 @@ import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import type {
   SupplierType,
   SupplierTypeSaveParams,
-} from "@/types/cost/supplier-category-type";
-import { supTypeApi } from "@/api/cost/supplier-category-api";
+} from "@/types/cost/master-data/supplier-category-type";
+import { supTypeApi } from "@/api/cost/master-data/supplier-category-api";
 
 const props = defineProps<{
   modelValue: boolean;

@@ -50,8 +50,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { ElTree } from "element-plus";
-import type { ProjectTreeNode } from "@/types/cost/project-area-type";
-import { projectAreaApi } from "@/api/cost/project-area-api";
+import type { ProjectTreeNode } from "@/types/cost/master-data/project-area-type";
+import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 
 defineOptions({ name: "urban-project-tree" });
 

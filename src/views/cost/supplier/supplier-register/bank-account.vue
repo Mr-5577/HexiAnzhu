@@ -55,9 +55,9 @@
 <script setup lang="ts">
 import { ref, watch, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import type { SupplierBank } from "@/types/cost/supplier-ledger-type";
+import type { SupplierBank } from "@/types/cost/supplier/supplier-ledger-type.ts";
 import AddEditBankDialog from "./add-edit-bank-dialog.vue";
-import { supplierApi } from "@/api/cost/supplier-ledger-api";
+import { supplierApi } from "@/api/cost/supplier/supplier-ledger-api.ts";
 
 defineOptions({ name: "bank-account" });
 

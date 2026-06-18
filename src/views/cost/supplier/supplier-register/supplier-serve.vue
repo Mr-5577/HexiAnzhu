@@ -68,9 +68,9 @@
 <script setup lang="ts">
 import { ref, watch, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import type { SupplierSegment } from "@/types/cost/supplier-ledger-type";
+import type { SupplierSegment } from "@/types/cost/supplier/supplier-ledger-type.ts";
 import AddEditServiceDialog from "./add-edit-service-dialog.vue";
-import { supplierApi } from "@/api/cost/supplier-ledger-api";
+import { supplierApi } from "@/api/cost/supplier/supplier-ledger-api.ts";
 
 defineOptions({ name: "supplier-service" });
 

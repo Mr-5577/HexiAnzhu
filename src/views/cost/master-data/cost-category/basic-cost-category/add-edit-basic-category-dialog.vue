@@ -116,8 +116,8 @@ import type {
   CostCategoryBase,
   CostCategoryBaseSaveParams,
   CostCategoryBaseNode,
-} from "@/types/cost/cost-category-type";
-import { costCategoryApi } from "@/api/cost/cost-category-api";
+} from "@/types/cost/master-data/cost-category-type";
+import { costCategoryApi } from "@/api/cost/master-data/cost-category-api";
 
 // Props
 interface Props {

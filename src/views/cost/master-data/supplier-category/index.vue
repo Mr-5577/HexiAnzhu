@@ -85,9 +85,9 @@ import type { TableColumnItem } from "@/components/base/base-table.vue";
 import type {
   SupplierType,
   SupplierTypeTreeNode,
-} from "@/types/cost/supplier-category-type";
+} from "@/types/cost/master-data/supplier-category-type.ts";
 import SupplierTypeDialog from "./supplier-type-dialog.vue";
-import { supTypeApi } from "@/api/cost/supplier-category-api";
+import { supTypeApi } from "@/api/cost/master-data/supplier-category-api.ts";
 import { buildTree } from "@/utils/tree";
 
 defineOptions({ name: "supplier-category" });

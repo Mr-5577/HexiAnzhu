@@ -21,7 +21,7 @@
 import { onMounted, ref } from "vue";
 import UrbanProjectTree from "@/components/business/urban-project-tree.vue";
 import TenderTable from "./tender-table.vue";
-import type { ProjectTreeNode } from "@/types/cost/project-area-type";
+import type { ProjectTreeNode } from "@/types/cost/master-data/project-area-type.ts";
 
 defineOptions({ name: "tender-matter" });
 

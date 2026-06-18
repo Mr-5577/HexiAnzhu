@@ -55,9 +55,9 @@
 <script setup lang="ts">
 import { ref, watch, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import type { SupplierPerf } from "@/types/cost/supplier-ledger-type";
+import type { SupplierPerf } from "@/types/cost/supplier/supplier-ledger-type.ts";
 import AddEditPerformanceDialog from "./add-edit-performance-dialog.vue";
-import { supplierApi } from "@/api/cost/supplier-ledger-api";
+import { supplierApi } from "@/api/cost/supplier/supplier-ledger-api.ts";
 
 defineOptions({ name: "project-performance" });
 

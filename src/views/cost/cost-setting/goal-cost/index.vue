@@ -15,12 +15,12 @@
               :project-id="selectedProjectId"
             />
           </el-tab-pane>
-          <el-tab-pane label="目标成本明细" name="detail" style="height: 100%">
+          <!-- <el-tab-pane label="目标成本明细" name="detail" style="height: 100%">
             <cost-detail
               v-if="activeTab === 'detail'"
               :project-id="selectedProjectId"
             />
-          </el-tab-pane>
+          </el-tab-pane> -->
         </el-tabs>
       </div>
     </div>
@@ -36,7 +36,7 @@ import { ref, onMounted } from "vue";
 import UrbanProjectTree from "@/components/business/urban-project-tree.vue";
 import CostVersion from "./components/cost-version/index.vue";
 import CostDetail from "./components/cost-detail/index.vue";
-import { ProjectTreeNode } from "@/types/cost/project-area-type";
+import { ProjectTreeNode } from "@/types/cost/master-data/project-area-type.ts";
 
 defineOptions({ name: "goal-cost" });
 

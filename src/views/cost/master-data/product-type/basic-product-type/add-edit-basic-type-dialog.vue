@@ -113,8 +113,8 @@ import type {
   ProductBase,
   ProductBaseSaveParams,
   ProductBaseTreeNode,
-} from "@/types/cost/product-type";
-import { productTypeApi } from "@/api/cost/product-type-api";
+} from "@/types/cost/master-data/product-type";
+import { productTypeApi } from "@/api/cost/master-data/product-type-api";
 
 // Props
 interface Props {

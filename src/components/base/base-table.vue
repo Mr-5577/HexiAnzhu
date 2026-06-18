@@ -75,7 +75,11 @@
 
         <!-- 空状态 -->
         <template #empty>
-          <div class="empty-container">
+          <div
+            :class="
+              compactEmpty ? 'empty-container compact' : 'empty-container'
+            "
+          >
             <slot name="empty">
               <el-empty description="暂无数据" />
             </slot>
@@ -246,6 +250,8 @@ interface Props {
     children?: string;
     checkStrictly?: boolean;
   };
+  /** 是否启用紧凑型空状态样式，适用于小高度容器（如弹窗内的表格） */
+  compactEmpty?: boolean;
 }
 
 // 定义组件事件
@@ -558,6 +564,7 @@ const props = withDefaults(defineProps<Props>(), {
     children: "children",
     checkStrictly: false,
   }),
+  compactEmpty: false,
 });
 
 const emit = defineEmits<Emits>();
@@ -631,7 +638,7 @@ const calculateTableHeight = (): number | null => {
   // 额外减去一些边距，确保有滚动空间
   height -= 12;
 
-  return Math.max(height, 200); // 最小高度 200px
+  return Math.max(height, 180); // 最小高度 180px
 };
 
 // 计算表格容器样式
@@ -974,7 +981,7 @@ defineExpose({
 }
 .table-wrapper {
   flex: 1;
-  min-height: 200px;
+  min-height: 180px;
   :deep(.el-table) {
     .el-table__header-wrapper {
       background-color: #f8f8f9 !important;
@@ -1052,6 +1059,25 @@ defineExpose({
 }
 .empty-container {
   padding: 40px 0;
+  // 紧凑型空状态样式，适用于小高度容器（如弹窗内的表格）
+  &.compact {
+    padding: 8px 0;
+    :deep(.el-empty) {
+      // padding: 8px 0;
+      .el-empty__image {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 4px;
+      }
+      .el-empty__description {
+        margin-top: 4px;
+        p {
+          font-size: 12px;
+          line-height: 1.2;
+        }
+      }
+    }
+  }
 }
 /* 调整合计行高度 */
 .pro-table-container {

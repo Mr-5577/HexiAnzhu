@@ -98,9 +98,9 @@
               >
                 <el-option
                   v-for="item in allocRuleOptions"
-                  :key="item.dicCode"
-                  :label="item.dicLabel"
-                  :value="item.dicCode"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
                 />
               </el-select>
             </el-form-item>
@@ -167,10 +167,8 @@ import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import type {
   HCstProjectCostDAddEditParams,
   HCstProjectCostM,
-} from "@/types/cost/goal-cost-type";
-import { goalCostApi } from "@/api/cost/goal-cost-api.ts";
-import { useDict } from "@/composables/use-dict";
-import { dictMapping } from "@/utils/dict-mapping";
+} from "@/types/cost/cost-setting/goal-cost-type";
+import { goalCostApi } from "@/api/cost/cost-setting/goal-cost-api";
 
 const props = defineProps<{
   modelValue: boolean;
@@ -193,17 +191,15 @@ const submitLoading = ref(false);
 // 业务归属选项
 const busiSegOptions = ref([]);
 // 分摊规则选项
-const allocRuleOptions = ref([]);
-// 数据字典
-const { getDictList, loadDicts } = useDict(
-  [
-    dictMapping.allocationRule, // 分摊规则
-    dictMapping.businessSegment, // 业务归属
-  ],
-  {
-    treeDictCodes: [],
-  },
-);
+const allocRuleOptions = ref([
+  { value: "RL_ALL", label: "按产品面积分摊" },
+  { value: "RL_UP", label: "按地上产品面积分摊" },
+  { value: "RL_DOWN", label: "按地下产品面积分摊" },
+  { value: "RL_RF", label: "按地下人防面积分摊" },
+  { value: "RL_NRF", label: "按地下非人防面积分摊" },
+  { value: "RL_HS", label: "按户数分摊" },
+  { value: "RL_DTS", label: "按电梯数分摊" },
+]);
 
 const isEditMode = computed(() => !!props.editData?.id);
 const dialogTitle = computed(() =>
@@ -308,13 +304,6 @@ const handleSubmit = async () => {
   }
 };
 
-// 初始化数据字典数据
-const initDictData = async () => {
-  await loadDicts();
-  busiSegOptions.value = getDictList(dictMapping.businessSegment); // 业务归属
-  allocRuleOptions.value = getDictList(dictMapping.allocationRule); // 分摊规则
-};
-
 // 初始化表单数据
 const initForm = () => {
   if (isEditMode.value && props.editData) {
@@ -356,7 +345,6 @@ watch(
   async (val) => {
     visible.value = val;
     if (val) {
-      await initDictData();
       initForm();
     }
   },
