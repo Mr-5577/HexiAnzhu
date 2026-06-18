@@ -54,4 +54,9 @@ export const dictionaryApi = {
   getsegmentList: () => {
     return http.formPost("/mainData/segment/getList");
   },
+
+  /** 获取组织类型列表 */
+  getDataTypeList: () => {
+    return http.formPost("/mainData/getDataTypeList");
+  },
 };

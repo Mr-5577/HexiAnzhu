@@ -246,7 +246,7 @@
             <el-form-item label="本次申报应付金额" prop="applyPayAmt" required>
               <el-input-number
                 v-model="formData.applyPayAmt"
-                :disabled="isDetail || formData.isCtrl"
+                :disabled="isDetail || !!formData.isCtrl"
                 :min="0"
                 :precision="2"
                 :controls="false"

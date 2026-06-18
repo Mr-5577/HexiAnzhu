@@ -44,7 +44,7 @@ const menuItems = [
     index: "basic",
     icon: markRaw(Icons.Document),
     label: "基本信息",
-    component: () => import("./contract-ledger-form.vue"),
+    component: () => import("./basic-infor/index.vue"),
   },
   {
     index: "attachment",

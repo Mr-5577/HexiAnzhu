@@ -665,17 +665,21 @@ const getTableProps = computed(() => {
     border: props.border,
     stripe: props.stripe,
     size: props.size,
-    height: props.autoHeight ? tableHeight.value : props.height,
-    maxHeight: props.maxHeight,
     highlightCurrentRow: props.highlightCurrentRow,
     ...$attrs,
   };
 
-  // 如果设置了固定高度或最大高度，优先使用
-  if (props.height || props.maxHeight) {
+  // 优先使用用户显式设置的 height/maxHeight
+  if (props.height) {
     baseProps.height = props.height;
+  } else if (props.maxHeight) {
+    baseProps.maxHeight = props.maxHeight;
+  } else if (props.autoHeight && tableHeight.value) {
+    // 只有 autoHeight 为 true 且没有设置 height/maxHeight 时，才使用自动计算的高度
+    baseProps.height = tableHeight.value;
   }
-  // 传递 tree-props 属性（使用默认值）
+
+  // 传递 tree-props 属性
   baseProps["tree-props"] = props.treeProps;
 
   return baseProps;
