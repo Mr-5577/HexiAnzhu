@@ -722,7 +722,7 @@
 
     <div class="btn-row" v-if="!isDetail">
       <el-button type="primary" :loading="submitLoading" @click="handleSubmit">
-        提交
+        保存
       </el-button>
     </div>
   </div>
@@ -731,7 +731,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { ElMessage } from "element-plus";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import { useUserStore } from "@/stores/user-store";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import { conTypeApi } from "@/api/cost/master-data/contract-category-api";
@@ -760,14 +760,13 @@ defineOptions({ name: "contract-ledger-form" });
 
 // 路由与状态
 const route = useRoute();
-const router = useRouter();
 const userStore = useUserStore();
 
 const conId = ref(null);
 const mode = ref<"add" | "edit" | "detail">("add");
 const isDetail = computed(() => route.query.mode === "detail");
 
-// 创建响应式的价款数据，使用 computed 自动追踪 priceTable 变化
+// 创建响应式的价款数据，使用 computed 追踪 priceTable 变化
 const priceTaxData = computed(() => calculatePriceTaxData());
 // 表单数据定义
 const initFormData = () => ({
@@ -1404,7 +1403,6 @@ const formRules = ref({
   ],
 });
 
-// ==================== 数据获取方法 ====================
 // 获取签约公司列表
 const getCompanyList = async () => {
   try {
@@ -1518,7 +1516,6 @@ const initOptions = async () => {
   ]);
 };
 
-// ==================== 表单数据转换方法 ====================
 // 构建提交参数（表单数据 -> 接口参数）
 const buildSubmitParams = () => {
   return {
@@ -1630,7 +1627,6 @@ const parseContractData = (conMain: any, conMainExt: any) => {
   };
 };
 
-// ==================== 业务操作方法 ====================
 // 选择项目（联动加载楼栋）
 const changeProject = (val: number) => {
   formData.value.bldIds = [];
@@ -1659,16 +1655,28 @@ const loadContractDetail = async () => {
       const {
         conMain,
         conMainExt,
-        billMaterials,
-        billPaynodes,
-        billPayrates,
-        billPrices,
+        billMaterials = [],
+        billPaynodes = [],
+        billPayrates = [],
+        billPrices = [],
       } = res.data;
       formData.value = parseContractData(conMain, conMainExt);
-      materialTable.value = billMaterials || [];
-      paynodeTable.value = billPaynodes || [];
-      payrateTable.value = billPayrates || [];
-      priceTable.value = billPrices || [];
+      materialTable.value = billMaterials.map((item: any) => ({
+        ...item,
+        uuid: uuidv4(),
+      }));
+      paynodeTable.value = billPaynodes.map((item: any) => ({
+        ...item,
+        uuid: uuidv4(),
+      }));
+      payrateTable.value = billPayrates.map((item: any) => ({
+        ...item,
+        uuid: uuidv4(),
+      }));
+      priceTable.value = billPrices.map((item: any) => ({
+        ...item,
+        uuid: uuidv4(),
+      }));
       // 加载楼栋列表
       if (conMain.projId) {
         await getBuildingList(conMain.projId);
@@ -1989,8 +1997,6 @@ const handleSubmit = async () => {
     submitLoading.value = false;
   }
 };
-
-// ==================== 路由初始化 ====================
 const syncRouteState = async () => {
   const queryMode = route.query.mode as string;
   mode.value =

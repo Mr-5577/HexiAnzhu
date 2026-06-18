@@ -65,7 +65,6 @@
             <el-form-item label="补充合同金额" prop="addAmt" required>
               <el-input-number
                 v-model="formData.addAmt"
-                disabled
                 :precision="2"
                 :controls="false"
                 style="width: 100%"
@@ -76,7 +75,6 @@
             <el-form-item label="累计变更签证" prop="sumChangeAmt" required>
               <el-input-number
                 v-model="formData.sumChangeAmt"
-                disabled
                 :precision="2"
                 :controls="false"
                 style="width: 100%"
@@ -87,7 +85,6 @@
             <el-form-item label="预结算合同金额" prop="preSettleAmt" required>
               <el-input-number
                 v-model="formData.preSettleAmt"
-                disabled
                 :precision="2"
                 :controls="false"
                 style="width: 100%"
@@ -211,8 +208,8 @@
                 placeholder="请选择"
                 style="width: 100%"
               >
-                <el-option label="是" :value="true" />
-                <el-option label="否" :value="false" />
+                <el-option label="是" :value="1" />
+                <el-option label="否" :value="0" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -444,7 +441,7 @@
 
     <div class="btn-row" v-if="!isDetail">
       <el-button type="primary" :loading="submitLoading" @click="handleSubmit">
-        提交
+        保存
       </el-button>
     </div>
   </div>
@@ -477,9 +474,9 @@ const conId = ref<number | null>(null);
 const mode = ref<"add" | "edit" | "detail">("add");
 const isDetail = computed(() => route.query.mode === "detail");
 
-const initFormData = () => ({
-  id: undefined,
-  conBillId: 0,
+const formData = ref({
+  id: null,
+  conBillId: null,
   status: 0,
   signAmt: 0,
   addAmt: 0,
@@ -490,12 +487,12 @@ const initFormData = () => ({
   sumAppyAmt: 0,
   sumPaidAmt: 0,
   sumOwedAmt: 0,
-  conId: 0,
+  conId: null,
   conTypeId: 0,
   payMethod: null,
   payTypeId: null,
   payRate: 0,
-  isCtrl: false,
+  isCtrl: 0,
   payIntvl: 0,
   applyProdVal: 0,
   applyPayAmt: 0,
@@ -510,8 +507,6 @@ const initFormData = () => ({
   conTypeName: "",
   supName: "",
 });
-
-const formData = ref(initFormData());
 const formRef = ref(null);
 const submitLoading = ref(false);
 
@@ -519,14 +514,14 @@ const submitLoading = ref(false);
 const payrateTable = ref<ContractBillPayRate[]>([]);
 const payrateColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
-  {
-    prop: "payRateId",
-    label: "支付比例",
-    editable: true,
-    editType: "input",
-    showOverflowTooltip: false,
-    width: 120,
-  },
+  // {
+  //   prop: "payRateId",
+  //   label: "支付比例",
+  //   editable: true,
+  //   editType: "input",
+  //   showOverflowTooltip: false,
+  //   width: 120,
+  // },
   {
     prop: "payTypeId",
     label: "款项类型",
@@ -785,14 +780,14 @@ const materialColumns = computed<EditableColumn[]>(() => [
 const paynodeTable = ref<ContractBillPayNode[]>([]);
 const paynodeColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
-  {
-    prop: "nodeId",
-    label: "支付节点",
-    editable: true,
-    editType: "input",
-    showOverflowTooltip: false,
-    width: 120,
-  },
+  // {
+  //   prop: "nodeId",
+  //   label: "支付节点",
+  //   editable: true,
+  //   editType: "input",
+  //   showOverflowTooltip: false,
+  //   width: 120,
+  // },
   {
     prop: "nodeName",
     label: "支付节点名称",
@@ -963,7 +958,6 @@ const handleCostProdValChange = () => {};
 // 复核应付变更
 const handleCostPayAmtChange = () => {};
 
-// ==================== 明细表操作方法 ====================
 // 支付比例明细
 const addPayrate = () => {
   const newRow: ContractBillPayRate = {
@@ -992,9 +986,7 @@ const deletePayrate = (row: ContractBillPayRate) => {
   );
 };
 
-const handleSavePayrate = async (rowData: any) => {
-  // 保存单行逻辑
-};
+const handleSavePayrate = async (rowData: any) => {};
 
 const handleChangePayrate = (data: any) => {};
 
@@ -1135,7 +1127,6 @@ const validatePaynodeTable = () => {
   return true;
 };
 
-// ==================== 提交方法 ====================
 // 构建提交参数
 const buildSubmitParams = () => {
   return {
@@ -1180,19 +1171,19 @@ const handleSubmit = async () => {
 
   try {
     await formRef.value.validate();
-    if (!validatePayrateTable()) return;
-    if (!validateMaterialTable()) return;
-    if (!validatePaynodeTable()) return;
+    // if (!validatePayrateTable()) return;
+    // if (!validateMaterialTable()) return;
+    // if (!validatePaynodeTable()) return;
 
-    submitLoading.value = true;
+    // submitLoading.value = true;
     const params = buildSubmitParams();
     console.log("提交参数", params);
-    // TODO: 调用API
-    // if (formData.value.id) {
-    //   await contractProdValApi.update(params);
-    // } else {
-    //   await contractProdValApi.add(params);
-    // }
+    // return
+    if (mode.value === "edit") {
+      await outputDeclarationApi.editProdVal(params);
+    } else {
+      await outputDeclarationApi.addProdVal(params);
+    }
     ElMessage.success("提交成功");
   } catch (error) {
     console.error(error);
@@ -1201,7 +1192,6 @@ const handleSubmit = async () => {
   }
 };
 
-// ==================== 数据加载 ====================
 // 加载产值申报详情
 const loadProdValDetail = async () => {
   if (!outputId.value) return;
@@ -1226,7 +1216,7 @@ const loadContractInfo = async () => {
       id: conId.value,
     });
     if (res.code === 200) {
-      const { conMain, billPaynodes, billPayrates } = res.data;
+      const { conMain, billPaynodes = [], billPayrates = [] } = res.data;
       formData.value.conName = conMain.conName;
       formData.value.conSysNo = conMain.conSysNo;
       formData.value.conTypeId = conMain.conTypeId;
@@ -1234,8 +1224,18 @@ const loadContractInfo = async () => {
       formData.value.supName = conMain.supName;
       formData.value.signAmt = conMain.signAmt;
       formData.value.conId = conMain.id;
-      paynodeTable.value = billPaynodes || [];
-      payrateTable.value = billPayrates || [];
+      paynodeTable.value = billPaynodes.map((item) => {
+        return {
+          ...item,
+          uuid: uuidv4(),
+        };
+      });
+      payrateTable.value = billPayrates.map((item) => {
+        return {
+          ...item,
+          uuid: uuidv4(),
+        };
+      });
     }
   } catch (error) {}
 };
@@ -1246,7 +1246,6 @@ const initDictData = async () => {
   paymentTypeOptions.value = getDictList(dictMapping.paymentType); // 款项类型
 };
 
-// ==================== 路由初始化 ====================
 const syncRouteState = async () => {
   const queryMode = route.query.mode as string;
   mode.value =
@@ -1265,6 +1264,10 @@ const syncRouteState = async () => {
   if (mode.value === "edit" || mode.value === "detail") {
     await loadProdValDetail();
   } else {
+    formData.value = {
+      ...formData.value,
+      conId: conId.value,
+    };
     await loadContractInfo();
   }
 };
