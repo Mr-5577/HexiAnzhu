@@ -51,10 +51,27 @@
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleQuery">
+        <el-button
+          type="primary"
+          icon="Search"
+          :loading="tableLoading"
+          @click="handleQuery"
+        >
           搜索
         </el-button>
-        <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+        <el-button icon="Refresh" :loading="tableLoading" @click="resetQuery">
+          重置
+        </el-button>
+        <el-button
+          type="primary"
+          :loading="exportLoading"
+          @click="exportExcel"
+          :disabled="
+            !menuStore.hasExactPermission('visiting-record:export')
+          "
+        >
+          导出
+        </el-button>
       </el-form-item>
     </el-form>
     <base-table
@@ -86,12 +103,7 @@
       <!-- 列表内操作列自定义插槽 -->
       <template #action="scope">
         <div class="action-buttons">
-          <el-button
-            link
-            type="primary"
-            size="small"
-            @click="handlePrint(scope.row)"
-          >
+          <el-button link type="primary" @click="handlePrint(scope.row)">
             打印
           </el-button>
         </div>
@@ -248,6 +260,9 @@ import { v4 as uuidv4 } from "uuid";
 import BaseModal from "@/components/base/base-modal.vue";
 import { VuePrintNext } from "vue-print-next";
 import { useUserStore } from "@/stores/user-store";
+import { ElMessage } from "element-plus";
+import { useMenuStore } from "@/stores/menu-store";
+const menuStore = useMenuStore();
 
 const userStore = useUserStore();
 // 组件name，需要和菜单配置里面的name一致
@@ -264,6 +279,7 @@ const visitMethodList = ref([]);
 const salerList = ref([]);
 const knowWayList = ref([]);
 const tableLoading = ref<boolean>(false);
+const exportLoading = ref<boolean>(false);
 const currentPage = ref<number>(1);
 const pageSize = ref<number>(20);
 const total = ref<number>(0);
@@ -277,7 +293,7 @@ const printInstance = ref<any>(null);
 
 const userName = computed(() => {
   const name = userStore?.userInfo?.empName || "";
-  return name ? name.replace(/\(.*\)/, "") : '-';
+  return name ? name.replace(/\(.*\)/, "") : "-";
 });
 
 const handleProjectChange = (value: any) => {
@@ -300,6 +316,27 @@ const resetQuery = () => {
   pageSize.value = 20;
   getTableList();
 };
+const exportExcel = async () => {
+  try {
+    exportLoading.value = true;
+    const params = {
+      ...queryParams.value,
+      isExport: true,
+      isShowTel: menuStore.hasExactPermission("visiting-record:showAllTel"),
+    };
+    const fileBlob = await assetManagementApi.exportVisitHis(params);
+    console.log("fileBlob", fileBlob);
+    if (!fileBlob || fileBlob.size === 0) {
+      ElMessage.warning("导出文件为空，请检查数据");
+    } else {
+      ElMessage.success("导出成功！");
+    }
+  } catch (error) {
+    ElMessage.error(`导出失败：${error.message || "未知错误"}`);
+  } finally {
+    exportLoading.value = false;
+  }
+};
 
 // 默认全选查询条件
 const initDefaultParams = () => {
@@ -312,7 +349,8 @@ const initDefaultParams = () => {
 // 获取项目列表
 const getProjectList = async () => {
   try {
-    const res = await assetManagementApi.getProjList({ isAll: true });
+    // isAll：true获取所有项目，false获取当前用户所属项目
+    const res = await assetManagementApi.getVisitProjList({ isAll: false });
     if (res.code === 200) {
       projectList.value = res.data || [];
     }
@@ -325,10 +363,7 @@ const fetchGetVisitType = async () => {
   try {
     const res = await assetManagementApi.getVisitType();
     if (res.code === 200) {
-      const data = res.data || [];
-      const [firstData, ...restData] = data;
-      const { optionStr, valueStr } = firstData || {};
-      visitMethodList.value = transformData(optionStr, valueStr);
+      visitMethodList.value = res.data || [];
     }
   } catch (error) {
     visitMethodList.value = [];
@@ -356,39 +391,11 @@ const fetchGetKnowWay = async () => {
   try {
     const res = await assetManagementApi.getKnowWay();
     if (res.code === 200) {
-      const data = res.data || [];
-      const [firstData, ...restData] = data;
-      const { optionStr, valueStr } = firstData || {};
-      knowWayList.value = transformData(optionStr, valueStr);
+      knowWayList.value = res.data || [];
     }
   } catch (error) {
     knowWayList.value = [];
   }
-};
-const transformData = (optionStr: any, valueStr: any) => {
-  // 参数校验：非字符串或空字符串时返回空数组
-  if (typeof optionStr !== "string" || typeof valueStr !== "string") {
-    return [];
-  }
-  const trimmedOption = optionStr.trim();
-  const trimmedValue = valueStr.trim();
-  // 处理空字符串
-  if (trimmedOption === "" || trimmedValue === "") {
-    return [];
-  }
-  const names = trimmedOption.split(",");
-  const ids = trimmedValue.split(",");
-  const result = [];
-  // 取两者中较短的长度进行配对，避免索引越界
-  const length = Math.min(names.length, ids.length);
-  // 遍历并组装对象数组
-  for (let i = 0; i < length; i++) {
-    result.push({
-      id: ids[i], // 保持原始字符串格式
-      name: names[i].trim(), // 去除名称首尾空格
-    });
-  }
-  return result;
 };
 
 // 获取列表
@@ -403,6 +410,7 @@ const getTableList = async () => {
       custTel: custTel,
       visitTimeStart: day ? `${day} 00:00:00` : "",
       visitTimeEnd: day ? `${day} 23:59:59` : "",
+      isShowTel: menuStore.hasExactPermission("visiting-record:showAllTel"),
     };
     const res = await assetManagementApi.getVisitHis(params);
     if (res.code === 200) {
@@ -436,17 +444,19 @@ const getProjectName = (projId: string) => {
   const project = projectList.value.find((item) => item.projId == projId);
   return project ? project.projName : "-";
 };
-const getVisitTypeName = (visitType: string) => {
-  const visit = visitMethodList.value.find((item) => item.id == visitType);
-  return visit ? visit.name : "-";
+const getVisitTypeName = (visitTypeId: string) => {
+  const visit = visitMethodList.value.find(
+    (item) => item.valueStr == visitTypeId,
+  );
+  return visit ? visit.optionStr : "-";
 };
 const getSalerName = (salerId: string) => {
   const saler = salerList.value.find((item) => item.salerId == salerId);
   return saler ? saler.salerName : "-";
 };
-const getKnowWayName = (knowWay: string) => {
-  const know = knowWayList.value.find((item) => item.id == knowWay);
-  return know ? know.name : "-";
+const getKnowWayName = (knowWayId: string) => {
+  const know = knowWayList.value.find((item) => item.valueStr == knowWayId);
+  return know ? know.optionStr : "-";
 };
 
 const handleClose = () => {

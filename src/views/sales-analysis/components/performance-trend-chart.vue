@@ -48,14 +48,13 @@ import {
 import * as echarts from "echarts";
 import { dateUtil } from "@/utils/date-util";
 import { largeScreenApi } from "@/api/large-screen-api";
-import type { ECharts, EChartsOption } from "echarts";
 import { useRouter } from "vue-router";
 
 const router = useRouter();
 
 interface Props {
   data: string;
-  department: number[];
+  projIds: number[];
 }
 
 interface YearData {
@@ -72,7 +71,7 @@ interface DayData {
 
 const props = withDefaults(defineProps<Props>(), {
   data: "",
-  department: () => [],
+  projIds: () => [],
 });
 
 // 常量定义
@@ -86,7 +85,7 @@ const loading = ref(false);
 // 请求锁
 let isRequesting = false;
 const chartType = ref("year");
-const chartInstance = shallowRef<ECharts | null>(null);
+const chartInstance = shallowRef<echarts.ECharts | null>(null);
 const chartDom = ref<HTMLDivElement | null>(null);
 
 // 图表数据
@@ -121,7 +120,7 @@ const numMax = computed(() => {
 });
 
 // 图表配置
-const chartOption = computed<EChartsOption>(() => {
+const chartOption = computed(() => {
   if (chartType.value === "year") {
     return {
       tooltip: { trigger: "axis" },
@@ -372,7 +371,7 @@ const getRequestParams = () => {
     .format("YYYY-MM-DD");
 
   return {
-    projIds: props.department,
+    projIds: props.projIds,
     type: 0, // 0:年  1:月  2:周  3:日
     day: `${props.data} 00:00:00`,
     beginDate: `${startDate} 00:00:00`,
@@ -419,7 +418,7 @@ const handleToPage = () => {
   const timestamp = new Date().getTime();
   let params: any = {
     data: props.data,
-    projIds: props.department,
+    projIds: props.projIds,
   };
   if (chartType.value === "month") {
     params.type = "date";

@@ -12,11 +12,13 @@ export const largeScreenApi = {
   },
   // 获取项目列表
   getProjList: () => {
-    return http.post("/emp/getProjList");
+    // return http.post("/emp/getProjList");
+    return http.post("/mainData/project/getAuthProjList");
   },
   // 获取项目列表(树)
   getProjTree: () => {
-    return http.post("/emp/getProjTree");
+    // return http.post("/emp/getProjTree");
+    return http.post("/mainData/project/getAuthProjTree");
   },
   // 获取销售业绩数据（项目月度）
   getSaleProjInfo: (data: SaleParamsInterface) => {
@@ -29,13 +31,13 @@ export const largeScreenApi = {
   // 导出-置业顾问排名
   exportSaleProjSalerInfo: (
     data: any,
-    filename: string = "置业顾问排名.xlsx"
+    filename: string = "置业顾问排名.xlsx",
   ) => {
     return http.exportFile(
       "/sale/getSaleProjSalerInfo",
       data,
       filename || "数据列表.xlsx",
-      "post"
+      "post",
     );
   },
   // 获取销售业绩数据（近一年）

@@ -29,7 +29,11 @@
           </template>
           <template #default>
             <div class="user-dropdown">
-              <div class="dropdown-item" @click="handleProfile">
+              <div
+                class="dropdown-item"
+                @click="handleProfile"
+                v-if="hasPersonalCenter"
+              >
                 <el-icon><User /></el-icon>
                 <span>个人中心</span>
               </div>
@@ -46,6 +50,7 @@
 </template>
 
 <script setup lang="ts">
+import { User, SwitchButton } from "@element-plus/icons-vue";
 import { ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import { extractModules, getFirstRoutePath } from "@/utils/menu-util";
@@ -53,9 +58,11 @@ import { useMenuStore } from "@/stores/menu-store";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { userApi } from "@/api/user-api";
 import { useUserStore } from "@/stores/user-store";
+import { useSalesData } from "@/composables/use-sales";
 
 const menuStore = useMenuStore();
 const userStore = useUserStore();
+const { resetData } = useSalesData();
 
 interface Props {
   activeModuleId?: number;
@@ -76,8 +83,33 @@ const activeNav = ref<number>(0);
 
 const menuList = computed(() => {
   const menu = menuStore.menuData;
+  // console.log("menu", menu);
   // console.log("extractModules(menu)", extractModules(menu));
   return extractModules(menu);
+});
+// 检查是否有个人中心菜单权限
+const hasPersonalCenter = computed(() => {
+  // 递归查找菜单树中是否存在个人中心相关的菜单
+  const findPersonalCenter = (menus: any[]): boolean => {
+    for (const menu of menus) {
+      // 根据 meta.title 或 name 判断是否为个人中心
+      if (
+        menu.meta?.title === "个人中心" ||
+        menu.path === "system/user" ||
+        menu.path === "/system/user"
+      ) {
+        return true;
+      }
+      if (menu.children && menu.children.length > 0) {
+        if (findPersonalCenter(menu.children)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  };
+
+  return findPersonalCenter(menuStore.menuData || []);
 });
 
 // 监听外部传入的activeModuleId
@@ -88,7 +120,7 @@ watch(
       activeNav.value = newId;
     }
   },
-  { immediate: true }
+  { immediate: true },
 );
 
 // 处理导航点击
@@ -109,7 +141,7 @@ const handleProfile = () => {
 };
 
 const logout = () => {
-  ElMessageBox.confirm("确定现在退出系统吗?", "退出", {
+  ElMessageBox.confirm("确定要退出当前系统吗？", "退出", {
     confirmButtonText: "确认",
     cancelButtonText: "取消",
     type: "warning",
@@ -124,8 +156,8 @@ const logout = () => {
             ElMessage.success("退出成功，即将跳转到登录页！");
             localStorage.clear();
             sessionStorage.clear();
-            // 关闭弹窗
-            done();
+            resetData(); // 重置共享数据
+            done(); // 关闭弹窗
             setTimeout(() => {
               // 跳转到登录页并刷新
               router.push("/login").then(() => {
@@ -168,7 +200,7 @@ const logout = () => {
 
   .logo-content {
     height: 64px;
-    padding: 0px 19px;
+    padding-left: 20px;
     box-sizing: border-box;
     flex-shrink: 0;
     display: flex;

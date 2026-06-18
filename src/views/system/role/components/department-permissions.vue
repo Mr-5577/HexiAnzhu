@@ -97,11 +97,13 @@ const columns: TableColumnItem[] = [
     prop: "isPower",
     label: "授权",
     slot: "isPower",
+    showOverflowTooltip: false,
   },
   {
     prop: "isAutoRefresh",
     label: "自动权限扩张",
     slot: "isAutoRefresh",
+    showOverflowTooltip: false,
   },
 ];
 const tableData = ref<any[]>([]);

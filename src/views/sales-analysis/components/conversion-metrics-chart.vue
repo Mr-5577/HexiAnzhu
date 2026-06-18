@@ -34,6 +34,7 @@
 import BaseChart from "@/components/base/base-chart.vue";
 import {
   ref,
+  shallowRef,
   onMounted,
   onUnmounted,
   nextTick,
@@ -48,11 +49,11 @@ const router = useRouter();
 
 interface Props {
   data: string;
-  department: number[];
+  projIds: number[];
 }
 const props = withDefaults(defineProps<Props>(), {
   data: "",
-  department: () => [],
+  projIds: () => [],
 });
 // 定义一个需要暴露的方法
 const refreshData = () => {
@@ -78,8 +79,8 @@ const monthChartRef = ref<HTMLDivElement | null>(null);
 const overallChartRef = ref<HTMLDivElement | null>(null);
 
 // 为每个图表创建独立的实例
-const monthChartInstance = ref<echarts.ECharts | null>(null);
-const overallChartInstance = ref<echarts.ECharts | null>(null);
+const monthChartInstance = shallowRef<echarts.ECharts | null>(null);
+const overallChartInstance = shallowRef<echarts.ECharts | null>(null);
 
 const conversionRates = computed(() => {
   const total = conversionData.value.dylfComeNum;
@@ -292,9 +293,9 @@ const getData = async () => {
   // 检查是否已有请求在进行
   if (isRequesting) return;
 
-  const { data, department } = props;
+  const { data, projIds } = props;
   const params = {
-    projIds: department,
+    projIds: projIds,
     type: 1, // 0:年  1:月  2:周  3:日
     day: `${data} 00:00:00`,
     beginDate:
@@ -322,7 +323,7 @@ const handleMonthTitleClick = () => {
   const timestamp = new Date().getTime();
   const params = {
     data: props.data,
-    projIds: props.department,
+    projIds: props.projIds,
   };
   router.push({
     path: "/channel-analysis/conversion-rate",
@@ -337,7 +338,7 @@ const handleOverallTitleClick = () => {
   const timestamp = new Date().getTime();
   const params = {
     data: props.data,
-    projIds: props.department,
+    projIds: props.projIds,
     type: "date",
   };
   router.push({

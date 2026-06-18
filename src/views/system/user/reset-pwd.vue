@@ -34,7 +34,7 @@
       <el-button
         class="save-btn"
         type="primary"
-        size="small"
+        size="default"
         :loading="saveLoading"
         @click="handleSubmit"
       >

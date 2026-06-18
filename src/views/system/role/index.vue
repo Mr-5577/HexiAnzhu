@@ -386,7 +386,8 @@ onMounted(() => {
       width: 360px;
       background: white;
       border-radius: 12px;
-      padding: 15px;
+      padding: 15px 0;
+      box-sizing: border-box;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
       display: flex; // 新增
       flex-direction: column; // 新增
@@ -396,7 +397,8 @@ onMounted(() => {
         justify-content: space-between;
         align-items: center;
         flex-shrink: 0;
-        margin-bottom: 10px;
+        padding: 0 15px;
+        box-sizing: border-box;
         .card-title {
           font-size: 16px;
           font-weight: 600;
@@ -407,7 +409,7 @@ onMounted(() => {
         flex: 1;
         min-height: 0;
         overflow-y: auto;
-        padding-top: 2px;
+        padding: 15px;
         box-sizing: border-box;
         /* 自定义滚动条样式 */
         &::-webkit-scrollbar {

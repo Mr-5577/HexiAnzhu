@@ -123,6 +123,8 @@ import { ref, computed, watch, nextTick, PropType } from "vue";
 import { ElTree, ElMessage } from "element-plus";
 import { ArrowDown, Search } from "@element-plus/icons-vue";
 import { debounce } from "@/utils/common";
+import { buildTree } from "@/utils/tree";
+
 
 // 定义项目数据类型
 interface ProjectData {
@@ -283,39 +285,6 @@ watch(
     // deep: true,
   },
 );
-
-// 方法
-const buildTree = (list: ProjectData[]): ProjectData[] => {
-  if (!list || list.length === 0) return [];
-
-  const map = new Map<number, ProjectData>();
-  const roots: ProjectData[] = [];
-
-  // 创建映射
-  list.forEach((item) => {
-    map.set(item.id, { ...item, children: [] });
-  });
-
-  // 构建树
-  list.forEach((item) => {
-    const node = map.get(item.id);
-    if (!node) return;
-
-    if (item.pid === 0) {
-      roots.push(node);
-    } else {
-      const parent = map.get(item.pid);
-      if (parent) {
-        parent.children!.push(node);
-      } else {
-        // 如果父节点不存在，作为根节点
-        roots.push(node);
-      }
-    }
-  });
-
-  return roots;
-};
 
 const openDialog = () => {
   if (props.disabled) return;
@@ -580,22 +549,22 @@ defineExpose({
   }
 }
 // 滚动条样式
-.tree-container,
-.selected-preview {
-  &::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  &::-webkit-scrollbar-track {
-    background: var(--el-fill-color-light);
-    border-radius: 3px;
-  }
-  &::-webkit-scrollbar-thumb {
-    background: var(--el-border-color-dark);
-    border-radius: 3px;
-    &:hover {
-      background: var(--el-border-color-darker);
-    }
-  }
-}
+// .tree-container,
+// .selected-preview {
+//   &::-webkit-scrollbar {
+//     width: 6px;
+//     height: 6px;
+//   }
+//   &::-webkit-scrollbar-track {
+//     background: var(--el-fill-color-light);
+//     border-radius: 3px;
+//   }
+//   &::-webkit-scrollbar-thumb {
+//     background: var(--el-border-color-dark);
+//     border-radius: 3px;
+//     &:hover {
+//       background: var(--el-border-color-darker);
+//     }
+//   }
+// }
 </style>

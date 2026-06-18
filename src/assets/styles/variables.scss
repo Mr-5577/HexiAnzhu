@@ -1,0 +1,126 @@
+// CSS 变量定义 - 全局主题色
+
+:root {
+  // ========== 主色系（你的自定义品牌色）==========
+  // 保持深蓝绿色系但提亮
+  // --harmony-primary: #0a5c8a; /* 主体，比原来的亮一级 */
+  // --harmony-primary-light: #1a7cb0; /* 悬停/激活 */
+  // --harmony-primary-dark: #043c5c; /* 保留原色作为深色变体 */
+  // 中等深度色系
+  // --harmony-primary: #1a6e9e;
+  // --harmony-primary-light: #2a88be;
+  // --harmony-primary-dark: #0c4a6e;
+  // 明亮的品牌蓝
+  --harmony-primary: #2c7cb6;
+  --harmony-primary-light: #4096cc;
+  --harmony-primary-dark: #1a5a8a;
+
+  // --harmony-primary: #0a5c8a;        // 比 #05456e 亮一级，比 #032c46 亮两级
+  // --harmony-primary-light: #1e78ae;  // 悬停/高亮
+  // --harmony-primary-dark: #043c5c;   // 激活/深色（就是原色）
+
+  // ========== 辅助色系 ==========
+  --harmony-success: #0c7c42;
+  --harmony-success-light: #0e9a51;
+  --harmony-success-dark: #085d31;
+
+  --harmony-warning: #d4a012;
+  --harmony-warning-light: #f0b429;
+  --harmony-warning-dark: #b3860f;
+
+  --harmony-danger: #c53030;
+  --harmony-danger-light: #e53e3e;
+  --harmony-danger-dark: #9b2c2c;
+
+  --harmony-info: #2b6cb0;
+  --harmony-info-light: #3182ce;
+  --harmony-info-dark: #2c5282;
+
+  // ========== 中性色系 ==========
+  --harmony-gray-50: #f8fafc;
+  --harmony-gray-100: #f1f5f9;
+  --harmony-gray-200: #e2e8f0;
+  --harmony-gray-300: #cbd5e1;
+  --harmony-gray-400: #94a3b8;
+  --harmony-gray-500: #64748b;
+  --harmony-gray-600: #475569;
+  --harmony-gray-700: #334155;
+  --harmony-gray-800: #1e293b;
+  --harmony-gray-900: #0f172a;
+
+  // ========== Element Plus CSS 变量映射 ==========
+  // 主色
+  --el-color-primary: var(--harmony-primary);
+  --el-color-primary-dark-2: var(--harmony-primary-dark);
+  --el-color-primary-light-3: #1e5672;
+  --el-color-primary-light-5: #4a788e;
+  --el-color-primary-light-7: #7a9aab;
+  --el-color-primary-light-8: #a1b9c5;
+  --el-color-primary-light-9: #c8d9e0;
+
+  // 成功色
+  --el-color-success: var(--harmony-success);
+  --el-color-success-dark-2: var(--harmony-success-dark);
+  --el-color-success-light-3: #2a9d6e;
+  --el-color-success-light-5: #5cb88e;
+  --el-color-success-light-7: #8ed2ae;
+  --el-color-success-light-8: #b5e4cd;
+  --el-color-success-light-9: #ddf5ea;
+
+  // 警告色
+  --el-color-warning: var(--harmony-warning);
+  --el-color-warning-dark-2: var(--harmony-warning-dark);
+  --el-color-warning-light-3: #e8b43a;
+  --el-color-warning-light-5: #efc96b;
+  --el-color-warning-light-7: #f5de9c;
+  --el-color-warning-light-8: #faedc4;
+  --el-color-warning-light-9: #fdf6e5;
+
+  // 危险色
+  --el-color-danger: var(--harmony-danger);
+  --el-color-danger-dark-2: var(--harmony-danger-dark);
+  --el-color-danger-light-3: #db5a5a;
+  --el-color-danger-light-5: #e88282;
+  --el-color-danger-light-7: #f0aaaa;
+  --el-color-danger-light-8: #f5c8c8;
+  --el-color-danger-light-9: #fce8e8;
+
+  // 信息色
+  --el-color-info: var(--harmony-info);
+  --el-color-info-dark-2: var(--harmony-info-dark);
+  --el-color-info-light-3: #558cc0;
+  --el-color-info-light-5: #7fa8d0;
+  --el-color-info-light-7: #a9c4e0;
+  --el-color-info-light-8: #c8dbee;
+  --el-color-info-light-9: #e6f0f8;
+
+  // 悬停/激活状态
+  --el-color-primary-hover: var(--el-color-primary-light-3);
+  --el-color-primary-active: var(--el-color-primary-dark-2);
+
+  // ========== 文字颜色 ==========
+  --el-text-color-primary: #303133;
+  --el-text-color-regular: #606266;
+  --el-text-color-secondary: #909399;
+  --el-text-color-placeholder: #a8abb2;
+  --el-text-color-disabled: #c0c4cc;
+
+  // ========== 边框颜色 ==========
+  --el-border-color: #dcdfe6;
+  --el-border-color-light: #e4e7ed;
+  --el-border-color-lighter: #ebeef5;
+  --el-border-color-extra-light: #f2f6fc;
+
+  // ========== 背景色 ==========
+  --el-fill-color: #f0f2f5;
+  --el-fill-color-light: #f5f7fa;
+  --el-fill-color-lighter: #fafafa;
+  --el-fill-color-extra-light: #fafcff;
+  --el-fill-color-dark: #ebedf0;
+  --el-fill-color-blank: #ffffff;
+
+  // ========== 禁用状态 ==========
+  --el-disabled-bg-color: var(--el-fill-color-light);
+  --el-disabled-text-color: var(--el-text-color-placeholder);
+  --el-disabled-border-color: var(--el-border-color-light);
+}

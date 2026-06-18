@@ -1,8 +1,8 @@
 import { createApp } from "vue";
 import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
-import "./assets/styles/index.scss";
-import "./assets/styles/button-theme.scss";
+import "./assets/styles/variables.scss";  // CSS变量定义（必须最先导入）
+import "./assets/styles/element-override.scss"; // Element Plus样式覆盖
 import zhCn from "element-plus/es/locale/lang/zh-cn";
 
 import App from "./App.vue";

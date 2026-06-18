@@ -17,9 +17,6 @@ UI 框架: 按需引入
 
 代码规范: ESLint + Prettier
 
-# 初始化
-npm install
-
 # 开发环境
 npm run dev
 # 访问: http://localhost:3000

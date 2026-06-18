@@ -10,7 +10,7 @@ export function debounce<T extends (...args: any[]) => any>(
   wait: number = 500,
   immediate: boolean = false
 ): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout | null = null;
+  let timeout: ReturnType<typeof setTimeout> | null = null;
   let result: any;
 
   return function (this: any, ...args: Parameters<T>) {

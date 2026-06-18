@@ -1,5 +1,4 @@
 import { useMenuStore } from "@/stores/menu-store";
-import { useUserStore } from "@/stores/user-store";
 import {
   transformMenuDataExact,
   extractButtonPermissions,
@@ -13,6 +12,7 @@ import {
 import { addDynamicRoutes } from "./dynamic-routes";
 import { userApi } from "@/api/user-api";
 import { ElLoading } from "element-plus";
+import { costStaticRoutes } from "./static-routes";
 
 // 静态路由（登录页等）
 const staticRoutes: Array<RouteRecordRaw> = [
@@ -94,7 +94,7 @@ const router = createRouter({
   routes: staticRoutes,
 });
 
-// 在路由守卫开始添加一个全局清理函数
+// 清理动态路由的函数
 const cleanupDynamicRoutes = () => {
   // 获取所有路由
   const routes = router.getRoutes();
@@ -116,6 +116,7 @@ const cleanupDynamicRoutes = () => {
   });
 };
 
+// 菜单是否加载
 let menuLoaded = false;
 
 // 检查密码是否过期
@@ -166,13 +167,10 @@ router.beforeEach(async (to, from, next) => {
   }
 
   const menuStore = useMenuStore();
-  const userStore = useUserStore();
-
-  // 只需要这个判断：菜单没加载过，就加载一次
+  // 菜单没加载过，就加载菜单数据并添加动态路由
   if (!menuLoaded) {
     let loadingInstance = null;
     try {
-      // console.log("加载菜单数据...");
       // 创建加载实例 - 全屏加载
       loadingInstance = ElLoading.service({
         lock: true,
@@ -184,7 +182,11 @@ router.beforeEach(async (to, from, next) => {
       const res = await userApi.getUserMenuPowerList();
       // console.log("获取到菜单数据:", res);
       if (res.code === 200) {
-        const menuData = res.data || [];
+        let menuData = res.data || [];
+        // 手动管理成本模块的权限，管理员拥有成本模块的权限
+        if (localStorage.getItem("admin") === "1") {
+          menuData.push(costStaticRoutes);
+        }
         // 提取按钮权限
         const buttonPermission = extractButtonPermissions(menuData);
         // console.log("权限列表:", buttonPermission);
@@ -196,7 +198,6 @@ router.beforeEach(async (to, from, next) => {
         // 存储到store
         menuStore.setMenuData(exactData);
         menuStore.setPermissionData(buttonPermission);
-
         // 添加动态路由
         await addDynamicRoutes(router, exactData);
         // 标记为已加载

@@ -5,7 +5,7 @@
         <!-- <el-cascader
           class="custom-cascader fixed-height-cascader"
           :filterable="true"
-          v-model="departmentVal"
+          v-model="projIds"
           placeholder="请选择"
           :options="options"
           :props="cascaderProps"
@@ -17,7 +17,7 @@
         ></el-cascader> -->
         <project-tree-selector
           class="large-screen-project-tree"
-          v-model="departmentVal"
+          v-model="projIds"
           :project-list="options"
           placeholder="请选择项目"
           width="220px"
@@ -74,41 +74,41 @@
         <goal-achieved
           ref="goalAchievedRef"
           :data="dataVal"
-          :department="departmentVal"
+          :projIds="projIds"
         ></goal-achieved>
         <performance-ranking
           ref="performanceRankingRef"
           :data="dataVal"
-          :department="departmentVal"
+          :projIds="projIds"
         ></performance-ranking>
       </div>
       <div class="main-middle">
         <achievement-rate
           ref="achievementRateRef"
           :data="dataVal"
-          :department="departmentVal"
+          :projIds="projIds"
         ></achievement-rate>
         <performance-trend-chart
           ref="performanceTrendChartRef"
           :data="dataVal"
-          :department="departmentVal"
+          :projIds="projIds"
         ></performance-trend-chart>
       </div>
       <div class="main-right">
         <conversion-metrics-chart
           ref="conversionMetricsChartRef"
           :data="dataVal"
-          :department="departmentVal"
+          :projIds="projIds"
         ></conversion-metrics-chart>
         <financial-statistics
           ref="financialStatisticsRef"
           :data="dataVal"
-          :department="departmentVal"
+          :projIds="projIds"
         ></financial-statistics>
         <structural-statistics-chart
           ref="structuralStatisticsChartRef"
           :data="dataVal"
-          :department="departmentVal"
+          :projIds="projIds"
         ></structural-statistics-chart>
       </div>
     </el-main>
@@ -145,7 +145,7 @@ defineOptions({ name: "large-screen" });
 const yearMonthDay = ref("");
 const time = ref("");
 const week = ref("");
-const departmentVal = ref<number[]>([]);
+const projIds = ref<number[]>([]);
 const dataVal = ref("");
 const options = ref<any[]>([]);
 const isQueryFast = ref(true);
@@ -214,7 +214,7 @@ const getProjList = async () => {
   if (res.code === 200) {
     const data = res.data || [];
     options.value = data;
-    departmentVal.value = getLeafNodeIds(data);
+    projIds.value = getLeafNodeIds(data);
     setTimeout(() => {
       // 手动触发子组件加载数据
       refreshAllComponents();

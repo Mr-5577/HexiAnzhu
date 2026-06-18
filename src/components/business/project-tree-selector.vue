@@ -611,25 +611,25 @@ defineExpose({
   }
 }
 // 滚动条样式
-.list-container,
-.preview-tags {
-  &::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
+// .list-container,
+// .preview-tags {
+//   &::-webkit-scrollbar {
+//     width: 6px;
+//     height: 6px;
+//   }
 
-  &::-webkit-scrollbar-track {
-    background: var(--el-fill-color-light);
-    border-radius: 3px;
-  }
+//   &::-webkit-scrollbar-track {
+//     background: var(--el-fill-color-light);
+//     border-radius: 3px;
+//   }
 
-  &::-webkit-scrollbar-thumb {
-    background: var(--el-border-color-dark);
-    border-radius: 3px;
+//   &::-webkit-scrollbar-thumb {
+//     background: var(--el-border-color-dark);
+//     border-radius: 3px;
 
-    &:hover {
-      background: var(--el-border-color-darker);
-    }
-  }
-}
+//     &:hover {
+//       background: var(--el-border-color-darker);
+//     }
+//   }
+// }
 </style>

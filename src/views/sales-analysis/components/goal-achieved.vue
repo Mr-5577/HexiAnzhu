@@ -145,6 +145,7 @@ import qianyue from "@/assets/imgs/largeScreenImg/qianyue.png";
 import BaseChart from "@/components/base/base-chart.vue";
 import {
   ref,
+  shallowRef,
   onMounted,
   onUnmounted,
   nextTick,
@@ -162,11 +163,11 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 interface Props {
   data: string;
-  department: number[];
+  projIds: number[];
 }
 const props = withDefaults(defineProps<Props>(), {
   data: "",
-  department: () => [],
+  projIds: () => [],
 });
 // 定义一个需要暴露的方法
 const refreshData = () => {
@@ -267,7 +268,7 @@ const dataList = ref([
   },
 ]);
 
-const chartInstance = ref<echarts.ECharts | null>(null);
+const chartInstance = shallowRef<echarts.ECharts | null>(null);
 const chartDom = ref<HTMLDivElement | null>(null);
 
 // 初始化图表
@@ -357,7 +358,7 @@ const handleTitleClick = () => {
   const type = targetData?.type || "date";
   const params = {
     data: props.data,
-    projIds: props.department,
+    projIds: props.projIds,
     type
   };
   router.push({
@@ -380,7 +381,7 @@ const getData = async () => {
   if (isRequesting) return;
 
   const params = {
-    projIds: props.department,
+    projIds: props.projIds,
     type: typeVal.value,
     day: `${props.data} 00:00:00`,
   };
@@ -507,9 +508,9 @@ const handleLookDetail = (item: any) => {
   });
 };
 watch(
-  () => [props.data, props.department],
-  ([data, department]) => {
-    if (data && department) {
+  () => [props.data, props.projIds],
+  ([data, projIds]) => {
+    if (data && projIds) {
       // nextTick(() => {
       //   getData();
       // });

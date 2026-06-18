@@ -73,7 +73,6 @@ import {
 } from "vue";
 import * as echarts from "echarts";
 import { largeScreenApi } from "@/api/large-screen-api";
-import type { ECharts, EChartsOption } from "echarts";
 import { dateUtil } from "@/utils/date-util";
 import { useRoute, useRouter } from "vue-router";
 
@@ -82,7 +81,7 @@ const router = useRouter();
 
 interface Props {
   data: string;
-  department: number[];
+  projIds: number[];
 }
 
 interface ApiDataItem {
@@ -98,7 +97,7 @@ interface PieDataItem {
 
 const props = withDefaults(defineProps<Props>(), {
   data: "",
-  department: () => [],
+  projIds: () => [],
 });
 
 // 常量定义
@@ -136,7 +135,7 @@ const loading = ref(false);
 const chartType = ref("1");
 const inventoryType = ref("time");
 const channelType = ref("visit");
-const chartInstance = shallowRef<ECharts | null>(null);
+const chartInstance = shallowRef<echarts.ECharts | null>(null);
 const chartDomRef = ref<HTMLDivElement | null>(null);
 
 // API返回的原始数据 - 包含7个维度
@@ -241,7 +240,7 @@ const disposeChart = () => {
 };
 
 // 获取基础图表配置
-const getBaseChartOption = (): EChartsOption => {
+const getBaseChartOption = (): any => {
   const chartData = currentChartData.value;
   const chartName = getChartName();
 
@@ -342,7 +341,7 @@ const bindChartClickEvent = () => {
     const timestamp = new Date().getTime();
     const params = {
       data: props.data,
-      projIds: props.department,
+      projIds: props.projIds,
     };
     router.push({
       path: path,
@@ -364,8 +363,8 @@ const handleResize = () => {
 const fetchData = async () => {
   if (isRequesting) return;
 
-  const { data, department } = props;
-  if (!data || department.length === 0) {
+  const { data, projIds } = props;
+  if (!data || projIds.length === 0) {
     // 如果没有必要参数，清空数据
     apiRawData.value = [[], [], [], [], [], [], []];
     nextTick(() => {
@@ -374,7 +373,7 @@ const fetchData = async () => {
     return;
   }
   const params = {
-    projIds: department,
+    projIds: projIds,
     type: 1, // 0:年  1:月  2:周  3:日
     day: `${data} 00:00:00`,
     beginDate:

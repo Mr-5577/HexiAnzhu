@@ -79,6 +79,7 @@ const columns: TableColumnItem[] = [
     prop: "isPower",
     label: "授权",
     slot: "isPower",
+    showOverflowTooltip: false,
   },
 ];
 const tableData = ref<any[]>([]);
