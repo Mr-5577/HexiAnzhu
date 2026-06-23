@@ -1048,6 +1048,10 @@ defineExpose({
         }
       }
     }
+    // 表格空数据时的高度调整
+    .el-table__empty-block {
+      height: 100% !important;
+    }
   }
 }
 .pagination {
