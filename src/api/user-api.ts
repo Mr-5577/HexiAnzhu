@@ -104,7 +104,7 @@ export const userApi = {
           id: 13,
           pid: 0,
           name: "dashboard-analysis",
-          title: "大屏分析",
+          title: "销售分析",
           icon: "Monitor",
           menuType: 0,
           component: "",
