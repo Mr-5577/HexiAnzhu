@@ -76,7 +76,7 @@ import { ref, reactive, computed, watch } from "vue";
 import { ElForm, ElMessage, type FormRules, ElRow, ElCol } from "element-plus";
 import BaseModal from "@/components/base/base-modal.vue";
 import type { RoleFormData, RoleItem } from "@/types/role-type";
-import { roleApi } from "@/api/role-api";
+import { roleApi } from "@/api/system/role-api";
 
 interface Props {
   modelValue: boolean;

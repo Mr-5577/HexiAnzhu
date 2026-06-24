@@ -44,7 +44,7 @@
 
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
-import { roleApi } from "@/api/role-api";
+import { roleApi } from "@/api/system/role-api";
 import { ElMessage } from "element-plus";
 
 import type { TableColumnItem } from "@/components/base/base-table.vue";
