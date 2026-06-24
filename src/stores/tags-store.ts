@@ -40,7 +40,7 @@ export const useTagsStore = defineStore(
 
       // 检查是否已存在相同唯一标识的标签
       const existingIndex = visitedViews.value.findIndex(
-        (v) => v.uniqueId === uniqueId
+        (v) => v.uniqueId === uniqueId,
       );
 
       if (existingIndex > -1) {
@@ -69,7 +69,7 @@ export const useTagsStore = defineStore(
     const handleNormalView = (view: RouteLocationNormalized) => {
       // 查找相同路径的标签页
       const existingIndex = visitedViews.value.findIndex(
-        (v) => v.path === view.path
+        (v) => v.path === view.path,
       );
 
       if (existingIndex > -1) {
@@ -98,7 +98,7 @@ export const useTagsStore = defineStore(
     // 删除标签页
     const delView = (view: TagView) => {
       const index = visitedViews.value.findIndex(
-        (v) => v.uniqueId === view.uniqueId
+        (v) => v.uniqueId === view.uniqueId,
       );
       if (index > -1) {
         visitedViews.value.splice(index, 1);
@@ -108,7 +108,7 @@ export const useTagsStore = defineStore(
     // 删除其他标签页
     const delOtherViews = (view: TagView) => {
       visitedViews.value = visitedViews.value.filter(
-        (v) => v.affix || v.uniqueId === view.uniqueId
+        (v) => v.affix || v.uniqueId === view.uniqueId,
       );
       setActiveTag(view.path, view.uniqueId);
     };
@@ -125,7 +125,7 @@ export const useTagsStore = defineStore(
     // 删除右侧标签页
     const delRightViews = (view: TagView) => {
       const index = visitedViews.value.findIndex(
-        (v) => v.uniqueId === view.uniqueId
+        (v) => v.uniqueId === view.uniqueId,
       );
       if (index > -1) {
         visitedViews.value = visitedViews.value
@@ -198,7 +198,7 @@ export const useTagsStore = defineStore(
     // 检查标签是否激活
     const isTagActive = (
       tag: TagView,
-      currentRoute: RouteLocationNormalized
+      currentRoute: RouteLocationNormalized,
     ): boolean => {
       const currentUniqueId = generateUniqueId(currentRoute);
       return tag.uniqueId === currentUniqueId;
@@ -235,5 +235,5 @@ export const useTagsStore = defineStore(
       key: "tags-store",
       storage: sessionStorage,
     },
-  }
+  },
 );

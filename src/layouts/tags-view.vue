@@ -29,6 +29,7 @@
           <Close />
         </el-icon>
       </router-link>
+
       <!-- 右键菜单 -->
       <div v-show="menuVisible" class="context-menu" :style="menuStyle">
         <div @click="closeCurrent">关闭当前</div>
@@ -41,7 +42,7 @@
 
 <script setup lang="ts">
 import { Close } from "@element-plus/icons-vue";
-import { computed, ref, onMounted, onUnmounted } from "vue";
+import { computed, ref, onMounted, onUnmounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useTagsStore } from "@/stores/tags-store";
 import type { TagView } from "@/stores/tags-store";
@@ -52,46 +53,22 @@ const tagsStore = useTagsStore();
 
 const visitedViews = computed(() => tagsStore.visitedViews);
 
-// 右键菜单
+// 右键菜单相关
 const menuVisible = ref(false);
 const menuStyle = ref({ left: "0px", top: "0px" });
 const currentTag = ref<TagView | null>(null);
+
 // 显示右键菜单
 const showContextMenu = (e: MouseEvent, tag: TagView) => {
   currentTag.value = tag;
-  menuStyle.value = { left: e.pageX + "px", top: e.pageY + "px" };
+  menuStyle.value = {
+    left: e.pageX + "px",
+    top: e.pageY + "px",
+  };
   menuVisible.value = true;
 };
 
-const isActive = (tag: TagView) => tagsStore.isTagActive(tag, route);
-
-const extractQueryParams = (tag: TagView) => {
-  if (!tag.fullPath.includes("?")) return {};
-  const queryStr = tag.fullPath.split("?")[1];
-  const params = new URLSearchParams(queryStr);
-  const query: Record<string, string> = {};
-  params.forEach((value, key) => {
-    query[key] = value;
-  });
-  return query;
-};
-
-// 关闭标签
-const closeSelectedTag = (tag: TagView) => {
-  const isActiveTag = isActive(tag);
-  tagsStore.delView(tag);
-
-  if (isActiveTag) {
-    const lastView = visitedViews.value[visitedViews.value.length - 1];
-    if (lastView) {
-      router.push({ path: lastView.path, query: extractQueryParams(lastView) });
-    } else {
-      router.push("/");
-    }
-  }
-};
-
-// 右键菜单操作
+// 关闭当前标签
 const closeCurrent = () => {
   if (currentTag.value && !currentTag.value.affix) {
     closeSelectedTag(currentTag.value);
@@ -99,9 +76,12 @@ const closeCurrent = () => {
   menuVisible.value = false;
 };
 
+// 关闭其他标签
 const closeOthers = () => {
   if (currentTag.value) {
+    // 直接删除其他标签
     tagsStore.delOtherViews(currentTag.value);
+    // 跳转到当前标签
     router.push({
       path: currentTag.value.path,
       query: extractQueryParams(currentTag.value),
@@ -110,8 +90,10 @@ const closeOthers = () => {
   menuVisible.value = false;
 };
 
+// 关闭全部标签
 const closeAll = () => {
   tagsStore.delAllViews();
+
   const affixTags = visitedViews.value.filter((tag) => tag.affix);
   if (affixTags.length > 0) {
     const lastAffixTag = affixTags[affixTags.length - 1];
@@ -125,10 +107,61 @@ const closeAll = () => {
   menuVisible.value = false;
 };
 
+// 点击其他地方关闭菜单
 const closeMenu = () => {
   menuVisible.value = false;
 };
 
+// 使用store中的方法检查标签是否激活
+const isActive = (tag: TagView) => {
+  return tagsStore.isTagActive(tag, route);
+};
+
+// 从完整路径中提取查询参数
+const extractQueryParams = (tag: TagView) => {
+  if (!tag.fullPath.includes("?")) return {};
+
+  const queryStr = tag.fullPath.split("?")[1];
+  const params = new URLSearchParams(queryStr);
+  const query: Record<string, string> = {};
+
+  params.forEach((value, key) => {
+    query[key] = value;
+  });
+
+  return query;
+};
+
+// 关闭选中的标签
+const closeSelectedTag = (tag: TagView) => {
+  // 删除标签（缓存会自动由 layout 中的 computed 清理）
+  tagsStore.delView(tag);
+
+  if (isActive(tag)) {
+    const lastView = visitedViews.value[visitedViews.value.length - 1];
+    if (lastView) {
+      router.push({
+        path: lastView.path,
+        query: extractQueryParams(lastView),
+      });
+    } else {
+      router.push("/");
+    }
+  }
+};
+
+// 监听路由变化，添加标签
+watch(
+  () => route.fullPath,
+  () => {
+    if (route.path && route.path !== "/") {
+      tagsStore.addView(route);
+    }
+  },
+  { immediate: true },
+);
+
+// 添加事件监听
 onMounted(() => {
   document.addEventListener("click", closeMenu);
 });
@@ -156,6 +189,7 @@ onUnmounted(() => {
     box-sizing: border-box;
     position: relative;
 
+    /* 滚动条样式 */
     &::-webkit-scrollbar {
       height: 4px;
       background-color: transparent;
@@ -235,6 +269,7 @@ onUnmounted(() => {
   }
 }
 
+// 右键菜单样式
 .context-menu {
   position: fixed;
   background: white;
