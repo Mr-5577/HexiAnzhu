@@ -271,20 +271,8 @@
               </el-form-item>
             </el-col>
           </el-row>
-
-          <!-- <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="经办人" prop="agentId">
-                <el-input
-                v-model="userName"
-                :disabled="isDetail"
-                readonly
-                placeholder="经办人"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row> -->
         </div>
+
         <div>
           <div class="section-title">扩展信息</div>
           <el-row :gutter="24">
@@ -457,17 +445,21 @@ import EditableTable from "@/components/base/editable-table.vue";
 import type { EditableColumn } from "@/components/base/editable-table.vue";
 import { visaManagementApi } from "@/api/cost/contract-manage/visa-management-api";
 
-const userStore = useUserStore();
+const props = defineProps<{
+  mode: "add" | "edit" | "detail";
+  conId: number; // 合同ID
+  addId?: number; // 补充合同ID
+}>();
 
-defineOptions({ name: "supplement-contract-form" });
+const emit = defineEmits<{
+  success: [];
+  cancel: [];
+}>();
 
 const route = useRoute();
+const userStore = useUserStore();
 
-const conId = ref<number | null>(null); // 合同台账ID（合同单据ID）
-const addId = ref<number | null>(null); // 补充合同ID
-const mode = ref<"add" | "edit" | "detail">("add"); // add, edit, detail
-
-const isDetail = computed(() => route.query.mode === "detail");
+const isDetail = computed(() => props.mode === "detail");
 const userName = computed(() => {
   const name = userStore?.userInfo?.empName || "";
   return name ? name.replace(/\(.*\)/, "") : "-";
@@ -724,7 +716,7 @@ const getBuildingList = async (projId: number) => {
 const getVisaData = async () => {
   try {
     const res = await visaManagementApi.getVisaList({
-      conId: conId.value,
+      conId: props.conId,
     });
     if (res.code === 200) {
       visaList.value = res.data || [];
@@ -756,11 +748,12 @@ const handleDataChange = (data: any) => {};
 const handleDataUpdate = (newData: any) => {
   tableList.value = newData;
 };
+
 const handleAdd = () => {
   const newRow = {
     uuid: uuidv4(),
     conBillId: null,
-    conId: conId.value,
+    conId: props.conId,
     visaId: null,
     processName: "",
     processAmt: 0,
@@ -771,17 +764,20 @@ const handleAdd = () => {
   };
   tableList.value = [...tableList.value, newRow];
 };
-const handleDelete = (row) => {
-  tableList.value = tableList.value.filter((item) => item.uuid !== row.uuid);
+
+const handleDelete = (row: any) => {
+  tableList.value = tableList.value.filter(
+    (item: any) => item.uuid !== row.uuid,
+  );
 };
 
-// 初始化数据字典数据
+// 初始化数据字典
 const initDictData = async () => {
   await loadDicts();
   proProfOptions.value = getDictList(dictMapping.proProf); // 生产专业
 };
 
-// 初始化下拉框选项
+// 初始化下拉选项
 const initOptions = async () => {
   await getCompanyList();
   await getConTypeList();
@@ -791,14 +787,13 @@ const initOptions = async () => {
 
 // 获取补充合同详情
 const getSupplementContractDetail = async () => {
-  if (!addId.value) return;
+  if (!props.addId) return;
   try {
     const res = await supplementContractApi.getSupplementContractById({
-      id: addId.value,
+      id: props.addId,
     });
     if (res.code === 200 && res.data) {
       const { conAdd, conAddExt, addProcesses = [] } = res.data;
-      // 回填主表数据
       formData.value = {
         id: conAdd.id,
         addName: conAdd.addName,
@@ -828,7 +823,7 @@ const getSupplementContractDetail = async () => {
         supCmanJob: conAddExt?.supCmanJob || "",
         remark: conAddExt?.remark || "",
       };
-      tableList.value = addProcesses?.map((item) => ({
+      tableList.value = addProcesses?.map((item: any) => ({
         ...item,
         uuid: uuidv4(),
       }));
@@ -837,18 +832,20 @@ const getSupplementContractDetail = async () => {
     console.error("获取补充合同详情失败:", error);
   }
 };
+
 // 获取合同单据详情
 const getContractDetail = async () => {
-  if (!conId.value) return;
+  if (!props.conId) return;
   try {
     const res = await contractLedgerApi.getContractLedgerById({
-      id: conId.value,
+      id: props.conId,
     });
     if (res.code === 200 && res.data) {
       const { conMain, conMainExt } = res.data;
+
       getBuildingList(conMain.projId); // 获取楼栋数据
-      if (mode.value === "add") {
-        // 回填主表数据
+
+      if (props.mode === "add") {
         formData.value = {
           ...initFormData(),
           companyId: conMain.companyId,
@@ -861,7 +858,6 @@ const getContractDetail = async () => {
           bldIds: conMain.bldIds ? conMain.bldIds.split(",").map(Number) : [],
           bldNames: conMain.bldNames,
           agentId: userStore.userInfo.id,
-
           needSeal: conMainExt?.needSeal ?? false,
           sealTypes: conMainExt?.sealTypes
             ? conMainExt.sealTypes.split(",")
@@ -875,22 +871,24 @@ const getContractDetail = async () => {
         };
       }
     }
-  } catch (error) {}
+  } catch (error) {
+    console.error("获取合同详情失败:", error);
+  }
 };
 
 // 提交表单
 const handleSubmit = async () => {
-  console.log("提交表单", formData.value);
   if (isDetail.value) return;
   if (!formRef.value) return;
+
   try {
     await formRef.value.validate();
     submitLoading.value = true;
-    // 组装请求数据结构
+
     const params = {
       conAdd: {
         id: formData.value.id,
-        conBillId: conId.value,
+        conBillId: props.conId,
         addName: formData.value.addName,
         companyId: formData.value.companyId,
         addSysNo: formData.value.addSysNo,
@@ -912,7 +910,7 @@ const handleSubmit = async () => {
       },
       conAddExt: {
         id: formData.value.id,
-        conBillId: conId.value,
+        conBillId: props.conId,
         addId: formData.value.id,
         needSeal: formData.value.needSeal,
         sealTypes: formData.value.sealTypes?.join(",") || "",
@@ -926,25 +924,18 @@ const handleSubmit = async () => {
       addProcesses: tableList.value,
     };
 
-    console.log("提交参数:", params);
-    // 根据是否有ID判断是新增还是编辑
-    if (mode.value === "edit") {
-      // 编辑
+    if (props.mode === "edit") {
       const editRes =
         await supplementContractApi.editSupplementContract(params);
       if (editRes.code === 200) {
         ElMessage.success("编辑成功");
-        // 重置表单
-        // formData.value = {
-        //   ...initFormData(),
-        // };
-        // formRef.value.resetFields();
+        emit("success");
       }
     } else {
-      // 新增
       const addRes = await supplementContractApi.addSupplementContract(params);
       if (addRes.code === 200) {
         ElMessage.success("新增成功");
+        emit("success");
       }
     }
   } catch (error) {
@@ -954,26 +945,19 @@ const handleSubmit = async () => {
   }
 };
 
-// 同步路由状态
-const syncRouteState = async () => {
-  const queryMode = route.query.mode as string;
-  mode.value =
-    queryMode === "edit" || queryMode === "detail" ? queryMode : "add";
-  addId.value = route.query.addId ? Number(route.query.addId) : null; // 补充合同ID
-  conId.value = route.query.conId ? Number(route.query.conId) : null; // 合同台账ID
+// 初始化
+const initData = async () => {
+  await initOptions();
+  await getContractDetail();
+  await getVisaData();
 
-  await initOptions(); // 初始化下拉框选项
-
-  await getContractDetail(); // 获取合同台账详情，相同数据回填
-  await getVisaData(); // 获取签证数据
-  // 编辑或详情
-  if (mode.value === "edit" || mode.value === "detail") {
+  if (props.mode === "edit" || props.mode === "detail") {
     await getSupplementContractDetail();
-  } else if (mode.value === "add") {
+  } else if (props.mode === "add") {
     await createConNo();
   }
 };
-// 监听是否需要印章，清空印章类型
+
 watch(
   () => formData.value.needSeal,
   (newVal) => {
@@ -984,7 +968,14 @@ watch(
 );
 
 onMounted(() => {
-  syncRouteState();
+  initData();
+});
+
+// 暴露方法
+defineExpose({
+  formData,
+  formRef,
+  handleSubmit,
 });
 </script>
 
@@ -1028,6 +1019,7 @@ onMounted(() => {
     transform: translateY(-50%);
   }
 }
+
 .detail-table {
   .header-content {
     margin-bottom: 12px;

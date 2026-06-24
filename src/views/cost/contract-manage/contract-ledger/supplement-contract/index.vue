@@ -132,7 +132,6 @@ const handleAdd = () => {
   router.push({
     path: "/contract/supplement-contract/add",
     query: {
-      mode: "add",
       conId: props.conId, // 合同台账ID（合同单据ID）
     },
   });
@@ -141,7 +140,6 @@ const handleEdit = (row: SupplementContract) => {
   router.push({
     path: "/contract/supplement-contract/edit",
     query: {
-      mode: "edit",
       addId: row.id, // 补充合同ID
       conId: props.conId, // 合同台账ID（合同单据ID）
     },
