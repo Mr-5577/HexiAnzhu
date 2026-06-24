@@ -154,7 +154,6 @@
             <el-form-item label="付款方式" prop="payMethod" required>
               <el-select
                 v-model="formData.payMethod"
-                :disabled="isDetail"
                 placeholder="请选择付款方式"
                 style="width: 100%"
                 @change="handlePayMethodChange"
@@ -172,7 +171,6 @@
             <el-form-item label="款项类型" prop="payTypeId" required>
               <el-select
                 v-model="formData.payTypeId"
-                :disabled="isDetail"
                 placeholder="请选择款项类型"
                 style="width: 100%"
               >
@@ -189,7 +187,6 @@
             <el-form-item label="应付比例(%)" prop="payRate" required>
               <el-input-number
                 v-model="formData.payRate"
-                :disabled="isDetail"
                 :min="0"
                 :max="100"
                 :precision="2"
@@ -204,7 +201,6 @@
             <el-form-item label="是否强控" prop="isCtrl" required>
               <el-select
                 v-model="formData.isCtrl"
-                :disabled="isDetail"
                 placeholder="请选择"
                 style="width: 100%"
               >
@@ -219,7 +215,6 @@
             <el-form-item label="支付周期(月)" prop="payIntvl">
               <el-input-number
                 v-model="formData.payIntvl"
-                :disabled="isDetail"
                 :min="0"
                 :precision="0"
                 :controls="false"
@@ -232,7 +227,6 @@
             <el-form-item label="本次申报产值金额" prop="applyProdVal" required>
               <el-input-number
                 v-model="formData.applyProdVal"
-                :disabled="isDetail"
                 :min="0"
                 :precision="2"
                 :controls="false"
@@ -284,7 +278,6 @@
             <el-form-item label="申报说明" prop="applyDesc">
               <el-input
                 v-model="formData.applyDesc"
-                :disabled="isDetail"
                 type="textarea"
                 :rows="2"
                 maxlength="500"
@@ -301,12 +294,7 @@
           <div class="detail-table">
             <div class="header-content">
               <span class="header-title">支付比例明细</span>
-              <el-button
-                type="primary"
-                size="small"
-                @click="addPayrate"
-                v-if="!isDetail"
-              >
+              <el-button type="primary" size="small" @click="addPayrate">
                 新增支付比例
               </el-button>
             </div>
@@ -377,12 +365,7 @@
           <div class="detail-table">
             <div class="header-content">
               <span class="header-title">支付节点明细</span>
-              <el-button
-                type="primary"
-                size="small"
-                @click="addPaynode"
-                v-if="!isDetail"
-              >
+              <el-button type="primary" size="small" @click="addPaynode">
                 新增支付节点
               </el-button>
             </div>
@@ -416,7 +399,6 @@
             <el-form-item label="复核产值金额" prop="costProdVal">
               <el-input-number
                 v-model="formData.costProdVal"
-                :disabled="isDetail"
                 :min="0"
                 :precision="2"
                 :controls="false"
@@ -430,7 +412,6 @@
             <el-form-item label="复核应付金额" prop="costPayAmt">
               <el-input-number
                 v-model="formData.costPayAmt"
-                :disabled="isDetail"
                 :min="0"
                 :precision="2"
                 :controls="false"
@@ -444,7 +425,7 @@
       </el-form>
     </div>
 
-    <div class="btn-row" v-if="!isDetail">
+    <div class="btn-row">
       <el-button type="primary" :loading="submitLoading" @click="handleSubmit">
         保存
       </el-button>
@@ -455,7 +436,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
 import { ElMessage } from "element-plus";
-import { useRoute } from "vue-router";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";
 import { v4 as uuidv4 } from "uuid";
@@ -472,12 +452,31 @@ import { outputDeclarationApi } from "@/api/cost/contract-manage/output-declarat
 
 defineOptions({ name: "output-value-form" });
 
-const route = useRoute();
+// Props
+interface Props {
+  mode?: "add" | "edit" | "detail";
+  conId: number;
+  outputId?: number;
+}
 
-const outputId = ref<number | null>(null);
-const conId = ref<number | null>(null);
-const mode = ref<"add" | "edit" | "detail">("add");
-const isDetail = computed(() => route.query.mode === "detail");
+const props = withDefaults(defineProps<Props>(), {
+  mode: "add",
+  outputId: undefined,
+});
+
+// Emits
+const emit = defineEmits<{
+  (e: "success", data: any): void;
+  (e: "cancel"): void;
+}>();
+
+const mode = ref<"add" | "edit" | "detail">(props.mode);
+const conId = ref<number>(props.conId);
+const outputId = ref<number | undefined>(props.outputId);
+
+const isDetailMode = computed(() => mode.value === "detail");
+const isEditMode = computed(() => mode.value === "edit");
+const isAddMode = computed(() => mode.value === "add");
 
 const formData = ref({
   id: null,
@@ -1180,7 +1179,7 @@ const buildSubmitParams = () => {
 
 // 提交
 const handleSubmit = async () => {
-  if (isDetail.value) return;
+  if (isDetailMode.value) return;
   if (!formRef.value) return;
   formRef.value.validate(async (viod: boolean) => {
     if (!viod) {
@@ -1195,7 +1194,7 @@ const handleSubmit = async () => {
       submitLoading.value = true;
       const params = buildSubmitParams();
       console.log("提交参数", params);
-      if (mode.value === "edit") {
+      if (isEditMode.value) {
         await outputDeclarationApi.editProdVal(params);
       } else {
         await outputDeclarationApi.addProdVal(params);
@@ -1228,6 +1227,7 @@ const loadProdValDetail = async () => {
 
 // 加载合同信息
 const loadContractInfo = async () => {
+  if (!conId.value) return;
   try {
     const res = await contractLedgerApi.getContractLedgerById({
       id: conId.value,
@@ -1275,34 +1275,27 @@ const initDictData = async () => {
   paymentTypeOptions.value = getDictList(dictMapping.paymentType); // 款项类型
 };
 
-const syncRouteState = async () => {
-  const queryMode = route.query.mode as string;
-  mode.value =
-    queryMode === "edit" || queryMode === "detail" ? queryMode : "add";
-
-  const outputIdValue = route.query.outputId
-    ? Number(route.query.outputId)
-    : null;
-  outputId.value = outputIdValue || null;
-
-  const conIdValue = route.query.conId ? Number(route.query.conId) : null;
-  conId.value = conIdValue || null;
-
+// 初始化
+const initData = async () => {
   await initDictData();
 
-  if (mode.value === "edit" || mode.value === "detail") {
-    await loadProdValDetail();
-  } else {
-    formData.value = {
-      ...formData.value,
-      conId: conId.value,
-    };
+  if (isAddMode.value) {
     await loadContractInfo();
+  } else if (isEditMode.value || isDetailMode.value) {
+    if (outputId.value) {
+      await loadProdValDetail();
+    }
   }
 };
-
 onMounted(() => {
-  syncRouteState();
+  initData();
+});
+
+// 暴露方法
+defineExpose({
+  initData,
+  formData,
+  mode,
 });
 </script>
 
