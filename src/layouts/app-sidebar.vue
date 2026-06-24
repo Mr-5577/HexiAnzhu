@@ -58,7 +58,7 @@ const handleMenuClick = (item: SidebarMenuItem) => {
   // console.log("tagsStore:", tagsStore);
   // if (item.path) router.push(item.path); // 直接跳转路由
 
-  // 查找相同路径下，所有带参数的页签（fullPath 不等于 path 说明带了参数）
+  // 查找相同路径下，所有带参数的页签（fullPath ≠ path ，则说明带了参数）
   const existingTabs = tagsStore.visitedViews.filter(
     (tab) => tab.path === item.path && tab.fullPath !== tab.path,
   );

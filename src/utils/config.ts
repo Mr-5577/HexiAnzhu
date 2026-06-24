@@ -89,36 +89,5 @@ export const getEnvironmentName = (): string => {
   return config.mode;
 };
 
-export const getEnvironmentDisplayName = (): string => {
-  switch (config.mode) {
-    case "development":
-      return "开发环境";
-    case "production":
-      return "生产环境";
-    case "staging":
-      return "预发布环境";
-    case "test":
-      return "测试环境";
-    default:
-      return "未知环境";
-  }
-};
-
-// 获取环境颜色（用于 UI 显示）
-export const getEnvironmentColor = (): string => {
-  switch (config.mode) {
-    case "development":
-      return "#1677ff"; // 蓝色
-    case "production":
-      return "#52c41a"; // 绿色
-    case "staging":
-      return "#fa8c16"; // 橙色
-    case "test":
-      return "#722ed1"; // 紫色
-    default:
-      return "#8c8c8c"; // 灰色
-  }
-};
-
 // 默认导出
 export default config;

@@ -780,7 +780,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/contract-manage/contract-ledger/contract-ledger-form",
+            "cost/contract-manage/contract-ledger/contract-ledger-add",
           path: "contract/contract-ledger/add",
           isKeepAlive: true,
           isControl: true,
@@ -800,7 +800,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/contract-manage/contract-ledger/contract-ledger-form",
+            "cost/contract-manage/contract-ledger/contract-ledger-edit",
           path: "contract/contract-ledger/edit",
           isKeepAlive: true,
           isControl: true,
@@ -840,7 +840,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/contract-manage/contract-ledger/supplement-contract/supplement-contract-form",
+            "cost/contract-manage/contract-ledger/supplement-contract/supplement-contract-add",
           path: "contract/supplement-contract/add",
           isKeepAlive: true,
           isControl: true,
@@ -860,7 +860,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/contract-manage/contract-ledger/supplement-contract/supplement-contract-form",
+            "cost/contract-manage/contract-ledger/supplement-contract/supplement-contract-edit",
           path: "contract/supplement-contract/edit",
           isKeepAlive: true,
           isControl: true,
@@ -880,7 +880,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/contract-manage/contract-ledger/output-declaration/output-value-form",
+            "cost/contract-manage/contract-ledger/output-declaration/output-declaration-add",
           path: "contract/output-declaration/add",
           isKeepAlive: true,
           isControl: true,
@@ -900,7 +900,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/contract-manage/contract-ledger/output-declaration/output-value-form",
+            "cost/contract-manage/contract-ledger/output-declaration/output-declaration-edit",
           path: "contract/output-declaration/edit",
           isKeepAlive: true,
           isControl: true,

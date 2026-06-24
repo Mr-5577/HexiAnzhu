@@ -27,6 +27,7 @@
         <el-button type="danger" link @click="handleDelete(row)">
           删除
         </el-button>
+        <el-button type="primary" link> 审批 </el-button>
       </template>
     </base-table>
 
