@@ -128,7 +128,6 @@ import BasicInfo from "./contract-ledger-form.vue";
 import Attachment from "./attachment/index.vue";
 import ContractApproval from "./contract-approval/index.vue";
 import SupplementContract from "./supplement-contract/index.vue";
-import PayPlan from "./pay-plan/index.vue";
 import EngineeringPrice from "./engineering-price/index.vue";
 import ChangeOrder from "./change-order/index.vue";
 import VisaManagement from "./visa-management/index.vue";
@@ -150,7 +149,6 @@ const tabComponents = {
   attachment: Attachment, // 合同附件
   contractApproval: ContractApproval, // 合同审批
   supplementContract: SupplementContract, // 补充合同
-  payPlan: PayPlan, // 应付计划
   engineeringPrice: EngineeringPrice, // 工程核价
   changeOrder: ChangeOrder, // 变更指令
   visaManagement: VisaManagement, // 签证管理

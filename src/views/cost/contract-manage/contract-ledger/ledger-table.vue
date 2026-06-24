@@ -97,6 +97,7 @@
         <el-button type="primary" link @click="handleDetail(row)">
           台账详情
         </el-button>
+        <el-button type="primary" link> 审批 </el-button>
       </template>
     </base-table>
   </div>
@@ -170,7 +171,7 @@ const columns: TableColumnItem[] = [
   {
     label: "操作",
     prop: "actions",
-    width: 200,
+    width: 240,
     slot: "actions",
     fixed: "right",
   },
@@ -211,21 +212,17 @@ const handleReset = () => {
   };
   getDataList();
 };
-
+// 新增合同台账
 const handleAdd = () => {
   router.push({
     path: "/contract/contract-ledger/add",
-    query: {
-      mode: "add",
-    },
   });
 };
-
+// 编辑合同台账
 const handleEdit = (row: HConMain) => {
   router.push({
     path: "/contract/contract-ledger/edit",
     query: {
-      mode: "edit",
       conId: row.id,
     },
   });
@@ -237,7 +234,6 @@ const handleDetail = (row: HConMain) => {
     query: {
       conId: row.id,
       projId: props.projectId,
-      mode: "detail",
     },
   });
 };

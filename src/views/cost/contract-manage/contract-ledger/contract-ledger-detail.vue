@@ -32,11 +32,14 @@ import {
   computed,
   watch,
   markRaw,
+  onMounted,
   type Component,
   defineAsyncComponent,
 } from "vue";
 import { useRoute } from "vue-router";
 import * as Icons from "@element-plus/icons-vue";
+
+defineOptions({ name: "contract-ledger-detail" });
 
 // 菜单配置
 const menuItems = [
@@ -162,6 +165,9 @@ const syncRouteState = () => {
 
 watch(() => [route.query.conId, route.query.projId], syncRouteState, {
   immediate: true,
+});
+onMounted(() => {
+  console.log("onMounted");
 });
 </script>
 <style scoped lang="scss">
