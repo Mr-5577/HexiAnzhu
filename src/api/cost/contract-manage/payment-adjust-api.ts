@@ -1,5 +1,5 @@
 import { http } from "@/axios/service";
-import { ContractDedParams } from "@/types/cost/contract-manage/payment-adjust-type";
+import { ContractDedParams, DedInfo } from "@/types/cost/contract-manage/payment-adjust-type";
 
 /**
  * 款项调整(合同奖罚) 相关接口
@@ -18,7 +18,7 @@ export const paymentAdjustApi = {
     return http.post("/con/ded/add", data);
   },
   /** 编辑合同奖罚 */
-  editDed: (data: ContractDedParams) => {
+  editDed: (data: DedInfo) => {
     return http.post("/con/ded/edit", data);
   },
   /** 删除合同奖罚 */

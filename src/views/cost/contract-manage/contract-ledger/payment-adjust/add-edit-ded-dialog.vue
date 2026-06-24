@@ -26,10 +26,10 @@
                 style="width: 100%"
               >
                 <el-option
-                  v-for="item in dedTypeOptions"
-                  :key="item.id"
-                  :label="item.name"
-                  :value="item.id"
+                  v-for="item in dedTypeEnum"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
                 />
               </el-select>
             </el-form-item>
@@ -72,13 +72,17 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { ElMessage, type FormInstance, type FormRules } from "element-plus";
-import { ContractDedParams } from "@/types/cost/contract-manage/payment-adjust-type";
+import {
+  DedInfo,
+  ContractDed,
+} from "@/types/cost/contract-manage/payment-adjust-type";
 import { paymentAdjustApi } from "@/api/cost/contract-manage/payment-adjust-api";
+import { dedTypeEnum } from "@/constants/contract-manage/enums";
 
 interface Props {
   modelValue: boolean;
   conId?: number;
-  editData?: ContractDedParams | null;
+  editData?: ContractDed | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -96,18 +100,8 @@ const dialogVisible = ref(props.modelValue);
 const formRef = ref<FormInstance>();
 const submitLoading = ref(false);
 
-// 扣款类型选项
-const dedTypeOptions = ref<Array<{ id: number; name: string }>>([
-  { id: 1, name: "质量扣款" },
-  { id: 2, name: "工期延误" },
-  { id: 3, name: "安全违规" },
-  { id: 4, name: "质量奖励" },
-  { id: 5, name: "提前竣工奖励" },
-  { id: 6, name: "其他扣款" },
-]);
-
 // 表单数据
-const formData = ref<ContractDedParams>({
+const formData = ref<DedInfo>({
   id: undefined,
   status: 0,
   conBillId: 0,
@@ -178,11 +172,16 @@ const handleSubmit = async () => {
     await formRef.value.validate();
     submitLoading.value = true;
 
-    const interfaceApi = isEditMode.value
-      ? paymentAdjustApi.editDed
-      : paymentAdjustApi.addDed;
-
-    const res = await interfaceApi(formData.value);
+    let res;
+    if (isEditMode.value) {
+      res = await paymentAdjustApi.editDed(formData.value);
+    } else {
+      const params = {
+        conId: props.conId,
+        rec: formData.value,
+      };
+      res = await paymentAdjustApi.addDed(params);
+    }
 
     if (res.code === 200) {
       ElMessage.success(isEditMode.value ? "修改成功" : "新增成功");

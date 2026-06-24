@@ -30,9 +30,9 @@ export interface ContractDed {
 }
 
 /**
- * 新增/编辑 合同奖惩参数
+ * 奖惩信息
  */
-export interface ContractDedParams {
+export interface DedInfo {
   /** 主键ID（编辑时必填） */
   id?: number;
   /** 状态：0-草稿，5-审批中，10-已审批，30-已作废 */
@@ -45,6 +45,17 @@ export interface ContractDedParams {
   dedAmt: number;
   /** 奖罚说明 */
   dedDesc?: string;
+}
+/**
+ * 新增/编辑 合同奖惩参数
+ */
+export interface ContractDedParams {
+  /** 主键ID（编辑时必填） */
+  id?: number;
+  /** 合同ID */
+  conId: number;
+  /** 奖惩信息 */
+  rec: DedInfo;
 }
 
 /**
