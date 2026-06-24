@@ -44,17 +44,16 @@ export interface ContractAuditPrice {
   /** 删除标识：false-未删除，true-已删除 */
   isDel?: boolean;
 }
-
 /**
- * 新增/编辑工程核价 - 表单数据
+ * 工程核价信息
  */
-export interface ContractAuditPriceFormData {
+export interface EngineeringPrice {
   /** 工程核价ID（编辑时存在） */
   id?: number;
   /** 单据ID */
   conBillId?: number;
-  /** 合同ID（关联选择） */
-  conId?: number;
+  /** 状态：0-草稿 5-审批中 10-已审批 30-已作废 */
+  status?: number;
   /** 合同签约金额（带出展示） */
   signAmt?: number;
   /** 申报事项说明 */
@@ -73,4 +72,12 @@ export interface ContractAuditPriceFormData {
   auditCutAmt?: number;
   /** 审计审核意见 */
   auditOpinion?: string;
+}
+/**
+ * 新增/编辑工程核价 - 表单数据
+ */
+export interface ContractAuditPriceFormData {
+  /** 合同ID */
+  conId: number;
+  auditPrice: EngineeringPrice;
 }

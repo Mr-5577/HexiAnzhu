@@ -157,17 +157,19 @@ import { ref, computed, watch } from "vue";
 import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import {
   ContractAuditPrice,
-  ContractAuditPriceFormData,
+  EngineeringPrice,
 } from "@/types/cost/contract-manage/engineering-price-type";
 import { engineeringPriceApi } from "@/api/cost/contract-manage/engineering-price-api";
 
 interface Props {
   modelValue: boolean;
+  conId?: number | null;
   editData?: ContractAuditPrice | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
+  conId: null,
   editData: null,
 });
 
@@ -180,16 +182,16 @@ const dialogVisible = ref(props.modelValue);
 const formRef = ref<FormInstance>();
 const submitLoading = ref(false);
 
-const formData = ref<ContractAuditPriceFormData>({
+const formData = ref<EngineeringPrice>({
   id: null,
   conBillId: null,
-  signAmt: null,
-  applyAmt: null,
+  signAmt: 0,
+  applyAmt: 0,
   applyDesc: "",
-  costingReviewAmt: null,
+  costingReviewAmt: 0,
   costingCutAmt: null,
   costingOpinion: "",
-  auditReviewAmt: null,
+  auditReviewAmt: 0,
   auditCutAmt: null,
   auditOpinion: "",
 });
@@ -240,6 +242,7 @@ const initFormData = () => {
     formData.value = {
       id: props.editData.id,
       conBillId: props.editData.conBillId,
+      status: props.editData.status,
       signAmt: props.editData.signAmt,
       applyAmt: props.editData.applyAmt,
       applyDesc: props.editData.applyDesc,
@@ -253,14 +256,15 @@ const initFormData = () => {
   } else {
     formData.value = {
       id: null,
-      conBillId: null,
-      signAmt: null,
-      applyAmt: null,
+      conBillId: props.conId,
+      status: 0,
+      signAmt: 0,
+      applyAmt: 0,
       applyDesc: "",
-      costingReviewAmt: null,
+      costingReviewAmt: 0,
       costingCutAmt: null,
       costingOpinion: "",
-      auditReviewAmt: null,
+      auditReviewAmt: 0,
       auditCutAmt: null,
       auditOpinion: "",
     };
@@ -279,13 +283,21 @@ const handleClose = () => {
 const handleSubmit = async () => {
   if (!formRef.value) return;
 
+  console.log("表单验证成功:", formData.value);
   try {
     await formRef.value.validate();
     submitLoading.value = true;
-    const interfaceApi = isEditMode.value
-      ? engineeringPriceApi.editAuditPrice
-      : engineeringPriceApi.addAuditPrice;
-    const res = await interfaceApi(formData.value);
+
+    let res;
+    if (isEditMode.value) {
+      res = await engineeringPriceApi.editAuditPrice(formData.value);
+    } else {
+      const params = {
+        conId: props.conId,
+        auditPrice: formData.value,
+      };
+      res = await engineeringPriceApi.addAuditPrice(params);
+    }
     if (res.code === 200) {
       ElMessage.success(isEditMode.value ? "修改成功" : "新增成功");
       emit("success");
