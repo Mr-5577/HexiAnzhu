@@ -126,7 +126,7 @@ import { ref, reactive, onMounted, onUnmounted, watch } from "vue";
 import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import { useRouter } from "vue-router";
 import { md5 } from "@/utils/crypto";
-import { userApi } from "@/api/user-api";
+import { userApi } from "@/api/system/user-api";
 import { Refresh } from "@element-plus/icons-vue";
 import { v4 as uuidv4 } from "uuid";
 import { useUserStore } from "@/stores/user-store";

@@ -10,7 +10,7 @@ import {
   RouteRecordRaw,
 } from "vue-router";
 import { addDynamicRoutes } from "./dynamic-routes";
-import { userApi } from "@/api/user-api";
+import { userApi } from "@/api/system/user-api";
 import { ElLoading } from "element-plus";
 import { costStaticRoutes } from "./static-routes";
 import { getEnvironmentName } from "@/utils/config";

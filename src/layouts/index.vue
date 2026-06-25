@@ -45,7 +45,7 @@ import { useMenuStore } from "@/stores/menu-store";
 import { useTagsStore } from "@/stores/tags-store";
 import { getSidebarMenuByModule, extractModules } from "@/utils/menu-util";
 import { useUserStore } from "@/stores/user-store";
-import { userApi } from "@/api/user-api";
+import { userApi } from "@/api/system/user-api.ts";
 
 const userStore = useUserStore();
 const route = useRoute();

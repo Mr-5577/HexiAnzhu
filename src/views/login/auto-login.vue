@@ -36,7 +36,7 @@
 </template>
 
 <script setup lang="ts">
-import { userApi } from "@/api/user-api";
+import { userApi } from "@/api/system/user-api";
 import { ref, onMounted, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { v4 as uuidv4 } from "uuid";

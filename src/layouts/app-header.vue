@@ -52,7 +52,7 @@ import { useRouter } from "vue-router";
 import { extractModules, getFirstRoutePath } from "@/utils/menu-util";
 import { useMenuStore } from "@/stores/menu-store";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { userApi } from "@/api/user-api";
+import { userApi } from "@/api/system/user-api";
 import { useUserStore } from "@/stores/user-store";
 import { useSalesData } from "@/composables/use-sales";
 
