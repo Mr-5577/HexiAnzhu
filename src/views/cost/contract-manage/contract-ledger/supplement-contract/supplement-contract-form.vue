@@ -381,7 +381,7 @@
             <div class="header-content">
               <span class="header-title">补充合同明细</span>
               <el-button type="primary" size="small" @click="handleAdd">
-                新增
+                新增明细
               </el-button>
             </div>
             <editable-table
@@ -412,7 +412,7 @@
 
     <div class="btn-row" v-if="!isDetail">
       <el-button type="primary" :loading="submitLoading" @click="handleSubmit">
-        提交
+        保存
       </el-button>
     </div>
   </div>
@@ -421,7 +421,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
 import { ElMessage } from "element-plus";
-import { useRoute } from "vue-router";
 import { conTypeApi } from "@/api/cost/master-data/contract-category-api";
 import { supplierApi } from "@/api/cost/supplier/supplier-ledger-api";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
@@ -456,14 +455,9 @@ const emit = defineEmits<{
   cancel: [];
 }>();
 
-const route = useRoute();
 const userStore = useUserStore();
 
 const isDetail = computed(() => props.mode === "detail");
-const userName = computed(() => {
-  const name = userStore?.userInfo?.empName || "";
-  return name ? name.replace(/\(.*\)/, "") : "-";
-});
 
 const companyOptions = ref([]); // 签约公司选项
 const conTypeOptions = ref([]); // 合同分类选项
@@ -525,7 +519,7 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
     optionLabelField: "visaApplyDesc",
     optionValueField: "id",
     options: visaList.value || [],
-    width: 200,
+    width: 220,
   },
   {
     prop: "processName",
@@ -533,7 +527,7 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
     editable: true,
     editType: "input",
     showOverflowTooltip: false,
-    width: 200,
+    width: 220,
   },
   {
     prop: "processAmt",
@@ -542,7 +536,7 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
     editable: true,
     editType: "number",
     showOverflowTooltip: false,
-    width: 150,
+    width: 200,
   },
   {
     prop: "processExclAmt",
@@ -551,7 +545,7 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
     editable: true,
     editType: "number",
     showOverflowTooltip: false,
-    width: 150,
+    width: 200,
   },
   // {
   //   prop: "visaApplyId",
@@ -572,6 +566,7 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
     editable: true,
     editType: "date",
     showOverflowTooltip: false,
+    width: 200,
   },
   {
     prop: "remark",
