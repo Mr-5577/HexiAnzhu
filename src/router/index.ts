@@ -10,9 +10,10 @@ import {
   RouteRecordRaw,
 } from "vue-router";
 import { addDynamicRoutes } from "./dynamic-routes";
-import { userApi } from "@/api/user-api";
+import { userApi } from "@/api/system/user-api";
 import { ElLoading } from "element-plus";
 import { costStaticRoutes } from "./static-routes";
+import { getEnvironmentName } from "@/utils/config";
 
 // 静态路由（登录页等）
 const staticRoutes: Array<RouteRecordRaw> = [
@@ -183,10 +184,15 @@ router.beforeEach(async (to, from, next) => {
       // console.log("获取到菜单数据:", res);
       if (res.code === 200) {
         let menuData = res.data || [];
-        // 手动管理成本模块的权限，管理员拥有成本模块的权限
-        if (localStorage.getItem("admin") === "1") {
+
+        // 手动管理成本模块的权限，开发环境和测试环境拥有成本模块的权限
+        if (
+          getEnvironmentName() == "development" ||
+          getEnvironmentName() == "test"
+        ) {
           menuData.push(costStaticRoutes);
         }
+
         // 提取按钮权限
         const buttonPermission = extractButtonPermissions(menuData);
         // console.log("权限列表:", buttonPermission);

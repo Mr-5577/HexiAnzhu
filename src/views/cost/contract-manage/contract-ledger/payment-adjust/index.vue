@@ -1,4 +1,4 @@
-<!-- 款项调整 列表 -->
+<!-- 款项调整/合同奖罚 列表 -->
 <template>
   <div class="payment-adjust-wrapper">
     <base-table
@@ -20,6 +20,14 @@
         </div>
       </template>
 
+      <template #dedTypeId="{ row }">
+        {{ getDedTypeName(row.dedTypeId) }}
+      </template>
+
+      <template #status="{ row }">
+        {{ getStatusName(row.status) }}
+      </template>
+
       <template #actions="{ row }">
         <el-button type="primary" link @click="handleEdit(row)">
           编辑
@@ -29,13 +37,25 @@
         </el-button>
       </template>
     </base-table>
+
+    <!-- 新增/编辑 款项调整/合同奖惩弹窗 -->
+    <add-edit-ded-dialog
+      v-model="dialogVisible"
+      :conId="props.conId"
+      :editData="editData"
+      @success="handleRefresh"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
+import AddEditDedDialog from "./add-edit-ded-dialog.vue";
+import { paymentAdjustApi } from "@/api/cost/contract-manage/payment-adjust-api.ts";
+import { dedTypeEnum } from "@/constants/contract-manage/enums";
+import { ContractDed } from "@/types/cost/contract-manage/payment-adjust-type.ts";
 
 defineOptions({ name: "payment-adjust" });
 
@@ -50,16 +70,36 @@ const tableData = ref<any[]>([]);
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "changeType", label: "大类" },
-  { prop: "changeName", label: "小类" },
-  { prop: "changeAmt", label: "事项说明" },
-  { prop: "changeAmt", label: "金额" },
-  { prop: "changeAmt", label: "是否兑现" },
-  { prop: "changeAmt", label: "兑现金额" },
-  { prop: "changeAmt", label: "审批状态" },
-  { prop: "status", label: "申请人" },
-  { prop: "changeReasonId", label: "申请时间" },
+  { slot: "dedTypeId", label: "调整类型" },
+  { prop: "dedAmt", label: "调整金额" },
+  { prop: "dedDesc", label: "说明" },
+  { slot: "status", label: "状态" },
+  {
+    label: "操作",
+    width: 150,
+    slot: "actions",
+    fixed: "right",
+  },
 ];
+const getDedTypeName = (dedTypeId: number) => {
+  const dedType = dedTypeEnum.find((item) => item.value == dedTypeId);
+  return dedType?.label || "";
+};
+/** 状态：0-草稿，5-审批中，10-已审批，30-已作废 */
+const getStatusName = (status: number) => {
+  switch (status) {
+    case 0:
+      return "草稿";
+    case 5:
+      return "审批中";
+    case 10:
+      return "已审批";
+    case 30:
+      return "已作废";
+    default:
+      return "-";
+  }
+};
 // 获取列表数据
 const getDataList = async () => {
   if (!props.conId) {
@@ -68,6 +108,10 @@ const getDataList = async () => {
   try {
     tableLoading.value = true;
     tableData.value = [];
+    const res = await paymentAdjustApi.getDedList({ conId: props.conId });
+    if (res.code === 200) {
+      tableData.value = res.data || [];
+    }
   } catch (error) {
     console.error("获取列表失败:", error);
   } finally {
@@ -82,20 +126,24 @@ const handleRefresh = () => {
 
 // 发起流程
 const handleInitiate = () => {
+  editData.value = null;
   dialogVisible.value = true;
 };
 // 编辑
-const handleEdit = async (row) => {
+const handleEdit = async (row: ContractDed) => {
   editData.value = row;
   dialogVisible.value = true;
 };
 // 删除
-const handleDelete = (row) => {
+const handleDelete = (row: ContractDed) => {
   ElMessageBox.confirm("确定删除该数据吗？", "提示", { type: "warning" })
     .then(async () => {
       try {
-        ElMessage.success("删除成功");
-        getDataList();
+        const res = await paymentAdjustApi.delDed({ id: row.id });
+        if (res.code === 200) {
+          ElMessage.success("删除成功");
+          getDataList();
+        }
       } catch (error) {
         console.error("删除失败:", error);
       }
@@ -104,17 +152,20 @@ const handleDelete = (row) => {
 };
 
 // 监听合同ID变化，自动刷新列表
-watch(
-  () => props.conId,
-  async (val) => {
-    if (val) {
-      getDataList();
-    } else {
-      tableData.value = [];
-    }
-  },
-  { immediate: true },
-);
+// watch(
+//   () => props.conId,
+//   async (val) => {
+//     if (val) {
+//       getDataList();
+//     } else {
+//       tableData.value = [];
+//     }
+//   },
+//   { immediate: true },
+// );
+onMounted(() => {
+  getDataList();
+});
 </script>
 
 <style lang="scss" scoped>

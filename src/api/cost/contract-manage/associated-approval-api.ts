@@ -2,7 +2,7 @@ import { http } from "@/axios/service";
 
 /** 流程回调参数 */
 interface FlowCallbackChangeParams {
-/** 流程ID */
+  /** 流程ID */
   flowId: number;
   /** 工作流状态 */
   wfStatus: string;
@@ -48,5 +48,45 @@ export const associatedApprovalApi = {
   /** 工程核价流程回调 */
   flowCallbackAuditPrice: (data: FlowCallbackChangeParams) => {
     return http.post("/con/flow/flowCallbackAuditPrice", data);
+  },
+  /** 创建合同奖罚（款项调整）审批流程 dedId:奖罚ID */
+  createDedFlow: (data: { dedId: number }) => {
+    return http.post("/con/flow/createDedFlow", data);
+  },
+  /** 创建合同产值审批流程 prodValId:产值ID */
+  createProdValFlow: (data: { prodValId: number }) => {
+    return http.post("/con/flow/createProdValFlow", data);
+  },
+  /** 创建合同作废审批流程 voidId:合同作废ID */
+  createVoidFlow: (data: { voidId: number }) => {
+    return http.post("/con/flow/createVoidFlow", data);
+  },
+  /** 创建合同预结算审批流程 preSettleId:预结算ID */
+  createPreSettleFlow: (data: { preSettleId: number }) => {
+    return http.post("/con/flow/createPreSettleFlow", data);
+  },
+  /** 创建合同结算审批流程 settleId:结算ID */
+  createSettleFlow: (data: { settleId: number }) => {
+    return http.post("/con/flow/createSettleFlow", data);
+  },
+  /** 合同奖罚流程回调 */
+  flowCallbackDed: (data: FlowCallbackChangeParams) => {
+    return http.post("/con/flow/flowCallbackDed", data);
+  },
+  /** 合同产值流程回调 */
+  flowCallbackProdVal: (data: FlowCallbackChangeParams) => {
+    return http.post("/con/flow/flowCallbackProdVal", data);
+  },
+  /** 合同作废流程回调 */
+  flowCallbackVoid: (data: FlowCallbackChangeParams) => {
+    return http.post("/con/flow/flowCallbackVoid", data);
+  },
+  /** 合同预结算流程回调 */
+  flowCallbackPreSettle: (data: FlowCallbackChangeParams) => {
+    return http.post("/con/flow/flowCallbackPreSettle", data);
+  },
+  /** 合同结算流程回调 */
+  flowCallbackSettle: (data: FlowCallbackChangeParams) => {
+    return http.post("/con/flow/flowCallbackSettle", data);
   },
 };

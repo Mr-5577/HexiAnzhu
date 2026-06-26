@@ -31,7 +31,7 @@
               :model-value="row[column.prop]"
               :placeholder="column.placeholder || '请选择'"
               size="small"
-              :disabled="column.disabled"
+              :disabled="getColumnDisabled(column, row)"
               readonly
               class="clickable-input"
               @click.stop="handleCellClick(row, column, $index)"
@@ -44,7 +44,7 @@
               v-if="column.editType === 'input'"
               v-model="row[column.prop]"
               size="small"
-              :disabled="column.disabled"
+              :disabled="getColumnDisabled(column, row)"
               :placeholder="column.placeholder || '请输入'"
               @blur="handleSave(row, column, $index)"
               @keyup.enter="handleSave(row, column, $index)"
@@ -55,7 +55,7 @@
               v-else-if="column.editType === 'select'"
               v-model="row[column.prop]"
               size="small"
-              :disabled="column.disabled"
+              :disabled="getColumnDisabled(column, row)"
               :placeholder="column.placeholder || '请选择'"
               :multiple="column.multiple || false"
               :collapse-tags="column.collapseTags || true"
@@ -75,7 +75,7 @@
               v-else-if="column.editType === 'number'"
               v-model="row[column.prop]"
               size="small"
-              :disabled="column.disabled"
+              :disabled="getColumnDisabled(column, row)"
               controls-position="right"
               :controls="false"
               :precision="getNumberPrecision(column)"
@@ -91,7 +91,7 @@
               type="textarea"
               :rows="2"
               size="small"
-              :disabled="column.disabled"
+              :disabled="getColumnDisabled(column, row)"
               :placeholder="column.placeholder || '请输入'"
               @blur="handleSave(row, column, $index)"
             />
@@ -102,7 +102,7 @@
               v-model="row[column.prop]"
               type="date"
               size="small"
-              :disabled="column.disabled"
+              :disabled="getColumnDisabled(column, row)"
               :placeholder="column.placeholder || '请选择日期'"
               value-format="YYYY-MM-DD"
               @change="handleSave(row, column, $index)"
@@ -114,7 +114,7 @@
               v-model="row[column.prop]"
               type="datetime"
               size="small"
-              :disabled="column.disabled"
+              :disabled="getColumnDisabled(column, row)"
               :placeholder="column.placeholder || '请选择时间'"
               value-format="YYYY-MM-DD HH:mm:ss"
               @change="handleSave(row, column, $index)"
@@ -125,7 +125,7 @@
               v-else-if="column.editType === 'switch'"
               v-model="row[column.prop]"
               size="small"
-              :disabled="column.disabled"
+              :disabled="getColumnDisabled(column, row)"
               @change="handleSave(row, column, $index)"
             />
 
@@ -134,7 +134,7 @@
               v-else-if="column.editType === 'radio'"
               v-model="row[column.prop]"
               size="small"
-              :disabled="column.disabled"
+              :disabled="getColumnDisabled(column, row)"
               @change="handleSave(row, column, $index)"
             >
               <el-radio
@@ -151,7 +151,7 @@
               v-else
               v-model="row[column.prop]"
               size="small"
-              :disabled="column.disabled"
+              :disabled="getColumnDisabled(column, row)"
               :placeholder="column.placeholder || '请输入'"
               @blur="handleSave(row, column, $index)"
               @keyup.enter="handleSave(row, column, $index)"
@@ -256,6 +256,16 @@ const emit = defineEmits<Emits>();
 
 const baseTableRef = ref<InstanceType<typeof BaseTable>>();
 const editableData = ref<any[]>([]);
+
+/**
+ * 获取列的 disabled 状态（支持布尔值或函数）
+ */
+const getColumnDisabled = (column: EditableColumn, row: any): boolean => {
+  if (typeof column.disabled === "function") {
+    return column.disabled(row);
+  }
+  return column.disabled || false;
+};
 
 // 使用普通对象存储旧值，key 格式: "rowId_prop"
 const oldValueMap: Record<string, any> = {};
@@ -491,7 +501,12 @@ const handleCellEvent = (payload: any) => {
   // 可以在这里处理自定义事件
   console.log("cell-event:", payload);
 };
-
+/**
+ * @name 可编辑单元格点击事件触发事件
+ * @param row 行数据
+ * @param column 列配置
+ * @param rowIndex 行索引
+ */
 const handleCellClick = (
   row: any,
   column: EditableColumn,

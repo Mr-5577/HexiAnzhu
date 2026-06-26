@@ -27,6 +27,7 @@
         <el-button type="danger" link @click="handleDelete(row)">
           删除
         </el-button>
+        <el-button type="primary" link> 审批 </el-button>
       </template>
     </base-table>
 
@@ -41,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import AddEditVisaDialog from "./add-edit-visa-dialog.vue";
@@ -149,17 +150,20 @@ const handleEdit = async (row: ContractVisa) => {
 };
 
 // 监听合同ID变化，自动刷新列表
-watch(
-  () => props.conId,
-  async (val) => {
-    if (val) {
-      getDataList();
-    } else {
-      tableData.value = [];
-    }
-  },
-  { immediate: true },
-);
+// watch(
+//   () => props.conId,
+//   async (val) => {
+//     if (val) {
+//       getDataList();
+//     } else {
+//       tableData.value = [];
+//     }
+//   },
+//   { immediate: true },
+// );
+onMounted(() => {
+  getDataList();
+});
 </script>
 
 <style lang="scss" scoped>

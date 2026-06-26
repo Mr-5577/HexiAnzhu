@@ -154,7 +154,6 @@
             <el-form-item label="付款方式" prop="payMethod" required>
               <el-select
                 v-model="formData.payMethod"
-                :disabled="isDetail"
                 placeholder="请选择付款方式"
                 style="width: 100%"
                 @change="handlePayMethodChange"
@@ -172,7 +171,6 @@
             <el-form-item label="款项类型" prop="payTypeId" required>
               <el-select
                 v-model="formData.payTypeId"
-                :disabled="isDetail"
                 placeholder="请选择款项类型"
                 style="width: 100%"
               >
@@ -189,7 +187,6 @@
             <el-form-item label="应付比例(%)" prop="payRate" required>
               <el-input-number
                 v-model="formData.payRate"
-                :disabled="isDetail"
                 :min="0"
                 :max="100"
                 :precision="2"
@@ -204,7 +201,6 @@
             <el-form-item label="是否强控" prop="isCtrl" required>
               <el-select
                 v-model="formData.isCtrl"
-                :disabled="isDetail"
                 placeholder="请选择"
                 style="width: 100%"
               >
@@ -219,7 +215,6 @@
             <el-form-item label="支付周期(月)" prop="payIntvl">
               <el-input-number
                 v-model="formData.payIntvl"
-                :disabled="isDetail"
                 :min="0"
                 :precision="0"
                 :controls="false"
@@ -232,7 +227,6 @@
             <el-form-item label="本次申报产值金额" prop="applyProdVal" required>
               <el-input-number
                 v-model="formData.applyProdVal"
-                :disabled="isDetail"
                 :min="0"
                 :precision="2"
                 :controls="false"
@@ -246,7 +240,7 @@
             <el-form-item label="本次申报应付金额" prop="applyPayAmt" required>
               <el-input-number
                 v-model="formData.applyPayAmt"
-                :disabled="isDetail || formData.isCtrl"
+                disabled
                 :min="0"
                 :precision="2"
                 :controls="false"
@@ -254,9 +248,6 @@
                 style="width: 100%"
                 @change="handleApplyPayAmtChange"
               />
-              <span v-if="formData.isCtrl" class="field-tip">
-                强控模式下自动计算
-              </span>
             </el-form-item>
           </el-col>
           <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
@@ -287,7 +278,6 @@
             <el-form-item label="申报说明" prop="applyDesc">
               <el-input
                 v-model="formData.applyDesc"
-                :disabled="isDetail"
                 type="textarea"
                 :rows="2"
                 maxlength="500"
@@ -299,11 +289,14 @@
         </el-row>
 
         <!-- 支付比例明细 -->
-        <div>
+        <div v-if="formData.payMethod == 1">
           <div class="section-title">支付比例明细</div>
           <div class="detail-table">
             <div class="header-content">
               <span class="header-title">支付比例明细</span>
+              <el-button type="primary" size="small" @click="addPayrate">
+                新增支付比例
+              </el-button>
             </div>
             <editable-table
               ref="payrateRef"
@@ -319,17 +312,17 @@
               @data-change="handleChangePayrate"
               @update:table-data="handleUpdatePayrate"
             >
-              <!-- <template #actions="{ row }">
+              <template #actions="{ row }">
                 <el-button link type="danger" @click="deletePayrate(row)">
                   删除
                 </el-button>
-              </template> -->
+              </template>
             </editable-table>
           </div>
         </div>
 
         <!-- 材料合同产值 -->
-        <div>
+        <div v-if="formData.payMethod == 2">
           <div class="section-title">材料合同产值</div>
           <div class="detail-table">
             <div class="header-content">
@@ -357,29 +350,24 @@
               @data-change="handleChangeMaterial"
               @update:table-data="handleUpdateMaterial"
             >
-              <template #actions="{ row }">
+              <!-- <template #actions="{ row }">
                 <el-button link type="danger" @click="deleteMaterial(row)">
                   删除
                 </el-button>
-              </template>
+              </template> -->
             </editable-table>
           </div>
         </div>
 
         <!-- 支付节点 -->
-        <div>
+        <div v-if="formData.payMethod == 3">
           <div class="section-title">支付节点</div>
           <div class="detail-table">
             <div class="header-content">
               <span class="header-title">支付节点明细</span>
-              <!-- <el-button
-                type="primary"
-                size="small"
-                @click="addPaynode"
-                v-if="!isDetail"
-              >
+              <el-button type="primary" size="small" @click="addPaynode">
                 新增支付节点
-              </el-button> -->
+              </el-button>
             </div>
             <editable-table
               ref="paynodeRef"
@@ -395,11 +383,11 @@
               @data-change="handleChangePaynode"
               @update:table-data="handleUpdatePaynode"
             >
-              <!-- <template #actions="{ row }">
+              <template #actions="{ row }">
                 <el-button link type="danger" @click="deletePaynode(row)">
                   删除
                 </el-button>
-              </template> -->
+              </template>
             </editable-table>
           </div>
         </div>
@@ -411,7 +399,6 @@
             <el-form-item label="复核产值金额" prop="costProdVal">
               <el-input-number
                 v-model="formData.costProdVal"
-                :disabled="isDetail"
                 :min="0"
                 :precision="2"
                 :controls="false"
@@ -425,7 +412,6 @@
             <el-form-item label="复核应付金额" prop="costPayAmt">
               <el-input-number
                 v-model="formData.costPayAmt"
-                :disabled="isDetail"
                 :min="0"
                 :precision="2"
                 :controls="false"
@@ -439,7 +425,7 @@
       </el-form>
     </div>
 
-    <div class="btn-row" v-if="!isDetail">
+    <div class="btn-row">
       <el-button type="primary" :loading="submitLoading" @click="handleSubmit">
         保存
       </el-button>
@@ -450,7 +436,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
 import { ElMessage } from "element-plus";
-import { useRoute } from "vue-router";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";
 import { v4 as uuidv4 } from "uuid";
@@ -467,15 +452,35 @@ import { outputDeclarationApi } from "@/api/cost/contract-manage/output-declarat
 
 defineOptions({ name: "output-value-form" });
 
-const route = useRoute();
+// Props
+interface Props {
+  mode?: "add" | "edit" | "detail";
+  conId: number;
+  outputId?: number;
+}
 
-const outputId = ref<number | null>(null);
-const conId = ref<number | null>(null);
-const mode = ref<"add" | "edit" | "detail">("add");
-const isDetail = computed(() => route.query.mode === "detail");
+const props = withDefaults(defineProps<Props>(), {
+  mode: "add",
+  outputId: undefined,
+});
+
+// Emits
+const emit = defineEmits<{
+  (e: "success", data: any): void;
+  (e: "cancel"): void;
+}>();
+
+const mode = ref<"add" | "edit" | "detail">(props.mode);
+const conId = ref<number>(props.conId);
+const outputId = ref<number | undefined>(props.outputId);
+
+const isDetailMode = computed(() => mode.value === "detail");
+const isEditMode = computed(() => mode.value === "edit");
+const isAddMode = computed(() => mode.value === "add");
 
 const formData = ref({
   id: null,
+  conId: null, // 合同id
   conBillId: null,
   status: 0,
   signAmt: 0,
@@ -487,7 +492,6 @@ const formData = ref({
   sumAppyAmt: 0,
   sumPaidAmt: 0,
   sumOwedAmt: 0,
-  conId: null,
   conTypeId: 0,
   payMethod: null,
   payTypeId: null,
@@ -518,8 +522,11 @@ const payrateColumns = computed<EditableColumn[]>(() => [
   //   prop: "payRateId",
   //   label: "支付比例",
   //   editable: true,
-  //   editType: "input",
+  //   editType: "select",
   //   showOverflowTooltip: false,
+  //   optionLabelField: "name",
+  //   optionValueField: "id",
+  //   options: [],
   //   width: 120,
   // },
   {
@@ -619,26 +626,26 @@ const payrateColumns = computed<EditableColumn[]>(() => [
     showOverflowTooltip: false,
     width: 150,
   },
-  //   {
-  //     label: "操作",
-  //     width: 100,
-  //     slot: "actions",
-  //     fixed: "right",
-  //   },
+  {
+    label: "操作",
+    width: 100,
+    slot: "actions",
+    fixed: "right",
+  },
 ]);
 
 // 材料合同产值明细
 const materialTable = ref<ContractBillMaterial[]>([]);
 const materialColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
-  {
-    prop: "mtId",
-    label: "材料产值",
-    editable: true,
-    editType: "input",
-    showOverflowTooltip: false,
-    width: 120,
-  },
+  // {
+  //   prop: "mtId",
+  //   label: "材料产值",
+  //   editable: true,
+  //   editType: "input",
+  //   showOverflowTooltip: false,
+  //   width: 120,
+  // },
   {
     prop: "mtName",
     label: "材料名称",
@@ -861,24 +868,30 @@ const paynodeColumns = computed<EditableColumn[]>(() => [
     editable: true,
     editType: "input",
     showOverflowTooltip: false,
-    width: 150,
+    width: 200,
   },
-  //   {
-  //     label: "操作",
-  //     width: 100,
-  //     slot: "actions",
-  //     fixed: "right",
-  //   },
+  {
+    label: "操作",
+    width: 100,
+    slot: "actions",
+    fixed: "right",
+  },
 ]);
 
 const paymentTypeOptions = ref<any[]>([]);
 
-// ==================== 数据字典 ====================
 const { getDictList, loadDicts } = useDict([dictMapping.paymentType], {
   treeDictCodes: [],
 });
 
 const formRules = ref({
+  addAmt: [{ required: true, message: "请输入补充合同金额", trigger: "blur" }],
+  sumChangeAmt: [
+    { required: true, message: "请输入累计变更签证", trigger: "blur" },
+  ],
+  preSettleAmt: [
+    { required: true, message: "请输入预结算合同金额", trigger: "blur" },
+  ],
   sumProdVal: [{ required: true, message: "请输入累计产值", trigger: "blur" }],
   sumPayAmt: [{ required: true, message: "请输入累计应付", trigger: "blur" }],
   sumAppyAmt: [{ required: true, message: "请输入累计请款", trigger: "blur" }],
@@ -920,31 +933,31 @@ const calculateTotalPayVal = () => {
   formData.value.totalPayVal = sumPayAmt + applyPayAmt;
 };
 
-// 强控模式下，申报应付 = 申报产值 * 应付比例 / 100
+// 计算申报应付金额 = 申报产值 * 应付比例 / 100
 const calculateApplyPayAmt = () => {
-  if (formData.value.isCtrl) {
-    const applyProdVal = Number(formData.value.applyProdVal) || 0;
-    const payRate = Number(formData.value.payRate) || 0;
-    formData.value.applyPayAmt = applyProdVal * (payRate / 100);
-  }
+  const applyProdVal = Number(formData.value.applyProdVal) || 0;
+  const payRate = Number(formData.value.payRate) || 0;
+  formData.value.applyPayAmt = applyProdVal * (payRate / 100);
 };
 
 // 付款方式变更
-const handlePayMethodChange = (val: number) => {};
+const handlePayMethodChange = (val: number) => {
+  payrateTable.value = [];
+  materialTable.value = [];
+  paynodeTable.value = [];
+};
 
 // 应付比例变更
 const handlePayRateChange = () => {
-  if (formData.value.isCtrl) {
-    calculateApplyPayAmt();
-  }
+  calculateApplyPayAmt();
+  calculateTotalPayVal();
 };
 
 // 申报产值变更
 const handleApplyProdValChange = () => {
   calculateTotalProdVal();
-  if (formData.value.isCtrl) {
-    calculateApplyPayAmt();
-  }
+  calculateApplyPayAmt();
+  calculateTotalPayVal();
 };
 
 // 申报应付变更
@@ -963,7 +976,7 @@ const addPayrate = () => {
   const newRow: ContractBillPayRate = {
     uuid: uuidv4(),
     id: undefined,
-    conBillId: 0,
+    conBillId: conId.value,
     payRateId: undefined,
     payTypeId: undefined,
     payRate: 0,
@@ -999,7 +1012,7 @@ const addMaterial = () => {
   const newRow: ContractBillMaterial = {
     uuid: uuidv4(),
     id: undefined,
-    conBillId: 0,
+    conBillId: conId.value,
     mtId: undefined,
     mtName: "",
     mtModel: "",
@@ -1040,10 +1053,10 @@ const addPaynode = () => {
   const newRow: ContractBillPayNode = {
     uuid: uuidv4(),
     id: undefined,
-    conBillId: 0,
+    conBillId: conId.value,
     nodeId: undefined,
     nodeName: "",
-    payType: 0,
+    payType: null,
     prodVal: 0,
     payRate: 0,
     payAmt: 0,
@@ -1069,7 +1082,6 @@ const handleUpdatePaynode = (newData: any) => {
   paynodeTable.value = newData;
 };
 
-// ==================== 校验方法 ====================
 const validatePayrateTable = () => {
   if (payrateTable.value.length === 0) {
     ElMessage.error("支付比例明细列表不能为空");
@@ -1130,6 +1142,7 @@ const validatePaynodeTable = () => {
 // 构建提交参数
 const buildSubmitParams = () => {
   return {
+    conId: formData.value.conId,
     prodVal: {
       id: formData.value.id,
       conBillId: formData.value.conBillId,
@@ -1166,30 +1179,33 @@ const buildSubmitParams = () => {
 
 // 提交
 const handleSubmit = async () => {
-  if (isDetail.value) return;
+  if (isDetailMode.value) return;
   if (!formRef.value) return;
-
-  try {
-    await formRef.value.validate();
-    // if (!validatePayrateTable()) return;
-    // if (!validateMaterialTable()) return;
-    // if (!validatePaynodeTable()) return;
-
-    // submitLoading.value = true;
-    const params = buildSubmitParams();
-    console.log("提交参数", params);
-    // return
-    if (mode.value === "edit") {
-      await outputDeclarationApi.editProdVal(params);
-    } else {
-      await outputDeclarationApi.addProdVal(params);
+  formRef.value.validate(async (viod: boolean) => {
+    if (!viod) {
+      ElMessage.error("请检查表单是否填写完整");
+      return;
     }
-    ElMessage.success("提交成功");
-  } catch (error) {
-    console.error(error);
-  } finally {
-    submitLoading.value = false;
-  }
+    try {
+      // if (!validatePayrateTable()) return;
+      // if (!validateMaterialTable()) return;
+      // if (!validatePaynodeTable()) return;
+
+      submitLoading.value = true;
+      const params = buildSubmitParams();
+      console.log("提交参数", params);
+      if (isEditMode.value) {
+        await outputDeclarationApi.editProdVal(params);
+      } else {
+        await outputDeclarationApi.addProdVal(params);
+      }
+      ElMessage.success("提交成功");
+    } catch (error) {
+      console.error(error);
+    } finally {
+      submitLoading.value = false;
+    }
+  });
 };
 
 // 加载产值申报详情
@@ -1199,24 +1215,30 @@ const loadProdValDetail = async () => {
     const res = await outputDeclarationApi.getProdValById({
       id: outputId.value,
     });
-    // if (res.code === 200) {
-    //   const { prodVal, billPayrates, billMaterials, billPaynodes } = res.data;
-    //   formData.value = prodVal;
-    //   payrateTable.value = billPayrates || [];
-    //   materialTable.value = billMaterials || [];
-    //   paynodeTable.value = billPaynodes || [];
-    // }
+    if (res.code === 200) {
+      const { prodVal, billPayrates, billMaterials, billPaynodes } = res.data;
+      formData.value = prodVal;
+      payrateTable.value = billPayrates || [];
+      materialTable.value = billMaterials || [];
+      paynodeTable.value = billPaynodes || [];
+    }
   } catch (error) {}
 };
 
 // 加载合同信息
 const loadContractInfo = async () => {
+  if (!conId.value) return;
   try {
     const res = await contractLedgerApi.getContractLedgerById({
       id: conId.value,
     });
     if (res.code === 200) {
-      const { conMain, billPaynodes = [], billPayrates = [] } = res.data;
+      const {
+        conMain,
+        billPaynodes = [],
+        billPayrates = [],
+        billMaterials = [],
+      } = res.data;
       formData.value.conName = conMain.conName;
       formData.value.conSysNo = conMain.conSysNo;
       formData.value.conTypeId = conMain.conTypeId;
@@ -1224,18 +1246,25 @@ const loadContractInfo = async () => {
       formData.value.supName = conMain.supName;
       formData.value.signAmt = conMain.signAmt;
       formData.value.conId = conMain.id;
-      paynodeTable.value = billPaynodes.map((item) => {
-        return {
-          ...item,
-          uuid: uuidv4(),
-        };
-      });
-      payrateTable.value = billPayrates.map((item) => {
-        return {
-          ...item,
-          uuid: uuidv4(),
-        };
-      });
+      formData.value.payMethod = conMain.payMethod;
+      // paynodeTable.value = billPaynodes.map((item) => {
+      //   return {
+      //     ...item,
+      //     uuid: uuidv4(),
+      //   };
+      // });
+      // payrateTable.value = billPayrates.map((item) => {
+      //   return {
+      //     ...item,
+      //     uuid: uuidv4(),
+      //   };
+      // });
+      // materialTable.value = billMaterials.map((item) => {
+      //   return {
+      //     ...item,
+      //     uuid: uuidv4(),
+      //   };
+      // });
     }
   } catch (error) {}
 };
@@ -1246,34 +1275,27 @@ const initDictData = async () => {
   paymentTypeOptions.value = getDictList(dictMapping.paymentType); // 款项类型
 };
 
-const syncRouteState = async () => {
-  const queryMode = route.query.mode as string;
-  mode.value =
-    queryMode === "edit" || queryMode === "detail" ? queryMode : "add";
-
-  const outputIdValue = route.query.outputId
-    ? Number(route.query.outputId)
-    : null;
-  outputId.value = outputIdValue || null;
-
-  const conIdValue = route.query.conId ? Number(route.query.conId) : null;
-  conId.value = conIdValue || null;
-
+// 初始化
+const initData = async () => {
   await initDictData();
 
-  if (mode.value === "edit" || mode.value === "detail") {
-    await loadProdValDetail();
-  } else {
-    formData.value = {
-      ...formData.value,
-      conId: conId.value,
-    };
+  if (isAddMode.value) {
     await loadContractInfo();
+  } else if (isEditMode.value || isDetailMode.value) {
+    if (outputId.value) {
+      await loadProdValDetail();
+    }
   }
 };
-
 onMounted(() => {
-  syncRouteState();
+  initData();
+});
+
+// 暴露方法
+defineExpose({
+  initData,
+  formData,
+  mode,
 });
 </script>
 

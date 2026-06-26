@@ -439,7 +439,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/bidding/tender-matter/components/tender-plan/tender-plan-form",
+            "cost/bidding/tender-matter/components/tender-plan/tender-plan-add",
           path: "bidding/tender-plan/add",
           isKeepAlive: true,
           isControl: true,
@@ -459,7 +459,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/bidding/tender-matter/components/tender-plan/tender-plan-form",
+            "cost/bidding/tender-matter/components/tender-plan/tender-plan-edit",
           path: "bidding/tender-plan/edit",
           isKeepAlive: true,
           isControl: true,
@@ -479,7 +479,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/bidding/tender-matter/components/tender-plan/tender-plan-form",
+            "cost/bidding/tender-matter/components/tender-plan/tender-plan-detail",
           path: "bidding/tender-plan/detail",
           isKeepAlive: true,
           isControl: true,
@@ -499,7 +499,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/bidding/tender-matter/components/reference-price/reference-price-form",
+            "cost/bidding/tender-matter/components/reference-price/reference-price-add",
           path: "bidding/reference-price/add",
           isKeepAlive: true,
           isControl: true,
@@ -519,7 +519,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/bidding/tender-matter/components/reference-price/reference-price-form",
+            "cost/bidding/tender-matter/components/reference-price/reference-price-edit",
           path: "bidding/reference-price/edit",
           isKeepAlive: true,
           isControl: true,
@@ -539,7 +539,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/bidding/tender-matter/components/reference-price/reference-price-form",
+            "cost/bidding/tender-matter/components/reference-price/reference-price-detail",
           path: "bidding/reference-price/detail",
           isKeepAlive: true,
           isControl: true,
@@ -559,7 +559,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/bidding/tender-matter/components/award-approval/award-approval-form",
+            "cost/bidding/tender-matter/components/award-approval/award-approval-add",
           path: "bidding/award-approval/add",
           isKeepAlive: true,
           isControl: true,
@@ -579,7 +579,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/bidding/tender-matter/components/award-approval/award-approval-form",
+            "cost/bidding/tender-matter/components/award-approval/award-approval-edit",
           path: "bidding/award-approval/edit",
           isKeepAlive: true,
           isControl: true,
@@ -599,7 +599,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/bidding/tender-matter/components/award-approval/award-approval-form",
+            "cost/bidding/tender-matter/components/award-approval/award-approval-detail",
           path: "bidding/award-approval/detail",
           isKeepAlive: true,
           isControl: true,
@@ -619,7 +619,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/bidding/tender-matter/components/bid-bond-pay/bond-pay-form",
+            "cost/bidding/tender-matter/components/bid-bond-pay/bid-bond-pay-add",
           path: "bidding/bid-bond-pay/add",
           isKeepAlive: true,
           isControl: true,
@@ -639,7 +639,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/bidding/tender-matter/components/bid-bond-pay/bond-pay-form",
+            "cost/bidding/tender-matter/components/bid-bond-pay/bid-bond-pay-edit",
           path: "bidding/bid-bond-pay/edit",
           isKeepAlive: true,
           isControl: true,
@@ -659,7 +659,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/bidding/tender-matter/components/bid-bond-pay/bond-pay-form",
+            "cost/bidding/tender-matter/components/bid-bond-pay/bid-bond-pay-detail",
           path: "bidding/bid-bond-pay/detail",
           isKeepAlive: true,
           isControl: true,
@@ -679,7 +679,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/bidding/tender-matter/components/bid-bond-refund/bond-refund-form",
+            "cost/bidding/tender-matter/components/bid-bond-refund/bid-bond-refund-add",
           path: "bidding/bid-bond-refund/add",
           isKeepAlive: true,
           isControl: true,
@@ -699,7 +699,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/bidding/tender-matter/components/bid-bond-refund/bond-refund-form",
+            "cost/bidding/tender-matter/components/bid-bond-refund/bid-bond-refund-edit",
           path: "bidding/bid-bond-refund/edit",
           isKeepAlive: true,
           isControl: true,
@@ -719,7 +719,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/bidding/tender-matter/components/bid-bond-refund/bond-refund-form",
+            "cost/bidding/tender-matter/components/bid-bond-refund/bid-bond-refund-detail",
           path: "bidding/bid-bond-refund/detail",
           isKeepAlive: true,
           isControl: true,
@@ -779,8 +779,7 @@ export const costStaticRoutes = {
           title: "新增合同台账",
           icon: "Edit",
           menuType: 1,
-          component:
-            "cost/contract-manage/contract-ledger/contract-ledger-form",
+          component: "cost/contract-manage/contract-ledger/contract-ledger-add",
           path: "contract/contract-ledger/add",
           isKeepAlive: true,
           isControl: true,
@@ -800,7 +799,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/contract-manage/contract-ledger/contract-ledger-form",
+            "cost/contract-manage/contract-ledger/contract-ledger-edit",
           path: "contract/contract-ledger/edit",
           isKeepAlive: true,
           isControl: true,
@@ -840,7 +839,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/contract-manage/contract-ledger/supplement-contract/supplement-contract-form",
+            "cost/contract-manage/contract-ledger/supplement-contract/supplement-contract-add",
           path: "contract/supplement-contract/add",
           isKeepAlive: true,
           isControl: true,
@@ -860,7 +859,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/contract-manage/contract-ledger/supplement-contract/supplement-contract-form",
+            "cost/contract-manage/contract-ledger/supplement-contract/supplement-contract-edit",
           path: "contract/supplement-contract/edit",
           isKeepAlive: true,
           isControl: true,
@@ -880,7 +879,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/contract-manage/contract-ledger/output-declaration/output-value-form",
+            "cost/contract-manage/contract-ledger/output-declaration/output-declaration-add",
           path: "contract/output-declaration/add",
           isKeepAlive: true,
           isControl: true,
@@ -900,7 +899,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/contract-manage/contract-ledger/output-declaration/output-value-form",
+            "cost/contract-manage/contract-ledger/output-declaration/output-declaration-edit",
           path: "contract/output-declaration/edit",
           isKeepAlive: true,
           isControl: true,
@@ -920,7 +919,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/contract-manage/contract-ledger/contract-settle/contract-settle-form",
+            "cost/contract-manage/contract-ledger/contract-settle/contract-settle-add",
           path: "contract/contract-settle/add",
           isKeepAlive: true,
           isControl: true,
@@ -940,7 +939,7 @@ export const costStaticRoutes = {
           icon: "Edit",
           menuType: 1,
           component:
-            "cost/contract-manage/contract-ledger/contract-settle/contract-settle-form",
+            "cost/contract-manage/contract-ledger/contract-settle/contract-settle-edit",
           path: "contract/contract-settle/edit",
           isKeepAlive: true,
           isControl: true,

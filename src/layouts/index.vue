@@ -1,17 +1,19 @@
 <template>
   <div class="content-layout">
+    <!-- Header -->
     <app-header
       :active-module-id="activeModuleId"
       @module-change="handleModuleChange"
       v-show="!shouldHideLayout"
-    ></app-header>
+    />
     <div class="content-body">
-      <app-sidebar
-        :menu-data="sidebarMenu"
-        v-show="!shouldHideLayout"
-      ></app-sidebar>
+      <!-- 左侧侧边栏 -->
+      <app-sidebar :menu-data="sidebarMenu" v-show="!shouldHideLayout" />
+      <!-- 右侧内容区域 -->
       <main class="content-main">
+        <!-- 页签 -->
         <tags-view v-show="!shouldHideLayout"></tags-view>
+        <!-- 主内容 -->
         <!-- <router-view /> -->
         <router-view v-slot="{ Component, route }">
           <keep-alive :include="cachePagesArray">
@@ -35,18 +37,24 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch, provide } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { storeToRefs } from "pinia";
 import AppHeader from "./app-header.vue";
 import AppSidebar from "./app-sidebar.vue";
 import TagsView from "./tags-view.vue";
 import { useMenuStore } from "@/stores/menu-store";
+import { useTagsStore } from "@/stores/tags-store";
 import { getSidebarMenuByModule, extractModules } from "@/utils/menu-util";
 import { useUserStore } from "@/stores/user-store";
-import { userApi } from "@/api/user-api";
+import { userApi } from "@/api/system/user-api.ts";
 
 const userStore = useUserStore();
 const route = useRoute();
 const router = useRouter();
 const menuStore = useMenuStore();
+const tagsStore = useTagsStore();
+
+// 获取标签页列表
+const { visitedViews } = storeToRefs(tagsStore);
 
 const currentRoutePath = computed(() => route.path);
 // 判断是否在大屏页面
@@ -63,24 +71,24 @@ const shouldHideLayout = computed(() => {
   return userStore.isFullScreen;
 });
 
-// 缓存的页面组件名列表
-const cachePages = ref<Set<string>>(new Set());
-// 转换为数组供 KeepAlive 使用
+// 基于当前打开的标签页动态计算需要缓存的组件列表
 const cachePagesArray = computed(() => {
-  return Array.from(cachePages.value);
-});
-// 更新缓存页面列表
-const updateCachePages = () => {
   const routes = router.getRoutes();
-  cachePages.value.clear();
-  routes.forEach((route) => {
-    if (route.meta?.isKeepAlive && route.name) {
-      cachePages.value.add(route.name as string);
+  const cacheNames: string[] = [];
+
+  // 遍历当前打开的标签页
+  visitedViews.value.forEach((tag) => {
+    const routeRecord = routes.find((r) => r.path === tag.path);
+    if (routeRecord?.meta?.isKeepAlive) {
+      const componentName = routeRecord.components?.default?.name;
+      if (componentName && !cacheNames.includes(componentName)) {
+        cacheNames.push(componentName);
+      }
     }
   });
 
-  // console.log("📦 缓存页面列表:", Array.from(cachePages.value));
-};
+  return cacheNames;
+});
 
 // 缓存KEY
 const ACTIVE_MODULE_STORAGE_KEY = "active-module-id";
@@ -146,33 +154,14 @@ const handleModuleChange = (module: any) => {
   saveActiveModuleId(module.id);
 };
 
-// 添加缓存清理方法
-const clearPageCache = (componentName: string) => {
-  if (cachePages.value.has(componentName)) {
-    cachePages.value.delete(componentName);
-    // console.log(`🗑️ 已从缓存中移除: ${componentName}`);
-  }
-};
-
-// 添加缓存恢复方法
-const restorePageCache = (componentName: string) => {
-  if (!cachePages.value.has(componentName)) {
-    cachePages.value.add(componentName);
-    // console.log(`✅ 已重新缓存: ${componentName}`);
-  }
-};
-
 const getUserInfo = async () => {
   const res = await userApi.getEmpInfo();
   if (res.code === 200) {
     userStore.setUserInfo(res.data || null);
   }
 };
-// 通过 provide 提供给子组件使用
-provide("clearPageCache", clearPageCache);
-provide("restorePageCache", restorePageCache);
 
-// 监听路由变化 - 修改为监听 fullPath，包含查询参数
+// 监听路由变化
 watch(
   () => [route.fullPath, menuStore.menuData],
   () => {
@@ -180,15 +169,7 @@ watch(
       determineActiveModule();
     }
   },
-  { immediate: true }
-);
-
-// 监听路由配置变化，更新缓存
-watch(
-  () => router.getRoutes(),
-  () => {
-    updateCachePages();
-  }
+  { immediate: true },
 );
 
 // 初始化
@@ -196,7 +177,6 @@ onMounted(() => {
   const token = localStorage.getItem("token");
   if (token && menuStore.menuData.length > 0) {
     determineActiveModule();
-    updateCachePages();
   }
   if (token) {
     getUserInfo();
@@ -222,11 +202,11 @@ onUnmounted(() => {});
     min-height: 0;
     .content-main {
       flex: 1;
-      display: flex; /* 新增：启用 flex 布局 */
-      flex-direction: column; /* 新增：垂直方向排列 */
+      display: flex;
+      flex-direction: column;
       background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
       overflow: hidden;
-      min-height: 0; /* 关键：防止内部内容溢出 */
+      min-height: 0; /* 防止内部内容溢出 */
 
       /* 如果 tags-view 高度固定 */
       & > :first-child:not(router-view) {

@@ -10,7 +10,6 @@
     @close="handleClose"
   >
     <div class="choose-con-wrapper">
-      <!-- 筛选区域 -->
       <el-form
         :model="queryParams"
         ref="queryRef"

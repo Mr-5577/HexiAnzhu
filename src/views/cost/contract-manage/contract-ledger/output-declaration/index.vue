@@ -11,7 +11,12 @@
       <!-- 列表外操作栏 -->
       <template #actionBar>
         <div class="actionBar-buttons">
-          <el-button type="primary" icon="Refresh" @click="handleRefresh">
+          <el-button
+            type="primary"
+            icon="Refresh"
+            :loading="tableLoading"
+            @click="handleRefresh"
+          >
             刷新列表
           </el-button>
           <el-button type="primary" @click="handleInitiate">
@@ -27,13 +32,14 @@
         <el-button type="danger" link @click="handleDelete(row)">
           删除
         </el-button>
+        <el-button type="primary" link> 审批 </el-button>
       </template>
     </base-table>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { outputDeclarationApi } from "@/api/cost/contract-manage/output-declaration-api";
@@ -60,7 +66,7 @@ const tableColumns: TableColumnItem[] = [
   { prop: "sumAppyAmt", label: "累计请款", width: 140 },
   { prop: "sumPaidAmt", label: "累计实付", width: 140 },
   { prop: "sumOwedAmt", label: "欠款", width: 140 },
-  { prop: "conId", label: "合同名称", width: 140 },
+  // { prop: "conId", label: "合同名称", width: 140 },
   { prop: "conTypeId", label: "合同分类", width: 140 },
   { prop: "payMethod", label: "付款方式", width: 140 },
   { prop: "payTypeId", label: "款项类型", width: 140 },
@@ -73,7 +79,7 @@ const tableColumns: TableColumnItem[] = [
   { prop: "costPayAmt", label: "成本复核应付金额", width: 140 },
   { prop: "totalProdVal", label: "截止总产值", width: 140 },
   { prop: "totalPayVal", label: "截止总应付", width: 140 },
-    {
+  {
     label: "操作",
     width: 150,
     slot: "actions",
@@ -82,9 +88,7 @@ const tableColumns: TableColumnItem[] = [
 ];
 // 获取列表数据
 const getDataList = async () => {
-  if (!props.conId) {
-    return;
-  }
+  if (!props.conId) return;
   try {
     tableLoading.value = true;
     const res = await outputDeclarationApi.getProdValList({
@@ -110,28 +114,26 @@ const handleInitiate = () => {
   router.push({
     path: "/contract/output-declaration/add",
     query: {
-      mode: "add",
-      conId: props.conId,
+      conId: props.conId, // 合同ID
     },
   });
 };
 // 编辑
-const handleEdit = async (row) => {
+const handleEdit = async ({ id }) => {
   router.push({
     path: "/contract/output-declaration/edit",
     query: {
-      mode: "edit",
-      conId: props.conId,
-      outputId: row.id, // 产值ID
+      conId: props.conId, // 合同ID
+      outputId: id, // 产值ID
     },
   });
 };
 // 删除
-const handleDelete = (row) => {
+const handleDelete = ({ id }) => {
   ElMessageBox.confirm("确定删除该数据吗？", "提示", { type: "warning" })
     .then(async () => {
       try {
-        const res = await outputDeclarationApi.delProdVal({ id: row.id });
+        const res = await outputDeclarationApi.delProdVal({ id: id });
         if (res.code === 200) {
           ElMessage.success("删除成功");
           getDataList();
@@ -144,17 +146,20 @@ const handleDelete = (row) => {
 };
 
 // 监听合同ID变化，自动刷新列表
-watch(
-  () => props.conId,
-  async (val) => {
-    if (val) {
-      getDataList();
-    } else {
-      tableData.value = [];
-    }
-  },
-  { immediate: true },
-);
+// watch(
+//   () => props.conId,
+//   async (val) => {
+//     if (val) {
+//       getDataList();
+//     } else {
+//       tableData.value = [];
+//     }
+//   },
+//   { immediate: true },
+// );
+onMounted(() => {
+  getDataList();
+});
 </script>
 
 <style lang="scss" scoped>

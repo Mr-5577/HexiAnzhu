@@ -17,7 +17,6 @@
         label-width="120px"
         label-position="right"
       >
-        <!-- 第一行：合同签约金额 + 累计产值 -->
         <el-row>
           <el-col :span="12">
             <el-form-item prop="signAmt" label="合同签约金额" required>
@@ -45,7 +44,6 @@
           </el-col>
         </el-row>
 
-        <!-- 第二行：累计请款 + 经办人 -->
         <el-row>
           <el-col :span="12">
             <el-form-item prop="sumAppyAmt" label="累计请款" required>
@@ -60,27 +58,6 @@
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item prop="agentId" label="经办人">
-              <el-select
-                v-model="formData.agentId"
-                placeholder="请选择经办人"
-                filterable
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="item in agentOptions"
-                  :key="item.id"
-                  :label="item.name"
-                  :value="item.id"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <!-- 第三行：作废日期 -->
-        <el-row>
-          <el-col :span="12">
             <el-form-item prop="voidDate" label="作废日期" required>
               <el-date-picker
                 v-model="formData.voidDate"
@@ -91,15 +68,8 @@
               />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
-            <!-- 状态字段（隐藏，由审批流程控制） -->
-            <el-form-item prop="status" label="状态" v-if="false">
-              <el-input v-model="formData.status" />
-            </el-form-item>
-          </el-col>
         </el-row>
 
-        <!-- 第四行：作废说明 -->
         <el-row>
           <el-col :span="24">
             <el-form-item prop="voidDesc" label="作废说明" required>
@@ -124,14 +94,18 @@
 import { ref, computed, watch } from "vue";
 import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import type { ContractVoidParams } from "@/types/cost/contract-manage/contract-void-type";
+import { contractVoidApi } from "@/api/cost/contract-manage/contract-void-api";
+import { useUserStore } from "@/stores/user-store";
 
 interface Props {
   modelValue: boolean;
+  conId?: number;
   editData?: ContractVoidParams | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
+  conId: undefined,
   editData: null,
 });
 
@@ -140,28 +114,23 @@ const emit = defineEmits<{
   success: [];
 }>();
 
+const userStore = useUserStore();
+
 const dialogVisible = ref(props.modelValue);
 const formRef = ref<FormInstance>();
 const submitLoading = ref(false);
 
-// 经办人选项（实际项目中从接口获取）
-const agentOptions = ref<Array<{ id: number; name: string }>>([
-  { id: 1, name: "张三" },
-  { id: 2, name: "李四" },
-  { id: 3, name: "王五" },
-]);
-
 // 表单数据
 const formData = ref<ContractVoidParams>({
   id: undefined,
-  conBillId: 0,
-  status: 0,
-  signAmt: 0,
-  sumProdVal: 0,
-  sumAppyAmt: 0,
-  agentId: undefined,
-  voidDate: "",
-  voidDesc: "",
+  conBillId: null,
+  status: 0, // 状态：0-草稿，5-审批中，10-已审批，30-已作废
+  signAmt: 0, // 合同签约金额
+  sumProdVal: 0, // 累计产值
+  sumAppyAmt: 0, // 累计请款
+  agentId: undefined, // 经办人
+  voidDate: "", // 作废日期
+  voidDesc: "", // 作废说明
 });
 
 // 表单校验规则
@@ -215,7 +184,7 @@ const initFormData = () => {
   } else {
     formData.value = {
       id: undefined,
-      conBillId: 0,
+      conBillId: props.conId,
       status: 0,
       signAmt: 0,
       sumProdVal: 0,
@@ -245,21 +214,22 @@ const handleSubmit = async () => {
     await formRef.value.validate();
     submitLoading.value = true;
 
-    // 模拟接口调用，实际使用时替换为真实API
-    // const api = isEditMode.value
-    //   ? contractVoidApi.editVoid
-    //   : contractVoidApi.addVoid;
-    // const res = await api(formData.value);
+    const params = {
+      ...formData.value,
+      agentId: userStore?.userInfo?.id, // 当前登录人id
+    };
 
-    // 模拟请求延迟
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const interfaceApi = isEditMode.value
+      ? contractVoidApi.editVoid
+      : contractVoidApi.addVoid;
 
-    // 模拟成功
-    // if (res.code === 200) {
-    ElMessage.success(isEditMode.value ? "修改成功" : "新增成功");
-    emit("success");
-    handleClose();
-    // }
+    const res = await interfaceApi(params);
+
+    if (res.code === 200) {
+      ElMessage.success(isEditMode.value ? "修改成功" : "保存成功");
+      emit("success");
+      handleClose();
+    }
   } catch (error) {
     console.error("表单验证失败:", error);
   } finally {

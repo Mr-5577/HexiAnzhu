@@ -51,8 +51,8 @@ import type { HCstProjectCostD } from "@/types/cost/cost-setting/goal-cost-type.
 import { costCategoryApi } from "@/api/cost/master-data/cost-category-api.ts";
 import { productTypeApi } from "@/api/cost/master-data/product-type-api.ts";
 import { useRoute } from "vue-router";
-import { segmentApi } from "@/api/cost/master-data/segment-api";
 import { goalCostApi } from "@/api/cost/cost-setting/goal-cost-api";
+import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 
 defineOptions({ name: "cost-detail-list" });
 
@@ -192,7 +192,7 @@ const getProductList = async () => {
 // 获取业务归属
 const getBusiSegList = async () => {
   try {
-    const res = await segmentApi.getSegmentList();
+    const res = await dictionaryApi.getsegmentList();
     if (res.code === 200) {
       busiSegOptions.value = res.data || [];
     } else {

@@ -42,16 +42,10 @@
 
 <script setup lang="ts">
 import { Close } from "@element-plus/icons-vue";
-import { computed, ref, onMounted, onUnmounted, watch, inject } from "vue";
+import { computed, ref, onMounted, onUnmounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useTagsStore } from "@/stores/tags-store";
 import type { TagView } from "@/stores/tags-store";
-
-// 添加inject注入，用于清理缓存和恢复缓存
-const clearPageCache =
-  inject<(componentName: string) => void>("clearPageCache");
-const restorePageCache =
-  inject<(componentName: string) => void>("restorePageCache");
 
 const route = useRoute();
 const router = useRouter();
@@ -85,15 +79,8 @@ const closeCurrent = () => {
 // 关闭其他标签
 const closeOthers = () => {
   if (currentTag.value) {
-    // 先清理其他标签的缓存
-    const otherTags = visitedViews.value.filter(
-      (tag) => tag.path !== currentTag.value?.path && !tag.affix,
-    );
-    otherTags.forEach((tag) => clearTagCache(tag));
-
-    // 再删除 store 中的记录
+    // 直接删除其他标签
     tagsStore.delOtherViews(currentTag.value);
-
     // 跳转到当前标签
     router.push({
       path: currentTag.value.path,
@@ -102,16 +89,11 @@ const closeOthers = () => {
   }
   menuVisible.value = false;
 };
+
 // 关闭全部标签
 const closeAll = () => {
-  // 先清理所有非固定标签的缓存
-  const nonAffixTags = visitedViews.value.filter((tag) => !tag.affix);
-  nonAffixTags.forEach((tag) => clearTagCache(tag));
-
-  // 再删除 store 中的记录
   tagsStore.delAllViews();
 
-  // 跳转到固定标签或首页
   const affixTags = visitedViews.value.filter((tag) => tag.affix);
   if (affixTags.length > 0) {
     const lastAffixTag = affixTags[affixTags.length - 1];
@@ -149,28 +131,10 @@ const extractQueryParams = (tag: TagView) => {
 
   return query;
 };
-// 根据路径获取组件名
-const getComponentNameByPath = (path: string): string | null => {
-  const routeRecord = router.getRoutes().find((r) => r.path === path);
-  return (routeRecord?.components?.default?.name as string) || null;
-};
 
-// 清理指定标签的缓存
-const clearTagCache = (tag: TagView) => {
-  if (!clearPageCache) return;
-
-  const componentName = getComponentNameByPath(tag.path);
-  if (componentName) {
-    clearPageCache(componentName);
-  }
-};
-
-// 关闭选中的标签，关闭标签时需要清除页面的缓存，等从路由重新进入时再次缓存
+// 关闭选中的标签
 const closeSelectedTag = (tag: TagView) => {
-  // 清理缓存
-  clearTagCache(tag);
-
-  // 删除标签
+  // 删除标签（缓存会自动由 layout 中的 computed 清理）
   tagsStore.delView(tag);
 
   if (isActive(tag)) {
@@ -180,11 +144,6 @@ const closeSelectedTag = (tag: TagView) => {
         path: lastView.path,
         query: extractQueryParams(lastView),
       });
-      // 切换到新标签时，恢复其缓存
-      const newComponentName = getComponentNameByPath(lastView.path);
-      if (newComponentName && restorePageCache) {
-        restorePageCache(newComponentName);
-      }
     } else {
       router.push("/");
     }
@@ -193,26 +152,13 @@ const closeSelectedTag = (tag: TagView) => {
 
 // 监听路由变化，添加标签
 watch(
-  () => ({
-    path: route.path,
-    fullPath: route.fullPath,
-    meta: route.meta,
-  }),
-  (newRoute) => {
+  () => route.fullPath,
+  () => {
     if (route.path && route.path !== "/") {
       tagsStore.addView(route);
-      // 每次路由变化时，确保当前页面被缓存
-      const routeRecord = router
-        .getRoutes()
-        .find((r) => r.path === newRoute.path);
-      const componentName = routeRecord?.components?.default?.name as string;
-
-      if (componentName && restorePageCache) {
-        restorePageCache(componentName);
-      }
     }
   },
-  { immediate: true, deep: true },
+  { immediate: true },
 );
 
 // 添加事件监听
@@ -243,7 +189,7 @@ onUnmounted(() => {
     box-sizing: border-box;
     position: relative;
 
-    /* 美化滚动条样式 - Webkit浏览器 (Chrome, Safari, Edge) */
+    /* 滚动条样式 */
     &::-webkit-scrollbar {
       height: 4px;
       background-color: transparent;
@@ -289,7 +235,6 @@ onUnmounted(() => {
 
         .close-icon {
           color: rgba(255, 255, 255, 0.8);
-
           &:hover {
             background-color: rgba(255, 255, 255, 0.2);
             color: #ffffff;
@@ -359,18 +304,12 @@ onUnmounted(() => {
   .tags-view-wrapper::-webkit-scrollbar-thumb {
     background-color: rgba(255, 255, 255, 0.2);
   }
-
   .tags-view-wrapper::-webkit-scrollbar-thumb:hover {
     background-color: rgba(255, 255, 255, 0.3);
   }
 
-  .tags-view-wrapper {
-    scrollbar-color: #095e92 transparent;
-  }
-
   .tags-view-item {
     color: #fff !important;
-
     &:hover {
       background: linear-gradient(135deg, #0a649c 0%, #063958 100%) !important;
     }

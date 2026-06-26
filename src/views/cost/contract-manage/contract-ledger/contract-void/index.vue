@@ -41,10 +41,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import AddEditVoidDialog from "./add-edit-void-dialog.vue";
+import { contractVoidApi } from "@/api/cost/contract-manage/contract-void-api.ts";
 
 defineOptions({ name: "contract-void" });
 
@@ -59,11 +60,11 @@ const tableData = ref<any[]>([]);
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "changeType", label: "单据类型" },
-  { prop: "changeName", label: "流程标题" },
-  { prop: "changeAmt", label: "状态" },
-  { prop: "status", label: "申请人" },
-  { prop: "changeReasonId", label: "申请时间" },
+  { prop: "signAmt", label: "合同签约金额" },
+  { prop: "sumProdVal", label: "累计产值" },
+  { prop: "sumAppyAmt", label: "累计请款" },
+  { prop: "voidDate", label: "作废日期" },
+  { prop: "voidDesc", label: "作废说明" },
 ];
 // 获取列表数据
 const getDataList = async () => {
@@ -73,6 +74,10 @@ const getDataList = async () => {
   try {
     tableLoading.value = true;
     tableData.value = [];
+    const res = await contractVoidApi.getVoidist({ conId: props.conId });
+    if (res.code === 200) {
+      tableData.value = res.data || [];
+    }
   } catch (error) {
     console.error("获取列表失败:", error);
   } finally {
@@ -96,12 +101,15 @@ const handleEdit = async (row) => {
   dialogVisible.value = true;
 };
 // 删除
-const handleDelete = (row) => {
+const handleDelete = ({ id }) => {
   ElMessageBox.confirm("确定删除该数据吗？", "提示", { type: "warning" })
     .then(async () => {
       try {
-        ElMessage.success("删除成功");
-        getDataList();
+        const res = await contractVoidApi.delVoid({ id: id });
+        if (res.code === 200) {
+          ElMessage.success("删除成功");
+          getDataList();
+        }
       } catch (error) {
         console.error("删除失败:", error);
       }
@@ -110,17 +118,20 @@ const handleDelete = (row) => {
 };
 
 // 监听合同ID变化，自动刷新列表
-watch(
-  () => props.conId,
-  async (val) => {
-    if (val) {
-      getDataList();
-    } else {
-      tableData.value = [];
-    }
-  },
-  { immediate: true },
-);
+// watch(
+//   () => props.conId,
+//   async (val) => {
+//     if (val) {
+//       getDataList();
+//     } else {
+//       tableData.value = [];
+//     }
+//   },
+//   { immediate: true },
+// );
+onMounted(() => {
+  getDataList();
+});
 </script>
 
 <style lang="scss" scoped>

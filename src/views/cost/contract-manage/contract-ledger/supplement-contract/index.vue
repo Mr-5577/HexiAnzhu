@@ -51,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { useRouter } from "vue-router";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
@@ -96,7 +96,7 @@ const tableColumns: TableColumnItem[] = [
   { slot: "payMethod", label: "主合同付款方式", width: 180 },
   {
     label: "操作",
-    width: 220,
+    width: 180,
     slot: "actions",
     fixed: "right",
   },
@@ -132,7 +132,6 @@ const handleAdd = () => {
   router.push({
     path: "/contract/supplement-contract/add",
     query: {
-      mode: "add",
       conId: props.conId, // 合同台账ID（合同单据ID）
     },
   });
@@ -141,7 +140,6 @@ const handleEdit = (row: SupplementContract) => {
   router.push({
     path: "/contract/supplement-contract/edit",
     query: {
-      mode: "edit",
       addId: row.id, // 补充合同ID
       conId: props.conId, // 合同台账ID（合同单据ID）
     },
@@ -167,15 +165,18 @@ const handleDelete = (row) => {
 };
 const handleDetail = (row) => {};
 
-watch(
-  () => props.conId,
-  (val) => {
-    if (val) {
-      getDataList();
-    }
-  },
-  { immediate: true },
-);
+// watch(
+//   () => props.conId,
+//   (val) => {
+//     if (val) {
+//       getDataList();
+//     }
+//   },
+//   { immediate: true },
+// );
+onMounted(() => {
+  getDataList();
+});
 </script>
 
 <style lang="scss" scoped>

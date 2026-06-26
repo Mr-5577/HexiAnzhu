@@ -15,7 +15,6 @@
             <el-form-item label="合同名称" prop="conName" required>
               <el-input
                 v-model="formData.conName"
-                :disabled="isDetail"
                 clearable
                 placeholder="请输入合同名称"
               />
@@ -25,7 +24,6 @@
             <el-form-item label="合同分类" prop="conTypeId" required>
               <el-cascader
                 v-model="formData.conTypeId"
-                :disabled="isDetail"
                 :options="conTypeOptions"
                 :show-all-levels="false"
                 :props="{
@@ -46,7 +44,6 @@
             <el-form-item label="签约公司" prop="companyId" required>
               <el-cascader
                 v-model="formData.companyId"
-                :disabled="isDetail"
                 :options="companyOptions"
                 :show-all-levels="false"
                 :props="{
@@ -67,7 +64,6 @@
             <el-form-item label="合同类型" prop="conProperty" required>
               <el-select
                 v-model="formData.conProperty"
-                :disabled="isDetail"
                 placeholder="请选择合同类型"
                 style="width: 100%"
               >
@@ -86,7 +82,6 @@
             <el-form-item label="合同系统编号" prop="conSysNo">
               <el-input
                 v-model="formData.conSysNo"
-                :disabled="isDetail"
                 placeholder="请输入合同系统编号"
               />
             </el-form-item>
@@ -95,7 +90,6 @@
             <el-form-item label="合同档案编号" prop="conPhyNo">
               <el-input
                 v-model="formData.conPhyNo"
-                :disabled="isDetail"
                 placeholder="请输入合同档案编号"
               />
             </el-form-item>
@@ -117,7 +111,6 @@
                 placeholder="请选择项目"
                 style="width: 100%"
                 clearable
-                :disabled="isDetail"
                 @change="changeProject"
               />
             </el-form-item>
@@ -126,7 +119,6 @@
             <el-form-item label="业务板块" prop="segId" required>
               <el-select
                 v-model="formData.segId"
-                :disabled="isDetail"
                 placeholder="请选择业务板块"
                 style="width: 100%"
               >
@@ -145,7 +137,6 @@
             <el-form-item label="核算项目" prop="acctProjId" required>
               <el-cascader
                 v-model="formData.acctProjId"
-                :disabled="isDetail"
                 :options="acctProjOptions"
                 :show-all-levels="false"
                 :props="{
@@ -166,7 +157,6 @@
             <el-form-item label="供应商" prop="supId" required>
               <el-select
                 v-model="formData.supId"
-                :disabled="isDetail"
                 placeholder="请选择供应商"
                 style="width: 100%"
               >
@@ -183,7 +173,6 @@
             <el-form-item label="计价方式" prop="priceType" required>
               <el-select
                 v-model="formData.priceType"
-                :disabled="isDetail"
                 placeholder="请选择计价方式"
                 style="width: 100%"
               >
@@ -200,7 +189,6 @@
             <el-form-item label="管理类型" prop="manageType" required>
               <el-select
                 v-model="formData.manageType"
-                :disabled="isDetail"
                 placeholder="请选择管理类型"
                 style="width: 100%"
               >
@@ -219,9 +207,9 @@
             <el-form-item label="付款方式" prop="payMethod" required>
               <el-select
                 v-model="formData.payMethod"
-                :disabled="isDetail"
                 placeholder="请选择付款方式"
                 style="width: 100%"
+                @change="handlePayMethodChange"
               >
                 <el-option
                   v-for="item in PayTypeEnum"
@@ -236,7 +224,6 @@
             <el-form-item label="签约金额(含税)" prop="signAmt" required>
               <el-input-number
                 v-model="formData.signAmt"
-                :disabled="isDetail"
                 :min="0"
                 :precision="2"
                 :controls="false"
@@ -249,7 +236,6 @@
             <el-form-item label="签约金额(不含税)" prop="signExclAmt" required>
               <el-input-number
                 v-model="formData.signExclAmt"
-                :disabled="isDetail"
                 :min="0"
                 :precision="2"
                 :controls="false"
@@ -262,7 +248,6 @@
             <el-form-item label="税额" prop="taxAmt" required>
               <el-input-number
                 v-model="formData.taxAmt"
-                :disabled="isDetail"
                 :min="0"
                 :precision="2"
                 :controls="false"
@@ -277,7 +262,6 @@
             <el-form-item label="签订日期" prop="signDate" required>
               <el-date-picker
                 v-model="formData.signDate"
-                :disabled="isDetail"
                 type="date"
                 placeholder="请选择签订日期"
                 style="width: 100%"
@@ -289,7 +273,6 @@
             <el-form-item label="生效日期" prop="effectiveDate" required>
               <el-date-picker
                 v-model="formData.effectiveDate"
-                :disabled="isDetail"
                 type="date"
                 placeholder="请选择生效日期"
                 style="width: 100%"
@@ -301,7 +284,6 @@
             <el-form-item label="到期日期" prop="expiryDate" required>
               <el-date-picker
                 v-model="formData.expiryDate"
-                :disabled="isDetail"
                 type="date"
                 placeholder="请选择到期日期"
                 style="width: 100%"
@@ -313,7 +295,6 @@
             <el-form-item label="工期(天)" prop="daysNum" required>
               <el-input-number
                 v-model="formData.daysNum"
-                :disabled="isDetail"
                 :min="0"
                 :controls="false"
                 placeholder="请输入工期"
@@ -327,7 +308,6 @@
             <el-form-item label="履约保证金" prop="pbAmount" required>
               <el-input-number
                 v-model="formData.pbAmount"
-                :disabled="isDetail"
                 :min="0"
                 :precision="2"
                 :controls="false"
@@ -340,7 +320,6 @@
             <el-form-item label="生产专业" prop="proProf" required>
               <el-cascader
                 v-model="formData.proProf"
-                :disabled="isDetail"
                 :options="proProfOptions"
                 :show-all-levels="false"
                 :props="{
@@ -361,7 +340,6 @@
             <el-form-item label="楼栋范围" prop="bldIds" required>
               <el-select
                 v-model="formData.bldIds"
-                :disabled="isDetail"
                 multiple
                 collapse-tags
                 collapse-tags-tooltip
@@ -382,7 +360,6 @@
             <el-form-item label="结算金额" prop="settleAmt" required>
               <el-input-number
                 v-model="formData.settleAmt"
-                :disabled="isDetail"
                 :min="0"
                 :precision="2"
                 :controls="false"
@@ -399,7 +376,6 @@
             <el-form-item label="是否用印" prop="needSeal" required>
               <el-select
                 v-model="formData.needSeal"
-                :disabled="isDetail"
                 placeholder="请选择"
                 style="width: 100%"
               >
@@ -412,7 +388,6 @@
             <el-form-item label="印章类型" prop="sealTypes" required>
               <el-select
                 v-model="formData.sealTypes"
-                :disabled="isDetail"
                 multiple
                 collapse-tags
                 placeholder="请选择印章类型"
@@ -431,7 +406,6 @@
             <el-form-item label="签约地点" prop="signAddr" required>
               <el-input
                 v-model="formData.signAddr"
-                :disabled="isDetail"
                 placeholder="请输入签约地点"
               />
             </el-form-item>
@@ -440,7 +414,6 @@
             <el-form-item label="供应商联系人" prop="supCmanName" required>
               <el-input
                 v-model="formData.supCmanName"
-                :disabled="isDetail"
                 placeholder="请输入联系人姓名"
               />
             </el-form-item>
@@ -451,7 +424,6 @@
             <el-form-item label="联系人电话" prop="supCmanTel" required>
               <el-input
                 v-model="formData.supCmanTel"
-                :disabled="isDetail"
                 placeholder="请输入联系电话"
               />
             </el-form-item>
@@ -460,7 +432,6 @@
             <el-form-item label="联系人身份证" prop="supCmanIdno" required>
               <el-input
                 v-model="formData.supCmanIdno"
-                :disabled="isDetail"
                 placeholder="请输入身份证号码"
               />
             </el-form-item>
@@ -469,7 +440,6 @@
             <el-form-item label="联系人职务" prop="supCmanJob">
               <el-input
                 v-model="formData.supCmanJob"
-                :disabled="isDetail"
                 placeholder="请输入职务"
               />
             </el-form-item>
@@ -478,7 +448,6 @@
             <el-form-item label="开户银行" prop="bankName">
               <el-input
                 v-model="formData.bankName"
-                :disabled="isDetail"
                 placeholder="请输入开户银行"
               />
             </el-form-item>
@@ -489,7 +458,6 @@
             <el-form-item label="银行户名" prop="accountName">
               <el-input
                 v-model="formData.accountName"
-                :disabled="isDetail"
                 placeholder="请输入银行户名"
               />
             </el-form-item>
@@ -498,7 +466,6 @@
             <el-form-item label="银行账号" prop="bankAccount">
               <el-input
                 v-model="formData.bankAccount"
-                :disabled="isDetail"
                 placeholder="请输入银行账号"
               />
             </el-form-item>
@@ -509,7 +476,6 @@
             <el-form-item label="备注" prop="remark">
               <el-input
                 v-model="formData.remark"
-                :disabled="isDetail"
                 type="textarea"
                 :rows="3"
                 maxlength="500"
@@ -568,12 +534,7 @@
           <div class="detail-table">
             <div class="header-content">
               <span class="header-title">价税明细</span>
-              <el-button
-                type="primary"
-                size="small"
-                @click="addPrice"
-                v-if="!isDetail"
-              >
+              <el-button type="primary" size="small" @click="addPrice">
                 新增价税明细
               </el-button>
             </div>
@@ -588,6 +549,7 @@
               :show-summary="false"
               :compactEmpty="true"
               :on-save="handleSavePrice"
+              :editable="true"
               @data-change="handleChangePrice"
               @update:table-data="handleUpdatePrice"
             >
@@ -600,17 +562,12 @@
           </div>
         </div>
         <!-- 合同支付比例明细 -->
-        <div>
+        <div v-if="formData.payMethod == 1">
           <div class="section-title">支付比例</div>
           <div class="detail-table">
             <div class="header-content">
               <span class="header-title">支付比例明细</span>
-              <el-button
-                type="primary"
-                size="small"
-                @click="addPayrate"
-                v-if="!isDetail"
-              >
+              <el-button type="primary" size="small" @click="addPayrate">
                 新增支付明细
               </el-button>
             </div>
@@ -625,6 +582,7 @@
               :show-summary="false"
               :compactEmpty="true"
               :on-save="handleSavePayrate"
+              :editable="true"
               @data-change="handleChangePayrate"
               @update:table-data="handleUpdatePayrate"
             >
@@ -637,17 +595,12 @@
           </div>
         </div>
         <!-- 材料合同产值 -->
-        <div>
+        <div v-if="formData.payMethod == 2">
           <div class="section-title">材料合同产值</div>
           <div class="detail-table">
             <div class="header-content">
               <span class="header-title">材料合同产值明细</span>
-              <el-button
-                type="primary"
-                size="small"
-                @click="addMaterial"
-                v-if="!isDetail"
-              >
+              <el-button type="primary" size="small" @click="addMaterial">
                 新增合同产值明细
               </el-button>
             </div>
@@ -662,6 +615,7 @@
               :show-summary="false"
               :compactEmpty="true"
               :on-save="handleSaveMaterial"
+              :editable="true"
               @data-change="handleChangeMaterial"
               @update:table-data="handleUpdateMaterial"
             >
@@ -674,17 +628,12 @@
           </div>
         </div>
         <!-- 支付节点 -->
-        <div>
+        <div v-if="formData.payMethod == 3">
           <div class="section-title">支付节点</div>
           <div class="detail-table">
             <div class="header-content">
               <span class="header-title">支付节点明细</span>
-              <el-button
-                type="primary"
-                size="small"
-                @click="addPaynode"
-                v-if="!isDetail"
-              >
+              <el-button type="primary" size="small" @click="addPaynode">
                 新增支付节点明细
               </el-button>
             </div>
@@ -699,6 +648,7 @@
               :show-summary="false"
               :compactEmpty="true"
               :on-save="handleSavePaynode"
+              :editable="true"
               @data-change="handleChangePaynode"
               @update:table-data="handleUpdatePaynode"
             >
@@ -720,7 +670,7 @@
       </el-form>
     </div>
 
-    <div class="btn-row" v-if="!isDetail">
+    <div class="btn-row">
       <el-button type="primary" :loading="submitLoading" @click="handleSubmit">
         保存
       </el-button>
@@ -731,7 +681,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { ElMessage } from "element-plus";
-import { useRoute } from "vue-router";
+import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user-store";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import { conTypeApi } from "@/api/cost/master-data/contract-category-api";
@@ -758,16 +708,37 @@ import BaseUpload from "@/components/base/base-upload.vue";
 
 defineOptions({ name: "contract-ledger-form" });
 
+// Props
+interface Props {
+  mode?: "add" | "edit" | "detail";
+  conId?: number; // 合同ID
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  mode: "add",
+  conId: undefined,
+});
+
+// Emits
+const emit = defineEmits<{
+  (e: "success", data: any): void;
+  (e: "cancel"): void;
+}>();
+
 // 路由与状态
-const route = useRoute();
+const router = useRouter();
 const userStore = useUserStore();
 
-const conId = ref(null);
-const mode = ref<"add" | "edit" | "detail">("add");
-const isDetail = computed(() => route.query.mode === "detail");
+const mode = ref<"add" | "edit" | "detail">(props.mode);
+const conId = ref<number | undefined>(props.conId);
+
+const isDetailMode = computed(() => mode.value === "detail");
+const isEditMode = computed(() => mode.value === "edit");
+const isAddMode = computed(() => mode.value === "add");
 
 // 创建响应式的价款数据，使用 computed 追踪 priceTable 变化
 const priceTaxData = computed(() => calculatePriceTaxData());
+
 // 表单数据定义
 const initFormData = () => ({
   // 主表字段
@@ -1464,7 +1435,7 @@ const getConTypeList = async () => {
 };
 
 // 获取楼栋列表
-const getBuildingList = async (projId: number) => {
+const getBuildingListByProjId = async (projId: number) => {
   if (!projId) return;
   try {
     buildingOptions.value = [];
@@ -1569,9 +1540,9 @@ const buildSubmitParams = () => {
       remark: formData.value.remark,
     },
     billPrices: priceTable.value,
-    billPayrates: payrateTable.value,
-    billMaterials: materialTable.value,
-    billPaynodes: paynodeTable.value,
+    billPayrates: formData.value.payMethod == 1 ? payrateTable.value : [],
+    billMaterials: formData.value.payMethod == 2 ? materialTable.value : [],
+    billPaynodes: formData.value.payMethod == 3 ? paynodeTable.value : [],
     annexes: [],
   };
 };
@@ -1628,11 +1599,11 @@ const parseContractData = (conMain: any, conMainExt: any) => {
 };
 
 // 选择项目（联动加载楼栋）
-const changeProject = (val: number) => {
+const changeProject = (id: number) => {
   formData.value.bldIds = [];
   formData.value.bldNames = "";
-  if (val) {
-    getBuildingList(val);
+  if (id) {
+    getBuildingListByProjId(id);
   }
 };
 
@@ -1642,6 +1613,12 @@ const handleBuildingChange = (ids: number[]) => {
     .filter((v: any) => ids.includes(v.id))
     .map((v: any) => v.bldName);
   formData.value.bldNames = names.join(",");
+};
+// 切换付款方式
+const handlePayMethodChange = (value: string) => {
+  // payrateTable.value = [];
+  // materialTable.value = [];
+  // paynodeTable.value = [];
 };
 
 // 加载合同详情（编辑/详情模式）
@@ -1679,7 +1656,7 @@ const loadContractDetail = async () => {
       }));
       // 加载楼栋列表
       if (conMain.projId) {
-        await getBuildingList(conMain.projId);
+        await getBuildingListByProjId(conMain.projId);
       }
     }
   } catch (error) {
@@ -1968,7 +1945,7 @@ const validatePaynodeTable = () => {
 };
 // 提交表单
 const handleSubmit = async () => {
-  if (isDetail.value) return;
+  if (isDetailMode.value) return;
   if (!formRef.value) return;
   try {
     await formRef.value.validate();
@@ -1980,16 +1957,15 @@ const handleSubmit = async () => {
 
     submitLoading.value = true;
     const params = buildSubmitParams();
+    let res;
     if (formData.value.id) {
-      const editRes = await contractLedgerApi.editContractLedger(params);
-      if (editRes.code === 200) {
-        ElMessage.success("提交成功");
-      }
+      res = await contractLedgerApi.editContractLedger(params);
     } else {
-      const addRes = await contractLedgerApi.addContractLedger(params);
-      if (addRes.code === 200) {
-        ElMessage.success("提交成功");
-      }
+      res = await contractLedgerApi.addContractLedger(params);
+    }
+    if (res.code === 200) {
+      ElMessage.success(formData.value.id ? "编辑成功" : "新增成功");
+      emit("success", res.data);
     }
   } catch (error) {
     console.log(error);
@@ -1997,25 +1973,39 @@ const handleSubmit = async () => {
     submitLoading.value = false;
   }
 };
-const syncRouteState = async () => {
-  const queryMode = route.query.mode as string;
-  mode.value =
-    queryMode === "edit" || queryMode === "detail" ? queryMode : "add";
-  const idValue = route.query.conId ? Number(route.query.conId) : null;
-  conId.value = idValue || null;
 
+// 初始化
+const initData = async () => {
   await initOptions();
 
-  if (mode.value === "edit" || mode.value === "detail") {
-    await loadContractDetail();
-  } else if (mode.value === "add") {
+  if (isAddMode.value) {
     formData.value.agentId = userStore.userInfo.id;
     await createConNo();
+  } else if (isEditMode.value || isDetailMode.value) {
+    if (conId.value) {
+      await loadContractDetail();
+    }
   }
 };
 
+// 暴露方法
+defineExpose({
+  formData,
+  resetForm: () => {
+    formData.value = initFormData();
+    priceTable.value = [];
+    payrateTable.value = [];
+    materialTable.value = [];
+    paynodeTable.value = [];
+    if (formRef.value) {
+      formRef.value.resetFields();
+    }
+  },
+  initData,
+});
+
 onMounted(() => {
-  syncRouteState();
+  initData();
 });
 </script>
 

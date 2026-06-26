@@ -91,9 +91,9 @@
             <el-button link type="danger" @click="handleDelete(row)">
               删除
             </el-button>
-            <el-button type="primary" link @click="handleViewDetail(row)">
+            <!-- <el-button type="primary" link @click="handleViewDetail(row)">
               查看详情
-            </el-button>
+            </el-button> -->
           </template>
         </base-table>
       </template>

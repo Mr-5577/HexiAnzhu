@@ -42,7 +42,7 @@
               :class="{ 'project-active': selectedGroupId === data.id }"
             >
               <div class="node-label">
-                <el-icon><Folder /></el-icon>
+                <el-icon><FolderOpened /></el-icon>
                 <span>{{ node.label }}</span>
                 <el-tag
                   size="small"

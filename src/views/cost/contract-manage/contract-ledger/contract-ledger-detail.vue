@@ -32,11 +32,14 @@ import {
   computed,
   watch,
   markRaw,
+  onMounted,
   type Component,
   defineAsyncComponent,
 } from "vue";
 import { useRoute } from "vue-router";
 import * as Icons from "@element-plus/icons-vue";
+
+defineOptions({ name: "contract-ledger-detail" });
 
 // 菜单配置
 const menuItems = [
@@ -44,7 +47,7 @@ const menuItems = [
     index: "basic",
     icon: markRaw(Icons.Document),
     label: "基本信息",
-    component: () => import("./contract-ledger-form.vue"),
+    component: () => import("./basic-infor/index.vue"),
   },
   {
     index: "attachment",
@@ -94,36 +97,42 @@ const menuItems = [
     label: "成本分摊",
     component: () => import("./cost-allocation/index.vue"),
   },
-  {
-    index: "disputeApproval",
-    icon: markRaw(Icons.Warning),
-    label: "争议审批",
-    component: () => import("./disput-approval/index.vue"),
-  },
+  // {
+  //   index: "disputeApproval",
+  //   icon: markRaw(Icons.Warning),
+  //   label: "争议审批",
+  //   component: () => import("./disput-approval/index.vue"),
+  // },
   {
     index: "engineeringPrice",
     icon: markRaw(Icons.PriceTag),
     label: "工程核价",
     component: () => import("./engineering-price/index.vue"),
   },
-  {
-    index: "documents",
-    icon: markRaw(Icons.Message),
-    label: "收文发文",
-    component: () => import("./documents/index.vue"),
-  },
-  {
-    index: "paymentApplication",
-    icon: markRaw(Icons.Money),
-    label: "付款申请",
-    component: () => import("./payment-application/index.vue"),
-  },
+  // {
+  //   index: "documents",
+  //   icon: markRaw(Icons.Message),
+  //   label: "收文发文",
+  //   component: () => import("./documents/index.vue"),
+  // },
+  // {
+  //   index: "paymentApplication",
+  //   icon: markRaw(Icons.Money),
+  //   label: "付款申请",
+  //   component: () => import("./payment-application/index.vue"),
+  // },
   {
     index: "performanceBond",
     icon: markRaw(Icons.Lock),
     label: "履约保证金",
     component: () => import("./performance-bond/index.vue"),
   },
+  // {
+  //   index: "contractPreSettlement",
+  //   icon: markRaw(Icons.Lock),
+  //   label: "合同预结算",
+  //   component: () => import("./contract-preSettlement/index.vue"),
+  // },
   {
     index: "contractSettle",
     icon: markRaw(Icons.Finished),
@@ -163,6 +172,7 @@ const syncRouteState = () => {
 watch(() => [route.query.conId, route.query.projId], syncRouteState, {
   immediate: true,
 });
+onMounted(() => {});
 </script>
 <style scoped lang="scss">
 .contract-ledger-detail {
