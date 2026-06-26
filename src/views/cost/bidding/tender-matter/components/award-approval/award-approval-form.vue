@@ -43,7 +43,7 @@
             <div class="actionBar-buttons">
               <el-button
                 type="primary"
-                icon="DocumentAdd"
+                size="small"
                 :loading="saveLoading"
                 @click="handleBatchSave"
               >
@@ -64,7 +64,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import BasicInfo from "../basic-info.vue";
 import { BidTenderFormParams } from "@/types/cost/bidding/bidding-management-type.ts";
 import EditableTable from "@/components/base/editable-table.vue";
@@ -72,12 +72,35 @@ import type { EditableColumn } from "@/components/base/editable-table.vue";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
 import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api.ts";
 import { ElMessage } from "element-plus";
-import { useRoute } from "vue-router";
 import { largeScreenApi } from "@/api/large-screen-api";
 import { debounce } from "@/utils/common";
 import ChooseSupplierDialog from "../choose-supplier-dialog.vue";
 
 defineOptions({ name: "award-approval-form" });
+
+// ==================== Props 定义 ====================
+interface Props {
+  /** 页面模式：add-新增，edit-编辑，detail-详情 */
+  mode?: "add" | "edit" | "detail";
+  /** 招标事项ID */
+  tenderId?: number | null;
+  /** 定标审批ID（编辑/详情时使用） */
+  awardId?: number | null;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  mode: "add",
+  tenderId: null,
+  awardId: null,
+});
+
+// ==================== Emits 定义 ====================
+const emit = defineEmits<{
+  /** 成功回调 */
+  success: [];
+  /** 取消回调 */
+  cancel: [];
+}>();
 
 type TenderDetailData = {
   tender: BidTenderFormParams;
@@ -85,15 +108,33 @@ type TenderDetailData = {
   projIds: number[];
 };
 
-const route = useRoute();
-// 页面模式：add-新增，edit-编辑，detail-详情
-const mode = ref<"add" | "edit" | "detail">("add");
-const tenderId = ref<number | null>(null); // 事项ID，新增使用
-const billId = ref<number | null>(null); // 单据ID，编辑使用
+// ==================== 响应式数据 ====================
 const detailData = ref<TenderDetailData | null>(null); // 详情数据
 const projectOptions = ref([]); // 项目列表
 const billData = ref(null); // 单据数据
-const isDetail = computed(() => mode.value === "detail");
+const tableData = ref([]); // 明细表
+const tableLoading = ref(false);
+const saveLoading = ref(false);
+const supplierDialogVisible = ref(false);
+const currentRowData = ref(null); // 当前点击的审批行数据
+
+// ==================== 计算属性 ====================
+const isDetail = computed(() => props.mode === "detail");
+const isEdit = computed(() => props.mode === "edit");
+const isAdd = computed(() => props.mode === "add");
+
+// 筛选详情里面选中的项目数据
+const optionalProjList = computed(() => {
+  const selectedProjectIds = detailData.value?.projIds || [];
+  if (selectedProjectIds.length === 0) {
+    return [];
+  }
+  // 从 projectOptions 中过滤出选中的项目
+  return projectOptions.value.filter((project) =>
+    selectedProjectIds.includes(project.id),
+  );
+});
+
 const dynamicColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60 },
   {
@@ -206,24 +247,7 @@ const detailColumns = [
   { prop: "bidExplain", label: "评定说明" },
 ];
 
-// 明细表
-const tableData = ref([]);
-const tableLoading = ref(false);
-const saveLoading = ref(false);
-const supplierDialogVisible = ref(false);
-const currentRowData = ref(null); // 当前点击的审批行数据
-
-// 筛选详情里面选中的项目数据
-const optionalProjList = computed(() => {
-  const selectedProjectIds = detailData.value?.projIds || [];
-  if (selectedProjectIds.length === 0) {
-    return [];
-  }
-  // 从 projectOptions 中过滤出选中的项目
-  return projectOptions.value.filter((project) =>
-    selectedProjectIds.includes(project.id),
-  );
-});
+// ==================== 方法 ====================
 // 计算价格偏差
 const calculatePriceVariance = (
   bidAmount: number | null,
@@ -327,6 +351,7 @@ const handleDataChange = (data) => {
 const handleDataUpdate = (newData) => {
   tableData.value = newData;
 };
+
 const handleEditableCellClick = ({ row, column, rowIndex }) => {
   //   console.log("可编辑单元格点击:", row, column, rowIndex);
   // 供应商单元格点击
@@ -335,6 +360,7 @@ const handleEditableCellClick = ({ row, column, rowIndex }) => {
     currentRowData.value = row; // 保存数据，供选择供应商后使用
   }
 };
+
 // 确认选择供应商后回调
 const handleSupplierSelect = (data) => {
   console.log("选择的供应商数据:", data);
@@ -353,6 +379,7 @@ const handleSupplierSelect = (data) => {
     }
   }
 };
+
 // 保存
 const handleBatchSave = async () => {
   if (tableData.value.length === 0) {
@@ -381,9 +408,11 @@ const handleBatchSave = async () => {
     ElMessage.error("请填写列表中的税率");
     return;
   }
+
   try {
     saveLoading.value = true;
-    if (mode.value === "add") {
+
+    if (isAdd.value) {
       const dataList = tableData.value.map((item) => {
         const bldIds = Array.isArray(item.bldIds) ? item.bldIds : [];
         return {
@@ -404,7 +433,7 @@ const handleBatchSave = async () => {
       });
       const params = {
         bizItemCode: "ZB_DB",
-        tenderId: tenderId.value, // 事项ID
+        tenderId: props.tenderId, // 事项ID
         childData: dataList,
       };
       const res = await biddingManageApi.addBill(params);
@@ -414,7 +443,8 @@ const handleBatchSave = async () => {
         ElMessage.error("保存失败");
       }
     }
-    if (mode.value === "edit") {
+
+    if (isEdit.value) {
       const dataList = tableData.value.map((item) => {
         const bldIds = Array.isArray(item.bldIds) ? item.bldIds : [];
         return {
@@ -424,8 +454,8 @@ const handleBatchSave = async () => {
       });
       const params = {
         bizItemCode: "ZB_DB",
-        tenderId: billData.value.tenderId, // 事项ID
-        id: billData.value.id, // 单据ID
+        tenderId: billData.value?.tenderId, // 事项ID
+        id: billData.value?.id, // 单据ID
         childData: dataList,
       };
       const res = await biddingManageApi.editBill(params);
@@ -441,17 +471,20 @@ const handleBatchSave = async () => {
     saveLoading.value = false;
   }
 };
+
 // 编辑/详情时获取定标审批列表通过ID进行过滤
 const initEditTableData = async () => {
   try {
     const params = {
-      tenderId: tenderId.value,
+      tenderId: props.tenderId,
       bizItemCode: "ZB_DB", // 定标审批
     };
     const res = await biddingManageApi.getBillList(params);
     if (res.code === 200) {
       const listData = res.data || [];
-      const targetData = listData.find((item) => item.bill.id === billId.value);
+      const targetData = listData.find(
+        (item) => item.bill.id === props.awardId,
+      );
       if (targetData) {
         billData.value = targetData.bill || null;
         detailData.value = {
@@ -463,7 +496,7 @@ const initEditTableData = async () => {
           items: [],
         };
         const list = targetData.awards || [];
-        if (mode.value === "edit") {
+        if (isEdit.value) {
           if (list && list.length > 0) {
             const initialTableList = list.map((item) => ({
               ...item,
@@ -496,8 +529,11 @@ const initEditTableData = async () => {
         }
       }
     }
-  } catch (error) {}
+  } catch (error) {
+    console.error("获取详情失败:", error);
+  }
 };
+
 // 新增时获取详情中的items列表并初始化表格数据
 const initAddTableData = async () => {
   if (!detailData.value) {
@@ -543,11 +579,13 @@ const initAddTableData = async () => {
     tableData.value = [];
   }
 };
+
 // 获取详情数据
 const getDetailData = async () => {
+  if (!props.tenderId) return;
   try {
     const res = await biddingManageApi.getTenderInfo({
-      tenderId: tenderId.value,
+      tenderId: props.tenderId,
     });
     if (res.code === 200 && res.data) {
       detailData.value = res.data;
@@ -560,6 +598,7 @@ const getDetailData = async () => {
     console.error("获取详情失败:", error);
   }
 };
+
 // 获取项目列表
 const getProjectOptions = async () => {
   try {
@@ -574,20 +613,10 @@ const getProjectOptions = async () => {
 
 // 初始化页面
 const initPage = async () => {
-  const queryMode = route.query.mode as string; // 保存模式到状态中
-  const queryTenderId = route.query.tenderId; // 保存事项ID到状态中
-  const queryBillId = route.query.id; // 保存单据ID到状态中
-
-  tenderId.value = queryTenderId ? Number(queryTenderId) : null; // 保存事项ID到状态中
-  billId.value = queryBillId ? Number(queryBillId) : null; // 保存单据ID到状态中
-  mode.value = ["add", "edit", "detail"].includes(queryMode)
-    ? (queryMode as "add" | "edit" | "detail")
-    : "add"; // 保存模式到状态中
-
   // 获取项目列表数据
   await getProjectOptions();
 
-  if (mode.value === "add") {
+  if (isAdd.value) {
     // 新增模式：获取详情数据（用于基本信息），表格初始为详情内的items
     await getDetailData();
   } else {
