@@ -127,6 +127,12 @@ const menuItems = [
     label: "履约保证金",
     component: () => import("./performance-bond/index.vue"),
   },
+  // {
+  //   index: "contractPreSettlement",
+  //   icon: markRaw(Icons.Lock),
+  //   label: "合同预结算",
+  //   component: () => import("./contract-preSettlement/index.vue"),
+  // },
   {
     index: "contractSettle",
     icon: markRaw(Icons.Finished),
@@ -166,9 +172,7 @@ const syncRouteState = () => {
 watch(() => [route.query.conId, route.query.projId], syncRouteState, {
   immediate: true,
 });
-onMounted(() => {
-  console.log("onMounted");
-});
+onMounted(() => {});
 </script>
 <style scoped lang="scss">
 .contract-ledger-detail {
