@@ -209,6 +209,7 @@
                 v-model="formData.payMethod"
                 placeholder="请选择付款方式"
                 style="width: 100%"
+                @change="handlePayMethodChange"
               >
                 <el-option
                   v-for="item in PayTypeEnum"
@@ -561,7 +562,7 @@
           </div>
         </div>
         <!-- 合同支付比例明细 -->
-        <div>
+        <div v-if="formData.payMethod == 1">
           <div class="section-title">支付比例</div>
           <div class="detail-table">
             <div class="header-content">
@@ -594,7 +595,7 @@
           </div>
         </div>
         <!-- 材料合同产值 -->
-        <div>
+        <div v-if="formData.payMethod == 2">
           <div class="section-title">材料合同产值</div>
           <div class="detail-table">
             <div class="header-content">
@@ -627,7 +628,7 @@
           </div>
         </div>
         <!-- 支付节点 -->
-        <div>
+        <div v-if="formData.payMethod == 3">
           <div class="section-title">支付节点</div>
           <div class="detail-table">
             <div class="header-content">
@@ -1539,9 +1540,9 @@ const buildSubmitParams = () => {
       remark: formData.value.remark,
     },
     billPrices: priceTable.value,
-    billPayrates: payrateTable.value,
-    billMaterials: materialTable.value,
-    billPaynodes: paynodeTable.value,
+    billPayrates: formData.value.payMethod == 1 ? payrateTable.value : [],
+    billMaterials: formData.value.payMethod == 2 ? materialTable.value : [],
+    billPaynodes: formData.value.payMethod == 3 ? paynodeTable.value : [],
     annexes: [],
   };
 };
@@ -1612,6 +1613,12 @@ const handleBuildingChange = (ids: number[]) => {
     .filter((v: any) => ids.includes(v.id))
     .map((v: any) => v.bldName);
   formData.value.bldNames = names.join(",");
+};
+// 切换付款方式
+const handlePayMethodChange = (value: string) => {
+  // payrateTable.value = [];
+  // materialTable.value = [];
+  // paynodeTable.value = [];
 };
 
 // 加载合同详情（编辑/详情模式）

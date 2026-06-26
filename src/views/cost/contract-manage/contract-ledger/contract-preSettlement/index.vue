@@ -1,6 +1,6 @@
-<!-- 合同解除 列表 -->
+<!-- 合同预结算 列表 -->
 <template>
-  <div class="contract-void-wrapper">
+  <div class="contract-pre-settle-wrapper">
     <base-table
       :columns="tableColumns"
       :tableData="tableData"
@@ -30,8 +30,8 @@
       </template>
     </base-table>
 
-    <!-- 新增/编辑 合同解除弹窗 -->
-    <add-edit-void-dialog
+    <!-- 新增/编辑 合同预结算弹窗 -->
+    <add-edit-pre-settle-dialog
       v-model="dialogVisible"
       :conId="props.conId"
       :editData="editData"
@@ -41,13 +41,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from "vue";
+import { ref, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
-import AddEditVoidDialog from "./add-edit-void-dialog.vue";
-import { contractVoidApi } from "@/api/cost/contract-manage/contract-void-api.ts";
+import AddEditPreSettleDialog from "./add-edit-pre-settle-dialog.vue";
+import { contractPreSettleApi } from "@/api/cost/contract-manage/contract-preSettlement-api.ts";
+import { ContractPreSettle } from "@/types/cost/contract-manage/contract-preSettlement-type.ts";
 
-defineOptions({ name: "contract-void" });
+defineOptions({ name: "contract-pre-settle" });
 
 const props = defineProps<{
   conId: number | null;
@@ -61,11 +62,21 @@ const tableData = ref<any[]>([]);
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
   { prop: "signAmt", label: "合同签约金额" },
-  { prop: "sumProdVal", label: "累计产值" },
-  { prop: "sumAppyAmt", label: "累计请款" },
-  { prop: "voidDate", label: "作废日期" },
-  { prop: "voidDesc", label: "作废说明" },
+  { prop: "addAmt", label: "补充合同金额" },
+  { prop: "sumChangeAmt", label: "累计变更签证" },
+  { prop: "preSettleAmt", label: "预估合同金额" },
+  { prop: "preSettleDesc", label: "调整说明" },
+  { prop: "status", label: "状态" },
 ];
+
+// 状态映射
+const statusMap: Record<number, string> = {
+  0: "草稿",
+  5: "审批中",
+  10: "已审批",
+  30: "已作废",
+};
+
 // 获取列表数据
 const getDataList = async () => {
   if (!props.conId) {
@@ -74,9 +85,14 @@ const getDataList = async () => {
   try {
     tableLoading.value = true;
     tableData.value = [];
-    const res = await contractVoidApi.getVoidist({ conId: props.conId });
+    const res = await contractPreSettleApi.getPreSettleList({
+      conId: props.conId,
+    });
     if (res.code === 200) {
-      tableData.value = res.data || [];
+      tableData.value = (res.data || []).map((item: any) => ({
+        ...item,
+        statusLabel: statusMap[item.status] ?? item.status,
+      }));
     }
   } catch (error) {
     console.error("获取列表失败:", error);
@@ -95,17 +111,19 @@ const handleInitiate = () => {
   editData.value = null;
   dialogVisible.value = true;
 };
+
 // 编辑
-const handleEdit = async (row) => {
+const handleEdit = async (row: ContractPreSettle) => {
   editData.value = row;
   dialogVisible.value = true;
 };
+
 // 删除
-const handleDelete = ({ id }) => {
+const handleDelete = ({ id }: { id: number }) => {
   ElMessageBox.confirm("确定删除该数据吗？", "提示", { type: "warning" })
     .then(async () => {
       try {
-        const res = await contractVoidApi.delVoid({ id: id });
+        const res = await contractPreSettleApi.delPreSettle({ id });
         if (res.code === 200) {
           ElMessage.success("删除成功");
           getDataList();
@@ -117,25 +135,13 @@ const handleDelete = ({ id }) => {
     .catch(() => {});
 };
 
-// 监听合同ID变化，自动刷新列表
-// watch(
-//   () => props.conId,
-//   async (val) => {
-//     if (val) {
-//       getDataList();
-//     } else {
-//       tableData.value = [];
-//     }
-//   },
-//   { immediate: true },
-// );
 onMounted(() => {
   getDataList();
 });
 </script>
 
 <style lang="scss" scoped>
-.contract-void-wrapper {
+.contract-pre-settle-wrapper {
   width: 100%;
   height: 100%;
   padding: 15px;

@@ -213,7 +213,7 @@
                 type="date"
                 placeholder="请选择收到资料日期"
                 style="width: 100%"
-                value-format="YYYY-MM-DD"
+                value-format="YYYY-MM-DD HH:mm:ss"
               />
             </el-form-item>
           </el-col>
@@ -225,7 +225,7 @@
                 type="date"
                 placeholder="请选择经办人签字日期"
                 style="width: 100%"
-                value-format="YYYY-MM-DD"
+                value-format="YYYY-MM-DD HH:mm:ss"
               />
             </el-form-item>
           </el-col>
@@ -269,6 +269,7 @@
                 :precision="2"
                 :controls="false"
                 style="width: 100%"
+                @change="handleCostFirstDecAmtChange"
               />
               <!-- <div class="form-tip">
                 成本一审审减金额 = 成本一审金额 - 申报结算金额
@@ -283,7 +284,7 @@
                 type="date"
                 placeholder="请选择成本一审签字日期"
                 style="width: 100%"
-                value-format="YYYY-MM-DD"
+                value-format="YYYY-MM-DD HH:mm:ss"
               />
             </el-form-item>
           </el-col>
@@ -325,7 +326,7 @@
                 type="date"
                 placeholder="请选择成本二审签字日期"
                 style="width: 100%"
-                value-format="YYYY-MM-DD"
+                value-format="YYYY-MM-DD HH:mm:ss"
               />
             </el-form-item>
           </el-col>
@@ -337,7 +338,7 @@
                 type="date"
                 placeholder="请选择成本负责人签字日期"
                 style="width: 100%"
-                value-format="YYYY-MM-DD"
+                value-format="YYYY-MM-DD HH:mm:ss"
               />
             </el-form-item>
           </el-col>
@@ -382,7 +383,7 @@
                 type="date"
                 placeholder="请选择审计一审签字日期"
                 style="width: 100%"
-                value-format="YYYY-MM-DD"
+                value-format="YYYY-MM-DD HH:mm:ss"
               />
             </el-form-item>
           </el-col>
@@ -394,7 +395,7 @@
                 type="date"
                 placeholder="请选择审计二审签字日期"
                 style="width: 100%"
-                value-format="YYYY-MM-DD"
+                value-format="YYYY-MM-DD HH:mm:ss"
               />
             </el-form-item>
           </el-col>
@@ -450,7 +451,7 @@
                 type="date"
                 placeholder="请选择质保到期日"
                 style="width: 100%"
-                value-format="YYYY-MM-DD"
+                value-format="YYYY-MM-DD HH:mm:ss"
               />
             </el-form-item>
           </el-col>
@@ -464,7 +465,7 @@
                 type="date"
                 placeholder="请选择最终结算签字日期"
                 style="width: 100%"
-                value-format="YYYY-MM-DD"
+                value-format="YYYY-MM-DD HH:mm:ss"
               />
             </el-form-item>
           </el-col>
@@ -483,11 +484,53 @@
           </el-col>
         </el-row>
       </el-form>
+      <div>
+        <div class="section-title">结算明细</div>
+        <editable-table
+          ref="settleRef"
+          :row-key="'uuid'"
+          :height="'240px'"
+          :table-data="tableData"
+          :columns="editableColumns"
+          :pagination="false"
+          :highlight-current-row="false"
+          :show-summary="false"
+          :compactEmpty="true"
+          :on-save="handleSave"
+          :editable="true"
+          @data-change="handleChange"
+          @update:table-data="handleUpdate"
+        >
+          <template #actionBar>
+            <div class="actionBar-buttons">
+              <el-button type="primary" size="small" @click="handleAdd">
+                新增扣款事项
+              </el-button>
+            </div>
+          </template>
+          <template #dedTypeId="{ row }">
+            {{ getDedTypeName(row.dedTypeId) }}
+          </template>
+          <template #status="{ row }">
+            {{ getStatusName(row.status) }}
+          </template>
+          <template #actions="{ row }">
+            <el-button
+              link
+              type="danger"
+              v-if="!row.disabled"
+              @click="handleDelete(row)"
+            >
+              删除
+            </el-button>
+          </template>
+        </editable-table>
+      </div>
     </div>
 
     <div class="btn-row" v-if="!isDetail">
       <el-button type="primary" :loading="submitLoading" @click="handleSubmit">
-        提交
+        保存
       </el-button>
     </div>
   </div>
@@ -498,19 +541,35 @@ import { ref, computed, onMounted, watch } from "vue";
 import { ElMessage } from "element-plus";
 import { useRoute } from "vue-router";
 import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api";
+import { dedTypeEnum } from "@/constants/contract-manage/enums";
+import EditableTable from "@/components/base/editable-table.vue";
+import { EditableColumn } from "@/components/base/editable-table.vue";
+import { v4 as uuidv4 } from "uuid";
+import { paymentAdjustApi } from "@/api/cost/contract-manage/payment-adjust-api.ts";
+import { contractSettleApi } from "@/api/cost/contract-manage/contract-settlement-api.ts";
 
 defineOptions({ name: "contract-settle-form" });
 
+const props = defineProps<{
+  mode: "add" | "edit" | "detail";
+  conId: number; // 合同ID
+  settleId?: number; // 结算ID
+}>();
+
+const emit = defineEmits<{
+  success: [];
+  cancel: [];
+}>();
+
 const route = useRoute();
 
-const settleId = ref<number | null>(null);
-const conId = ref<number | null>(null);
-const mode = ref<"add" | "edit" | "detail">("add");
-const isDetail = computed(() => route.query.mode === "detail");
+const isAdd = computed(() => props.mode === "add");
+const isEdit = computed(() => props.mode === "edit");
+const isDetail = computed(() => props.mode === "detail");
 
 const initFormData = () => ({
   id: undefined as number | undefined,
-  conBillId: 0,
+  conBillId: undefined as number | undefined,
   status: 0,
   signAmt: 0,
   addAmt: 0,
@@ -545,12 +604,7 @@ const initFormData = () => ({
   warrExpireDate: "",
   finalSettleSignDate: "",
   settleDesc: "",
-  createId: undefined,
-  createDate: undefined,
-  operId: null,
-  operDate: null,
-  isDel: false,
-  // 额外展示字段（非数据库字段，用于展示合同信息）
+  // 额外展示字段
   conName: "",
   conSysNo: "",
   conTypeName: "",
@@ -560,6 +614,77 @@ const initFormData = () => ({
 const formData = ref(initFormData());
 const formRef = ref(null);
 const submitLoading = ref(false);
+const tableData = ref([]);
+const editableColumns = computed<EditableColumn[]>(() => [
+  { type: "index", label: "序号", width: 60, editable: false },
+  {
+    prop: "dedName",
+    label: "扣款事项",
+    editable: true,
+    editType: "input",
+    showOverflowTooltip: false,
+    disabled: (row: any) => row.disabled,
+  },
+  {
+    prop: "dedTypeId",
+    label: "扣款类型",
+    editable: true,
+    editType: "select",
+    showOverflowTooltip: false,
+    // 自定义键名
+    optionLabelField: "label",
+    optionValueField: "value",
+    options: (dedTypeEnum as any) || [],
+    disabled: (row: any) => row.disabled,
+  },
+  {
+    prop: "dedAmt",
+    label: "奖罚总金额",
+    editable: true,
+    editType: "number",
+    showOverflowTooltip: false,
+    disabled: (row: any) => row.disabled,
+  },
+  {
+    prop: "dedAlreadyAmt",
+    label: "已扣金额",
+    editable: true,
+    editType: "number",
+    showOverflowTooltip: false,
+    disabled: (row: any) => row.disabled,
+  },
+  {
+    prop: "dedLastAmt",
+    label: "未扣金额",
+    editable: true,
+    editType: "number",
+    showOverflowTooltip: false,
+    disabled: (row: any) => row.disabled,
+  },
+  {
+    prop: "currentDedAmt",
+    label: "本次扣款",
+    editable: true,
+    editType: "number",
+    showOverflowTooltip: false,
+    disabled: (row: any) => row.disabled,
+  },
+  {
+    prop: "dedDesc",
+    label: "扣款说明",
+    editable: true,
+    editType: "input",
+    showOverflowTooltip: false,
+    width: 240,
+    disabled: (row: any) => row.disabled,
+  },
+  {
+    label: "操作",
+    width: 100,
+    slot: "actions",
+    fixed: "right",
+  },
+]);
 
 const formRules = ref({
   addAmt: [{ required: true, message: "请输入补充合同金额", trigger: "blur" }],
@@ -594,8 +719,7 @@ const formRules = ref({
 });
 
 /**
- * 计算成本一审审减金额
- * 成本一审审减金额 = 成本一审金额 - 申报结算金额
+ * 计算成本一审审减金额 成本一审审减金额 = 成本一审金额 - 申报结算金额
  */
 const calculateCostFirstDecAmt = () => {
   const costFirstAmt = Number(formData.value.costFirstAmt) || 0;
@@ -605,8 +729,7 @@ const calculateCostFirstDecAmt = () => {
 };
 
 /**
- * 计算成本二审审减金额
- * 成本二审审减金额 = 成本二审金额 - 成本一审审减金额
+ * 计算成本二审审减金额 成本二审审减金额 = 成本二审金额 - 成本一审审减金额
  */
 const calculateCostSecondDecAmt = () => {
   const costSecondAmt = Number(formData.value.costSecondAmt) || 0;
@@ -616,8 +739,7 @@ const calculateCostSecondDecAmt = () => {
 };
 
 /**
- * 计算审计审减金额
- * 审计审减金额 = 审计审核金额 - 成本二审金额
+ * 计算审计审减金额 审计审减金额 = 审计审核金额 - 成本二审金额
  */
 const calculateAuditDecAmt = () => {
   const auditAmt = Number(formData.value.auditAmt) || 0;
@@ -627,8 +749,7 @@ const calculateAuditDecAmt = () => {
 };
 
 /**
- * 申报结算金额变更
- * 触发：成本一审审减金额重新计算
+ * 申报结算金额变更 触发：成本一审审减金额重新计算
  */
 const handleApplySettleAmtChange = () => {
   calculateCostFirstDecAmt();
@@ -637,8 +758,7 @@ const handleApplySettleAmtChange = () => {
 };
 
 /**
- * 成本一审金额变更
- * 触发：成本一审审减金额重新计算
+ * 成本一审金额变更 触发：成本一审审减金额重新计算
  */
 const handleCostFirstAmtChange = () => {
   calculateCostFirstDecAmt();
@@ -647,8 +767,14 @@ const handleCostFirstAmtChange = () => {
 };
 
 /**
- * 成本二审金额变更
- * 触发：成本二审审减金额重新计算，以及审计审减金额重新计算
+ * 成本一审审减金额变更 触发：成本二审审减金额重新计算
+ */
+const handleCostFirstDecAmtChange = () => {
+  calculateCostSecondDecAmt();
+};
+
+/**
+ * 成本二审金额变更 触发：成本二审审减金额重新计算，以及审计审减金额重新计算
  */
 const handleCostSecondAmtChange = () => {
   calculateCostSecondDecAmt();
@@ -657,65 +783,73 @@ const handleCostSecondAmtChange = () => {
 };
 
 /**
- * 审计审核金额变更
- * 触发：审计审减金额重新计算
+ * 审计审核金额变更 触发：审计审减金额重新计算
  */
 const handleAuditAmtChange = () => {
   calculateAuditDecAmt();
 };
 
-// 监听申报结算金额变化（使用 watch 作为补充，确保在非 change 事件触发的场景下也能更新）
-watch(
-  () => formData.value.applySettleAmt,
-  () => {
-    calculateCostFirstDecAmt();
-    calculateCostSecondDecAmt();
-  },
-);
+const handleSave = async (rowData: any) => {
+  const { row, column, newValue, oldValue, rowIndex } = rowData;
+};
+const handleChange = (data: any) => {};
+const handleUpdate = (data: any) => {
+  tableData.value = data;
+};
+const handleAdd = () => {
+  const newRowData = {
+    uuid: uuidv4(),
+    id: null,
+    conBillId: props.conId,
+    dedId: null, // 扣款事项ID
+    dedName: "", // 扣款事项
+    dedAmt: 0, // 扣款金额
+    dedTypeId: null, // 扣款类型ID
+    dedAlreadyAmt: 0, // 已扣款金额
+    dedLastAmt: 0, // 未扣款金额
+    dedDesc: "", // 扣款说明
+    disabled: false,
+  };
+  tableData.value = [...tableData.value, newRowData];
+};
+const handleDelete = (row) => {
+  tableData.value = tableData.value.filter((item) => item.uuid !== row.uuid);
+};
+// 获取扣款类型名称
+const getDedTypeName = (dedTypeId: number) => {
+  const dedType = dedTypeEnum.find((item) => item.value == dedTypeId);
+  return dedType?.label || "";
+};
 
-// 监听成本一审金额变化
-watch(
-  () => formData.value.costFirstAmt,
-  () => {
-    calculateCostFirstDecAmt();
-    calculateCostSecondDecAmt();
-  },
-);
-
-// 监听成本二审金额变化
-watch(
-  () => formData.value.costSecondAmt,
-  () => {
-    calculateCostSecondDecAmt();
-    calculateAuditDecAmt();
-  },
-);
-
-// 监听审计审核金额变化
-watch(
-  () => formData.value.auditAmt,
-  () => {
-    calculateAuditDecAmt();
-  },
-);
-
-// 监听成本一审审减金额变化（当一审审减金额变化时，二审审减金额需要重新计算）
-watch(
-  () => formData.value.costFirstDecAmt,
-  () => {
-    calculateCostSecondDecAmt();
-  },
-);
+// 获取状态名称
+const getStatusName = (status: number) => {
+  switch (status) {
+    case 0:
+      return "草稿";
+    case 5:
+      return "审批中";
+    case 10:
+      return "已审批";
+    case 30:
+      return "已作废";
+    default:
+      return "-";
+  }
+};
 
 // 构建提交参数
 const buildSubmitParams = () => {
-  const data = { ...formData.value };
+  let data = { ...formData.value };
   // 移除额外展示字段
   delete data.conName;
   delete data.conSysNo;
   delete data.conTypeName;
   delete data.supName;
-  return data;
+  return {
+    settle: data,
+    settleDeds: tableData.value,
+    conId: props.conId,
+  };
 };
 
 // 提交
@@ -726,18 +860,20 @@ const handleSubmit = async () => {
   try {
     await formRef.value.validate();
     submitLoading.value = true;
+
     const params = buildSubmitParams();
 
-    // TODO: 调用API
-    // if (formData.value.id) {
-    //   await contractSettleApi.update(params);
-    //   ElMessage.success("更新成功");
-    // } else {
-    //   await contractSettleApi.add(params);
-    //   ElMessage.success("提交成功");
-    // }
-    console.log("提交参数:", params);
-    ElMessage.success("提交成功");
+    if (isEdit.value) {
+      const editRes = await contractSettleApi.editSettle(params);
+      if (editRes.code === 200) {
+        ElMessage.success("更新成功");
+      }
+    } else {
+      const addRes = await contractSettleApi.addSettle(params);
+      if (addRes.code === 200) {
+        ElMessage.success("保存成功");
+      }
+    }
   } catch (error) {
     console.error(error);
   } finally {
@@ -747,20 +883,20 @@ const handleSubmit = async () => {
 
 // 加载合同结算详情
 const loadSettleDetail = async () => {
-  if (!settleId.value) return;
+  if (!props.settleId) return;
   try {
-    // const res = await contractSettleApi.getById({ id: settleId.value });
-    // if (res.code === 200) {
-    //   const data = res.data;
-    //   formData.value = {
-    //     ...formData.value,
-    //     ...data,
-    //   };
-    //   // 数据加载完成后，重新计算所有审减金额
-    //   calculateCostFirstDecAmt();
-    //   calculateCostSecondDecAmt();
-    //   calculateAuditDecAmt();
-    // }
+    const res = await contractSettleApi.getSettleById({ id: props.settleId });
+    if (res.code === 200) {
+      const { settle = {}, settleDeds = [] } = res.data;
+      formData.value = {
+        ...formData.value,
+        ...settle,
+      };
+      // 数据加载完成后，重新计算所有审减金额
+      calculateCostFirstDecAmt();
+      calculateCostSecondDecAmt();
+      calculateAuditDecAmt();
+    }
   } catch (error) {
     console.error(error);
   }
@@ -768,10 +904,10 @@ const loadSettleDetail = async () => {
 
 // 加载合同信息
 const loadContractInfo = async () => {
-  if (!conId.value) return;
+  if (!props.conId) return;
   try {
     const res = await contractLedgerApi.getContractLedgerById({
-      id: conId.value,
+      id: props.conId,
     });
     if (res.code === 200) {
       const { conMain } = res.data;
@@ -786,31 +922,42 @@ const loadContractInfo = async () => {
     console.error(error);
   }
 };
+// 获取奖惩列表
+const getDedDataList = async () => {
+  try {
+    const res = await paymentAdjustApi.getDedList({ conId: props.conId });
+    if (res.code === 200) {
+      const list = res.data || [];
+      tableData.value = list.map((item) => {
+        return {
+          conBillId: item.conBillId,
+          dedTypeId: item.dedTypeId,
+          dedAmt: item.dedAmt,
+          dedDesc: item.dedDesc,
+          uuid: uuidv4(),
+          dedId: item.id,
+          dedAlreadyAmt: 0,
+          dedLastAmt: 0,
+          disabled: true, // 源数据不可编辑
+        };
+      });
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
 
-// ==================== 路由初始化 ====================
-
-const syncRouteState = async () => {
-  const queryMode = route.query.mode as string;
-  mode.value =
-    queryMode === "edit" || queryMode === "detail" ? queryMode : "add";
-
-  const settleIdValue = route.query.settleId
-    ? Number(route.query.settleId)
-    : null;
-  settleId.value = settleIdValue || null;
-
-  const conIdValue = route.query.conId ? Number(route.query.conId) : null;
-  conId.value = conIdValue || null;
-
-  if (mode.value === "edit" || mode.value === "detail") {
-    await loadSettleDetail();
+const initData = async () => {
+  if (isEdit.value || isDetail.value) {
+    await loadSettleDetail(); // 加载合同结算详情
   } else {
-    await loadContractInfo();
+    await loadContractInfo(); // 加载合同信息
+    await getDedDataList(); // 加载扣款列表
   }
 };
 
 onMounted(() => {
-  syncRouteState();
+  initData();
 });
 </script>
 
@@ -860,6 +1007,11 @@ onMounted(() => {
     top: 50%;
     transform: translateY(-50%);
   }
+}
+.actionBar-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
 }
 
 .btn-row {
