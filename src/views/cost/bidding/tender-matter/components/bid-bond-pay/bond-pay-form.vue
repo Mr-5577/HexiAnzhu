@@ -348,7 +348,7 @@ const initEditTableData = async () => {
   try {
     const params = {
       tenderId: props.tenderId,
-      bizItemCode: "ZB_BZJ", // 定标审批
+      bizItemCode: "ZB_BZJ", // 保证金
     };
     const res = await biddingManageApi.getBillList(params);
     if (res.code === 200) {

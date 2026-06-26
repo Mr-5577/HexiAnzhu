@@ -167,7 +167,7 @@ const handleAdd = () => {
   // 跳转到新增页面，传递事项ID
   router.push({
     path: "/bidding/bid-bond-refund/add",
-    query: { tenderId: props.tenderId, mode: "add" },
+    query: { tenderId: props.tenderId },
   });
 };
 // 编辑
@@ -175,7 +175,7 @@ const handleEdit = (row) => {
   // 跳转到编辑页面，把当前点击的数据作为参数传递过去
   router.push({
     path: "/bidding/bid-bond-refund/edit",
-    query: { tenderId: props.tenderId, id: row.id, mode: "edit" },
+    query: { tenderId: props.tenderId, bondRefundId: row.id },
   });
 };
 // 删除
@@ -197,7 +197,7 @@ const handleDetail = (row) => {
   // 跳转到详情页面，把当前点击的数据作为参数传递过去
   router.push({
     path: "/bidding/bid-bond-refund/detail",
-    query: { tenderId: props.tenderId, id: row.id, mode: "detail" },
+    query: { tenderId: props.tenderId, bondRefundId: row.id },
   });
 };
 // 获取项目列表
