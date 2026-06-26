@@ -52,15 +52,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, Ref, watch, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import BasicInfo from "./basic-infor.vue";
-import SupplierServe from "./supplier-serve.vue";
-import ContactWay from "./contact-way.vue";
-import BankTable from "./bank-account.vue";
-import RelateQualification from "./relate-qualification.vue";
-import ProjectPerformance from "./project-performance.vue";
+import SupplierServe from "./supplier-serve/index.vue";
+import ContactWay from "./contact-way/index.vue";
+import BankTable from "./bank-account/index.vue";
+import RelateQualification from "./relate-qualification/index.vue";
+import ProjectPerformance from "./project-performance/index.vue";
 
 const route = useRoute();
 const activeTab = ref("basic");
@@ -105,7 +105,6 @@ const syncRouteState = () => {
   }
 };
 
-// watch(() => [route.query.mode, route.query.supplierId], syncRouteState);
 onMounted(() => {
   syncRouteState();
 });
