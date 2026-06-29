@@ -18,6 +18,17 @@
         label-position="right"
       >
         <el-row>
+          <el-col :span="24">
+            <el-form-item prop="dedName" label="款项标题" required>
+              <el-input
+                v-model="formData.dedName"
+                placeholder="请输入款项标题"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
           <el-col :span="12">
             <el-form-item prop="dedTypeId" label="扣款类型" required>
               <el-select
@@ -105,6 +116,7 @@ const formData = ref<DedInfo>({
   id: undefined,
   status: 0,
   conBillId: 0,
+  dedName: "",
   dedTypeId: 0,
   dedAmt: 0,
   dedDesc: "",
@@ -112,6 +124,7 @@ const formData = ref<DedInfo>({
 
 // 表单校验规则
 const formRules: FormRules = {
+  dedName: [{ required: true, message: "请输入标题", trigger: "change" }],
   dedTypeId: [{ required: true, message: "请选择扣款类型", trigger: "change" }],
   dedAmt: [
     { required: true, message: "请输入款项金额", trigger: "change" },
@@ -139,6 +152,7 @@ const initFormData = () => {
       id: props.editData.id,
       status: props.editData.status,
       conBillId: props.editData.conBillId,
+      dedName: props.editData.dedName,
       dedTypeId: props.editData.dedTypeId,
       dedAmt: props.editData.dedAmt || 0,
       dedDesc: props.editData.dedDesc || "",
@@ -148,6 +162,7 @@ const initFormData = () => {
       id: undefined,
       status: 0,
       conBillId: props.conId,
+      dedName: "",
       dedTypeId: null,
       dedAmt: 0,
       dedDesc: "",

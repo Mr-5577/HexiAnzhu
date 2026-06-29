@@ -65,7 +65,7 @@ const tableColumns: TableColumnItem[] = [
   { slot: "status", label: "状态", width: 100 },
   { prop: "visaType", label: "签证类型", width: 120 },
   { prop: "visaApplyAmt", label: "签证申报金额", width: 120 },
-  { prop: "visaApplyDesc", label: "签证申报说明", width: 120 },
+  { prop: "visaApplyDesc", label: "签证申报说明", width: 200 },
   { prop: "costingReviewAmt", label: "成本审核金额", width: 120 },
   { prop: "costingCutAmt", label: "成本审减金额", width: 120 },
   { prop: "costingOpinion", label: "成本审核意见", width: 200 },

@@ -70,6 +70,7 @@ const tableData = ref<any[]>([]);
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
+  { prop: "dedName", label: "款项标题" },
   { slot: "dedTypeId", label: "调整类型" },
   { prop: "dedAmt", label: "调整金额" },
   { prop: "dedDesc", label: "说明" },
