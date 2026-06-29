@@ -19,6 +19,9 @@
           </el-button>
         </div>
       </template>
+      <template #settleType="{ row }">
+        {{ row.settleType == 0 ? "部分结算" : "全部结算"}}
+      </template>
       <template #status="{ row }">
         {{ getStatusName(row.status) }}
       </template>
@@ -53,7 +56,8 @@ const tableData = ref<any[]>([]);
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "conBillId", label: "单据编号", width: 120 },
+  // { prop: "conBillId", label: "单据编号", width: 120 },
+  { prop: "settleType", label: "结算类型", width: 120, slot: "settleType" }, // 0-部分结算，1-全部结算
   { prop: "status", label: "状态", width: 100, slot: "status" }, // 用slot显示状态标签
   { prop: "signAmt", label: "合同签约金额", width: 120 },
   { prop: "addAmt", label: "补充合同金额", width: 120 },
@@ -64,7 +68,6 @@ const tableColumns: TableColumnItem[] = [
   { prop: "sumAppyAmt", label: "累计请款", width: 120 },
   { prop: "sumPaidAmt", label: "累计实付", width: 120 },
   { prop: "sumOwedAmt", label: "累计欠款", width: 120 },
-  { prop: "settleType", label: "结算类型", width: 120, slot: "settleType" }, // 0-部分结算，1-全部结算
   { prop: "applySettleAmt", label: "申报结算金额", width: 120 },
   { prop: "totalDedAmt", label: "扣款总金额", width: 120 },
   { prop: "sumDedAlreadyAmt", label: "累计已扣款", width: 120 },

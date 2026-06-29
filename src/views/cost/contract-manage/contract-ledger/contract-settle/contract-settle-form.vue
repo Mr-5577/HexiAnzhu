@@ -6,7 +6,7 @@
         ref="formRef"
         :model="formData"
         :rules="formRules"
-        label-width="160px"
+        label-width="140px"
         class="adapt-form"
       >
         <!-- 基本信息 -->
@@ -539,7 +539,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from "vue";
 import { ElMessage } from "element-plus";
-import { useRoute } from "vue-router";
 import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api";
 import { dedTypeEnum } from "@/constants/contract-manage/enums";
 import EditableTable from "@/components/base/editable-table.vue";
@@ -560,8 +559,6 @@ const emit = defineEmits<{
   success: [];
   cancel: [];
 }>();
-
-const route = useRoute();
 
 const isAdd = computed(() => props.mode === "add");
 const isEdit = computed(() => props.mode === "edit");
@@ -656,14 +653,6 @@ const editableColumns = computed<EditableColumn[]>(() => [
   {
     prop: "dedLastAmt",
     label: "未扣金额",
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-    disabled: (row: any) => row.disabled,
-  },
-  {
-    prop: "currentDedAmt",
-    label: "本次扣款",
     editable: true,
     editType: "number",
     showOverflowTooltip: false,
@@ -841,13 +830,13 @@ const getStatusName = (status: number) => {
 const buildSubmitParams = () => {
   let data = { ...formData.value };
   // 移除额外展示字段
-  delete data.conName;
-  delete data.conSysNo;
-  delete data.conTypeName;
-  delete data.supName;
+  // delete data.conName;
+  // delete data.conSysNo;
+  // delete data.conTypeName;
+  // delete data.supName;
   return {
     settle: data,
-    settleDeds: tableData.value,
+    settleDeds: tableData.value?.map(({ uuid, disabled, ...rest }) => rest), // 去除uuid、disabled
     conId: props.conId,
   };
 };
@@ -892,6 +881,21 @@ const loadSettleDetail = async () => {
         ...formData.value,
         ...settle,
       };
+      tableData.value = settleDeds.map((item) => {
+        return {
+          id: item.id,
+          conBillId: item.conBillId,
+          dedName: item.dedName,
+          dedTypeId: item.dedTypeId,
+          dedAmt: item.dedAmt,
+          dedDesc: item.dedDesc,
+          dedId: item.dedId,
+          dedAlreadyAmt: item.dedAlreadyAmt,
+          dedLastAmt: item.dedLastAmt,
+          uuid: uuidv4(),
+          disabled: false,
+        }
+      });
       // 数据加载完成后，重新计算所有审减金额
       calculateCostFirstDecAmt();
       calculateCostSecondDecAmt();
@@ -931,6 +935,7 @@ const getDedDataList = async () => {
       tableData.value = list.map((item) => {
         return {
           conBillId: item.conBillId,
+          dedName: item.dedName,
           dedTypeId: item.dedTypeId,
           dedAmt: item.dedAmt,
           dedDesc: item.dedDesc,
