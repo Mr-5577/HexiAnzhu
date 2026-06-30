@@ -147,38 +147,46 @@ export const useTagsStore = defineStore(
 
     // 辅助函数：生成唯一标识
     const generateUniqueId = (view: RouteLocationNormalized): string => {
-      const { path, query } = view;
+      const { path, query, params, fullPath } = view;
 
       // 如果不支持多开，仅使用路径作为标识
       if (!view.meta?.isMultiOpen || Object.keys(query).length === 0) {
         return path;
       }
 
-      // 对于多开页面，使用路径+关键参数生成唯一标识
-      // 可以根据需要调整关键参数
+      // 对于多开页面，使用关键参数生成唯一标识
       const keyParams: string[] = [];
 
-      // 优先使用id作为标识
-      if (query.id) {
-        keyParams.push(`id=${query.id}`);
-      }
-      // 如果没有id，使用其他参数
-      else {
-        const sortedParams = Object.keys(query)
+      // 从 params 提取
+      const paramKeys = Object.keys(params);
+      if (paramKeys.length > 0) {
+        const sortedParams = paramKeys
           .sort()
-          .map((key) => `${key}=${query[key]}`)
+          .map((key) => `${key}=${params[key]}`)
           .join("&");
         keyParams.push(sortedParams);
       }
-
+      // 从 query 提取
+      const queryKeys = Object.keys(query);
+      if (queryKeys.length > 0) {
+        const sortedQuery = queryKeys
+          .sort()
+          .map((key) => `${key}=${query[key]}`)
+          .join("&");
+        keyParams.push(sortedQuery);
+      }
+      // 没有任何参数：使用路径作为标识
+      if (keyParams.length === 0) {
+        return path;
+      }
       return `${path}?${keyParams.join("&")}`;
     };
 
     // 辅助函数：生成标签标题
     const generateTagTitle = (view: RouteLocationNormalized): string => {
       const baseTitle = (view.meta?.title as string) || "未知页面";
-      const { query } = view;
 
+      // const { query } = view;
       // 如果是多开页面且有标识参数，显示在标题中
       // if (view.meta?.isMultiOpen) {
       //   if (query.taskName) {
