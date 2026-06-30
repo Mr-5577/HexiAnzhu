@@ -246,8 +246,6 @@
           :show-summary="false"
           :compactEmpty="true"
           :on-save="handleSave"
-          @data-change="handleDataChange"
-          @update:table-data="handleDataUpdate"
         >
           <template #actions="{ row }">
             <el-button link type="danger" @click="handleDelete(row)">
@@ -615,12 +613,6 @@ const handleSave = async (data: any) => {
       tableList.value = newTableList;
     }
   }
-};
-
-const handleDataChange = (data: any) => {};
-
-const handleDataUpdate = (newData: any) => {
-  tableList.value = newData;
 };
 
 const handleDelete = (row: any) => {

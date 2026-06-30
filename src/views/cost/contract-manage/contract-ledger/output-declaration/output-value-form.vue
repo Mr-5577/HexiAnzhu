@@ -308,9 +308,6 @@
               :highlight-current-row="false"
               :show-summary="false"
               :compactEmpty="true"
-              :on-save="handleSavePayrate"
-              @data-change="handleChangePayrate"
-              @update:table-data="handleUpdatePayrate"
             >
               <template #actions="{ row }">
                 <el-button link type="danger" @click="deletePayrate(row)">
@@ -346,9 +343,6 @@
               :highlight-current-row="false"
               :show-summary="false"
               :compactEmpty="true"
-              :on-save="handleSaveMaterial"
-              @data-change="handleChangeMaterial"
-              @update:table-data="handleUpdateMaterial"
             >
               <!-- <template #actions="{ row }">
                 <el-button link type="danger" @click="deleteMaterial(row)">
@@ -379,9 +373,6 @@
               :highlight-current-row="false"
               :show-summary="false"
               :compactEmpty="true"
-              :on-save="handleSavePaynode"
-              @data-change="handleChangePaynode"
-              @update:table-data="handleUpdatePaynode"
             >
               <template #actions="{ row }">
                 <el-button link type="danger" @click="deletePaynode(row)">
@@ -999,14 +990,6 @@ const deletePayrate = (row: ContractBillPayRate) => {
   );
 };
 
-const handleSavePayrate = async (rowData: any) => {};
-
-const handleChangePayrate = (data: any) => {};
-
-const handleUpdatePayrate = (newData: any) => {
-  payrateTable.value = newData;
-};
-
 // 材料明细
 const addMaterial = () => {
   const newRow: ContractBillMaterial = {
@@ -1040,14 +1023,6 @@ const deleteMaterial = (row: ContractBillMaterial) => {
   );
 };
 
-const handleSaveMaterial = async (rowData: any) => {};
-
-const handleChangeMaterial = (data: any) => {};
-
-const handleUpdateMaterial = (newData: any) => {
-  materialTable.value = newData;
-};
-
 // 支付节点明细
 const addPaynode = () => {
   const newRow: ContractBillPayNode = {
@@ -1072,14 +1047,6 @@ const deletePaynode = (row: ContractBillPayNode) => {
   paynodeTable.value = paynodeTable.value.filter(
     (item) => item.uuid !== row.uuid,
   );
-};
-
-const handleSavePaynode = async (rowData: any) => {};
-
-const handleChangePaynode = (data: any) => {};
-
-const handleUpdatePaynode = (newData: any) => {
-  paynodeTable.value = newData;
 };
 
 const validatePayrateTable = () => {

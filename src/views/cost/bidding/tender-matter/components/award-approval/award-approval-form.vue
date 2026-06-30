@@ -34,8 +34,6 @@
           :highlight-current-row="false"
           :show-summary="false"
           :on-save="handleSave"
-          @data-change="handleDataChange"
-          @update:table-data="handleDataUpdate"
           @editable-cell-click="handleEditableCellClick"
         >
           <!-- 列表外操作栏 -->
@@ -342,14 +340,6 @@ const handleSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
   }
 
   updateRow(rowIndex, { [column]: newValue });
-};
-
-const handleDataChange = (data) => {
-  // console.log("表格数据变化:", data);
-};
-
-const handleDataUpdate = (newData) => {
-  tableData.value = newData;
 };
 
 const handleEditableCellClick = ({ row, column, rowIndex }) => {

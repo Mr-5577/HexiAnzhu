@@ -47,7 +47,6 @@
               :disabled="getColumnDisabled(column, row)"
               :placeholder="column.placeholder || '请输入'"
               @blur="handleSave(row, column, $index)"
-              @keyup.enter="handleSave(row, column, $index)"
             />
 
             <!-- 选择器 -->
@@ -154,7 +153,6 @@
               :disabled="getColumnDisabled(column, row)"
               :placeholder="column.placeholder || '请输入'"
               @blur="handleSave(row, column, $index)"
-              @keyup.enter="handleSave(row, column, $index)"
             />
           </template>
         </div>

@@ -496,10 +496,7 @@
           :highlight-current-row="false"
           :show-summary="false"
           :compactEmpty="true"
-          :on-save="handleSave"
           :editable="true"
-          @data-change="handleChange"
-          @update:table-data="handleUpdate"
         >
           <template #actionBar>
             <div class="actionBar-buttons">
@@ -776,14 +773,6 @@ const handleCostSecondAmtChange = () => {
  */
 const handleAuditAmtChange = () => {
   calculateAuditDecAmt();
-};
-
-const handleSave = async (rowData: any) => {
-  const { row, column, newValue, oldValue, rowIndex } = rowData;
-};
-const handleChange = (data: any) => {};
-const handleUpdate = (data: any) => {
-  tableData.value = data;
 };
 const handleAdd = () => {
   const newRowData = {

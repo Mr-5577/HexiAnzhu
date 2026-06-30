@@ -395,9 +395,6 @@
               :highlight-current-row="false"
               :show-summary="false"
               :compactEmpty="true"
-              :on-save="handleSave"
-              @data-change="handleDataChange"
-              @update:table-data="handleDataUpdate"
             >
               <template #actions="{ row }">
                 <el-button link type="danger" @click="handleDelete(row)">
@@ -732,16 +729,6 @@ const createConNo = async () => {
   } catch (error) {
     console.error("生成合同编号失败:", error);
   }
-};
-
-const handleSave = async (rowData: any) => {
-  const { row, column, newValue, oldValue, rowIndex } = rowData;
-};
-
-const handleDataChange = (data: any) => {};
-
-const handleDataUpdate = (newData: any) => {
-  tableList.value = newData;
 };
 
 const handleAdd = () => {

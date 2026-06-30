@@ -29,8 +29,6 @@
           :highlight-current-row="false"
           :show-summary="false"
           :on-save="handleSave"
-          @data-change="handleDataChange"
-          @update:table-data="handleDataUpdate"
         >
           <!-- 列表外操作栏 -->
           <template #actionBar>
@@ -251,14 +249,6 @@ const handleSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
   }
 
   updateRow(rowIndex, { [column]: newValue });
-};
-
-const handleDataChange = (data) => {
-  // 数据变化处理
-};
-
-const handleDataUpdate = (newData) => {
-  tableData.value = newData;
 };
 
 // 发起招标

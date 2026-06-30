@@ -22,8 +22,6 @@
         :show-summary="false"
         :compactEmpty="true"
         :on-save="handleSave"
-        @data-change="handleDataChange"
-        @update:table-data="handleDataUpdate"
       >
       </editable-table>
     </template>
@@ -275,12 +273,6 @@ const handleSave = async (data: any) => {
       tableData.value = newTableList;
     }
   }
-};
-
-const handleDataChange = (data: any) => {};
-
-const handleDataUpdate = (newData: any) => {
-  tableData.value = newData;
 };
 
 // 校验价税明细表

@@ -53,8 +53,6 @@
       :highlight-current-row="false"
       :showSummary="true"
       :on-save="handleSave"
-      @data-change="handleDataChange"
-      @update:table-data="handleDataUpdate"
     >
     </editable-table>
   </div>
@@ -222,7 +220,11 @@ const handleBatchSave = async () => {
     saveLoading.value = false;
   }
 };
-
+const updateRow = (rowIndex: number, data: any) => {
+  const newData = [...tableList.value];
+  newData[rowIndex] = { ...tableList.value[rowIndex], ...data };
+  tableList.value = newData;
+};
 // 保存
 const handleSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
   // console.log("保存:", { row, column, newValue, oldValue, rowIndex });
@@ -230,18 +232,11 @@ const handleSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
     const selectedOption = productProjList.value.find(
       (option) => option.id === newValue,
     );
-    row.prodName = selectedOption ? selectedOption.prodName : "";
+    const prodName = selectedOption ? selectedOption?.prodName : "";
+    updateRow(rowIndex, { prodId: newValue, prodName });
+    return;
   }
-};
-
-// 数据变化回调
-const handleDataChange = (data: any) => {
-  // console.log("当前行数据更新", data);
-};
-// 数据更新回调
-const handleDataUpdate = (newData: any) => {
-  // console.log("table数据更新", newData);
-  tableList.value = newData;
+  updateRow(rowIndex, { [column]: newValue });
 };
 
 // 获取项目产品类型
