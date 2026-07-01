@@ -2,7 +2,7 @@ import { http } from "@/axios/service";
 import {
   ContractPreSettleEditParams,
   ContractPreSettleSaveParams,
-} from "@/types/cost/contract-manage/contract-preSettlement-type";
+} from "@/types/cost/contract-manage/contract-preSettle-type";
 
 /**
  * 合同预结算 相关接口

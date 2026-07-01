@@ -14,9 +14,7 @@
           <el-button type="primary" icon="Refresh" @click="handleRefresh">
             刷新列表
           </el-button>
-          <el-button type="primary" @click="handleInitiate">
-            发起流程
-          </el-button>
+          <el-button type="primary" @click="handleAdd"> 新增 </el-button>
         </div>
       </template>
 
@@ -46,7 +44,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import AddEditPreSettleDialog from "./add-edit-pre-settle-dialog.vue";
 import { contractPreSettleApi } from "@/api/cost/contract-manage/contract-preSettlement-api.ts";
-import { ContractPreSettle } from "@/types/cost/contract-manage/contract-preSettlement-type.ts";
+import { ContractPreSettle } from "@/types/cost/contract-manage/contract-preSettle-type.ts";
 
 defineOptions({ name: "contract-pre-settle" });
 
@@ -65,8 +63,14 @@ const tableColumns: TableColumnItem[] = [
   { prop: "addAmt", label: "补充合同金额" },
   { prop: "sumChangeAmt", label: "累计变更签证" },
   { prop: "preSettleAmt", label: "预估合同金额" },
-  { prop: "preSettleDesc", label: "调整说明" },
-  { prop: "status", label: "状态" },
+  { prop: "preSettleDesc", label: "结算说明", minWidth: 200 },
+  { prop: "statusName", label: "状态" },
+  {
+    label: "操作",
+    width: 150,
+    slot: "actions",
+    fixed: "right",
+  },
 ];
 
 // 状态映射
@@ -91,7 +95,7 @@ const getDataList = async () => {
     if (res.code === 200) {
       tableData.value = (res.data || []).map((item: any) => ({
         ...item,
-        statusLabel: statusMap[item.status] ?? item.status,
+        statusName: statusMap[item.status] ?? item.status,
       }));
     }
   } catch (error) {
@@ -107,7 +111,7 @@ const handleRefresh = () => {
 };
 
 // 发起流程
-const handleInitiate = () => {
+const handleAdd = () => {
   editData.value = null;
   dialogVisible.value = true;
 };
