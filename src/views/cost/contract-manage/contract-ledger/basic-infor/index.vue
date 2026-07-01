@@ -119,7 +119,7 @@
         <el-descriptions-item label="银行账号：" :span="1">
           {{ formData.bankAccount || "-" }}
         </el-descriptions-item>
-        <el-descriptions-item label="备注" :span="2">
+        <el-descriptions-item label="备注：" :span="2">
           {{ formData.remark || "-" }}
         </el-descriptions-item>
       </el-descriptions>
@@ -151,6 +151,7 @@
           :height="'160px'"
           :pagination="false"
           :loading="false"
+          :compactEmpty="true"
         />
       </div>
 
@@ -164,6 +165,7 @@
           :height="'160px'"
           :pagination="false"
           :loading="false"
+          :compactEmpty="true"
         />
       </div>
 
@@ -177,6 +179,7 @@
           :height="'160px'"
           :pagination="false"
           :loading="false"
+          :compactEmpty="true"
         />
       </div>
 
@@ -190,6 +193,7 @@
           :height="'160px'"
           :pagination="false"
           :loading="false"
+          :compactEmpty="true"
         />
       </div>
 
@@ -813,10 +817,29 @@ onMounted(() => {
     // width: 130px;          // 固定宽度
     // background-color: #fafafa;
     // font-weight: 500;
-    margin-right: 2px;
+    margin-right: 0;
   }
   :deep(.el-descriptions__content) {
-    word-break: break-all;
+    // word-break: break-all;
+  }
+  :deep(.el-descriptions__body) {
+    .el-descriptions__table {
+      table-layout: fixed;
+    }
+    .el-descriptions__table td {
+      width: 25%; /* 4列就是25% */
+    }
+  }
+  /* 让所有列等宽 */
+  .el-descriptions__body .el-descriptions__table {
+    table-layout: fixed;
+  }
+  /* 每列平均分配宽度 */
+  .el-descriptions__body .el-descriptions__table td {
+    width: 25%; /* 4列就是25% */
+    word-wrap: break-word;
+    word-break: break-all; 
+    white-space: normal;
   }
 }
 </style>

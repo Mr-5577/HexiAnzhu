@@ -19,9 +19,7 @@
           >
             刷新列表
           </el-button>
-          <el-button type="primary" @click="handleInitiate">
-            发起流程
-          </el-button>
+          <el-button type="primary" @click="handleAdd"> 新增 </el-button>
         </div>
       </template>
 
@@ -110,7 +108,7 @@ const handleRefresh = () => {
 };
 
 // 发起流程
-const handleInitiate = () => {
+const handleAdd = () => {
   router.push({
     path: "/contract/output-declaration/add",
     query: {

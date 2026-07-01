@@ -14,9 +14,7 @@
           <el-button type="primary" icon="Refresh" @click="handleRefresh">
             刷新列表
           </el-button>
-          <el-button type="primary" @click="handleInitiate">
-            发起流程
-          </el-button>
+          <el-button type="primary" @click="handleAdd"> 新增 </el-button>
         </div>
       </template>
 
@@ -126,7 +124,7 @@ const handleRefresh = () => {
 };
 
 // 发起流程
-const handleInitiate = () => {
+const handleAdd = () => {
   editData.value = null;
   dialogVisible.value = true;
 };

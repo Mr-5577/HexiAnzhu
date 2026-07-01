@@ -14,13 +14,11 @@
           <el-button type="primary" icon="Refresh" @click="handleRefresh">
             刷新列表
           </el-button>
-          <el-button type="primary" @click="handleInitiate">
-            发起流程
-          </el-button>
+          <el-button type="primary" @click="handleAdd"> 新增 </el-button>
         </div>
       </template>
       <template #settleType="{ row }">
-        {{ row.settleType == 0 ? "部分结算" : "全部结算"}}
+        {{ row.settleType == 0 ? "部分结算" : "全部结算" }}
       </template>
       <template #status="{ row }">
         {{ getStatusName(row.status) }}
@@ -32,6 +30,7 @@
         <el-button type="danger" link @click="handleDelete(row)">
           删除
         </el-button>
+        <el-button type="primary" link> 审批 </el-button>
       </template>
     </base-table>
   </div>
@@ -124,7 +123,7 @@ const handleRefresh = () => {
 };
 
 // 发起流程
-const handleInitiate = () => {
+const handleAdd = () => {
   router.push({
     path: "/contract/contract-settle/add",
     query: {

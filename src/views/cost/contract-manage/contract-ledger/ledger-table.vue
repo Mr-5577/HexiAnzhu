@@ -214,6 +214,9 @@ const handleReset = () => {
 const handleAdd = () => {
   router.push({
     path: "/contract/contract-ledger/add",
+    query: {
+      t: Date.now(),
+    },
   });
 };
 // 编辑合同台账

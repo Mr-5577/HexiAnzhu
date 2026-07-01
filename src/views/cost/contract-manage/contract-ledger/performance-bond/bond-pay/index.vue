@@ -18,6 +18,9 @@
         </div>
       </template>
 
+      <template #recvTypeId="{ row }">
+        {{ getRecvTypeName(row.recvTypeId) }}
+      </template>
       <template #actions="{ row }">
         <el-button type="primary" link @click="handleEdit(row)">
           编辑
@@ -30,6 +33,7 @@
     <!-- 新增/编辑 缴纳弹窗 -->
     <add-edit-pay-dialog
       v-model="dialogVisible"
+      :recvTypeEnum="recvTypeEnum"
       :conId="props.conId"
       :editData="editData"
       @success="handleRefresh"
@@ -51,6 +55,14 @@ const props = defineProps<{
   conId: number | null;
 }>();
 
+// 缴纳方式枚举
+const recvTypeEnum = [
+  { value: 1, label: "银行转账" },
+  { value: 2, label: "现金" },
+  { value: 3, label: "支票" },
+  { value: 4, label: "线上支付" },
+];
+
 const dialogVisible = ref(false);
 const editData = ref(null);
 const tableLoading = ref(false);
@@ -58,10 +70,10 @@ const tableData = ref<PerformanceBondList[]>([]);
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "recvTypeId", label: "业务类型" },
+  { slot: "recvTypeId", label: "业务类型" },
   { prop: "recvAmt", label: "金额" },
   { prop: "recvDate", label: "发生日期" },
-  { prop: "annexId", label: "相关单据" },
+  { prop: "annexId", label: "相关附件" },
   {
     label: "操作",
     width: 150,
@@ -69,6 +81,10 @@ const tableColumns: TableColumnItem[] = [
     fixed: "right",
   },
 ];
+const getRecvTypeName = (recvTypeId: number) => {
+  const item = recvTypeEnum.find((item) => item.value === recvTypeId);
+  return item ? item.label : "";
+}
 // 获取列表数据
 const getDataList = async () => {
   if (!props.conId) {

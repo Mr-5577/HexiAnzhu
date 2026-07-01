@@ -24,7 +24,7 @@
             style="width: 100%"
           >
             <el-option
-              v-for="item in refundTypeEnum"
+              v-for="item in props.refundTypeEnum"
               :key="item.value"
               :label="item.label"
               :value="item.value"
@@ -52,6 +52,13 @@
           />
         </el-form-item>
         <el-form-item prop="annexId" label="附件凭证"> </el-form-item>
+        <!-- <el-form-item prop="srcBillId" label="相关流程">
+          <el-input
+            v-model="formData.srcBillId"
+            placeholder="相关流程"
+            style="width: 100%"
+          />
+        </el-form-item> -->
       </el-form>
     </div>
   </base-modal>
@@ -65,12 +72,14 @@ import { perfBondApi } from "@/api/cost/contract-manage/performance-bond-api";
 
 interface Props {
   modelValue: boolean;
+  refundTypeEnum: any[];
   conId?: number;
   editData?: PerformanceBondReturnList | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
+  refundTypeEnum: () => [],
   conId: undefined,
   editData: null,
 });
@@ -83,14 +92,6 @@ const emit = defineEmits<{
 const dialogVisible = ref(props.modelValue);
 const formRef = ref<FormInstance>();
 const submitLoading = ref(false);
-
-// 退还方式枚举（请根据实际业务调整）
-const refundTypeEnum = [
-  { value: 1, label: "银行转账" },
-  { value: 2, label: "现金" },
-  { value: 3, label: "支票" },
-  { value: 4, label: "线上支付" },
-];
 
 // 表单数据
 const formData = ref({

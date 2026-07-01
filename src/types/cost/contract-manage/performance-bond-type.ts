@@ -32,6 +32,7 @@ export interface PerformanceBondList extends BaseEntity {
   recvDate: string;
   /** 附件凭证 */
   annexId: number;
+  /** 相关流程 */
   srcBillId: number;
 }
 /**
@@ -51,6 +52,7 @@ export interface PerformanceBondParam {
     recvDate: string;
     /** 附件凭证 */
     annexId: number;
+    /** 相关流程 */
     srcBillId?: number;
   };
 }
@@ -70,6 +72,7 @@ export interface PerformanceBondEditParam {
   recvDate: string;
   /** 附件凭证 */
   annexId: number;
+  /** 相关流程 */
   srcBillId?: number;
 }
 
@@ -89,6 +92,7 @@ export interface PerformanceBondReturnList extends BaseEntity {
   refundDate: string;
   /** 附件凭证 */
   annexId: number;
+  /** 相关流程 */
   srcBillId: number;
 }
 /**
@@ -108,6 +112,7 @@ export interface PerformanceBondReturnParam {
     refundDate: string;
     /** 附件凭证 */
     annexId: number;
+    /** 相关流程 */
     srcBillId?: number;
   };
 }
@@ -127,5 +132,6 @@ export interface PerformanceBondReturnEditParam {
   refundDate: string;
   /** 附件凭证 */
   annexId: number;
+  /** 相关流程 */
   srcBillId?: number;
 }

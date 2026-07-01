@@ -24,7 +24,7 @@
             style="width: 100%"
           >
             <el-option
-              v-for="item in recvTypeEnum"
+              v-for="item in props.recvTypeEnum"
               :key="item.value"
               :label="item.label"
               :value="item.value"
@@ -51,13 +51,14 @@
             style="width: 100%"
           />
         </el-form-item>
-        <el-form-item prop="annexId" label="附件凭证">
+        <el-form-item prop="annexId" label="附件凭证"> </el-form-item>
+        <!-- <el-form-item prop="srcBillId" label="相关流程">
           <el-input
-            v-model="formData.annexId"
-            placeholder="请输入附件凭证ID"
+            v-model="formData.srcBillId"
+            placeholder="相关流程"
             style="width: 100%"
           />
-        </el-form-item>
+        </el-form-item> -->
       </el-form>
     </div>
   </base-modal>
@@ -71,12 +72,14 @@ import { perfBondApi } from "@/api/cost/contract-manage/performance-bond-api";
 
 interface Props {
   modelValue: boolean;
+  recvTypeEnum: any[];
   conId?: number;
   editData?: PerformanceBondList | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
+  recvTypeEnum: () => [],
   conId: undefined,
   editData: null,
 });
@@ -89,14 +92,6 @@ const emit = defineEmits<{
 const dialogVisible = ref(props.modelValue);
 const formRef = ref<FormInstance>();
 const submitLoading = ref(false);
-
-// 缴纳方式枚举
-const recvTypeEnum = [
-  { value: 1, label: "银行转账" },
-  { value: 2, label: "现金" },
-  { value: 3, label: "支票" },
-  { value: 4, label: "线上支付" },
-];
 
 // 表单数据
 const formData = ref({

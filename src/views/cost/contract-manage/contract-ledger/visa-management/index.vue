@@ -14,7 +14,7 @@
           <el-button type="primary" icon="Refresh" @click="handleRefresh">
             刷新列表
           </el-button>
-          <el-button type="primary" @click="handleAdd"> 发起流程 </el-button>
+          <el-button type="primary" @click="handleAdd"> 新增 </el-button>
         </div>
       </template>
       <template #status="{ row }">
