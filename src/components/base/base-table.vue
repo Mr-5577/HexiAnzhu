@@ -154,12 +154,14 @@ export interface TableColumnItem {
   visible?: boolean;
   /** 单元格是否可点击，开启后会添加点击样式和事件 */
   clickable?: boolean;
+  /** 单元格点击事件名称，会触发 cell-event 事件 */
+  clickEvent?: string;
   /** 单元格点击事件处理函数 */
   clickHandler?: (row: any, column: TableColumnItem, index: number) => void;
   /** 子列配置，用于多级表头 */
   children?: TableColumnItem[];
   /** 单元格内容格式化函数 */
-  formatter?: (row: any, column: any, index: number) => any;
+  formatter?: (row: any, column: TableColumnItem, index: number) => any;
   /** 表头提示配置 */
   headerTip?: {
     /** 提示图标组件名，默认使用 QuestionFilled */
@@ -299,14 +301,9 @@ interface Emits {
 // 递归列组件的 Props
 interface TableColumnProps {
   column: TableColumnItem;
-  slots: Slots;
+  slots: Record<string, any>;
   dictData: DictData;
 }
-
-// 使用 Vue 3 提供的 Slots 类型
-type ComponentSlots = {
-  [key: string]: (...args: any[]) => VNode[];
-};
 
 // 递归列组件
 const TableColumn = {
@@ -498,11 +495,7 @@ const TableColumn = {
 
           // 格式化显示
           if (column.formatter) {
-            contentValue = column.formatter(
-              scope.row,
-              scope.column,
-              scope.$index,
-            );
+            contentValue = column.formatter(scope.row, column, scope.$index);
           } else if (column.dict) {
             contentValue = getDictLabel(column.dict, scope.row[column.prop!]);
           } else {
@@ -534,8 +527,8 @@ const TableColumn = {
   },
 };
 
-const $attrs = useAttrs();
-const $slots = useSlots();
+const attrs = useAttrs();
+const slots = useSlots();
 
 const props = withDefaults(defineProps<Props>(), {
   rowKey: "id",
@@ -558,7 +551,6 @@ const props = withDefaults(defineProps<Props>(), {
   showSummary: false,
   highlightCurrentRow: true,
   selectionMode: "multiple",
-  // treeProps 默认值
   treeProps: () => ({
     hasChildren: "hasChildren",
     children: "children",
@@ -666,7 +658,7 @@ const getTableProps = computed(() => {
     stripe: props.stripe,
     size: props.size,
     highlightCurrentRow: props.highlightCurrentRow,
-    ...$attrs,
+    ...attrs, // 正确使用 attrs
   };
 
   // 优先使用用户显式设置的 height/maxHeight
@@ -690,7 +682,11 @@ const getRowClassName = ({ row }: { row: any }): string => {
   if (!props.highlightCurrentRow) return "";
 
   const rowKeyValue = row[props.rowKey];
-  if (rowKeyValue === currentRowKey.value) {
+  if (
+    rowKeyValue !== undefined &&
+    rowKeyValue !== null &&
+    rowKeyValue === currentRowKey.value
+  ) {
     return "current-row";
   }
   return "";
@@ -832,20 +828,21 @@ const handleTableCellEvent = (payload: {
   column: TableColumnItem;
   index: number;
 }) => {
-  // 将事件冒泡给父组件
   emit("cell-event", payload);
 };
 
-// 多选/单选方法
+// 处理选择变化（修复单选模式事件重复触发问题）
 const handleSelectionChange = (val: any[]): void => {
   if (isProgrammaticSelection.value) {
     selectedRows.value = val;
     return;
   }
+
   if (props.selectionMode === "single" && val.length > 1) {
     const last = val[val.length - 1];
     selectedRows.value = [last];
     isProgrammaticSelection.value = true;
+    // 使用 nextTick 确保在下一个 tick 重置标志
     tableRef.value?.clearSelection();
     tableRef.value?.toggleRowSelection(last, true);
     nextTick(() => {
@@ -854,6 +851,7 @@ const handleSelectionChange = (val: any[]): void => {
     emit("selection-change", selectedRows.value);
     return;
   }
+
   selectedRows.value = val;
   emit("selection-change", val);
 };
@@ -873,16 +871,15 @@ const handleSortChange = (val: Sort): void => {
 const handleRowClick = (row: any, column: any, event: Event): void => {
   if (!props.highlightCurrentRow) return;
 
-  // 获取当前行的key值
   const rowKeyValue = row[props.rowKey];
-
-  // 如果点击的是同一行，则清除选中状态
-  if (currentRowKey.value === rowKeyValue) {
-    currentRowKey.value = "";
-  } else {
-    currentRowKey.value = rowKeyValue;
+  if (rowKeyValue !== undefined && rowKeyValue !== null) {
+    if (currentRowKey.value === rowKeyValue) {
+      currentRowKey.value = "";
+    } else {
+      currentRowKey.value = rowKeyValue;
+    }
   }
-  // console.log("行点击事件");
+
   emit("row-click", { row, event });
 };
 
