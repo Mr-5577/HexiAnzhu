@@ -228,13 +228,14 @@ const handleEdit = (row: HConMain) => {
     },
   });
 };
-
+// 台账详情
 const handleDetail = (row: HConMain) => {
   router.push({
     path: "/contract/contract-ledger/detail",
     query: {
       conId: row.id,
       projId: props.projectId,
+      tab: "basic",
     },
   });
 };

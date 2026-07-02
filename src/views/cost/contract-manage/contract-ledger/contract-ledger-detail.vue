@@ -19,7 +19,12 @@
 
       <el-main class="content-area">
         <keep-alive>
-          <component :is="currentComponent" :conId="conId" :projId="projId" />
+          <component
+            :is="currentComponent"
+            :key="activeTab"
+            :conId="conId"
+            :projId="projId"
+          />
         </keep-alive>
       </el-main>
     </el-container>
@@ -87,7 +92,7 @@ const menuItems = [
   },
   {
     index: "paymentAdjust",
-    icon: markRaw(Icons.Coin),
+    icon: markRaw(Icons.EditPen),
     label: "款项调整",
     component: () => import("./payment-adjust/index.vue"),
   },
@@ -103,6 +108,12 @@ const menuItems = [
   //   label: "争议审批",
   //   component: () => import("./disput-approval/index.vue"),
   // },
+  {
+    index: "specialMatter",
+    icon: markRaw(Icons.WarningFilled),
+    label: "特殊事项",
+    component: () => import("./special-matter/index.vue"),
+  },
   {
     index: "engineeringPrice",
     icon: markRaw(Icons.PriceTag),
@@ -123,16 +134,16 @@ const menuItems = [
   // },
   {
     index: "performanceBond",
-    icon: markRaw(Icons.Lock),
+    icon: markRaw(Icons.Coin),
     label: "履约保证金",
     component: () => import("./performance-bond/index.vue"),
   },
-  // {
-  //   index: "contractPreSettlement",
-  //   icon: markRaw(Icons.Lock),
-  //   label: "合同预结算",
-  //   component: () => import("./contract-preSettlement/index.vue"),
-  // },
+  {
+    index: "contractPreSettle",
+    icon: markRaw(Icons.Lock),
+    label: "合同预结算",
+    component: () => import("./contract-preSettle/index.vue"),
+  },
   {
     index: "contractSettle",
     icon: markRaw(Icons.Finished),
@@ -160,18 +171,43 @@ const projId = ref<number | null>(null); // 项目ID
 
 const currentComponent = computed(() => componentMap.get(activeTab.value));
 
+// 切换tab
 const handleTabChange = (tab: string) => {
   activeTab.value = tab;
+  
+  // 更新 URL 但不触发路由更新（仅在不同的时候修改，避免无谓的 history.replaceState）
+  try {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("tab") !== tab) {
+      url.searchParams.set("tab", tab);
+      window.history.replaceState({}, "", url.toString());
+    }
+  } catch (e) {}
 };
 
+// 获取初始tab
+const getInitialTab = (): string => {
+  // 先从路由query获取
+  const tabFromQuery = route.query.tab as string;
+  if (tabFromQuery && menuItems.some((item) => item.index === tabFromQuery)) {
+    return tabFromQuery;
+  }
+  // 默认返回'basic'
+  return "basic";
+};
+
+// 同步路由参数
 const syncRouteState = () => {
   conId.value = route.query.conId ? Number(route.query.conId) : null;
   projId.value = route.query.projId ? Number(route.query.projId) : null;
+
+  activeTab.value = getInitialTab();
 };
 
 watch(() => [route.query.conId, route.query.projId], syncRouteState, {
   immediate: true,
 });
+
 onMounted(() => {});
 </script>
 <style scoped lang="scss">

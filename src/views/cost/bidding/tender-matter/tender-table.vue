@@ -73,8 +73,8 @@
         <span>{{ getTenderStatusText(row.tenderStatus) }}</span>
       </template>
       <template #actions="{ row }">
-        <!-- <el-button type="primary" link @click="handleReview(row)">
-          审核
+        <!-- <el-button type="primary" link @click="handleApproval(row)">
+          审批
         </el-button> -->
         <el-button type="primary" link @click="handleEdit(row)">
           编辑
@@ -253,7 +253,10 @@ const handleEdit = (row: BidTender) => {
 
 const handleDetail = (row: BidTender) => {
   // 跳转到详情页面并传递事项ID参数
-  router.push({ path: "/bidding/bidding-detail", query: { tenderId: row.id } });
+  router.push({
+    path: "/bidding/bidding-detail",
+    query: { tenderId: row.id, tab: "overview" },
+  });
 };
 
 const handleDelete = (row: BidTender) => {
@@ -267,8 +270,8 @@ const handleDelete = (row: BidTender) => {
     })
     .catch(() => {});
 };
-const handleReview = (row: BidTender) => {
-  console.log("审核招标事项:", row);
+const handleApproval = (row: BidTender) => {
+  console.log("审批招标事项:", row);
 };
 const getTenderStatusText = (status: number) => {
   const statusMap: Record<number, string> = {
