@@ -73,7 +73,7 @@
       </el-form-item>
     </el-form>
     <base-table
-      :rowKey="'uuid'"
+      :rowKey="'id'"
       :columns="visitingRecordColumns"
       :tableData="paginatedData"
       :loading="tableLoading"
@@ -414,10 +414,7 @@ const getTableList = async () => {
     };
     const res = await assetManagementApi.getVisitHis(params);
     if (res.code === 200) {
-      allTableList.value = (res.data || []).map((item: any) => ({
-        ...item,
-        uuid: uuidv4(),
-      }));
+      allTableList.value = res.data || []
       total.value = res.data?.length || 0;
     }
   } catch (error) {
