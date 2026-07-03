@@ -4,6 +4,9 @@ import {
   RoleDelete,
   RoleFormData,
   MemberSearch,
+  RoleUpdate,
+  RoleMemberAdd,
+  RoleMemberEdit,
 } from "@/types/system/role-type";
 
 export const roleApi = {
@@ -20,24 +23,24 @@ export const roleApi = {
     return http.post("/auth/delRole", data);
   },
   // 修改角色
-  editRole: (data: any) => {
+  editRole: (data: RoleUpdate) => {
     return http.post("/auth/editRole", data);
   },
 
   // 获取角色对应的成员列表
-  getRoleMemberList: (data: any) => {
+  getRoleMemberList: (data: { roleId: number | string }) => {
     return http.post("/auth/getRoleMemberList", data);
   },
   // 修改角色成员
-  editRoleMember: (data: any) => {
+  editRoleMember: (data: RoleMemberEdit) => {
     return http.post("/auth/editRoleMember", data);
   },
   // 删除角色成员
-  delRoleMember: (data: any) => {
+  delRoleMember: (data: { id: number; isDel: boolean }) => {
     return http.post("/auth/delRoleMember", data);
   },
   // 添加角色成员
-  addRoleMember: (data: any) => {
+  addRoleMember: (data: RoleMemberAdd) => {
     return http.post("/auth/addRoleMember", data);
   },
   // 获取人员列表（树形结构）
@@ -46,7 +49,7 @@ export const roleApi = {
   },
 
   // 获取角色对应的菜单权限
-  getRoleMenuPowerList: (data: any) => {
+  getRoleMenuPowerList: (data: { roleId: number | string }) => {
     return http.post("/auth/getRoleMenuPowerList", data);
   },
   // 保存角色对应的菜单权限
@@ -55,7 +58,7 @@ export const roleApi = {
   },
 
   // 获取角色对应的组织权限
-  getRoleDataPowerDeptList: (data: any) => {
+  getRoleDataPowerDeptList: (data: { roleId: number | string }) => {
     return http.post("/auth/getRoleDataPowerDeptList", data);
   },
   // 保存角色对应的组织权限
@@ -63,7 +66,7 @@ export const roleApi = {
     return http.post("/auth/editRoleDataPowerDeptList", data);
   },
   // 获取角色对应的项目权限
-  getRoleDataPowerProjList: (data: any) => {
+  getRoleDataPowerProjList: (data: { roleId: number | string }) => {
     return http.post("/auth/getRoleDataPowerProjList", data);
   },
   // 保存角色对应的项目权限
@@ -71,7 +74,10 @@ export const roleApi = {
     return http.post("/auth/editRoleDataPowerProjList", data);
   },
   // 获取角色对应的专业权限
-  getRoleDataPowerMajorList: (data: any) => {
+  getRoleDataPowerMajorList: (data: {
+    roleId: number | string;
+    isSuper: boolean;
+  }) => {
     return http.post("/auth/getRoleDataPowerMajorList", data);
   },
   // 保存角色对应的专业权限
@@ -79,7 +85,7 @@ export const roleApi = {
     return http.post("/auth/editRoleDataPowerMajorList", data);
   },
   // 获取角色对应的人员权限
-  getRoleDataPowerUserList: (data: any) => {
+  getRoleDataPowerUserList: (data: { roleId: number | string }) => {
     return http.post("/auth/getRoleDataPowerUserList", data);
   },
   // 保存角色对应的人员权限

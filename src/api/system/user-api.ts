@@ -24,19 +24,29 @@ export const userApi = {
     return http.post(`/auth/logout`);
   },
   // 获取二维码
-  createQrCode: (data: any) => {
+  createQrCode: (data: { data: string; isQrCode: boolean }) => {
     return http.post(`/callback/createQrCode`, data);
   },
   // 获取扫码后的token
-  getTokenForAutoLogin: (data: any) => {
+  getTokenForAutoLogin: (data: { data: string }) => {
     return http.post(`/callback/getTokenForAutoLogin`, data);
   },
   // 一键登录
-  getAuthRedirectUrl: (data: any) => {
+  getAuthRedirectUrl: (data: {
+    data: string;
+    home: any;
+    autoLoginPage: string;
+    isQrCode: boolean;
+  }) => {
     return http.post(`/callback/getAuthRedirectUrl`, data);
   },
   // 一键登录（测试）
-  getAuthRedirectUrlTest: (data: any) => {
+  getAuthRedirectUrlTest: (data: {
+    data: string;
+    home: any;
+    autoLoginPage: string;
+    isQrCode: boolean;
+  }) => {
     return http.post(`/callback/getAuthRedirectUrlTest`, data);
   },
   // 获取用户信息
@@ -44,7 +54,11 @@ export const userApi = {
     return http.post(`/emp/getEmpInfo`);
   },
   // 修改密码
-  resetPassword: (data: any) => {
+  resetPassword: (data: {
+    username: string;
+    oldPassword: string;
+    password: string;
+  }) => {
     return http.post(`/auth/resetPassword`, data);
   },
   // 获取当前用户的菜单数据
