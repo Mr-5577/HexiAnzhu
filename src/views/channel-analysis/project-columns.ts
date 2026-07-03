@@ -111,7 +111,7 @@ export const visitingRecordColumns: any = [
   { prop: "custTel", label: "客户电话", width: 150 },
   { prop: "custTel2", label: "备用电话", width: 180 },
   { label: "到访方式", slot: "visitTypeName", width: 150 },
-  { label: "置业顾问", prop: "salerName", width: 150 },
+  { prop: "salerName", label: "置业顾问", width: 150 },
   { prop: "bringMan", label: "带访人", width: 120 },
   { prop: "bringTel", label: "带访人电话", width: 150 },
   { prop: "visitTime", label: "来访时间", width: 180 },
