@@ -143,6 +143,7 @@ export interface VisitProjListParams {
 
 export interface SalerListParams {
   projId: number | string;
+  isOnlyIn: boolean;
 }
 
 export interface ReportParams {
