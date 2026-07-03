@@ -9,10 +9,6 @@ interface StatisticsInterface {
   projIds: number[];
   productTypes: number[];
 }
-interface StatisticsInterface {
-  projIds: number[];
-  productTypes: number[];
-}
 export const assetManagementApi = {
   // 获取房间销售状态
   getSaleStatusList: () => {

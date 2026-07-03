@@ -82,7 +82,7 @@ const props = withDefaults(defineProps<Props>(), {
   roleId: 0,
 });
 
-const treeData = ref<any[]>([]);
+const treeData = ref([]);
 
 // 设置树的选中状态
 const setTreeCheckedState = async () => {

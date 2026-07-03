@@ -300,10 +300,10 @@ const payRateOptions = ref([
 ]);
 
 // 明细表数据
-const priceTable = ref<any[]>([]);
-const payrateTable = ref<any[]>([]);
-const materialTable = ref<any[]>([]);
-const paynodeTable = ref<any[]>([]);
+const priceTable = ref([]);
+const payrateTable = ref([]);
+const materialTable = ref([]);
+const paynodeTable = ref([]);
 
 // 价款汇总计算
 const priceTaxData = computed(() => {

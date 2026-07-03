@@ -142,11 +142,11 @@ import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import type { BidDemandFormParams } from "@/types/cost/bidding/bidding-management-type";
 import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api";
 
-interface Props {
+interface Props<T = any> {
   modelValue: boolean;
-  editData?: any | null;
-  segOptions?: any[];
-  projectOptions?: any[];
+  editData?: T | null;
+  segOptions?: T[];
+  projectOptions?: T[];
 }
 
 const props = withDefaults(defineProps<Props>(), {

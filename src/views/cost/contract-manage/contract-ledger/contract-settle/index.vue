@@ -51,7 +51,7 @@ const props = defineProps<{
 const router = useRouter();
 
 const tableLoading = ref(false);
-const tableData = ref<any[]>([]);
+const tableData = ref([]);
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },

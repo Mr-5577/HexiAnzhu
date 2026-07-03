@@ -794,7 +794,7 @@ const acctProjOptions = ref([
 ]);
 const paymentTypeOptions = ref([]);
 
-const priceTable = ref<any[]>([]); // 合同价格明细
+const priceTable = ref([]); // 合同价格明细
 const priceColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {
@@ -884,7 +884,7 @@ const calculatePriceTaxData = () => {
     taxRate,
   };
 };
-const payrateTable = ref<any[]>([]); // 支付明细
+const payrateTable = ref([]); // 支付明细
 const payrateColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {
@@ -1014,7 +1014,7 @@ const payrateColumns = computed<EditableColumn[]>(() => [
     fixed: "right",
   },
 ]);
-const materialTable = ref<any[]>([]); // 材料合同产值明细
+const materialTable = ref([]); // 材料合同产值明细
 const materialColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {
@@ -1161,7 +1161,7 @@ const materialColumns = computed<EditableColumn[]>(() => [
     fixed: "right",
   },
 ]);
-const paynodeTable = ref<any[]>([]); // 支付节点明细
+const paynodeTable = ref([]); // 支付节点明细
 const paynodeColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {

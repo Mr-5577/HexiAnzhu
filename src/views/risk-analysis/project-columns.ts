@@ -1,7 +1,9 @@
 import { formatNumberDisplay } from "@/utils/common";
 
+// 定义通用类型
+type NumStr = number | string | null | undefined;
 // 认购转签约统计-表头
-export const ConversionStatsColumns: any = [
+export const ConversionStatsColumns = [
   { type: "index", label: "序号", width: 60 },
   {
     prop: "projName",
@@ -16,7 +18,7 @@ export const ConversionStatsColumns: any = [
 ];
 
 // 认购转签约明细-表头
-export const conversionDetailColumns: any = [
+export const conversionDetailColumns = [
   { type: "index", label: "序号", width: 60 },
   { prop: "projName", label: "项目", width: 240 },
   { prop: "bigProductTypeName", label: "业态" },
@@ -28,13 +30,15 @@ export const conversionDetailColumns: any = [
     prop: "floorMoney",
     label: "底价总价",
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.floorMoney),
+    formatter: ({ floorMoney }: { floorMoney: NumStr }) =>
+      formatNumberDisplay(floorMoney),
   },
   {
     prop: "saleMoney",
     label: "销售总价",
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.saleMoney),
+    formatter: ({ saleMoney }: { saleMoney: NumStr }) =>
+      formatNumberDisplay(saleMoney),
   },
   { prop: "saleDate", label: "认购日期" },
   { prop: "signDate", label: "签约日期" },
@@ -42,7 +46,7 @@ export const conversionDetailColumns: any = [
 ];
 
 // 认购未签约统计-表头
-export const pendingStatsColumns: any = [
+export const pendingStatsColumns = [
   { type: "index", label: "序号", width: 60 },
   {
     prop: "projName",
@@ -55,27 +59,30 @@ export const pendingStatsColumns: any = [
     prop: "orderArea",
     label: "销售面积",
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.orderArea),
+    formatter: ({ orderArea }: { orderArea: NumStr }) =>
+      formatNumberDisplay(orderArea),
   },
   {
     prop: "orderMoney",
     label: "销售总金额(万元)",
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.orderMoney),
+    formatter: ({ orderMoney }: { orderMoney: NumStr }) =>
+      formatNumberDisplay(orderMoney),
   },
   { prop: "notsignNum", label: "未签约套数", showSummary: true },
   {
     prop: "notsignMoney",
     label: "未签约金额(万元)",
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.notsignMoney),
+    formatter: ({ notsignMoney }: { notsignMoney: NumStr }) =>
+      formatNumberDisplay(notsignMoney),
   },
   { prop: "maxNotsignDays", label: "最大周期(天)" },
   { prop: "notsignDays", label: "平均周期(天)" },
 ];
 
 // 认购未签约明细-表头
-export const pendingDetailColumns: any = [
+export const pendingDetailColumns = [
   { type: "index", label: "序号", width: 60 },
   { prop: "projName", label: "项目", width: 240 },
   { prop: "bigProductTypeName", label: "业态" },
@@ -88,23 +95,26 @@ export const pendingDetailColumns: any = [
     prop: "floorMoney",
     label: "底价总价",
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.floorMoney),
+    formatter: ({ floorMoney }: { floorMoney: NumStr }) =>
+      formatNumberDisplay(floorMoney),
   },
   {
     prop: "saleMoney",
     label: "销售总价",
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.saleMoney),
+    formatter: ({ saleMoney }: { saleMoney: NumStr }) =>
+      formatNumberDisplay(saleMoney),
   },
   {
     prop: "signDays",
     label: "未签约天数",
-    formatter: (row: any) => formatNumberDisplay(row.signDays),
+    formatter: ({ signDays }: { signDays: NumStr }) =>
+      formatNumberDisplay(signDays),
   },
 ];
 
 // 溢价统计-表头
-export const premiumStatsColumns: any = [
+export const premiumStatsColumns = [
   {
     prop: "projName",
     label: "项目",
@@ -119,69 +129,78 @@ export const premiumStatsColumns: any = [
     label: "销售面积",
     width: 100,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.saleArea),
+    formatter: ({ saleArea }: { saleArea: NumStr }) =>
+      formatNumberDisplay(saleArea),
   },
   {
     prop: "floorMoney",
     label: "底价总金额(万)",
     width: 150,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.floorMoney),
+    formatter: ({ floorMoney }: { floorMoney: NumStr }) =>
+      formatNumberDisplay(floorMoney),
   },
   {
     prop: "floorUnitPrice",
     label: "底价平均单价",
     width: 150,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.floorUnitPrice),
+    formatter: ({ floorUnitPrice }: { floorUnitPrice: NumStr }) =>
+      formatNumberDisplay(floorUnitPrice),
   },
   {
     prop: "saleMoney",
     label: "销售总金额(万)",
     width: 150,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.saleMoney),
+    formatter: ({ saleMoney }: { saleMoney: NumStr }) =>
+      formatNumberDisplay(saleMoney),
   },
   {
     prop: "allSalePrice",
     label: "销售平均单价",
     width: 150,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.allSalePrice),
+    formatter: ({ allSalePrice }: { allSalePrice: NumStr }) =>
+      formatNumberDisplay(allSalePrice),
   },
   {
     prop: "premiumMoney",
     label: "销售溢价金额",
     width: 150,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.premiumMoney),
+    formatter: ({ premiumMoney }: { premiumMoney: NumStr }) =>
+      formatNumberDisplay(premiumMoney),
   },
   {
     prop: "incMoneyRm",
     label: "补贴金额(万)",
     width: 150,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.incMoneyRm),
+    formatter: ({ incMoneyRm }: { incMoneyRm: NumStr }) =>
+      formatNumberDisplay(incMoneyRm),
   },
   {
     prop: "incMoneyPj",
     label: "活动补贴金额(万)",
     width: 150,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.incMoneyPj),
+    formatter: ({ incMoneyPj }: { incMoneyPj: NumStr }) =>
+      formatNumberDisplay(incMoneyPj),
   },
   {
     prop: "yjMoney",
     label: "溢价金额(万)",
     width: 110,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.yjMoney),
+    formatter: ({ yjMoney }: { yjMoney: NumStr }) =>
+      formatNumberDisplay(yjMoney),
   },
   {
     prop: "premiumRate",
     label: "溢价比例",
     width: 100,
-    formatter: (row: any, column: any, index: number) => {
+    formatter: (row: any) => {
       const premiumRate = row.premiumRate || 0;
       if (!premiumRate) {
         return "0%";
@@ -192,7 +211,7 @@ export const premiumStatsColumns: any = [
 ];
 
 // 溢价明细-表头
-export const premiumDetailColumns: any = [
+export const premiumDetailColumns = [
   { type: "index", label: "序号", width: 60, fixed: "left" },
   { prop: "projName", label: "项目", width: 220, fixed: "left" },
   { prop: "bigProductTypeName", label: "业态", width: 80 },
@@ -206,28 +225,32 @@ export const premiumDetailColumns: any = [
     label: "底价总价",
     width: 120,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.floorMoney),
+    formatter: ({ floorMoney }: { floorMoney: NumStr }) =>
+      formatNumberDisplay(floorMoney),
   },
   {
     prop: "saleMoney",
     label: "销售总价",
     width: 120,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.saleMoney),
+    formatter: ({ saleMoney }: { saleMoney: NumStr }) =>
+      formatNumberDisplay(saleMoney),
   },
   {
     prop: "incMoney",
     label: "补贴总金额",
     width: 150,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.incMoney),
+    formatter: ({ incMoney }: { incMoney: NumStr }) =>
+      formatNumberDisplay(incMoney),
   },
   {
     prop: "saleMoneyAll",
     label: "实际销售金额",
     width: 130,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.saleMoneyAll),
+    formatter: ({ saleMoneyAll }: { saleMoneyAll: NumStr }) =>
+      formatNumberDisplay(saleMoneyAll),
   },
   { prop: "premiumStatus", label: "溢价状态", width: 90 },
   {
@@ -235,7 +258,8 @@ export const premiumDetailColumns: any = [
     label: "溢价金额",
     width: 120,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.premiumMoney),
+    formatter: ({ premiumMoney }: { premiumMoney: NumStr }) =>
+      formatNumberDisplay(premiumMoney),
   },
   { prop: "premiumRate", label: "溢价比例", width: 100 },
   { prop: "sallerName", label: "置业顾问", width: 120 },
@@ -243,7 +267,7 @@ export const premiumDetailColumns: any = [
   // { prop: "name", label: "备注详情", width: 150 }, // 字段调整
 ];
 // 应收统计-表头
-export const receivablesColumns1: any = [
+export const receivablesColumns1 = [
   {
     prop: "proj_name",
     label: "项目",
@@ -266,7 +290,8 @@ export const receivablesColumns1: any = [
         label: "总金额",
         width: 100,
         showSummary: true,
-        formatter: (row: any) => formatNumberDisplay(row.totalCollectMoney),
+        formatter: ({ totalCollectMoney }: { totalCollectMoney: NumStr }) =>
+          formatNumberDisplay(totalCollectMoney),
       },
       {
         label: "预计回款",
@@ -282,8 +307,11 @@ export const receivablesColumns1: any = [
             label: "总金额",
             width: 100,
             showSummary: true,
-            formatter: (row: any) =>
-              formatNumberDisplay(row.totalSldCollectMoney),
+            formatter: ({
+              totalSldCollectMoney,
+            }: {
+              totalSldCollectMoney: NumStr;
+            }) => formatNumberDisplay(totalSldCollectMoney),
           },
         ],
       },
@@ -303,7 +331,8 @@ export const receivablesColumns1: any = [
         label: "总金额",
         width: 100,
         showSummary: true,
-        formatter: (row: any) => formatNumberDisplay(row.outstdCollectMoney),
+        formatter: ({ outstdCollectMoney }: { outstdCollectMoney: NumStr }) =>
+          formatNumberDisplay(outstdCollectMoney),
       },
     ],
   },
@@ -324,8 +353,11 @@ export const receivablesColumns1: any = [
             label: "总金额",
             width: 100,
             showSummary: true,
-            formatter: (row: any) =>
-              formatNumberDisplay(row.rwqGcdkCollectMoney),
+            formatter: ({
+              rwqGcdkCollectMoney,
+            }: {
+              rwqGcdkCollectMoney: NumStr;
+            }) => formatNumberDisplay(rwqGcdkCollectMoney),
           },
           {
             prop: "name",
@@ -342,8 +374,11 @@ export const receivablesColumns1: any = [
                 label: "总金额",
                 width: 100,
                 showSummary: true,
-                formatter: (row: any) =>
-                  formatNumberDisplay(row.rwqGcdkSldCollectMoney),
+                formatter: ({
+                  rwqGcdkSldCollectMoney,
+                }: {
+                  rwqGcdkSldCollectMoney: NumStr;
+                }) => formatNumberDisplay(rwqGcdkSldCollectMoney),
               },
             ],
           },
@@ -363,7 +398,8 @@ export const receivablesColumns1: any = [
             label: "总金额",
             width: 100,
             showSummary: true,
-            formatter: (row: any) => formatNumberDisplay(row.rwqQtCollectMoney),
+            formatter: ({ rwqQtCollectMoney }: { rwqQtCollectMoney: NumStr }) =>
+              formatNumberDisplay(rwqQtCollectMoney),
           },
           {
             label: "预计回款",
@@ -379,8 +415,11 @@ export const receivablesColumns1: any = [
                 label: "总金额",
                 width: 100,
                 showSummary: true,
-                formatter: (row: any) =>
-                  formatNumberDisplay(row.rwqQtSldCollectMoney),
+                formatter: ({
+                  rwqQtSldCollectMoney,
+                }: {
+                  rwqQtSldCollectMoney: NumStr;
+                }) => formatNumberDisplay(rwqQtSldCollectMoney),
               },
             ],
           },
@@ -389,7 +428,7 @@ export const receivablesColumns1: any = [
     ],
   },
 ];
-export const receivablesColumns2: any = [
+export const receivablesColumns2 = [
   {
     label: "工程抵款",
     children: [
@@ -404,7 +443,8 @@ export const receivablesColumns2: any = [
         label: "总金额",
         width: 100,
         showSummary: true,
-        formatter: (row: any) => formatNumberDisplay(row.qwhGcdkCollectMoney),
+        formatter: ({ qwhGcdkCollectMoney }: { qwhGcdkCollectMoney: NumStr }) =>
+          formatNumberDisplay(qwhGcdkCollectMoney),
       },
       {
         label: "预计回款",
@@ -420,8 +460,11 @@ export const receivablesColumns2: any = [
             label: "总金额",
             width: 100,
             showSummary: true,
-            formatter: (row: any) =>
-              formatNumberDisplay(row.qwhGcdkSldCollectMoney),
+            formatter: ({
+              qwhGcdkSldCollectMoney,
+            }: {
+              qwhGcdkSldCollectMoney: NumStr;
+            }) => formatNumberDisplay(qwhGcdkSldCollectMoney),
           },
         ],
       },
@@ -441,7 +484,8 @@ export const receivablesColumns2: any = [
         label: "总金额",
         width: 100,
         showSummary: true,
-        formatter: (row: any) => formatNumberDisplay(row.qwhFpCollectMoney),
+        formatter: ({ qwhFpCollectMoney }: { qwhFpCollectMoney: NumStr }) =>
+          formatNumberDisplay(qwhFpCollectMoney),
       },
       {
         label: "预计回款",
@@ -457,8 +501,11 @@ export const receivablesColumns2: any = [
             label: "总金额",
             width: 100,
             showSummary: true,
-            formatter: (row: any) =>
-              formatNumberDisplay(row.qwhFpSldCollectMoney),
+            formatter: ({
+              qwhFpSldCollectMoney,
+            }: {
+              qwhFpSldCollectMoney: NumStr;
+            }) => formatNumberDisplay(qwhFpSldCollectMoney),
           },
         ],
       },
@@ -466,7 +513,7 @@ export const receivablesColumns2: any = [
   },
 ];
 // 应收明细-表头
-export const receivablesDetailColumns: any = [
+export const receivablesDetailColumns = [
   { type: "index", label: "序号", width: 60 },
   { prop: "projName", label: "项目", width: 220 },
   { prop: "bigProductTypeName", label: "业态", width: 80 },
@@ -479,24 +526,27 @@ export const receivablesDetailColumns: any = [
   {
     prop: "saleMoney",
     label: "认购金额",
-    formatter: (row: any) => formatNumberDisplay(row.saleMoney),
+    formatter: ({ saleMoney }: { saleMoney: NumStr }) =>
+      formatNumberDisplay(saleMoney),
   },
   { prop: "salerName", label: "置业顾问" },
   {
     prop: "recMoney",
     label: "应收金额",
-    formatter: (row: any) => formatNumberDisplay(row.recMoney),
+    formatter: ({ recMoney }: { recMoney: NumStr }) =>
+      formatNumberDisplay(recMoney),
   },
   { prop: "minRecDate", label: "最近应收日期" },
   {
     prop: "yqMoney",
     label: "逾期未收金额",
-    formatter: (row: any) => formatNumberDisplay(row.yqMoney),
+    formatter: ({ yqMoney }: { yqMoney: NumStr }) =>
+      formatNumberDisplay(yqMoney),
   },
   { prop: "maxYqDays", label: "最大逾期天数" },
 ];
 // 应收账龄明细-表头
-export const arAgingDetailColumns: any = [
+export const arAgingDetailColumns = [
   { type: "index", label: "序号", width: 60, fixed: "left" },
   {
     prop: "projName",
@@ -517,7 +567,8 @@ export const arAgingDetailColumns: any = [
     label: "认购金额",
     width: 100,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.saleMoney),
+    formatter: ({ saleMoney }: { saleMoney: NumStr }) =>
+      formatNumberDisplay(saleMoney),
   },
   { prop: "salerName", label: "置业顾问", width: 90 },
   { prop: "payProName", label: "应收款项", width: 90 },
@@ -527,21 +578,24 @@ export const arAgingDetailColumns: any = [
     label: "应收金额",
     width: 100,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.recMoney),
+    formatter: ({ recMoney }: { recMoney: NumStr }) =>
+      formatNumberDisplay(recMoney),
   },
   {
     prop: "receivedMoney",
     label: "已收金额",
     width: 100,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.receivedMoney),
+    formatter: ({ receivedMoney }: { receivedMoney: NumStr }) =>
+      formatNumberDisplay(receivedMoney),
   },
   {
     prop: "outstdMoney",
     label: "应收未收金额",
     width: 120,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.outstdMoney),
+    formatter: ({ outstdMoney }: { outstdMoney: NumStr }) =>
+      formatNumberDisplay(outstdMoney),
   },
   { prop: "overdueDays", label: "账龄(天)", width: 90 },
   { prop: "overdueTypeName", label: "账龄类型", width: 120 },
@@ -559,18 +613,20 @@ export const forfeitureStatslColumns = [
     prop: "tfMoney",
     label: "退房金额",
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.tfMoney),
+    formatter: ({ tfMoney }: { tfMoney: NumStr }) =>
+      formatNumberDisplay(tfMoney),
   },
   { prop: "tdNum", label: "挞定套数", showSummary: true },
   {
     prop: "tdMoney",
     label: "挞定金额",
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.tdMoney),
+    formatter: ({ tdMoney }: { tdMoney: NumStr }) =>
+      formatNumberDisplay(tdMoney),
   },
 ];
 // 退房挞定明细-表头
-export const forfeitureDetailColumns: any = [
+export const forfeitureDetailColumns = [
   { type: "index", label: "序号", width: 60 },
   {
     prop: "projName",
@@ -587,19 +643,21 @@ export const forfeitureDetailColumns: any = [
     prop: "floorMoney",
     label: "底价金额",
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.floorMoney),
+    formatter: ({ floorMoney }: { floorMoney: NumStr }) =>
+      formatNumberDisplay(floorMoney),
   },
   {
     prop: "saleMoney",
     label: "认购金额",
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.saleMoney),
+    formatter: ({ saleMoney }: { saleMoney: NumStr }) =>
+      formatNumberDisplay(saleMoney),
   },
   { prop: "checkOutTypeName", label: "类型", width: 100 },
   { prop: "checkOutDate", label: "退定日期" },
 ];
 // 逾期未回款明细-表头
-export const overdueDetailColumns: any = [
+export const overdueDetailColumns = [
   { type: "index", label: "序号", width: 60, fixed: "left" },
   { prop: "projName", label: "项目", width: 240, fixed: "left" },
   { prop: "bigProductTypeName", label: "业态", width: 90 },
@@ -612,7 +670,8 @@ export const overdueDetailColumns: any = [
     prop: "saleMoney",
     label: "认购金额",
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.saleMoney),
+    formatter: ({ saleMoney }: { saleMoney: NumStr }) =>
+      formatNumberDisplay(saleMoney),
     width: 120,
   },
   { prop: "salerName", label: "置业顾问", width: 120 },
@@ -620,7 +679,8 @@ export const overdueDetailColumns: any = [
     prop: "recMoney",
     label: "应收总金额",
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.recMoney),
+    formatter: ({ recMoney }: { recMoney: NumStr }) =>
+      formatNumberDisplay(recMoney),
     width: 150,
   },
   { prop: "minRecDate", label: "最早回款日期", width: 150 },
@@ -628,7 +688,8 @@ export const overdueDetailColumns: any = [
     prop: "yqMoney",
     label: "逾期金额",
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.yqMoney),
+    formatter: ({ yqMoney }: { yqMoney: NumStr }) =>
+      formatNumberDisplay(yqMoney),
     width: 150,
   },
   { prop: "maxYqDays", label: "最大逾期天数", width: 150 },

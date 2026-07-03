@@ -104,7 +104,7 @@ const queryParams = ref({
 });
 const tableLoading = ref<boolean>(false);
 const exportLoading = ref<boolean>(false);
-const tableData = ref<any[]>([]);
+const tableData = ref([]);
 
 const handleQuery = () => {
   getTableList();

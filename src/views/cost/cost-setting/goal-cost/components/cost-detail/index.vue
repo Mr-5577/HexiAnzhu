@@ -129,8 +129,8 @@ const currentEditData = ref<HCstProjectCostD | null>(null);
 
 // 下拉选项数据
 const costVersionOptions = ref<HCstProjectCostM[]>([]); // 目标成本版本选项
-const subjectOptions = ref<any[]>([]); // 科目选项
-const productOptions = ref<any[]>([]); // 业态选项
+const subjectOptions = ref([]); // 科目选项
+const productOptions = ref([]); // 业态选项
 
 // 表格列配置
 const columns: TableColumnItem[] = [

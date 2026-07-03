@@ -162,7 +162,7 @@ const columns: TableColumnItem[] = [
   { label: "是否可见", slot: "isVisible", width: 90 },
   { label: "操作", slot: "action", width: 220 },
 ];
-const tableData = ref<any[]>([]);
+const tableData = ref([]);
 const toggleExpandAll = () => {
   refreshTable.value = false;
   isExpandAll.value = !isExpandAll.value;

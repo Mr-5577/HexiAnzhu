@@ -106,7 +106,7 @@ const queryParams = ref({
   projIds: [],
 });
 
-const dynamicColumns = ref<any[]>([]);
+const dynamicColumns = ref([]);
 const tableColumns = computed(() => [
   ...receivablesColumns1,
   ...dynamicColumns.value,
@@ -117,8 +117,8 @@ const exportLoading = ref<boolean>(false);
 const currentPage = ref<number>(1);
 const pageSize = ref<number>(20);
 const total = ref<number>(0);
-const tableData = ref<any[]>([]);
-const allTableList = ref<any[]>([]);
+const tableData = ref([]);
+const allTableList = ref([]);
 
 // 项目名称点击
 const handleCellEventClick = (data: any) => {

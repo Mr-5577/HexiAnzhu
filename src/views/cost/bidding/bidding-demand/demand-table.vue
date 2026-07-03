@@ -197,7 +197,10 @@ const handleReset = () => {
   getDataList();
 };
 
-const handlePaginationChange = (params: any) => {
+const handlePaginationChange = (params: {
+  currentPage: number;
+  pageSize: number;
+}) => {
   currentPage.value = params.currentPage;
   pageSize.value = params.pageSize;
   getDataList();

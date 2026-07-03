@@ -869,7 +869,7 @@ const paynodeColumns = computed<EditableColumn[]>(() => [
   },
 ]);
 
-const paymentTypeOptions = ref<any[]>([]);
+const paymentTypeOptions = ref([]);
 
 const { getDictList, loadDicts } = useDict([dictMapping.paymentType], {
   treeDictCodes: [],

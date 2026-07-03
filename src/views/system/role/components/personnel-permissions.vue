@@ -92,7 +92,7 @@ const modalVisible = ref(false);
 const currentPage = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
-const selectionData = ref<any[]>([]);
+const selectionData = ref([]);
 const columns: TableColumnItem[] = [
   {
     type: "selection",
@@ -112,7 +112,7 @@ const columns: TableColumnItem[] = [
     slot: "action",
   },
 ];
-const tableData = ref<any[]>([]);
+const tableData = ref([]);
 // 获取数据列表
 const getDataList = async () => {
   try {

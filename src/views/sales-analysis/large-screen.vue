@@ -147,7 +147,7 @@ const time = ref("");
 const week = ref("");
 const projIds = ref<number[]>([]);
 const dataVal = ref("");
-const options = ref<any[]>([]);
+const options = ref([]);
 const isQueryFast = ref(true);
 
 // 定义多个 ref

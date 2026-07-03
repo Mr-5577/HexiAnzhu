@@ -784,6 +784,7 @@ export const costStaticRoutes = {
           isKeepAlive: true,
           isControl: true,
           isVisible: false,
+          // isMultiOpen: true,
           sort: 2,
         },
         {
@@ -804,6 +805,7 @@ export const costStaticRoutes = {
           isKeepAlive: true,
           isControl: true,
           isVisible: false,
+          // isMultiOpen: true,
           sort: 3,
         },
         {

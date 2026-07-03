@@ -80,7 +80,7 @@ const queryParams = ref({
 
 const tableData = ref<ProductProjDetail[]>([]);
 const tableLoading = ref(false);
-const projectTreeData = ref<any[]>([]);
+const projectTreeData = ref([]);
 const enabledLoading = ref(false);
 
 // 弹窗相关

@@ -121,7 +121,7 @@ const fixedColumns = [
   { type: "index", label: "序号", width: 60, fixed: "left" },
   { prop: "proj_name", label: "项目", width: 220, fixed: "left" },
 ];
-const dynamicColumns = ref<any[]>([]);
+const dynamicColumns = ref([]);
 const tableColumns = computed(() => [...fixedColumns, ...dynamicColumns.value]);
 
 const tableLoading = ref<boolean>(false);

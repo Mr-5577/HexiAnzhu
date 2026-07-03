@@ -180,8 +180,8 @@ const tableLoading = ref<boolean>(false);
 const exportLoading = ref<boolean>(false);
 const currentPage = ref<number>(1);
 const pageSize = ref<number>(20);
-const allTableList = shallowRef<any[]>([]);
-const filteredData = ref<any[]>([]); // 过滤后的数据
+const allTableList = shallowRef([]);
+const filteredData = ref([]); // 过滤后的数据
 
 const handlePaginationChange = (params: any) => {
   currentPage.value = params.currentPage;
