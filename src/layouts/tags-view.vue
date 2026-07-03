@@ -260,7 +260,7 @@ onUnmounted(() => {
     }
     &::-webkit-scrollbar-thumb:hover {
       cursor: pointer;
-      background-color: rgba(0, 0, 0, 0.3) !important;
+      background-color: rgba(0, 0, 0, 0.2) !important;
     }
 
     .tags-view-item {
