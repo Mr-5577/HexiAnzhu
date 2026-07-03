@@ -27,7 +27,6 @@
         :pagination="false"
         :highlight-current-row="false"
         :show-summary="false"
-        :on-save="handleSave"
         @data-change="handleDataChange"
         @update:table-data="handleDataUpdate"
       >
@@ -130,15 +129,6 @@ const handleAdd = () => {
 // 删除行
 const handleDelete = (row) => {
   tableData.value = tableData.value.filter((item) => item.uuid !== row.uuid);
-};
-const handleSave = async ({
-  row,
-  column,
-  newValue,
-  oldValue,
-  rowIndex,
-}: any) => {
-  console.log("保存行数据:", { row, column, newValue, oldValue, rowIndex });
 };
 // 数据变化处理
 const handleDataChange = async ({ row, column, newValue }: any) => {

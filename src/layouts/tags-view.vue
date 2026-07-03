@@ -1,11 +1,9 @@
 <template>
   <div
     class="tags-view-container"
-    :class="
-      route.path == '/sales-analysis/large-screen' ? 'dark-background' : ''
-    "
+    :class="isLargeScreen ? 'dark-background' : ''"
   >
-    <div class="tags-view-wrapper">
+    <div ref="wrapperRef" class="tags-view-wrapper">
       <router-link
         v-for="tag in visitedViews"
         :key="tag.uniqueId || tag.path"
@@ -42,7 +40,7 @@
 
 <script setup lang="ts">
 import { Close } from "@element-plus/icons-vue";
-import { computed, ref, onMounted, onUnmounted, watch } from "vue";
+import { computed, ref, onMounted, onUnmounted, watch, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useTagsStore } from "@/stores/tags-store";
 import type { TagView } from "@/stores/tags-store";
@@ -52,8 +50,40 @@ const router = useRouter();
 const tagsStore = useTagsStore();
 
 const visitedViews = computed(() => tagsStore.visitedViews);
+const isLargeScreen = computed(
+  () => route.path === "/sales-analysis/large-screen",
+);
 
-// 右键菜单相关
+// ===== 滚轮滚动相关 =====
+const wrapperRef = ref<HTMLElement | null>(null);
+let rafId: number | null = null;
+let pendingDelta = 0;
+
+// 滚轮事件处理 - 使用 requestAnimationFrame 节流优化性能
+const handleWheel = (e: WheelEvent) => {
+  if (!wrapperRef.value) return;
+  // 阻止页面默认的垂直滚动
+  e.preventDefault();
+
+  // 累积滚动量（deltaY 正数向下滚动，负数向上滚动）
+  pendingDelta += e.deltaY;
+
+  // 如果已经有待执行的动画帧，不重复创建
+  if (rafId !== null) return;
+
+  // 使用 requestAnimationFrame 合并多个事件为一次 DOM 更新
+  rafId = requestAnimationFrame(() => {
+    if (wrapperRef.value) {
+      // 执行水平滚动
+      wrapperRef.value.scrollLeft += pendingDelta;
+    }
+    // 重置累积值和动画帧 ID
+    pendingDelta = 0;
+    rafId = null;
+  });
+};
+
+// ===== 右键菜单相关 =====
 const menuVisible = ref(false);
 const menuStyle = ref({ left: "0px", top: "0px" });
 const currentTag = ref<TagView | null>(null);
@@ -161,12 +191,31 @@ watch(
   { immediate: true },
 );
 
-// 添加事件监听
 onMounted(() => {
+  // 使用 nextTick 确保 DOM 已渲染
+  nextTick(() => {
+    if (wrapperRef.value) {
+      // 绑定滚轮事件
+      wrapperRef.value.addEventListener("wheel", handleWheel, {
+        passive: false,
+      });
+    }
+  });
+  // 添加点击关闭菜单事件
   document.addEventListener("click", closeMenu);
 });
-
 onUnmounted(() => {
+  // 移除滚轮事件
+  if (wrapperRef.value) {
+    wrapperRef.value.removeEventListener("wheel", handleWheel);
+  }
+  // 清理未完成的动画帧，防止内存泄漏
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+    pendingDelta = 0;
+  }
+  // 移除点击事件
   document.removeEventListener("click", closeMenu);
 });
 </script>
@@ -184,14 +233,18 @@ onUnmounted(() => {
     flex-wrap: nowrap;
     align-items: center;
     flex-shrink: 0;
-    overflow-x: auto;
     padding: 0 12px;
     box-sizing: border-box;
+    overflow-x: auto;
+    overflow-y: hidden;
     position: relative;
 
-    /* 滚动条样式 */
+    // 提示浏览器该元素会频繁滚动
+    will-change: scroll-position;
+
+    // 滚动条样式
     &::-webkit-scrollbar {
-      height: 4px;
+      height: 5px;
       background-color: transparent;
     }
     &::-webkit-scrollbar-track {
@@ -203,8 +256,10 @@ onUnmounted(() => {
       background-color: rgba(0, 0, 0, 0.15);
       border-radius: 2px;
       transition: background-color 0.3s ease;
+      cursor: pointer;
     }
     &::-webkit-scrollbar-thumb:hover {
+      cursor: pointer;
       background-color: rgba(0, 0, 0, 0.2) !important;
     }
 
@@ -219,10 +274,13 @@ onUnmounted(() => {
       box-sizing: border-box;
       font-size: 13px;
       margin-right: 6px;
-      border-radius: 4px;
+      border-radius: 6px;
       text-decoration: none;
       transition: all 0.2s ease;
       border: none;
+
+      // 防止文字被选中（提升拖拽体验）
+      user-select: none;
 
       &:hover {
         background: #f5f5f5;

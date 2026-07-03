@@ -130,7 +130,7 @@ import { computed, onMounted, onUnmounted, ref, shallowRef } from "vue";
 import { ContractDetailColumns } from "./project-columns";
 import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
-import { assetManagementApi } from "@/api/asset-management-api";
+import { assetManagementApi } from "@/api/sales/asset-management-api";
 import { ElMessage } from "element-plus";
 import { useRoute } from "vue-router";
 import { v4 as uuidv4 } from "uuid";
@@ -180,8 +180,8 @@ const tableLoading = ref<boolean>(false);
 const exportLoading = ref<boolean>(false);
 const currentPage = ref<number>(1);
 const pageSize = ref<number>(20);
-const allTableList = shallowRef<any[]>([]);
-const filteredData = ref<any[]>([]); // 过滤后的数据列表
+const allTableList = shallowRef([]);
+const filteredData = ref([]); // 过滤后的数据列表
 
 const handlePaginationChange = (params: any) => {
   currentPage.value = params.currentPage;

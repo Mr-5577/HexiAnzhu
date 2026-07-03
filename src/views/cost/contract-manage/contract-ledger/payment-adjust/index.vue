@@ -14,9 +14,7 @@
           <el-button type="primary" icon="Refresh" @click="handleRefresh">
             刷新列表
           </el-button>
-          <el-button type="primary" @click="handleInitiate">
-            发起流程
-          </el-button>
+          <el-button type="primary" @click="handleAdd"> 新增 </el-button>
         </div>
       </template>
 
@@ -66,10 +64,11 @@ const props = defineProps<{
 const dialogVisible = ref(false);
 const editData = ref(null);
 const tableLoading = ref(false);
-const tableData = ref<any[]>([]);
+const tableData = ref([]);
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
+  { prop: "dedName", label: "款项标题" },
   { slot: "dedTypeId", label: "调整类型" },
   { prop: "dedAmt", label: "调整金额" },
   { prop: "dedDesc", label: "说明" },
@@ -125,7 +124,7 @@ const handleRefresh = () => {
 };
 
 // 发起流程
-const handleInitiate = () => {
+const handleAdd = () => {
   editData.value = null;
   dialogVisible.value = true;
 };

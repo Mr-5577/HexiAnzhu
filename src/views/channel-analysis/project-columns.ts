@@ -50,7 +50,7 @@ export const VisitingStatisticsMonthColumns = [
   { prop: "m12", label: "12月", showSummary: true },
 ];
 // 转化率统计-表头
-export const conversionRateColumns: any = [
+export const conversionRateColumns = [
   { type: "index", label: "序号", width: 60 },
   { prop: "projName", label: "项目名称", width: 220 },
   { prop: "dylfComeNum", label: "当月来访人数" },
@@ -60,7 +60,7 @@ export const conversionRateColumns: any = [
   {
     prop: "dylfZhl",
     label: "当月来访认购转化率",
-    formatter: (row: any, column: any, index: number) => {
+    formatter: (row: any) => {
       const dylfZhl = row.dylfZhl || 0;
       if (!dylfZhl) {
         return "0%";
@@ -71,7 +71,7 @@ export const conversionRateColumns: any = [
   {
     prop: "sylfZhl",
     label: "上月来访认购转化率",
-    formatter: (row: any, column: any, index: number) => {
+    formatter: (row: any) => {
       const sylfZhl = row.sylfZhl || 0;
       if (!sylfZhl) {
         return "0%";
@@ -82,7 +82,7 @@ export const conversionRateColumns: any = [
   {
     prop: "dyztZhl",
     label: "当月整体转化率",
-    formatter: (row: any, column: any, index: number) => {
+    formatter: (row: any) => {
       const dyztZhl = row.dyztZhl || 0;
       if (!dyztZhl) {
         return "0%";
@@ -93,7 +93,7 @@ export const conversionRateColumns: any = [
   {
     prop: "syztZhl",
     label: "上月整体转化率",
-    formatter: (row: any, column: any, index: number) => {
+    formatter: (row: any) => {
       const syztZhl = row.syztZhl || 0;
       if (!syztZhl) {
         return "0%";
@@ -104,7 +104,7 @@ export const conversionRateColumns: any = [
 ];
 
 // 来访记录-表头
-export const visitingRecordColumns: any = [
+export const visitingRecordColumns = [
   { type: "index", label: "序号", width: 60 },
   { label: "项目名称", slot: "projName", width: 220 },
   { prop: "custName", label: "客户姓名", width: 150 },

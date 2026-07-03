@@ -30,8 +30,6 @@
           :highlight-current-row="false"
           :show-summary="false"
           :on-save="handleSave"
-          @data-change="handleDataChange"
-          @update:table-data="handleDataUpdate"
           @editable-cell-click="handleEditableCellClick"
         >
           <!-- 列表外操作栏 -->
@@ -67,7 +65,7 @@ import EditableTable from "@/components/base/editable-table.vue";
 import type { EditableColumn } from "@/components/base/editable-table.vue";
 import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api.ts";
 import { ElMessage } from "element-plus";
-import { largeScreenApi } from "@/api/large-screen-api";
+import { largeScreenApi } from "@/api/sales/large-screen-api.ts";
 import ChooseSupplierDialog from "../choose-supplier-dialog.vue";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";
@@ -239,14 +237,6 @@ const handleSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
   }
 
   updateRow(rowIndex, { [column]: newValue });
-};
-
-const handleDataChange = (data) => {
-  // console.log("表格数据变化:", data);
-};
-
-const handleDataUpdate = (newData) => {
-  tableData.value = newData;
 };
 
 const handleEditableCellClick = ({ row, column, rowIndex }) => {

@@ -14,9 +14,7 @@
           <el-button type="primary" icon="Refresh" @click="handleRefresh">
             刷新列表
           </el-button>
-          <el-button type="primary" @click="handleInitiate">
-            发起流程
-          </el-button>
+          <el-button type="primary" @click="handleAdd"> 新增 </el-button>
         </div>
       </template>
 
@@ -36,7 +34,9 @@
         <el-button type="danger" link @click="handleDelete(row)">
           删除
         </el-button>
-        <el-button type="primary" link> 审批 </el-button>
+        <el-button type="primary" link @click="handleApproval(row)">
+          审批
+        </el-button>
       </template>
     </base-table>
 
@@ -60,6 +60,7 @@ import InitiateDialog from "./initiate-dialog.vue";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";
 import { ChangeTypeEnum } from "@/constants/contract-manage/enums.ts";
+import { associatedApprovalApi } from "@/api/cost/contract-manage/associated-approval-api.ts";
 
 defineOptions({ name: "change-order" });
 
@@ -71,7 +72,7 @@ const props = defineProps<{
 const dialogVisible = ref(false);
 const editData = ref(null);
 const tableLoading = ref(false);
-const tableData = ref<any[]>([]);
+const tableData = ref([]);
 const changeReasonOptions = ref([]); // 变更原因列表
 
 // 数据字典
@@ -150,7 +151,7 @@ const handleRefresh = () => {
 };
 
 // 发起流程
-const handleInitiate = () => {
+const handleAdd = () => {
   editData.value = null;
   dialogVisible.value = true;
 };
@@ -158,6 +159,28 @@ const handleInitiate = () => {
 const handleEdit = async (row) => {
   editData.value = row;
   dialogVisible.value = true;
+};
+// 审批
+const handleApproval = async (row) => {
+  console.log("审批", row);
+  return;
+  ElMessageBox.confirm("确定创建该合同变更审批流程？", "提示", {
+    type: "warning",
+  })
+    .then(async () => {
+      try {
+        const res = await associatedApprovalApi.createChangeFlow({
+          changeId: row.id,
+        });
+        if (res.code === 200) {
+          ElMessage.success("操作成功");
+          getDataList();
+        }
+      } catch (error) {
+        console.error("失败:", error);
+      }
+    })
+    .catch(() => {});
 };
 // 删除
 const handleDelete = (row) => {

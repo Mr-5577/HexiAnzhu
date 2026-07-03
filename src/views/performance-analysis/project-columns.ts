@@ -1,7 +1,9 @@
 import { formatNumber, formatNumberDisplay } from "@/utils/common";
 
+// 定义通用类型
+type NumStr = number | string | null | undefined;
 // 销售年报表-表头
-export const AnnualReportColumns: any = [
+export const AnnualReportColumns = [
   { type: "index", label: "序号", width: 60, fixed: "left" },
   { prop: "projName", label: "项目", width: 220, align: "left", fixed: "left" },
   { prop: "productTypeName", label: "考核业态", width: 120 },
@@ -29,7 +31,8 @@ export const AnnualReportColumns: any = [
         clickable: true, // 允许触发单元格事件
         clickEvent: "order-name-click", // 事件名称
         showSummary: true,
-        formatter: (row: any) => formatNumberDisplay(row.totalOrderMoney),
+        formatter: ({ totalOrderMoney }: { totalOrderMoney: NumStr }) =>
+          formatNumberDisplay(totalOrderMoney),
       },
       { prop: "totalPrice", label: "成交均价", width: 100 },
       {
@@ -55,7 +58,8 @@ export const AnnualReportColumns: any = [
         clickable: true, // 允许触发单元格事件
         clickEvent: "sgin-name-click", // 事件名称
         showSummary: true,
-        formatter: (row: any) => formatNumberDisplay(row.totalSignMoney),
+        formatter: ({ totalSignMoney }: { totalSignMoney: NumStr }) =>
+          formatNumberDisplay(totalSignMoney),
       },
       {
         prop: "totalRecMoney",
@@ -64,14 +68,16 @@ export const AnnualReportColumns: any = [
         clickable: true, // 允许触发单元格事件
         clickEvent: "payment-name-click", // 事件名称
         showSummary: true,
-        formatter: (row: any) => formatNumberDisplay(row.totalRecMoney),
+        formatter: ({ totalRecMoney }: { totalRecMoney: NumStr }) =>
+          formatNumberDisplay(totalRecMoney),
       },
       {
         prop: "totalPemMoney",
         label: "溢价金额",
         width: 100,
         showSummary: true,
-        formatter: (row: any) => formatNumberDisplay(row.totalPemMoney),
+        formatter: ({ totalPemMoney }: { totalPemMoney: NumStr }) =>
+          formatNumberDisplay(totalPemMoney),
         clickable: true, // 允许触发单元格事件
         clickEvent: "totalPemMoney-click", // 事件名称
       },
@@ -79,7 +85,7 @@ export const AnnualReportColumns: any = [
         prop: "totalPemRate",
         label: "溢价率",
         width: 90,
-        formatter: (row: any, column: any, index: number) => {
+        formatter: (row: any) => {
           const totalPemRate = row.totalPemRate || 0;
           if (!totalPemRate) {
             return "0%";
@@ -101,8 +107,11 @@ export const AnnualReportColumns: any = [
             label: "金额",
             width: 100,
             showSummary: true,
-            formatter: (row: any) =>
-              formatNumberDisplay(row.notSignOutstdMoney),
+            formatter: ({
+              notSignOutstdMoney,
+            }: {
+              notSignOutstdMoney: NumStr;
+            }) => formatNumberDisplay(notSignOutstdMoney),
           },
         ],
       },
@@ -115,7 +124,8 @@ export const AnnualReportColumns: any = [
             label: "金额",
             width: 100,
             showSummary: true,
-            formatter: (row: any) => formatNumberDisplay(row.signOutstdMoney),
+            formatter: ({ signOutstdMoney }: { signOutstdMoney: NumStr }) =>
+              formatNumberDisplay(signOutstdMoney),
           },
         ],
       },
@@ -137,7 +147,8 @@ export const AnnualReportColumns: any = [
             clickable: true, // 允许触发单元格事件
             clickEvent: "total-name-click", // 事件名称
             showSummary: true,
-            formatter: (row: any) => formatNumberDisplay(row.totalOutstdMoney),
+            formatter: ({ totalOutstdMoney }: { totalOutstdMoney: NumStr }) =>
+              formatNumberDisplay(totalOutstdMoney),
           },
         ],
       },
@@ -155,7 +166,8 @@ export const AnnualReportColumns: any = [
             label: "金额",
             width: 100,
             showSummary: true,
-            formatter: (row: any) => formatNumberDisplay(row.loanOutstdMoney),
+            formatter: ({ loanOutstdMoney }: { loanOutstdMoney: NumStr }) =>
+              formatNumberDisplay(loanOutstdMoney),
           },
         ],
       },
@@ -171,7 +183,8 @@ export const AnnualReportColumns: any = [
         label: "回款金额",
         width: 90,
         showSummary: true,
-        formatter: (row: any) => formatNumberDisplay(row.collectTask),
+        formatter: ({ collectTask }: { collectTask: NumStr }) =>
+          formatNumberDisplay(collectTask),
       },
     ],
   },
@@ -201,7 +214,8 @@ export const AnnualReportColumns: any = [
         clickable: true, // 允许触发单元格事件
         clickEvent: "payment-name-click", // 事件名称
         showSummary: true,
-        formatter: (row: any) => formatNumberDisplay(row.totalRecMoney),
+        formatter: ({ totalRecMoney }: { totalRecMoney: NumStr }) =>
+          formatNumberDisplay(totalRecMoney),
       },
     ],
   },
@@ -212,7 +226,7 @@ export const AnnualReportColumns: any = [
         prop: "orderRate",
         label: "成交",
         width: 80,
-        formatter: (row: any, column: any, index: number) => {
+        formatter: (row: any) => {
           const orderRate = row.orderRate || 0;
           if (!orderRate) {
             return "0%";
@@ -224,7 +238,7 @@ export const AnnualReportColumns: any = [
         prop: "signRate",
         label: "签约",
         width: 80,
-        formatter: (row: any, column: any, index: number) => {
+        formatter: (row: any) => {
           const signRate = row.signRate || 0;
           if (!signRate) {
             return "0%";
@@ -236,7 +250,7 @@ export const AnnualReportColumns: any = [
         prop: "collectRate",
         label: "回款",
         width: 80,
-        formatter: (row: any, column: any, index: number) => {
+        formatter: (row: any) => {
           const collectRate = row.collectRate || 0;
           if (!collectRate) {
             return "0%";
@@ -248,7 +262,7 @@ export const AnnualReportColumns: any = [
         prop: "totalRate",
         label: "综合",
         width: 80,
-        formatter: (row: any, column: any, index: number) => {
+        formatter: (row: any) => {
           const totalRate = row.totalRate || 0;
           if (!totalRate) {
             return "0%";
@@ -261,7 +275,7 @@ export const AnnualReportColumns: any = [
 ];
 
 // 销售日报表-表头
-export const dailylReportColumns: any = [
+export const dailylReportColumns = [
   { type: "index", label: "序号", width: 60, fixed: "left" },
   { prop: "projName", label: "项目", width: 220, align: "left", fixed: "left" },
   { prop: "productTypeName", label: "考核业态", width: 120 },
@@ -304,7 +318,8 @@ export const dailylReportColumns: any = [
         label: "回款金额",
         width: 90,
         showSummary: true, // 运行合计
-        formatter: (row: any) => formatNumberDisplay(row.dayRecMoney), // 千分位并保留2为小数
+        formatter: ({ dayRecMoney }: { dayRecMoney: NumStr }) =>
+          formatNumberDisplay(dayRecMoney), // 千分位并保留2为小数
         clickable: true, // 允许触发单元格事件
         clickEvent: "payment-name-click", // 事件名称
       },
@@ -320,7 +335,7 @@ export const dailylReportColumns: any = [
         prop: "dayPemRate",
         label: "溢价率",
         width: 90,
-        formatter: (row: any, column: any, index: number) => {
+        formatter: (row: any) => {
           const dayPemRate = row.dayPemRate || 0;
           if (!dayPemRate) {
             return "0%";
@@ -354,7 +369,8 @@ export const dailylReportColumns: any = [
         clickable: true, // 允许触发单元格事件
         clickEvent: "totalOrderNum-click", // 事件名称
         showSummary: true,
-        formatter: (row: any) => formatNumberDisplay(row.totalOrderMoney),
+        formatter: ({ totalOrderMoney }: { totalOrderMoney: NumStr }) =>
+          formatNumberDisplay(totalOrderMoney),
       },
       { prop: "totalPrice", label: "销售均价", width: 100 },
       {
@@ -380,14 +396,16 @@ export const dailylReportColumns: any = [
         clickable: true, // 允许触发单元格事件
         clickEvent: "totalSignNum-click", // 事件名称
         showSummary: true,
-        formatter: (row: any) => formatNumberDisplay(row.totalSignMoney),
+        formatter: ({ totalSignMoney }: { totalSignMoney: NumStr }) =>
+          formatNumberDisplay(totalSignMoney),
       },
       {
         prop: "totalRecMoney",
         label: "回款金额",
         width: 90,
         showSummary: true,
-        formatter: (row: any) => formatNumberDisplay(row.totalRecMoney),
+        formatter: ({ totalRecMoney }: { totalRecMoney: NumStr }) =>
+          formatNumberDisplay(totalRecMoney),
         clickable: true, // 允许触发单元格事件
         clickEvent: "totalRecMoney-click", // 事件名称
       },
@@ -403,7 +421,7 @@ export const dailylReportColumns: any = [
         prop: "totalPemRate",
         label: "溢价率",
         width: 90,
-        formatter: (row: any, column: any, index: number) => {
+        formatter: (row: any) => {
           const totalPemRate = row.totalPemRate || 0;
           if (!totalPemRate) {
             return "0%";
@@ -425,8 +443,11 @@ export const dailylReportColumns: any = [
             label: "金额",
             width: 100,
             showSummary: true,
-            formatter: (row: any) =>
-              formatNumberDisplay(row.notSignOutstdMoney),
+            formatter: ({
+              notSignOutstdMoney,
+            }: {
+              notSignOutstdMoney: NumStr;
+            }) => formatNumberDisplay(notSignOutstdMoney),
           },
         ],
       },
@@ -439,7 +460,8 @@ export const dailylReportColumns: any = [
             label: "金额",
             width: 100,
             showSummary: true,
-            formatter: (row: any) => formatNumberDisplay(row.signOutstdMoney),
+            formatter: ({ signOutstdMoney }: { signOutstdMoney: NumStr }) =>
+              formatNumberDisplay(signOutstdMoney),
           },
         ],
       },
@@ -459,7 +481,8 @@ export const dailylReportColumns: any = [
             label: "金额",
             width: 100,
             showSummary: true,
-            formatter: (row: any) => formatNumberDisplay(row.totalOutstdMoney),
+            formatter: ({ totalOutstdMoney }: { totalOutstdMoney: NumStr }) =>
+              formatNumberDisplay(totalOutstdMoney),
             clickable: true, // 允许触发单元格事件
             clickEvent: "total-name-click", // 事件名称
           },
@@ -479,7 +502,8 @@ export const dailylReportColumns: any = [
             label: "金额",
             width: 100,
             showSummary: true,
-            formatter: (row: any) => formatNumberDisplay(row.loanOutstdMoney),
+            formatter: ({ loanOutstdMoney }: { loanOutstdMoney: NumStr }) =>
+              formatNumberDisplay(loanOutstdMoney),
           },
         ],
       },
@@ -495,7 +519,8 @@ export const dailylReportColumns: any = [
         label: "回款金额",
         width: 90,
         showSummary: true,
-        formatter: (row: any) => formatNumberDisplay(row.collectTask),
+        formatter: ({ collectTask }: { collectTask: NumStr }) =>
+          formatNumberDisplay(collectTask),
       },
     ],
   },
@@ -525,7 +550,8 @@ export const dailylReportColumns: any = [
         clickable: true, // 允许触发单元格事件
         clickEvent: "totalRecMoney-click", // 事件名称
         showSummary: true,
-        formatter: (row: any) => formatNumberDisplay(row.totalRecMoney),
+        formatter: ({ totalRecMoney }: { totalRecMoney: NumStr }) =>
+          formatNumberDisplay(totalRecMoney),
       },
     ],
   },
@@ -536,7 +562,7 @@ export const dailylReportColumns: any = [
         prop: "orderRate",
         label: "成交",
         width: 80,
-        formatter: (row: any, column: any, index: number) => {
+        formatter: (row: any) => {
           const orderRate = row.orderRate || 0;
           if (!orderRate) {
             return "0%";
@@ -548,7 +574,7 @@ export const dailylReportColumns: any = [
         prop: "signRate",
         label: "签约",
         width: 80,
-        formatter: (row: any, column: any, index: number) => {
+        formatter: (row: any) => {
           const signRate = row.signRate || 0;
           if (!signRate) {
             return "0%";
@@ -560,7 +586,7 @@ export const dailylReportColumns: any = [
         prop: "collectRate",
         label: "回款",
         width: 80,
-        formatter: (row: any, column: any, index: number) => {
+        formatter: (row: any) => {
           const collectRate = row.collectRate || 0;
           if (!collectRate) {
             return "0%";
@@ -572,7 +598,7 @@ export const dailylReportColumns: any = [
         prop: "totalRate",
         label: "综合",
         width: 80,
-        formatter: (row: any, column: any, index: number) => {
+        formatter: (row: any) => {
           const totalRate = row.totalRate || 0;
           if (!totalRate) {
             return "0%";
@@ -585,7 +611,7 @@ export const dailylReportColumns: any = [
 ];
 
 // 认购业绩明细-表头
-export const SubDetailColumns: any = [
+export const SubDetailColumns = [
   { type: "index", label: "序号", width: 60, fixed: "left" },
   { prop: "projName", label: "项目", width: 220, fixed: "left" },
   { prop: "bigProductTypeName", label: "业态", width: 90 },
@@ -596,7 +622,8 @@ export const SubDetailColumns: any = [
     width: 90,
     showSummary: true, // 标记需要合计
     // 存储时用 formatNumberDisplay (返回字符串)
-    formatter: (row: any) => formatNumberDisplay(row.forecastArea),
+    formatter: ({ forecastArea }: { forecastArea: NumStr }) =>
+      formatNumberDisplay(forecastArea),
   },
   { prop: "custName", label: "业主", width: 100 },
   { prop: "custTel", label: "联系电话", width: 120 },
@@ -608,9 +635,9 @@ export const SubDetailColumns: any = [
     // 存储时用 formatNumber(返回数字)
     // formatter: (row: any) => formatNumberDisplay(row.floorMoney),
     // 或者如果需要原始数值，可以这样：
-    formatter: (row: any, column: any) => {
+    formatter: ({ floorMoney }: { floorMoney: NumStr }) => {
       // 存储数值
-      const numValue = formatNumber(row.floorMoney);
+      const numValue = formatNumber(floorMoney);
       // 显示带千分位的字符串
       return formatNumberDisplay(numValue);
     },
@@ -620,14 +647,16 @@ export const SubDetailColumns: any = [
     label: "销售总价",
     width: 120,
     showSummary: true, // 标记需要合计
-    formatter: (row: any) => formatNumberDisplay(row.saleMoney),
+    formatter: ({ saleMoney }: { saleMoney: NumStr }) =>
+      formatNumberDisplay(saleMoney),
   },
   {
     prop: "saleUnitPrice",
     label: "销售单价",
     width: 120,
     showSummary: true, // 标记需要合计
-    formatter: (row: any) => formatNumberDisplay(row.saleUnitPrice),
+    formatter: ({ saleUnitPrice }: { saleUnitPrice: NumStr }) =>
+      formatNumberDisplay(saleUnitPrice),
   },
   { prop: "payWayName", label: "付款方式", width: 120 },
   { prop: "saleDate", label: "认购日期", width: 120 },
@@ -640,7 +669,7 @@ export const SubDetailColumns: any = [
   { prop: "typeName", label: "业务类型", width: 100 },
 ];
 // 签约业绩-表头
-export const ContractDetailColumns: any = [
+export const ContractDetailColumns = [
   { type: "index", label: "序号", width: 60, fixed: "left" },
   { prop: "projName", label: "项目", width: 220, fixed: "left" },
   { prop: "bigProductTypeName", label: "业态", width: 100 },
@@ -653,21 +682,24 @@ export const ContractDetailColumns: any = [
     label: "底价总价",
     width: 120,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.floorMoney),
+    formatter: ({ floorMoney }: { floorMoney: NumStr }) =>
+      formatNumberDisplay(floorMoney),
   },
   {
     prop: "saleMoney",
     label: "销售总价",
     width: 120,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.saleMoney),
+    formatter: ({ saleMoney }: { saleMoney: NumStr }) =>
+      formatNumberDisplay(saleMoney),
   },
   {
     prop: "saleUnitPrice",
     label: "销售单价",
     width: 120,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.saleUnitPrice),
+    formatter: ({ saleUnitPrice }: { saleUnitPrice: NumStr }) =>
+      formatNumberDisplay(saleUnitPrice),
   },
   { prop: "payWayName", label: "付款方式", width: 120 },
   { prop: "saleDate", label: "认购日期", width: 120 },
@@ -679,14 +711,15 @@ export const ContractDetailColumns: any = [
     label: "签约增量金额",
     width: 120,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.saleMoneyInc),
+    formatter: ({ saleMoneyInc }: { saleMoneyInc: NumStr }) =>
+      formatNumberDisplay(saleMoneyInc),
   },
   { prop: "teamName", label: "团队名称", width: 100 },
   { prop: "salerName", label: "置业顾问", width: 150 },
   { prop: "typeName", label: "业务类型", width: 100 },
 ];
 // 回款业绩-表头
-export const CollectionDetailColumns: any = [
+export const CollectionDetailColumns = [
   { type: "index", label: "序号", width: 60, fixed: "left" },
   { prop: "projName", label: "项目", width: 220, fixed: "left" },
   { prop: "bigProductTypeName", label: "业态", width: 120 },
@@ -699,7 +732,8 @@ export const CollectionDetailColumns: any = [
     label: "销售总价",
     width: 120,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.saleMoney),
+    formatter: ({ saleMoney }: { saleMoney: NumStr }) =>
+      formatNumberDisplay(saleMoney),
   },
   { prop: "payWayName", label: "付款方式", width: 120 },
   { prop: "saleDate", label: "认购日期", width: 120 },
@@ -710,7 +744,8 @@ export const CollectionDetailColumns: any = [
     label: "回款金额",
     width: 120,
     showSummary: true,
-    formatter: (row: any) => formatNumberDisplay(row.collectMoney),
+    formatter: ({ collectMoney }: { collectMoney: NumStr }) =>
+      formatNumberDisplay(collectMoney),
   },
   { prop: "teamName", label: "团队名称", width: 100 },
   { prop: "salerName", label: "置业顾问", width: 150 },
@@ -778,28 +813,32 @@ export const agentRankingColumns = [
   {
     prop: "orderMoney",
     label: "认购业绩金额",
-    formatter: (row: any) => formatNumberDisplay(row.orderMoney),
+    formatter: ({ orderMoney }: { orderMoney: NumStr }) =>
+      formatNumberDisplay(orderMoney),
   },
   { prop: "signNum", label: "签约套数" },
   {
     prop: "signMoney",
     label: "签约金额",
-    formatter: (row: any) => formatNumberDisplay(row.signMoney),
+    formatter: ({ signMoney }: { signMoney: NumStr }) =>
+      formatNumberDisplay(signMoney),
   },
   {
     prop: "payMoney",
     label: "回款金额",
-    formatter: (row: any) => formatNumberDisplay(row.payMoney),
+    formatter: ({ payMoney }: { payMoney: NumStr }) =>
+      formatNumberDisplay(payMoney),
   },
   {
     prop: "premiumMoney",
     label: "溢价金额",
-    formatter: (row: any) => formatNumberDisplay(row.premiumMoney),
+    formatter: ({ premiumMoney }: { premiumMoney: NumStr }) =>
+      formatNumberDisplay(premiumMoney),
   },
   {
     prop: "premiumRate",
     label: "溢价比例",
-    formatter: (row: any, column: any, index: number) => {
+    formatter: (row: any) => {
       // 获取溢价金额和底价
       const premiumMoney = row.premiumMoney || 0;
       const floorMoney = row.floorMoney || 0;

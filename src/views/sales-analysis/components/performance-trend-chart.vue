@@ -47,7 +47,7 @@ import {
 } from "vue";
 import * as echarts from "echarts";
 import { dateUtil } from "@/utils/date-util";
-import { largeScreenApi } from "@/api/large-screen-api";
+import { largeScreenApi } from "@/api/sales/large-screen-api";
 import { useRouter } from "vue-router";
 
 const router = useRouter();

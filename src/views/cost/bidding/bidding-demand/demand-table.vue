@@ -113,7 +113,7 @@ import type {
 import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api.ts";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api.ts";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
-import { largeScreenApi } from "@/api/large-screen-api";
+import { largeScreenApi } from "@/api/sales/large-screen-api.ts";
 
 defineOptions({ name: "demand-table" });
 
@@ -197,7 +197,10 @@ const handleReset = () => {
   getDataList();
 };
 
-const handlePaginationChange = (params: any) => {
+const handlePaginationChange = (params: {
+  currentPage: number;
+  pageSize: number;
+}) => {
   currentPage.value = params.currentPage;
   pageSize.value = params.pageSize;
   getDataList();

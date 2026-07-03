@@ -1,7 +1,10 @@
 import { formatNumberDisplay } from "@/utils/common";
 
+// 定义通用类型
+type NumStr = number | string | null | undefined;
+
 // 房间台账表-表头
-export const roomLedgerColumns: any = [
+export const roomLedgerColumns = [
   { prop: "projName", label: "项目", width: 220, fixed: "left" },
   { prop: "roomNum", label: "房号", width: 110 },
   { prop: "buildBatch", label: "楼栋分期", width: 90 },
@@ -15,37 +18,42 @@ export const roomLedgerColumns: any = [
     prop: "listedPrice",
     label: "挂牌单价",
     width: 100,
-    formatter: (row: any) => formatNumberDisplay(row.listedPrice),
+    formatter: ({ listedPrice }: { listedPrice: NumStr }) =>
+      formatNumberDisplay(listedPrice),
   },
   {
     prop: "listedMoney",
     label: "挂牌总价",
     width: 100,
-    formatter: (row: any) => formatNumberDisplay(row.listedMoney),
+    formatter: ({ listedMoney }: { listedMoney: NumStr }) =>
+      formatNumberDisplay(listedMoney),
   },
   {
     prop: "price",
     label: "按揭单价",
     width: 100,
-    formatter: (row: any) => formatNumberDisplay(row.price),
+    formatter: ({ price }: { price: NumStr }) => formatNumberDisplay(price),
   },
   {
     prop: "floorMoney",
     label: "按揭底价",
     width: 100,
-    formatter: (row: any) => formatNumberDisplay(row.floorMoney),
+    formatter: ({ floorMoney }: { floorMoney: NumStr }) =>
+      formatNumberDisplay(floorMoney),
   },
   {
     prop: "priceOffer",
     label: "全款单价",
     width: 100,
-    formatter: (row: any) => formatNumberDisplay(row.priceOffer),
+    formatter: ({ priceOffer }: { priceOffer: NumStr }) =>
+      formatNumberDisplay(priceOffer),
   },
   {
     prop: "floorMoneyOffer",
     label: "全款底价",
     width: 100,
-    formatter: (row: any) => formatNumberDisplay(row.floorMoneyOffer),
+    formatter: ({ floorMoneyOffer }: { floorMoneyOffer: NumStr }) =>
+      formatNumberDisplay(floorMoneyOffer),
   },
   { prop: "orderFloorMoney", label: "成交时系统底价", width: 140 },
   { prop: "saleDate", label: "认购日期", width: 120 },
@@ -56,19 +64,22 @@ export const roomLedgerColumns: any = [
     prop: "saleMoney",
     label: "销售总价",
     width: 100,
-    formatter: (row: any) => formatNumberDisplay(row.saleMoney),
+    formatter: ({ saleMoney }: { saleMoney: NumStr }) =>
+      formatNumberDisplay(saleMoney),
   },
   {
     prop: "unitPrice",
     label: "销售单价",
     width: 90,
-    formatter: (row: any) => formatNumberDisplay(row.unitPrice),
+    formatter: ({ unitPrice }: { unitPrice: NumStr }) =>
+      formatNumberDisplay(unitPrice),
   },
   {
     prop: "surveyMoney",
     label: "实测总价",
     width: 100,
-    formatter: (row: any) => formatNumberDisplay(row.surveyMoney),
+    formatter: ({ surveyMoney }: { surveyMoney: NumStr }) =>
+      formatNumberDisplay(surveyMoney),
   },
   { prop: "custName", label: "客户姓名", width: 100 },
   { prop: "custTel", label: "联系电话", width: 120 },
@@ -77,33 +88,37 @@ export const roomLedgerColumns: any = [
     prop: "receivedMoney",
     label: "应收金额",
     width: 90,
-    formatter: (row: any) => formatNumberDisplay(row.receivedMoney),
+    formatter: ({ receivedMoney }: { receivedMoney: NumStr }) =>
+      formatNumberDisplay(receivedMoney),
   },
   {
     prop: "outstdMoney",
     label: "已收金额",
     width: 90,
-    formatter: (row: any) => formatNumberDisplay(row.outstdMoney),
+    formatter: ({ outstdMoney }: { outstdMoney: NumStr }) =>
+      formatNumberDisplay(outstdMoney),
   },
   {
     prop: "loanPayMoney",
     label: "银行放款",
     width: 100,
-    formatter: (row: any) => formatNumberDisplay(row.loanPayMoney),
+    formatter: ({ loanPayMoney }: { loanPayMoney: NumStr }) =>
+      formatNumberDisplay(loanPayMoney),
   },
   { prop: "loanPayDate", label: "放款日期", width: 120 },
   {
     prop: "refundMoney",
     label: "退款金额",
     width: 90,
-    formatter: (row: any) => formatNumberDisplay(row.refundMoney),
+    formatter: ({ refundMoney }: { refundMoney: NumStr }) =>
+      formatNumberDisplay(refundMoney),
   },
   { prop: "remark", label: "备注详情", width: 220 },
   { prop: "orderCreateDate", label: "创建日期", width: 120 },
 ];
 
 // 库存统计表-表头
-export const inventoryStatisticsColumns: any = [
+export const inventoryStatisticsColumns = [
   { type: "index", label: "序号", width: 80 },
   {
     prop: "projName",
@@ -148,7 +163,7 @@ export const inventoryStatisticsColumns: any = [
 ];
 
 // 库存明细表-表头
-export const inventoryDetailColumns: any = [
+export const inventoryDetailColumns = [
   { type: "index", label: "序号", width: 80 },
   { prop: "projName", label: "项目名称", width: 220 },
   { prop: "bigProductTypeName", label: "业态" },
@@ -157,7 +172,8 @@ export const inventoryDetailColumns: any = [
   {
     prop: "floorMoney",
     label: "底价总价(元)",
-    formatter: (row: any) => formatNumberDisplay(row.floorMoney),
+    formatter: ({ floorMoney }: { floorMoney: NumStr }) =>
+      formatNumberDisplay(floorMoney),
   },
   { prop: "price", label: "底价单价(元/㎡)" },
   { prop: "monthType", label: "库存周期" },
@@ -166,7 +182,7 @@ export const inventoryDetailColumns: any = [
 ];
 
 // 产值统计表-表头
-export const outputStatisticsColumns: any = [
+export const outputStatisticsColumns = [
   {
     prop: "projName",
     label: "项目名称",
@@ -183,14 +199,16 @@ export const outputStatisticsColumns: any = [
         prop: "totalArea",
         label: "面积",
         width: 120,
-        formatter: (row: any) => formatNumberDisplay(row.totalArea),
+        formatter: ({ totalArea }: { totalArea: NumStr }) =>
+          formatNumberDisplay(totalArea),
       },
       { prop: "totalPrice", label: "单价", width: 100 },
       {
         prop: "totalMoney",
         label: "产值",
         width: 150,
-        formatter: (row: any) => formatNumberDisplay(row.totalMoney),
+        formatter: ({ totalMoney }: { totalMoney: NumStr }) =>
+          formatNumberDisplay(totalMoney),
       },
     ],
   },
@@ -205,26 +223,30 @@ export const outputStatisticsColumns: any = [
             prop: "pYearArea",
             label: "认购面积",
             width: 120,
-            formatter: (row: any) => formatNumberDisplay(row.pYearArea),
+            formatter: ({ pYearArea }: { pYearArea: NumStr }) =>
+              formatNumberDisplay(pYearArea),
           },
           { prop: "pYearPrice", label: "认购均价", width: 100 },
           {
             prop: "pYearMoney",
             label: "认购金额",
             width: 150,
-            formatter: (row: any) => formatNumberDisplay(row.pYearMoney),
+            formatter: ({ pYearMoney }: { pYearMoney: NumStr }) =>
+              formatNumberDisplay(pYearMoney),
           },
           {
             prop: "pYearSkMoney",
             label: "已收款",
             width: 150,
-            formatter: (row: any) => formatNumberDisplay(row.pYearSkMoney),
+            formatter: ({ pYearSkMoney }: { pYearSkMoney: NumStr }) =>
+              formatNumberDisplay(pYearSkMoney),
           },
           {
             prop: "pYearSkMoneyUn",
             label: "未收款",
             width: 150,
-            formatter: (row: any) => formatNumberDisplay(row.pYearSkMoneyUn),
+            formatter: ({ pYearSkMoneyUn }: { pYearSkMoneyUn: NumStr }) =>
+              formatNumberDisplay(pYearSkMoneyUn),
           },
         ],
       },
@@ -236,7 +258,8 @@ export const outputStatisticsColumns: any = [
             prop: "pYearNetMoney",
             label: "网签金额",
             width: 150,
-            formatter: (row: any) => formatNumberDisplay(row.pYearNetMoney),
+            formatter: ({ pYearNetMoney }: { pYearNetMoney: NumStr }) =>
+              formatNumberDisplay(pYearNetMoney),
           },
         ],
       },
@@ -253,26 +276,30 @@ export const outputStatisticsColumns: any = [
             prop: "pMonthArea",
             label: "认购面积",
             width: 120,
-            formatter: (row: any) => formatNumberDisplay(row.pMonthArea),
+            formatter: ({ pMonthArea }: { pMonthArea: NumStr }) =>
+              formatNumberDisplay(pMonthArea),
           },
           { prop: "pMonthPrice", label: "认购均价", width: 100 },
           {
             prop: "pMonthMoney",
             label: "认购金额",
             width: 150,
-            formatter: (row: any) => formatNumberDisplay(row.pMonthMoney),
+            formatter: ({ pMonthMoney }: { pMonthMoney: NumStr }) =>
+              formatNumberDisplay(pMonthMoney),
           },
           {
             prop: "pMonthSkMoney",
             label: "已收款",
             width: 150,
-            formatter: (row: any) => formatNumberDisplay(row.pMonthSkMoney),
+            formatter: ({ pMonthSkMoney }: { pMonthSkMoney: NumStr }) =>
+              formatNumberDisplay(pMonthSkMoney),
           },
           {
             prop: "pMonthSkMoneyUn",
             label: "未收款",
             width: 150,
-            formatter: (row: any) => formatNumberDisplay(row.pMonthSkMoneyUn),
+            formatter: ({ pMonthSkMoneyUn }: { pMonthSkMoneyUn: NumStr }) =>
+              formatNumberDisplay(pMonthSkMoneyUn),
           },
         ],
       },
@@ -284,7 +311,8 @@ export const outputStatisticsColumns: any = [
             prop: "pMonthNetMoney",
             label: "网签金额",
             width: 150,
-            formatter: (row: any) => formatNumberDisplay(row.pMonthNetMoney),
+            formatter: ({ pMonthNetMoney }: { pMonthNetMoney: NumStr }) =>
+              formatNumberDisplay(pMonthNetMoney),
           },
         ],
       },
@@ -301,26 +329,30 @@ export const outputStatisticsColumns: any = [
             prop: "cMonthArea",
             label: "认购面积",
             width: 120,
-            formatter: (row: any) => formatNumberDisplay(row.cMonthArea),
+            formatter: ({ cMonthArea }: { cMonthArea: NumStr }) =>
+              formatNumberDisplay(cMonthArea),
           },
           { prop: "cMonthPrice", label: "认购均价", width: 100 },
           {
             prop: "cMonthMoney",
             label: "认购金额",
             width: 150,
-            formatter: (row: any) => formatNumberDisplay(row.cMonthMoney),
+            formatter: ({ cMonthMoney }: { cMonthMoney: NumStr }) =>
+              formatNumberDisplay(cMonthMoney),
           },
           {
             prop: "cMonthSkMoney",
             label: "已收款",
             width: 150,
-            formatter: (row: any) => formatNumberDisplay(row.cMonthSkMoney),
+            formatter: ({ cMonthSkMoney }: { cMonthSkMoney: NumStr }) =>
+              formatNumberDisplay(cMonthSkMoney),
           },
           {
             prop: "cMonthSkMoneyUn",
             label: "未收款",
             width: 150,
-            formatter: (row: any) => formatNumberDisplay(row.cMonthSkMoneyUn),
+            formatter: ({ cMonthSkMoneyUn }: { cMonthSkMoneyUn: NumStr }) =>
+              formatNumberDisplay(cMonthSkMoneyUn),
           },
         ],
       },
@@ -332,7 +364,8 @@ export const outputStatisticsColumns: any = [
             prop: "cMonthNetMoney",
             label: "网签金额",
             width: 150,
-            formatter: (row: any) => formatNumberDisplay(row.cMonthNetMoney),
+            formatter: ({ cMonthNetMoney }: { cMonthNetMoney: NumStr }) =>
+              formatNumberDisplay(cMonthNetMoney),
           },
         ],
       },
@@ -349,26 +382,30 @@ export const outputStatisticsColumns: any = [
             prop: "cYearArea",
             label: "认购面积",
             width: 120,
-            formatter: (row: any) => formatNumberDisplay(row.cYearArea),
+            formatter: ({ cYearArea }: { cYearArea: NumStr }) =>
+              formatNumberDisplay(cYearArea),
           },
           { prop: "cYearPrice", label: "认购均价", width: 100 },
           {
             prop: "cYearMoney",
             label: "认购金额",
             width: 150,
-            formatter: (row: any) => formatNumberDisplay(row.cYearMoney),
+            formatter: ({ cYearMoney }: { cYearMoney: NumStr }) =>
+              formatNumberDisplay(cYearMoney),
           },
           {
             prop: "cYearSkMoney",
             label: "已收款",
             width: 150,
-            formatter: (row: any) => formatNumberDisplay(row.cYearSkMoney),
+            formatter: ({ cYearSkMoney }: { cYearSkMoney: NumStr }) =>
+              formatNumberDisplay(cYearSkMoney),
           },
           {
             prop: "cYearSkMoneyUn",
             label: "未收款",
             width: 150,
-            formatter: (row: any) => formatNumberDisplay(row.cYearSkMoneyUn),
+            formatter: ({ cYearSkMoneyUn }: { cYearSkMoneyUn: NumStr }) =>
+              formatNumberDisplay(cYearSkMoneyUn),
           },
         ],
       },
@@ -380,7 +417,8 @@ export const outputStatisticsColumns: any = [
             prop: "cYearNetMoney",
             label: "网签金额",
             width: 150,
-            formatter: (row: any) => formatNumberDisplay(row.cYearNetMoney),
+            formatter: ({ cYearNetMoney }: { cYearNetMoney: NumStr }) =>
+              formatNumberDisplay(cYearNetMoney),
           },
         ],
       },
@@ -397,26 +435,30 @@ export const outputStatisticsColumns: any = [
             prop: "allArea",
             label: "认购面积",
             width: 120,
-            formatter: (row: any) => formatNumberDisplay(row.allArea),
+            formatter: ({ allArea }: { allArea: NumStr }) =>
+              formatNumberDisplay(allArea),
           },
           { prop: "allPrice", label: "认购均价", width: 100 },
           {
             prop: "allMoney",
             label: "认购金额",
             width: 150,
-            formatter: (row: any) => formatNumberDisplay(row.allMoney),
+            formatter: ({ allMoney }: { allMoney: NumStr }) =>
+              formatNumberDisplay(allMoney),
           },
           {
             prop: "allSkMoney",
             label: "已收款",
             width: 150,
-            formatter: (row: any) => formatNumberDisplay(row.allSkMoney),
+            formatter: ({ allSkMoney }: { allSkMoney: NumStr }) =>
+              formatNumberDisplay(allSkMoney),
           },
           {
             prop: "allSkMoneyUn",
             label: "未收款",
             width: 150,
-            formatter: (row: any) => formatNumberDisplay(row.allSkMoneyUn),
+            formatter: ({ allSkMoneyUn }: { allSkMoneyUn: NumStr }) =>
+              formatNumberDisplay(allSkMoneyUn),
           },
         ],
       },
@@ -428,7 +470,8 @@ export const outputStatisticsColumns: any = [
             prop: "allNetMoney",
             label: "网签金额",
             width: 150,
-            formatter: (row: any) => formatNumberDisplay(row.allNetMoney),
+            formatter: ({ allNetMoney }: { allNetMoney: NumStr }) =>
+              formatNumberDisplay(allNetMoney),
           },
         ],
       },
@@ -442,14 +485,16 @@ export const outputStatisticsColumns: any = [
         prop: "notSaleArea",
         label: "面积",
         width: 120,
-        formatter: (row: any) => formatNumberDisplay(row.notSaleArea),
+        formatter: ({ notSaleArea }: { notSaleArea: NumStr }) =>
+          formatNumberDisplay(notSaleArea),
       },
       { prop: "notSalePrice", label: "均价", width: 100 },
       {
         prop: "notSaleMoney",
         label: "金额",
         width: 150,
-        formatter: (row: any) => formatNumberDisplay(row.notSaleMoney),
+        formatter: ({ notSaleMoney }: { notSaleMoney: NumStr }) =>
+          formatNumberDisplay(notSaleMoney),
       },
     ],
   },

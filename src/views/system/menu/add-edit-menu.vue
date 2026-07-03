@@ -211,7 +211,7 @@ import type { FormInstance, FormRules } from "element-plus";
 import { Search } from "@element-plus/icons-vue";
 import IconSelector from "./icon-selector.vue";
 import BaseModal from "@/components/base/base-modal.vue";
-import type { MenuItem, MenuForm } from "@/types/menu-type";
+import type { MenuItem, MenuForm } from "@/types/system/menu-type.ts";
 import { menuApi } from "@/api/system/menu-api.ts";
 
 // Props

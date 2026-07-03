@@ -1,7 +1,7 @@
 import { RouteRecordRaw } from "vue-router";
 import type { Component } from "vue";
 import AdminLayout from "@/layouts/index.vue";
-import type { BackendMenuItem } from "@/types/menu-type";
+import type { BackendMenuItem } from "@/types/system/menu-type";
 import { extractAllMenus } from "@/utils/menu-util";
 
 // 使用 glob 动态导入所有 Vue 组件

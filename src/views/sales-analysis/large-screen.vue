@@ -132,7 +132,7 @@ import {
   onActivated,
 } from "vue";
 import { formatToDateTime, formatToDate } from "@/utils/date-util";
-import { largeScreenApi } from "@/api/large-screen-api";
+import { largeScreenApi } from "@/api/sales/large-screen-api.ts";
 import { ElMessage } from "element-plus";
 import fullScreenIcon from "@/assets/imgs/largeScreenImg/full-screen.png";
 import exitFullScreenIcon from "@/assets/imgs/largeScreenImg/small-screen.png";
@@ -147,7 +147,7 @@ const time = ref("");
 const week = ref("");
 const projIds = ref<number[]>([]);
 const dataVal = ref("");
-const options = ref<any[]>([]);
+const options = ref([]);
 const isQueryFast = ref(true);
 
 // 定义多个 ref

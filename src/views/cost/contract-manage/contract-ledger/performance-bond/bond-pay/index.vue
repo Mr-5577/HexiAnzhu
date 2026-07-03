@@ -1,6 +1,6 @@
-<!-- 合同预结算 列表 -->
+<!-- 履约保证金 缴纳列表 -->
 <template>
-  <div class="contract-pre-settle-wrapper">
+  <div class="bond-pay-wrapper">
     <base-table
       :columns="tableColumns"
       :tableData="tableData"
@@ -14,12 +14,13 @@
           <el-button type="primary" icon="Refresh" @click="handleRefresh">
             刷新列表
           </el-button>
-          <el-button type="primary" @click="handleInitiate">
-            发起流程
-          </el-button>
+          <el-button type="primary" @click="handleAdd"> 新增 </el-button>
         </div>
       </template>
 
+      <template #recvTypeId="{ row }">
+        {{ getRecvTypeName(row.recvTypeId) }}
+      </template>
       <template #actions="{ row }">
         <el-button type="primary" link @click="handleEdit(row)">
           编辑
@@ -29,10 +30,10 @@
         </el-button>
       </template>
     </base-table>
-
-    <!-- 新增/编辑 合同预结算弹窗 -->
-    <add-edit-pre-settle-dialog
+    <!-- 新增/编辑 缴纳弹窗 -->
+    <add-edit-pay-dialog
       v-model="dialogVisible"
+      :recvTypeEnum="recvTypeEnum"
       :conId="props.conId"
       :editData="editData"
       @success="handleRefresh"
@@ -41,42 +42,49 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
-import AddEditPreSettleDialog from "./add-edit-pre-settle-dialog.vue";
-import { contractPreSettleApi } from "@/api/cost/contract-manage/contract-preSettlement-api.ts";
-import { ContractPreSettle } from "@/types/cost/contract-manage/contract-preSettlement-type.ts";
+import { perfBondApi } from "@/api/cost/contract-manage/performance-bond-api";
+import AddEditPayDialog from "./add-edit-pay-dialog.vue";
+import { PerformanceBondList } from "@/types/cost/contract-manage/performance-bond-type.ts";
 
-defineOptions({ name: "contract-pre-settle" });
+defineOptions({ name: "bond-pay" });
 
 const props = defineProps<{
   conId: number | null;
 }>();
 
+// 缴纳方式枚举
+const recvTypeEnum = [
+  { value: 1, label: "银行转账" },
+  { value: 2, label: "现金" },
+  { value: 3, label: "支票" },
+  { value: 4, label: "线上支付" },
+];
+
 const dialogVisible = ref(false);
 const editData = ref(null);
 const tableLoading = ref(false);
-const tableData = ref<any[]>([]);
+const tableData = ref<PerformanceBondList[]>([]);
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "signAmt", label: "合同签约金额" },
-  { prop: "addAmt", label: "补充合同金额" },
-  { prop: "sumChangeAmt", label: "累计变更签证" },
-  { prop: "preSettleAmt", label: "预估合同金额" },
-  { prop: "preSettleDesc", label: "调整说明" },
-  { prop: "status", label: "状态" },
+  { slot: "recvTypeId", label: "业务类型" },
+  { prop: "recvAmt", label: "金额" },
+  { prop: "recvDate", label: "发生日期" },
+  { prop: "annexId", label: "相关附件" },
+  {
+    label: "操作",
+    width: 150,
+    slot: "actions",
+    fixed: "right",
+  },
 ];
-
-// 状态映射
-const statusMap: Record<number, string> = {
-  0: "草稿",
-  5: "审批中",
-  10: "已审批",
-  30: "已作废",
-};
-
+const getRecvTypeName = (recvTypeId: number) => {
+  const item = recvTypeEnum.find((item) => item.value === recvTypeId);
+  return item ? item.label : "";
+}
 // 获取列表数据
 const getDataList = async () => {
   if (!props.conId) {
@@ -85,14 +93,9 @@ const getDataList = async () => {
   try {
     tableLoading.value = true;
     tableData.value = [];
-    const res = await contractPreSettleApi.getPreSettleList({
-      conId: props.conId,
-    });
+    const res = await perfBondApi.getLvRecvList({ conId: props.conId });
     if (res.code === 200) {
-      tableData.value = (res.data || []).map((item: any) => ({
-        ...item,
-        statusLabel: statusMap[item.status] ?? item.status,
-      }));
+      tableData.value = res.data || [];
     }
   } catch (error) {
     console.error("获取列表失败:", error);
@@ -106,28 +109,23 @@ const handleRefresh = () => {
   getDataList();
 };
 
-// 发起流程
-const handleInitiate = () => {
+// 新增
+const handleAdd = () => {
   editData.value = null;
   dialogVisible.value = true;
 };
-
 // 编辑
-const handleEdit = async (row: ContractPreSettle) => {
+const handleEdit = async (row) => {
   editData.value = row;
   dialogVisible.value = true;
 };
-
 // 删除
-const handleDelete = ({ id }: { id: number }) => {
+const handleDelete = (row) => {
   ElMessageBox.confirm("确定删除该数据吗？", "提示", { type: "warning" })
     .then(async () => {
       try {
-        const res = await contractPreSettleApi.delPreSettle({ id });
-        if (res.code === 200) {
-          ElMessage.success("删除成功");
-          getDataList();
-        }
+        ElMessage.success("删除成功");
+        getDataList();
       } catch (error) {
         console.error("删除失败:", error);
       }
@@ -135,17 +133,27 @@ const handleDelete = ({ id }: { id: number }) => {
     .catch(() => {});
 };
 
+// 监听合同ID变化，自动刷新列表
+// watch(
+//   () => props.conId,
+//   async (val) => {
+//     if (val) {
+//       getDataList();
+//     } else {
+//       tableData.value = [];
+//     }
+//   },
+//   { immediate: true },
+// );
 onMounted(() => {
   getDataList();
 });
 </script>
 
 <style lang="scss" scoped>
-.contract-pre-settle-wrapper {
+.bond-pay-wrapper {
   width: 100%;
   height: 100%;
-  padding: 15px;
-  box-sizing: border-box;
   background-color: #fff;
   display: flex;
   flex-direction: column;

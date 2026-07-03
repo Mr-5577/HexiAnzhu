@@ -115,7 +115,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, nextTick, watch } from "vue";
-import { largeScreenApi } from "@/api/large-screen-api";
+import { largeScreenApi } from "@/api/sales/large-screen-api";
 import { dateUtil } from "@/utils/date-util";
 import { useRouter } from "vue-router";
 

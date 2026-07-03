@@ -116,7 +116,7 @@
         <editable-table
           ref="detailtableRef"
           :row-key="'uuid'"
-          :height="'230px'"
+          :height="'220px'"
           :table-data="tableList"
           :columns="dynamicColumns"
           :loading="tableLoading"
@@ -124,9 +124,6 @@
           :highlight-current-row="false"
           :show-summary="false"
           :compactEmpty="true"
-          :on-save="handleSave"
-          @data-change="handleDataChange"
-          @update:table-data="handleDataUpdate"
           @editable-cell-click="handleEditableCellClick"
         >
           <template #actions="{ row }">
@@ -301,18 +298,8 @@ const formRules: FormRules = {
 const isEditMode = computed(() => !!props.editData?.id);
 
 const dialogTitle = computed(() => {
-  return isEditMode.value ? "编辑变更申请" : "发起变更申请";
+  return isEditMode.value ? "编辑变更申请" : "新增变更申请";
 });
-
-const handleSave = async (rowData: any) => {
-  const { row, column, newValue, oldValue, rowIndex } = rowData;
-};
-
-const handleDataChange = (data: any) => {};
-
-const handleDataUpdate = (newData: any) => {
-  tableList.value = newData;
-};
 const handleEditableCellClick = ({ row, column, rowIndex }) => {
   // console.log("可编辑单元格点击:", row, column, rowIndex);
   // 合同名称单元格点击

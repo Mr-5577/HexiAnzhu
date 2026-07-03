@@ -14,10 +14,12 @@
           <el-button type="primary" icon="Refresh" @click="handleRefresh">
             刷新列表
           </el-button>
-          <el-button type="primary" @click="handleInitiate">
-            发起流程
-          </el-button>
+          <el-button type="primary" @click="handleAdd"> 新增 </el-button>
         </div>
+      </template>
+
+      <template #status="{ row }">
+        {{ getStatusName(row.status) }}
       </template>
 
       <template #actions="{ row }">
@@ -46,6 +48,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import AddEditVoidDialog from "./add-edit-void-dialog.vue";
 import { contractVoidApi } from "@/api/cost/contract-manage/contract-void-api.ts";
+import { ContractVoid } from "@/types/cost/contract-manage/contract-void-type.ts";
 
 defineOptions({ name: "contract-void" });
 
@@ -56,15 +59,22 @@ const props = defineProps<{
 const dialogVisible = ref(false);
 const editData = ref(null);
 const tableLoading = ref(false);
-const tableData = ref<any[]>([]);
+const tableData = ref<ContractVoid[]>([]);
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
+  { prop: "status", label: "状态", width: 100, slot: "status" },
   { prop: "signAmt", label: "合同签约金额" },
   { prop: "sumProdVal", label: "累计产值" },
   { prop: "sumAppyAmt", label: "累计请款" },
   { prop: "voidDate", label: "作废日期" },
-  { prop: "voidDesc", label: "作废说明" },
+  { prop: "voidDesc", label: "作废说明", minWidth: 200 },
+  {
+    label: "操作",
+    width: 150,
+    slot: "actions",
+    fixed: "right",
+  },
 ];
 // 获取列表数据
 const getDataList = async () => {
@@ -85,13 +95,28 @@ const getDataList = async () => {
   }
 };
 
+const getStatusName = (status: number) => {
+  switch (status) {
+    case 0:
+      return "草稿";
+    case 5:
+      return "审批中";
+    case 10:
+      return "已审批";
+    case 30:
+      return "已作废";
+    default:
+      return "-";
+  }
+};
+
 // 刷新
 const handleRefresh = () => {
   getDataList();
 };
 
 // 发起流程
-const handleInitiate = () => {
+const handleAdd = () => {
   editData.value = null;
   dialogVisible.value = true;
 };

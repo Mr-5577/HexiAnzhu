@@ -60,5 +60,5 @@ export interface ContractPreSettleEditParams {
 export interface ContractPreSettleSaveParams {
   /** 合同ID */
   conId: number;
-  preSettle: ContractPreSettleEditParams;
+  rec: ContractPreSettleEditParams;
 }

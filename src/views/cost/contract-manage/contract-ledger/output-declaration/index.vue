@@ -19,9 +19,7 @@
           >
             刷新列表
           </el-button>
-          <el-button type="primary" @click="handleInitiate">
-            发起流程
-          </el-button>
+          <el-button type="primary" @click="handleAdd"> 新增 </el-button>
         </div>
       </template>
 
@@ -53,7 +51,7 @@ const props = defineProps<{
 
 const router = useRouter();
 const tableLoading = ref(false);
-const tableData = ref<any[]>([]);
+const tableData = ref([]);
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
@@ -110,7 +108,7 @@ const handleRefresh = () => {
 };
 
 // 发起流程
-const handleInitiate = () => {
+const handleAdd = () => {
   router.push({
     path: "/contract/output-declaration/add",
     query: {

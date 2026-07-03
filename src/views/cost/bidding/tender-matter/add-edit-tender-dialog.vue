@@ -246,8 +246,6 @@
           :show-summary="false"
           :compactEmpty="true"
           :on-save="handleSave"
-          @data-change="handleDataChange"
-          @update:table-data="handleDataUpdate"
         >
           <template #actions="{ row }">
             <el-button link type="danger" @click="handleDelete(row)">
@@ -275,16 +273,16 @@ import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 
 // ==================== Props & Emits ====================
-interface Props {
+interface Props<T = any> {
   modelValue: boolean;
   editData?: BidTender | null;
   projectId?: number | null;
-  segOptions?: any[];
-  conTypeOptions?: any[];
-  projectOptions: any[];
-  purchaseMethodOptions?: any[];
-  tenderMethodOptions?: any[];
-  billModeOptions?: any[];
+  segOptions?: T[];
+  conTypeOptions?: T[];
+  projectOptions: T[];
+  purchaseMethodOptions?: T[];
+  tenderMethodOptions?: T[];
+  billModeOptions?: T[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -309,7 +307,7 @@ const dialogVisible = ref(props.modelValue);
 const formRef = ref<FormInstance>();
 const submitLoading = ref(false);
 const tableLoading = ref(false);
-const tableList = ref<any[]>([]);
+const tableList = ref([]);
 
 const optionalProjList = computed(() => {
   const selectedProjectIds = formData.value.projectId || [];
@@ -615,12 +613,6 @@ const handleSave = async (data: any) => {
       tableList.value = newTableList;
     }
   }
-};
-
-const handleDataChange = (data: any) => {};
-
-const handleDataUpdate = (newData: any) => {
-  tableList.value = newData;
 };
 
 const handleDelete = (row: any) => {

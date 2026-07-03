@@ -1,5 +1,6 @@
 import { http } from "@/axios/service";
-import { SaleParamsInterface } from "@/types/large-screen-type";
+import { OrderToSignParams } from "@/types/sales/asset-management-type";
+import { SaleParamsInterface } from "@/types/sales/large-screen-type";
 
 export const largeScreenApi = {
   // 获取销售业绩数据
@@ -30,7 +31,7 @@ export const largeScreenApi = {
   },
   // 导出-置业顾问排名
   exportSaleProjSalerInfo: (
-    data: any,
+    data: OrderToSignParams,
     filename: string = "置业顾问排名.xlsx",
   ) => {
     return http.exportFile(

@@ -46,8 +46,7 @@
               size="small"
               :disabled="getColumnDisabled(column, row)"
               :placeholder="column.placeholder || '请输入'"
-              @blur="handleSave(row, column, $index)"
-              @keyup.enter="handleSave(row, column, $index)"
+              @change="handleSave(row, column, $index)"
             />
 
             <!-- 选择器 -->
@@ -93,7 +92,7 @@
               size="small"
               :disabled="getColumnDisabled(column, row)"
               :placeholder="column.placeholder || '请输入'"
-              @blur="handleSave(row, column, $index)"
+              @change="handleSave(row, column, $index)"
             />
 
             <!-- 日期 -->
@@ -153,8 +152,7 @@
               size="small"
               :disabled="getColumnDisabled(column, row)"
               :placeholder="column.placeholder || '请输入'"
-              @blur="handleSave(row, column, $index)"
-              @keyup.enter="handleSave(row, column, $index)"
+              @change="handleSave(row, column, $index)"
             />
           </template>
         </div>
@@ -255,7 +253,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>();
 
 const baseTableRef = ref<InstanceType<typeof BaseTable>>();
-const editableData = ref<any[]>([]);
+const editableData = ref([]);
 
 /**
  * 获取列的 disabled 状态（支持布尔值或函数）

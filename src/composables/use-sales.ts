@@ -1,11 +1,11 @@
 import { ref } from "vue";
-import { largeScreenApi } from "@/api/large-screen-api";
-import { assetManagementApi } from "@/api/asset-management-api";
+import { largeScreenApi } from "@/api/sales/large-screen-api";
+import { assetManagementApi } from "@/api/sales/asset-management-api";
 import type {
   ProjectInterface,
   TypeInterface,
   StatusInterface,
-} from "@/types/asset-management-type";
+} from "@/types/sales/asset-management-type";
 
 // ============ 全局单例变量（模块级别，不在函数内部） ============
 

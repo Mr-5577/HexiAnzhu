@@ -75,8 +75,8 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { assetManagementApi } from "@/api/asset-management-api";
-import type { DayTableInterface } from "@/types/channel-analysis-type";
+import { assetManagementApi } from "@/api/sales/asset-management-api";
+import type { DayTableInterface } from "@/types/sales/channel-analysis-type";
 import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
 import { ElMessage } from "element-plus";
@@ -121,7 +121,7 @@ const fixedColumns = [
   { type: "index", label: "序号", width: 60, fixed: "left" },
   { prop: "proj_name", label: "项目", width: 220, fixed: "left" },
 ];
-const dynamicColumns = ref<any[]>([]);
+const dynamicColumns = ref([]);
 const tableColumns = computed(() => [...fixedColumns, ...dynamicColumns.value]);
 
 const tableLoading = ref<boolean>(false);

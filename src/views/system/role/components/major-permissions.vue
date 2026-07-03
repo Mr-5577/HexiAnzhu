@@ -82,7 +82,7 @@ const columns: TableColumnItem[] = [
     showOverflowTooltip: false,
   },
 ];
-const tableData = ref<any[]>([]);
+const tableData = ref([]);
 // 获取数据列表
 const getDataList = async () => {
   try {

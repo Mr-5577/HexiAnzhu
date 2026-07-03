@@ -127,7 +127,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 
 import AddEditMenu from "./add-edit-menu.vue";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
-import { MenuForm, MenuItem } from "@/types/menu-type";
+import { MenuForm, MenuItem } from "@/types/system/menu-type.ts";
 import { menuApi } from "@/api/system/menu-api.ts";
 
 const queryParams = ref({
@@ -162,7 +162,7 @@ const columns: TableColumnItem[] = [
   { label: "是否可见", slot: "isVisible", width: 90 },
   { label: "操作", slot: "action", width: 220 },
 ];
-const tableData = ref<any[]>([]);
+const tableData = ref([]);
 const toggleExpandAll = () => {
   refreshTable.value = false;
   isExpandAll.value = !isExpandAll.value;

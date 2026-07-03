@@ -548,10 +548,7 @@
               :highlight-current-row="false"
               :show-summary="false"
               :compactEmpty="true"
-              :on-save="handleSavePrice"
               :editable="true"
-              @data-change="handleChangePrice"
-              @update:table-data="handleUpdatePrice"
             >
               <template #actions="{ row }">
                 <el-button link type="danger" @click="deletePrice(row)">
@@ -581,10 +578,7 @@
               :highlight-current-row="false"
               :show-summary="false"
               :compactEmpty="true"
-              :on-save="handleSavePayrate"
               :editable="true"
-              @data-change="handleChangePayrate"
-              @update:table-data="handleUpdatePayrate"
             >
               <template #actions="{ row }">
                 <el-button link type="danger" @click="deletePayrate(row)">
@@ -614,10 +608,7 @@
               :highlight-current-row="false"
               :show-summary="false"
               :compactEmpty="true"
-              :on-save="handleSaveMaterial"
               :editable="true"
-              @data-change="handleChangeMaterial"
-              @update:table-data="handleUpdateMaterial"
             >
               <template #actions="{ row }">
                 <el-button link type="danger" @click="deleteMaterial(row)">
@@ -647,10 +638,7 @@
               :highlight-current-row="false"
               :show-summary="false"
               :compactEmpty="true"
-              :on-save="handleSavePaynode"
               :editable="true"
-              @data-change="handleChangePaynode"
-              @update:table-data="handleUpdatePaynode"
             >
               <template #actions="{ row }">
                 <el-button link type="danger" @click="deletePaynode(row)">
@@ -806,7 +794,7 @@ const acctProjOptions = ref([
 ]);
 const paymentTypeOptions = ref([]);
 
-const priceTable = ref<any[]>([]); // 合同价格明细
+const priceTable = ref([]); // 合同价格明细
 const priceColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {
@@ -896,7 +884,7 @@ const calculatePriceTaxData = () => {
     taxRate,
   };
 };
-const payrateTable = ref<any[]>([]); // 支付明细
+const payrateTable = ref([]); // 支付明细
 const payrateColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {
@@ -1026,7 +1014,7 @@ const payrateColumns = computed<EditableColumn[]>(() => [
     fixed: "right",
   },
 ]);
-const materialTable = ref<any[]>([]); // 材料合同产值明细
+const materialTable = ref([]); // 材料合同产值明细
 const materialColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {
@@ -1173,7 +1161,7 @@ const materialColumns = computed<EditableColumn[]>(() => [
     fixed: "right",
   },
 ]);
-const paynodeTable = ref<any[]>([]); // 支付节点明细
+const paynodeTable = ref([]); // 支付节点明细
 const paynodeColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {
@@ -1681,13 +1669,6 @@ const addPrice = () => {
 const deletePrice = (row) => {
   priceTable.value = priceTable.value.filter((item) => item.uuid !== row.uuid);
 };
-const handleSavePrice = async (rowData: any) => {
-  const { row, column, newValue, oldValue, rowIndex } = rowData;
-};
-const handleChangePrice = (data: any) => {};
-const handleUpdatePrice = (newData: any) => {
-  priceTable.value = newData;
-};
 const addPayrate = () => {
   const newRowData = {
     uuid: uuidv4(),
@@ -1712,13 +1693,6 @@ const deletePayrate = (row) => {
   payrateTable.value = payrateTable.value.filter(
     (item) => item.uuid !== row.uuid,
   );
-};
-const handleSavePayrate = async (rowData: any) => {
-  const { row, column, newValue, oldValue, rowIndex } = rowData;
-};
-const handleChangePayrate = (data: any) => {};
-const handleUpdatePayrate = (newData: any) => {
-  payrateTable.value = newData;
 };
 const addMaterial = () => {
   const newRowData = {
@@ -1750,13 +1724,6 @@ const deleteMaterial = (row) => {
     (item) => item.uuid !== row.uuid,
   );
 };
-const handleSaveMaterial = async (rowData: any) => {
-  const { row, column, newValue, oldValue, rowIndex } = rowData;
-};
-const handleChangeMaterial = (data: any) => {};
-const handleUpdateMaterial = (newData: any) => {
-  materialTable.value = newData;
-};
 const addPaynode = () => {
   const newRowData = {
     uuid: uuidv4(),
@@ -1779,13 +1746,6 @@ const deletePaynode = (row) => {
   paynodeTable.value = paynodeTable.value.filter(
     (item) => item.uuid !== row.uuid,
   );
-};
-const handleSavePaynode = async (rowData: any) => {
-  const { row, column, newValue, oldValue, rowIndex } = rowData;
-};
-const handleChangePaynode = (data: any) => {};
-const handleUpdatePaynode = (newData: any) => {
-  paynodeTable.value = newData;
 };
 // 校验价税明细表
 const validatePriceTable = () => {

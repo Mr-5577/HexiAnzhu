@@ -14,10 +14,11 @@
           <el-button type="primary" icon="Refresh" @click="handleRefresh">
             刷新列表
           </el-button>
-          <el-button type="primary" @click="handleInitiate">
-            发起流程
-          </el-button>
+          <el-button type="primary" @click="handleAdd"> 新增 </el-button>
         </div>
+      </template>
+      <template #settleType="{ row }">
+        {{ row.settleType == 0 ? "部分结算" : "全部结算" }}
       </template>
       <template #status="{ row }">
         {{ getStatusName(row.status) }}
@@ -29,6 +30,7 @@
         <el-button type="danger" link @click="handleDelete(row)">
           删除
         </el-button>
+        <el-button type="primary" link> 审批 </el-button>
       </template>
     </base-table>
   </div>
@@ -49,11 +51,12 @@ const props = defineProps<{
 const router = useRouter();
 
 const tableLoading = ref(false);
-const tableData = ref<any[]>([]);
+const tableData = ref([]);
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "conBillId", label: "单据编号", width: 120 },
+  // { prop: "conBillId", label: "单据编号", width: 120 },
+  { prop: "settleType", label: "结算类型", width: 120, slot: "settleType" }, // 0-部分结算，1-全部结算
   { prop: "status", label: "状态", width: 100, slot: "status" }, // 用slot显示状态标签
   { prop: "signAmt", label: "合同签约金额", width: 120 },
   { prop: "addAmt", label: "补充合同金额", width: 120 },
@@ -64,7 +67,6 @@ const tableColumns: TableColumnItem[] = [
   { prop: "sumAppyAmt", label: "累计请款", width: 120 },
   { prop: "sumPaidAmt", label: "累计实付", width: 120 },
   { prop: "sumOwedAmt", label: "累计欠款", width: 120 },
-  { prop: "settleType", label: "结算类型", width: 120, slot: "settleType" }, // 0-部分结算，1-全部结算
   { prop: "applySettleAmt", label: "申报结算金额", width: 120 },
   { prop: "totalDedAmt", label: "扣款总金额", width: 120 },
   { prop: "sumDedAlreadyAmt", label: "累计已扣款", width: 120 },
@@ -121,7 +123,7 @@ const handleRefresh = () => {
 };
 
 // 发起流程
-const handleInitiate = () => {
+const handleAdd = () => {
   router.push({
     path: "/contract/contract-settle/add",
     query: {

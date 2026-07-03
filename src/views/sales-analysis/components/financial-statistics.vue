@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import { largeScreenApi } from "@/api/large-screen-api";
+import { largeScreenApi } from "@/api/sales/large-screen-api";
 import dingdan from "@/assets/imgs/largeScreenImg/dingdan.png";
 import rengou from "@/assets/imgs/largeScreenImg/rengou.png";
 import tuifang from "@/assets/imgs/largeScreenImg/tuifang.png";

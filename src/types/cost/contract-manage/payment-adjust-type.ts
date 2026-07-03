@@ -11,6 +11,8 @@ export interface ContractDed {
   conBillId: number;
   /** 状态：0-草稿，5-审批中，10-已审批，30-已作废 */
   status: number;
+  /** 扣款标题 */
+  dedName: string;
   /** 扣款类型ID */
   dedTypeId: number;
   /** 奖罚金额 */
@@ -39,6 +41,8 @@ export interface DedInfo {
   status: number;
   /** 单据ID */
   conBillId: number;
+  /** 扣款标题 */
+  dedName: string;
   /** 扣款类型ID */
   dedTypeId: number;
   /** 奖罚金额 */

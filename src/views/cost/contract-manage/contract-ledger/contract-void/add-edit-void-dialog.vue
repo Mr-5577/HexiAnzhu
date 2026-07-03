@@ -63,7 +63,7 @@
                 v-model="formData.voidDate"
                 type="date"
                 placeholder="请选择作废日期"
-                value-format="YYYY-MM-DD"
+                value-format="YYYY-MM-DD HH:mm:ss"
                 style="width: 100%"
               />
             </el-form-item>
@@ -72,7 +72,7 @@
 
         <el-row>
           <el-col :span="24">
-            <el-form-item prop="voidDesc" label="作废说明" required>
+            <el-form-item prop="voidDesc" label="作废说明">
               <el-input
                 v-model="formData.voidDesc"
                 type="textarea"
@@ -93,14 +93,14 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { ElMessage, type FormInstance, type FormRules } from "element-plus";
-import type { ContractVoidParams } from "@/types/cost/contract-manage/contract-void-type";
+import type { ContractVoid } from "@/types/cost/contract-manage/contract-void-type";
 import { contractVoidApi } from "@/api/cost/contract-manage/contract-void-api";
 import { useUserStore } from "@/stores/user-store";
 
 interface Props {
   modelValue: boolean;
   conId?: number;
-  editData?: ContractVoidParams | null;
+  editData?: ContractVoid | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -121,7 +121,7 @@ const formRef = ref<FormInstance>();
 const submitLoading = ref(false);
 
 // 表单数据
-const formData = ref<ContractVoidParams>({
+const formData = ref({
   id: undefined,
   conBillId: null,
   status: 0, // 状态：0-草稿，5-审批中，10-已审批，30-已作废
@@ -153,10 +153,6 @@ const formRules: FormRules = {
     { type: "number", min: 0, message: "累计请款不能小于0", trigger: "change" },
   ],
   voidDate: [{ required: true, message: "请选择作废日期", trigger: "change" }],
-  voidDesc: [
-    { required: true, message: "请输入作废说明", trigger: "blur" },
-    { max: 500, message: "作废说明不能超过500个字符", trigger: "blur" },
-  ],
 };
 
 // 是否为编辑模式
@@ -166,6 +162,21 @@ const isEditMode = computed(() => !!props.editData?.id);
 const dialogTitle = computed(() => {
   return isEditMode.value ? "编辑合同解除" : "新增合同解除";
 });
+
+/**
+ * 校验是否允许作废
+ * 产值金额、请款金额任意一个不为0，则不允许作废
+ */
+const validateCanVoid = (): boolean => {
+  const sumProdVal = Number(formData.value.sumProdVal) || 0;
+  const sumAppyAmt = Number(formData.value.sumAppyAmt) || 0;
+
+  if (sumProdVal !== 0 || sumAppyAmt !== 0) {
+    ElMessage.warning("累计产值或累计请款不为0，不允许作废");
+    return false;
+  }
+  return true;
+};
 
 // 初始化表单数据
 const initFormData = () => {
@@ -189,7 +200,7 @@ const initFormData = () => {
       signAmt: 0,
       sumProdVal: 0,
       sumAppyAmt: 0,
-      agentId: undefined,
+      agentId: userStore?.userInfo?.id, // 当前登录人id
       voidDate: "",
       voidDesc: "",
     };
@@ -212,19 +223,24 @@ const handleSubmit = async () => {
 
   try {
     await formRef.value.validate();
+
+    // 校验是否允许作废
+    // if (!validateCanVoid()) {
+    //   return;
+    // }
+
     submitLoading.value = true;
 
-    const params = {
-      ...formData.value,
-      agentId: userStore?.userInfo?.id, // 当前登录人id
-    };
-
-    const interfaceApi = isEditMode.value
-      ? contractVoidApi.editVoid
-      : contractVoidApi.addVoid;
-
-    const res = await interfaceApi(params);
-
+    let res;
+    if (isEditMode.value) {
+      res = await contractVoidApi.editVoid(formData.value);
+    } else {
+      const params = {
+        conId: props.conId,
+        rec: formData.value,
+      };
+      res = await contractVoidApi.addVoid(params);
+    }
     if (res.code === 200) {
       ElMessage.success(isEditMode.value ? "修改成功" : "保存成功");
       emit("success");

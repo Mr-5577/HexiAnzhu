@@ -29,8 +29,6 @@
           :highlight-current-row="false"
           :show-summary="false"
           :on-save="handleSave"
-          @data-change="handleDataChange"
-          @update:table-data="handleDataUpdate"
         >
           <!-- 列表外操作栏 -->
           <template #actionBar>
@@ -71,7 +69,7 @@ import type { EditableColumn } from "@/components/base/editable-table.vue";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
 import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api.ts";
 import { ElMessage } from "element-plus";
-import { largeScreenApi } from "@/api/large-screen-api";
+import { largeScreenApi } from "@/api/sales/large-screen-api.ts";
 import { debounce } from "@/utils/common";
 import AmountDialog from "./amount-dialog.vue";
 
@@ -280,14 +278,6 @@ const handleSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
   }
 
   updateRow(rowIndex, { [column]: newValue });
-};
-
-const handleDataChange = (data) => {
-  // console.log("表格数据变化:", data);
-};
-
-const handleDataUpdate = (newData) => {
-  tableData.value = newData;
 };
 
 const handleAmount = (row) => {

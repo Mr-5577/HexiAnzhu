@@ -73,11 +73,11 @@
 
         <el-row>
           <el-col :span="24">
-            <el-form-item prop="preSettleDesc" label="调整说明" required>
+            <el-form-item prop="preSettleDesc" label="结算说明" required>
               <el-input
                 v-model="formData.preSettleDesc"
                 type="textarea"
-                placeholder="请输入调整说明"
+                placeholder="请输入结算说明"
                 :rows="4"
                 maxlength="500"
                 show-word-limit
@@ -97,8 +97,7 @@ import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import {
   ContractPreSettle,
   ContractPreSettleEditParams,
-  ContractPreSettleSaveParams,
-} from "@/types/cost/contract-manage/contract-preSettlement-type";
+} from "@/types/cost/contract-manage/contract-preSettle-type";
 import { contractPreSettleApi } from "@/api/cost/contract-manage/contract-preSettlement-api";
 
 interface Props {
@@ -173,8 +172,8 @@ const formRules: FormRules = {
     },
   ],
   preSettleDesc: [
-    { required: true, message: "请输入调整说明", trigger: "blur" },
-    { max: 500, message: "调整说明不能超过500个字符", trigger: "blur" },
+    { required: true, message: "请输入结算说明", trigger: "blur" },
+    { max: 500, message: "结算说明不能超过500个字符", trigger: "blur" },
   ],
 };
 
@@ -241,7 +240,7 @@ const handleSubmit = async () => {
     } else {
       const params = {
         conId: props.conId,
-        preSettle: formData.value,
+        rec: formData.value,
       };
       const res = await contractPreSettleApi.addPreSettle(params);
       if (res.code === 200) {

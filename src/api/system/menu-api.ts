@@ -2,7 +2,7 @@ import { http } from "@/axios/service";
 
 export const menuApi = {
   // 获取菜单列表
-  getMenuList: (data: any) => {
+  getMenuList: (data: { menuName: string }) => {
     return http.post("/auth/getMenuList", data);
   },
   // 编辑菜单

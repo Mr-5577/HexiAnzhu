@@ -94,7 +94,7 @@ import { computed, onMounted, onUnmounted, ref } from "vue";
 import { agentRankingColumns } from "./project-columns";
 import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
-import { largeScreenApi } from "@/api/large-screen-api";
+import { largeScreenApi } from "@/api/sales/large-screen-api";
 import { ElMessage } from "element-plus";
 import { useRoute } from "vue-router";
 import { v4 as uuidv4 } from "uuid";
@@ -141,8 +141,8 @@ const exportLoading = ref<boolean>(false);
 const currentPage = ref<number>(1);
 const pageSize = ref<number>(20);
 const total = ref<number>(0);
-const tableData = ref<any[]>([]);
-const allTableList = ref<any[]>([]);
+const tableData = ref([]);
+const allTableList = ref([]);
 
 const handlePaginationChange = (params: any) => {
   currentPage.value = params.currentPage;

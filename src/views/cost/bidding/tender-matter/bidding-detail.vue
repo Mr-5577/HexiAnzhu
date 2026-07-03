@@ -42,21 +42,22 @@
 
       <!-- 右侧内容区 -->
       <el-main class="content-area">
-        <!-- <keep-alive> -->
-        <component
-          :is="currentComponent"
-          :tender-id="tenderId"
-          :detail-data="detailData"
-          :project-options="projectOptions"
-        />
-        <!-- </keep-alive> -->
+        <keep-alive>
+          <component
+            :key="activeTab"
+            :is="currentComponent"
+            :tender-id="tenderId"
+            :detail-data="detailData"
+            :project-options="projectOptions"
+          />
+        </keep-alive>
       </el-main>
     </el-container>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, shallowRef } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import {
@@ -76,7 +77,7 @@ import AwardApproval from "./components/award-approval/index.vue";
 import BidBondPay from "./components/bid-bond-pay/index.vue";
 import BidBondRefund from "./components/bid-bond-refund/index.vue";
 import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api.ts";
-import { largeScreenApi } from "@/api/large-screen-api";
+import { largeScreenApi } from "@/api/sales/large-screen-api.ts";
 import { BidTenderFormParams } from "@/types/cost/bidding/bidding-management-type.ts";
 
 defineOptions({ name: "bidding-detail" });
@@ -89,7 +90,7 @@ type TenderDetailData = {
 const route = useRoute();
 const tenderId = ref<number | null>(); // 事项ID
 
-const detailData = ref<TenderDetailData | null>(null); // 详情数据
+const detailData = shallowRef<TenderDetailData | null>(null); // 详情数据
 const projectOptions = ref([]); // 项目列表
 
 // ==================== Tab配置 ====================
@@ -134,11 +135,28 @@ const getProjectOptions = async () => {
     console.error("获取项目列表失败:", error);
   }
 };
-
+// 切换tab
 const handleTabChange = (tab: string) => {
   activeTab.value = tab;
-};
 
+  // 更新 URL 但不触发路由更新（仅在不同的时候修改，避免无谓的 history.replaceState）
+  try {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("tab") !== tab) {
+      url.searchParams.set("tab", tab);
+      window.history.replaceState({}, "", url.toString());
+    }
+  } catch (e) {}
+};
+// 从路由获取初始tab
+const getInitialTab = (): string => {
+  const tabFromQuery = route.query.tab as string;
+  const validTabs = Object.keys(tabComponents);
+  if (tabFromQuery && validTabs.includes(tabFromQuery)) {
+    return tabFromQuery;
+  }
+  return "overview";
+};
 const initData = () => {
   // 从路由参数中获取 tenderId
   const queryTenderId = route.query.tenderId;
@@ -147,6 +165,9 @@ const initData = () => {
     tenderId.value = Number(queryTenderId);
     getDetailData();
     getProjectOptions();
+
+    // 重新设置tab（防止URL有变化）
+    activeTab.value = getInitialTab();
   } else {
     ElMessage.error("缺少招标事项ID");
   }
@@ -160,6 +181,17 @@ watch(
     }
   },
   { immediate: true },
+);
+watch(
+  () => route.query.tab,
+  (newTab) => {
+    if (newTab && typeof newTab === "string") {
+      const validTabs = Object.keys(tabComponents);
+      if (validTabs.includes(newTab)) {
+        activeTab.value = newTab;
+      }
+    }
+  },
 );
 </script>
 

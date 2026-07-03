@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useRouter, useRoute } from "vue-router";
-import type { SidebarMenuItem } from "@/types/menu-type";
+import type { SidebarMenuItem } from "@/types/system/menu-type.ts";
 import SidebarItem from "./sidebar-menu-item.vue";
 import { useTagsStore } from "@/stores/tags-store";
 const tagsStore = useTagsStore();

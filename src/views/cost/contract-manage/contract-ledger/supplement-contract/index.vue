@@ -45,6 +45,7 @@
         <!-- <el-button type="primary" link @click="handleDetail(row)">
           详情
         </el-button> -->
+        <el-button type="primary" link> 审批 </el-button>
       </template>
     </base-table>
   </div>
