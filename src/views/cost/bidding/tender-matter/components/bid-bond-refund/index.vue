@@ -74,7 +74,7 @@
 import { ref, onMounted } from "vue";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api";
-import { largeScreenApi } from "@/api/large-screen-api";
+import { largeScreenApi } from "@/api/sales/large-screen-api";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { BidBondRefundBill } from "@/types/cost/bidding/bidding-management-type";

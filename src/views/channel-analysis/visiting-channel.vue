@@ -75,8 +75,8 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
-import { assetManagementApi } from "@/api/asset-management-api";
-import type { DayTableInterface } from "@/types/channel-analysis-type";
+import { assetManagementApi } from "@/api/sales/asset-management-api";
+import type { DayTableInterface } from "@/types/sales/channel-analysis-type";
 import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
 import { ElMessage } from "element-plus";

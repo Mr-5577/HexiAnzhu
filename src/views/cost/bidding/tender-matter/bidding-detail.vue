@@ -77,7 +77,7 @@ import AwardApproval from "./components/award-approval/index.vue";
 import BidBondPay from "./components/bid-bond-pay/index.vue";
 import BidBondRefund from "./components/bid-bond-refund/index.vue";
 import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api.ts";
-import { largeScreenApi } from "@/api/large-screen-api";
+import { largeScreenApi } from "@/api/sales/large-screen-api.ts";
 import { BidTenderFormParams } from "@/types/cost/bidding/bidding-management-type.ts";
 
 defineOptions({ name: "bidding-detail" });

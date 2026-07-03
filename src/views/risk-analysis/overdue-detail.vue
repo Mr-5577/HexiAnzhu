@@ -62,7 +62,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { overdueDetailColumns } from "./project-columns";
-import { assetManagementApi } from "@/api/asset-management-api";
+import { assetManagementApi } from "@/api/sales/asset-management-api";
 import { useSalesData } from "@/composables/use-sales";
 import { ElMessage } from "element-plus";
 import { useRoute } from "vue-router";
@@ -157,7 +157,6 @@ const initPageData = async () => {
 };
 const getParams = () => ({
   ...queryParams.value,
-  current: currentPage.value,
 });
 // 获取列表
 const getTableList = async () => {

@@ -65,7 +65,7 @@ import EditableTable from "@/components/base/editable-table.vue";
 import type { EditableColumn } from "@/components/base/editable-table.vue";
 import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api.ts";
 import { ElMessage } from "element-plus";
-import { largeScreenApi } from "@/api/large-screen-api";
+import { largeScreenApi } from "@/api/sales/large-screen-api.ts";
 import ChooseSupplierDialog from "../choose-supplier-dialog.vue";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";

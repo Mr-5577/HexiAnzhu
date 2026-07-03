@@ -76,7 +76,7 @@ import { computed, onMounted, onUnmounted, ref } from "vue";
 import { AnnualReportColumns } from "./project-columns";
 import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
-import { assetManagementApi } from "@/api/asset-management-api";
+import { assetManagementApi } from "@/api/sales/asset-management-api";
 import { ElMessage } from "element-plus";
 import { useRoute, useRouter } from "vue-router";
 import { v4 as uuidv4 } from "uuid";

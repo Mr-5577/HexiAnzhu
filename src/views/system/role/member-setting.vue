@@ -74,7 +74,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { roleApi } from "@/api/system/role-api.ts";
-import { RoleMemberItem } from "@/types/role-type";
+import { RoleMemberItem } from "@/types/system/role-type.ts";
 import { ElMessage, ElMessageBox } from "element-plus";
 import AddEditMember from "./components/add-edit-member.vue";
 import { useMenuStore } from "@/stores/menu-store";

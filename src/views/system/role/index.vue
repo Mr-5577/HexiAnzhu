@@ -204,7 +204,7 @@ import DataPermissions from "./data-permissions.vue";
 import { ref, reactive, onMounted } from "vue";
 import AddEditRole from "./components/add-edit-role.vue";
 import { roleApi } from "@/api/system/role-api.ts";
-import { RoleItem, RoleSearchForm } from "@/types/role-type";
+import { RoleItem, RoleSearchForm } from "@/types/system/role-type.ts";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Plus, Delete, Edit, Search, Refresh } from "@element-plus/icons-vue";
 import { useMenuStore } from "@/stores/menu-store";

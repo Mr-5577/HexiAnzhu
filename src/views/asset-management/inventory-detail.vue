@@ -79,8 +79,8 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { inventoryDetailColumns } from "./project-columns";
-import { assetManagementApi } from "@/api/asset-management-api";
-import type { InventoryDetailInterface } from "@/types/asset-management-type";
+import { assetManagementApi } from "@/api/sales/asset-management-api";
+import type { InventoryDetailInterface } from "@/types/sales/asset-management-type";
 import { useSalesData } from "@/composables/use-sales";
 import { ElMessage } from "element-plus";
 import { useRoute } from "vue-router";

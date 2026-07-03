@@ -127,7 +127,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 
 import AddEditMenu from "./add-edit-menu.vue";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
-import { MenuForm, MenuItem } from "@/types/menu-type";
+import { MenuForm, MenuItem } from "@/types/system/menu-type.ts";
 import { menuApi } from "@/api/system/menu-api.ts";
 
 const queryParams = ref({

@@ -2,7 +2,7 @@ import type {
   BackendMenuItem,
   SidebarMenuItem,
   ModuleItem,
-} from "@/types/menu-type";
+} from "@/types/system/menu-type";
 
 /**
  * 提取模块数据（用于header显示）

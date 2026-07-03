@@ -110,7 +110,7 @@ import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { useRouter } from "vue-router";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
-import { largeScreenApi } from "@/api/large-screen-api";
+import { largeScreenApi } from "@/api/sales/large-screen-api";
 import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api";
 import {
   ConPropertyEnum,

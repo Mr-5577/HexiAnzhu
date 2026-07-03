@@ -247,8 +247,8 @@
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { visitingRecordColumns } from "./project-columns";
 import { dateUtil } from "@/utils/date-util";
-import { assetManagementApi } from "@/api/asset-management-api";
-import { ConversionRateInterface } from "@/types/channel-analysis-type";
+import { assetManagementApi } from "@/api/sales/asset-management-api";
+import { ConversionRateInterface } from "@/types/sales/channel-analysis-type";
 import { v4 as uuidv4 } from "uuid";
 import BaseModal from "@/components/base/base-modal.vue";
 import { VuePrintNext } from "vue-print-next";

@@ -4,7 +4,7 @@ import {
   RoleDelete,
   RoleFormData,
   MemberSearch,
-} from "@/types/role-type";
+} from "@/types/system/role-type";
 
 export const roleApi = {
   // 获取角色列表

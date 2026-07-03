@@ -117,7 +117,7 @@ import type {
 import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api.ts";
 import { conTypeApi } from "@/api/cost/master-data/contract-category-api.ts";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api.ts";
-import { largeScreenApi } from "@/api/large-screen-api";
+import { largeScreenApi } from "@/api/sales/large-screen-api.ts";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";
 

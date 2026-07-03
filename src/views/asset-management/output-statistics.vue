@@ -71,7 +71,7 @@ import { computed, onMounted, onUnmounted, ref } from "vue";
 import { outputStatisticsColumns } from "./project-columns";
 import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
-import { assetManagementApi } from "@/api/asset-management-api";
+import { assetManagementApi } from "@/api/sales/asset-management-api";
 import { ElMessage } from "element-plus";
 import { useRoute } from "vue-router";
 import { useMenuStore } from "@/stores/menu-store";

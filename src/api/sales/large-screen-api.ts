@@ -1,5 +1,5 @@
 import { http } from "@/axios/service";
-import { SaleParamsInterface } from "@/types/large-screen-type";
+import { SaleParamsInterface } from "@/types/sales/large-screen-type";
 
 export const largeScreenApi = {
   // 获取销售业绩数据
