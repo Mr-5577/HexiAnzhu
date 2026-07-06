@@ -497,6 +497,7 @@
           :show-summary="false"
           :compactEmpty="true"
           :editable="true"
+          @update:table-data="(newData) => (tableData = newData)"
         >
           <template #actionBar>
             <div class="actionBar-buttons">

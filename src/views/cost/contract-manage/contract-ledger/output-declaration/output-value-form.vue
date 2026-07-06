@@ -308,6 +308,7 @@
               :highlight-current-row="false"
               :show-summary="false"
               :compactEmpty="true"
+              @update:table-data="(newData) => (payrateTable = newData)"
             >
               <template #actions="{ row }">
                 <el-button link type="danger" @click="deletePayrate(row)">
@@ -343,6 +344,7 @@
               :highlight-current-row="false"
               :show-summary="false"
               :compactEmpty="true"
+              @update:table-data="(newData) => (materialTable = newData)"
             >
               <!-- <template #actions="{ row }">
                 <el-button link type="danger" @click="deleteMaterial(row)">
@@ -373,6 +375,7 @@
               :highlight-current-row="false"
               :show-summary="false"
               :compactEmpty="true"
+              @update:table-data="(newData) => (paynodeTable = newData)"
             >
               <template #actions="{ row }">
                 <el-button link type="danger" @click="deletePaynode(row)">

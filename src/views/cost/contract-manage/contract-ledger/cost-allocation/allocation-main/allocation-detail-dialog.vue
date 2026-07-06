@@ -30,7 +30,6 @@
         <div class="header-content">
           <span class="header-title">分摊明细</span>
         </div>
-
         <!-- 分摊汇总信息（分摊后显示） -->
         <div v-if="showSummary" class="summary-info">
           <el-descriptions :column="3" size="default">
@@ -122,7 +121,7 @@
         <!-- 底部汇总 -->
         <div v-if="!showSummary" class="table-footer">
           <span>
-            已输入分摊总额(含税)：<b>{{ totalInputAmt.toFixed(2) }}</b>
+            已输入 分摊总额(含税)：<b>{{ totalInputAmt.toFixed(2) }}</b>
           </span>
           <span>
             应分摊总额(含税)：<b>{{ currentRowData?.allocAmt || 0 }}</b>

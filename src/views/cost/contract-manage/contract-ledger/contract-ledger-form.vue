@@ -549,6 +549,7 @@
               :show-summary="false"
               :compactEmpty="true"
               :editable="true"
+              @update:table-data="(newData) => (priceTable = newData)"
             >
               <template #actions="{ row }">
                 <el-button link type="danger" @click="deletePrice(row)">
@@ -579,6 +580,7 @@
               :show-summary="false"
               :compactEmpty="true"
               :editable="true"
+              @update:table-data="(newData) => (payrateTable = newData)"
             >
               <template #actions="{ row }">
                 <el-button link type="danger" @click="deletePayrate(row)">
@@ -609,6 +611,7 @@
               :show-summary="false"
               :compactEmpty="true"
               :editable="true"
+              @update:table-data="(newData) => (materialTable = newData)"
             >
               <template #actions="{ row }">
                 <el-button link type="danger" @click="deleteMaterial(row)">
@@ -639,6 +642,7 @@
               :show-summary="false"
               :compactEmpty="true"
               :editable="true"
+              @update:table-data="(newData) => (paynodeTable = newData)"
             >
               <template #actions="{ row }">
                 <el-button link type="danger" @click="deletePaynode(row)">

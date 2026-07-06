@@ -124,6 +124,7 @@
           :highlight-current-row="false"
           :show-summary="false"
           :compactEmpty="true"
+          @update:table-data="(newData) => (tableList = newData)"
           @editable-cell-click="handleEditableCellClick"
         >
           <template #actions="{ row }">
