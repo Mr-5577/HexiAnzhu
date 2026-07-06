@@ -57,7 +57,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, shallowRef } from "vue";
+import { ref, computed, watch, shallowRef, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import {
@@ -173,26 +173,29 @@ const initData = () => {
   }
 };
 
-watch(
-  () => route.query.tenderId,
-  (newId) => {
-    if (newId) {
-      initData();
-    }
-  },
-  { immediate: true },
-);
-watch(
-  () => route.query.tab,
-  (newTab) => {
-    if (newTab && typeof newTab === "string") {
-      const validTabs = Object.keys(tabComponents);
-      if (validTabs.includes(newTab)) {
-        activeTab.value = newTab;
-      }
-    }
-  },
-);
+// watch(
+//   () => route.query.tenderId,
+//   (newId) => {
+//     if (newId) {
+//       initData();
+//     }
+//   },
+//   { immediate: true },
+// );
+// watch(
+//   () => route.query.tab,
+//   (newTab) => {
+//     if (newTab && typeof newTab === "string") {
+//       const validTabs = Object.keys(tabComponents);
+//       if (validTabs.includes(newTab)) {
+//         activeTab.value = newTab;
+//       }
+//     }
+//   },
+// );
+onMounted(() => {
+  initData();
+});
 </script>
 
 <style scoped lang="scss">

@@ -108,14 +108,6 @@
             </div>
           </div>
         </div>
-
-        <!-- <div class="footer-links">
-          <span class="register-link">
-            还没有账号？
-            <a href="#">立即注册</a>
-          </span>
-          <span class="forgot-link"><a href="#">忘记密码？</a></span>
-        </div> -->
       </div>
     </div>
   </div>
@@ -729,41 +721,6 @@ onMounted(() => {
 
 .qr-loading {
   animation: qr-loading 1.5s ease-in-out infinite;
-}
-
-.footer-links {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 25px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
-  font-size: 14px;
-
-  .register-link {
-    color: #666;
-
-    a {
-      color: #409eff;
-      text-decoration: none;
-
-      &:hover {
-        text-decoration: underline;
-      }
-    }
-  }
-
-  .forgot-link {
-    a {
-      color: #999;
-      text-decoration: none;
-
-      &:hover {
-        color: #409eff;
-        text-decoration: underline;
-      }
-    }
-  }
 }
 
 @keyframes slideUp {
