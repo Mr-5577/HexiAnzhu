@@ -174,7 +174,7 @@ const currentComponent = computed(() => componentMap.get(activeTab.value));
 // 切换tab
 const handleTabChange = (tab: string) => {
   activeTab.value = tab;
-  
+
   // 更新 URL 但不触发路由更新（仅在不同的时候修改，避免无谓的 history.replaceState）
   try {
     const url = new URL(window.location.href);
@@ -198,17 +198,20 @@ const getInitialTab = (): string => {
 
 // 同步路由参数
 const syncRouteState = () => {
+  console.log("同步路由参数:", route.query);
   conId.value = route.query.conId ? Number(route.query.conId) : null;
   projId.value = route.query.projId ? Number(route.query.projId) : null;
 
   activeTab.value = getInitialTab();
 };
 
-watch(() => [route.query.conId, route.query.projId], syncRouteState, {
-  immediate: true,
-});
+// watch(() => [route.query.conId, route.query.projId], syncRouteState, {
+//   immediate: true,
+// });
 
-onMounted(() => {});
+onMounted(() => {
+  syncRouteState();
+});
 </script>
 <style scoped lang="scss">
 .contract-ledger-detail {

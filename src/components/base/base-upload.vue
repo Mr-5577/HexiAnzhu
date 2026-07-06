@@ -15,6 +15,7 @@
       :on-progress="handleProgress"
       :on-remove="handleRemove"
       :on-exceed="handleExceed"
+      :on-preview="handlePreview"
       :disabled="disabled"
     >
       <el-button :loading="isUploading" :disabled="disabled">
@@ -67,8 +68,8 @@ const props = withDefaults(
     modelValue: () => [],
     multiple: false,
     limit: 3,
-    accept: ".pdf,.jpg,.png,.dwg,.doc,.docx",
-    maxSize: 10,
+    accept: ".pdf,.jpg,.png,.doc,.docx,.xlsx,.xls",
+    maxSize: 20,
     action: "/system/bindAttachment",
     disabled: false,
     showTip: true,
@@ -249,6 +250,14 @@ const handleRemove: UploadProps["onRemove"] = (file, files) => {
   // 可选：调用后端删除接口
   // if (file.key) {
   //   api.deleteFile({ key: file.key }).catch(console.error)
+  // }
+};
+
+// 预览文件
+const handlePreview: UploadProps["onPreview"] = (file) => {
+  console.log("预览文件:", file);
+  // if (file.url) {
+  //   window.open(file.url, "_blank");
   // }
 };
 
