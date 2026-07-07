@@ -12,7 +12,6 @@
       :before-upload="handleBeforeUpload"
       :on-success="handleSuccess"
       :on-error="handleError"
-      :on-progress="handleProgress"
       :on-remove="handleRemove"
       :on-exceed="handleExceed"
       :on-preview="handlePreview"
@@ -32,19 +31,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, computed } from "vue";
 import { ElMessage } from "element-plus";
 import type { UploadFile, UploadProps } from "element-plus";
+import { getApiBaseUrl } from "@/utils/config";
+
+// 附件信息接口
+interface AnnexInfo {
+  id: number;
+  annexName: string;
+  annexSize?: number;
+  annexPath?: string;
+  annexExt?: string;
+  [key: string]: any;
+}
 
 interface FileItem extends UploadFile {
-  key?: string;
-  fileId?: string;
+  id?: number;
+  annexName?: string;
+  annexPath?: string;
+  annexSize?: number;
 }
 
 const props = withDefaults(
   defineProps<{
-    /** 已上传的文件key列表 */
-    modelValue?: string[];
+    /** 附件完整信息列表 */
+    fileList?: AnnexInfo[];
     /** 是否多选 */
     multiple?: boolean;
     /** 最大上传数量 */
@@ -65,12 +77,12 @@ const props = withDefaults(
     buttonText?: string;
   }>(),
   {
-    modelValue: () => [],
+    fileList: () => [],
     multiple: false,
-    limit: 3,
+    limit: 9,
     accept: ".pdf,.jpg,.png,.doc,.docx,.xlsx,.xls",
     maxSize: 20,
-    action: "/system/bindAttachment",
+    action: "/system/uploadFile",
     disabled: false,
     showTip: true,
     tipText: "",
@@ -79,13 +91,14 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  (e: "update:modelValue", value: string[]): void;
-  (e: "success", files: FileItem[]): void;
-  (e: "remove", file: FileItem): void;
-  (e: "error", error: Error): void;
+  (e: "update:fileList", value: AnnexInfo[]): void;
+  (e: "success", file: AnnexInfo): void;
+  (e: "remove", file: AnnexInfo): void;
 }>();
 
 const uploadRef = ref();
+const uploadingCount = ref(0);
+const isUploading = computed(() => uploadingCount.value > 0);
 
 // 请求头
 const headers = computed(() => ({
@@ -93,71 +106,23 @@ const headers = computed(() => ({
 }));
 
 // 上传地址
-const uploadUrl = computed(() => props.action);
+const uploadUrl = computed(() => {
+  const baseUrl = getApiBaseUrl() || "";
+  return baseUrl + props.action;
+});
 
-// 文件列表
-const fileList = ref([]);
-
-// 上传中的文件数量
-const uploadingCount = ref(0);
-const isUploading = computed(() => uploadingCount.value > 0);
-
-// 格式化提示文本
-const defaultTip = `支持 ${props.accept} 格式，单个文件不超过 ${props.maxSize}MB，最多上传 ${props.limit} 个文件`;
-const tipTextComputed = computed(() => props.tipText || defaultTip);
-
-// 根据 keys 获取文件信息
-const fetchFileInfoByKeys = async (keys: string[]) => {
-  if (!keys || keys.length === 0) return [];
-
-  try {
-    // TODO: 调用后端接口根据 keys 批量获取文件信息
-    // const res = await api.getFilesByKeys({ keys })
-    // return res.data
-
-    // 模拟返回
-    return keys.map((key, index) => ({
-      uid: key,
-      name: `文件_${key.slice(-8)}.pdf`,
-      key: key,
-      url: `/api/file/${key}`,
-      status: "success",
-    }));
-  } catch (error) {
-    console.error("获取文件信息失败", error);
-    return [];
-  }
-};
-
-// 监听外部传入的 keys 变化
-watch(
-  () => props.modelValue,
-  async (newKeys, oldKeys) => {
-    // 避免循环更新
-    const currentKeys = fileList.value.map((f) => f.key).filter(Boolean);
-    if (JSON.stringify(newKeys) === JSON.stringify(currentKeys)) {
-      return;
-    }
-
-    // 初始化文件列表
-    if (newKeys && newKeys.length > 0) {
-      const files = await fetchFileInfoByKeys(newKeys);
-      fileList.value = files;
-    } else if (!newKeys?.length && fileList.value.length) {
-      fileList.value = [];
-    }
-  },
-  {
-    immediate: true,
-    // deep: true,
-  },
+// 提示文本
+const tipTextComputed = computed(
+  () =>
+    props.tipText ||
+    `支持 ${props.accept} 格式，单个文件不超过 ${props.maxSize}MB，最多上传 ${props.limit} 个文件`,
 );
 
 // 上传前校验
 const handleBeforeUpload: UploadProps["beforeUpload"] = (file) => {
-  // 检查是否超出数量限制
-  const successFiles = fileList.value.filter((f) => f.status === "success");
-  if (successFiles.length >= props.limit && !props.multiple) {
+  // 检查数量限制
+  const successFiles = props.fileList.filter((f) => f.id);
+  if (successFiles.length >= props.limit) {
     ElMessage.warning(`最多只能上传 ${props.limit} 个文件`);
     return false;
   }
@@ -173,9 +138,8 @@ const handleBeforeUpload: UploadProps["beforeUpload"] = (file) => {
   const acceptTypes = props.accept
     .split(",")
     .map((t) => t.trim().toLowerCase());
-  const fileExtension = "." + file.name.split(".").pop()?.toLowerCase();
-
-  if (!acceptTypes.includes(fileExtension)) {
+  const fileExt = "." + file.name.split(".").pop()?.toLowerCase();
+  if (!acceptTypes.includes(fileExt)) {
     ElMessage.error(`文件 ${file.name} 格式不支持，只支持 ${props.accept}`);
     return false;
   }
@@ -184,81 +148,77 @@ const handleBeforeUpload: UploadProps["beforeUpload"] = (file) => {
   return true;
 };
 
-// 上传进度
-const handleProgress: UploadProps["onProgress"] = (evt, file) => {
-  // 可选的进度处理，可以派发事件给父组件
-  console.log(`${file.name} 上传进度: ${evt.percent}%`);
-};
-
 // 上传成功
-const handleSuccess: UploadProps["onSuccess"] = (response, file) => {
+const handleSuccess: UploadProps["onSuccess"] = (res, file) => {
   uploadingCount.value--;
+  // const res = {
+  //   code: 200,
+  //   message: "success",
+  //   data: {
+  //     id: 5,
+  //     annexName: "附件1.xls",
+  //     annexSize: 20992,
+  //     annexMd5: "fe1cb77a59d6e88424d838313c3cd8ce",
+  //     annexPath:
+  //       "D:\\annex\\temporary\\20260707\\fe1cb77a59d6e88424d838313c3cd8ce.xls",
+  //     annexExt: "xls",
+  //     uploadStatus: 0,
+  //     expireTime: "2026-07-22T15:38:30.1855396",
+  //     createDate: "2026-07-07T15:38:30.185",
+  //     createId: 15,
+  //   },
+  // };
+  if (res.code === 200 && res.data) {
+    const { data } = res;
 
-  if (response.code === 200 || response.success) {
-    // 保存后端返回的 key
-    const targetFile = fileList.value.find((f) => f.uid === file.uid);
-    if (targetFile) {
-      targetFile.key = response.data?.key || response.data?.fileId;
-      targetFile.fileId = response.data?.fileId;
-      targetFile.url = response.data?.url;
-    }
+    // 构建新的附件信息
+    const newAnnex: AnnexInfo = {
+      id: data.id,
+      name: data.annexName || file.name,
+      url: data.annexPath,
+      annexName: data.annexName || file.name,
+      annexPath: data.annexPath,
+      annexSize: data.annexSize,
+      annexExt: data.annexExt,
+    };
 
-    // 更新 v-model
-    const keys = fileList.value
-      .filter((f) => f.status === "success" && f.key)
-      .map((f) => f.key as string);
-
-    emit("update:modelValue", keys);
-    emit("success", fileList.value);
+    // 通知父组件更新列表
+    const newFileList = [...props.fileList, newAnnex];
+    emit("update:fileList", newFileList);
+    emit("success", newAnnex);
 
     ElMessage.success(`${file.name} 上传成功`);
   } else {
-    ElMessage.error(response.message || `${file.name} 上传失败`);
-
-    // 移除失败的文件
-    const index = fileList.value.findIndex((f) => f.uid === file.uid);
-    if (index !== -1) {
-      fileList.value.splice(index, 1);
-    }
+    ElMessage.error(res.message || `${file.name} 上传失败`);
   }
 };
 
 // 上传失败
-const handleError: UploadProps["onError"] = (error, file) => {
+const handleError: UploadProps["onError"] = (_, file) => {
   uploadingCount.value--;
   ElMessage.error(`${file.name} 上传失败`);
-
-  // 移除失败的文件
-  const index = fileList.value.findIndex((f) => f.uid === file.uid);
-  if (index !== -1) {
-    fileList.value.splice(index, 1);
-  }
-
-  emit("error", error as Error);
 };
 
 // 移除文件
-const handleRemove: UploadProps["onRemove"] = (file, files) => {
-  // 更新 keys
-  const keys = fileList.value
-    .filter((f) => f.status === "success" && f.key)
-    .map((f) => f.key as string);
+const handleRemove: UploadProps["onRemove"] = (file, fileData) => {
+  console.log("handleRemove", file, fileData);
+  const fileId = (file as FileItem).id;
+  if (fileId) {
+    const newFileList = props.fileList.filter((f) => f.id !== fileId);
+    emit("update:fileList", newFileList);
 
-  emit("update:modelValue", keys);
-  emit("remove", file as FileItem);
-
-  // 可选：调用后端删除接口
-  // if (file.key) {
-  //   api.deleteFile({ key: file.key }).catch(console.error)
-  // }
+    const removedFile = props.fileList.find((f) => f.id === fileId);
+    if (removedFile) {
+      emit("remove", removedFile);
+    }
+  }
 };
 
 // 预览文件
 const handlePreview: UploadProps["onPreview"] = (file) => {
-  console.log("预览文件:", file);
-  // if (file.url) {
-  //   window.open(file.url, "_blank");
-  // }
+  if (file.url) {
+    window.open(file.url, "_blank");
+  }
 };
 
 // 超出数量限制
@@ -268,21 +228,13 @@ const handleExceed: UploadProps["onExceed"] = () => {
 
 // 清空所有文件
 const clearFiles = () => {
-  fileList.value = [];
-  emit("update:modelValue", []);
+  emit("update:fileList", []);
 };
 
-// 手动上传
-const submit = () => {
-  uploadRef.value?.submit();
-};
-
-// 暴露方法给父组件
+// 暴露方法
 defineExpose({
   clearFiles,
-  submit,
-  getFileList: () => fileList.value,
-  getFileKeys: () => fileList.value.filter((f) => f.key).map((f) => f.key),
+  submit: () => uploadRef.value?.submit(),
 });
 </script>
 

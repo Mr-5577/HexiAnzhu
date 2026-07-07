@@ -42,8 +42,11 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item prop="annexId" label="上传附件" required>
-        <base-upload></base-upload>
+      <el-form-item prop="annexList" label="上传附件" required>
+        <base-upload
+          :file-list="formData.annexList"
+          @update:fileList="handleFileListUpdate"
+        ></base-upload>
       </el-form-item>
     </el-form>
   </base-modal>
@@ -74,8 +77,9 @@ const submitLoading = ref(false);
 const formData = ref({
   conId: null,
   annexType: null, // 附件类型
-  annexId: null, // 已关联附件id
   annexSrc: null, // 附件来源
+  annexId: null, // 已关联附件id
+  annexList: [], // 已关联附件集合
 });
 const formRules: FormRules = {
   annexType: [{ required: true, message: "请选择附件类型", trigger: "change" }],
@@ -83,21 +87,14 @@ const formRules: FormRules = {
   annexId: [{ required: true, message: "请选择附件", trigger: "change" }],
 };
 
-watch(
-  () => props.modelValue,
-  (val) => {
-    visible.value = val;
-  },
-);
-
-watch(visible, (val) => emit("update:modelValue", val));
-
 const handleClose = () => {
   visible.value = false;
   formRef.value?.resetFields();
   formRef.value?.clearValidate();
 };
-
+const handleFileListUpdate = (newList) => {
+  formData.value.annexList = newList;
+};
 const handleSubmit = async () => {
   console.log("handleSubmit", { ...formData.value, conId: props.conId });
   if (!formRef.value) return;
@@ -120,6 +117,15 @@ const handleSubmit = async () => {
     submitLoading.value = false;
   }
 };
+
+watch(
+  () => props.modelValue,
+  (val) => {
+    visible.value = val;
+  },
+);
+
+watch(visible, (val) => emit("update:modelValue", val));
 </script>
 <style lang="scss" scoped>
 .add-attachment-dialog-form {
