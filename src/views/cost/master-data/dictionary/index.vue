@@ -54,7 +54,7 @@
               <el-popover placement="left" :teleported="false">
                 <template #reference>
                   <div class="operation-button">
-                    <el-icon><MoreFilled /></el-icon>
+                    <el-icon :size="18"><MoreFilled size="40"/></el-icon>
                   </div>
                 </template>
                 <template #default>

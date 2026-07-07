@@ -45,7 +45,9 @@
         <!-- <el-button type="primary" link @click="handleDetail(row)">
           详情
         </el-button> -->
-        <el-button type="primary" link> 审批 </el-button>
+        <el-button type="primary" link @click="handleApprove(row)">
+          审批
+        </el-button>
       </template>
     </base-table>
   </div>
@@ -65,6 +67,7 @@ import {
   getLabel,
   AddTypeEnum,
 } from "@/constants/contract-manage/enums";
+import { contractApprovalApi } from "@/api/cost/contract-manage/contract-approval-api";
 
 defineOptions({ name: "supplement-contract" });
 
@@ -147,7 +150,7 @@ const handleEdit = (row: SupplementContract) => {
   });
 };
 
-const handleDelete = (row) => {
+const handleDelete = (row: SupplementContract) => {
   ElMessageBox.confirm(`确定删除“${row.addName}”数据吗？`, "提示", {
     type: "warning",
   })
@@ -164,7 +167,27 @@ const handleDelete = (row) => {
     })
     .catch(() => {});
 };
-const handleDetail = (row) => {};
+// 详情
+const handleDetail = (row: SupplementContract) => {};
+// 审批
+const handleApprove = (row: SupplementContract) => {
+  return;
+  ElMessageBox.confirm(`确定审批“${row.addName}”数据吗？`, "提示", {
+    type: "warning",
+  })
+    .then(async () => {
+      try {
+        const res = await contractApprovalApi.createConAddFlow({
+          conAddId: row.id,
+        });
+        if (res.code === 200) {
+          ElMessage.success("审批成功");
+          getDataList();
+        }
+      } catch (error) {}
+    })
+    .catch(() => {});
+};
 
 // watch(
 //   () => props.conId,

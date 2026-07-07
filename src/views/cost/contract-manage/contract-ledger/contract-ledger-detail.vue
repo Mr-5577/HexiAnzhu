@@ -165,7 +165,7 @@ menuItems.forEach((item) => {
 });
 
 const route = useRoute();
-const activeTab = ref("basic"); // 默认显示基本信息
+const activeTab = ref(""); // 默认显示基本信息 basic
 const conId = ref<number | null>(null); // 合同ID
 const projId = ref<number | null>(null); // 项目ID
 

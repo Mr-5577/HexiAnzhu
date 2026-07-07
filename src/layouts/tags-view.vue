@@ -294,7 +294,7 @@ onUnmounted(() => {
         .close-icon {
           color: rgba(255, 255, 255, 0.8);
           &:hover {
-            background-color: rgba(255, 255, 255, 0.2);
+            background-color: rgba(255, 255, 255, 0.3);
             color: #ffffff;
           }
         }
