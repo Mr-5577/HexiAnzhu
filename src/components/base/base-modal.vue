@@ -45,7 +45,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { ElDialog, ElButton, ElIcon } from "element-plus";
 import { Close } from "@element-plus/icons-vue";
 
@@ -80,33 +80,38 @@ const emit = defineEmits<{
   "update:modelValue": [value: boolean];
   confirm: [];
   cancel: [];
-  close: [];
+  close: [reason: "cancel" | "close" | "outside"];
 }>();
 
-const modalVisible = ref(props.modelValue);
-
-watch(
-  () => props.modelValue,
-  (val) => {
-    modalVisible.value = val;
-  },
-);
-
-watch(modalVisible, (val) => {
-  emit("update:modelValue", val);
+// computed 简化双向绑定
+const modalVisible = computed({
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
 });
+
+// 统一关闭
+const closeModal = (reason: "cancel" | "close" | "outside" = "close") => {
+  // 只在弹窗打开时才执行关闭逻辑，避免重复触发
+  if (!modalVisible.value) return;
+  modalVisible.value = false;
+  // 根据关闭原因触发不同事件
+  if (reason === "cancel") {
+    emit("cancel");
+  }
+  // 无论什么原因关闭，都触发 close 事件
+  emit("close", reason);
+};
 
 const handleConfirm = () => {
   emit("confirm");
 };
 
 const handleCancel = () => {
-  modalVisible.value = false;
-  emit("cancel");
+  closeModal("cancel");
 };
 
 const handleClose = () => {
-  emit("close");
+  closeModal("outside");
 };
 
 // 暴露方法
@@ -115,7 +120,7 @@ defineExpose({
     modalVisible.value = true;
   },
   close: () => {
-    modalVisible.value = false;
+    closeModal("close");
   },
 });
 </script>
