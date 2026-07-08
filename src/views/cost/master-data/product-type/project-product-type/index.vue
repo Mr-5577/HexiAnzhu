@@ -14,6 +14,7 @@
           :check-strictly="false"
           :filterable="false"
           style="width: 240px"
+          @change="handleChange"
         />
       </el-form-item>
       <el-form-item>
@@ -173,6 +174,10 @@ const getProjectProductList = async () => {
   }
 };
 
+const handleChange = (value: number) => {
+  queryParams.value.projId = value;
+  getProjectProductList();
+};
 /**
  * 搜索
  */

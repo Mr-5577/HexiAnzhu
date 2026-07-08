@@ -35,7 +35,7 @@
               }"
             >
               <el-icon><Folder /></el-icon>
-              <span>{{ node.label }}</span>
+              <span class="node-label">{{ node.label }}</span>
             </span>
           </template>
         </el-tree>
@@ -79,6 +79,7 @@
           :columns="tableColumns"
           :tableData="tableData"
           :loading="tableLoading"
+          :pagination="false"
           :total="total"
           :current-page="currentPage"
           :page-size="pageSize"
@@ -171,7 +172,7 @@ const tableColumns = [
   {
     label: "操作",
     prop: "actions",
-    width: 200,
+    width: 160,
     slot: "actions",
     fixed: "right",
   },
@@ -367,9 +368,20 @@ onMounted(() => {
           align-items: center;
           gap: 8px;
           font-size: 14px;
+          width: 100%;
+          min-width: 0; // 允许收缩
 
           .el-icon {
             color: #909399;
+            flex-shrink: 0; // 图标不收缩
+          }
+
+          .node-label {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 0; // 允许文本收缩
           }
 
           &.category-active {
@@ -384,6 +396,8 @@ onMounted(() => {
 
         .el-tree-node__content {
           height: 40px;
+          width: 100%;
+
           &:hover {
             background-color: #ecf5ff;
           }

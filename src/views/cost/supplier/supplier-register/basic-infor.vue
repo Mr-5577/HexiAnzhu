@@ -273,7 +273,7 @@
 
     <div class="btn-row" v-if="!isView">
       <el-button type="primary" :loading="submitLoading" @click="handleSubmit">
-        提交
+        保存
       </el-button>
     </div>
   </div>
