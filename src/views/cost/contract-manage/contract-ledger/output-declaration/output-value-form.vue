@@ -302,13 +302,12 @@
               ref="payrateRef"
               :row-key="'uuid'"
               :height="'200px'"
-              :table-data="payrateTable"
+              v-model="payrateTable"
               :columns="payrateColumns"
               :pagination="false"
               :highlight-current-row="false"
               :show-summary="false"
               :compactEmpty="true"
-              @update:table-data="(newData) => (payrateTable = newData)"
             >
               <template #actions="{ row }">
                 <el-button link type="danger" @click="deletePayrate(row)">
@@ -338,13 +337,12 @@
               ref="materialRef"
               :row-key="'uuid'"
               :height="'200px'"
-              :table-data="materialTable"
+              v-model="materialTable"
               :columns="materialColumns"
               :pagination="false"
               :highlight-current-row="false"
               :show-summary="false"
               :compactEmpty="true"
-              @update:table-data="(newData) => (materialTable = newData)"
             >
               <!-- <template #actions="{ row }">
                 <el-button link type="danger" @click="deleteMaterial(row)">
@@ -369,13 +367,12 @@
               ref="paynodeRef"
               :row-key="'uuid'"
               :height="'200px'"
-              :table-data="paynodeTable"
+              v-model="paynodeTable"
               :columns="paynodeColumns"
               :pagination="false"
               :highlight-current-row="false"
               :show-summary="false"
               :compactEmpty="true"
-              @update:table-data="(newData) => (paynodeTable = newData)"
             >
               <template #actions="{ row }">
                 <el-button link type="danger" @click="deletePaynode(row)">

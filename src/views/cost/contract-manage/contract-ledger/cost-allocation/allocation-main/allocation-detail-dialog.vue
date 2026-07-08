@@ -101,14 +101,13 @@
         <editable-table
           :row-key="'uuid'"
           :height="'300px'"
-          :table-data="detailTable"
+          v-model="detailTable"
           :columns="dynamicColumns"
           :loading="tableLoading"
           :pagination="false"
           :highlight-current-row="false"
           :show-summary="false"
           :compactEmpty="true"
-          @update:table-data="handleDataUpdate"
         >
           <!-- 自定义列插槽：预警状态 -->
           <template #allocWarn="{ row }">
@@ -322,10 +321,6 @@ const getCostSubjectProjList = async () => {
   }
 };
 
-// 表格数据更新
-const handleDataUpdate = (newData: any[]) => {
-  detailTable.value = newData;
-};
 // 分摊操作
 const handleAutoAllocate = async () => {
   // 至少有一个科目有金额

@@ -238,7 +238,7 @@
           ref="detailtableRef"
           :row-key="'uuid'"
           :height="'250px'"
-          :table-data="tableList"
+          v-model="tableList"
           :columns="dynamicColumns"
           :loading="tableLoading"
           :pagination="false"

@@ -21,14 +21,13 @@
         ref="detailtableRef"
         :row-key="'uuid'"
         :height="'400px'"
-        :table-data="tableData"
+        v-model="tableData"
         :columns="dynamicColumns"
         :loading="tableLoading"
         :pagination="false"
         :highlight-current-row="false"
         :show-summary="false"
         @data-change="handleDataChange"
-        @update:table-data="handleDataUpdate"
       >
         <template #actions="{ row }">
           <el-button link type="danger" @click="handleDelete(row)">
@@ -159,10 +158,6 @@ const handleDataChange = async ({ row, column, newValue }: any) => {
   }
 };
 
-// 表格数据更新
-const handleDataUpdate = (newData: AmountItem[]) => {
-  tableData.value = newData;
-};
 /**
  * 获取目标成本科目列表
  */

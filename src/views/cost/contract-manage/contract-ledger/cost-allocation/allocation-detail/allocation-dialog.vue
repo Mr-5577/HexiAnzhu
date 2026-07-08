@@ -38,7 +38,7 @@
         <editable-table
           :row-key="'uuid'"
           :height="'280px'"
-          :table-data="detailTable"
+          v-model="detailTable"
           :columns="dynamicColumns"
           :loading="tableLoading"
           :pagination="false"

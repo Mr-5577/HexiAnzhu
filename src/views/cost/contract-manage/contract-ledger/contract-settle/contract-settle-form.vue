@@ -490,14 +490,13 @@
           ref="settleRef"
           :row-key="'uuid'"
           :height="'240px'"
-          :table-data="tableData"
+          v-model="tableData"
           :columns="editableColumns"
           :pagination="false"
           :highlight-current-row="false"
           :show-summary="false"
           :compactEmpty="true"
           :editable="true"
-          @update:table-data="(newData) => (tableData = newData)"
         >
           <template #actionBar>
             <div class="actionBar-buttons">

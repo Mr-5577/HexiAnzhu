@@ -23,7 +23,7 @@
         <editable-table
           ref="detailtableRef"
           :row-key="'id'"
-          :table-data="tableData"
+          v-model="tableData"
           :columns="dynamicColumns"
           :loading="tableLoading"
           :pagination="false"

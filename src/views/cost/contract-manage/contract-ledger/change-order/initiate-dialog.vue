@@ -117,14 +117,13 @@
           ref="detailtableRef"
           :row-key="'uuid'"
           :height="'220px'"
-          :table-data="tableList"
+          v-model="tableList"
           :columns="dynamicColumns"
           :loading="tableLoading"
           :pagination="false"
           :highlight-current-row="false"
           :show-summary="false"
           :compactEmpty="true"
-          @update:table-data="(newData) => (tableList = newData)"
           @editable-cell-click="handleEditableCellClick"
         >
           <template #actions="{ row }">

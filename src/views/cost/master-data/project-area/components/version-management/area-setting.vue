@@ -46,7 +46,7 @@
     <editable-table
       ref="businessDetailtableRef"
       :rowKey="'uuid'"
-      :table-data="tableList"
+      v-model="tableList"
       :columns="tableColumns"
       :loading="tableLoading"
       :pagination="false"

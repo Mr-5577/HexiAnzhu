@@ -388,14 +388,13 @@
               ref="detailtableRef"
               :row-key="'uuid'"
               :height="'200px'"
-              :table-data="tableList"
+              v-model="tableList"
               :columns="dynamicColumns"
               :loading="tableLoading"
               :pagination="false"
               :highlight-current-row="false"
               :show-summary="false"
               :compactEmpty="true"
-              @update:table-data="(newData) => (tableList = newData)"
             >
               <template #actions="{ row }">
                 <el-button link type="danger" @click="handleDelete(row)">

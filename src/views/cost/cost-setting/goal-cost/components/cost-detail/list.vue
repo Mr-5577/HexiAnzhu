@@ -14,7 +14,7 @@
       <editable-table
         ref="detailtableRef"
         :row-key="'uuid'"
-        :table-data="tableData"
+        v-model="tableData"
         :columns="dynamicColumns"
         :loading="tableLoading"
         :pagination="false"
@@ -49,6 +49,7 @@ import type { HCstProjectCostD } from "@/types/cost/cost-setting/goal-cost-type.
 import { costCategoryApi } from "@/api/cost/master-data/cost-category-api.ts";
 import { productTypeApi } from "@/api/cost/master-data/product-type-api.ts";
 import { useRoute } from "vue-router";
+import { v4 as uuidv4 } from "uuid";
 import { goalCostApi } from "@/api/cost/cost-setting/goal-cost-api";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 
@@ -207,6 +208,7 @@ const generateCombinations = () => {
   productOptions.value.forEach((product) => {
     subjectOptions.value.forEach((subject) => {
       listData.push({
+        uuid: uuidv4(),
         prodId: product.id,
         prodName: product.prodName,
         subId: subject.id,
@@ -296,6 +298,7 @@ const validateTable = () => {
 };
 
 const handleBatchSave = async () => {
+  console.log("保存", tableData.value);
   // 校验列表
   // if (!validateTable()) return;
   try {

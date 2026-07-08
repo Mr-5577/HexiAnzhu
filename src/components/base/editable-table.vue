@@ -167,6 +167,43 @@ import { ElMessage } from "element-plus";
 import BaseTable from "./base-table.vue";
 import type { TableColumnItem, DictData } from "./base-table.vue";
 
+/**
+ * <!-- 方式一：只用 v-model（推荐） -->
+ * <editable-table v-model="tableData" />
+ * 
+ * <!-- 方式二：只用 :table-data + @update -->
+ * <editable-table :table-data="tableData" @update:table-data="tableData = $event" />
+ * 
+ * <!-- 方式三：用 v-model:table-data（等价于方式二） -->
+ * <editable-table v-model:table-data="tableData" />
+ */
+
+// Props - 支持 v-model 和传统方式
+interface Props {
+  /** 表格数据（v-model 方式） */
+  modelValue?: any[];
+  /** 表格数据（传统方式，兼容旧代码） */
+  tableData?: any[];
+  /** 列配置 */
+  columns: EditableColumn[];
+  /** 行数据的唯一标识字段 */
+  rowKey?: string;
+  /** 数据字典对象 */
+  dictData?: DictData;
+  /** 全局选项标签字段名，默认 'label' */
+  globalOptionLabelField?: string;
+  /** 全局选项值字段名，默认 'value' */
+  globalOptionValueField?: string;
+  /** 保存回调 */
+  onSave?: (data: {
+    row: any;
+    column: string;
+    newValue: any;
+    oldValue: any;
+    rowIndex: number;
+  }) => Promise<void> | void;
+}
+
 // 扩展列配置
 export interface EditableColumn extends TableColumnItem {
   /** 是否可编辑 */
@@ -203,32 +240,10 @@ export interface EditableColumn extends TableColumnItem {
   children?: EditableColumn[];
 }
 
-// Props
-interface Props {
-  /** 表格数据 */
-  tableData: any[];
-  /** 列配置 */
-  columns: EditableColumn[];
-  /** 行数据的唯一标识字段 */
-  rowKey?: string;
-  /** 数据字典对象 */
-  dictData?: DictData;
-  /** 全局选项标签字段名，默认 'label' */
-  globalOptionLabelField?: string;
-  /** 全局选项值字段名，默认 'value' */
-  globalOptionValueField?: string;
-  /** 保存回调 */
-  onSave?: (data: {
-    row: any;
-    column: string;
-    newValue: any;
-    oldValue: any;
-    rowIndex: number;
-  }) => Promise<void> | void;
-}
-
 // Emits
 interface Emits {
+  (e: "update:modelValue", data: any[]): void;
+  (e: "update:tableData", data: any[]): void; // 保留兼容
   (
     e: "data-change",
     data: {
@@ -239,11 +254,12 @@ interface Emits {
       rowIndex: number;
     },
   ): void;
-  (e: "update:tableData", data: any[]): void;
   (e: "editable-cell-click", payload: any): void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  modelValue: () => [],
+  tableData: () => [],
   rowKey: "id",
   dictData: () => ({}),
   globalOptionLabelField: "label",
@@ -254,6 +270,16 @@ const emit = defineEmits<Emits>();
 
 const baseTableRef = ref<InstanceType<typeof BaseTable>>();
 const editableData = ref([]);
+
+// ★★★ 核心修改：获取实际数据源 ★★★
+const actualData = computed(() => {
+  // 优先使用 modelValue（v-model 方式）
+  if (props.modelValue !== undefined && props.modelValue.length >= 0) {
+    return props.modelValue;
+  }
+  // 兼容传统的 tableData
+  return props.tableData;
+});
 
 /**
  * 获取列的 disabled 状态（支持布尔值或函数）
@@ -433,6 +459,18 @@ const initOldValues = () => {
 };
 
 /**
+ * ★★★ 核心修改：触发数据更新 ★★★
+ */
+const emitDataUpdate = () => {
+  // 优先使用 v-model 方式
+  if (props.modelValue !== undefined) {
+    emit("update:modelValue", editableData.value);
+  }
+  // 同时兼容传统方式
+  emit("update:tableData", editableData.value);
+};
+
+/**
  * 更新单元格数据（供自定义插槽和内置组件调用）
  */
 const updateCell = async (
@@ -444,11 +482,6 @@ const updateCell = async (
   const prop = column.prop!;
   const oldValue = getOldValue(row, prop);
 
-  // 没有旧值或值未变化，不处理
-  // if (oldValue === undefined || newValue === oldValue) {
-  //   clearOldValue(row, prop);
-  //   return;
-  // }
   if (newValue === oldValue) {
     clearOldValue(row, prop);
     return;
@@ -481,7 +514,9 @@ const updateCell = async (
     oldValue,
     rowIndex,
   });
-  emit("update:tableData", editableData.value);
+
+  // ★★★ 关键：触发数据更新 ★★★
+  emitDataUpdate();
 
   // 更新旧值为新值，以便下次编辑时比较
   setOldValue(row, prop, newValue);
@@ -496,14 +531,11 @@ const handleSave = (row: any, column: EditableColumn, rowIndex: number) => {
 
 // 处理单元格事件（透传给父组件）
 const handleCellEvent = (payload: any) => {
-  // 可以在这里处理自定义事件
   console.log("cell-event:", payload);
 };
+
 /**
- * @name 可编辑单元格点击事件触发事件
- * @param row 行数据
- * @param column 列配置
- * @param rowIndex 行索引
+ * 可编辑单元格点击事件触发事件
  */
 const handleCellClick = (
   row: any,
@@ -513,9 +545,9 @@ const handleCellClick = (
   emit("editable-cell-click", { row, column, rowIndex });
 };
 
-// 监听外部数据变化
+// ★★★ 核心修改：监听实际数据源 ★★★
 watch(
-  () => props.tableData,
+  () => actualData.value,
   (newData) => {
     if (newData && newData.length) {
       // 浅拷贝，避免修改原数据
@@ -550,8 +582,8 @@ defineExpose({
   getData: () => editableData.value,
   /** 刷新数据 */
   refresh: () => {
-    if (props.tableData) {
-      editableData.value = props.tableData.map((item) => ({ ...item }));
+    if (actualData.value) {
+      editableData.value = actualData.value.map((item) => ({ ...item }));
       initOldValues();
     }
   },
@@ -705,7 +737,6 @@ defineExpose({
   .clickable-input-wrapper {
     :deep(.el-input__wrapper) {
       cursor: pointer;
-      // background-color: var(--el-fill-color-light);
 
       &:hover {
         // background-color: var(--el-fill-color);
