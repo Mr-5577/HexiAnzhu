@@ -1,33 +1,39 @@
 <!-- 文件上传组件 -->
 <template>
-  <div class="upload-file">
-    <el-upload
-      ref="uploadRef"
-      :action="uploadUrl"
-      :headers="headers"
-      :file-list="fileList"
-      :multiple="multiple"
-      :limit="limit"
-      :accept="accept"
-      :before-upload="handleBeforeUpload"
-      :on-success="handleSuccess"
-      :on-error="handleError"
-      :on-remove="handleRemove"
-      :on-exceed="handleExceed"
-      :on-preview="handlePreview"
-      :disabled="disabled"
-    >
-      <el-button :loading="isUploading" :disabled="disabled">
-        <el-icon><Upload /></el-icon>
+  <el-upload
+    ref="uploadRef"
+    :action="uploadUrl"
+    :headers="headers"
+    :file-list="fileList"
+    :multiple="multiple"
+    :limit="limit"
+    :accept="accept"
+    :before-upload="handleBeforeUpload"
+    :on-success="handleSuccess"
+    :on-error="handleError"
+    :on-remove="handleRemove"
+    :on-exceed="handleExceed"
+    :on-preview="handlePreview"
+    :disabled="disabled"
+  >
+    <template #trigger>
+      <el-button
+        :link="isLink"
+        :size="size"
+        :type="buttonType"
+        :loading="isUploading"
+        :disabled="disabled"
+      >
+        <el-icon v-if="showIcon"><Upload /></el-icon>
         {{ buttonText }}
       </el-button>
-      <template #tip>
-        <div v-if="showTip" class="el-upload__tip">
-          {{ tipTextComputed }}
-        </div>
-      </template>
-    </el-upload>
-  </div>
+    </template>
+    <template #tip>
+      <div v-if="showTip" class="el-upload__tip">
+        {{ tipTextComputed }}
+      </div>
+    </template>
+  </el-upload>
 </template>
 
 <script setup lang="ts">
@@ -75,6 +81,20 @@ const props = withDefaults(
     tipText?: string;
     /** 按钮文本 */
     buttonText?: string;
+    /** 是否显示上传图标 */
+    showIcon?: boolean;
+    /** 上传按钮尺寸 */
+    size?: "small" | "default" | "large";
+    /** 是否为链接样式 */
+    isLink?: boolean;
+    /** 按钮类型 */
+    buttonType?:
+      | "primary"
+      | "success"
+      | "warning"
+      | "danger"
+      | "info"
+      | "default";
   }>(),
   {
     fileList: () => [],
@@ -87,6 +107,10 @@ const props = withDefaults(
     showTip: true,
     tipText: "",
     buttonText: "选择文件",
+    showIcon: true,
+    size: "default",
+    isLink: false,
+    buttonType: "default",
   },
 );
 
@@ -239,30 +263,26 @@ defineExpose({
 </script>
 
 <style lang="scss" scoped>
-.upload-file {
-  width: 100%;
+:deep(.el-upload) {
+  display: block;
+}
 
-  :deep(.el-upload) {
-    display: block;
-  }
+:deep(.el-upload-list) {
+  margin-top: 12px;
 
-  :deep(.el-upload-list) {
-    margin-top: 12px;
+  .el-upload-list__item {
+    transition: all 0.3s;
 
-    .el-upload-list__item {
-      transition: all 0.3s;
-
-      &:hover {
-        background-color: #f5f7fa;
-      }
+    &:hover {
+      background-color: #f5f7fa;
     }
   }
+}
 
-  .el-upload__tip {
-    margin-top: 8px;
-    font-size: 12px;
-    color: #909399;
-    line-height: 1.4;
-  }
+.el-upload__tip {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #909399;
+  line-height: 1.4;
 }
 </style>
