@@ -126,12 +126,12 @@ const menuItems = [
   //   label: "收文发文",
   //   component: () => import("./documents/index.vue"),
   // },
-  // {
-  //   index: "paymentApplication",
-  //   icon: markRaw(Icons.Money),
-  //   label: "付款申请",
-  //   component: () => import("./payment-application/index.vue"),
-  // },
+  {
+    index: "paymentApplication",
+    icon: markRaw(Icons.Money),
+    label: "付款申请",
+    component: () => import("./payment-application/index.vue"),
+  },
   {
     index: "performanceBond",
     icon: markRaw(Icons.Coin),

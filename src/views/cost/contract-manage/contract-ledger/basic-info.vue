@@ -414,7 +414,7 @@ const handlePayMethodChange = (value: string) => {
   font-size: 16px;
   font-weight: 600;
   color: #303133;
-  margin: 10px 0 10px 0;
+  margin-bottom: 10px;
   padding-left: 10px;
   position: relative;
   &::before {

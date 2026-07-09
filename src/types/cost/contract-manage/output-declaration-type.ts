@@ -6,8 +6,8 @@
 export interface BaseEntity {
   /** 主键，自增 */
   id?: number;
-  /** 删除标识：0-未删除，1-已删除 */
-  isDel?: boolean | string;
+  /** 删除标识：false-未删除，true-已删除 */
+  isDel?: boolean;
   /** 创建人ID */
   createId?: number;
   /** 创建时间 */

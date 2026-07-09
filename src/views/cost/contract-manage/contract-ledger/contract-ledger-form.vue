@@ -55,10 +55,10 @@
         <div>
           <div class="section-title">合同附件</div>
           <el-form-item label="上传合同附件" prop="attachment">
-            <!-- <base-upload
+            <base-upload
               :file-list="formData.attachment"
               @update:fileList="formData.attachment = $event"
-            ></base-upload> -->
+            ></base-upload>
           </el-form-item>
         </div>
       </el-form>
@@ -832,7 +832,8 @@ defineExpose({
 .form-scroll-area {
   flex: 1;
   overflow-y: auto;
-  padding: 0 15px;
+  padding: 15px 15px 0;
+  box-sizing: border-box;
 }
 
 .adapt-form {
