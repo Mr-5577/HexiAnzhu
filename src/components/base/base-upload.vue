@@ -255,10 +255,31 @@ const clearFiles = () => {
   emit("update:fileList", []);
 };
 
+// 暴露触发文件选择的方法
+const triggerFileSelect = () => {
+  if (props.disabled) return;
+  // 获取 el-upload 内部的 input 元素并触发点击
+  const uploadInstance = uploadRef.value;
+  if (uploadInstance) {
+    // 方式1：通过 el-upload 的内部方法
+    if (typeof uploadInstance.handleClick === "function") {
+      uploadInstance.handleClick();
+    } else {
+      // 方式2：查找内部的 input 元素
+      const input = uploadInstance.$el?.querySelector('input[type="file"]');
+      if (input) {
+        input.click();
+      }
+    }
+  }
+};
+
 // 暴露方法
 defineExpose({
   clearFiles,
   submit: () => uploadRef.value?.submit(),
+  triggerFileSelect,
+  uploadRef,
 });
 </script>
 
