@@ -9,650 +9,56 @@
         label-width="130px"
         class="adapt-form"
       >
-        <div class="section-title">基本信息</div>
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="合同名称" prop="conName" required>
-              <el-input
-                v-model="formData.conName"
-                clearable
-                placeholder="请输入合同名称"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="合同分类" prop="conTypeId" required>
-              <el-cascader
-                v-model="formData.conTypeId"
-                :options="conTypeOptions"
-                :show-all-levels="false"
-                :props="{
-                  expandTrigger: 'hover',
-                  emitPath: false,
-                  checkStrictly: false,
-                  value: 'id',
-                  label: 'conTypeName',
-                  children: 'children',
-                }"
-                placeholder="请选择合同分类"
-                style="width: 100%"
-                clearable
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="签约公司" prop="companyId" required>
-              <el-cascader
-                v-model="formData.companyId"
-                :options="companyOptions"
-                :show-all-levels="false"
-                :props="{
-                  expandTrigger: 'hover',
-                  emitPath: false,
-                  checkStrictly: false,
-                  value: 'id',
-                  label: 'mguName',
-                  children: 'children',
-                }"
-                placeholder="请选择签约公司"
-                style="width: 100%"
-                clearable
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="合同类型" prop="conProperty" required>
-              <el-select
-                v-model="formData.conProperty"
-                placeholder="请选择合同类型"
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="item in ConPropertyEnum"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="合同系统编号" prop="conSysNo">
-              <el-input
-                v-model="formData.conSysNo"
-                placeholder="请输入合同系统编号"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="合同档案编号" prop="conPhyNo">
-              <el-input
-                v-model="formData.conPhyNo"
-                placeholder="请输入合同档案编号"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="项目名称" prop="projId" required>
-              <el-cascader
-                v-model="formData.projId"
-                :options="projectOptions"
-                :show-all-levels="false"
-                :props="{
-                  expandTrigger: 'hover',
-                  emitPath: false,
-                  checkStrictly: false,
-                  value: 'orgId',
-                  label: 'orgName',
-                  children: 'children',
-                }"
-                placeholder="请选择项目"
-                style="width: 100%"
-                clearable
-                @change="changeProject"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="业务板块" prop="segId" required>
-              <el-select
-                v-model="formData.segId"
-                placeholder="请选择业务板块"
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="item in segOptions"
-                  :key="item.id"
-                  :label="item.segName"
-                  :value="item.id"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="核算项目" prop="acctProjId" required>
-              <el-cascader
-                v-model="formData.acctProjId"
-                :options="acctProjOptions"
-                :show-all-levels="false"
-                :props="{
-                  expandTrigger: 'hover',
-                  emitPath: false,
-                  checkStrictly: false,
-                  value: 'id',
-                  label: 'dicLabel',
-                  children: 'children',
-                }"
-                placeholder="请选择核算项目"
-                style="width: 100%"
-                clearable
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="供应商" prop="supId" required>
-              <el-select
-                v-model="formData.supId"
-                placeholder="请选择供应商"
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="item in supplierOptions"
-                  :key="item.id"
-                  :label="item.supName"
-                  :value="item.id"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="计价方式" prop="priceType" required>
-              <el-select
-                v-model="formData.priceType"
-                placeholder="请选择计价方式"
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="item in PriceTypeEnum"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="管理类型" prop="manageType" required>
-              <el-select
-                v-model="formData.manageType"
-                placeholder="请选择管理类型"
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="item in ManageTypeEnum"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="付款方式" prop="payMethod" required>
-              <el-select
-                v-model="formData.payMethod"
-                placeholder="请选择付款方式"
-                style="width: 100%"
-                @change="handlePayMethodChange"
-              >
-                <el-option
-                  v-for="item in PayTypeEnum"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="签约金额(含税)" prop="signAmt" required>
-              <el-input-number
-                v-model="formData.signAmt"
-                :min="0"
-                :precision="2"
-                :controls="false"
-                placeholder="请输入签约金额"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="签约金额(不含税)" prop="signExclAmt" required>
-              <el-input-number
-                v-model="formData.signExclAmt"
-                :min="0"
-                :precision="2"
-                :controls="false"
-                placeholder="请输入不含税金额"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="税额" prop="taxAmt" required>
-              <el-input-number
-                v-model="formData.taxAmt"
-                :min="0"
-                :precision="2"
-                :controls="false"
-                placeholder="请输入税额"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="签订日期" prop="signDate" required>
-              <el-date-picker
-                v-model="formData.signDate"
-                type="date"
-                placeholder="请选择签订日期"
-                style="width: 100%"
-                value-format="YYYY-MM-DD"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="生效日期" prop="effectiveDate" required>
-              <el-date-picker
-                v-model="formData.effectiveDate"
-                type="date"
-                placeholder="请选择生效日期"
-                style="width: 100%"
-                value-format="YYYY-MM-DD"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="到期日期" prop="expiryDate" required>
-              <el-date-picker
-                v-model="formData.expiryDate"
-                type="date"
-                placeholder="请选择到期日期"
-                style="width: 100%"
-                value-format="YYYY-MM-DD"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="工期(天)" prop="daysNum" required>
-              <el-input-number
-                v-model="formData.daysNum"
-                :min="0"
-                :controls="false"
-                placeholder="请输入工期"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="履约保证金" prop="pbAmount" required>
-              <el-input-number
-                v-model="formData.pbAmount"
-                :min="0"
-                :precision="2"
-                :controls="false"
-                placeholder="请输入履约保证金"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="生产专业" prop="proProf" required>
-              <el-cascader
-                v-model="formData.proProf"
-                :options="proProfOptions"
-                :show-all-levels="false"
-                :props="{
-                  expandTrigger: 'hover',
-                  emitPath: false,
-                  checkStrictly: false,
-                  value: 'id',
-                  label: 'dicLabel',
-                  children: 'children',
-                }"
-                placeholder="请选择生产专业"
-                style="width: 100%"
-                clearable
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="楼栋范围" prop="bldIds" required>
-              <el-select
-                v-model="formData.bldIds"
-                multiple
-                collapse-tags
-                collapse-tags-tooltip
-                placeholder="请选择楼栋"
-                style="width: 100%"
-                @change="handleBuildingChange"
-              >
-                <el-option
-                  v-for="item in buildingOptions"
-                  :key="item.id"
-                  :label="item.bldName"
-                  :value="item.id"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="结算金额" prop="settleAmt" required>
-              <el-input-number
-                v-model="formData.settleAmt"
-                :min="0"
-                :precision="2"
-                :controls="false"
-                placeholder="请输入结算金额"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
+        <!-- 基本信息 -->
+        <BasicInfo
+          v-model="formData"
+          :company-options="companyOptions"
+          :con-type-options="conTypeOptions"
+          :project-options="projectOptions"
+          :seg-options="segOptions"
+          :supplier-options="supplierOptions"
+          :pro-prof-options="proProfOptions"
+          :acct-proj-options="acctProjOptions"
+          :building-options="buildingOptions"
+          @project-change="changeProject"
+          @building-change="handleBuildingChange"
+          @pay-method-change="handlePayMethodChange"
+        />
 
-        <div class="section-title">拓展信息</div>
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="是否用印" prop="needSeal" required>
-              <el-select
-                v-model="formData.needSeal"
-                placeholder="请选择"
-                style="width: 100%"
-              >
-                <el-option label="是" :value="true" />
-                <el-option label="否" :value="false" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="印章类型" prop="sealTypes" required>
-              <el-select
-                v-model="formData.sealTypes"
-                multiple
-                collapse-tags
-                placeholder="请选择印章类型"
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="item in SealTypesEnum"
-                  :key="item.value"
-                  :label="item.label"
-                  :value="item.value"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="签约地点" prop="signAddr" required>
-              <el-input
-                v-model="formData.signAddr"
-                placeholder="请输入签约地点"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="供应商联系人" prop="supCmanName" required>
-              <el-input
-                v-model="formData.supCmanName"
-                placeholder="请输入联系人姓名"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="联系人电话" prop="supCmanTel" required>
-              <el-input
-                v-model="formData.supCmanTel"
-                placeholder="请输入联系电话"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="联系人身份证" prop="supCmanIdno" required>
-              <el-input
-                v-model="formData.supCmanIdno"
-                placeholder="请输入身份证号码"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="联系人职务" prop="supCmanJob">
-              <el-input
-                v-model="formData.supCmanJob"
-                placeholder="请输入职务"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="开户银行" prop="bankName">
-              <el-input
-                v-model="formData.bankName"
-                placeholder="请输入开户银行"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="银行户名" prop="accountName">
-              <el-input
-                v-model="formData.accountName"
-                placeholder="请输入银行户名"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="银行账号" prop="bankAccount">
-              <el-input
-                v-model="formData.bankAccount"
-                placeholder="请输入银行账号"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="24">
-          <el-col :span="24">
-            <el-form-item label="备注" prop="remark">
-              <el-input
-                v-model="formData.remark"
-                type="textarea"
-                :rows="3"
-                maxlength="500"
-                show-word-limit
-                placeholder="其他需要补充说明的信息"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
+        <!-- 拓展信息 -->
+        <ExtendInfo v-model="formData" />
+
         <!-- 价款及税率 -->
-        <div>
-          <div class="section-title">价款及税率</div>
-          <el-row :gutter="24">
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="合同总价(含税)" prop="totalPriceTax">
-                <el-input
-                  v-model="priceTaxData.totalPriceTax"
-                  readonly
-                  placeholder="自动计算"
-                  style="width: 100%"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="合同总价(不含税)" prop="totalPrice">
-                <el-input
-                  v-model="priceTaxData.totalPrice"
-                  readonly
-                  placeholder="自动计算"
-                  style="width: 100%"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="税额" prop="taxAmount">
-                <el-input
-                  v-model="priceTaxData.taxAmount"
-                  readonly
-                  placeholder="自动计算"
-                  style="width: 100%"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="税率" prop="taxRate">
-                <el-input
-                  v-model="priceTaxData.taxRate"
-                  readonly
-                  placeholder="自动计算"
-                  style="width: 100%"
-                />
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <!-- 价税明细表格区域 -->
-          <div class="detail-table">
-            <div class="header-content">
-              <span class="header-title">价税明细</span>
-              <el-button type="primary" size="small" @click="addPrice">
-                新增价税明细
-              </el-button>
-            </div>
-            <editable-table
-              ref="pricesRef"
-              :row-key="'uuid'"
-              :height="'160px'"
-              v-model="priceTable"
-              :columns="priceColumns"
-              :pagination="false"
-              :highlight-current-row="false"
-              :show-summary="false"
-              :compactEmpty="true"
-              :editable="true"
-            >
-              <template #actions="{ row }">
-                <el-button link type="danger" @click="deletePrice(row)">
-                  删除
-                </el-button>
-              </template>
-            </editable-table>
-          </div>
-        </div>
-        <!-- 合同支付比例明细 -->
-        <div v-if="formData.payMethod == 1">
-          <div class="section-title">支付比例</div>
-          <div class="detail-table">
-            <div class="header-content">
-              <span class="header-title">支付比例明细</span>
-              <el-button type="primary" size="small" @click="addPayrate">
-                新增支付明细
-              </el-button>
-            </div>
-            <editable-table
-              ref="payrateRef"
-              :row-key="'uuid'"
-              :height="'160px'"
-              v-model="payrateTable"
-              :columns="payrateColumns"
-              :pagination="false"
-              :highlight-current-row="false"
-              :show-summary="false"
-              :compactEmpty="true"
-              :editable="true"
-            >
-              <template #actions="{ row }">
-                <el-button link type="danger" @click="deletePayrate(row)">
-                  删除
-                </el-button>
-              </template>
-            </editable-table>
-          </div>
-        </div>
-        <!-- 材料合同产值 -->
-        <div v-if="formData.payMethod == 2">
-          <div class="section-title">材料合同产值</div>
-          <div class="detail-table">
-            <div class="header-content">
-              <span class="header-title">材料合同产值明细</span>
-              <el-button type="primary" size="small" @click="addMaterial">
-                新增合同产值明细
-              </el-button>
-            </div>
-            <editable-table
-              ref="materialRef"
-              :row-key="'uuid'"
-              :height="'160px'"
-              v-model="materialTable"
-              :columns="materialColumns"
-              :pagination="false"
-              :highlight-current-row="false"
-              :show-summary="false"
-              :compactEmpty="true"
-              :editable="true"
-            >
-              <template #actions="{ row }">
-                <el-button link type="danger" @click="deleteMaterial(row)">
-                  删除
-                </el-button>
-              </template>
-            </editable-table>
-          </div>
-        </div>
+        <PriceTaxSection v-model="priceTable" />
+
+        <!-- 支付比例 -->
+        <PayrateSection
+          v-if="formData.payMethod == 1"
+          v-model="payrateTable"
+          :payment-type-options="paymentTypeOptions"
+        />
+
+        <!-- 材料产值 -->
+        <MaterialSection
+          v-if="formData.payMethod == 2"
+          v-model="materialTable"
+        />
+
         <!-- 支付节点 -->
-        <div v-if="formData.payMethod == 3">
-          <div class="section-title">支付节点</div>
-          <div class="detail-table">
-            <div class="header-content">
-              <span class="header-title">支付节点明细</span>
-              <el-button type="primary" size="small" @click="addPaynode">
-                新增支付节点明细
-              </el-button>
-            </div>
-            <editable-table
-              ref="paynodeRef"
-              :row-key="'uuid'"
-              :height="'160px'"
-              v-model="paynodeTable"
-              :columns="paynodeColumns"
-              :pagination="false"
-              :highlight-current-row="false"
-              :show-summary="false"
-              :compactEmpty="true"
-              :editable="true"
-            >
-              <template #actions="{ row }">
-                <el-button link type="danger" @click="deletePaynode(row)">
-                  删除
-                </el-button>
-              </template>
-            </editable-table>
-          </div>
-        </div>
+        <PaynodeSection
+          v-if="formData.payMethod == 3"
+          v-model="paynodeTable"
+          :payment-type-options="paymentTypeOptions"
+        />
+
         <!-- 合同附件 -->
         <div>
           <div class="section-title">合同附件</div>
           <el-form-item label="上传合同附件" prop="attachment">
-            <base-upload></base-upload>
+            <!-- <base-upload
+              :file-list="formData.attachment"
+              @update:fileList="formData.attachment = $event"
+            ></base-upload> -->
           </el-form-item>
         </div>
       </el-form>
@@ -669,7 +75,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { ElMessage } from "element-plus";
-import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user-store";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import { conTypeApi } from "@/api/cost/master-data/contract-category-api";
@@ -681,17 +86,16 @@ import { manageunitApi } from "@/api/cost/master-data/management-unit-api";
 import { buildTree } from "@/utils/tree";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";
-import {
-  ConPropertyEnum,
-  PriceTypeEnum,
-  ManageTypeEnum,
-  PayTypeEnum,
-  SealTypesEnum,
-} from "@/constants/contract-manage/enums";
 import { bankCardRegex, idCardRegex, phoneRegex } from "@/utils/regex";
-import EditableTable from "@/components/base/editable-table.vue";
-import type { EditableColumn } from "@/components/base/editable-table.vue";
 import { v4 as uuidv4 } from "uuid";
+
+// 引入子组件
+import BasicInfo from "./basic-info.vue";
+import ExtendInfo from "./extend-info.vue";
+import PriceTaxSection from "./price-tax-section.vue";
+import PayrateSection from "./payrate-section.vue";
+import MaterialSection from "./material-section.vue";
+import PaynodeSection from "./paynode-section.vue";
 import BaseUpload from "@/components/base/base-upload.vue";
 
 defineOptions({ name: "contract-ledger-form" });
@@ -699,7 +103,7 @@ defineOptions({ name: "contract-ledger-form" });
 // Props
 interface Props {
   mode?: "add" | "edit" | "detail";
-  conId?: number; // 合同ID
+  conId?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -713,8 +117,6 @@ const emit = defineEmits<{
   (e: "cancel"): void;
 }>();
 
-// 路由与状态
-const router = useRouter();
 const userStore = useUserStore();
 
 const mode = ref<"add" | "edit" | "detail">(props.mode);
@@ -724,45 +126,40 @@ const isDetailMode = computed(() => mode.value === "detail");
 const isEditMode = computed(() => mode.value === "edit");
 const isAddMode = computed(() => mode.value === "add");
 
-// 创建响应式的价款数据，使用 computed 追踪 priceTable 变化
-const priceTaxData = computed(() => calculatePriceTaxData());
-
 // 表单数据定义
 const initFormData = () => ({
-  // 主表字段
-  id: null,
-  segId: null,
-  projId: null,
-  acctProjId: null,
-  tenderItemId: null,
-  companyId: null,
+  id: undefined,
+  segId: undefined,
+  projId: undefined,
+  acctProjId: undefined,
+  tenderItemId: undefined,
+  companyId: undefined,
   conName: "",
   conSysNo: "",
   conPhyNo: "",
-  conTypeId: null,
-  conProperty: null,
-  mainConId: null,
-  supId: null,
-  priceType: null,
+  conTypeId: undefined,
+  conProperty: undefined,
+  mainConId: undefined,
+  supId: undefined,
+  priceType: undefined,
   conStatus: 0,
-  signAmt: null,
-  signExclAmt: null,
-  taxAmt: null,
+  signAmt: undefined,
+  signExclAmt: undefined,
+  taxAmt: undefined,
   signDate: "",
   effectiveDate: "",
   expiryDate: "",
-  daysNum: null,
+  daysNum: undefined,
   needSettle: true,
-  settleAmt: null,
-  flowId: null,
-  agentId: null,
-  proProf: null,
+  settleAmt: undefined,
+  flowId: undefined,
+  agentId: undefined,
+  proProf: undefined,
   bldIds: [],
   bldNames: "",
-  pbAmount: null,
-  manageType: null,
-  payMethod: null,
-  // 扩展字段
+  pbAmount: undefined,
+  manageType: undefined,
+  payMethod: undefined,
   needSeal: false,
   sealTypes: [],
   signAddr: "",
@@ -774,6 +171,7 @@ const initFormData = () => ({
   accountName: "",
   bankAccount: "",
   remark: "",
+  attachment: [],
 });
 
 const formData = ref(initFormData());
@@ -788,475 +186,14 @@ const conTypeOptions = ref([]);
 const projectOptions = ref([]);
 const supplierOptions = ref([]);
 const proProfOptions = ref([]);
-const acctProjOptions = ref([
-  { id: 1, dicLabel: "项目1" },
-  { id: 2, dicLabel: "项目2" },
-]);
+const acctProjOptions = ref([]);
 const paymentTypeOptions = ref([]);
 
-const priceTable = ref([]); // 合同价格明细
-const priceColumns = computed<EditableColumn[]>(() => [
-  { type: "index", label: "序号", width: 60, editable: false },
-  {
-    prop: "itemName",
-    label: "分项名称",
-    editable: true,
-    editType: "input",
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "itemAmt",
-    label: "分项含税总额",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "itemTaxRate",
-    label: "税率",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "itemExclAmt",
-    label: "分项不含税额",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "itemTaxAmt",
-    label: "分项税额",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "remark",
-    label: "备注",
-    editable: true,
-    editType: "input",
-    showOverflowTooltip: false,
-  },
-  {
-    label: "操作",
-    width: 100,
-    slot: "actions",
-    fixed: "right",
-  },
-]);
-// 计算价款及税率汇总数据
-const calculatePriceTaxData = () => {
-  // 累加各项金额
-  const totalPriceTax = priceTable.value.reduce((sum, item) => {
-    const amt = Number(item.itemAmt) || 0;
-    return sum + amt;
-  }, 0);
-
-  const totalPrice = priceTable.value.reduce((sum, item) => {
-    const exclAmt = Number(item.itemExclAmt) || 0;
-    return sum + exclAmt;
-  }, 0);
-
-  const taxAmount = priceTable.value.reduce((sum, item) => {
-    const tax = Number(item.itemTaxAmt) || 0;
-    return sum + tax;
-  }, 0);
-
-  // 计算税率（不含税总额 > 0 时计算税率，否则为 0）
-  let taxRate = 0;
-  if (totalPrice > 0) {
-    // 税率 = 税额 / 不含税总额 * 100
-    taxRate = (taxAmount / totalPrice) * 100;
-    // 保留两位小数
-    taxRate = Math.round(taxRate * 100) / 100;
-  }
-
-  return {
-    totalPriceTax,
-    totalPrice,
-    taxAmount,
-    taxRate,
-  };
-};
-const payrateTable = ref([]); // 支付明细
-const payrateColumns = computed<EditableColumn[]>(() => [
-  { type: "index", label: "序号", width: 60, editable: false },
-  {
-    prop: "payRateId",
-    label: "支付比例",
-    editable: true,
-    editType: "select",
-    showOverflowTooltip: false,
-    // 自定义键名
-    optionLabelField: "name",
-    optionValueField: "id",
-    options: [
-      { id: 1, name: "节点" },
-      { id: 2, name: "比例" },
-      { id: 3, name: "材料" },
-    ],
-    width: 120,
-  },
-  {
-    prop: "payTypeId",
-    label: "款项类型",
-    editable: true,
-    editType: "select",
-    showOverflowTooltip: false,
-    // 自定义键名
-    optionLabelField: "dicLabel",
-    optionValueField: "id",
-    options: paymentTypeOptions.value || [],
-    width: 120,
-  },
-  {
-    prop: "payRate",
-    label: "应付比例(%)",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-    width: 120,
-  },
-  {
-    prop: "isCtrl",
-    label: "是否强控",
-    editable: true,
-    editType: "select",
-    showOverflowTooltip: false,
-    clearable: false,
-    options: [
-      { value: true, label: "是" },
-      { value: false, label: "否" },
-    ],
-    width: 120,
-  },
-  {
-    prop: "payIntvl",
-    label: "支付周期(月)",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    precision: 0,
-    showOverflowTooltip: false,
-    width: 120,
-  },
-  {
-    prop: "prodVal",
-    label: "本次申请产值金额",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    prop: "payAmt",
-    label: "本次申报应付金额",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    prop: "buildPeriod",
-    label: "施工期间",
-    editable: true,
-    editType: "date",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    prop: "prodValPeriod",
-    label: "产值期间",
-    editable: true,
-    editType: "date",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    prop: "payDate",
-    label: "计划付款日期",
-    editable: true,
-    editType: "date",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    prop: "costProdVal",
-    label: "成本复核产值金额",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    prop: "costPayAmt",
-    label: "成本复核应付金额",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    label: "操作",
-    width: 100,
-    slot: "actions",
-    fixed: "right",
-  },
-]);
-const materialTable = ref([]); // 材料合同产值明细
-const materialColumns = computed<EditableColumn[]>(() => [
-  { type: "index", label: "序号", width: 60, editable: false },
-  {
-    prop: "mtName",
-    label: "材料名称",
-    editable: true,
-    editType: "input",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    prop: "mtModel",
-    label: "材料规格",
-    editable: true,
-    editType: "input",
-    showOverflowTooltip: false,
-    width: 120,
-  },
-  {
-    prop: "mtBrand",
-    label: "品牌",
-    editable: true,
-    editType: "input",
-    showOverflowTooltip: false,
-    width: 120,
-  },
-  {
-    prop: "recvNum",
-    label: "接收数量",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-    precision: 0,
-    width: 120,
-  },
-  {
-    prop: "mtUnit",
-    label: "计量单位",
-    editable: true,
-    editType: "input",
-    showOverflowTooltip: false,
-    width: 120,
-  },
-  {
-    prop: "recvBillNo",
-    label: "接收单号",
-    editable: true,
-    editType: "input",
-    showOverflowTooltip: false,
-    width: 120,
-  },
-  {
-    prop: "recvPrice",
-    label: "接收价格",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-    width: 120,
-  },
-  {
-    prop: "fineAmt",
-    label: "罚款",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-    width: 120,
-  },
-  {
-    prop: "prodVal",
-    label: "产值总金额",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    prop: "payRate",
-    label: "应付比例",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    prop: "payAmt",
-    label: "本次申报应付金额",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    prop: "buildPeriod",
-    label: "施工期间",
-    editable: true,
-    editType: "date",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    prop: "prodValPeriod",
-    label: "产值期间",
-    editable: true,
-    editType: "date",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    prop: "payDate",
-    label: "计划付款日期",
-    editable: true,
-    editType: "date",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    prop: "costProdVal",
-    label: "成本复核产值金额",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    prop: "costPayAmt",
-    label: "成本复核应付金额",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    label: "操作",
-    width: 100,
-    slot: "actions",
-    fixed: "right",
-  },
-]);
-const paynodeTable = ref([]); // 支付节点明细
-const paynodeColumns = computed<EditableColumn[]>(() => [
-  { type: "index", label: "序号", width: 60, editable: false },
-  {
-    prop: "nodeName",
-    label: "支付节点",
-    editable: true,
-    editType: "input",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    prop: "payType",
-    label: "款项类型",
-    editable: true,
-    editType: "select",
-    showOverflowTooltip: false,
-    optionLabelField: "dicLabel",
-    optionValueField: "id",
-    options: paymentTypeOptions.value || [],
-    width: 120,
-  },
-  {
-    prop: "prodVal",
-    label: "产值金额",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    prop: "payAmt",
-    label: "应付金额",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    prop: "payRate",
-    label: "应付比例",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    prop: "payDate",
-    label: "计划付款日期",
-    editable: true,
-    editType: "date",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    prop: "costProdVal",
-    label: "成本复核产值金额",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    prop: "costPayAmt",
-    label: "成本复核应付金额",
-    showSummary: true,
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    prop: "remark",
-    label: "备注",
-    editable: true,
-    editType: "input",
-    showOverflowTooltip: false,
-    width: 150,
-  },
-  {
-    label: "操作",
-    width: 100,
-    slot: "actions",
-    fixed: "right",
-  },
-]);
-
-// 数据字典
-const { getDictList, loadDicts } = useDict(
-  [dictMapping.proProf, dictMapping.paymentType],
-  { treeDictCodes: [] },
-);
+// 表格数据 - 父组件只负责存储，不负责增删改
+const priceTable = ref([]);
+const payrateTable = ref([]);
+const materialTable = ref([]);
+const paynodeTable = ref([]);
 
 // 表单校验规则
 const formRules = ref({
@@ -1430,7 +367,6 @@ const getBuildingListByProjId = async (projId: number) => {
     const buildingRes = await projectAreaApi.getBuildingList({ projId });
     if (buildingRes.code === 200) {
       buildingOptions.value = buildingRes.data || [];
-      // 编辑时回显楼栋名称
       if (formData.value.bldIds && formData.value.bldIds.length > 0) {
         const names = buildingOptions.value
           .filter((v: any) => formData.value.bldIds.includes(v.id))
@@ -1446,9 +382,15 @@ const getBuildingListByProjId = async (projId: number) => {
 // 初始化数据字典
 const initDictData = async () => {
   await loadDicts();
-  proProfOptions.value = getDictList(dictMapping.proProf); // 生产专业
-  paymentTypeOptions.value = getDictList(dictMapping.paymentType); // 款项类型
+  proProfOptions.value = getDictList(dictMapping.proProf);
+  paymentTypeOptions.value = getDictList(dictMapping.paymentType);
 };
+
+// 数据字典
+const { getDictList, loadDicts } = useDict(
+  [dictMapping.proProf, dictMapping.paymentType],
+  { treeDictCodes: [] },
+);
 
 // 生成合同编号
 const createConNo = async () => {
@@ -1475,7 +417,124 @@ const initOptions = async () => {
   ]);
 };
 
-// 构建提交参数（表单数据 -> 接口参数）
+// 选择项目
+const changeProject = (id: number) => {
+  formData.value.bldIds = [];
+  formData.value.bldNames = "";
+  if (id) {
+    getBuildingListByProjId(id);
+  }
+};
+
+// 楼栋选择变化
+const handleBuildingChange = (ids: number[]) => {
+  const names = buildingOptions.value
+    .filter((v: any) => ids.includes(v.id))
+    .map((v: any) => v.bldName);
+  formData.value.bldNames = names.join(",");
+};
+
+// 切换付款方式
+const handlePayMethodChange = (value: string) => {
+  // payrateTable.value = [];
+  // materialTable.value = [];
+  // paynodeTable.value = [];
+};
+
+// 加载合同详情
+const loadContractDetail = async () => {
+  if (!conId.value) return;
+  try {
+    const res = await contractLedgerApi.getContractLedgerById({
+      id: conId.value,
+    });
+    if (res.code === 200 && res.data) {
+      const {
+        conMain,
+        conMainExt,
+        billMaterials = [],
+        billPaynodes = [],
+        billPayrates = [],
+        billPrices = [],
+      } = res.data;
+      formData.value = parseContractData(conMain, conMainExt);
+      // 直接赋值给父组件的表格数据
+      priceTable.value = billPrices.map((item: any) => ({
+        ...item,
+        uuid: uuidv4(),
+      }));
+      payrateTable.value = billPayrates.map((item: any) => ({
+        ...item,
+        uuid: uuidv4(),
+      }));
+      materialTable.value = billMaterials.map((item: any) => ({
+        ...item,
+        uuid: uuidv4(),
+      }));
+      paynodeTable.value = billPaynodes.map((item: any) => ({
+        ...item,
+        uuid: uuidv4(),
+      }));
+      if (conMain.projId) {
+        await getBuildingListByProjId(conMain.projId);
+      }
+    }
+  } catch (error) {
+    console.error("获取合同信息失败:", error);
+  }
+};
+
+// 解析回显数据
+const parseContractData = (conMain: any, conMainExt: any) => {
+  return {
+    id: conMain.id,
+    segId: conMain.segId,
+    projId: conMain.projId,
+    acctProjId: conMain.acctProjId,
+    tenderItemId: conMain.tenderItemId,
+    companyId: conMain.companyId,
+    conName: conMain.conName,
+    conSysNo: conMain.conSysNo,
+    conPhyNo: conMain.conPhyNo,
+    conTypeId: conMain.conTypeId,
+    conProperty: conMain.conProperty,
+    mainConId: conMain.mainConId,
+    supId: conMain.supId,
+    priceType: conMain.priceType,
+    conStatus: conMain.conStatus,
+    signAmt: conMain.signAmt,
+    signExclAmt: conMain.signExclAmt,
+    taxAmt: conMain.taxAmt,
+    signDate: conMain.signDate,
+    effectiveDate: conMain.effectiveDate,
+    expiryDate: conMain.expiryDate,
+    daysNum: conMain.daysNum,
+    needSettle: conMain.needSettle,
+    settleAmt: conMain.settleAmt,
+    flowId: conMain.flowId,
+    agentId: conMain.agentId,
+    proProf: conMain.proProf,
+    bldIds: conMain.bldIds ? conMain.bldIds.split(",").map(Number) : [],
+    bldNames: conMain.bldNames || "",
+    pbAmount: conMain.pbAmount,
+    manageType: conMain.manageType,
+    payMethod: conMain.payMethod,
+    needSeal: conMainExt?.needSeal ?? false,
+    sealTypes: conMainExt?.sealTypes ? conMainExt.sealTypes.split(",") : [],
+    signAddr: conMainExt?.signAddr || "",
+    supCmanName: conMainExt?.supCmanName || "",
+    supCmanIdno: conMainExt?.supCmanIdno || "",
+    supCmanTel: conMainExt?.supCmanTel || "",
+    supCmanJob: conMainExt?.supCmanJob || "",
+    bankName: conMainExt?.bankName || "",
+    accountName: conMainExt?.accountName || "",
+    bankAccount: conMainExt?.bankAccount || "",
+    remark: conMainExt?.remark || "",
+    attachment: [],
+  };
+};
+
+// 构建提交参数
 const buildSubmitParams = () => {
   return {
     conMain: {
@@ -1535,218 +594,6 @@ const buildSubmitParams = () => {
   };
 };
 
-// 解析回显数据（接口数据 -> 表单数据）
-const parseContractData = (conMain: any, conMainExt: any) => {
-  return {
-    // 主表字段
-    id: conMain.id,
-    segId: conMain.segId,
-    projId: conMain.projId,
-    acctProjId: conMain.acctProjId,
-    tenderItemId: conMain.tenderItemId,
-    companyId: conMain.companyId,
-    conName: conMain.conName,
-    conSysNo: conMain.conSysNo,
-    conPhyNo: conMain.conPhyNo,
-    conTypeId: conMain.conTypeId,
-    conProperty: conMain.conProperty,
-    mainConId: conMain.mainConId,
-    supId: conMain.supId,
-    priceType: conMain.priceType,
-    conStatus: conMain.conStatus,
-    signAmt: conMain.signAmt,
-    signExclAmt: conMain.signExclAmt,
-    taxAmt: conMain.taxAmt,
-    signDate: conMain.signDate,
-    effectiveDate: conMain.effectiveDate,
-    expiryDate: conMain.expiryDate,
-    daysNum: conMain.daysNum,
-    needSettle: conMain.needSettle,
-    settleAmt: conMain.settleAmt,
-    flowId: conMain.flowId,
-    agentId: conMain.agentId,
-    proProf: conMain.proProf,
-    bldIds: conMain.bldIds ? conMain.bldIds.split(",").map(Number) : [],
-    bldNames: conMain.bldNames || "",
-    pbAmount: conMain.pbAmount,
-    manageType: conMain.manageType,
-    payMethod: conMain.payMethod,
-    // 扩展字段
-    needSeal: conMainExt?.needSeal ?? false,
-    sealTypes: conMainExt?.sealTypes ? conMainExt.sealTypes.split(",") : [],
-    signAddr: conMainExt?.signAddr || "",
-    supCmanName: conMainExt?.supCmanName || "",
-    supCmanIdno: conMainExt?.supCmanIdno || "",
-    supCmanTel: conMainExt?.supCmanTel || "",
-    supCmanJob: conMainExt?.supCmanJob || "",
-    bankName: conMainExt?.bankName || "",
-    accountName: conMainExt?.accountName || "",
-    bankAccount: conMainExt?.bankAccount || "",
-    remark: conMainExt?.remark || "",
-  };
-};
-
-// 选择项目（联动加载楼栋）
-const changeProject = (id: number) => {
-  formData.value.bldIds = [];
-  formData.value.bldNames = "";
-  if (id) {
-    getBuildingListByProjId(id);
-  }
-};
-
-// 楼栋选择变化（更新楼栋名称）
-const handleBuildingChange = (ids: number[]) => {
-  const names = buildingOptions.value
-    .filter((v: any) => ids.includes(v.id))
-    .map((v: any) => v.bldName);
-  formData.value.bldNames = names.join(",");
-};
-// 切换付款方式
-const handlePayMethodChange = (value: string) => {
-  // payrateTable.value = [];
-  // materialTable.value = [];
-  // paynodeTable.value = [];
-};
-
-// 加载合同详情（编辑/详情模式）
-const loadContractDetail = async () => {
-  if (!conId.value) return;
-  try {
-    const res = await contractLedgerApi.getContractLedgerById({
-      id: conId.value,
-    });
-    if (res.code === 200 && res.data) {
-      const {
-        conMain,
-        conMainExt,
-        billMaterials = [],
-        billPaynodes = [],
-        billPayrates = [],
-        billPrices = [],
-      } = res.data;
-      formData.value = parseContractData(conMain, conMainExt);
-      materialTable.value = billMaterials.map((item: any) => ({
-        ...item,
-        uuid: uuidv4(),
-      }));
-      paynodeTable.value = billPaynodes.map((item: any) => ({
-        ...item,
-        uuid: uuidv4(),
-      }));
-      payrateTable.value = billPayrates.map((item: any) => ({
-        ...item,
-        uuid: uuidv4(),
-      }));
-      priceTable.value = billPrices.map((item: any) => ({
-        ...item,
-        uuid: uuidv4(),
-      }));
-      // 加载楼栋列表
-      if (conMain.projId) {
-        await getBuildingListByProjId(conMain.projId);
-      }
-    }
-  } catch (error) {
-    console.error("获取合同信息失败:", error);
-  }
-};
-
-const addPrice = () => {
-  const newRowData = {
-    uuid: uuidv4(),
-    id: null,
-    conBillId: conId.value,
-    itemName: "", // 分项名称
-    itemAmt: 0, // 分项含税总额
-    itemTaxRate: 0, // 税率
-    itemExclAmt: 0, // 分项不含税总额
-    itemTaxAmt: 0, // 分项税额
-    remark: "", // 备注
-  };
-  priceTable.value = [...priceTable.value, newRowData];
-};
-const deletePrice = (row) => {
-  priceTable.value = priceTable.value.filter((item) => item.uuid !== row.uuid);
-};
-const addPayrate = () => {
-  const newRowData = {
-    uuid: uuidv4(),
-    id: null,
-    conBillId: conId.value,
-    payRateId: null, // 支付比例表ID
-    payTypeId: null, // 款项类型ID
-    payRate: 0, // 应付比例
-    isCtrl: false, // 是否强控
-    payIntvl: 0, // 付周期（月）
-    prodVal: 0, // 本次申请产值金额
-    payAmt: 0, // 本次申报应付金额
-    buildPeriod: "", // 施工期间
-    prodValPeriod: "", // 产值期间
-    payDate: "", // 计划付款日期
-    costProdVal: 0, // 成本复核产值金额
-    costPayAmt: 0, // 成本复核应付金额
-  };
-  payrateTable.value = [...payrateTable.value, newRowData];
-};
-const deletePayrate = (row) => {
-  payrateTable.value = payrateTable.value.filter(
-    (item) => item.uuid !== row.uuid,
-  );
-};
-const addMaterial = () => {
-  const newRowData = {
-    uuid: uuidv4(),
-    id: null,
-    conBillId: conId.value,
-    mtId: null, // 材料产值ID
-    mtName: "", // 材料名称
-    mtModel: "", // 材料规格
-    mtBrand: "", // 材料品牌
-    recvNum: 0, // 接收数量
-    mtUnit: "", // 计量单位
-    recvBillNo: "", // 接收单号
-    recvPrice: 0, // 接收价格
-    fineAmt: 0, // 罚款
-    prodVal: 0, // 产值总金额
-    payRate: 0, // 应付比例
-    payAmt: 0, // 本次申报应付金额
-    buildPeriod: "", // 施工期间
-    prodValPeriod: "", // 产值期间
-    payDate: "", // 计划付款日期
-    costProdVal: 0, // 成本复核产值金额
-    costPayAmt: 0, // 成本复核应付金额
-  };
-  materialTable.value = [...materialTable.value, newRowData];
-};
-const deleteMaterial = (row) => {
-  materialTable.value = materialTable.value.filter(
-    (item) => item.uuid !== row.uuid,
-  );
-};
-const addPaynode = () => {
-  const newRowData = {
-    uuid: uuidv4(),
-    id: null,
-    conBillId: conId.value,
-    nodeId: null, // 支付节点ID
-    nodeName: "", // 支付节点名称
-    payType: null, // 款项类型
-    prodVal: 0, // 产值金额
-    payRate: 0, // 应付比例
-    payAmt: 0, // 应付金额
-    payDate: "", // 计划付款日期
-    costProdVal: 0, // 成本复核产值金额
-    costPayAmt: 0, // 成本复核应付金额
-    remark: "", // 备注
-  };
-  paynodeTable.value = [...paynodeTable.value, newRowData];
-};
-const deletePaynode = (row) => {
-  paynodeTable.value = paynodeTable.value.filter(
-    (item) => item.uuid !== row.uuid,
-  );
-};
 // 校验价税明细表
 const validatePriceTable = () => {
   if (priceTable.value.length === 0) {
@@ -1778,6 +625,7 @@ const validatePriceTable = () => {
   }
   return true;
 };
+
 // 校验支付比例明细表
 const validatePayrateTable = () => {
   if (payrateTable.value.length === 0) {
@@ -1903,13 +751,13 @@ const validatePaynodeTable = () => {
   }
   return true;
 };
+
 // 提交表单
 const handleSubmit = async () => {
   if (isDetailMode.value) return;
   if (!formRef.value) return;
   try {
     await formRef.value.validate();
-    // 校验各个明细表
     // if (!validatePriceTable()) return;
     // if (!validatePayrateTable()) return;
     // if (!validateMaterialTable()) return;
@@ -1948,6 +796,10 @@ const initData = async () => {
   }
 };
 
+onMounted(() => {
+  initData();
+});
+
 // 暴露方法
 defineExpose({
   formData,
@@ -1962,10 +814,6 @@ defineExpose({
     }
   },
   initData,
-});
-
-onMounted(() => {
-  initData();
 });
 </script>
 
@@ -2008,19 +856,6 @@ onMounted(() => {
     left: -4px;
     top: 50%;
     transform: translateY(-50%);
-  }
-}
-.detail-table {
-  .header-content {
-    margin-bottom: 8px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    .header-title {
-      font-size: 15px;
-      color: #5d5d5f;
-      font-weight: 600;
-    }
   }
 }
 
