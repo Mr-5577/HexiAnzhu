@@ -74,10 +74,6 @@ export interface SupplierTypeQueryParams {
   supTypeName?: string;
   /** 是否启用 */
   isEnabled?: boolean;
-  /** 页码 */
-  pageNum?: number;
-  /** 每页条数 */
-  pageSize?: number;
 }
 
 /**
