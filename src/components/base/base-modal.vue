@@ -27,19 +27,17 @@
 
     <!-- 底部 -->
     <template #footer>
-      <div class="modal-footer">
-        <el-button v-if="showCancelButton" @click="handleCancel">
-          {{ cancelText }}
-        </el-button>
-        <el-button
-          v-if="showConfirmButton"
-          type="primary"
-          :loading="confirmLoading"
-          @click="handleConfirm"
-        >
-          {{ confirmText }}
-        </el-button>
-      </div>
+      <el-button v-if="showCancelButton" @click="handleCancel">
+        {{ cancelText }}
+      </el-button>
+      <el-button
+        v-if="showConfirmButton"
+        type="primary"
+        :loading="confirmLoading"
+        @click="handleConfirm"
+      >
+        {{ confirmText }}
+      </el-button>
     </template>
   </el-dialog>
 </template>
@@ -148,19 +146,14 @@ defineExpose({
     color: #666;
   }
 }
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 0 20px;
-  box-sizing: border-box;
-}
 </style>
 <style lang="scss">
 // 不加 scoped，专门写 dialog 的样式
 .base-modal-dialog .el-dialog__body {
   max-height: 60vh;
   overflow-y: auto;
+}
+.base-modal-dialog .el-dialog__footer {
+  padding: 0;
 }
 </style>
