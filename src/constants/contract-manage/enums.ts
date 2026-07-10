@@ -80,6 +80,40 @@ export const dedTypeEnum = [
   { value: 6, label: "其他扣款" },
 ] as const;
 
+/** 业务类型选项 */
+export const bizTypeEnum = [
+  // { label: "合同", value: "CON_MAIN" },
+  // { label: "补充合同", value: "CON_ADD" },
+  // { label: "订单合同", value: "CON_ORD" },
+  // { label: "采购订单", value: "CON_BILL" },
+  // { label: "合同变更", value: "CON_BG" },
+  // { label: "合同签证", value: "CON_QZ" },
+  // { label: "合同产值", value: "CON_PROD" },
+  // { label: "合同预结算", value: "CON_PRE_SETTLE" },
+  // { label: "合同结算", value: "CON_SETTLE" },
+  // { label: "非合同", value: "NCON" },
+  { label: "合同", value: 1 },
+  { label: "补充合同", value: 2 },
+  { label: "合同变更", value: 3 },
+  { label: "合同签证", value: 4 },
+  { label: "合同结算", value: 5 },
+  { label: "非合同", value: 6 },
+] as const;
+
+/** 分摊状态选项 */
+export const allocStatusEnum = [
+  { label: "未分摊", value: 0, type: "info" },
+  { label: "已分摊", value: 1, type: "success" },
+  { label: "部分分摊", value: 2, type: "warning" },
+] as const;
+
+/** 分摊预警选项 */
+export const allocWarnEnum = [
+  { label: "红色预警", value: 0, type: "danger" },
+  { label: "黄色预警", value: 1, type: "warning" }, // 超95%
+  { label: "绿色预警", value: 2, type: "success" },
+] as const;
+
 // 辅助函数：根据value获取label
 export const getLabel = <T extends { value: number | string; label: string }>(
   list: readonly T[],
