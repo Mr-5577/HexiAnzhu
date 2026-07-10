@@ -218,7 +218,6 @@ const tableColumns: TableColumnItem[] = [
     prop: "modifyAccAnnex",
     label: "修改凭证附件",
     width: 130,
-    formatter: (row: HConPayment) => (row.modifyAccAnnex ? "已上传" : "未上传"),
   },
   {
     label: "操作",
@@ -272,12 +271,15 @@ const handleEdit = async ({ id }) => {
   });
 };
 // 删除
-const handleDelete = (row) => {
+const handleDelete = ({ id }) => {
   ElMessageBox.confirm("确定删除该数据吗？", "提示", { type: "warning" })
     .then(async () => {
       try {
-        ElMessage.success("删除成功");
-        getDataList();
+        const res = await paymentRequestApi.delPay({ id });
+        if (res.code === 200) {
+          ElMessage.success("删除成功");
+          getDataList();
+        }
       } catch (error) {
         console.error("删除失败:", error);
       }

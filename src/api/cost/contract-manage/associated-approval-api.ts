@@ -89,4 +89,16 @@ export const associatedApprovalApi = {
   flowCallbackSettle: (data: FlowCallbackChangeParams) => {
     return http.post("/con/flow/flowCallbackSettle", data);
   },
+  /** 发起合同支付流程 payReqId:付款申请ID */
+  createConPayFlow: (data: { payReqId: number }) => {
+    return http.post("/con/flow/createConPayFlow", data);
+  },
+  /** 发起履约保证金收取流程 recvId:收取ID */
+  createConLvRecvFlow: (data: { recvId: number }) => {
+    return http.post("/con/flow/createConLvRecvFlow", data);
+  },
+  /** 发起履约保证金退还流程 refuId:退还ID */
+  createConLvRefuFlow: (data: { refuId: number }) => {
+    return http.post("/con/flow/createConLvRefuFlow", data);
+  },
 };

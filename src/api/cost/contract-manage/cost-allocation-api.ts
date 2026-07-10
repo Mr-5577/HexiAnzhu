@@ -5,6 +5,7 @@ import {
   CostAllocationDetailQueryDTO,
   CostAllocationDTO,
   CostAllocationQueryDTO,
+  SaveCostAllocationDTO,
 } from "@/types/cost/contract-manage/cost-allocation-type";
 
 /**
@@ -52,5 +53,17 @@ export const costAllocationApi = {
   /** 动态成本自动分摊 */
   autoAllocateCost: (data: AutoAllocateCostDTO) => {
     return http.post("/con/main/autoAlloc", data);
+  },
+  /** 保存项目成本分摊（主从表） */
+  saveProjectAlloc: (data: SaveCostAllocationDTO) => {
+    return http.post("/cost/projectAlloc/save", data);
+  },
+  /** 删除项目成本分摊（主从表） */
+  delProjectAlloc: (data: { id: number }) => {
+    return http.formPost("/cost/projectAlloc/del", data);
+  },
+  /** 查询项目成本分摊（主从表） */
+  getProjectAlloc: (data: { id: number }) => {
+    return http.formPost("/cost/projectAlloc/getList", data);
   },
 };

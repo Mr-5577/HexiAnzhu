@@ -316,6 +316,7 @@
           </el-col>
         </el-row>
       </el-form>
+      <!-- 扣款事项明细 -->
       <div>
         <div class="section-title">扣款事项明细</div>
         <editable-table
@@ -344,6 +345,7 @@
           </template>
         </editable-table>
       </div>
+      <!-- 发票登记 -->
       <div>
         <div class="section-title">发票登记</div>
         <editable-table
@@ -422,6 +424,7 @@
           :detailList="detailList"
         />
       </div>
+      <!-- 付款方式 -->
       <div>
         <div class="section-title">付款方式</div>
         <editable-table
@@ -450,6 +453,7 @@
           </template>
         </editable-table>
       </div>
+      <!-- 财务明细 -->
       <div>
         <div class="section-title">财务明细</div>
         <editable-table
@@ -593,7 +597,8 @@ const formRules = {
 const calcFields = () => {
   const d = formData.value;
   // 实际请款金额 = 请款总金额 - 转履约保证金 - 奖罚总金额
-  d.factReqAmt = (d.reqAmt || 0) - (d.pbAmount || 0) - (d.changeAmt || 0);
+  const factAmt = (d.reqAmt || 0) - (d.pbAmount || 0) - (d.changeAmt || 0);
+  d.factReqAmt = factAmt < 0 ? 0 : factAmt;
   // 剩余应付金额 = 累计应付 - 累计实付
   d.leavePayAmt = (d.sumPayAmt || 0) - (d.sumPaidAmt || 0);
   // 欠票金额 = 应收发票金额 - 已收发票
@@ -683,7 +688,7 @@ const handleAddDed = () => {
   const newRowData = {
     uuid: uuidv4(),
     id: undefined,
-    conBillId: props.conId,
+    conBillId: undefined,
     dedId: undefined, // 扣款事项ID
     dedName: "", // 扣款事项
     dedAmt: 0, // 应扣款金额
@@ -795,7 +800,7 @@ const addInvoiceM = () => {
   const newRowData = {
     uuid: uuidv4(),
     id: undefined,
-    conBillId: props.conId,
+    conBillId: undefined,
     invNo: undefined, // 发票号
     invDate: undefined, // 开票日期
     totalAmt: 0, // 发票总金额
@@ -823,21 +828,21 @@ const openUploadForRow = (row: any) => {
   tempFileList.value = [];
 
   // 触发上传组件的文件选择
-  // nextTick(() => {
-  //   hiddenUploadRef.value?.triggerFileSelect();
-  // });
-  handleUploadSuccess({
-    id: 11,
-    annexName: "发票94996751.pdf",
-    annexSize: 42535,
-    annexMd5: "fd5ce710e9c20d54299f9e3f29554939",
-    annexPath: "temporary\\20260709\\fd5ce710e9c20d54299f9e3f29554939.pdf",
-    annexExt: "pdf",
-    uploadStatus: 0,
-    expireTime: "2026-07-24T13:48:22.2228291",
-    createDate: "2026-07-09T13:48:22.225",
-    createId: 15,
+  nextTick(() => {
+    hiddenUploadRef.value?.triggerFileSelect();
   });
+  // handleUploadSuccess({
+  //   id: 11,
+  //   annexName: "发票94996751.pdf",
+  //   annexSize: 42535,
+  //   annexMd5: "fd5ce710e9c20d54299f9e3f29554939",
+  //   annexPath: "temporary\\20260709\\fd5ce710e9c20d54299f9e3f29554939.pdf",
+  //   annexExt: "pdf",
+  //   uploadStatus: 0,
+  //   expireTime: "2026-07-24T13:48:22.2228291",
+  //   createDate: "2026-07-09T13:48:22.225",
+  //   createId: 15,
+  // });
 };
 const updateRow = (rowIndex: number, data: any) => {
   // 直接修改对象属性，避免创建新对象
@@ -877,45 +882,47 @@ const handleUploadSuccess = (file: any) => {
 const recognizeInvoiceAsync = async (currUuid: string, annexId: number) => {
   console.log("发票识别", annexId, currUuid);
   try {
+    // 编辑时，优先使用申请单ID；新增时则取合同ID
+    const conBillId = formData.value.id || props.conId;
     const params = {
       annexId: annexId,
-      conBillId: props.conId,
+      // conBillId: conBillId,
     };
-    // const res = await commonApi.recognizeInvoice(params);
-    const res = {
-      code: 200,
-      message: "success",
-      data: {
-        mainInfo: {
-          isDel: false,
-          invNo: "94996751",
-          invDate: "2021-10-16",
-          totalAmt: 10.53,
-          notTaxAmt: 9.66,
-          taxAmt: 0.87,
-          invType: "",
-        },
-        detailList: [
-          {
-            isDel: false,
-            createId: 15,
-            createDate: "2026-07-09 13:48:23",
-            operId: 15,
-            operDate: "2026-07-09 13:48:23",
-            id: 3,
-            invMid: 2,
-            itemName: "*经营租赁*通行费",
-            size: "渝A653PF",
-            unit: "客车",
-            num: 20211013,
-            price: 20211013,
-            totalAmt: 9.66,
-            taxRate: 0.09,
-            taxAmt: 0.87,
-          },
-        ],
-      },
-    };
+    const res = await commonApi.recognizeInvoice(params);
+    // const res = {
+    //   code: 200,
+    //   message: "success",
+    //   data: {
+    //     mainInfo: {
+    //       isDel: false,
+    //       invNo: "94996751",
+    //       invDate: "2021-10-16",
+    //       totalAmt: 10.53,
+    //       notTaxAmt: 9.66,
+    //       taxAmt: 0.87,
+    //       invType: "",
+    //     },
+    //     detailList: [
+    //       {
+    //         isDel: false,
+    //         createId: 15,
+    //         createDate: "2026-07-09 13:48:23",
+    //         operId: 15,
+    //         operDate: "2026-07-09 13:48:23",
+    //         id: 3,
+    //         invMid: 2,
+    //         itemName: "*经营租赁*通行费",
+    //         size: "渝A653PF",
+    //         unit: "客车",
+    //         num: 998,
+    //         price: 38.8,
+    //         totalAmt: 9.66,
+    //         taxRate: 0.09,
+    //         taxAmt: 0.87,
+    //       },
+    //     ],
+    //   },
+    // };
     if (res.code === 200 && res.data) {
       const { mainInfo, detailList = [] } = res.data;
       const recogniRowIndex = invoiceMTable.value.findIndex(
@@ -997,7 +1004,7 @@ const addPayWay = () => {
   const newRowData = {
     uuid: uuidv4(),
     id: undefined,
-    conBillId: props.conId,
+    conBillId: undefined,
     payWay: undefined, // 付款方式
     payAmt: 0, // 付款金额
     dedRoomAmt: 0, // 其中抵房金额
@@ -1067,7 +1074,7 @@ const addFinance = () => {
   const newRowData = {
     uuid: uuidv4(),
     id: undefined,
-    conBillId: props.conId,
+    conBillId: undefined,
     projId: undefined, // 项目ID
     acctProjId: undefined, // 建筑核算项目ID
     subId: undefined, // 科目ID
@@ -1128,6 +1135,10 @@ const backfillData = async (data) => {
   const { payment, payWays, paySubs, invoiceMs, invoiceDs, billDeds } = data;
   // 回填主表单
   Object.assign(formData.value, payment || {});
+  // 确保 conBillId 被正确赋值
+  if (payment?.conBillId) {
+    formData.value.conBillId = payment.conBillId;
+  }
   // 回填付款方式
   payWayTable.value =
     payWays?.map((item) => ({
@@ -1162,9 +1173,11 @@ const backfillData = async (data) => {
 
 // 构建保存参数
 const buildSaveParams = (): ConPaySaveParam => {
+  // 优先使用 formData 中的值（编辑时回填的），否则使用 props.conId
+  const conBillId = formData.value.conBillId || props.conId;
   // 构建主表数据
   const payment: HConPayment = {
-    conBillId: props.conId,
+    conBillId: formData.value.conBillId,
     signAmt: formData.value.signAmt || 0,
     addAmt: formData.value.addAmt || 0,
     sumChangeAmt: formData.value.sumChangeAmt || 0,
@@ -1203,7 +1216,7 @@ const buildSaveParams = (): ConPaySaveParam => {
   // 构建扣款明细
   const billDeds: HConDedUsed[] = dedTable.value.map((item: HConDedUsed) => ({
     id: item.id,
-    conBillId: props.conId,
+    conBillId: item.conBillId,
     dedId: item.dedId,
     dedName: item.dedName || "",
     dedAmt: item.dedAmt || 0,
@@ -1223,7 +1236,7 @@ const buildSaveParams = (): ConPaySaveParam => {
     if (item.annexId) {
       const invM: HConBillInvoiceM = {
         id: item.id,
-        conBillId: props.conId,
+        conBillId: item.conBillId,
         invNo: item.invNo || "",
         invDate: item.invDate ? `${item.invDate} 00:00:00` : "",
         totalAmt: item.totalAmt || 0,
@@ -1260,7 +1273,7 @@ const buildSaveParams = (): ConPaySaveParam => {
   const payWays: HConPaymentWay[] = payWayTable.value.map(
     (item: HConPaymentWay) => ({
       id: item.id,
-      conBillId: props.conId,
+      conBillId: item.conBillId,
       payWay: item.payWay || "",
       payAmt: item.payAmt || 0,
       dedRoomAmt: item.dedRoomAmt || 0,
@@ -1271,7 +1284,7 @@ const buildSaveParams = (): ConPaySaveParam => {
   const paySubs: HConPaymentSub[] = financeTable.value.map(
     (item: HConPaymentSub) => ({
       id: item.id,
-      conBillId: props.conId,
+      conBillId: item.conBillId,
       projId: item.projId,
       acctProjId: item.acctProjId,
       subId: item.subId,
@@ -1282,7 +1295,7 @@ const buildSaveParams = (): ConPaySaveParam => {
   // 返回完整参数
   return {
     conId: props.conId,
-    payment,
+    payment: payment,
     billDeds: billDeds.length > 0 ? billDeds : undefined,
     invoiceMs: invoiceMs.length > 0 ? invoiceMs : undefined,
     invoiceDs: invoiceDs.length > 0 ? invoiceDs : undefined,

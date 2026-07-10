@@ -67,7 +67,7 @@
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item label="成本分摊">
-                <el-button type="primary" size="default">
+                <el-button type="primary" @click="setCostShare">
                   设置成本分摊
                 </el-button>
               </el-form-item>
@@ -82,6 +82,9 @@
         保存
       </el-button>
     </div>
+
+    <!-- 成本分摊 弹窗 -->
+    <CostAllocationDialog v-model="visibleDialog" :projId="formData.projId" />
   </div>
 </template>
 
@@ -110,6 +113,7 @@ import PayrateSection from "./payrate-section.vue";
 import MaterialSection from "./material-section.vue";
 import PaynodeSection from "./paynode-section.vue";
 import BaseUpload from "@/components/base/base-upload.vue";
+import CostAllocationDialog from "@/views/cost/contract-manage/contract-ledger/cost-allocation/cost-allocation-dialog.vue";
 
 defineOptions({ name: "contract-ledger-form" });
 
@@ -190,6 +194,7 @@ const initFormData = () => ({
 const formData = ref(initFormData());
 const formRef = ref(null);
 const submitLoading = ref(false);
+const visibleDialog = ref(false); // 成本分摊弹窗
 
 // 下拉选项数据
 const companyOptions = ref([]);
@@ -311,6 +316,14 @@ const formRules = ref({
     },
   ],
 });
+
+const setCostShare = () => {
+  if (formData.value.projId) {
+    visibleDialog.value = true;
+  } else {
+    ElMessage.error("请先选择项目");
+  }
+};
 
 // 获取签约公司列表
 const getCompanyList = async () => {
@@ -794,7 +807,17 @@ const handleSubmit = async () => {
     submitLoading.value = false;
   }
 };
-
+// 重置表单
+const handleReset = () => {
+  formData.value = initFormData();
+  priceTable.value = [];
+  payrateTable.value = [];
+  materialTable.value = [];
+  paynodeTable.value = [];
+  if (formRef.value) {
+    formRef.value.resetFields();
+  }
+};
 // 初始化
 const initData = async () => {
   await initOptions();
@@ -811,22 +834,6 @@ const initData = async () => {
 
 onMounted(() => {
   initData();
-});
-
-// 暴露方法
-defineExpose({
-  formData,
-  resetForm: () => {
-    formData.value = initFormData();
-    priceTable.value = [];
-    payrateTable.value = [];
-    materialTable.value = [];
-    paynodeTable.value = [];
-    if (formRef.value) {
-      formRef.value.resetFields();
-    }
-  },
-  initData,
 });
 </script>
 

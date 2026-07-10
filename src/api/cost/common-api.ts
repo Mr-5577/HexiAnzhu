@@ -17,24 +17,40 @@ interface AttachmentParams {
   annexName?: string;
 }
 export const commonApi = {
-  /** 上传文件到临时目录 */
+  /**
+   * @name 上传文件到临时目录
+   * @param data - 请求参数
+   * @param data.file - 待上传的文件对象
+   */
   uploadFile: (data: { file: File }) => {
     return http.formPost("/system/uploadFile", data);
   },
-  /** 将临时文件转为正式文件 */
+  /**
+   * @name 将临时文件转为正式文件
+   * @param data - 请求参数
+   * @param data.annexId - 附件ID
+   * @returns Promise
+   */
   enableFile: (data: { annexId: number }) => {
     return http.formPost("/system/enableFile", data);
   },
-  /** 获取附件信息 */
+  /**
+   * @name 获取附件信息
+   * @param data - 请求参数
+   * @param data.annexId - 附件ID
+   * @returns Promise<附件信息>
+   */
   getFileInfo: (data: { annexId: number }) => {
     return http.formPost("/system/getFileInfo", data);
   },
   /**
    * @name 识别发票文件
-   * @param annexId  附件ID
-   * @param conBillId  单据ID
+   * @param data - 请求参数
+   * @param data.annexId - 附件ID（必传）
+   * @param data.conBillId - 单据ID（可选，不传则仅识别不保存）
+   * @returns Promise<识别结果>
    */
-  recognizeInvoice: (data: { annexId: number; conBillId: number }) => {
+  recognizeInvoice: (data: { annexId: number; conBillId?: number }) => {
     return http.formPost("/system/recognizeInvoice", data);
   },
   /**
@@ -52,7 +68,12 @@ export const commonApi = {
   setFileExpireTime: (data: { annexId: number; expireDays: number }) => {
     return http.formPost("/system/setFileExpireTime", data);
   },
-  /** 生成业务流水号 */
+  /**
+   * @name 生成业务流水号
+   * @param data - 请求参数
+   * @param data.bizType - 业务类型
+   * @returns Promise<业务流水号>
+   */
   getBillNo: (data: { bizType: String }) => {
     return http.formPost("/system/getBillNo", data);
   },
