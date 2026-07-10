@@ -497,13 +497,17 @@ const nextStep = async () => {
 };
 // 自动计算分摊
 const calculateAllocation = async () => {
-  const params = {
-    conId: undefined,
-    subList: detailTable.value.map((item) => ({
+  // 过滤掉分摊金额都为0的科目
+  const validSubList = detailTable.value
+    .map((item) => ({
       subId: item.subId,
       allocAmt: item.allocAmt || 0,
       allocExclAmt: item.allocExclAmt || 0,
-    })),
+    }))
+    .filter((item) => item.allocAmt > 0 || item.allocExclAmt > 0);
+  const params = {
+    conId: undefined,
+    subList: validSubList,
   };
   const res = await costAllocationApi.autoAllocateCost(params);
   if (res.code === 200 && res.data) {
