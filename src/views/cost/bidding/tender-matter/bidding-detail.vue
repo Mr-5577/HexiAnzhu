@@ -30,11 +30,11 @@
             <span>定标审批</span>
           </el-menu-item>
           <el-menu-item index="bid-bond-pay">
-            <el-icon><CirclePlus /></el-icon>
+            <el-icon><Money /></el-icon>
             <span>投标保证金缴纳</span>
           </el-menu-item>
           <el-menu-item index="bid-bond-refund">
-            <el-icon><Back /></el-icon>
+            <el-icon><RefreshRight /></el-icon>
             <span>投标保证金退还</span>
           </el-menu-item>
         </el-menu>
@@ -66,8 +66,8 @@ import {
   Checked,
   PriceTag,
   Flag,
-  CirclePlus,
-  Back,
+  Money,
+  RefreshRight,
 } from "@element-plus/icons-vue";
 import Overview from "./components/overview/index.vue";
 import Demand from "./components/demand/index.vue";
@@ -81,6 +81,7 @@ import { largeScreenApi } from "@/api/sales/large-screen-api.ts";
 import { BidTenderFormParams } from "@/types/cost/bidding/bidding-management-type.ts";
 
 defineOptions({ name: "bidding-detail" });
+
 type TenderDetailData = {
   tender: BidTenderFormParams;
   items: any[];
@@ -105,6 +106,7 @@ const tabComponents: Record<string, any> = {
   "bid-bond-refund": BidBondRefund, // 投标保证金退还
 };
 
+// 当前显示组件内容
 const currentComponent = computed(() => tabComponents[activeTab.value]);
 
 // 获取详情数据
@@ -158,7 +160,7 @@ const getInitialTab = (): string => {
   return "overview";
 };
 const initData = () => {
-  // 从路由参数中获取 tenderId
+  // 从路由参数中获取 tenderId 事项ID
   const queryTenderId = route.query.tenderId;
   if (queryTenderId) {
     // 保存事项ID到状态中

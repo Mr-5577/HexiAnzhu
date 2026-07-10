@@ -11,7 +11,7 @@
 
 <script setup lang="ts">
 import { useRouter } from "vue-router";
-import ContractLedgerForm from "./contract-ledger-form.vue";
+import ContractLedgerForm from "./components/contract-ledger-form.vue";
 
 const router = useRouter();
 

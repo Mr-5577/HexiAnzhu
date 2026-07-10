@@ -54,7 +54,7 @@
       <el-form-item>
         <el-button type="primary" @click="handleSearch"> 搜索 </el-button>
         <el-button @click="handleReset">重置</el-button>
-        <el-button type="primary" @click="handleTender">新增事项</el-button>
+        <el-button type="primary" @click="handleAdd">新增事项</el-button>
       </el-form-item>
     </el-form>
 
@@ -241,7 +241,7 @@ const handlePaginationChange = (params: any) => {
   getDataList();
 };
 
-const handleTender = () => {
+const handleAdd = () => {
   editData.value = null;
   tenderDialogVisible.value = true;
 };

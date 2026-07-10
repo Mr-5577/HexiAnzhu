@@ -39,14 +39,7 @@
                 :loading="saveLoading"
                 @click="handleBatchSave"
               >
-                保存
-              </el-button>
-              <el-button
-                type="primary"
-                size="small"
-                @click="handleInitiateBidding"
-              >
-                发起
+                {{ isAdd ? "发起" : "保存并发起" }}
               </el-button>
             </div>
           </template>
@@ -251,23 +244,10 @@ const handleSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
   updateRow(rowIndex, { [column]: newValue });
 };
 
-// 发起招标
-const handleInitiateBidding = async () => {
-  console.log("发起招标:", tableData.value);
-  // if (tableData.value.length === 0) {
-  //   ElMessage.warning("暂无数据发起招标");
-  //   return;
-  // }
-  // try {
-  //   const res = await biddingManageApi.createBillFlow({
-  //     billId: null, // 单据ID
-  //   });
-  // } catch (error) {}
-};
 // 先保存，保存成功后再发起招标流程
 const handleBatchSave = async () => {
   if (tableData.value.length === 0) {
-    ElMessage.warning("暂无数据保存");
+    ElMessage.warning("暂无招标明细数据");
     return;
   }
   if (tableData.value.some((item) => !item.tenderItemName)) {
@@ -317,8 +297,10 @@ const handleBatchSave = async () => {
         childData: dataList,
       };
       const res = await biddingManageApi.addBill(params);
-      if (res.code === 200) {
-        ElMessage.success("保存成功");
+      if (res.code === 200 && res.data) {
+        // 这里新增成功后需要返回成功的单据ID，然后调用发起招标接口
+        // ElMessage.success("保存成功");
+        // handleInitiateBidding(res.data);
       } else {
         ElMessage.error("保存失败");
       }
@@ -340,7 +322,9 @@ const handleBatchSave = async () => {
       };
       const res = await biddingManageApi.editBill(params);
       if (res.code === 200) {
-        ElMessage.success("保存成功");
+        // ElMessage.success("保存成功");
+        // 这里编辑成功后直接调用发起招标接口
+        // handleInitiateBidding(billData.value.id);
       } else {
         ElMessage.error("保存失败");
       }
@@ -350,6 +334,18 @@ const handleBatchSave = async () => {
   } finally {
     saveLoading.value = false;
   }
+};
+
+// 发起招标
+const handleInitiateBidding = async (billId: number) => {
+  try {
+    const res = await biddingManageApi.createBillFlow({
+      billId: billId, // 单据ID
+    });
+    if (res.code === 200) {
+      ElMessage.success("发起招标计划成功");
+    }
+  } catch (error) {}
 };
 
 // 编辑/详情时获取招标计划列表
@@ -498,7 +494,6 @@ const initPage = async () => {
 onMounted(() => {
   initPage();
 });
-
 </script>
 
 <style scoped lang="scss">

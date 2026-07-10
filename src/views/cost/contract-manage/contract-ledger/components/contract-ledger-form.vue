@@ -50,16 +50,29 @@
           v-model="paynodeTable"
           :payment-type-options="paymentTypeOptions"
         />
+        <!-- 成本分摊 -->
 
         <!-- 合同附件 -->
         <div>
           <div class="section-title">合同附件</div>
-          <el-form-item label="上传合同附件" prop="attachment">
-            <base-upload
-              :file-list="formData.attachment"
-              @update:fileList="formData.attachment = $event"
-            ></base-upload>
-          </el-form-item>
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
+              <el-form-item label="上传合同附件" prop="attachment">
+                <base-upload
+                  :showTip="false"
+                  :file-list="formData.attachment"
+                  @update:fileList="formData.attachment = $event"
+                ></base-upload>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
+              <el-form-item label="成本分摊">
+                <el-button type="primary" size="default">
+                  设置成本分摊
+                </el-button>
+              </el-form-item>
+            </el-col>
+          </el-row>
         </div>
       </el-form>
     </div>

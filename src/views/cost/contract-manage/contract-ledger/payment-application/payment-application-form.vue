@@ -375,7 +375,7 @@
           </template>
 
           <template #actions="{ row }">
-            <div class="actions-btn" @click.stop @mousedown.stop>
+            <div class="actions-btn">
               <!-- 用按钮触发上传，不直接放上传组件 -->
               <el-button
                 link
@@ -494,7 +494,6 @@ import { ElMessage } from "element-plus";
 import EditableTable from "@/components/base/editable-table.vue";
 import { EditableColumn } from "@/components/base/editable-table.vue";
 import { v4 as uuidv4 } from "uuid";
-import { outputDeclarationApi } from "@/api/cost/contract-manage/output-declaration-api";
 import { dedTypeEnum } from "@/constants/contract-manage/enums";
 import { largeScreenApi } from "@/api/sales/large-screen-api";
 import { costCategoryApi } from "@/api/cost/master-data/cost-category-api";
@@ -567,7 +566,7 @@ const formData = ref({
   bankName: "", // 收款开户行
   accountName: "", // 收款账户名
   bankAccount: "", // 收款账号
-  modifyAccAnnex: undefined as number | undefined, // 修改凭证附件
+  modifyAccAnnex: undefined, // 修改凭证附件
 });
 
 const formRules = {
@@ -593,17 +592,23 @@ const formRules = {
 // 计算字段
 const calcFields = () => {
   const d = formData.value;
+  // 实际请款金额 = 请款总金额 - 转履约保证金 - 奖罚总金额
   d.factReqAmt = (d.reqAmt || 0) - (d.pbAmount || 0) - (d.changeAmt || 0);
+  // 剩余应付金额 = 累计应付 - 累计实付
   d.leavePayAmt = (d.sumPayAmt || 0) - (d.sumPaidAmt || 0);
+  // 欠票金额 = 应收发票金额 - 已收发票
   d.invOweAmt = (d.invRecAmt || 0) - (d.invRcvdAmt || 0);
+  // 应付占产值比 = 累计应付 / 累计产值 × 100%
   d.payOutRate =
     d.sumProdVal > 0
       ? Number(((d.sumPayAmt / d.sumProdVal) * 100).toFixed(2))
       : 0;
+  // 实付占应付比 = 累计实付 / 累计应付 × 100%
   d.paidPayRate =
     d.sumPayAmt > 0
       ? Number(((d.sumPaidAmt / d.sumPayAmt) * 100).toFixed(2))
       : 0;
+  // 实付占产值比 = 累计实付 / 累计产值 × 100%
   d.paidOutRate =
     d.sumProdVal > 0
       ? Number(((d.sumPaidAmt / d.sumProdVal) * 100).toFixed(2))
@@ -818,9 +823,9 @@ const openUploadForRow = (row: any) => {
   tempFileList.value = [];
 
   // 触发上传组件的文件选择
-  //   nextTick(() => {
-  //     hiddenUploadRef.value?.triggerFileSelect();
-  //   });
+  // nextTick(() => {
+  //   hiddenUploadRef.value?.triggerFileSelect();
+  // });
   handleUploadSuccess({
     id: 11,
     annexName: "发票94996751.pdf",
@@ -1029,7 +1034,10 @@ const financeColumns = computed<EditableColumn[]>(() => [
     // 自定义键名
     optionLabelField: "label",
     optionValueField: "value",
-    options: dedTypeEnum as any,
+    options: [
+      { label: "核算项目1", value: 1 },
+      { label: "核算项目2", value: 2 },
+    ],
   },
   {
     prop: "subId",

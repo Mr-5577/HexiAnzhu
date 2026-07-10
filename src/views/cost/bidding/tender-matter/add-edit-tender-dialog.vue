@@ -14,7 +14,7 @@
         ref="formRef"
         :model="formData"
         :rules="formRules"
-        label-width="110px"
+        label-width="120px"
         label-position="right"
       >
         <el-row>
@@ -43,6 +43,7 @@
                 multiple
                 collapse-tags
                 style="width: 100%"
+                @change="handleChangeProj"
               >
                 <el-option
                   v-for="item in projectOptions"
@@ -214,7 +215,7 @@
               <el-input
                 v-model="formData.tenderRemark"
                 type="textarea"
-                placeholder="请输入招采事项说明"
+                placeholder="请输入事项说明"
                 :rows="3"
                 maxlength="500"
                 show-word-limit
@@ -233,7 +234,6 @@
             新增明细
           </el-button>
         </div>
-
         <editable-table
           ref="detailtableRef"
           :row-key="'uuid'"
@@ -302,24 +302,12 @@ const emit = defineEmits<{
   success: [];
 }>();
 
-// ==================== Refs ====================
 const dialogVisible = ref(props.modelValue);
 const formRef = ref<FormInstance>();
 const submitLoading = ref(false);
 const tableLoading = ref(false);
 const tableList = ref([]);
 
-const optionalProjList = computed(() => {
-  const selectedProjectIds = formData.value.projectId || [];
-  if (selectedProjectIds.length === 0) {
-    return [];
-  }
-  // 从 props.projectOptions 中过滤出选中的项目
-  return props.projectOptions.filter((project) =>
-    selectedProjectIds.includes(project.id),
-  );
-});
-// ==================== 表格配置 ====================
 const dynamicColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {
@@ -331,7 +319,15 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
     // 自定义键名
     optionLabelField: "projName",
     optionValueField: "id",
-    options: optionalProjList.value,
+    getOptions: () => {
+      const selectedProjectIds = formData.value.projectId || [];
+      if (selectedProjectIds.length === 0) {
+        return [];
+      }
+      return props.projectOptions.filter((project) =>
+        selectedProjectIds.includes(project.id),
+      );
+    },
   },
   {
     prop: "tenderItemName",
@@ -409,7 +405,6 @@ const formData = ref<BidTenderFormParams>({
   tenderStatus: 0,
 });
 
-// ==================== 表单验证规则 ====================
 const validatePlanAmount = (_rule: any, value: number, callback: any) => {
   if (value && value < 0) {
     callback(new Error("计划金额不能小于0"));
@@ -468,14 +463,21 @@ const formRules: FormRules = {
   ],
 };
 
-// ==================== 计算属性 ====================
 const isEditMode = computed(() => !!props.editData?.id);
-
 const dialogTitle = computed(() => {
   return isEditMode.value ? "编辑招标事项" : "新增招标事项";
 });
 
-// ==================== 方法 ====================
+// 切换项目
+const handleChangeProj = async (value: any) => {
+  // 重置所有行的项目和楼栋
+  tableList.value = tableList.value.map((row) => ({
+    ...row,
+    projId: null,
+    bldIds: [],
+    buildingOptions: [],
+  }));
+};
 // 获取详情
 const getInfo = async () => {
   const res = await biddingManageApi.getTenderInfo({
