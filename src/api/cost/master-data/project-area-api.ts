@@ -2,7 +2,6 @@ import { http } from "@/axios/service";
 import {
   ProjectBuildingQueryParams,
   ProjectBuildingSaveParams,
-  ProjectBuildingDeleteParams,
   ProjectAreaVersionQueryParams,
   ProjectAreaVersionSaveParams,
   ProjectAreaDetailQueryParams,
@@ -65,7 +64,7 @@ export const projectAreaApi = {
    * @param data.id - 楼栋ID（必填）
    * @returns Promise
    */
-  delBuilding: (data: ProjectBuildingDeleteParams) => {
+  delBuilding: (data: { id: number }) => {
     return http.formPost("/mainData/building/del", data);
   },
 
@@ -124,7 +123,7 @@ export const projectAreaApi = {
    * @param data.id - 版本ID（必填）
    * @returns Promise
    */
-  delAreaVerM: (data: ProjectBuildingDeleteParams) => {
+  delAreaVerM: (data: { id: number }) => {
     return http.formPost("/mainData/areaVerM/del", data);
   },
 

@@ -65,13 +65,13 @@
                 ></base-upload>
               </el-form-item>
             </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
+            <!-- <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item label="成本分摊">
                 <el-button type="primary" @click="setCostShare">
                   设置成本分摊
                 </el-button>
               </el-form-item>
-            </el-col>
+            </el-col> -->
           </el-row>
         </div>
       </el-form>
@@ -239,9 +239,9 @@ const formRules = ref({
   ],
   segId: [{ required: true, message: "请选择业务板块", trigger: "change" }],
   projId: [{ required: true, message: "请选择项目", trigger: "change" }],
-  acctProjId: [
-    { required: true, message: "请选择核算项目", trigger: "change" },
-  ],
+  // acctProjId: [
+  //   { required: true, message: "请选择核算项目", trigger: "change" },
+  // ],
   supId: [{ required: true, message: "请选择供应商", trigger: "change" }],
   priceType: [{ required: true, message: "请选择计价方式", trigger: "change" }],
   manageType: [

@@ -95,11 +95,3 @@ export interface ContractTypeQueryParams {
   /** 是否启用 */
   isEnabled?: boolean;
 }
-
-/**
- * 删除合同类别请求参数
- */
-export interface ContractTypeDeleteParams {
-  /** 主键ID */
-  id: number;
-}

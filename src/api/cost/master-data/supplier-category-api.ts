@@ -2,7 +2,6 @@ import { http } from "@/axios/service";
 import {
   SupplierTypeQueryParams,
   SupplierTypeSaveParams,
-  SupplierTypeDeleteParams,
 } from "@/types/cost/master-data/supplier-category-type";
 
 /**
@@ -58,7 +57,7 @@ export const supTypeApi = {
    * @param data.id - 主键ID（必填）
    * @returns Promise
    */
-  delSupType: (data: SupplierTypeDeleteParams) => {
+  delSupType: (data: { id: number }) => {
     return http.formPost("/mainData/supType/del", data);
   },
 };

@@ -1,12 +1,10 @@
 import { http } from "@/axios/service";
 import type {
-  BidDemandDeleteParams,
   BidDemandFormParams,
   BidDemandQueryParams,
   BidTenderBillFormDataAdd,
   BidTenderBillFormDataEdit,
   BidTenderBillQueryParams,
-  BidTenderDeleteParams,
   BidTenderQueryParams,
   BidTenderSaveParams,
 } from "@/types/cost/bidding/bidding-management-type";
@@ -82,7 +80,7 @@ export const biddingManageApi = {
    * @returns Promise
    * @description 注意：删除前请确保该事项未被招标单据引用
    */
-  delTender: (data: BidTenderDeleteParams) => {
+  delTender: (data: { id: number }) => {
     return http.post("/bid/tender/del", data);
   },
 
@@ -157,7 +155,7 @@ export const biddingManageApi = {
    * @param data.id - 主键ID（必填）
    * @returns Promise
    */
-  delDemand: (data: BidDemandDeleteParams) => {
+  delDemand: (data: { id: number }) => {
     return http.formPost("/bid/demand/del", data);
   },
 
@@ -195,7 +193,11 @@ export const biddingManageApi = {
    * @param data - 新增参数
    * @param data.bizItemCode - 业务代码（必填）
    * @param data.tenderId - 招标事项ID（必填）
-   * @param data.childData - 招标明细事项列表
+   * @param data.planList - 招标计划列表
+   * @param data.referList - 招标参考列表
+   * @param data.awardList - 定标审批列表
+   * @param data.bondRecvList - 招标保证金列表
+   * @param data.bondRefundList - 招标保证金退还列表
    * @returns Promise
    */
   addBill: (data: BidTenderBillFormDataAdd) => {

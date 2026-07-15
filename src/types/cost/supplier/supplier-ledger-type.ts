@@ -1,9 +1,24 @@
 // ==================== 供应商台账主表类型定义 ====================
 
+/** 基础实体类型 */
+export interface BaseEntity {
+  /** 主键ID */
+  id?: number;
+  /** 删除标识：false-未删除 true-已删除 */
+  isDel?: boolean;
+  /** 创建人ID */
+  createId?: number;
+  /** 创建时间 */
+  createDate?: string;
+  /** 更新人ID */
+  operId?: number;
+  /** 更新时间 */
+  operDate?: string;
+}
 /**
  * 供应商台账信息 (h_sup_supplier_m)
  */
-export interface Supplier {
+export interface Supplier extends BaseEntity {
   /** 主键，自增 */
   id: number;
   /** 供应商编码 */
@@ -58,20 +73,6 @@ export interface Supplier {
   entryDate: string | null;
   /** 备注 */
   remark: string | null;
-  /** 创建人 */
-  createId: number;
-  /** 创建人名称 */
-  createName?: string;
-  /** 创建时间 */
-  createDate: string;
-  /** 更新人 */
-  operId: number | null;
-  /** 更新人名称 */
-  operName?: string;
-  /** 更新时间 */
-  operDate: string | null;
-  /** 删除标识：false-未删除，true-已删除 */
-  isDel: boolean;
 }
 
 /**
@@ -154,20 +155,12 @@ export interface SupplierQueryParams {
   entryDateEnd?: string;
 }
 
-/**
- * 删除供应商台账请求参数
- */
-export interface SupplierDeleteParams {
-  /** 供应商台账ID */
-  id: number;
-}
-
 // ==================== 供应商银行账户类型定义 ====================
 
 /**
  * 供应商银行账户信息 (h_sup_supplier_bank)
  */
-export interface SupplierBank {
+export interface SupplierBank extends BaseEntity {
   /** 主键，自增 */
   id: number;
   /** 供应商ID */
@@ -184,16 +177,6 @@ export interface SupplierBank {
   isEnabled: boolean;
   /** 备注 */
   remark: string | null;
-  /** 创建人 */
-  createId: number;
-  /** 创建时间 */
-  createDate: string;
-  /** 更新人 */
-  operId: number | null;
-  /** 更新时间 */
-  operDate: string | null;
-  /** 删除标识：false-未删除，true-已删除 */
-  isDel: boolean;
 }
 
 /**
@@ -230,20 +213,12 @@ export interface SupplierBankQueryParams {
   isEnabled?: boolean;
 }
 
-/**
- * 删除供应商银行账户请求参数
- */
-export interface SupplierBankDeleteParams {
-  /** 供应商台账ID */
-  id: number;
-}
-
 // ==================== 供应商服务板块类型定义 ====================
 
 /**
  * 供应商服务板块 (h_sup_supplier_seg)
  */
-export interface SupplierSegment {
+export interface SupplierSegment extends BaseEntity {
   /** 主键，自增 */
   id: number;
   /** 供应商ID */
@@ -254,16 +229,6 @@ export interface SupplierSegment {
   segName?: string;
   /** 备注 */
   remark: string | null;
-  /** 创建人 */
-  createId: number;
-  /** 创建时间 */
-  createDate: string;
-  /** 更新人 */
-  operId: number | null;
-  /** 更新时间 */
-  operDate: string | null;
-  /** 删除标识：false-未删除，true-已删除 */
-  isDel: boolean;
 }
 
 /**
@@ -298,20 +263,12 @@ export interface SupplierSegmentQueryParams {
   remark?: string;
 }
 
-/**
- * 删除供应商服务板块请求参数
- */
-export interface SupplierSegmentDeleteParams {
-  /** 主键ID */
-  id: number;
-}
-
 // ==================== 供应商资质类型定义 ====================
 
 /**
  * 供应商资质 (h_sup_supplier_annex)
  */
-export interface SupplierAnnex {
+export interface SupplierAnnex extends BaseEntity {
   /** 主键，自增 */
   id: number;
   /** 供应商ID */
@@ -324,16 +281,6 @@ export interface SupplierAnnex {
   annexId: number;
   /** 备注 */
   remark: string | null;
-  /** 创建人 */
-  createId: number;
-  /** 创建时间 */
-  createDate: string;
-  /** 更新人 */
-  operId: number | null;
-  /** 更新时间 */
-  operDate: string | null;
-  /** 删除标识：false-未删除，true-已删除 */
-  isDel: boolean;
 }
 
 /**
@@ -372,20 +319,12 @@ export interface SupplierAnnexQueryParams {
   remark?: string;
 }
 
-/**
- * 删除供应商资质请求参数
- */
-export interface SupplierAnnexDeleteParams {
-  /** 主键ID */
-  id: number;
-}
-
 // ==================== 供应商项目业绩类型定义 ====================
 
 /**
  * 供应商项目业绩 (h_sup_supplier_perf)
  */
-export interface SupplierPerf {
+export interface SupplierPerf extends BaseEntity {
   /** 主键，自增 */
   id: number;
   /** 供应商ID */
@@ -404,16 +343,6 @@ export interface SupplierPerf {
   endDate: string | null;
   /** 相关附件ID */
   annexId: number | null;
-  /** 创建人 */
-  createId: number;
-  /** 创建时间 */
-  createDate: string;
-  /** 更新人 */
-  operId: number | null;
-  /** 更新时间 */
-  operDate: string | null;
-  /** 删除标识：false-未删除，true-已删除 */
-  isDel: boolean;
 }
 
 /**
@@ -464,12 +393,4 @@ export interface SupplierPerfQueryParams {
   endDateFrom?: string;
   /** 结束日期范围-结束 */
   endDateTo?: string;
-}
-
-/**
- * 删除供应商项目业绩请求参数
- */
-export interface SupplierPerfDeleteParams {
-  /** 主键ID */
-  id: number;
 }

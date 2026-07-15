@@ -125,7 +125,7 @@
     </el-row>
     <el-row :gutter="24">
       <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-        <el-form-item label="核算项目" prop="acctProjId" required>
+        <el-form-item label="核算项目" prop="acctProjId">
           <el-cascader
             v-model="formData.acctProjId"
             :options="acctProjOptions"

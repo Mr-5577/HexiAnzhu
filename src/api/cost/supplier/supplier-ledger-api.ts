@@ -1,18 +1,13 @@
 import { http } from "@/axios/service";
 import {
-  SupplierAnnexDeleteParams,
   SupplierAnnexQueryParams,
   SupplierAnnexSaveParams,
-  SupplierBankDeleteParams,
   SupplierBankQueryParams,
   SupplierBankSaveParams,
-  SupplierDeleteParams,
-  SupplierPerfDeleteParams,
   SupplierPerfQueryParams,
   SupplierPerfSaveParams,
   SupplierQueryParams,
   SupplierSaveParams,
-  SupplierSegmentDeleteParams,
   SupplierSegmentQueryParams,
   SupplierSegmentSaveParams,
 } from "@/types/cost/supplier/supplier-ledger-type";
@@ -75,7 +70,7 @@ export const supplierApi = {
    * @param data.id - 供应商ID（必填）
    * @returns Promise
    */
-  delSupplier: (data: SupplierDeleteParams) => {
+  delSupplier: (data: { id: number }) => {
     return http.formPost("/sup/supplier/del", data);
   },
 
@@ -125,7 +120,7 @@ export const supplierApi = {
    * @param data.id - 主键ID（必填）
    * @returns Promise
    */
-  delSeg: (data: SupplierSegmentDeleteParams) => {
+  delSeg: (data: { id: number }) => {
     return http.formPost("/sup/seg/del", data);
   },
 
@@ -181,7 +176,7 @@ export const supplierApi = {
    * @param data.id - 主键ID（必填）
    * @returns Promise
    */
-  delBank: (data: SupplierBankDeleteParams) => {
+  delBank: (data: { id: number }) => {
     return http.formPost("/sup/bank/del", data);
   },
 
@@ -245,7 +240,7 @@ export const supplierApi = {
    * @param data.id - 主键ID（必填）
    * @returns Promise
    */
-  delAnnex: (data: SupplierAnnexDeleteParams) => {
+  delAnnex: (data: { id: number }) => {
     return http.formPost("/sup/annex/del", data);
   },
 
@@ -309,7 +304,7 @@ export const supplierApi = {
    * @param data.id - 主键ID（必填）
    * @returns Promise
    */
-  delPerf: (data: SupplierPerfDeleteParams) => {
+  delPerf: (data: { id: number }) => {
     return http.formPost("/sup/perf/del", data);
   },
 };

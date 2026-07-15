@@ -61,14 +61,6 @@ export interface DictGroupQueryParams {
 }
 
 /**
- * 删除数据字典分组请求参数
- */
-export interface DictGroupDeleteParams {
-  /** 分组ID */
-  id: number;
-}
-
-/**
  * 数据字典分组树形节点
  */
 export interface DictGroupTreeNode extends DictGroup {
@@ -154,14 +146,6 @@ export interface DictItemQueryParams {
   id?: number;
   /** 是否启用 */
   isEnabled?: boolean;
-}
-
-/**
- * 删除数据字典项请求参数
- */
-export interface DictItemDeleteParams {
-  /** 字典项ID */
-  id: number;
 }
 
 /**

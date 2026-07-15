@@ -2,7 +2,6 @@ import { http } from "@/axios/service";
 import {
   ContractTypeQueryParams,
   ContractTypeSaveParams,
-  ContractTypeDeleteParams,
 } from "@/types/cost/master-data/contract-category-type";
 
 /**
@@ -66,7 +65,7 @@ export const conTypeApi = {
    * @returns Promise
    * @description 注意：删除类别前请确保没有子类别或关联数据
    */
-  delConType: (data: ContractTypeDeleteParams) => {
+  delConType: (data: { id: number }) => {
     return http.formPost("/mainData/conType/del", data);
   },
 };

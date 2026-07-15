@@ -75,11 +75,3 @@ export interface SupplierTypeQueryParams {
   /** 是否启用 */
   isEnabled?: boolean;
 }
-
-/**
- * 删除供应商类别请求参数
- */
-export interface SupplierTypeDeleteParams {
-  /** 主键ID */
-  id: number;
-}

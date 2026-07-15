@@ -2,9 +2,7 @@ import { http } from "@/axios/service";
 import {
   DictGroupSaveParams,
   DictGroupQueryParams,
-  DictGroupDeleteParams,
   DictItemQueryParams,
-  DictItemDeleteParams,
   DictItemSaveParams,
   DictItemsByGroupCodeParams,
 } from "@/types/cost/master-data/dict-type";
@@ -67,7 +65,7 @@ export const dictionaryApi = {
    * @returns Promise
    * @description 注意：删除分组前请确保该分组下没有字典项或子分组
    */
-  delDictM: (data: DictGroupDeleteParams) => {
+  delDictM: (data: { id: number }) => {
     return http.formPost("/mainData/dicM/del", data);
   },
 
@@ -131,7 +129,7 @@ export const dictionaryApi = {
    * @returns Promise
    * @description 注意：删除前请确保该字典项未被业务数据引用
    */
-  delDictD: (data: DictItemDeleteParams) => {
+  delDictD: (data: { id: number }) => {
     return http.formPost("/mainData/dicD/del", data);
   },
 

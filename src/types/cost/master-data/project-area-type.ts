@@ -13,12 +13,28 @@ export interface ProjectTreeNode {
   children?: ProjectTreeNode[];
 }
 
+/** 基础实体类型 */
+export interface BaseEntity {
+  /** 主键ID */
+  id?: number;
+  /** 删除标识：false-未删除 true-已删除 */
+  isDel?: boolean;
+  /** 创建人ID */
+  createId?: number;
+  /** 创建时间 */
+  createDate?: string;
+  /** 更新人ID */
+  operId?: number;
+  /** 更新时间 */
+  operDate?: string;
+}
+
 // ==================== 项目楼栋类型定义 ====================
 
 /**
  * 项目楼栋信息 (h_md_proj_building)
  */
-export interface ProjectBuilding {
+export interface ProjectBuilding extends BaseEntity {
   /** 主键，自增 */
   id: number;
   /** 项目ID */
@@ -27,16 +43,6 @@ export interface ProjectBuilding {
   bldName: string;
   /** 是否地下室：false-否，true-是 */
   isUnderGround: boolean;
-  /** 创建人 */
-  createId: number;
-  /** 创建时间 */
-  createDate: string;
-  /** 更新人 */
-  operId: number | null;
-  /** 更新时间 */
-  operDate: string | null;
-  /** 删除标识：false-未删除，true-已删除 */
-  isDel: boolean;
 }
 
 /**
@@ -63,13 +69,6 @@ export interface ProjectBuildingQueryParams {
   bldName?: string;
   /** 是否地下室 */
   isUnderGround?: boolean;
-}
-/**
- * 删除项目楼栋请求参数
- */
-export interface ProjectBuildingDeleteParams {
-  /** 楼栋ID */
-  id: number;
 }
 
 // ==================== 项目面积版本主表类型定义 ====================
@@ -103,7 +102,7 @@ export interface VersionTypeOption {
 /**
  * 项目面积版本主表 (h_md_proj_area_ver_m)
  */
-export interface ProjectAreaVersion {
+export interface ProjectAreaVersion extends BaseEntity {
   /** 主键，自增 */
   id: number;
   /** 项目ID */
@@ -118,16 +117,6 @@ export interface ProjectAreaVersion {
   isEnabled: boolean;
   /** 版本说明 */
   remark: string | null;
-  /** 创建人 */
-  createId: number;
-  /** 创建时间 */
-  createDate: string;
-  /** 更新人 */
-  operId: number | null;
-  /** 更新时间 */
-  operDate: string | null;
-  /** 删除标识：false-未删除，true-已删除 */
-  isDel: boolean;
 }
 
 /**
@@ -174,7 +163,7 @@ export interface ProjectBuildingDeleteParams {
 /**
  * 项目面积明细 (h_md_proj_area_ver_d)
  */
-export interface ProjectAreaDetail {
+export interface ProjectAreaDetail extends BaseEntity {
   /** 主键，自增 */
   id: number;
   /** 版本ID */
@@ -201,16 +190,6 @@ export interface ProjectAreaDetail {
   elvNum: number | null;
   /** 备注 */
   remark: string | null;
-  /** 创建人 */
-  createId: number;
-  /** 创建时间 */
-  createDate: string;
-  /** 更新人 */
-  operId: number | null;
-  /** 更新时间 */
-  operDate: string | null;
-  /** 删除标识：false-未删除，true-已删除 */
-  isDel: boolean;
 }
 
 /**
@@ -252,4 +231,3 @@ export interface ProjectAreaDetailQueryParams {
   /** 产品类型ID */
   prodId?: number;
 }
-
