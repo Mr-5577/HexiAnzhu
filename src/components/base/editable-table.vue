@@ -6,6 +6,11 @@
     :columns="enhancedColumns"
     :table-data="editableData"
     :dict-data="dictData"
+    :row-key="rowKey"
+    :tree-props="treeProps"
+    :default-expand-all="defaultExpandAll"
+    :lazy="lazy"
+    :load="load"
     @cell-event="handleCellEvent"
   >
     <!-- 透传所有插槽 -->
@@ -170,10 +175,10 @@ import type { TableColumnItem, DictData } from "./base-table.vue";
 /**
  * <!-- 方式一：只用 v-model（推荐） -->
  * <editable-table v-model="tableData" />
- * 
+ *
  * <!-- 方式二：只用 :table-data + @update -->
  * <editable-table :table-data="tableData" @update:table-data="tableData = $event" />
- * 
+ *
  * <!-- 方式三：用 v-model:table-data（等价于方式二） -->
  * <editable-table v-model:table-data="tableData" />
  */
@@ -202,6 +207,17 @@ interface Props {
     oldValue: any;
     rowIndex: number;
   }) => Promise<void> | void;
+  /** 树形配置 */
+  treeProps?: {
+    children?: string;
+    hasChildren?: string;
+  };
+  /** 是否默认展开所有节点 */
+  defaultExpandAll?: boolean;
+  /** 是否懒加载 */
+  lazy?: boolean;
+  /** 懒加载方法 */
+  load?: (row: any, treeNode: any, resolve: (data: any[]) => void) => void;
 }
 
 // 扩展列配置
@@ -238,6 +254,12 @@ export interface EditableColumn extends TableColumnItem {
   getOptions?: (row: any) => Array<any>;
   /** 子列配置（递归支持多级表头） */
   children?: EditableColumn[];
+  /** 禁用状态（支持函数） */
+  disabled?: boolean | ((row: any) => boolean);
+  /** 点击事件处理（用于可点击列） */
+  clickable?: boolean;
+  /** 点击回调函数 */
+  onClick?: (row: any, column: EditableColumn, index: number) => void;
 }
 
 // Emits
@@ -264,12 +286,15 @@ const props = withDefaults(defineProps<Props>(), {
   dictData: () => ({}),
   globalOptionLabelField: "label",
   globalOptionValueField: "value",
+  treeProps: () => ({ children: "children" }),
+  defaultExpandAll: false,
+  lazy: false,
 });
 
 const emit = defineEmits<Emits>();
 
 const baseTableRef = ref<InstanceType<typeof BaseTable>>();
-const editableData = ref([]);
+const editableData = ref<any[]>([]);
 
 // ★★★ 核心修改：获取实际数据源 ★★★
 const actualData = computed(() => {
@@ -372,6 +397,7 @@ const getColumnOptions = (column: EditableColumn, row?: any): any[] => {
 
   return options;
 };
+
 /**
  * 获取数字输入框的精度
  * 如果设置了 precision 且大于 0，则使用该值作为小数位数
@@ -440,7 +466,27 @@ const getCachedEditableColumns = (): EditableColumn[] => {
 };
 
 /**
- * 初始化所有旧值
+ * 深拷贝树形数据
+ */
+const deepCloneTree = (data: any[]): any[] => {
+  if (!data || !data.length) return [];
+
+  return data.map((item) => {
+    const cloned: any = { ...item };
+    // 如果有 children，递归深拷贝
+    if (
+      item.children &&
+      Array.isArray(item.children) &&
+      item.children.length > 0
+    ) {
+      cloned.children = deepCloneTree(item.children);
+    }
+    return cloned;
+  });
+};
+
+/**
+ * 初始化所有旧值（递归处理树形数据）
  */
 const initOldValues = () => {
   // 清空所有旧值
@@ -449,13 +495,26 @@ const initOldValues = () => {
   const editableColumns = getCachedEditableColumns();
   if (editableColumns.length === 0) return;
 
-  editableData.value.forEach((row) => {
-    editableColumns.forEach((col) => {
-      if (col.prop) {
-        setOldValue(row, col.prop, row[col.prop]);
+  // 递归遍历树形数据
+  const traverse = (data: any[]) => {
+    data.forEach((row) => {
+      editableColumns.forEach((col) => {
+        if (col.prop) {
+          setOldValue(row, col.prop, row[col.prop]);
+        }
+      });
+      // 递归处理子节点
+      if (
+        row.children &&
+        Array.isArray(row.children) &&
+        row.children.length > 0
+      ) {
+        traverse(row.children);
       }
     });
-  });
+  };
+
+  traverse(editableData.value);
 };
 
 /**
@@ -550,8 +609,8 @@ watch(
   () => actualData.value,
   (newData) => {
     if (newData && newData.length) {
-      // 浅拷贝，避免修改原数据
-      editableData.value = newData.map((item) => ({ ...item }));
+      // ★★★ 使用深拷贝保持树形结构 ★★★
+      editableData.value = deepCloneTree(newData);
       // 重新初始化旧值
       initOldValues();
     } else {
@@ -559,7 +618,7 @@ watch(
       clearAllOldValues();
     }
   },
-  { immediate: true },
+  { immediate: true, deep: true },
 );
 
 // 监听列配置变化，重新初始化旧值
@@ -583,7 +642,8 @@ defineExpose({
   /** 刷新数据 */
   refresh: () => {
     if (actualData.value) {
-      editableData.value = actualData.value.map((item) => ({ ...item }));
+      // ★★★ 使用深拷贝 ★★★
+      editableData.value = deepCloneTree(actualData.value);
       initOldValues();
     }
   },
