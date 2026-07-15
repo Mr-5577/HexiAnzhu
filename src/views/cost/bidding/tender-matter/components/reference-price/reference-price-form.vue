@@ -75,23 +75,21 @@ import AmountDialog from "./amount-dialog.vue";
 
 defineOptions({ name: "reference-price-form" });
 
-// ==================== Props 定义 ====================
 interface Props {
   /** 页面模式：add-新增，edit-编辑，detail-详情 */
   mode?: "add" | "edit" | "detail";
   /** 招标事项ID */
-  tenderId?: number | null;
+  tenderId: number | undefined;
   /** 参考价ID（编辑/详情时使用） */
-  referId?: number | null;
+  referId?: number | undefined;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   mode: "add",
-  tenderId: null,
-  referId: null,
+  tenderId: undefined,
+  referId: undefined,
 });
 
-// ==================== Emits 定义 ====================
 const emit = defineEmits<{
   /** 成功回调 */
   success: [];
@@ -105,7 +103,6 @@ type TenderDetailData = {
   projIds: number[];
 };
 
-// ==================== 响应式数据 ====================
 const detailData = ref<TenderDetailData | null>(null); // 详情数据
 const projectOptions = ref([]); // 项目列表
 const billData = ref(null); // 单据数据
@@ -116,7 +113,6 @@ const saveLoading = ref(false);
 const currentRowData = ref(null);
 const amountDialogVisible = ref(false);
 
-// ==================== 计算属性 ====================
 const isDetail = computed(() => props.mode === "detail");
 const isEdit = computed(() => props.mode === "edit");
 const isAdd = computed(() => props.mode === "add");
@@ -352,9 +348,6 @@ const handleBatchSave = async () => {
           bldNames: item.bldNames || "",
           tenderItemName: item.tenderItemName || "",
           referRemark: item.referRemark || "",
-          itemRemark: item.itemRemark || "",
-          bidBondAmount: item.bidBondAmount ?? 0,
-          perfBondAmount: item.perfBondAmount ?? 0,
           referAmount: item.referAmount ?? 0,
           costAlert: item.costAlert,
           amounts: item.amounts || [],
@@ -363,7 +356,7 @@ const handleBatchSave = async () => {
       const params = {
         bizItemCode: "ZB_CK",
         tenderId: props.tenderId, // 事项ID
-        childData: dataList,
+        referList: dataList,
       };
       const res = await biddingManageApi.addBill(params);
       if (res.code === 200) {
@@ -375,9 +368,10 @@ const handleBatchSave = async () => {
 
     if (isEdit.value) {
       const dataList = tableData.value.map((item) => {
+        const { buildingOptions, ...rest } = item;
         const bldIds = Array.isArray(item.bldIds) ? item.bldIds : [];
         return {
-          ...item,
+          ...rest,
           bldIds: bldIds.join(","),
         };
       });
@@ -385,7 +379,7 @@ const handleBatchSave = async () => {
         bizItemCode: "ZB_CK",
         tenderId: billData.value?.tenderId, // 事项ID
         id: billData.value?.id, // 单据ID
-        childData: dataList,
+        referList: dataList,
       };
       const res = await biddingManageApi.editBill(params);
       if (res.code === 200) {

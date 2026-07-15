@@ -74,23 +74,21 @@ import { dictMapping } from "@/utils/dict-mapping";
 
 defineOptions({ name: "bid-bond-pay-form" });
 
-// ==================== Props 定义 ====================
 interface Props {
   /** 页面模式：add-新增，edit-编辑，detail-详情 */
   mode?: "add" | "edit" | "detail";
   /** 招标事项ID */
-  tenderId?: number | null;
+  tenderId?: number | undefined;
   /** 投标保证金缴纳ID（编辑/详情时使用） */
-  bondRecvId?: number | null;
+  bondRecvId?: number | undefined;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   mode: "add",
-  tenderId: null,
-  bondRecvId: null,
+  tenderId: undefined,
+  bondRecvId: undefined,
 });
 
-// ==================== Emits 定义 ====================
 const emit = defineEmits<{
   /** 成功回调 */
   success: [];
@@ -104,7 +102,6 @@ type TenderDetailData = {
   projIds: number[];
 };
 
-// ==================== 响应式数据 ====================
 const detailData = ref<TenderDetailData | null>(null); // 详情数据
 const projectOptions = ref([]); // 项目列表
 const billData = ref(null); // 单据数据
@@ -115,7 +112,6 @@ const supplierDialogVisible = ref(false);
 const currentRowData = ref(null); // 当前点击的审批行数据
 const payMethodOptions = ref([]); // 缴纳方式数据字典选项
 
-// ==================== 计算属性 ====================
 const isDetail = computed(() => props.mode === "detail");
 const isEdit = computed(() => props.mode === "edit");
 const isAdd = computed(() => props.mode === "add");
@@ -302,7 +298,7 @@ const handleBatchSave = async () => {
       const params = {
         bizItemCode: "ZB_BZJ",
         tenderId: props.tenderId, // 事项ID
-        childData: dataList,
+        bondRecvList: dataList,
       };
       const res = await biddingManageApi.addBill(params);
       if (res.code === 200) {
@@ -317,7 +313,7 @@ const handleBatchSave = async () => {
         bizItemCode: "ZB_BZJ",
         tenderId: billData.value?.tenderId, // 事项ID
         id: billData.value?.id, // 单据ID
-        childData: tableData.value,
+        bondRecvList: tableData.value,
       };
       const res = await biddingManageApi.editBill(params);
       if (res.code === 200) {
@@ -374,7 +370,7 @@ const initAddTableData = async () => {
   if (items && items.length > 0) {
     const initialTableList = items.map((item) => ({
       id: item.id,
-      supId: item.supId || null,
+      supId: item.supId || undefined,
       supName: item.supName || "",
       needAmount: item.needAmount ?? 0,
       recvAmount: item.recvAmount ?? 0,

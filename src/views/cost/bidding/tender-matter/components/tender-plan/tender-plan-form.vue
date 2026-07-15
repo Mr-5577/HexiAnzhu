@@ -63,23 +63,21 @@ import { debounce } from "@/utils/common";
 
 defineOptions({ name: "tender-plan-form" });
 
-// ==================== Props 定义 ====================
 interface Props {
   /** 页面模式：add-新增，edit-编辑，detail-详情 */
   mode?: "add" | "edit" | "detail";
   /** 招标事项ID */
-  tenderId?: number | null;
+  tenderId: number | undefined;
   /** 计划ID（编辑/详情时使用） */
-  planId?: number | null;
+  planId?: number | undefined;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   mode: "add",
-  tenderId: null,
-  planId: null,
+  tenderId: undefined,
+  planId: undefined,
 });
 
-// ==================== Emits 定义 ====================
 const emit = defineEmits<{
   success: [];
   cancel: [];
@@ -294,7 +292,7 @@ const handleBatchSave = async () => {
       const params = {
         bizItemCode: "ZB_JH",
         tenderId: props.tenderId, // 事项ID
-        childData: dataList,
+        planList: dataList,
       };
       const res = await biddingManageApi.addBill(params);
       if (res.code === 200 && res.data) {
@@ -308,9 +306,10 @@ const handleBatchSave = async () => {
 
     if (isEdit.value) {
       const dataList = tableData.value.map((item) => {
+        const { buildingOptions, ...rest } = item;
         const bldIds = Array.isArray(item.bldIds) ? item.bldIds : [];
         return {
-          ...item,
+          ...rest,
           bldIds: bldIds.join(","),
         };
       });
@@ -318,7 +317,7 @@ const handleBatchSave = async () => {
         bizItemCode: "ZB_JH",
         tenderId: billData.value.tenderId, // 事项ID
         id: billData.value.id, // 单据ID
-        childData: dataList,
+        planList: dataList,
       };
       const res = await biddingManageApi.editBill(params);
       if (res.code === 200) {

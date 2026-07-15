@@ -416,9 +416,9 @@ const validateSupCode = (rule, value, callback) => {
     return;
   }
   // 必须以字母开头，后面只能跟字母、数字、下划线
-  const pattern = /^[a-zA-Z][a-zA-Z0-9_]*$/;
+  const pattern = /^[a-zA-Z][a-zA-Z0-9_.]*$/;
   if (!pattern.test(value)) {
-    callback(new Error("只能包含英文、数字和下划线，且不能以数字开头"));
+    callback(new Error("只能包含英文、数字、.和下划线，且不能以数字开头"));
   } else {
     callback();
   }

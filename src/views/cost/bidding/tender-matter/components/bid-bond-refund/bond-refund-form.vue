@@ -72,23 +72,21 @@ import { dictMapping } from "@/utils/dict-mapping";
 
 defineOptions({ name: "bid-bond-refund-form" });
 
-// ==================== Props 定义 ====================
 interface Props {
   /** 页面模式：add-新增，edit-编辑，detail-详情 */
   mode?: "add" | "edit" | "detail";
   /** 招标事项ID */
-  tenderId?: number | null;
+  tenderId?: number | undefined;
   /** 投标保证金退还ID（编辑/详情时使用） */
-  bondRefundId?: number | null;
+  bondRefundId?: number | undefined;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   mode: "add",
-  tenderId: null,
-  bondRefundId: null,
+  tenderId: undefined,
+  bondRefundId: undefined,
 });
 
-// ==================== Emits 定义 ====================
 const emit = defineEmits<{
   /** 成功回调 */
   success: [];
@@ -102,7 +100,6 @@ type TenderDetailData = {
   projIds: number[];
 };
 
-// ==================== 响应式数据 ====================
 const detailData = ref<TenderDetailData | null>(null); // 详情数据
 const projectOptions = ref([]); // 项目列表
 const billData = ref(null); // 单据数据
@@ -114,7 +111,6 @@ const currentRowData = ref(null); // 当前点击的审批行数据
 const payMethodOptions = ref([]); // 缴纳方式数据字典选项
 const refundMethodOptions = ref([]); // 退还方式数据字典选项
 
-// ==================== 计算属性 ====================
 const isDetail = computed(() => props.mode === "detail");
 const isEdit = computed(() => props.mode === "edit");
 const isAdd = computed(() => props.mode === "add");
@@ -309,14 +305,14 @@ const handleBatchSave = async () => {
           recvMethodName: item.recvMethodName || "",
           refundType: item.refundType || "",
           refundAmount: item.refundAmount ?? 0,
-          refundAnnexId: item.refundAnnexId || "",
+          refundAnnexId: item.refundAnnexId || undefined,
           conId: item.conId || "",
         };
       });
       const params = {
         bizItemCode: "ZB_BZJTH",
         tenderId: props.tenderId, // 事项ID
-        childData: dataList,
+        bondRefundList: dataList,
       };
       const res = await biddingManageApi.addBill(params);
       if (res.code === 200) {
@@ -331,7 +327,7 @@ const handleBatchSave = async () => {
         bizItemCode: "ZB_BZJTH",
         tenderId: billData.value?.tenderId, // 事项ID
         id: billData.value?.id, // 单据ID
-        childData: tableData.value,
+        bondRefundList: tableData.value,
       };
       const res = await biddingManageApi.editBill(params);
       if (res.code === 200) {
@@ -388,7 +384,7 @@ const initAddTableData = async () => {
   if (items && items.length > 0) {
     const initialTableList = items.map((item) => ({
       id: item.id,
-      supId: item.supId || null,
+      supId: item.supId || undefined,
       supName: item.supName || "",
       recvAmount: item.recvAmount ?? 0,
       recvMethod: item.recvMethod || "",

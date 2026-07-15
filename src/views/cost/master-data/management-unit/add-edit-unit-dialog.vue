@@ -124,8 +124,8 @@ const formData = ref<ManageUnitFormData>({
 const validateCode = (_rule: any, value: string, callback: any) => {
   if (!value) {
     callback(new Error("请输入组织编码"));
-  } else if (!/^[A-Za-z][A-Za-z0-9_]*$/i.test(value)) {
-    callback(new Error("字典编码只能包含字母、数字和下划线，且必须以字母开头"));
+  } else if (!/^[A-Za-z][A-Za-z0-9_.]*$/i.test(value)) {
+    callback(new Error("字典编码只能包含字母、数字、.和下划线，且必须以字母开头"));
   } else {
     callback();
   }

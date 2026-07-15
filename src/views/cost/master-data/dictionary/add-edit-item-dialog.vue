@@ -175,8 +175,8 @@ const dialogTitle = computed(() => {
 const validateDicCode = (_rule: any, value: string, callback: any) => {
   if (!value) {
     callback(new Error("请输入字典编码"));
-  } else if (!/^[A-Za-z][A-Za-z0-9_]*$/i.test(value)) {
-    callback(new Error("字典编码只能包含字母、数字和下划线，且必须以字母开头"));
+  } else if (!/^[A-Za-z][A-Za-z0-9_.]*$/i.test(value)) {
+    callback(new Error("字典编码只能包含字母、数字、.和下划线，且必须以字母开头"));
   } else {
     callback();
   }
@@ -185,8 +185,8 @@ const validateDicCode = (_rule: any, value: string, callback: any) => {
 const validateDicValue = (_rule: any, value: string, callback: any) => {
   if (!value) {
     callback(new Error("请输入字典值"));
-  } else if (!/^[A-Za-z][A-Za-z0-9_]*$/i.test(value)) {
-    callback(new Error("字典值只能包含字母、数字和下划线，且必须以字母开头"));
+  } else if (!/^[A-Za-z][A-Za-z0-9_.]*$/i.test(value)) {
+    callback(new Error("字典值只能包含字母、数字、.和下划线，且必须以字母开头"));
   } else {
     callback();
   }

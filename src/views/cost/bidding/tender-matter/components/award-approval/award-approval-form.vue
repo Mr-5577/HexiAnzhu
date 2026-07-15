@@ -76,23 +76,21 @@ import ChooseSupplierDialog from "../choose-supplier-dialog.vue";
 
 defineOptions({ name: "award-approval-form" });
 
-// ==================== Props 定义 ====================
 interface Props {
   /** 页面模式：add-新增，edit-编辑，detail-详情 */
   mode?: "add" | "edit" | "detail";
   /** 招标事项ID */
-  tenderId?: number | null;
+  tenderId: number | undefined;
   /** 定标审批ID（编辑/详情时使用） */
-  awardId?: number | null;
+  awardId?: number | undefined;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   mode: "add",
-  tenderId: null,
-  awardId: null,
+  tenderId: undefined,
+  awardId: undefined,
 });
 
-// ==================== Emits 定义 ====================
 const emit = defineEmits<{
   /** 成功回调 */
   success: [];
@@ -106,7 +104,6 @@ type TenderDetailData = {
   projIds: number[];
 };
 
-// ==================== 响应式数据 ====================
 const detailData = ref<TenderDetailData | null>(null); // 详情数据
 const projectOptions = ref([]); // 项目列表
 const billData = ref(null); // 单据数据
@@ -116,7 +113,6 @@ const saveLoading = ref(false);
 const supplierDialogVisible = ref(false);
 const currentRowData = ref(null); // 当前点击的审批行数据
 
-// ==================== 计算属性 ====================
 const isDetail = computed(() => props.mode === "detail");
 const isEdit = computed(() => props.mode === "edit");
 const isAdd = computed(() => props.mode === "add");
@@ -296,7 +292,7 @@ const handleSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
   if (column === "projId") {
     if (!newValue) {
       updateRow(rowIndex, {
-        projId: null,
+        projId: undefined,
         buildingOptions: [],
         bldIds: [],
         bldNames: "",
@@ -424,7 +420,7 @@ const handleBatchSave = async () => {
       const params = {
         bizItemCode: "ZB_DB",
         tenderId: props.tenderId, // 事项ID
-        childData: dataList,
+        awardList: dataList,
       };
       const res = await biddingManageApi.addBill(params);
       if (res.code === 200) {
@@ -436,9 +432,10 @@ const handleBatchSave = async () => {
 
     if (isEdit.value) {
       const dataList = tableData.value.map((item) => {
+        const { buildingOptions, ...rest } = item;
         const bldIds = Array.isArray(item.bldIds) ? item.bldIds : [];
         return {
-          ...item,
+          ...rest,
           bldIds: bldIds.join(","),
         };
       });
@@ -446,7 +443,7 @@ const handleBatchSave = async () => {
         bizItemCode: "ZB_DB",
         tenderId: billData.value?.tenderId, // 事项ID
         id: billData.value?.id, // 单据ID
-        childData: dataList,
+        awardList: dataList,
       };
       const res = await biddingManageApi.editBill(params);
       if (res.code === 200) {
@@ -537,14 +534,14 @@ const initAddTableData = async () => {
       projId: item.projId,
       bldIds: item.bldIds ? item.bldIds.split(",").map(Number) : [],
       bldNames: item.bldNames || "",
-      supId: item.supId || null,
+      supId: item.supId || undefined,
       supName: item.supName || "",
       bidAmount: item.bidAmount ?? 0,
       referAmount: item.referAmount ?? 0,
       priceVariance: item.priceVariance ?? 0,
       taxRate: item.taxRate ?? 0,
       bidExplain: item.bidExplain || "",
-      isWinner: null,
+      isWinner: undefined,
       buildingOptions: [],
     }));
     // 并行加载所有楼栋数据
