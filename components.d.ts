@@ -66,6 +66,7 @@ declare module 'vue' {
     ElTree: typeof import('element-plus/es')['ElTree']
     ElTreeSelect: typeof import('element-plus/es')['ElTreeSelect']
     ElUpload: typeof import('element-plus/es')['ElUpload']
+    InvoiceDetailDialog: typeof import('./src/components/business/invoice-detail-dialog.vue')['default']
     ProjectTreeSelector: typeof import('./src/components/business/project-tree-selector.vue')['default']
     ProjectTreeSelector2: typeof import('./src/components/business/project-tree-selector2.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']

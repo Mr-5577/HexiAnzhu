@@ -225,7 +225,7 @@ onUnmounted(() => {
   height: 40px;
   width: 100%;
   background: #ffffff;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #e4e7ed;
 
   .tags-view-wrapper {
     height: 40px;

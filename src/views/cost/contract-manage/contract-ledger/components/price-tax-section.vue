@@ -6,7 +6,7 @@
         <el-form-item label="合同总价(含税)" prop="totalPriceTax">
           <el-input
             v-model="priceTaxData.totalPriceTax"
-            readonly
+            disabled
             placeholder="自动计算"
             style="width: 100%"
           />
@@ -16,7 +16,7 @@
         <el-form-item label="合同总价(不含税)" prop="totalPrice">
           <el-input
             v-model="priceTaxData.totalPrice"
-            readonly
+            disabled
             placeholder="自动计算"
             style="width: 100%"
           />
@@ -26,7 +26,7 @@
         <el-form-item label="税额" prop="taxAmount">
           <el-input
             v-model="priceTaxData.taxAmount"
-            readonly
+            disabled
             placeholder="自动计算"
             style="width: 100%"
           />
@@ -36,7 +36,7 @@
         <el-form-item label="税率" prop="taxRate">
           <el-input
             v-model="priceTaxData.taxRate"
-            readonly
+            disabled
             placeholder="自动计算"
             style="width: 100%"
           />

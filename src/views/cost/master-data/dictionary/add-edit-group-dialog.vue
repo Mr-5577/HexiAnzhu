@@ -45,7 +45,7 @@
           maxlength="50"
           show-word-limit
         />
-        <div class="form-tip">建议使用英文小写+下划线命名</div>
+        <div class="form-tip">建议字母、数字、.和下划线，且必须以字母开头</div>
       </el-form-item>
 
       <!-- 分组名称 -->

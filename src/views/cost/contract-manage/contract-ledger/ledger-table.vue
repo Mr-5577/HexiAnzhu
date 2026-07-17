@@ -95,9 +95,8 @@
           删除
         </el-button>
         <el-button type="primary" link @click="handleDetail(row)">
-          台账详情
+          详情
         </el-button>
-        <el-button type="primary" link> 审批 </el-button>
       </template>
     </base-table>
   </div>
@@ -169,7 +168,7 @@ const columns: TableColumnItem[] = [
   {
     label: "操作",
     prop: "actions",
-    width: 240,
+    width: 200,
     slot: "actions",
     fixed: "right",
   },
