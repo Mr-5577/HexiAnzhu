@@ -100,7 +100,7 @@ const props = withDefaults(
     fileList: () => [],
     multiple: false,
     limit: 9,
-    accept: ".pdf,.jpg,.png,.doc,.docx,.xlsx,.xls",
+    accept: ".pdf,.jpg,.png,.JPEG,.doc,.docx,.xlsx,.xls",
     maxSize: 20,
     action: "/system/uploadFile",
     disabled: false,
@@ -144,6 +144,7 @@ const tipTextComputed = computed(
 
 // 上传前校验
 const handleBeforeUpload: UploadProps["beforeUpload"] = (file) => {
+  console.log("handleBeforeUpload", file);
   // 检查数量限制
   const successFiles = props.fileList.filter((f) => f.id);
   if (successFiles.length >= props.limit) {

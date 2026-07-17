@@ -49,6 +49,15 @@ export const userApi = {
   }) => {
     return http.post(`/callback/getAuthRedirectUrlTest`, data);
   },
+  // OA系统鉴权
+  getOaAuthRedirectUrl: (data: {
+    requestId: string;
+    oaUserId: string;
+    timestamp: string;
+    signature: string;
+  }) => {
+    return http.post(`/auth/oaLogin`, data);
+  },
   // 获取用户信息
   getEmpInfo: () => {
     return http.post(`/emp/getEmpInfo`);
