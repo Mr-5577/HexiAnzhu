@@ -98,7 +98,14 @@ const handleOALogin = async (
 
       // 根据 bizItemCode 跳转不同页面
       // let targetPath = BIZ_CODE_ROUTE_MAP[bizItemCode] || "/home";
-      let targetPath = "/home";
+      let targetPath = `/channel-analysis/visiting-record`; // 来访记录地址
+      // 如果有 billId 和 bizId，可以拼接到URL中
+      if (billId || bizId) {
+        const params = new URLSearchParams();
+        if (bizId) params.append("bizId", bizId);
+        if (billId) params.append("billId", billId);
+        targetPath += `?${params.toString()}`;
+      }
       // 跳转页面
       await router.replace(targetPath);
     } else {
