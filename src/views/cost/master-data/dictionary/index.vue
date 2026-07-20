@@ -51,10 +51,14 @@
                   {{ data.isEnabled ? "启用" : "禁用" }}
                 </el-tag>
               </div>
-              <el-popover placement="left" :teleported="false">
+              <el-popover
+                placement="bottom"
+                trigger="click"
+                :teleported="false"
+              >
                 <template #reference>
-                  <div class="operation-button">
-                    <el-icon :size="18"><MoreFilled size="40"/></el-icon>
+                  <div class="operation-button" @click.stop>
+                    <el-icon :size="18"><MoreFilled size="40" /></el-icon>
                   </div>
                 </template>
                 <template #default>
@@ -122,7 +126,10 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api.ts";
 import DictItemTable from "./dict-item-table.vue";
 import AddEditGroupDialog from "./add-edit-group-dialog.vue";
-import type { DictGroup, DictGroupTreeNode } from "@/types/cost/master-data/dict-type.ts";
+import type {
+  DictGroup,
+  DictGroupTreeNode,
+} from "@/types/cost/master-data/dict-type.ts";
 
 defineOptions({ name: "dictionary" });
 
@@ -304,7 +311,11 @@ onMounted(() => {
       border-bottom: 1px solid #e4e7ed;
       :deep(.el-input-group__append) {
         padding: 0;
-        background: linear-gradient(135deg, var(--harmony-primary-dark) 0%, var(--harmony-primary-light));
+        background: linear-gradient(
+          135deg,
+          var(--harmony-primary-dark) 0%,
+          var(--harmony-primary-light)
+        );
         border-color: var(--harmony-primary-light);
         .el-icon {
           width: 50px;

@@ -33,6 +33,16 @@
       :tableLoading="tableLoading"
       :pagination="false"
     >
+      <!-- 管控方式 -->
+      <template #ctrlMode="{ row }">
+        <el-tag
+          :type="getCtrlModeType(row.ctrlMode)"
+          size="small"
+          effect="light"
+        >
+          {{ getCtrlModeLabel(row.ctrlMode) }}
+        </el-tag>
+      </template>
       <template #status="{ row }">
         <el-tag :type="row.isEnabled ? 'success' : 'danger'" size="small">
           {{ row.isEnabled ? "启用" : "禁用" }}
@@ -62,6 +72,8 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { costCategoryApi } from "@/api/cost/master-data/cost-category-api.ts";
 import AddEditProjectCategoryDialog from "./add-edit-project-category-dialog.vue";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
+import { ctrlModeEnum } from "@/constants/master-data/enums.ts";
+import { buildTree } from "@/utils/tree.ts";
 
 defineOptions({ name: "project-cost-category" });
 
@@ -80,10 +92,13 @@ const dialogVisible = ref(false);
 // 表格列配置
 const tableColumns = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "subName", label: "名称" },
-  { prop: "subCode", label: "编码" },
+  { prop: "subName", label: "名称", align: "left" },
+  { prop: "subCode", label: "编码", width: 120 },
+  { prop: "busiSegName", label: "所属业务", width: 150 },
+  { prop: "remark", label: "科目说明" },
+  { slot: "ctrlMode", label: "管控方式", width: 120 },
   { label: "是否启用", width: 120, slot: "status" },
-  { label: "操作", width: 200, slot: "actions" },
+  { label: "操作", width: 150, slot: "actions" },
 ];
 
 // 项目树配置
@@ -91,6 +106,16 @@ const projectTreeProps = {
   children: "children",
   label: "orgName",
   value: "orgId",
+};
+
+// 获取标签文字
+const getCtrlModeLabel = (value: number | string | null) => {
+  return ctrlModeEnum.find((item) => item.value === value)?.label || "-";
+};
+
+// 获取标签颜色（直接从枚举里取 type，不用额外定义映射）
+const getCtrlModeType = (value: number | string | null) => {
+  return ctrlModeEnum.find((item) => item.value === value)?.type || "info";
 };
 
 /**
@@ -152,7 +177,7 @@ const getProjectProductList = async () => {
       withDetail: true,
     });
     if (res.code === 200) {
-      tableData.value = res.data || [];
+      tableData.value = buildTree(res.data || []);
     } else {
       ElMessage.error(res.msg || "获取数据失败");
     }
@@ -208,9 +233,11 @@ const handleDelete = async (row) => {
   });
 
   try {
-    const res = await costCategoryApi.delCostSubjectProj({
-      id: row.id,
-    });
+    const params = {
+      projId: queryParams.value.projId,
+      subId: row.id,
+    };
+    const res = await costCategoryApi.delCostSubjectProj(params);
     if (res.code === 200) {
       ElMessage.success("删除成功");
       getProjectProductList();

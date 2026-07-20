@@ -74,7 +74,7 @@ export const costCategoryApi = {
   // ==================== 项目成本科目 ====================
 
   /**
-   * 查询项目成本科目列表
+   * 查询项目成本科目列表（树形结构数据）
    * @param data - 查询参数
    * @param data.projId - 项目ID（必填）
    * @param data.withDetail - 是否包含产品类型详情，默认 false
@@ -101,13 +101,12 @@ export const costCategoryApi = {
   /**
    * 删除项目成本科目
    * @param data - 删除参数
-   * @param data.id - 主键ID（必填）
+   * @param data.subId - 科目ID（必填）
+   * @param data.projId - 项目ID（必填）
    * @returns Promise
    * @description 解除项目与基准成本科目的关联关系
    */
-  delCostSubjectProj: (data: { id: number }) => {
-    return http.formPost("/mainData/costSubjectProj/del", data, {
-      addQueryFast: false,
-    });
+  delCostSubjectProj: (data: { subId: number; projId: number }) => {
+    return http.formPost("/mainData/costSubjectProj/del", data);
   },
 };

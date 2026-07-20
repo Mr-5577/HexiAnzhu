@@ -16,29 +16,28 @@
       label-width="110px"
       label-position="right"
     >
-      <!-- <el-form-item prop="projId" label="选择项目" required>
-        <el-tree-select
-          v-model="formData.projId"
-          :data="projectTreeData"
-          :props="projectProps"
-          :check-strictly="false"
-          placeholder="请选择项目"
-          filterable
-          style="width: 100%"
-        />
-      </el-form-item> -->
       <el-form-item prop="subId" label="选择成本科目" required>
-        <el-tree-select
+        <el-cascader
+          ref="cascaderRef"
           v-model="formData.subId"
-          :data="productTreeData"
-          :props="productProps"
-          :check-strictly="false"
+          :options="productTreeData"
+          :show-all-levels="false"
+          :collapse-tags="true"
+          :props="{
+            expandTrigger: 'hover',
+            emitPath: true,
+            checkStrictly: false,
+            value: 'id',
+            label: 'subName',
+            children: 'children',
+            multiple: true,
+          }"
           placeholder="请选择成本科目"
-          filterable
           style="width: 100%"
+          @change="handleProductChange"
         />
       </el-form-item>
-      <el-form-item prop="segId" label="业务板块" required>
+      <!-- <el-form-item prop="segId" label="业务板块" required>
         <el-select
           v-model="formData.segId"
           placeholder="请选择业务板块"
@@ -51,7 +50,7 @@
             :value="item.id"
           />
         </el-select>
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item prop="remark" label="备注">
         <el-input
           v-model="formData.remark"
@@ -67,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, useTemplateRef } from "vue";
 import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import BaseModal from "@/components/base/base-modal.vue";
 import type { CostCategoryBaseNode } from "@/types/cost/master-data/cost-category-type";
@@ -94,6 +93,7 @@ const emit = defineEmits<{
   success: [];
 }>();
 
+const cascaderRef = useTemplateRef("cascaderRef");
 const dialogVisible = ref(props.modelValue);
 const formRef = ref<FormInstance>();
 const submitLoading = ref(false);
@@ -101,23 +101,10 @@ const productTreeData = ref<CostCategoryBaseNode[]>([]);
 const productTreeLoading = ref(false);
 const segOptions = ref([]);
 
-// 树形选择器配置
-const projectProps = {
-  children: "children",
-  label: "orgName",
-  value: "orgId",
-};
-const productProps = {
-  children: "children",
-  label: "subName",
-  value: "id",
-  disabled: "isDisabled",
-};
-
 // 表单数据
 const formData = ref({
   projId: props.projectId,
-  subId: null as number | null,
+  subId: [] as number[][],
   segId: null as number | null,
   remark: "",
 });
@@ -128,7 +115,6 @@ const formRules: FormRules = {
   subId: [{ required: true, message: "请选择成本科目", trigger: "change" }],
   segId: [{ required: true, message: "请选择业务板块", trigger: "change" }],
 };
-
 /**
  * 获取基础成本科目
  */
@@ -157,32 +143,9 @@ const getSegOptions = async () => {
     console.error("获取业务板块列表失败:", error);
   }
 };
-
-// 监听弹窗
-watch(
-  () => props.modelValue,
-  (val) => {
-    dialogVisible.value = val;
-    if (val) {
-      // 重置表单
-      formData.value = {
-        projId: props.projectId,
-        subId: null,
-        segId: null,
-        remark: "",
-      };
-      formRef.value?.clearValidate();
-      // 获取基础成本科目列表
-      getBaseProductList();
-      // 获取业务板块列表
-      getSegOptions();
-    }
-  },
-);
-
-watch(dialogVisible, (val) => {
-  emit("update:modelValue", val);
-});
+const handleProductChange = (val: number) => {
+  console.log("handleProductChange", val);
+};
 
 // 关闭
 const handleClose = () => {
@@ -190,32 +153,79 @@ const handleClose = () => {
   dialogVisible.value = false;
 };
 
+// 扁平化并去重
+const flatAndUnique = (paths) => {
+  const ids = new Set();
+  paths.forEach((path) => {
+    path.forEach((id) => {
+      ids.add(id);
+    });
+  });
+  return Array.from(ids);
+};
+
 // 提交
 const handleSubmit = async () => {
+  console.log("handleSubmit", cascaderRef.value?.getCheckedNodes());
   if (!formRef.value) return;
   try {
     await formRef.value.validate();
+    // 扁平化并去重获取所有科目ID
+    const paths = formData.value.subId || [];
+    if (paths.length === 0) {
+      ElMessage.warning("请至少选择一个成本科目");
+      return;
+    }
     submitLoading.value = true;
-    const params = {
-      projId: formData.value.projId,
-      subId: formData.value.subId,
-      segId: formData.value.segId,
-      remark: formData.value.remark,
-    };
-    const res = await costCategoryApi.addCostSubjectProj(params);
-    if (res.code === 200) {
-      ElMessage.success("新增成功");
+    const uniqueIds = flatAndUnique(paths);
+    // 使用 Promise.allSettled 支持部分成功
+    const savePromises = uniqueIds.map((subId) => {
+      const params = {
+        projId: formData.value.projId as number,
+        subId: subId as number,
+        segId: formData.value.segId as number,
+        remark: formData.value.remark,
+      };
+      return costCategoryApi.addCostSubjectProj(params);
+    });
+    const results = await Promise.allSettled(savePromises);
+    const successCount = results.filter((r) => r.status === "fulfilled").length;
+    const failCount = results.filter((r) => r.status === "rejected").length;
+    if (successCount > 0) {
+      ElMessage.success(`新增成功！`);
       emit("success");
       handleClose();
-    } else {
-      ElMessage.error(res.msg || "操作失败");
     }
   } catch {
-    // 表单验证失败
+    ElMessage.error("保存失败，请重试");
   } finally {
     submitLoading.value = false;
   }
 };
+
+// 监听弹窗
+watch(
+  () => props.modelValue,
+  async (val) => {
+    dialogVisible.value = val;
+    if (val) {
+      // 重置表单
+      formData.value = {
+        projId: props.projectId,
+        subId: [],
+        segId: null,
+        remark: "",
+      };
+      formRef.value?.clearValidate();
+      // 获取基础成本科目列表
+      getBaseProductList();
+    }
+  },
+);
+
+watch(dialogVisible, (val) => {
+  emit("update:modelValue", val);
+});
 </script>
 
 <style lang="scss" scoped>

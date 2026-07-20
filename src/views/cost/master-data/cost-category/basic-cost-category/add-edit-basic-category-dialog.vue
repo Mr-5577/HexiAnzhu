@@ -41,10 +41,8 @@
           v-model="formData.subCode"
           placeholder="请输入科目编号"
           clearable
-          maxlength="50"
-          show-word-limit
         />
-        <div class="form-tip">只能输入英文、数字和下划线_，如：CODE_001</div>
+        <div class="form-tip">仅支持英文、数字、点号 .</div>
       </el-form-item>
 
       <!-- 名称 -->
@@ -53,8 +51,6 @@
           v-model="formData.subName"
           placeholder="请输入科目名称"
           clearable
-          maxlength="100"
-          show-word-limit
         />
       </el-form-item>
 
@@ -70,17 +66,47 @@
         />
       </el-form-item>
       <!-- 管控方式 -->
-      <el-form-item prop="subLevel" label="管控方式" required>
+      <el-form-item prop="ctrlMode" label="管控方式" required>
         <el-select
           v-model="formData.ctrlMode"
           placeholder="请选择管控方式"
           style="width: 100%"
         >
           <el-option
-            v-for="item in modeOptions"
+            v-for="item in ctrlModeEnum"
             :key="item.value"
             :label="item.label"
             :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
+      <!-- 分摊规则 -->
+      <el-form-item prop="allocRule" label="分摊规则" required>
+        <el-select
+          v-model="formData.allocRule"
+          placeholder="请选择分摊规则"
+          style="width: 100%"
+        >
+          <el-option
+            v-for="item in allocRuleEnum"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </el-form-item>
+      <!-- 业务归属 -->
+      <el-form-item prop="busiSegId" label="业务归属" required>
+        <el-select
+          v-model="formData.busiSegId"
+          placeholder="请选择业务归属"
+          style="width: 100%"
+        >
+          <el-option
+            v-for="item in busiSegOptions"
+            :key="item.id"
+            :label="item.segName"
+            :value="item.id"
           />
         </el-select>
       </el-form-item>
@@ -118,6 +144,8 @@ import type {
   CostCategoryBaseNode,
 } from "@/types/cost/master-data/cost-category-type";
 import { costCategoryApi } from "@/api/cost/master-data/cost-category-api";
+import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
+import { allocRuleEnum, ctrlModeEnum } from "@/constants/master-data/enums";
 
 // Props
 interface Props {
@@ -143,19 +171,13 @@ const emit = defineEmits<{
 const dialogVisible = ref(props.modelValue);
 const formRef = ref<FormInstance>();
 const submitLoading = ref(false);
-
+const busiSegOptions = ref([]); // 业务归属选项
 // 树形选择器配置
 const treeSelectProps = {
   children: "children",
   label: "subName",
   value: "id",
 };
-
-const modeOptions = [
-  { value: 1, label: "强控" },
-  { value: 2, label: "弱控" },
-  { value: 3, label: "不控" },
-];
 
 // 是否为编辑模式
 const isEditMode = computed(() => !!props.editData?.id);
@@ -178,6 +200,8 @@ const formData = ref<CostCategoryBaseSaveParams>({
   ctrlMode: null,
   remark: "",
   isEnabled: true,
+  allocRule: null,
+  busiSegId: null,
 });
 
 // 父级显示文本
@@ -198,6 +222,8 @@ const parentOptions = computed(() => {
     remark: null,
     ctrlMode: null,
     isEnabled: true,
+    allocRule: null,
+    busiSegId: null,
     createId: 0,
     createDate: "",
     operId: null,
@@ -265,10 +291,8 @@ const findParentLevel = (
 const validateProdCode = (_rule: any, value: string, callback: any) => {
   if (!value) {
     callback(new Error("请输入产品编号"));
-  } else if (!/^[A-Za-z0-9_]+$/i.test(value)) {
-    callback(new Error("产品编号只能包含字母、数字和下划线"));
-  } else if (value.length < 2) {
-    callback(new Error("产品编号至少2个字符"));
+  } else if (!/^[A-Za-z0-9.]+$/i.test(value)) {
+    callback(new Error("产品编号仅允许英文、数字和点号 ."));
   } else {
     callback();
   }
@@ -277,71 +301,35 @@ const validateProdCode = (_rule: any, value: string, callback: any) => {
 // 表单验证规则
 const formRules: FormRules<CostCategoryBaseSaveParams> = {
   subCode: [
-    { required: true, message: "请输入产品编号", trigger: "blur" },
+    { required: true, message: "请输入产品编号", trigger: "change" },
     { validator: validateProdCode, trigger: ["blur", "change"] },
   ],
-  subName: [
-    { required: true, message: "请输入产品名称", trigger: "blur" },
-    { min: 2, max: 100, message: "长度在 2 到 100 个字符", trigger: "blur" },
-  ],
+  subName: [{ required: true, message: "请输入产品名称", trigger: "change" }],
   subLevel: [
-    { required: true, message: "请输入产品层级", trigger: "blur" },
+    { required: true, message: "请输入产品层级", trigger: "change" },
     {
       type: "number",
       min: 1,
       max: 10,
       message: "层级范围 1-10",
-      trigger: "blur",
+      trigger: "change",
     },
   ],
-  ctrlMode: [{ required: true, message: "请选择控制模式", trigger: "blur" }],
+  ctrlMode: [{ required: true, message: "请选择控制模式", trigger: "change" }],
+  allocRule: [{ required: true, message: "请选择分摊规则", trigger: "change" }],
+  busiSegId: [{ required: true, message: "请选择业务归属", trigger: "change" }],
 };
-
-// 监听弹窗
-watch(
-  () => props.modelValue,
-  (val) => {
-    dialogVisible.value = val;
-    if (val) {
-      if (isEditMode.value && props.editData) {
-        // 编辑回填数据
-        formData.value = {
-          id: props.editData.id,
-          pid: props.editData.pid,
-          subCode: props.editData.subCode,
-          subName: props.editData.subName,
-          subLevel: props.editData.subLevel,
-          ctrlMode: props.editData.ctrlMode,
-          remark: props.editData.remark || "",
-          isEnabled: props.editData.isEnabled,
-        };
-      } else {
-        // 新增
-        const pid = props.parentId ?? 0;
-        let subLevel = 1;
-        if (pid > 0 && props.treeData?.length) {
-          const parentLevel = findParentLevel(props.treeData, pid);
-          subLevel = parentLevel + 1;
-        }
-        formData.value = {
-          id: undefined,
-          pid,
-          subCode: "",
-          subName: "",
-          subLevel,
-          ctrlMode: null,
-          remark: "",
-          isEnabled: true,
-        };
-        formRef.value?.clearValidate();
-      }
+// 获取业务归属
+const getBusiSegList = async () => {
+  try {
+    const res = await dictionaryApi.getsegmentList();
+    if (res.code === 200) {
+      busiSegOptions.value = res.data || [];
     }
-  },
-);
-
-watch(dialogVisible, (val) => {
-  emit("update:modelValue", val);
-});
+  } catch (error) {
+    throw error;
+  }
+};
 
 // 关闭
 const handleClose = () => {
@@ -383,6 +371,61 @@ const handleSubmit = async () => {
     submitLoading.value = false;
   }
 };
+
+const initData = () => {
+  if (isEditMode.value && props.editData) {
+    // 编辑回填数据
+    formData.value = {
+      id: props.editData.id,
+      pid: props.editData.pid,
+      subCode: props.editData.subCode,
+      subName: props.editData.subName,
+      subLevel: props.editData.subLevel,
+      ctrlMode: props.editData.ctrlMode,
+      remark: props.editData.remark || "",
+      isEnabled: props.editData.isEnabled,
+      allocRule: props.editData.allocRule,
+      busiSegId: props.editData.busiSegId,
+    };
+  } else {
+    // 新增
+    const pid = props.parentId ?? 0;
+    let subLevel = 1;
+    if (pid > 0 && props.treeData?.length) {
+      const parentLevel = findParentLevel(props.treeData, pid);
+      subLevel = parentLevel + 1;
+    }
+    formData.value = {
+      id: undefined,
+      pid,
+      subCode: "",
+      subName: "",
+      subLevel,
+      ctrlMode: null,
+      remark: "",
+      isEnabled: true,
+      allocRule: null,
+      busiSegId: null,
+    };
+    formRef.value?.clearValidate();
+  }
+};
+
+// 监听弹窗
+watch(
+  () => props.modelValue,
+  async (val) => {
+    dialogVisible.value = val;
+    if (val) {
+      await getBusiSegList();
+      initData();
+    }
+  },
+);
+
+watch(dialogVisible, (val) => {
+  emit("update:modelValue", val);
+});
 </script>
 
 <style lang="scss" scoped>

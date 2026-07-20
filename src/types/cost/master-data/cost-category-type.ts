@@ -20,6 +20,10 @@ export interface CostCategoryBase {
   remark: string | null;
   /** 是否启用：false-禁用，true-启用 */
   isEnabled: boolean;
+  /** 分摊规则 */
+  allocRule: number;
+  /** 业务归属 */
+  busiSegId: number;
   /** 创建人 */
   createId: number;
   /** 创建时间 */
@@ -62,6 +66,10 @@ export interface CostCategoryBaseSaveParams {
   isEnabled?: boolean;
   /** 排序号 */
   sort?: number;
+  /** 分摊规则 */
+  allocRule: number;
+  /** 业务归属 */
+  busiSegId: number;
 }
 
 /**

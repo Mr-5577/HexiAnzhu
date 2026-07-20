@@ -141,7 +141,7 @@ export const dictionaryApi = {
    * @returns Promise 字典项列表
    */
   getDicItemByGroupCode: (data: DictItemsByGroupCodeParams) => {
-    return http.formPost("/system/getDicItem", data);
+    return http.formPost("/mainData/dicD/getItem", data);
   },
 
   /**
