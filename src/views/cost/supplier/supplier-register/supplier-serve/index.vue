@@ -2,9 +2,9 @@
 <template>
   <div class="supplier-service-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
-      <el-form-item label="服务板块" prop="segId">
+      <el-form-item label="服务类别" prop="supTypeId">
         <el-cascader
-          v-model="queryParams.segId"
+          v-model="queryParams.supTypeId"
           :options="segmentOptions"
           :show-all-levels="false"
           :props="{
@@ -31,7 +31,7 @@
           :disabled="!props.supplierId"
           v-if="!isView"
         >
-          新增服务板块
+          新增服务类别
         </el-button>
       </el-form-item>
     </el-form>
@@ -45,9 +45,6 @@
       :loading="tableLoading"
       :pagination="false"
     >
-      <template #segId="{ row }">
-        {{ getSegName(row.segId) }}
-      </template>
       <!-- 操作列 -->
       <template #actions="{ row }" v-if="!isView">
         <el-button link type="primary" @click="handleEdit(row)">编辑</el-button>
@@ -95,14 +92,14 @@ const segmentOptions = ref([]);
 
 // 查询参数
 const queryParams = ref({
-  segId: undefined as number | undefined,
+  supTypeId: undefined as number | undefined,
 });
 const tableLoading = ref(false);
 const tableData = ref<SupplierSegment[]>([]);
 // 表格列配置
 const tableColumns = ref([
   { type: "index", label: "序号", width: 60 },
-  { label: "服务板块", slot: "segId", minWidth: 150 },
+  { label: "服务类别", prop: "supTypeName", minWidth: 150 },
   {
     label: "是否主类别",
     prop: "isPrimary",
@@ -121,7 +118,7 @@ const getSupplierServeData = async () => {
     tableData.value = [];
     const res = await supplierApi.getSegList({
       supId: props.supplierId,
-      segId: queryParams.value.segId,
+      supTypeId: queryParams.value.supTypeId,
     });
     if (res.code === 200) {
       tableData.value = res.data || [];
@@ -140,7 +137,7 @@ const handleSearch = () => {
 
 // 重置
 const handleReset = () => {
-  queryParams.value.segId = undefined;
+  queryParams.value.supTypeId = undefined;
   getSupplierServeData();
 };
 
@@ -163,7 +160,7 @@ const handleModalSuccess = async () => {
 
 // 删除
 const handleDelete = (row: SupplierSegment) => {
-  ElMessageBox.confirm(`确定要删除该服务板块吗？`, "提示", {
+  ElMessageBox.confirm(`确定要删除该服务类别吗？`, "提示", {
     confirmButtonText: "确定",
     cancelButtonText: "取消",
     type: "warning",
@@ -191,10 +188,6 @@ const getSegList = async () => {
       segmentOptions.value = buildTree(res.data || []);
     }
   } catch (error) {}
-};
-const getSegName = (segId: number) => {
-  const seg = segmentOptions.value.find((s) => s.id == segId);
-  return seg ? seg.supTypeName : "未知";
 };
 
 watch(

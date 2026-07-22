@@ -15,7 +15,7 @@
           </el-menu-item>
           <el-menu-item index="serve" :disabled="!supplierId">
             <el-icon><Briefcase /></el-icon>
-            <span>服务板块</span>
+            <span>服务类别</span>
           </el-menu-item>
           <el-menu-item index="contact" :disabled="!supplierId">
             <el-icon><Phone /></el-icon>

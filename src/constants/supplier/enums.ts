@@ -23,7 +23,7 @@ export const supStatusEnum = [
  * 供应商单据审批状态 枚举
  */
 export const supApprovalStatusEnum = [
-  { value: 0, label: "草稿", type: "info" },
+  { value: 0, label: "待入库", type: "info" },
   { value: 10, label: "审批中", type: "success" },
   { value: 40, label: "已审批", type: "danger" },
   { value: 80, label: "作废", type: "warning" },

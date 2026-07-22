@@ -72,7 +72,7 @@
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="业务板块" prop="segId">
+              <el-form-item label="业务板块" prop="segId" required>
                 <el-select
                   v-model="formData.segId"
                   placeholder="请选择业务板块"
@@ -120,7 +120,7 @@
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="所属项目" prop="projId">
+              <el-form-item label="所属项目" prop="projId" required>
                 <el-cascader
                   ref="projCascaderRef"
                   v-model="formData.projId"
@@ -205,6 +205,22 @@
                 </el-button>
               </div>
             </template>
+            <!-- 自定义考察报告列 -->
+            <template #inspectAnnexName="{ row, column, index, update }">
+              <div class="inspect-cell">
+                <!-- 有附件显示链接 -->
+                <el-link
+                  v-if="row.inspectAnnexId"
+                  type="primary"
+                  :underline="'hover'"
+                  @click="handleViewAnnex(row)"
+                >
+                  {{ row.inspectAnnexName }}
+                </el-link>
+                <!-- 无附件显示占位 -->
+                <span v-else style="color: #999; font-size: 12px"> - </span>
+              </div>
+            </template>
             <template #actions="{ row }">
               <div class="actions-btn">
                 <el-button link type="primary" @click="openUploadForRow(row)">
@@ -279,6 +295,9 @@ import { dateUtil } from "@/utils/date-util";
 import ChooseSupplierDialog from "@/components/business/choose-supplier-dialog.vue";
 import { commonApi } from "@/api/cost/common-api";
 import { useTagsStore } from "@/stores/tags-store";
+import { supTypeApi } from "@/api/cost/master-data/supplier-category-api";
+import { buildTree } from "@/utils/tree";
+import { buildFileUrl } from "@/utils/file-path-util";
 
 defineOptions({ name: "supplier-inspection-add" });
 
@@ -326,7 +345,7 @@ const initFormData = () => ({
 
   submitter: "", // 提交人
   submiterTime: "", // 提交时间
-  remark: "", // 其他说明
+  bizNo: "", // 业务编号（唯一）
 });
 // 表单数据
 const formData = ref(initFormData());
@@ -337,10 +356,13 @@ const projectOptions = ref([]);
 const tempFileList = ref([]);
 const currentUploadRow = ref(null);
 const supplierDialogVisible = ref(false);
+const supplierTypeList = ref([]);
 
 // 表单校验规则
 const formRules: FormRules = {
   wfTitle: [{ required: true, message: "请输入标题", trigger: "change" }],
+  segId: [{ required: true, message: "请选择业务板块", trigger: "change" }],
+  projId: [{ required: true, message: "请选择项目", trigger: "change" }],
 };
 
 const tableList = ref([]);
@@ -355,8 +377,23 @@ const tableColumns = computed<EditableColumn[]>(() => [
   {
     prop: "supTypeId",
     label: "主要服务类别",
-    editable: false,
+    editable: true,
+    editType: "cascader",
+    showOverflowTooltip: false,
     width: 150,
+    optionLabelField: "supTypeName",
+    optionValueField: "id",
+    options: supplierTypeList.value || [],
+    showAllLevels: false,
+    disabled: true,
+    cascaderProps: {
+      children: "children", // 指定子节点字段名
+      label: "supTypeName", // 指定标签字段名
+      value: "id", // 指定值字段名
+      emitPath: false, // 只返回叶子节点的值
+      showAllLevels: false, // 不显示所有层级
+      checkStrictly: false,
+    },
   },
   {
     prop: "registeredAmount",
@@ -391,9 +428,10 @@ const tableColumns = computed<EditableColumn[]>(() => [
     ],
   },
   {
-    prop: "inspectAnnexName",
+    slot: "inspectAnnexName",
     label: "考察报告",
-    editable: false,
+    // editable: false,
+    showOverflowTooltip: false,
   },
   {
     prop: "remark",
@@ -415,10 +453,29 @@ const chooseSupplier = () => {
 };
 
 // 确认选择供应商后回调
-const handleSupplierSelect = (data) => {
+const handleSupplierSelect = async (data) => {
   console.log("选择的供应商数据:", data);
   if (data && data.length > 0) {
-    tableList.value = data;
+    let newData = data || [];
+    // 循环列表，获取附件信息
+    for (const item of newData) {
+      // 如果有附件ID，请求附件信息
+      if (item.inspectAnnexId != null && item.inspectAnnexId !== 0) {
+        try {
+          const annexRes = await commonApi.getFileList({
+            annexId: item.inspectAnnexId,
+          });
+          if (annexRes.code === 200 && annexRes.data) {
+            // 将附件名称保存到当前数据中
+            const file = annexRes.data[0];
+            item.inspectAnnexName = file?.annexName || "";
+          }
+        } catch (error) {
+          item.inspectAnnexName = ""; // 失败时置空
+        }
+      }
+    }
+    tableList.value = newData;
   }
 };
 
@@ -484,6 +541,17 @@ const handleAnnexSuccess = (fileList: any) => {
   console.log("当前上传成功文件", fileList);
   console.log("文件列表", tempFileList.value);
 };
+// 生成业务编号
+const generatebizNo = async () => {
+  try {
+    const res = await commonApi.getBillNo({ bizType: "SUP_RK" });
+    if (res.code === 200) {
+      formData.value.bizNo = res.data;
+    }
+  } catch (error) {
+    console.error("生成单号失败:", error);
+  }
+};
 // 校验列表、表单
 const validateSupplierData = () => {
   if (!tableList.value.length) {
@@ -523,8 +591,11 @@ const handleSave = async (flag: boolean = false) => {
     // 保存单据
     const params = {
       bill: {
-        bizItemCode: "SUP_RK",
-        bizTitle: formData.value.wfTitle,
+        bizItemCode: "SUP_RK", // 供应商入库
+        bizTitle: formData.value.wfTitle, // 流程标题
+        bizNo: formData.value.bizNo, // 业务编号（唯一）
+        segId: formData.value.segId, // 板块ID
+        projId: formData.value.projId, // 项目ID
         id: formData.value.id || undefined, // 这里初次保存时没有ID，保存成功后没有关闭页面需要把ID保存下来，后续保存只是更新
       },
       supIds: tableList.value.map((item) => item.id),
@@ -587,6 +658,32 @@ const handleCancel = () => {
 const handleViewProcess = () => {
   console.log("查看流程");
 };
+// 查看附件 - 在新标签页打开
+const handleViewAnnex = async (row: any) => {
+  if (!row.inspectAnnexId) {
+    ElMessage.warning("该附件不存在");
+    return;
+  }
+  try {
+    // 如果附件ID存在，通过接口获取附件URL
+    const res = await commonApi.getFileList({ annexId: row.inspectAnnexId });
+    if (res.code === 200 && res.data && res.data.length > 0) {
+      const file = res.data[0];
+      const fileUrl = file.annexPath;
+      if (fileUrl) {
+        const url = buildFileUrl(fileUrl);
+        // 直接在新窗口打开
+        window.open(url, "_blank");
+      } else {
+        ElMessage.error("无法获取附件地址");
+      }
+    } else {
+      ElMessage.error("附件不存在");
+    }
+  } catch (error) {
+    ElMessage.error("查看附件失败，请稍后重试");
+  }
+};
 const openUploadForRow = (row: any) => {
   currentUploadRow.value = row;
   tempFileList.value = [];
@@ -623,9 +720,19 @@ const handleUploadSuccess = (file: any) => {
 
 // 初始化所有下拉选项
 const initOptions = async () => {
-  await Promise.all([getSegOptions(), getProjectOptions()]);
+  await Promise.all([
+    getSegOptions(),
+    getProjectOptions(),
+    getSupplierTypeList(),
+  ]);
 };
-
+// 获取供应商类别数据
+const getSupplierTypeList = async () => {
+  const res = await supTypeApi.getSupTypeList({ supTypeName: "" });
+  if (res.code === 200) {
+    supplierTypeList.value = buildTree(res.data || []);
+  }
+};
 const initData = async () => {
   await initOptions();
   formData.value = initFormData();
@@ -635,6 +742,7 @@ const initData = async () => {
 
 onMounted(async () => {
   await initData();
+  generatebizNo();
 });
 </script>
 

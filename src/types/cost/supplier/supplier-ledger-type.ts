@@ -231,9 +231,9 @@ export interface SupplierSegment extends BaseEntity {
   /** 供应商ID */
   supId: number;
   /** 板块ID */
-  segId: number;
+  supTypeId: number;
   /** 板块名称（前端关联展示用） */
-  segName?: string;
+  supTypeName?: string;
   /** 是否主类别 1:是 0:否 */
   isPrimary: number;
   /** 备注 */
@@ -249,7 +249,7 @@ export interface SupplierSegmentSaveParams {
   /** 供应商ID */
   supId: number;
   /** 板块ID */
-  segId: number;
+  supTypeId: number;
   /** 是否主类别 1:是 0:否 */
   isPrimary: number;
   /** 备注 */
@@ -265,9 +265,9 @@ export interface SupplierSegmentQueryParams {
   /** 供应商ID */
   supId?: number;
   /** 板块ID */
-  segId?: number;
+  supTypeId?: number;
   /** 板块ID列表（批量查询） */
-  segIds?: number[];
+  supTypeIds?: number[];
   /** 供应商ID列表（批量查询） */
   supIds?: number[];
   /** 备注（模糊查询） */

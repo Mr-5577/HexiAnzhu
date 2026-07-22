@@ -84,6 +84,7 @@ export const supplierApi = {
   createSupFlow: (data: { billId: string | number }) => {
     return http.formPost("/sup/apprFlow/createFlow", data);
   },
+
   /**
    * 更新供应商审批流程
    * @param data - 创建参数
@@ -117,6 +118,12 @@ export const supplierApi = {
     return http.post("/sup/bill/save", data);
   },
   /**
+   * 保存并提交供应商单据
+   */
+  submitSupBill: (data: any) => {
+    return http.post("/sup/bill/submit", data);
+  },
+  /**
    * 作废供应商单据
    * @param data - 作废参数
    * @param data.billId - 单据ID
@@ -146,7 +153,7 @@ export const supplierApi = {
    * @returns Promise 服务板块列表
    */
   getSegList: (data: SupplierSegmentQueryParams) => {
-    return http.formPost("/sup/seg/getList", data);
+    return http.formPost("/sup/type/getList", data);
   },
 
   /**
@@ -158,7 +165,7 @@ export const supplierApi = {
    * @returns Promise
    */
   addSeg: (data: SupplierSegmentSaveParams) => {
-    return http.post("/sup/seg/add", data);
+    return http.post("/sup/type/add", data);
   },
 
   /**
@@ -170,7 +177,7 @@ export const supplierApi = {
    * @returns Promise
    */
   editSeg: (data: SupplierSegmentSaveParams) => {
-    return http.post("/sup/seg/edit", data);
+    return http.post("/sup/type/edit", data);
   },
 
   /**
@@ -180,7 +187,7 @@ export const supplierApi = {
    * @returns Promise
    */
   delSeg: (data: { id: number }) => {
-    return http.formPost("/sup/seg/del", data);
+    return http.formPost("/sup/type/del", data);
   },
 
   // ==================== 供应商银行账户 ====================

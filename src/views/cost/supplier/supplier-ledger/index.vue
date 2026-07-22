@@ -264,13 +264,18 @@ const getSupplierTypeList = async () => {
 const handleNodeClick = (data: SupplierTypeTreeNode) => {
   if (currentNodeKey.value === data.id) return;
   // 只有最后一层节点才能选中
-  if (!data.children || data.children.length === 0) {
-    // 设置当前选中的节点
-    currentNodeKey.value = data.id;
-    selectedCategory.value = data;
-    // 加载对应类别的供应商列表
-    getSupplierListData();
-  }
+  // if (!data.children || data.children.length === 0) {
+  //   // 设置当前选中的节点
+  //   currentNodeKey.value = data.id;
+  //   selectedCategory.value = data;
+  //   // 加载对应类别的供应商列表
+  //   getSupplierListData();
+  // }
+  // 设置当前选中的节点
+  currentNodeKey.value = data.id;
+  selectedCategory.value = data;
+  // 加载对应类别的供应商列表
+  getSupplierListData();
 };
 
 // 加载供应商列表

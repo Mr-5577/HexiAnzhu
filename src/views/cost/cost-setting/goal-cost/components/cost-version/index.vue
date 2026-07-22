@@ -115,6 +115,7 @@ const currentEditData = ref<HCstProjectCostM | null>(null);
 // 表格列配置
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: "60" },
+  { prop: "projName", label: "项目名称", width: 150 },
   { prop: "versionNo", label: "版本号", minWidth: 200 },
   { prop: "versionTypeName", label: "版本类型", width: 150 },
   // {

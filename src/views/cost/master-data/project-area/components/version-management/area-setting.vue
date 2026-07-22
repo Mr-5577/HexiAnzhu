@@ -32,10 +32,12 @@
           </div>
         </div>
         <div>
+          <!-- 启用时不可操作 -->
           <el-button
             type="primary"
             :loading="saveLoading"
             @click="handleBatchSave"
+            v-if="!props.currentData.isEnabled"
           >
             批量保存
           </el-button>
@@ -106,6 +108,7 @@ const tableColumns = computed<EditableColumn[]>(() => [
     optionValueField: "id",
     editType: "select",
     clearable: false,
+    disabled: props.currentData.isEnabled,
     options: productProjList.value || [],
   },
   {
@@ -118,6 +121,7 @@ const tableColumns = computed<EditableColumn[]>(() => [
         editable: true,
         editType: "number",
         showOverflowTooltip: false,
+        disabled: props.currentData.isEnabled,
       },
       {
         prop: "ugBuildArea",
@@ -126,6 +130,7 @@ const tableColumns = computed<EditableColumn[]>(() => [
         editable: true,
         editType: "number",
         showOverflowTooltip: false,
+        disabled: props.currentData.isEnabled,
       },
     ],
   },
@@ -139,6 +144,7 @@ const tableColumns = computed<EditableColumn[]>(() => [
         editable: true,
         editType: "number",
         showOverflowTooltip: false,
+        disabled: props.currentData.isEnabled,
       },
       {
         prop: "ugSaleArea",
@@ -147,6 +153,7 @@ const tableColumns = computed<EditableColumn[]>(() => [
         editable: true,
         editType: "number",
         showOverflowTooltip: false,
+        disabled: props.currentData.isEnabled,
       },
     ],
   },
@@ -157,6 +164,7 @@ const tableColumns = computed<EditableColumn[]>(() => [
     editable: true,
     editType: "number",
     showOverflowTooltip: false,
+    disabled: props.currentData.isEnabled,
   },
   {
     prop: "elvNum",
@@ -164,6 +172,7 @@ const tableColumns = computed<EditableColumn[]>(() => [
     editable: true,
     editType: "number",
     showOverflowTooltip: false,
+    disabled: props.currentData.isEnabled,
   },
 ]);
 

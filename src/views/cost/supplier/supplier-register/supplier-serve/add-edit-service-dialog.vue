@@ -1,4 +1,4 @@
-<!-- 新增/编辑 服务板块弹窗 -->
+<!-- 新增/编辑 服务类别弹窗 -->
 <template>
   <base-modal
     v-model="dialogVisible"
@@ -16,20 +16,24 @@
       label-width="120px"
       label-position="right"
     >
-      <!-- 服务板块 -->
-      <el-form-item prop="segId" label="服务板块" required>
-        <el-select
-          v-model="formData.segId"
-          placeholder="请选择服务板块"
+      <!-- 服务类别 -->
+      <el-form-item prop="supTypeId" label="服务类别" required>
+        <el-cascader
+          v-model="formData.supTypeId"
+          :options="segmentOptions"
+          :show-all-levels="false"
+          :props="{
+            expandTrigger: 'hover',
+            emitPath: false,
+            checkStrictly: false,
+            value: 'id',
+            label: 'supTypeName',
+            children: 'children',
+          }"
+          placeholder="请选择供应商类别"
+          style="width: 100%"
           clearable
-        >
-          <el-option
-            v-for="item in segmentOptions"
-            :key="item.id"
-            :label="item.supTypeName"
-            :value="item.id"
-          />
-        </el-select>
+        />
       </el-form-item>
 
       <el-form-item prop="isPrimary" label="是否主要类别" required>
@@ -93,25 +97,25 @@ const isEditMode = computed(() => !!props.editData?.id);
 
 // 弹窗标题
 const dialogTitle = computed(() => {
-  return isEditMode.value ? "编辑服务板块" : "新增服务板块";
+  return isEditMode.value ? "编辑服务类别" : "新增服务类别";
 });
 
 // 表单数据
 const formData = ref<SupplierSegmentSaveParams>({
   supId: props.supId,
-  segId: null,
+  supTypeId: null,
   isPrimary: 0,
   remark: "",
 });
 
 // 表单验证规则
 const formRules: FormRules = {
-  segId: [
-    { required: true, message: "请选择服务板块", trigger: "change" },
+  supTypeId: [
+    { required: true, message: "请选择服务类别", trigger: "change" },
     {
       validator: (_rule: any, value: number, callback: any) => {
         if (!value) {
-          callback(new Error("请选择服务板块"));
+          callback(new Error("请选择服务类别"));
         } else {
           callback();
         }
@@ -161,15 +165,15 @@ watch(
         formData.value = {
           id: props.editData.id,
           supId: props.editData.supId,
-          segId: props.editData.segId,
-          isPrimary: props.editData.isPrimary,
+          supTypeId: props.editData.supTypeId,
+          isPrimary: props.editData.isPrimary ? 1 : 0,
           remark: props.editData.remark || "",
         };
       } else {
         // 新增：重置表单
         formData.value = {
           supId: props.supId,
-          segId: null,
+          supTypeId: null,
           isPrimary: 0,
           remark: "",
         };
