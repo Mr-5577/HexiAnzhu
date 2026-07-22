@@ -15,6 +15,7 @@ declare module 'vue' {
     BaseModal: typeof import('./src/components/base/base-modal.vue')['default']
     BaseTable: typeof import('./src/components/base/base-table.vue')['default']
     BaseUpload: typeof import('./src/components/base/base-upload.vue')['default']
+    ChooseSupplierDialog: typeof import('./src/components/business/choose-supplier-dialog.vue')['default']
     EditableTable: typeof import('./src/components/base/editable-table.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']
     ElAside: typeof import('element-plus/es')['ElAside']

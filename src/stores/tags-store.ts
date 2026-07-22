@@ -219,6 +219,21 @@ export const useTagsStore = defineStore(
       return false;
     };
 
+    // 关闭指定标签
+    const closeTagByPath = (path: string): boolean => {
+      // 查找要关闭的标签
+      const index = visitedViews.value.findIndex((v) => v.path === path);
+      if (index === -1) return false;
+
+      const tag = visitedViews.value[index];
+      // 固定标签不允许关闭
+      if (tag.affix) return false;
+
+      // 删除标签
+      visitedViews.value.splice(index, 1);
+      return true;
+    };
+
     return {
       visitedViews,
       activeTag,
@@ -229,6 +244,7 @@ export const useTagsStore = defineStore(
       delRightViews,
       setActiveTag,
       initAffixTags,
+      closeTagByPath,
       // 导出辅助函数
       generateUniqueId,
       generateTagTitle,
