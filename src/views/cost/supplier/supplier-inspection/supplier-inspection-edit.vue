@@ -516,7 +516,8 @@ const handleSave = async (flag: boolean = false) => {
       },
       supIds: tableList.value.map((item) => item.id),
     };
-    const billRes = await supplierApi.saveSupBill(params);
+    await supplierApi.saveSupBill(params);
+    
     // 批量保存供应商
     await saveSuppliers();
 

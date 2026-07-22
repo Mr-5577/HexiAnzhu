@@ -121,7 +121,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, provide } from "vue";
 import { HomeFilled, Search, OfficeBuilding } from "@element-plus/icons-vue";
 import { ElMessage, type ElTree } from "element-plus";
 import VersionManagement from "./components/version-management/index.vue";
@@ -150,6 +150,7 @@ const selectedProject = ref<SelectedProject | null>(null);
 const activeTab = ref("version");
 const currentNodeKey = ref<string | number | null>(null);
 const dataLoading = ref(false);
+const verMid = ref(null);
 
 // 树配置 - 根据新接口调整
 const treeProps = {
@@ -201,8 +202,9 @@ const getCurrentVersionId = async (projId: number) => {
       // 获取当前生效版本的版本
       const currentVersion = list.find((item) => item.isEnabled);
       if (currentVersion) {
-        const verMid = currentVersion.id;
-        getDetailByProjectId(verMid); // 获取详情列表
+        // const verMid = currentVersion.id;
+        verMid.value = currentVersion.id;
+        getDetailByProjectId(); // 获取详情列表
       }
     }
   } catch (error) {
@@ -211,10 +213,10 @@ const getCurrentVersionId = async (projId: number) => {
 };
 
 // 选中节点后获取当前项目下的详情数据，计算总面积、户数
-const getDetailByProjectId = async (verMid: number) => {
+const getDetailByProjectId = async () => {
   try {
     dataLoading.value = true;
-    const res = await projectAreaApi.getAreaVerDList({ verMid: verMid });
+    const res = await projectAreaApi.getAreaVerDList({ verMid: verMid.value });
     if (res.code === 200 && res.data) {
       const dataList = res.data || [];
 
@@ -323,6 +325,7 @@ const loadprojectData = async () => {
   }
 };
 
+provide("updateDetailByProjectId", getDetailByProjectId);
 onMounted(() => {
   loadprojectData();
 });

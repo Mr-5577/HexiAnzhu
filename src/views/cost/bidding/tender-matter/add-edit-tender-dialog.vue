@@ -655,10 +655,10 @@ const handleSubmit = async () => {
       ElMessage.error("请填写明细中的履约保证金");
       return;
     }
-    if (tableList.value.some((item) => !item.referAmount)) {
-      ElMessage.error("请填写明细中的不含税参考价");
-      return;
-    }
+    // if (tableList.value.some((item) => !item.referAmount)) {
+    //   ElMessage.error("请填写明细中的不含税参考价");
+    //   return;
+    // }
 
     submitLoading.value = true;
     const saveParams: BidTenderSaveParams = {

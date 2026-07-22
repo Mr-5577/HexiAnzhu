@@ -175,11 +175,20 @@
           </el-row>
         </div>
         <div class="item-card">
-          <div class="section-title">准入单位名单</div>
+          <div
+            class="section-title"
+            @click="
+              () => {
+                console.log(tableList, validateSupplierData());
+              }
+            "
+          >
+            准入单位名单
+          </div>
           <div class=""></div>
           <editable-table
             ref="payWayTableRef"
-            :row-key="'uuid'"
+            :row-key="'id'"
             :height="'300px'"
             v-model="tableList"
             :columns="tableColumns"
@@ -485,6 +494,7 @@ const validateSupplierData = () => {
   const invalidRows = tableList.value.filter(
     (row: any) => row.isInspect && !row.inspectAnnexName,
   );
+  console.log("没有上传报告", invalidRows);
   if (invalidRows.length > 0) {
     const names = invalidRows.map((row: any) => row.supName).join("、");
     ElMessage.error(`以下供应商未上传考察报告：${names}`);
@@ -498,6 +508,7 @@ const saveSuppliers = async () => {
     supplierApi.editSupplier({
       ...item,
       isInspect: item.isInspect ? 1 : 0,
+      supBillId: formData.value.id, // 保存的时候需要把原单据ID替换为保存生成的新单据ID
     }),
   );
   await Promise.all(savePromises);
@@ -520,7 +531,7 @@ const handleSave = async (flag: boolean = false) => {
     };
     const billRes = await supplierApi.saveSupBill(params);
     formData.value.id = billRes?.data; // 保存单据id
-    // 批量保存供应商
+    // 批量保存供应商，需要把单据ID替换为保存成功后生成的新ID
     await saveSuppliers();
     if (flag) {
       ElMessage.success("保存成功！");

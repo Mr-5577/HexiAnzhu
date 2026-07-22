@@ -32,24 +32,6 @@
           />
         </el-select>
       </el-form-item>
-      <el-form-item label="项目" prop="projId">
-        <el-cascader
-          v-model="queryParams.projId"
-          :options="projectOptions"
-          :show-all-levels="false"
-          :props="{
-            expandTrigger: 'hover',
-            emitPath: false,
-            checkStrictly: false,
-            value: 'orgId',
-            label: 'orgName',
-            children: 'children',
-          }"
-          placeholder="请选择项目"
-          style="width: 180px"
-          clearable
-        />
-      </el-form-item>
       <el-form-item label="招标事项" prop="tenderName">
         <el-input
           v-model="queryParams.tenderName"
@@ -138,7 +120,6 @@ const demandDialogVisible = ref(false);
 const queryParams = ref<BidDemandQueryParams>({
   segId: undefined,
   companyId: undefined,
-  projId: undefined,
   tenderName: "",
 });
 // 业务板块
@@ -170,7 +151,11 @@ const getDataList = async () => {
   try {
     tableLoading.value = true;
     tableData.value = [];
-    const res = await biddingManageApi.getDemandList(queryParams.value);
+    const query = {
+      ...queryParams.value,
+      projId: props.projectId,
+    };
+    const res = await biddingManageApi.getDemandList(query);
     if (res.code === 200) {
       tableData.value = res.data || [];
     }
@@ -190,7 +175,6 @@ const handleReset = () => {
   queryParams.value = {
     segId: undefined,
     companyId: undefined,
-    projId: undefined,
     tenderName: "",
   };
   currentPage.value = 1;

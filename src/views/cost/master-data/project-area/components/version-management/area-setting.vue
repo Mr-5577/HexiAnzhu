@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed, inject } from "vue";
 import { ElMessage } from "element-plus";
 import { v4 as uuidv4 } from "uuid";
 import EditableTable from "@/components/base/editable-table.vue";
@@ -69,6 +69,9 @@ import { ProjectAreaVersion } from "@/types/cost/master-data/project-area-type";
 import { productTypeApi } from "@/api/cost/master-data/product-type-api";
 
 defineOptions({ name: "area-setting" });
+
+// 注入父组件提供的方法
+const updateDetailByProjectId = inject<() => Promise<void>>("updateDetailByProjectId");
 
 // 定义 props
 const props = defineProps<{
@@ -214,6 +217,9 @@ const handleBatchSave = async () => {
       ElMessage.success("保存成功");
       getTableData();
       // emit("saveSuccess");
+      if (updateDetailByProjectId) {
+        updateDetailByProjectId();
+      }
     }
   } catch (error) {
   } finally {

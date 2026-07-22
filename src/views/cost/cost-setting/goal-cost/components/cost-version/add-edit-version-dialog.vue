@@ -49,7 +49,8 @@
             </el-form-item>
           </el-col>
         </el-row>
-        <el-row :gutter="20">
+
+        <!-- <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item prop="costAmt" label="目标成本总额(含税)" required>
               <el-input-number
@@ -104,7 +105,8 @@
               />
             </el-form-item>
           </el-col>
-        </el-row>
+        </el-row> -->
+        
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item prop="areaVerMid" label="面积版本" required>

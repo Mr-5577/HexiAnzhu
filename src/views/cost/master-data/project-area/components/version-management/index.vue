@@ -64,10 +64,20 @@
           >
             设置生效
           </el-button>
-          <el-button link type="primary" @click="handleEdit(row)">
+          <el-button
+            link
+            type="primary"
+            @click="handleEdit(row)"
+            :disabled="row.isEnabled"
+          >
             编辑
           </el-button>
-          <el-button link type="danger" @click="handleDelete(row)">
+          <el-button
+            link
+            type="danger"
+            @click="handleDelete(row)"
+            :disabled="row.isEnabled"
+          >
             删除
           </el-button>
         </template>

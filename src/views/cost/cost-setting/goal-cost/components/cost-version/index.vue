@@ -2,10 +2,10 @@
 <template>
   <div class="version-list-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
-      <el-form-item label="版本编号" prop="versionNo">
+      <el-form-item label="版本号" prop="versionNo">
         <el-input
           v-model="queryParams.versionNo"
-          placeholder="请输入版本编号"
+          placeholder="请输入版本号"
           clearable
           style="width: 200px"
         />
@@ -116,23 +116,23 @@ const currentEditData = ref<HCstProjectCostM | null>(null);
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: "60" },
   { prop: "versionNo", label: "版本号", minWidth: 200 },
-  { prop: "versionTypeName", label: "版本类型", width: "120" },
-  {
-    prop: "costAmt",
-    label: "目标成本总额(含税)",
-    width: 150,
-    formatter: (row: HCstProjectCostM) => {
-      return row.costAmt?.toLocaleString() || "-";
-    },
-  },
-  {
-    prop: "costExclAmt",
-    label: "目标成本总额(不含税)",
-    width: 180,
-    formatter: (row: HCstProjectCostM) => {
-      return row.costExclAmt?.toLocaleString() || "-";
-    },
-  },
+  { prop: "versionTypeName", label: "版本类型", width: 150 },
+  // {
+  //   prop: "costAmt",
+  //   label: "目标成本总额(含税)",
+  //   width: 150,
+  //   formatter: (row: HCstProjectCostM) => {
+  //     return row.costAmt?.toLocaleString() || "-";
+  //   },
+  // },
+  // {
+  //   prop: "costExclAmt",
+  //   label: "目标成本总额(不含税)",
+  //   width: 180,
+  //   formatter: (row: HCstProjectCostM) => {
+  //     return row.costExclAmt?.toLocaleString() || "-";
+  //   },
+  // },
   // {
   //   prop: "costDynAmt",
   //   label: "动态成本总额(含税)",
@@ -149,16 +149,16 @@ const tableColumns: TableColumnItem[] = [
   //     return row.costDynExclAmt?.toLocaleString() || "-";
   //   },
   // },
-  { prop: "segName", label: "业务板块", width: 120 },
+  { prop: "segName", label: "业务板块", width: 150 },
   {
     prop: "isEnabled",
     label: "当前使用",
-    width: "100",
+    width: 120,
     formatter: (row: HCstProjectCostM) => {
       return row.isEnabled ? "是" : "否";
     },
   },
-  { prop: "remark", label: "备注", width: 200 },
+  { prop: "remark", label: "备注", minWidth: 200 },
   { label: "操作", width: 200, slot: "actions", fixed: "right" },
 ];
 

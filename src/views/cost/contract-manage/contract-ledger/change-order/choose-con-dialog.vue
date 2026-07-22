@@ -161,7 +161,7 @@ const resetState = () => {
 };
 
 // 查询列表
-const getSupplierList = async () => {
+const getConList = async () => {
   try {
     const res = await contractLedgerApi.getContractLedgerList({
       ...queryParams.value,
@@ -181,7 +181,7 @@ const getSupplierList = async () => {
 // 查询
 const handleQuery = () => {
   currentPage.value = 1;
-  getSupplierList();
+  getConList();
 };
 
 // 重置
@@ -197,7 +197,7 @@ const handleReset = () => {
 const handlePaginationChange = (page: number, size: number) => {
   currentPage.value = page;
   pageSize.value = size;
-  getSupplierList();
+  getConList();
 };
 
 const handleSelectionChange = (row: HConMain[]) => {

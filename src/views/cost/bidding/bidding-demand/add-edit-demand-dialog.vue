@@ -6,7 +6,6 @@
     width="800px"
     :confirm-loading="submitLoading"
     @confirm="handleSubmit"
-    @cancel="handleClose"
     @close="handleClose"
   >
     <div style="padding-right: 8px; box-sizing: border-box">
@@ -37,19 +36,6 @@
           </el-col>
           <el-col :span="12">
             <el-form-item prop="projId" label="项目" required>
-              <!-- <el-select
-                v-model="formData.projId"
-                placeholder="请选择项目"
-                clearable
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="item in projectOptions"
-                  :key="item.id"
-                  :label="item.projName"
-                  :value="item.id"
-                />
-              </el-select> -->
               <el-cascader
                 v-model="formData.projId"
                 :options="projectOptions"
