@@ -69,6 +69,8 @@ const props = withDefaults(
     limit?: number;
     /** 接受的文件类型 */
     accept?: string;
+    /** 是否不限制文件格式 */
+    unrestricted?: boolean;
     /** 最大文件大小(MB) */
     maxSize?: number;
     /** 上传地址 */
@@ -100,7 +102,10 @@ const props = withDefaults(
     fileList: () => [],
     multiple: false,
     limit: 9,
-    accept: ".pdf,.jpg,.png,.JPEG,.doc,.docx,.xlsx,.xls",
+    // accept: ".pdf,.jpg,.png,.JPEG,.doc,.docx,.xlsx,.xls",
+    accept:
+      ".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.txt,.zip,.rar,.7z",
+    unrestricted: false, // 默认不开启
     maxSize: 20,
     action: "/system/uploadFile",
     disabled: false,
@@ -136,11 +141,13 @@ const uploadUrl = computed(() => {
 });
 
 // 提示文本
-const tipTextComputed = computed(
-  () =>
-    props.tipText ||
-    `支持 ${props.accept} 格式，单个文件不超过 ${props.maxSize}MB，最多上传 ${props.limit} 个文件`,
-);
+const tipTextComputed = computed(() => {
+  if (props.tipText) return props.tipText;
+  if (props.unrestricted) {
+    return `单个文件不超过 ${props.maxSize}MB，最多上传 ${props.limit} 个文件`;
+  }
+  return `支持 ${props.accept} 格式，单个文件不超过 ${props.maxSize}MB，最多上传 ${props.limit} 个文件`;
+});
 
 // 上传前校验
 const handleBeforeUpload: UploadProps["beforeUpload"] = (file) => {
@@ -159,14 +166,16 @@ const handleBeforeUpload: UploadProps["beforeUpload"] = (file) => {
     return false;
   }
 
-  // 检查文件类型
-  const acceptTypes = props.accept
-    .split(",")
-    .map((t) => t.trim().toLowerCase());
-  const fileExt = "." + file.name.split(".").pop()?.toLowerCase();
-  if (!acceptTypes.includes(fileExt)) {
-    ElMessage.error(`文件 ${file.name} 格式不支持，只支持 ${props.accept}`);
-    return false;
+  // 只有在非无限制模式下才检查文件类型
+  if (!props.unrestricted) {
+    const acceptTypes = props.accept
+      .split(",")
+      .map((t) => t.trim().toLowerCase());
+    const fileExt = "." + file.name.split(".").pop()?.toLowerCase();
+    if (!acceptTypes.includes(fileExt)) {
+      ElMessage.error(`文件 ${file.name} 格式不支持，只支持 ${props.accept}`);
+      return false;
+    }
   }
 
   uploadingCount.value++;
@@ -176,6 +185,7 @@ const handleBeforeUpload: UploadProps["beforeUpload"] = (file) => {
 // 上传成功
 const handleSuccess: UploadProps["onSuccess"] = (res, file) => {
   uploadingCount.value--;
+  // 文件上传成功返回的结构数据
   // const res = {
   //   code: 200,
   //   message: "success",
@@ -187,7 +197,7 @@ const handleSuccess: UploadProps["onSuccess"] = (res, file) => {
   //     annexPath:
   //       "D:\\annex\\temporary\\20260707\\fe1cb77a59d6e88424d838313c3cd8ce.xls",
   //     annexExt: "xls",
-  //     uploadStatus: 0,
+  //     uploadStatus: 0, // 文件状态，0-临时文件 1-正式文件
   //     expireTime: "2026-07-22T15:38:30.1855396",
   //     createDate: "2026-07-07T15:38:30.185",
   //     createId: 15,
@@ -199,12 +209,13 @@ const handleSuccess: UploadProps["onSuccess"] = (res, file) => {
     // 构建新的附件信息
     const newAnnex: AnnexInfo = {
       id: data.id,
-      name: data.annexName || file.name,
-      url: data.annexPath,
-      annexName: data.annexName || file.name,
-      annexPath: data.annexPath,
-      annexSize: data.annexSize,
-      annexExt: data.annexExt,
+      name: data.annexName || file.name, // 文件名称
+      url: data.annexPath, // 文件名称
+      annexName: data.annexName || file.name, // 文件名称
+      annexPath: data.annexPath, // 文件路径
+      annexSize: data.annexSize, // 文件尺寸
+      annexExt: data.annexExt, // 文件类型
+      uploadStatus: data.uploadStatus, // 文件状态，0-临时文件 1-正式文件
     };
 
     // 通知父组件更新列表
@@ -241,9 +252,9 @@ const handleRemove: UploadProps["onRemove"] = (file, fileData) => {
 
 // 预览文件
 const handlePreview: UploadProps["onPreview"] = (file) => {
-  if (file.url) {
-    window.open(file.url, "_blank");
-  }
+  // if (file.url) {
+  //   window.open(file.url, "_blank");
+  // }
 };
 
 // 超出数量限制
