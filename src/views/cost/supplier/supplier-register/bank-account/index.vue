@@ -47,6 +47,7 @@
       v-model="modalVisible"
       :edit-data="editBankData"
       :sup-id="props.supplierId"
+      :isDefault="tableData.length == 0"
       @success="handleModalSuccess"
     />
   </div>

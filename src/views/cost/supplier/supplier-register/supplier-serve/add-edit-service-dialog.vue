@@ -13,7 +13,7 @@
       ref="formRef"
       :model="formData"
       :rules="formRules"
-      label-width="90px"
+      label-width="120px"
       label-position="right"
     >
       <!-- 服务板块 -->
@@ -22,14 +22,20 @@
           v-model="formData.segId"
           placeholder="请选择服务板块"
           clearable
-          style="width: 100%"
         >
           <el-option
             v-for="item in segmentOptions"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
+            :key="item.id"
+            :label="item.supTypeName"
+            :value="item.id"
           />
+        </el-select>
+      </el-form-item>
+
+      <el-form-item prop="isPrimary" label="是否主要类别" required>
+        <el-select v-model="formData.isPrimary" placeholder="请选择">
+          <el-option label="是" :value="1" />
+          <el-option label="否" :value="0" />
         </el-select>
       </el-form-item>
 
@@ -62,7 +68,7 @@ interface Props {
   modelValue: boolean;
   editData?: SupplierSegment | null;
   supId: number | null;
-  segmentOptions: Array<{ value: number; label: string }>;
+  segmentOptions: any;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -94,6 +100,7 @@ const dialogTitle = computed(() => {
 const formData = ref<SupplierSegmentSaveParams>({
   supId: props.supId,
   segId: null,
+  isPrimary: 0,
   remark: "",
 });
 
@@ -113,37 +120,6 @@ const formRules: FormRules = {
     },
   ],
 };
-
-// 监听 modelValue
-watch(
-  () => props.modelValue,
-  (val) => {
-    dialogVisible.value = val;
-    if (val) {
-      if (isEditMode.value && props.editData) {
-        // 编辑：回填数据
-        formData.value = {
-          id: props.editData.id,
-          supId: props.editData.supId,
-          segId: props.editData.segId,
-          remark: props.editData.remark || "",
-        };
-      } else {
-        // 新增：重置表单
-        formData.value = {
-          supId: props.supId,
-          segId: null,
-          remark: "",
-        };
-        formRef.value?.clearValidate(); // 只清除验证，不清除数据
-      }
-    }
-  },
-);
-
-watch(dialogVisible, (val) => {
-  emit("update:modelValue", val);
-});
 
 // 关闭弹窗
 const handleClose = () => {
@@ -173,6 +149,39 @@ const handleSubmit = async () => {
     submitLoading.value = false;
   }
 };
+
+// 监听 modelValue
+watch(
+  () => props.modelValue,
+  (val) => {
+    dialogVisible.value = val;
+    if (val) {
+      if (isEditMode.value && props.editData) {
+        // 编辑：回填数据
+        formData.value = {
+          id: props.editData.id,
+          supId: props.editData.supId,
+          segId: props.editData.segId,
+          isPrimary: props.editData.isPrimary,
+          remark: props.editData.remark || "",
+        };
+      } else {
+        // 新增：重置表单
+        formData.value = {
+          supId: props.supId,
+          segId: null,
+          isPrimary: 0,
+          remark: "",
+        };
+        formRef.value?.clearValidate(); // 只清除验证，不清除数据
+      }
+    }
+  },
+);
+
+watch(dialogVisible, (val) => {
+  emit("update:modelValue", val);
+});
 </script>
 
 <style lang="scss" scoped>

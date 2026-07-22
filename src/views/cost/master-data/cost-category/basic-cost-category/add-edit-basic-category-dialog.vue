@@ -63,6 +63,7 @@
           controls-position="right"
           placeholder="请输入层级"
           style="width: 100%"
+          disabled
         />
       </el-form-item>
       <!-- 管控方式 -->
@@ -410,6 +411,28 @@ const initData = () => {
     formRef.value?.clearValidate();
   }
 };
+// 计算层级
+const calculateLevel = (pid: number): number => {
+  if (pid === 0) return 1;
+  // 从树中查找父级
+  const parent = findNodeById(props.treeData, pid);
+  if (parent) {
+    return parent.subLevel + 1;
+  }
+  return 1;
+};
+// 监听父级变化，自动计算层级（编辑和新增都适用）
+watch(
+  () => formData.value.pid,
+  (newPid) => {
+    if (newPid !== undefined && newPid !== null) {
+      // 计算新层级
+      const level = calculateLevel(newPid);
+      formData.value.subLevel = level;
+    }
+  },
+  { immediate: true },
+);
 
 // 监听弹窗
 watch(

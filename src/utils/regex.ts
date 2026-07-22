@@ -31,8 +31,8 @@ export const postalCodeRegex = /^[1-9]\d{5}$/;
 // 传真号码正则
 export const faxRegex = /^(\d{3,4}-)?\d{7,8}$/;
 
-// 银行卡号正则（16-19位数字）
-export const bankCardRegex = /^\d{16,19}$/;
+// 银行卡号正则（10-24位数字）
+export const bankCardRegex = /^[1-9]{1}[0-9]{9,24}$/;
 
 // 增值税号正则
 export const taxNoRegex =

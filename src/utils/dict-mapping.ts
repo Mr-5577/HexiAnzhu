@@ -27,14 +27,18 @@ export const dictMapping = {
   refundMethod: "REFUND_METHOD",
   /** 生产专业 */
   proProf: "PRO_PROF",
+  /** 核算项目 */
+  acctProj: "ACCT_PROJ",
   /** 附件类型 */
   annexType: "ANNEX_TYPE",
   /** 无效成本原因 */
   invalidCostReason: "INVALID_COST_REASON",
-  /** 变更原因原因 */
+  /** 变更原因 */
   changeReason: "CHANGE_REASON",
   /** 款项类型 */
   paymentType: "PAYMENT_TYPE",
+  /** 支付方式 */
+  payType: "PAY_TYPE",
 } as const;
 
 // 导出类型，用于类型提示

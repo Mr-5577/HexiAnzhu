@@ -3,19 +3,22 @@
   <div class="supplier-service-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
       <el-form-item label="服务板块" prop="segId">
-        <el-select
+        <el-cascader
           v-model="queryParams.segId"
-          placeholder="请选择服务板块"
-          clearable
+          :options="segmentOptions"
+          :show-all-levels="false"
+          :props="{
+            expandTrigger: 'hover',
+            emitPath: false,
+            checkStrictly: false,
+            value: 'id',
+            label: 'supTypeName',
+            children: 'children',
+          }"
+          placeholder="请选择供应商类别"
           style="width: 200px"
-        >
-          <el-option
-            v-for="item in segmentOptions"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
-        </el-select>
+          clearable
+        />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="Search" @click="handleSearch">
@@ -71,6 +74,8 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import type { SupplierSegment } from "@/types/cost/supplier/supplier-ledger-type.ts";
 import AddEditServiceDialog from "./add-edit-service-dialog.vue";
 import { supplierApi } from "@/api/cost/supplier/supplier-ledger-api.ts";
+import { supTypeApi } from "@/api/cost/master-data/supplier-category-api.ts";
+import { buildTree } from "@/utils/tree.ts";
 
 defineOptions({ name: "supplier-service" });
 
@@ -85,14 +90,8 @@ const isView = computed(() => props.mode === "view"); // 是否为查看模式
 const modalVisible = ref(false);
 const editServiceData = ref<SupplierSegment | null>(null);
 
-// 服务板块选项（当前写死枚举值）
-const segmentOptions = ref([
-  { value: 2, label: "地产" },
-  { value: 3, label: "商业" },
-  { value: 4, label: "物业" },
-  { value: 6, label: "咨询" },
-  { value: 7, label: "建筑" },
-]);
+// 服务类别选项
+const segmentOptions = ref([]);
 
 // 查询参数
 const queryParams = ref({
@@ -104,9 +103,14 @@ const tableData = ref<SupplierSegment[]>([]);
 const tableColumns = ref([
   { type: "index", label: "序号", width: 60 },
   { label: "服务板块", slot: "segId", minWidth: 150 },
+  {
+    label: "是否主类别",
+    prop: "isPrimary",
+    minWidth: 160,
+    formatter: (row) => (row.isPrimary ? "是" : "否"),
+  },
   { label: "备注", prop: "remark", minWidth: 200 },
-  { label: "创建时间", prop: "createDate", minWidth: 160 },
-  { label: "操作", slot: "actions", width: 150, fixed: "right" },
+  { label: "操作", slot: "actions", width: 200, fixed: "right" },
 ]);
 
 // 加载数据
@@ -177,16 +181,27 @@ const handleDelete = (row: SupplierSegment) => {
     })
     .catch(() => {});
 };
-
+/**
+ * 获取服务类别列表
+ */
+const getSegList = async () => {
+  try {
+    const res = await supTypeApi.getSupTypeList({});
+    if (res.code === 200) {
+      segmentOptions.value = buildTree(res.data || []);
+    }
+  } catch (error) {}
+};
 const getSegName = (segId: number) => {
-  const seg = segmentOptions.value.find((s) => s.value == segId);
-  return seg ? seg.label : "未知";
+  const seg = segmentOptions.value.find((s) => s.id == segId);
+  return seg ? seg.supTypeName : "未知";
 };
 
 watch(
   () => props.supplierId,
   (newVal) => {
     if (newVal) {
+      getSegList();
       getSupplierServeData();
     } else {
       tableData.value = [];

@@ -21,6 +21,7 @@ export interface BaseEntity {
 export interface Supplier extends BaseEntity {
   /** 主键，自增 */
   id: number;
+  supBillId?: number;
   /** 供应商编码 */
   supCode: string;
   /** 供应商名称 */
@@ -85,42 +86,48 @@ export interface SupplierSaveParams {
   supCode?: string;
   /** 供应商名称 */
   supName: string;
-  /** 供应商关联类型 */
-  supLinkType?: number | string | null;
+  /** 供应商内外部 1-内部关联单位，2-外部单位 */
+  supLinkType: number | string | null;
   /** 供应商主要服务类别ID */
   supTypeId: number | string | null;
   /** 企业性质ID */
-  supNatureId?: number | string | null;
+  supNatureId: number | string | null;
   /** 纳税类型ID */
-  taxTypeId?: number | string | null;
+  taxTypeId: number | string | null;
   /** 来源类型ID */
-  sourceTypeId?: number | string | null;
+  sourceTypeId: number | string | null;
   /** 统一社会信用代码 */
-  uscCardNo?: string | null;
+  uscCardNo: string | null;
   /** 法人代表 */
-  legalPerson?: string | null;
+  legalPerson: string | null;
   /** 法人代表证件类型ID */
-  legalCardTypeId?: number | string | null;
+  legalCardTypeId: number | string | null;
   /** 法人代表证件号码 */
-  legalCardNo?: string;
+  legalCardNo: string;
   /** 法人代表邮箱 */
-  legalEmail?: string | null;
+  legalEmail: string | null;
   /** 法人代表电话 */
-  legalPhone?: string | null;
+  legalPhone: string | null;
   /** 注册资本 */
-  registeredAmount?: number | null;
+  registeredAmount: number | null;
   /** 企业主要资质及等级 */
-  supQual?: string | null;
+  supQual: string | null;
   /** 供应商地址 */
-  address?: string | null;
-  /** 供应商状态 */
-  supStatus?: number;
+  address: string | null;
+  /** 供应商状态 0=草稿；1=已审批；2=黑名单；3=作废  */
+  supStatus: number;
   /** 经营范围 */
-  bizDesc?: string | null;
+  bizDesc: string | null;
   /** 入库日期 */
-  entryDate?: string | null;
+  entryDate: string | null;
   /** 备注 */
-  remark?: string | null;
+  remark: string | null;
+  /** 实控人证件类型 */
+  actualLegalCardTypeId: number;
+  /** 实控人姓名 */
+  actualLegalPerson: string;
+  /** 实控人证件号码 */
+  actualLegalCardNo: string | number;
   /** 服务板块ID列表 */
   segIds?: number[];
   /** 银行账户列表 */
@@ -227,6 +234,8 @@ export interface SupplierSegment extends BaseEntity {
   segId: number;
   /** 板块名称（前端关联展示用） */
   segName?: string;
+  /** 是否主类别 1:是 0:否 */
+  isPrimary: number;
   /** 备注 */
   remark: string | null;
 }
@@ -241,6 +250,8 @@ export interface SupplierSegmentSaveParams {
   supId: number;
   /** 板块ID */
   segId: number;
+  /** 是否主类别 1:是 0:否 */
+  isPrimary: number;
   /** 备注 */
   remark?: string;
 }
@@ -292,7 +303,7 @@ export interface SupplierAnnexSaveParams {
   /** 供应商ID */
   supId: number;
   /** 附件类型 */
-  annexType: string;
+  annexType: string | number;
   /** 附件名称 */
   annexName: string;
   /** 附件ID */
@@ -393,4 +404,52 @@ export interface SupplierPerfQueryParams {
   endDateFrom?: string;
   /** 结束日期范围-结束 */
   endDateTo?: string;
+}
+
+// ==================== 供应商联系方式类型定义 ====================
+/**
+ * 供应商联系方式 (h_sup_supplier_contact)
+ */
+export interface SupplierContact extends BaseEntity {
+  /** 主键，自增 */
+  id: number;
+  /** 供应商ID */
+  supId: number;
+  /** 联系人 */
+  contactPerson: string;
+  /** 联系电话 */
+  contactPhone: string;
+  /** 联系人身份证 */
+  contactCardNo: string;
+  /** 职务 */
+  jobTitle: string;
+  /** 是否主要联系人 */
+  isMain: boolean;
+  /** 是否启用 */
+  isEnable: boolean;
+  /** 备注 */
+  remark: string;
+}
+
+/**
+ * 新增/修改供应商联系方式请求参数
+ */
+export interface SupplierContactSaveParams {
+  id?: number;
+  /** 供应商ID */
+  supId: number;
+  /** 联系人 */
+  contactPerson: string;
+  /** 联系电话 */
+  contactPhone: string;
+  /** 联系人身份证 */
+  contactCardNo: string;
+  /** 职务 */
+  jobTitle: string;
+  /** 是否主要联系人 */
+  isMain: boolean;
+  /** 是否启用 */
+  isEnable: boolean;
+  /** 备注 */
+  remark: string;
 }

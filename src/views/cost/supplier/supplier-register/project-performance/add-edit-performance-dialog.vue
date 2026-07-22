@@ -22,8 +22,6 @@
             v-model="formData.projName"
             placeholder="请输入项目名称"
             clearable
-            maxlength="100"
-            show-word-limit
           />
         </el-form-item>
         <el-form-item prop="companyName" label="合作单位" required>
@@ -31,8 +29,6 @@
             v-model="formData.companyName"
             placeholder="请输入合作单位"
             clearable
-            maxlength="100"
-            show-word-limit
           />
         </el-form-item>
         <el-form-item prop="conAmount" label="合同金额" required>
@@ -87,7 +83,18 @@
           </el-col>
         </el-row>
         <el-form-item prop="annexId" label="相关附件" required>
-          <!-- 这里上传附件获取附件ID -->
+          <base-upload
+            v-model:file-list="tempFileList"
+            :limit="1"
+            :multiple="false"
+            :showIcon="true"
+            :showTip="true"
+            accept=".doc,.docx,.xls,.xlsx"
+            button-text="选择文件"
+            size="default"
+            @remove="handleRemove"
+            @success="uploadSuccess"
+          />
         </el-form-item>
       </el-form>
     </div>
@@ -102,8 +109,9 @@ import type {
   SupplierPerfSaveParams,
 } from "@/types/cost/supplier/supplier-ledger-type";
 import { supplierApi } from "@/api/cost/supplier/supplier-ledger-api";
+import { commonApi } from "@/api/cost/common-api";
+import BaseUpload from "@/components/base/base-upload.vue";
 
-// Props
 interface Props {
   modelValue: boolean;
   editData?: SupplierPerf | null;
@@ -116,7 +124,6 @@ const props = withDefaults(defineProps<Props>(), {
   supId: 0,
 });
 
-// Emits
 const emit = defineEmits<{
   "update:modelValue": [value: boolean];
   success: [];
@@ -134,6 +141,7 @@ const dialogTitle = computed(() => {
   return isEditMode.value ? "编辑项目业绩" : "新增项目业绩";
 });
 
+const tempFileList = ref([]);
 // 表单数据
 const formData = ref<SupplierPerfSaveParams>({
   supId: props.supId,
@@ -146,16 +154,9 @@ const formData = ref<SupplierPerfSaveParams>({
   annexId: undefined,
 });
 
-// 表单验证规则（全部必填）
 const formRules: FormRules = {
-  projName: [
-    { required: true, message: "请输入项目名称", trigger: "blur" },
-    { min: 1, max: 100, message: "长度在 1 到 100 个字符", trigger: "blur" },
-  ],
-  companyName: [
-    { required: true, message: "请输入合作单位", trigger: "blur" },
-    { min: 1, max: 100, message: "长度在 1 到 100 个字符", trigger: "blur" },
-  ],
+  projName: [{ required: true, message: "请输入项目名称", trigger: "blur" }],
+  companyName: [{ required: true, message: "请输入合作单位", trigger: "blur" }],
   conAmount: [
     { required: true, message: "请输入合同金额", trigger: "blur" },
     {
@@ -165,10 +166,7 @@ const formRules: FormRules = {
       trigger: "blur",
     },
   ],
-  conDesc: [
-    { required: true, message: "请输入合同概述", trigger: "blur" },
-    { min: 1, max: 500, message: "长度在 1 到 500 个字符", trigger: "blur" },
-  ],
+  conDesc: [{ required: true, message: "请输入合同概述", trigger: "blur" }],
   startDate: [
     { required: true, message: "请选择开始日期", trigger: "change" },
     {
@@ -203,23 +201,90 @@ const formRules: FormRules = {
       trigger: "change",
     },
   ],
-  annexId: [
-    { required: true, message: "请输入附件ID", trigger: "blur" },
-    {
-      type: "number",
-      min: 1,
-      message: "附件ID必须大于0",
-      trigger: "blur",
-    },
-  ],
+  annexId: [{ required: true, message: "请上传相关附件", trigger: "blur" }],
 };
 
-// 监听 modelValue
+// 附件上传成功
+const uploadSuccess = (file: any) => {
+  console.log("文件上传成功", file);
+  if (file && file.id) {
+    formData.value.annexId = file.id;
+  }
+};
+// 附件移除
+const handleRemove = (file: any) => {
+  console.log("文件移除", file);
+  if (file) {
+    formData.value.annexId = undefined;
+  }
+};
+
+// 关闭弹窗
+const handleClose = () => {
+  formRef.value?.resetFields();
+  formRef.value?.clearValidate();
+  dialogVisible.value = false;
+};
+
+// 提交表单
+const handleSubmit = async () => {
+  console.log("提交表单", tempFileList.value);
+  if (!formRef.value) return;
+
+  try {
+    await formRef.value.validate();
+    submitLoading.value = true;
+    const interfaceApi = isEditMode.value
+      ? supplierApi.editPerf
+      : supplierApi.addPerf;
+    const res = await interfaceApi(formData.value);
+    if (res.code === 200) {
+      if (formData.value.annexId > 0) {
+        // 成功后再把临时文件转为正式文件
+        const enableRes = await commonApi.enableFile({
+          annexIds: [formData.value.annexId],
+        });
+        if (enableRes.code === 200) {
+          ElMessage.success(`${isEditMode.value ? "编辑" : "新增"}成功`);
+          emit("success");
+          handleClose();
+        }
+      } else {
+        ElMessage.success(`${isEditMode.value ? "编辑" : "新增"}成功`);
+        emit("success");
+        handleClose();
+      }
+    }
+  } catch (error) {
+    console.error("表单验证失败:", error);
+  } finally {
+    submitLoading.value = false;
+  }
+};
+
+// 获取附件信息回显附件
+const getAttachmentInfo = async () => {
+  if (props.editData?.annexId) {
+    const res = await commonApi.getFileList({
+      annexId: props.editData.annexId,
+    });
+    if (res.code === 200 && res.data) {
+      const fileList = res.data || [];
+      tempFileList.value = fileList.map((item) => ({
+        ...item,
+        name: item.annexName,
+        url: item.annexPath,
+      }));
+    }
+  }
+};
+
 watch(
   () => props.modelValue,
   (val) => {
     dialogVisible.value = val;
     if (val) {
+      tempFileList.value = [];
       if (isEditMode.value && props.editData) {
         // 编辑：回填数据
         formData.value = {
@@ -233,6 +298,8 @@ watch(
           endDate: props.editData.endDate || undefined,
           annexId: props.editData.annexId || undefined,
         };
+        // 获取附件信息回显附件
+        getAttachmentInfo();
       } else {
         // 新增：重置表单
         formData.value = {
@@ -254,36 +321,6 @@ watch(
 watch(dialogVisible, (val) => {
   emit("update:modelValue", val);
 });
-
-// 关闭弹窗
-const handleClose = () => {
-  formRef.value?.resetFields();
-  formRef.value?.clearValidate();
-  dialogVisible.value = false;
-};
-
-// 提交表单
-const handleSubmit = async () => {
-  if (!formRef.value) return;
-
-  try {
-    await formRef.value.validate();
-    submitLoading.value = true;
-    const interfaceApi = isEditMode.value
-      ? supplierApi.editPerf
-      : supplierApi.addPerf;
-    const res = await interfaceApi(formData.value);
-    if (res) {
-      ElMessage.success(`${isEditMode.value ? "编辑" : "新增"}成功`);
-      emit("success");
-      handleClose();
-    }
-  } catch (error) {
-    console.error("表单验证失败:", error);
-  } finally {
-    submitLoading.value = false;
-  }
-};
 </script>
 
 <style lang="scss" scoped>

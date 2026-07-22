@@ -80,7 +80,7 @@ const tableColumns = ref([
   { type: "index", label: "序号", width: 60 },
   { label: "项目名称", prop: "projName", minWidth: 200 },
   { label: "合作单位", prop: "companyName", minWidth: 150 },
-  { label: "合同金额(元)", slot: "conAmount", width: 150 },
+  { label: "合同金额", slot: "conAmount", width: 150 },
   { label: "合同概述", prop: "conDesc", minWidth: 200 },
   { label: "开始日期", slot: "startDate", width: 120 },
   { label: "结束日期", slot: "endDate", width: 120 },
@@ -130,15 +130,11 @@ const handleModalSuccess = () => {
 
 // 删除
 const handleDelete = (row: SupplierPerf) => {
-  ElMessageBox.confirm(
-    `确定要删除项目"${row.projName}"的业绩记录吗？`,
-    "提示",
-    {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
-      type: "warning",
-    },
-  )
+  ElMessageBox.confirm(`确定要删除"${row.projName}"的业绩吗？`, "提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
     .then(async () => {
       try {
         const res = await supplierApi.delPerf({ id: row.id });

@@ -21,8 +21,6 @@
           v-model="formData.accountName"
           placeholder="请输入银行户名"
           clearable
-          maxlength="100"
-          show-word-limit
         />
         <div class="form-tip">必须与银行账户开立名称完全一致</div>
       </el-form-item>
@@ -32,8 +30,6 @@
           v-model="formData.bankName"
           placeholder="请输入开户银行"
           clearable
-          maxlength="100"
-          show-word-limit
         />
         <div class="form-tip">例：中国银行杭州市钱江新城支行</div>
       </el-form-item>
@@ -43,8 +39,6 @@
           v-model="formData.bankAccount"
           placeholder="请输入银行账号"
           clearable
-          maxlength="50"
-          show-word-limit
         />
       </el-form-item>
 
@@ -92,12 +86,14 @@ interface Props {
   modelValue: boolean;
   editData?: SupplierBank | null;
   supId: number;
+  isDefault?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
   editData: null,
   supId: 0,
+  isDefault: false,
 });
 
 // Emits
@@ -133,12 +129,8 @@ const formData = ref<SupplierBankSaveParams>({
 const formRules: FormRules = {
   accountName: [
     { required: true, message: "请输入银行账户名", trigger: "blur" },
-    { min: 1, max: 100, message: "长度在 1 到 100 个字符", trigger: "blur" },
   ],
-  bankName: [
-    { required: true, message: "请输入开户银行", trigger: "blur" },
-    { min: 1, max: 100, message: "长度在 1 到 100 个字符", trigger: "blur" },
-  ],
+  bankName: [{ required: true, message: "请输入开户银行", trigger: "blur" }],
   bankAccount: [
     { required: true, message: "请输入银行账号", trigger: "change" },
     {
@@ -174,7 +166,7 @@ watch(
           accountName: "",
           bankName: "",
           bankAccount: "",
-          isDefault: false,
+          isDefault: props.isDefault || false,
           isEnabled: true,
           remark: "",
         };

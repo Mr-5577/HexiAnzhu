@@ -4,6 +4,7 @@ import {
   SupplierAnnexSaveParams,
   SupplierBankQueryParams,
   SupplierBankSaveParams,
+  SupplierContactSaveParams,
   SupplierPerfQueryParams,
   SupplierPerfSaveParams,
   SupplierQueryParams,
@@ -72,6 +73,64 @@ export const supplierApi = {
    */
   delSupplier: (data: { id: number }) => {
     return http.formPost("/sup/supplier/del", data);
+  },
+
+  /**
+   * 创建供应商审批流程
+   * @param data - 创建参数
+   * @param data.billId - 单据ID
+   * @param data.bizItemCode - 业务代码
+   */
+  createSupFlow: (data: { billId: string | number }) => {
+    return http.formPost("/sup/apprFlow/createFlow", data);
+  },
+  /**
+   * 更新供应商审批流程
+   * @param data - 创建参数
+   * @param data.billId - 单据ID
+   */
+  updateSupFlow: (data: { billId: string | number }) => {
+    return http.formPost("/sup/apprFlow/updateFlow", data);
+  },
+  /**
+   * 查询供应商单据列表
+   * @param data - 查询参数
+   * @param data.bizItemCode - 业务代码
+   * @param data.supId - 供应商ID
+   * @returns
+   */
+  getFlowList: (data: { bizItemCode?: string; supId?: number }) => {
+    return http.post("/sup/apprFlow/getList", data);
+  },
+  /**
+   * @name 查询供应商单据详情
+   * @param params.billId 单据id
+   * @returns
+   */
+  getSupBillInfo: (params?: { billId?: number }) => {
+    return http.get("/sup/bill/getInfo", params);
+  },
+  /**
+   * 新增/修改供应商单据
+   */
+  saveSupBill: (data: any) => {
+    return http.post("/sup/bill/save", data);
+  },
+  /**
+   * 作废供应商单据
+   * @param data - 作废参数
+   * @param data.billId - 单据ID
+   */
+  voidSupBill: (data: { billId: number | string }) => {
+    return http.post("/sup/bill/void", data);
+  },
+  /**
+   * 删除供应商单据
+   * @param data - 删除参数
+   * @param data.billId - 单据ID
+   */
+  delSupBill: (data: { billId: number | string }) => {
+    return http.post("/sup/bill/del", data);
   },
 
   // ==================== 供应商服务板块 ====================
@@ -306,5 +365,38 @@ export const supplierApi = {
    */
   delPerf: (data: { id: number }) => {
     return http.formPost("/sup/perf/del", data);
+  },
+
+  // ==================== 供应商联系方式 ====================
+
+  /**
+   * 查询供应商联系方式
+   * @param data - 查询参数
+   * @param data.supId - 供应商ID（必填）
+   * @param data.isEnable - 是否启用
+   */
+  getContactList: (data: { supId: number; isEnable?: boolean }) => {
+    return http.formPost("/sup/contact/getList", data);
+  },
+  /**
+   * 新增供应商联系方式
+   */
+  addContact: (data: SupplierContactSaveParams) => {
+    return http.post("/sup/contact/add", data);
+  },
+  /**
+   * 修改供应商联系方式
+   */
+  editContact: (data: SupplierContactSaveParams) => {
+    return http.post("/sup/contact/edit", data);
+  },
+  /**
+   * 删除供应商联系方式
+   * @param data - 删除参数
+   * @param data.id - 主键ID（必填）
+   * @returns Promise
+   */
+  delContact: (data: { id: number }) => {
+    return http.formPost("/sup/contact/del", data);
   },
 };

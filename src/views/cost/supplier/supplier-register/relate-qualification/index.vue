@@ -4,7 +4,7 @@
     <el-form :inline="true">
       <el-form-item>
         <el-button type="primary" @click="handleAdd" v-if="!isView">
-          新增资质
+          新增资料
         </el-button>
         <el-button icon="Refresh" @click="handleRefresh">刷新列表</el-button>
       </el-form-item>
@@ -31,6 +31,7 @@
     <!-- 新增/编辑 资质弹窗 -->
     <add-edit-annex-dialog
       v-model="modalVisible"
+      :annexTypeOptions="annexTypeOptions"
       :edit-data="editAnnexData"
       :sup-id="props.supplierId"
       @success="handleModalSuccess"
@@ -44,6 +45,8 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import type { SupplierAnnex } from "@/types/cost/supplier/supplier-ledger-type.ts";
 import AddEditAnnexDialog from "./add-edit-annex-dialog.vue";
 import { supplierApi } from "@/api/cost/supplier/supplier-ledger-api.ts";
+import { useDict } from "@/composables/use-dict";
+import { dictMapping } from "@/utils/dict-mapping";
 
 defineOptions({ name: "relate-qualification" });
 
@@ -58,18 +61,37 @@ const isView = computed(() => props.mode === "view"); // 是否为查看模式
 const tableLoading = ref(false);
 const modalVisible = ref(false);
 const editAnnexData = ref<SupplierAnnex | null>(null);
+const annexTypeOptions = ref([]);
 
 // 列表数据
 const tableData = ref<SupplierAnnex[]>([]);
 // 表格列配置
 const tableColumns = ref([
   { type: "index", label: "序号", width: 60 },
-  { label: "附件类型", prop: "annexType", minWidth: 150 },
+  {
+    label: "附件类型",
+    prop: "annexType",
+    minWidth: 150,
+    formatter: (row) => {
+      return annexTypeOptions.value.find((item) => item.id == row.annexType)
+        ?.dicLabel;
+    },
+  },
   { label: "附件名称", prop: "annexName", minWidth: 200 },
   { label: "备注", prop: "remark", minWidth: 200 },
   { label: "操作", slot: "actions", width: 180, fixed: "right" },
 ]);
 
+// 数据字典
+const { getDictList, loadDicts } = useDict([
+  dictMapping.annexType, // 附件类型
+]);
+
+// 初始化数据字典数据
+const initDictData = async () => {
+  await loadDicts();
+  annexTypeOptions.value = getDictList(dictMapping.annexType); // 附件类型
+};
 // 加载数据
 const getAnnexList = async () => {
   if (!props.supplierId) return;
@@ -136,6 +158,7 @@ watch(
   () => props.supplierId,
   (newVal) => {
     if (newVal) {
+      initDictData();
       getAnnexList();
     } else {
       tableData.value = [];

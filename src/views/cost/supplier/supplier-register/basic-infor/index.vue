@@ -60,8 +60,12 @@
                 placeholder="请选择"
                 style="width: 100%"
               >
-                <el-option label="内部" :value="1" />
-                <el-option label="外部" :value="2" />
+                <el-option
+                  v-for="item in supLinkEnum"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
               </el-select>
             </el-form-item>
           </el-col>
@@ -214,12 +218,50 @@
               />
             </el-form-item>
           </el-col>
-          <el-col :xs="24" :sm="16" :md="16" :lg="16" :xl="16">
+          <el-col :xs="24" :sm="16" :md="16" :lg="8" :xl="8">
             <el-form-item label="法人代表邮箱" prop="legalEmail">
               <el-input
                 v-model="formData.legalEmail"
                 :disabled="isView"
                 placeholder="请输入邮箱"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="16" :md="16" :lg="8" :xl="8">
+            <el-form-item label="实控人" prop="actualLegalPerson">
+              <el-input
+                v-model="formData.actualLegalPerson"
+                :disabled="isView"
+                placeholder="请输入实控人姓名"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="24">
+          <el-col :xs="24" :sm="8" :md="8" :lg="8" :xl="8">
+            <el-form-item label="实控人证件类型" prop="actualLegalCardTypeId">
+              <el-select
+                v-model="formData.actualLegalCardTypeId"
+                :disabled="isView"
+                placeholder="请选择证件类型"
+                style="width: 100%"
+              >
+                <el-option
+                  v-for="item in legalCardTypeList"
+                  :key="item.id"
+                  :label="item.dicLabel"
+                  :value="item.id"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :xs="24" :sm="16" :md="16" :lg="8" :xl="8">
+            <el-form-item label="实控人身份证" prop="actualLegalCardNo">
+              <el-input
+                v-model="formData.actualLegalCardNo"
+                :disabled="isView"
+                placeholder="请输入实控人身份证号码"
               />
             </el-form-item>
           </el-col>
@@ -268,6 +310,31 @@
             </el-form-item>
           </el-col>
         </el-row>
+
+        <!-- 服务类别明细 -->
+        <!-- <div>
+          <div class="section">
+            <div class="title">服务类别</div>
+            <el-button
+              type="primary"
+              size="small"
+              @click="dialogVisible = true"
+            >
+              关联服务类别
+            </el-button>
+          </div>
+          <base-table
+            ref="tableRef"
+            :columns="columns"
+            :table-data="tableData"
+            :row-key="'id'"
+            :pagination="false"
+            :show-toolbar="false"
+            :show-action-bar="false"
+            :compactEmpty="true"
+            :height="'220px'"
+          />
+        </div> -->
       </el-form>
     </div>
 
@@ -276,6 +343,9 @@
         保存
       </el-button>
     </div>
+
+    <!-- 服务类别选择弹窗 -->
+    <AssociatCategoryDialog v-model="dialogVisible" @success="handleSelect" />
   </div>
 </template>
 
@@ -289,6 +359,8 @@ import { supplierApi } from "@/api/cost/supplier/supplier-ledger-api";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";
 import { buildTree } from "@/utils/tree";
+import AssociatCategoryDialog from "./associat-category-dialog.vue";
+import { supLinkEnum } from "@/constants/supplier/enums.ts";
 
 defineOptions({ name: "basic-infor" });
 
@@ -301,38 +373,38 @@ const props = defineProps({
 });
 
 const isView = computed(() => props.mode === "view");
+const dialogVisible = ref(false);
 
 const initFormData = () => ({
-  // 基础信息
+  id: null,
+  supStatus: 0, // 0=草稿；1=已审批；2=黑名单；3=作废
   supName: "", // 供应商名称
+  supTypeId: null, // 供应商类别ID
   supCode: "", // 供应商编码
   supLinkType: null, // 供应商内外部 1-内部关联单位，2-外部单位
-  supTypeId: null, // 供应商类别ID
   supNatureId: null, // 企业性质ID
+  uscCardNo: "", // 统一社会信用代码
+  entryDate: "", // 成立日期
+  registeredAmount: null, // 注册资本
   taxTypeId: null, // 纳税类型ID
   sourceTypeId: null, // 来源类型ID
-  uscCardNo: "", // 统一社会信用代码
-
-  // 法人信息
+  address: "", // 供应商地址
   legalPerson: "", // 法人代表
   legalCardTypeId: null, // 法人代表证件类型ID
   legalCardNo: "", // 法人代表证件号码
-  legalEmail: "", // 法人代表邮箱
   legalPhone: "", // 法人代表电话
-
-  // 财务及资质信息
-  registeredAmount: null, // 注册资本
+  legalEmail: "", // 法人代表邮箱
+  actualLegalPerson: "", // 实控人
+  actualLegalCardTypeId: null, // 实控人证件类型ID
+  actualLegalCardNo: "", // 实控人证件号码
   supQual: "", // 企业主要资质及等级
-
-  // 地址及其他
-  address: "", // 供应商地址
   bizDesc: "", // 经营范围
-  entryDate: "", // 入库日期（原成立日期）
-  remark: "", // 备注（原其他说明）
+  remark: "", // 备注
+
+  segIds: [], // 服务板块ID列表
 });
 
 const formData = ref(initFormData());
-
 // 供应商类别
 const supplierTypeList = ref<SupplierTypeTreeNode[]>([]);
 // 企业性质
@@ -344,26 +416,29 @@ const sourceTypeList = ref([]);
 // 证件类型
 const legalCardTypeList = ref([]);
 // 数据字典
-const { getDictTree, getDictList, loadDicts } = useDict(
-  [
-    dictMapping.enterpriseNature, // 企业性质
-    dictMapping.taxType, // 纳税类型
-    dictMapping.supplierSource, // 供应商来源
-    dictMapping.legalCardType, // 法人证件类型
-  ],
-  {
-    treeDictCodes: [],
-  },
-);
+const { getDictList, loadDicts } = useDict([
+  dictMapping.enterpriseNature, // 企业性质
+  dictMapping.taxType, // 纳税类型
+  dictMapping.supplierSource, // 供应商来源
+  dictMapping.legalCardType, // 法人证件类型
+]);
 
-// 表单引用
 const formRef = ref(null);
 const submitLoading = ref(false);
+const tableData = ref([]); // 服务类别明细
+const columns = [
+  { type: "index", label: "序号", width: 60 },
+  { prop: "supTypeName", label: "服务类别" },
+  { prop: "supTypeCode", label: "类别编码" },
+  { prop: "ww", label: "是否主要类别" },
+];
 
 const resetForm = () => {
   formData.value = initFormData();
 };
-
+const handleSelect = (data) => {
+  tableData.value = data;
+};
 // 加载对应供应商信息
 const loadSupplierInfo = async () => {
   if (!props.supplierId) return;
@@ -382,24 +457,28 @@ const loadSupplierInfo = async () => {
   }
 };
 
-watch(
-  () => [props.supplierId, props.mode],
-  ([id, currentMode]) => {
-    if (currentMode === "add") {
-      resetForm();
-    } else if (id) {
-      loadSupplierInfo();
-    }
-  },
-  { immediate: true },
-);
-
-// 自定义验证函数 - 证件号码验证
+// 证件号码验证
 const validateCardNo = (rule, value, callback) => {
   if (!value) {
     callback(new Error("请输入证件号码"));
   } else if (
     formData.value.legalCardTypeId == 2016 &&
+    !idCardRegex.test(value)
+  ) {
+    // 选择身份证时需要校验身份证号码格式
+    callback(new Error("请输入正确的身份证号码"));
+  } else if (value.length < 6) {
+    callback(new Error("证件号码长度不能小于6位"));
+  } else {
+    callback();
+  }
+};
+// 证件号码验证
+const actualLegalNo = (rule, value, callback) => {
+  if (!value) {
+    callback(); // 空值直接通过校验
+  } else if (
+    formData.value.actualLegalCardTypeId == 2016 &&
     !idCardRegex.test(value)
   ) {
     // 选择身份证时需要校验身份证号码格式
@@ -487,17 +566,9 @@ const formRules = ref({
     { pattern: phoneRegex, message: "请输入正确的手机号码", trigger: "blur" },
   ],
   legalEmail: [
-    { required: true, message: "请输入法人代表邮箱", trigger: "blur" },
     { pattern: emailRegex, message: "请输入正确的邮箱地址", trigger: "blur" },
   ],
-  // supQual: [
-  //   { required: true, message: "请输入企业主要资质", trigger: "blur" },
-  //   { max: 500, message: "长度不能超过500个字符", trigger: "blur" },
-  // ],
-  // bizDesc: [
-  //   { required: true, message: "请输入经营范围", trigger: "blur" },
-  //   { max: 500, message: "长度不能超过500个字符", trigger: "blur" },
-  // ],
+  actualLegalCardNo: [{ validator: actualLegalNo, trigger: "blur" }],
 });
 
 const handleSubmit = async () => {
@@ -506,9 +577,10 @@ const handleSubmit = async () => {
   try {
     await formRef.value.validate();
     submitLoading.value = true;
+    const segIds = tableData.value.map((item) => item.id).filter(Boolean);
     const params = {
       ...formData.value,
-      supStatus: 0,
+      segIds: segIds,
     };
     const isEdit = props.mode === "edit";
     // 构建参数
@@ -523,7 +595,7 @@ const handleSubmit = async () => {
 
     if (res.code === 200) {
       const savedId = isEdit ? Number(props.supplierId) : res.data;
-      ElMessage.success("提交成功");
+      ElMessage.success("保存成功");
       emit("save-success", savedId);
     }
   } catch (error) {
@@ -548,10 +620,28 @@ const initDictData = async () => {
   sourceTypeList.value = getDictList(dictMapping.supplierSource); // 供应商来源
   legalCardTypeList.value = getDictList(dictMapping.legalCardType); // 法人证件类型
 };
+watch(
+  () => [props.supplierId, props.mode],
+  ([id, currentMode]) => {
+    getSupplierTypeList();
+    initDictData();
+    if (currentMode === "add") {
+      resetForm();
+    } else if (id) {
+      loadSupplierInfo();
+    }
+  },
+  { immediate: true },
+);
 
 onMounted(() => {
-  getSupplierTypeList();
-  initDictData();
+  // getSupplierTypeList();
+  // initDictData();
+  // if (props.mode === "add") {
+  //   resetForm();
+  // } else if (props.supplierId) {
+  //   loadSupplierInfo();
+  // }
 });
 </script>
 
@@ -589,6 +679,31 @@ onMounted(() => {
 
   .el-button {
     min-width: 88px;
+  }
+}
+.section {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  .title {
+    font-size: 16px;
+    color: #1d2129;
+    font-weight: 500;
+    padding-left: 15px;
+    box-sizing: border-box;
+    position: relative;
+
+    &::before {
+      content: "";
+      width: 4px;
+      height: 16px;
+      background: linear-gradient(180deg, #409eff, #66b1ff);
+      border-radius: 2px;
+      position: absolute;
+      left: 0;
+      top: 5px;
+    }
   }
 }
 </style>
