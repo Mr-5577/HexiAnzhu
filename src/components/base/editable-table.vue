@@ -74,6 +74,21 @@
               />
             </el-select>
 
+            <!-- 级联选择器 -->
+            <el-cascader
+              v-else-if="column.editType === 'cascader'"
+              v-model="row[column.prop]"
+              size="small"
+              :disabled="getColumnDisabled(column, row)"
+              :placeholder="column.placeholder || '请选择'"
+              :options="getColumnOptions(column, row)"
+              :props="getCascaderProps(column)"
+              :clearable="column.clearable !== false"
+              :show-all-levels="column.showAllLevels !== false"
+              :collapse-tags="column.collapseTags || false"
+              @change="handleSave(row, column, $index)"
+            />
+
             <!-- 数字输入 -->
             <el-input-number
               v-else-if="column.editType === 'number'"
@@ -228,6 +243,7 @@ export interface EditableColumn extends TableColumnItem {
   editType?:
     | "input"
     | "select"
+    | "cascader"
     | "number"
     | "textarea"
     | "date"
@@ -236,7 +252,7 @@ export interface EditableColumn extends TableColumnItem {
     | "radio";
   /** 占位符 */
   placeholder?: string;
-  /** 选项列表（用于 select/radio）- 支持静态数组或动态函数 */
+  /** 选项列表（用于 select/radio/cascader）- 支持静态数组或动态函数 */
   options?: Array<any> | ((row: any) => Array<any>);
   /** 选项的标签字段名，默认 'label' */
   optionLabelField?: string;
@@ -260,6 +276,29 @@ export interface EditableColumn extends TableColumnItem {
   clickable?: boolean;
   /** 点击回调函数 */
   onClick?: (row: any, column: EditableColumn, index: number) => void;
+  /** 级联选择器配置 */
+  cascaderProps?: {
+    /** 指定选项的子树为选项对象的某个属性值 */
+    children?: string;
+    /** 指定选项的标签为选项对象的某个属性值 */
+    label?: string;
+    /** 指定选项的值为选项对象的某个属性值 */
+    value?: string;
+    /** 是否可多选 */
+    multiple?: boolean;
+    /** 是否严格遵守 leetcode 模式 */
+    strict?: boolean;
+    /** 是否可搜索 */
+    filterable?: boolean;
+    /** 是否允许创建新条目 */
+    allowCreate?: boolean;
+    /** 是否只返回叶子节点的值 */
+    emitPath?: boolean;
+    /** 是否仅显示最后一级 */
+    showAllLevels?: boolean;
+  };
+  /** 是否显示所有层级（仅 cascader 类型有效） */
+  showAllLevels?: boolean;
 }
 
 // Emits
@@ -396,6 +435,24 @@ const getColumnOptions = (column: EditableColumn, row?: any): any[] => {
   }
 
   return options;
+};
+
+/**
+ * 获取级联选择器的配置
+ */
+const getCascaderProps = (column: EditableColumn): any => {
+  const defaultProps = {
+    children: "children",
+    label: "label",
+    value: "value",
+    emitPath: false, // 默认只返回叶子节点值
+  };
+
+  if (column.cascaderProps) {
+    return { ...defaultProps, ...column.cascaderProps };
+  }
+
+  return defaultProps;
 };
 
 /**
@@ -541,7 +598,20 @@ const updateCell = async (
   const prop = column.prop!;
   const oldValue = getOldValue(row, prop);
 
-  if (newValue === oldValue) {
+  // 对于级联选择器，需要特殊处理值的比较
+  let isValueChanged = true;
+  if (column.editType === "cascader") {
+    // 如果是路径数组，需要比较数组内容
+    if (Array.isArray(newValue) && Array.isArray(oldValue)) {
+      isValueChanged = JSON.stringify(newValue) !== JSON.stringify(oldValue);
+    } else {
+      isValueChanged = newValue !== oldValue;
+    }
+  } else {
+    isValueChanged = newValue !== oldValue;
+  }
+
+  if (!isValueChanged) {
     clearOldValue(row, prop);
     return;
   }
@@ -667,6 +737,7 @@ defineExpose({
   // 统一所有编辑组件的基础样式
   :deep(.el-input__wrapper),
   :deep(.el-select__wrapper),
+  :deep(.el-cascader .el-input__wrapper),
   :deep(.el-date-editor .el-input__wrapper),
   :deep(.el-input-number .el-input__wrapper) {
     border-radius: 0;
@@ -708,6 +779,22 @@ defineExpose({
 
     .el-select__caret {
       line-height: 28px;
+    }
+  }
+
+  // 级联选择器样式
+  :deep(.el-cascader) {
+    width: 100%;
+
+    .el-input__wrapper {
+      border-radius: 0;
+      padding: 0 8px;
+      height: 28px;
+    }
+
+    .el-input__suffix {
+      display: flex;
+      align-items: center;
     }
   }
 
