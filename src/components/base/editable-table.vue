@@ -655,7 +655,24 @@ const updateCell = async (
  * 保存单元格（内置组件使用）
  */
 const handleSave = (row: any, column: EditableColumn, rowIndex: number) => {
-  updateCell(row, column, rowIndex, row[column.prop!]);
+  // updateCell(row, column, rowIndex, row[column.prop!]);
+  const prop = column.prop!;
+  let value = row[prop];
+
+  // 如果是数字类型且值为空，转为 0
+  if (column.editType === "number") {
+    if (value === null || value === undefined || value === "") {
+      value = column.defaultValue ?? 0;
+      row[prop] = value;
+    }
+    // 确保是数字类型
+    if (typeof value !== "number") {
+      value = Number(value) || 0;
+      row[prop] = value;
+    }
+  }
+
+  updateCell(row, column, rowIndex, value);
 };
 
 // 处理单元格事件（透传给父组件）

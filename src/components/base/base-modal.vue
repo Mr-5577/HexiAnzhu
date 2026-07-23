@@ -27,17 +27,19 @@
 
     <!-- 底部 -->
     <template #footer>
-      <el-button v-if="showCancelButton" @click="handleCancel">
-        {{ cancelText }}
-      </el-button>
-      <el-button
-        v-if="showConfirmButton"
-        type="primary"
-        :loading="confirmLoading"
-        @click="handleConfirm"
-      >
-        {{ confirmText }}
-      </el-button>
+      <div style="margin-top: 10px">
+        <el-button v-if="showCancelButton" @click="handleCancel">
+          {{ cancelText }}
+        </el-button>
+        <el-button
+          v-if="showConfirmButton"
+          type="primary"
+          :loading="confirmLoading"
+          @click="handleConfirm"
+        >
+          {{ confirmText }}
+        </el-button>
+      </div>
     </template>
   </el-dialog>
 </template>
