@@ -8,8 +8,8 @@
         <el-button
           type="primary"
           icon="DocumentAdd"
-          :loading="submitLoading"
-          @click="handleSave(true)"
+          :loading="saveLoading"
+          @click="handleSave"
           :disabled="!!flowListData?.wfStatus"
         >
           保存
@@ -20,6 +20,7 @@
           plain
           icon="Promotion"
           @click="handleSubmit"
+          :loading="submitLoading"
           :disabled="!!flowListData?.wfStatus"
         >
           提交
@@ -160,9 +161,9 @@
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="提交人" prop="submitter">
+              <el-form-item label="提交人" prop="userName">
                 <el-input
-                  v-model="formData.submitter"
+                  v-model="formData.userName"
                   clearable
                   placeholder="提交人"
                   disabled
@@ -170,9 +171,9 @@
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="提交时间" prop="submiterTime">
+              <el-form-item label="提交时间" prop="createDate">
                 <el-date-picker
-                  v-model="formData.submiterTime"
+                  v-model="formData.createDate"
                   type="date"
                   placeholder="提交时间"
                   style="width: 100%"
@@ -334,8 +335,8 @@ const initFormData = () => ({
   compName: "", // 公司名称
   oaCompId: undefined, // OA公司ID
 
-  submitter: "", // 提交人
-  submiterTime: "", // 提交时间
+  userName: "", // 提交人
+  createDate: "", // 提交时间
   remark: "", // 其他说明
 });
 // 表单数据
@@ -358,6 +359,7 @@ const flowListData = ref({
   wfTitle: "", // 流程标题
 }); // 流程ID数据
 const suppliersData = ref(null); // 关联的供应商数据
+const saveLoading = ref(false);
 const submitLoading = ref(false);
 const formRef = ref<FormInstance>();
 const segOptions = ref([]);
@@ -546,12 +548,12 @@ const saveSuppliers = async () => {
 };
 
 // 保存
-const handleSave = async (flag: boolean = false) => {
+const handleSave = async () => {
   if (!formRef.value) return;
   try {
     await formRef.value.validate();
     if (!validateSupplierData()) return;
-
+    saveLoading.value = true;
     // 保存单据
     const params = {
       bill: {
@@ -560,19 +562,16 @@ const handleSave = async (flag: boolean = false) => {
         segId: formData.value.segId, // 板块ID
         projId: formData.value.projId, // 项目ID
       },
-      supIds: tableList.value.map((item) => item.id),
+      suppliers: tableList.value || [],
     };
     await supplierApi.saveSupBill(params);
 
     // 批量保存供应商
     await saveSuppliers();
-
-    if (flag) {
-      ElMessage.success("保存成功！");
-    }
+    ElMessage.success("保存成功！");
   } catch (error) {
   } finally {
-    submitLoading.value = false;
+    saveLoading.value = false;
   }
 };
 // 提交表单
@@ -581,17 +580,25 @@ const handleSubmit = async () => {
   try {
     await formRef.value.validate();
     if (!validateSupplierData()) return;
+    submitLoading.value = true;
+    // 批量保存供应商
+    await saveSuppliers();
 
-    // 先保存
-    await handleSave(false);
-
-    // 再提交
-    const res = await supplierApi.createSupFlow({ billId: billData.value.id });
-    if (res.code === 200 && res.data) {
+    const params = {
+      bill: {
+        ...billData.value,
+        bizTitle: formData.value.wfTitle, // 标题
+        segId: formData.value.segId, // 板块ID
+        projId: formData.value.projId, // 项目ID
+      },
+      suppliers: tableList.value || [],
+    };
+    const submitRes = await supplierApi.submitSupBill(params);
+    if (submitRes.code === 200 && submitRes.data) {
       ElMessage.success("提交成功,已发起审批！");
       // 生成OA审批页面重定向地址
       const redirectRes = await commonApi.generateRedirectUrl({
-        oaRequestId: res.data,
+        oaRequestId: submitRes.data,
       });
       // 提交成功后，关闭当前页面，跳转到单据列表页面
       tagsStore.closeTagByPath("/supplier/inspection/edit");
@@ -742,8 +749,8 @@ const initOptions = async () => {
 const initData = async () => {
   await initOptions();
   formData.value = initFormData();
-  formData.value.submitter = userStore.userInfo?.empName;
-  formData.value.submiterTime = dateUtil().format("YYYY-MM-DD");
+  formData.value.userName = userStore.userInfo?.empName;
+  formData.value.createDate = dateUtil().format("YYYY-MM-DD");
 };
 // 获取供应商类别数据
 const getSupplierTypeList = async () => {
@@ -766,7 +773,11 @@ const handleRouteParams = async () => {
       billData.value = { ...billData.value, ...bill };
       flowBaseData.value = { ...flowBaseData.value, ...flowBase };
       flowListData.value = { ...flowListData.value, ...flowList };
-      formData.value = { ...formData.value, ...flowBase };
+      formData.value = {
+        ...formData.value,
+        ...flowBase,
+        createDate: bill.createDate,
+      };
       // 循环列表，获取附件信息
       for (const item of suppliers) {
         // 如果有附件ID，请求附件信息

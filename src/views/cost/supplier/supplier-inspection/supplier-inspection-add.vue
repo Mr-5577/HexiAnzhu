@@ -7,13 +7,19 @@
         <el-button
           type="primary"
           icon="DocumentAdd"
-          :loading="submitLoading"
-          @click="handleSave(true)"
+          :loading="saveLoading"
+          @click="handleSave"
         >
           保存
         </el-button>
         <!-- 提交是保存并提交 -->
-        <el-button type="success" plain icon="Promotion" @click="handleSubmit">
+        <el-button
+          type="success"
+          plain
+          icon="Promotion"
+          :loading="submitLoading"
+          @click="handleSubmit"
+        >
           提交
         </el-button>
         <el-button
@@ -349,6 +355,7 @@ const initFormData = () => ({
 });
 // 表单数据
 const formData = ref(initFormData());
+const saveLoading = ref(false);
 const submitLoading = ref(false);
 const formRef = ref<FormInstance>();
 const segOptions = ref([]);
@@ -583,11 +590,12 @@ const saveSuppliers = async () => {
 };
 
 // 保存
-const handleSave = async (flag: boolean = false) => {
+const handleSave = async () => {
   if (!formRef.value) return;
   try {
     await formRef.value.validate();
     if (!validateSupplierData()) return;
+    saveLoading.value = true;
     // 保存单据
     const params = {
       bill: {
@@ -598,18 +606,16 @@ const handleSave = async (flag: boolean = false) => {
         projId: formData.value.projId, // 项目ID
         id: formData.value.id || undefined, // 这里初次保存时没有ID，保存成功后没有关闭页面需要把ID保存下来，后续保存只是更新
       },
-      supIds: tableList.value.map((item) => item.id),
+      suppliers: tableList.value || [],
     };
     const billRes = await supplierApi.saveSupBill(params);
     formData.value.id = billRes?.data; // 保存单据id
     // 批量保存供应商，需要把单据ID替换为保存成功后生成的新ID
     await saveSuppliers();
-    if (flag) {
-      ElMessage.success("保存成功！");
-    }
+    ElMessage.success("保存成功！");
   } catch (error) {
   } finally {
-    submitLoading.value = false;
+    saveLoading.value = false;
   }
 };
 // 提交表单
@@ -618,18 +624,36 @@ const handleSubmit = async () => {
   if (!formRef.value) return;
   try {
     await formRef.value.validate();
-
     if (!validateSupplierData()) return;
-    // 先保存并获取billNo
-    await handleSave(false);
-    // 再提交
-    const res = await supplierApi.createSupFlow({ billId: formData.value.id });
+    submitLoading.value = true;
+    // 批量保存供应商
+    const savePromises = tableList.value.map((item) =>
+      supplierApi.editSupplier({
+        ...item,
+        isInspect: item.isInspect ? 1 : 0,
+        supBillId: null, // 提交改为null
+      }),
+    );
+    await Promise.all(savePromises);
 
-    if (res.code === 200 && res.data) {
+    // 保存并提交
+    const params = {
+      bill: {
+        bizItemCode: "SUP_RK", // 供应商入库
+        bizTitle: formData.value.wfTitle, // 流程标题
+        bizNo: formData.value.bizNo, // 业务编号（唯一）
+        segId: formData.value.segId, // 板块ID
+        projId: formData.value.projId, // 项目ID
+        id: formData.value.id || undefined,
+      },
+      suppliers: tableList.value || [],
+    };
+    const submitRes = await supplierApi.submitSupBill(params);
+    if (submitRes.code === 200 && submitRes.data) {
       ElMessage.success("提交成功,审批已发起！");
       // 生成OA审批页面重定向地址
       const redirectRes = await commonApi.generateRedirectUrl({
-        oaRequestId: res.data,
+        oaRequestId: submitRes.data,
       });
       // 提交成功后关闭指定的tab页，回到列表页面
       tagsStore.closeTagByPath("/supplier/inspection/add"); // 关闭供应商入库审批

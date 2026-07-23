@@ -3,7 +3,7 @@
   <base-modal
     v-model="dialogVisible"
     title="选择供应商"
-    width="1200px"
+    width="1500px"
     :confirm-loading="confirmLoading"
     :confirm-text="'确定'"
     @confirm="handleConfirm"
@@ -22,7 +22,7 @@
             v-model="queryParams.supCode"
             placeholder="请输入供应商编码"
             clearable
-            style="width: 160px"
+            style="width: 200px"
           />
         </el-form-item>
         <el-form-item label="供应商名称" prop="supName">
@@ -30,7 +30,7 @@
             v-model="queryParams.supName"
             placeholder="请输入供应商名称"
             clearable
-            style="width: 160px"
+            style="width: 200px"
           />
         </el-form-item>
         <el-form-item label="供应商类别" prop="supTypeId">

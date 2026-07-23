@@ -73,7 +73,9 @@ import { productTypeApi } from "@/api/cost/master-data/product-type-api";
 defineOptions({ name: "area-setting" });
 
 // 注入父组件提供的方法
-const updateDetailByProjectId = inject<() => Promise<void>>("updateDetailByProjectId");
+const updateDetailByProjectId = inject<() => Promise<void>>(
+  "updateDetailByProjectId",
+);
 
 // 定义 props
 const props = defineProps<{
@@ -99,16 +101,15 @@ const tableList = ref([]);
 const tableColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {
-    prop: "prodId",
+    prop: props.currentData.isEnabled ? "prodName" : "prodId",
     label: "业态名称",
-    editable: true,
+    editable: props.currentData?.isEnabled ? false : true,
     showOverflowTooltip: false,
     // 自定义键名
     optionLabelField: "prodName",
     optionValueField: "id",
     editType: "select",
     clearable: false,
-    disabled: props.currentData.isEnabled,
     options: productProjList.value || [],
   },
   {
@@ -118,19 +119,17 @@ const tableColumns = computed<EditableColumn[]>(() => [
         prop: "agBuildArea",
         label: "地上",
         showSummary: true,
-        editable: true,
+        editable: props.currentData.isEnabled ? false : true,
         editType: "number",
         showOverflowTooltip: false,
-        disabled: props.currentData.isEnabled,
       },
       {
         prop: "ugBuildArea",
         label: "地下",
         showSummary: true,
-        editable: true,
+        editable: props.currentData.isEnabled ? false : true,
         editType: "number",
         showOverflowTooltip: false,
-        disabled: props.currentData.isEnabled,
       },
     ],
   },
@@ -141,19 +140,17 @@ const tableColumns = computed<EditableColumn[]>(() => [
         prop: "agSaleArea",
         label: "地上",
         showSummary: true,
-        editable: true,
+        editable: props.currentData.isEnabled ? false : true,
         editType: "number",
         showOverflowTooltip: false,
-        disabled: props.currentData.isEnabled,
       },
       {
         prop: "ugSaleArea",
         label: "地下",
         showSummary: true,
-        editable: true,
+        editable: props.currentData.isEnabled ? false : true,
         editType: "number",
         showOverflowTooltip: false,
-        disabled: props.currentData.isEnabled,
       },
     ],
   },
@@ -161,18 +158,16 @@ const tableColumns = computed<EditableColumn[]>(() => [
     prop: "houseNum",
     label: "户数",
     showSummary: true,
-    editable: true,
+    editable: props.currentData.isEnabled ? false : true,
     editType: "number",
     showOverflowTooltip: false,
-    disabled: props.currentData.isEnabled,
   },
   {
     prop: "elvNum",
     label: "电梯数",
-    editable: true,
+    editable: props.currentData.isEnabled ? false : true,
     editType: "number",
     showOverflowTooltip: false,
-    disabled: props.currentData.isEnabled,
   },
 ]);
 
@@ -215,6 +210,7 @@ const handleBatchSave = async () => {
     ElMessage.warning("请先填写数据");
     return;
   }
+
   try {
     saveLoading.value = true;
     const res = await projectAreaApi.batchSaveNet(
