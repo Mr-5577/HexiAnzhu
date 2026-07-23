@@ -37,7 +37,7 @@
             type="primary"
             :loading="saveLoading"
             @click="handleBatchSave"
-            v-if="!props.currentData.isEnabled"
+            v-if="props.currentData.status == 0"
           >
             批量保存
           </el-button>
@@ -93,6 +93,7 @@ const emit = defineEmits<{
 const queryParams = ref({
   bldId: null as number | null,
 });
+const prevListData = ref([]); // 上一版面积版本明细
 const productProjList = ref([]);
 const buildingList = ref([]);
 const saveLoading = ref(false);
@@ -101,9 +102,9 @@ const tableList = ref([]);
 const tableColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {
-    prop: props.currentData.isEnabled ? "prodName" : "prodId",
+    prop: props.currentData.status ? "prodName" : "prodId",
     label: "业态名称",
-    editable: props.currentData?.isEnabled ? false : true,
+    editable: props.currentData.status ? false : true,
     showOverflowTooltip: false,
     // 自定义键名
     optionLabelField: "prodName",
@@ -119,7 +120,7 @@ const tableColumns = computed<EditableColumn[]>(() => [
         prop: "agBuildArea",
         label: "地上",
         showSummary: true,
-        editable: props.currentData.isEnabled ? false : true,
+        editable: props.currentData.status ? false : true,
         editType: "number",
         showOverflowTooltip: false,
       },
@@ -127,7 +128,7 @@ const tableColumns = computed<EditableColumn[]>(() => [
         prop: "ugBuildArea",
         label: "地下",
         showSummary: true,
-        editable: props.currentData.isEnabled ? false : true,
+        editable: props.currentData.status ? false : true,
         editType: "number",
         showOverflowTooltip: false,
       },
@@ -140,7 +141,7 @@ const tableColumns = computed<EditableColumn[]>(() => [
         prop: "agSaleArea",
         label: "地上",
         showSummary: true,
-        editable: props.currentData.isEnabled ? false : true,
+        editable: props.currentData.status ? false : true,
         editType: "number",
         showOverflowTooltip: false,
       },
@@ -148,7 +149,7 @@ const tableColumns = computed<EditableColumn[]>(() => [
         prop: "ugSaleArea",
         label: "地下",
         showSummary: true,
-        editable: props.currentData.isEnabled ? false : true,
+        editable: props.currentData.status ? false : true,
         editType: "number",
         showOverflowTooltip: false,
       },
@@ -158,14 +159,14 @@ const tableColumns = computed<EditableColumn[]>(() => [
     prop: "houseNum",
     label: "户数",
     showSummary: true,
-    editable: props.currentData.isEnabled ? false : true,
+    editable: props.currentData.status ? false : true,
     editType: "number",
     showOverflowTooltip: false,
   },
   {
     prop: "elvNum",
     label: "电梯数",
-    editable: props.currentData.isEnabled ? false : true,
+    editable: props.currentData.status ? false : true,
     editType: "number",
     showOverflowTooltip: false,
   },
@@ -189,6 +190,61 @@ const getTableData = async () => {
     const res = await projectAreaApi.getNetByBldId(params);
     if (res.code === 200) {
       const list = res.data || [];
+
+      // 如果是未生效状态，并且返回的数据为空或所有数据都是空值，则回填上一版本数据
+      if (props.currentData?.status === 0) {
+        // 判断是否需要回填：列表为空 或 所有字段都没有值（新建状态）
+        const isEmpty =
+          list.length === 0 ||
+          list.every(
+            (item) =>
+              !item.agBuildArea &&
+              !item.ugBuildArea &&
+              !item.agSaleArea &&
+              !item.ugSaleArea &&
+              !item.houseNum &&
+              !item.elvNum,
+          );
+
+        if (isEmpty && prevListData.value.length > 0) {
+          // 获取当前楼栋的上一版数据
+          const historyData = prevListData.value.filter(
+            (item: any) => item.bldId === queryParams.value.bldId,
+          );
+          if (historyData.length > 0) {
+            // 将上一版本数据按 prodId 映射为对象，方便快速查找
+            const historyMap = historyData.reduce((map: any, item: any) => {
+              map[item.prodId] = item;
+              return map;
+            }, {});
+
+            // 合并数据：用历史数据覆盖模板数据
+            const newData = list.map((item: any) => {
+              const historyItem = historyMap[item.prodId];
+              if (historyItem) {
+                return {
+                  ...item,
+                  uuid: uuidv4(),
+                  // 用历史数据覆盖面积字段
+                  agBuildArea: historyItem.agBuildArea || 0,
+                  ugBuildArea: historyItem.ugBuildArea || 0,
+                  agSaleArea: historyItem.agSaleArea || 0,
+                  ugSaleArea: historyItem.ugSaleArea || 0,
+                  houseNum: historyItem.houseNum || 0,
+                  elvNum: historyItem.elvNum || 0,
+                };
+              }
+              return {
+                ...item,
+                uuid: uuidv4(),
+              };
+            });
+            tableList.value = newData;
+            return;
+          }
+        }
+      }
+      // 正常处理返回的数据
       const newData = list.map((item) => {
         return {
           ...item,
@@ -279,7 +335,7 @@ const getBuildingList = async () => {
       buildingList.value = res.data || [];
       if (buildingList.value.length > 0) {
         queryParams.value.bldId = buildingList.value[0].id; // 默认选中第一个楼栋
-        await getTableData(); // 获取默认选中楼栋的数据
+        // await getTableData(); // 获取默认选中楼栋的数据
       } else {
         ElMessage.warning("该项目下没有楼栋数据");
       }
@@ -288,15 +344,30 @@ const getBuildingList = async () => {
     ElMessage.error("加载数据失败");
   }
 };
+// 获取上一版面积版本明细
+const getPrevVersionDetail = async () => {
+  if (!props.currentData?.id) return;
+  try {
+    prevListData.value = [];
+    const res = await projectAreaApi.getPrevListByVerMid({
+      verMid: props.currentData?.id,
+    });
+    if (res.code === 200) {
+      console.log("上一版面积版本明细:", res.data);
+      prevListData.value = res.data || [];
+    }
+  } catch (error) {
+    ElMessage.error("加载数据失败");
+  }
+};
 onMounted(async () => {
   await getProductProjList(); // 获取产品类型
+  // 当未生效的版本面积设置时需要获取上一生效版本的面积版本明细，然后把对应楼栋的数据赋值上去显示
+  if (props.currentData.status == 0) {
+    await getPrevVersionDetail(); // 获取上一版面积版本明细
+  }
   await getBuildingList(); // 先获取楼栋列表
-  // await getTableData(); // 默认查询选中的第一个楼栋下的数据
-});
-
-// 暴露方法给父组件
-defineExpose({
-  refresh: getTableData,
+  await getTableData(); // 默认查询选中的第一个楼栋下的数据
 });
 </script>
 
@@ -350,7 +421,7 @@ defineExpose({
           color: #606266;
           font-weight: 600;
           font-size: 14px;
-          padding: 8px 0px;
+          padding: 8px 10px;
           border-radius: 6px;
           transition: all 0.3s;
           .el-icon {

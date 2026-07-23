@@ -85,8 +85,8 @@ const formData = ref<ProjectAreaVersionSaveParams>({
   projId: props.projectId,
   verTypeId: null,
   verTitle: "",
-  isEnabled: false,
   remark: "",
+  status: 0,
 });
 
 const formRules: FormRules = {
@@ -111,7 +111,7 @@ const handleSubmit = async () => {
     submitLoading.value = true;
 
     const submitData = { ...formData.value };
-    
+
     if (!isEditMode.value) {
       delete submitData.id;
     }
@@ -145,7 +145,7 @@ watch(
           projId: props.editData.projId,
           verTypeId: props.editData.verTypeId,
           verTitle: props.editData.verTitle,
-          isEnabled: props.editData.isEnabled,
+          status: props.editData.status,
           remark: props.editData.remark || "",
         };
       } else {
@@ -154,7 +154,7 @@ watch(
           projId: props.projectId,
           verTypeId: null,
           verTitle: "",
-          isEnabled: false,
+          status: 0,
           remark: "",
         };
         formRef.value?.resetFields();

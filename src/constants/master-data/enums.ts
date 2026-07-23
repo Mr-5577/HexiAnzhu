@@ -24,10 +24,12 @@ export const allocRuleEnum = [
   { value: "RL_DTS", label: "按电梯数分摊" },
 ] as const;
 
-// 辅助函数：根据value获取label
-export const getLabel = <T extends { value: number | string; label: string }>(
-  list: readonly T[],
-  value: number | string,
-) => {
-  return list.find((item) => item.value == value)?.label || "";
-};
+/** 
+ * 项目面积-版本生效状态 枚举
+ */
+export const versionStatusEnum = [
+  { value: 0, label: "未生效", type: "info" },
+  { value: 1, label: "生效", type: "success" },
+  { value: 2, label: "失效", type: "warning" },
+]
+

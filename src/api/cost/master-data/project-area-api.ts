@@ -179,4 +179,12 @@ export const projectAreaApi = {
   getAreaVerDList: (data: { verMid: number | string }) => {
     return http.formPost("/mainData/areaVerD/getList", data);
   },
+  /**
+   * 获取上一版面积版本明细
+   * @param data - 查询参数
+   * @param data.verMid - 版本ID（必填）
+   */
+  getPrevListByVerMid: (data: { verMid: number | string }) => {
+    return http.formPost("/mainData/areaVerD/getPrevList", data);
+  }
 };

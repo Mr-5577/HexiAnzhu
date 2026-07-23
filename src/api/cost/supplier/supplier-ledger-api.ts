@@ -129,7 +129,7 @@ export const supplierApi = {
    * @param data.billId - 单据ID
    */
   voidSupBill: (data: { billId: number | string }) => {
-    return http.post("/sup/bill/void", data);
+    return http.formPost("/sup/bill/void", data);
   },
   /**
    * 删除供应商单据
@@ -137,7 +137,7 @@ export const supplierApi = {
    * @param data.billId - 单据ID
    */
   delSupBill: (data: { billId: number | string }) => {
-    return http.post("/sup/bill/del", data);
+    return http.formPost("/sup/bill/del", data);
   },
 
   // ==================== 供应商服务板块 ====================

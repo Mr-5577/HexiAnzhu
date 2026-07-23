@@ -4,7 +4,7 @@
     <div class="form-header">
       <div class="header-title">供应商入库审批</div>
       <div class="header-btn">
-        <!-- 审批状态为草稿时才可保存、提交、删除、作废 -->
+        <!-- 审批状态为草稿0时才可保存、提交、删除、作废 -->
         <el-button
           type="primary"
           icon="DocumentAdd"
@@ -14,7 +14,6 @@
         >
           保存
         </el-button>
-        <!-- 提交是保存并提交 -->
         <el-button
           type="success"
           plain
@@ -64,6 +63,7 @@
                   v-model="formData.wfTitle"
                   clearable
                   placeholder="标题"
+                  :disabled="!!flowListData?.wfStatus"
                 />
               </el-form-item>
             </el-col>
@@ -89,6 +89,7 @@
                   placeholder="请选择业务板块"
                   style="width: 100%"
                   @change="handleSeg"
+                  :disabled="!!flowListData?.wfStatus"
                 >
                   <el-option
                     v-for="item in segOptions"
@@ -148,6 +149,7 @@
                   placeholder="请选择项目"
                   style="width: 100%"
                   @change="changeProject"
+                  :disabled="!!flowListData?.wfStatus"
                 />
               </el-form-item>
             </el-col>
@@ -377,87 +379,96 @@ const formRules: FormRules = {
 };
 
 const tableList = ref([]);
-const tableColumns = computed<EditableColumn[]>(() => [
-  { type: "index", label: "序号", width: 60, editable: false },
-  {
-    prop: "supName",
-    label: "供应商名称",
-    editable: false,
-    width: 200,
-  },
-  {
-    prop: "supTypeId",
-    label: "主要服务类别",
-    editable: true,
-    editType: "cascader",
-    showOverflowTooltip: false,
-    width: 150,
-    optionLabelField: "supTypeName",
-    optionValueField: "id",
-    options: supplierTypeList.value || [],
-    showAllLevels: false,
-    disabled: true,
-    cascaderProps: {
-      children: "children", // 指定子节点字段名
-      label: "supTypeName", // 指定标签字段名
-      value: "id", // 指定值字段名
-      emitPath: false, // 只返回叶子节点的值
-      showAllLevels: false, // 不显示所有层级
-      checkStrictly: false,
+const tableColumns = computed<EditableColumn[]>(() => {
+  const isEditable = flowListData.value?.wfStatus === 0;
+  return [
+    { type: "index", label: "序号", width: 60, editable: false },
+    {
+      prop: "supName",
+      label: "供应商名称",
+      editable: false,
+      width: 200,
     },
-  },
-  {
-    prop: "registeredAmount",
-    label: "注册资金",
-    editable: false,
-    width: 150,
-  },
-  {
-    prop: "legalPerson",
-    label: "联系人",
-    editable: false,
-    width: 150,
-  },
-  {
-    prop: "legalPhone",
-    label: "联系电话",
-    editable: false,
-    width: 150,
-  },
-  {
-    prop: "isInspect",
-    label: "是否考察",
-    editable: true,
-    editType: "select",
-    showOverflowTooltip: false,
-    optionLabelField: "label",
-    optionValueField: "value",
-    width: 150,
-    options: [
-      { label: "是", value: true },
-      { label: "否", value: false },
-    ],
-  },
-  {
-    slot: "inspectAnnexName",
-    label: "考察报告",
-    // editable: false,
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "remark",
-    label: "备注",
-    editable: true,
-    editType: "input",
-    showOverflowTooltip: false,
-  },
-  {
-    label: "操作",
-    width: 150,
-    slot: "actions",
-    fixed: "right",
-  },
-]);
+    {
+      prop: "supTypeName",
+      label: "主要服务类别",
+      editable: false,
+      editType: "cascader",
+      showOverflowTooltip: false,
+      width: 150,
+      optionLabelField: "supTypeName",
+      optionValueField: "id",
+      options: supplierTypeList.value || [],
+      showAllLevels: false,
+      cascaderProps: {
+        children: "children", // 指定子节点字段名
+        label: "supTypeName", // 指定标签字段名
+        value: "id", // 指定值字段名
+        emitPath: false, // 只返回叶子节点的值
+        showAllLevels: false, // 不显示所有层级
+        checkStrictly: false,
+      },
+    },
+    {
+      prop: "registeredAmount",
+      label: "注册资金",
+      editable: false,
+      width: 150,
+    },
+    {
+      prop: "legalPerson",
+      label: "联系人",
+      editable: false,
+      width: 150,
+    },
+    {
+      prop: "legalPhone",
+      label: "联系电话",
+      editable: false,
+      width: 150,
+    },
+    {
+      prop: "isInspect",
+      label: "是否考察",
+      editable: isEditable,
+      editType: "select",
+      showOverflowTooltip: false,
+      optionLabelField: "label",
+      optionValueField: "value",
+      width: 150,
+      options: [
+        { label: "是", value: true },
+        { label: "否", value: false },
+      ],
+      // 不可编辑时显示文本
+      formatter: (row: any) => {
+        if (!isEditable) {
+          return row.isInspect ? "是" : "否";
+        }
+        return undefined;
+      },
+    },
+    {
+      slot: "inspectAnnexName",
+      label: "考察报告",
+      // editable: false,
+      showOverflowTooltip: false,
+    },
+    {
+      prop: "remark",
+      label: "备注",
+      editable: isEditable,
+      editType: "input",
+      showOverflowTooltip: false,
+    },
+    {
+      label: "操作",
+      width: 150,
+      slot: "actions",
+      fixed: "right",
+    },
+  ];
+});
 // 获取业务板块列表
 const getSegOptions = async () => {
   try {
@@ -623,9 +634,8 @@ const handleDelete = () => {
     type: "warning",
   })
     .then(async () => {
-      const { supBillId } = route.query;
       try {
-        const res = await supplierApi.delSupBill({ billId: Number(supBillId) });
+        const res = await supplierApi.delSupBill({ billId: billData.value.id });
         if (res.code === 200) {
           ElMessage.success("删除成功");
           // 关闭当前页面，跳转到单据列表页面
@@ -646,10 +656,9 @@ const handleCancel = () => {
     type: "warning",
   })
     .then(async () => {
-      const { supBillId } = route.query;
       try {
         const res = await supplierApi.voidSupBill({
-          billId: Number(supBillId),
+          billId: billData.value.id,
         });
         if (res.code === 200) {
           ElMessage.success("作废成功");

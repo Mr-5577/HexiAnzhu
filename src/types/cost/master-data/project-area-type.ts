@@ -117,6 +117,8 @@ export interface ProjectAreaVersion extends BaseEntity {
   isEnabled: boolean;
   /** 版本说明 */
   remark: string | null;
+  /** 状态 0未生效  1生效  2失效 */
+  status: number;
 }
 
 /**
@@ -135,6 +137,8 @@ export interface ProjectAreaVersionSaveParams {
   isEnabled?: boolean;
   /** 版本说明 */
   remark?: string;
+  /** 状态 0未生效  1生效  2失效 */
+  status: number;
 }
 
 /**

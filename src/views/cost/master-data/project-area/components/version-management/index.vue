@@ -45,13 +45,18 @@
         :pagination="false"
       >
         <!-- 是否启用渲染 -->
-        <template #isEnabled="{ row }">
-          <el-tag :type="row.isEnabled ? 'success' : 'danger'" size="small">
-            {{ row.isEnabled ? "生效" : "未生效" }}
+        <template #status="{ row }">
+          <el-tag
+            :type="getEnumType(versionStatusEnum, row.status || 0)"
+            size="small"
+          >
+            {{ getEnumLabel(versionStatusEnum, row.status || 0) }}
           </el-tag>
         </template>
 
-        <!-- 操作列 -->
+        <!-- 0未生效状态可以编辑、删除、设置生效、面积设置可以修改保存 -->
+        <!-- 1生效状态不能编辑、删除、设置生效，面积设置只能查看 -->
+        <!-- 2失效状态不能编辑、删除、设置生效，面积设置只能查看 -->
         <template #actions="{ row }">
           <el-button link type="primary" @click="handleViewDetail(row)">
             面积设置
@@ -59,7 +64,7 @@
           <el-button
             link
             type="primary"
-            :disabled="row.isEnabled"
+            :disabled="row.status == 1 || row.status == 2"
             @click="handleEnableSetting(row)"
           >
             设置生效
@@ -68,7 +73,7 @@
             link
             type="primary"
             @click="handleEdit(row)"
-            :disabled="row.isEnabled"
+            :disabled="row.status == 1 || row.status == 2"
           >
             编辑
           </el-button>
@@ -76,7 +81,7 @@
             link
             type="danger"
             @click="handleDelete(row)"
-            :disabled="row.isEnabled"
+            :disabled="row.status == 1 || row.status == 2"
           >
             删除
           </el-button>
@@ -116,6 +121,8 @@ import type {
 import AddEditVersionDialog from "./add-edit-version-dialog.vue";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
 import AreaSetting from "./area-setting.vue";
+import { versionStatusEnum } from "@/constants/master-data/enums.ts";
+import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
 
 defineOptions({ name: "version-management" });
 
@@ -146,7 +153,7 @@ const tableColumns: TableColumnItem[] = [
   { prop: "verTitle", label: "版本标题", minWidth: 200 },
   { prop: "verTypeName", label: "版本类型", width: 150 },
   { prop: "remark", label: "版本说明", minWidth: 250 },
-  { label: "是否生效", width: 120, slot: "isEnabled" },
+  { label: "是否生效", width: 120, slot: "status" },
   { prop: "createDate", label: "创建时间", width: 180 },
   {
     label: "操作",
