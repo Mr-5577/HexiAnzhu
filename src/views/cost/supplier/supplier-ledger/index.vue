@@ -165,7 +165,7 @@ const supTypeName = ref("");
 const listData = ref<SupplierType[]>([]);
 const treeData = ref([]);
 const currentNodeKey = ref<string | number | null>(null);
-const selectedCategory = ref<SupplierTypeTreeNode | null>(null);
+const selectedCategory = ref(null);
 
 // 树配置
 const treeProps = {
@@ -205,19 +205,19 @@ const tableColumns = [
   //     return row.supStatus == 0; // 只有草稿状态可以勾选
   //   },
   // },
-  { type: "index", label: "序号", width: 60 },
-  { label: "供应商名称", prop: "supName", width: 200 },
+  { type: "index", label: "序号", width: 60, fixed: "left" },
+  { label: "供应商名称", prop: "supName", width: 200, fixed: "left" },
   { label: "供应商编码", prop: "supCode", width: 150 },
-  { label: "供应商类型", prop: "supTypeName", width: 150 },
-  { label: "内外部", prop: "supLinkTypeName", width: 150 },
-  { label: "企业性质", prop: "supNatureName", width: 120 },
-  { label: "纳税类型", prop: "taxTypeName", width: 120 },
-  { label: "来源类型", prop: "sourceTypeName", width: 120 },
-  { label: "法人代表", prop: "legalPerson", width: 120 },
+  { label: "供应商类型", prop: "supTypeName", width: 120 },
+  { label: "内外部", prop: "supLinkTypeName", width: 90 },
+  { label: "企业性质", prop: "supNatureName", width: 90 },
+  { label: "纳税类型", prop: "taxTypeName", width: 100 },
+  { label: "来源类型", prop: "sourceTypeName", width: 90 },
+  { label: "法人代表", prop: "legalPerson", width: 90 },
   { label: "法人电话", prop: "legalPhone", width: 120 },
   { label: "信用编码", prop: "uscCardNo", width: 180 },
   { label: "供应商地址", prop: "address", width: 200 },
-  { label: "供应商状态", slot: "supStatus", width: 100 },
+  { label: "供应商状态", slot: "supStatus", width: 90 },
   // { label: "审批流程", slot: "apprProcess", width: 120 },
   {
     slot: "actions",
@@ -387,8 +387,19 @@ const handleViewProcess = (row: Supplier) => {
     query: { supBillId: row.supBillId },
   });
 };
-onMounted(() => {
-  getSupplierTypeList();
+onMounted(async () => {
+  await getSupplierTypeList();
+  currentNodeKey.value = 99999;
+  selectedCategory.value = {
+    id: 99999,
+    isDel: false,
+    isEnabled: true,
+    pid: 99999,
+    remark: "全部类型",
+    supTypeCode: "ALL",
+    supTypeName: "全部",
+  };
+  getSupplierListData();
 });
 </script>
 

@@ -41,11 +41,11 @@
             </el-form-item>
           </el-col>
           <el-col :xs="24" :sm="8" :md="8" :lg="8" :xl="8">
-            <el-form-item label="供应商编码" prop="supCode" required>
+            <el-form-item label="供应商编码" prop="supCode">
               <el-input
                 v-model="formData.supCode"
                 :disabled="isView"
-                placeholder="请输入供应商编码"
+                :placeholder="isView ? '' : '请输入供应商编码'"
               />
             </el-form-item>
           </el-col>
@@ -111,7 +111,7 @@
             </el-form-item>
           </el-col>
           <el-col :xs="24" :sm="8" :md="8" :lg="8" :xl="8">
-            <el-form-item label="注册资金" prop="registeredAmount">
+            <el-form-item label="注册资金(万)" prop="registeredAmount">
               <el-input-number
                 v-model="formData.registeredAmount"
                 :disabled="isView"
@@ -165,7 +165,7 @@
               <el-input
                 v-model="formData.address"
                 :disabled="isView"
-                placeholder="请输入供应商地址"
+                :placeholder="isView ? '' : '请输入供应商地址'"
               />
             </el-form-item>
           </el-col>
@@ -185,7 +185,7 @@
               <el-select
                 v-model="formData.legalCardTypeId"
                 :disabled="isView"
-                placeholder="请选择证件类型"
+                :placeholder="isView ? '' : '请选择证件类型'"
                 style="width: 100%"
               >
                 <el-option
@@ -202,7 +202,7 @@
               <el-input
                 v-model="formData.legalCardNo"
                 :disabled="isView"
-                placeholder="请输入证件号码"
+                :placeholder="isView ? '' : '请输入证件号码'"
               />
             </el-form-item>
           </el-col>
@@ -214,7 +214,7 @@
               <el-input
                 v-model="formData.legalPhone"
                 :disabled="isView"
-                placeholder="请输入联系电话"
+                :placeholder="isView ? '' : '请输入联系电话'"
               />
             </el-form-item>
           </el-col>
@@ -223,7 +223,7 @@
               <el-input
                 v-model="formData.legalEmail"
                 :disabled="isView"
-                placeholder="请输入邮箱"
+                :placeholder="isView ? '' : '请输入邮箱'"
               />
             </el-form-item>
           </el-col>
@@ -232,7 +232,7 @@
               <el-input
                 v-model="formData.actualLegalPerson"
                 :disabled="isView"
-                placeholder="请输入实控人姓名"
+                :placeholder="isView ? '' : '请输入实控人姓名'"
               />
             </el-form-item>
           </el-col>
@@ -244,7 +244,7 @@
               <el-select
                 v-model="formData.actualLegalCardTypeId"
                 :disabled="isView"
-                placeholder="请选择证件类型"
+                :placeholder="isView ? '' : '请选择证件类型'"
                 style="width: 100%"
               >
                 <el-option
@@ -261,7 +261,7 @@
               <el-input
                 v-model="formData.actualLegalCardNo"
                 :disabled="isView"
-                placeholder="请输入实控人身份证号码"
+                :placeholder="isView ? '' : '请输入实控人身份证号码'"
               />
             </el-form-item>
           </el-col>
@@ -273,7 +273,11 @@
               <el-input
                 v-model="formData.supQual"
                 :disabled="isView"
-                placeholder="请填写企业取得的主要资质，如ISO9001、高新技术企业等"
+                :placeholder="
+                  isView
+                    ? ''
+                    : '请填写企业取得的主要资质，如ISO9001、高新技术企业等'
+                "
               />
             </el-form-item>
           </el-col>
@@ -289,7 +293,7 @@
                 :rows="3"
                 maxlength="500"
                 show-word-limit
-                placeholder="请填写营业执照上的经营范围"
+                :placeholder="isView ? '' : '请填写营业执照上的经营范围'"
               />
             </el-form-item>
           </el-col>
@@ -305,7 +309,7 @@
                 :rows="3"
                 maxlength="500"
                 show-word-limit
-                placeholder="其他需要补充说明的信息"
+                :placeholder="isView ? '' : '其他需要补充说明的信息'"
               />
             </el-form-item>
           </el-col>
@@ -513,10 +517,9 @@ const formRules = ref({
   supTypeId: [
     { required: true, message: "请选择供应商类型", trigger: "change" },
   ],
-  supCode: [
-    { required: true, message: "请输入供应商编码", trigger: "blur" },
-    { validator: validateSupCode, trigger: "blur" },
-  ],
+  // supCode: [
+  //   { validator: validateSupCode, trigger: "blur" },
+  // ],
   supLinkType: [{ required: true, message: "请选择内外部", trigger: "change" }],
   supNatureId: [
     { required: true, message: "请选择企业性质", trigger: "change" },
@@ -538,33 +541,19 @@ const formRules = ref({
   sourceTypeId: [
     { required: true, message: "请选择供应商来源", trigger: "change" },
   ],
-  address: [
-    { required: true, message: "请输入注册地址", trigger: "blur" },
-    { min: 2, max: 200, message: "长度在 2 到 200 个字符", trigger: "blur" },
-  ],
   legalPerson: [
-    {
-      required: true,
-      message: "请输入法人代表姓名",
-      trigger: "blur",
-    },
-    { min: 2, max: 50, message: "长度在 2 到 50 个字符", trigger: "blur" },
+    { required: true, message: "请输入法人代表姓名", trigger: "blur" },
   ],
-  legalCardTypeId: [
-    { required: true, message: "请选择法人证件类型", trigger: "change" },
-  ],
-  legalCardNo: [
-    {
-      required: true,
-      message: "请输入法人证件号码",
-      trigger: "blur",
-    },
-    { validator: validateCardNo, trigger: "blur" },
-  ],
-  legalPhone: [
-    { required: true, message: "请输入法人代表电话", trigger: "blur" },
-    { pattern: phoneRegex, message: "请输入正确的手机号码", trigger: "blur" },
-  ],
+  // legalCardTypeId: [
+  //   { required: true, message: "请选择法人证件类型", trigger: "change" },
+  // ],
+  // legalCardNo: [
+  //   { validator: validateCardNo, trigger: "blur" },
+  // ],
+  // legalPhone: [
+  //   { required: true, message: "请输入法人代表电话", trigger: "blur" },
+  //   { pattern: phoneRegex, message: "请输入正确的手机号码", trigger: "blur" },
+  // ],
   legalEmail: [
     { pattern: emailRegex, message: "请输入正确的邮箱地址", trigger: "blur" },
   ],
@@ -662,8 +651,40 @@ onMounted(() => {
   padding: 30px 30px 0 30px;
 }
 
-.adapt-form {
+:deep(.adapt-form) {
   width: 100%;
+
+  // 1. 输入框 placeholder
+  .el-input__inner::placeholder,
+  .el-textarea__inner::placeholder {
+    color: #c0c4cc !important;
+    font-size: 13px;
+  }
+
+  // 2. 选择器 placeholder
+  .el-select .el-select__placeholder {
+    color: #c0c4cc !important;
+  }
+
+  // 3. 级联选择器 placeholder
+  .el-cascader .el-cascader__placeholder {
+    color: #c0c4cc !important;
+  }
+
+  // 4. 日期选择器 placeholder
+  .el-date-editor .el-input__inner::placeholder {
+    color: #c0c4cc !important;
+  }
+
+  // 5. 时间选择器 placeholder
+  .el-time-editor .el-input__inner::placeholder {
+    color: #c0c4cc !important;
+  }
+
+  // 6. 数字输入框 placeholder
+  .el-input-number .el-input__inner::placeholder {
+    color: #c0c4cc !important;
+  }
 }
 
 .btn-row {

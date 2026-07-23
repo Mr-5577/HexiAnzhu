@@ -381,7 +381,7 @@ const formRules: FormRules = {
 const tableList = ref([]);
 const tableColumns = computed<EditableColumn[]>(() => {
   const isEditable = flowListData.value?.wfStatus === 0;
-  return [
+  let baseColumns: EditableColumn[] = [
     { type: "index", label: "序号", width: 60, editable: false },
     {
       prop: "supName",
@@ -393,25 +393,11 @@ const tableColumns = computed<EditableColumn[]>(() => {
       prop: "supTypeName",
       label: "主要服务类别",
       editable: false,
-      editType: "cascader",
-      showOverflowTooltip: false,
       width: 150,
-      optionLabelField: "supTypeName",
-      optionValueField: "id",
-      options: supplierTypeList.value || [],
-      showAllLevels: false,
-      cascaderProps: {
-        children: "children", // 指定子节点字段名
-        label: "supTypeName", // 指定标签字段名
-        value: "id", // 指定值字段名
-        emitPath: false, // 只返回叶子节点的值
-        showAllLevels: false, // 不显示所有层级
-        checkStrictly: false,
-      },
     },
     {
       prop: "registeredAmount",
-      label: "注册资金",
+      label: "注册资金(万)",
       editable: false,
       width: 150,
     },
@@ -435,7 +421,7 @@ const tableColumns = computed<EditableColumn[]>(() => {
       showOverflowTooltip: false,
       optionLabelField: "label",
       optionValueField: "value",
-      width: 150,
+      width: 100,
       options: [
         { label: "是", value: true },
         { label: "否", value: false },
@@ -461,13 +447,16 @@ const tableColumns = computed<EditableColumn[]>(() => {
       editType: "input",
       showOverflowTooltip: false,
     },
-    {
+  ];
+  if (isEditable) {
+    baseColumns.push({
       label: "操作",
       width: 150,
       slot: "actions",
       fixed: "right",
-    },
-  ];
+    });
+  }
+  return baseColumns;
 });
 // 获取业务板块列表
 const getSegOptions = async () => {
