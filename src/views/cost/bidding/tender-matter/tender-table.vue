@@ -2,21 +2,6 @@
 <template>
   <div class="tender-table-wrapper">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
-      <el-form-item label="业务板块" prop="segId">
-        <el-select
-          v-model="queryParams.segId"
-          placeholder="请选择业务板块"
-          clearable
-          style="width: 180px"
-        >
-          <el-option
-            v-for="item in segOptions"
-            :key="item.id"
-            :label="item.segName"
-            :value="item.id"
-          />
-        </el-select>
-      </el-form-item>
       <el-form-item label="合同分类" prop="conTypeId">
         <el-cascader
           v-model="queryParams.conTypeId"
@@ -33,14 +18,7 @@
           placeholder="请选择合同分类"
           style="width: 180px"
           clearable
-        />
-      </el-form-item>
-      <el-form-item label="招标单号" prop="tenderNo">
-        <el-input
-          v-model="queryParams.tenderNo"
-          placeholder="请输入招标单号"
-          clearable
-          style="width: 180px"
+          filterable
         />
       </el-form-item>
       <el-form-item label="采购事项" prop="tenderName">
@@ -50,6 +28,46 @@
           clearable
           style="width: 180px"
         />
+      </el-form-item>
+      <el-form-item label="招采责任人" prop="createId">
+        <el-cascader
+          ref="projCascaderRef"
+          v-model="queryParams.createId"
+          :options="empTreeData"
+          :show-all-levels="false"
+          :props="{
+            expandTrigger: 'click',
+            emitPath: false,
+            checkStrictly: false,
+            value: 'orgId',
+            label: 'orgName',
+            children: 'children',
+            // 通过 leaf 属性标识哪些是叶子节点（可选的）
+            leaf: (data) => {
+              // dataType: 0 表示人员，即叶子节点
+              return data.dataType === 0;
+            },
+          }"
+          placeholder="请选择"
+          style="width: 180px"
+          clearable
+          filterable
+        />
+      </el-form-item>
+      <el-form-item label="采购状态" prop="status">
+        <el-select
+          v-model="queryParams.status"
+          placeholder="请选择采购状态"
+          clearable
+          style="width: 180px"
+        >
+          <el-option
+            v-for="item in purchaseStatusEnum"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="handleSearch"> 搜索 </el-button>
@@ -63,19 +81,18 @@
       :tableData="tableData"
       :loading="tableLoading"
       :rowKey="'id'"
-      :total="total"
-      :current-page="currentPage"
-      :page-size="pageSize"
       :pagination="false"
-      @pagination-change="handlePaginationChange"
     >
       <template #tenderStatus="{ row }">
-        <span>{{ getTenderStatusText(row.tenderStatus) }}</span>
+        <el-tag
+          size="small"
+          :type="getEnumType(purchaseStatusEnum, row.tenderStatus || 0)"
+        >
+          {{ getEnumLabel(purchaseStatusEnum, row.tenderStatus || 0) }}
+        </el-tag>
       </template>
+
       <template #actions="{ row }">
-        <!-- <el-button type="primary" link @click="handleApproval(row)">
-          审批
-        </el-button> -->
         <el-button type="primary" link @click="handleEdit(row)">
           编辑
         </el-button>
@@ -92,13 +109,8 @@
     <add-edit-tender-dialog
       v-model="tenderDialogVisible"
       :edit-data="editData"
-      :project-id="projectId"
-      :seg-options="segOptions"
+      :empTreeData="empTreeData"
       :conType-options="conTypeOptions"
-      :project-options="projectOptions"
-      :purchaseMethod-options="purchaseMethodOptions"
-      :tenderMethod-options="tenderMethodOptions"
-      :billMode-options="billModeOptions"
       @success="handleDialogSuccess"
     />
   </div>
@@ -110,22 +122,22 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { useRouter } from "vue-router";
 import AddEditTenderDialog from "./add-edit-tender-dialog.vue";
-import type {
-  BidTender,
-  BidTenderQueryParams,
-} from "@/types/cost/bidding/bidding-management-type.ts";
+import type { BidTender } from "@/types/cost/bidding/bidding-management-type.ts";
 import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api.ts";
 import { conTypeApi } from "@/api/cost/master-data/contract-category-api.ts";
-import { dictionaryApi } from "@/api/cost/master-data/dictionary-api.ts";
-import { largeScreenApi } from "@/api/sales/large-screen-api.ts";
-import { useDict } from "@/composables/use-dict";
-import { dictMapping } from "@/utils/dict-mapping";
+import { buildTree } from "@/utils/tree.ts";
+import { purchaseStatusEnum } from "@/constants/bidding/enums.ts";
+import { roleApi } from "@/api/system/role-api.ts";
+import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
 
 defineOptions({ name: "tender-table" });
 
-const props = defineProps<{
-  projectId: number | null;
-}>();
+interface Props {
+  selectedData: any;
+}
+const props = withDefaults(defineProps<Props>(), {
+  selectedData: null,
+});
 
 const emit = defineEmits<{
   (e: "select-project"): void;
@@ -134,81 +146,78 @@ const emit = defineEmits<{
 const router = useRouter();
 
 const tableLoading = ref(false);
-const currentPage = ref(1);
-const pageSize = ref(10);
-const total = ref(0);
 const tableData = ref<BidTender[]>([]);
 const tenderDialogVisible = ref(false);
 const editData = ref<BidTender | null>(null);
-const demandDialogVisible = ref(false);
-
-const queryParams = ref<BidTenderQueryParams>({
-  segId: undefined,
-  conTypeId: undefined,
-  tenderName: "",
-  tenderNo: "",
-});
-// 业务板块
-const segOptions = ref([]);
 // 合同分类
 const conTypeOptions = ref([]);
-// 项目列表
-const projectOptions = ref([]);
-// 采购方式
-const purchaseMethodOptions = ref([]);
-// 招标方式
-const tenderMethodOptions = ref([]);
-// 清单模式
-const billModeOptions = ref([]);
-// 数据字典
-const { getDictList, loadDicts } = useDict(
-  [
-    dictMapping.purchaseMethod, // 采购方式
-    dictMapping.tenderMethod, // 招标方式
-    dictMapping.billMode, // 清单模式
-  ],
-  {
-    treeDictCodes: [],
+// 人员树形结构数据
+const empTreeData = ref([]);
+const defaultProps = {
+  value: "treeId",
+  label: "orgName",
+  children: "children",
+  disabled: (data: any) => {
+    // 禁用所有 dataType 不为 'emp' 的节点 ==== seg: '板块',mgu: '管理单元',dept: '部门',emp: '员工'
+    return data.dataType !== 0;
   },
-);
+};
+
+const queryParams = ref({
+  conTypeId: undefined,
+  tenderName: undefined,
+  createId: undefined,
+  status: undefined,
+});
 
 const columns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "segName", label: "业务板块", width: 120 },
-  // { prop: "projectName", label: "项目名称", width: 200 },
-  { prop: "tenderNo", label: "招标单号", width: 220 },
+  { prop: "segName", label: "业务板块", width: 90 },
+  // { prop: "projectName", label: "项目名称", width: 150 },
+  { prop: "tenderName", label: "采购事项", width: 200 },
   { prop: "conTypeName", label: "合同分类", width: 120 },
-  { prop: "tenderName", label: "采购事项", width: 150 },
-  { prop: "purchaseMethodName", label: "采购方式", width: 120 },
-  { prop: "tenderMethodName", label: "招标方式", width: 120 },
-  { prop: "planAmount", label: "计划金额", width: 120 },
-  { prop: "billModeName", label: "清单模式", width: 120 },
-  { prop: "demandDate", label: "需求时间", width: 120 },
+  // 计划金额格式化为￥10.00
+  {
+    prop: "planAmount",
+    label: "计划金额(元)",
+    width: 90,
+    formatter: (row: BidTender) => `￥${row.planAmount}`,
+  },
+  { prop: "createName", label: "招采责任人", width: 100 },
   { prop: "bidStartDate", label: "招采开始日期", width: 120 },
   { prop: "bidEndDate", label: "招采结束日期", width: 120 },
-  { prop: "dutyMan", label: "招采负责人", width: 120 },
-  { slot: "tenderStatus", label: "采购状态", width: 120 },
+  { prop: "demandDate", label: "需求时间", width: 100 },
+  { prop: "purchaseMethodName", label: "采购方式", width: 90 },
+  { prop: "tenderMethodName", label: "招标方式", width: 90 },
+  { prop: "billModeName", label: "清单模式", width: 90 },
+  { slot: "tenderStatus", label: "采购状态", width: 90 },
   {
     label: "操作",
     prop: "actions",
-    width: 220,
+    width: 200,
     slot: "actions",
     fixed: "right",
   },
 ];
 // 获取招标事项列表
 const getDataList = async () => {
-  if (!props.projectId) {
+  if (!props.selectedData) {
     return;
   }
+  const { orgId, dataType } = props.selectedData;
+  const params = {
+    projSegId: dataType === 4 ? orgId : undefined, // 板块
+    projMguId: dataType === 3 ? orgId : undefined, // 公司
+    projId: dataType === 1 ? orgId : undefined, // 项目
+  };
   try {
     tableLoading.value = true;
     tableData.value = [];
-    const params = {
+    const query = {
       ...queryParams.value,
-      projId: props.projectId,
+      ...params,
     };
-    const res = await biddingManageApi.getTenderList(params);
+    const res = await biddingManageApi.getTenderList(query);
     if (res.code === 200) {
       tableData.value = res.data || [];
     }
@@ -220,24 +229,16 @@ const getDataList = async () => {
 };
 
 const handleSearch = () => {
-  currentPage.value = 1;
   getDataList();
 };
 
 const handleReset = () => {
   queryParams.value = {
-    segId: undefined,
     conTypeId: undefined,
-    tenderName: "",
-    tenderNo: "",
+    tenderName: undefined,
+    createId: undefined,
+    status: undefined,
   };
-  currentPage.value = 1;
-  getDataList();
-};
-
-const handlePaginationChange = (params: any) => {
-  currentPage.value = params.currentPage;
-  pageSize.value = params.pageSize;
   getDataList();
 };
 
@@ -270,19 +271,6 @@ const handleDelete = (row: BidTender) => {
     })
     .catch(() => {});
 };
-const handleApproval = (row: BidTender) => {
-  console.log("审批招标事项:", row);
-};
-const getTenderStatusText = (status: number) => {
-  const statusMap: Record<number, string> = {
-    0: "草稿",
-    1: "已审批",
-    2: "招标中",
-    3: "已定标",
-    4: "已签约",
-  };
-  return statusMap[status] || "未知";
-};
 
 const handleDialogSuccess = () => {
   getDataList();
@@ -292,54 +280,32 @@ const getConTypeList = async () => {
   try {
     const res = await conTypeApi.getConTypeList();
     if (res.code === 200) {
-      conTypeOptions.value = res.data || [];
+      conTypeOptions.value = buildTree(res.data || []);
     }
   } catch (error) {
     console.error("获取合同分类失败:", error);
   }
 };
-// 获取业务板块列表
-const getSegOptions = async () => {
-  try {
-    const res = await dictionaryApi.getsegmentList();
-    if (res.code === 200) {
-      segOptions.value = res.data || [];
-    }
-  } catch (error) {
-    console.error("获取业务板块列表失败:", error);
+
+// 获取人员树形数据
+const getEmpTreeData = async () => {
+  const res = await roleApi.getEmpTree({ empName: "", isIncludeLeave: false });
+  // console.log("获取人员列表", res);
+  if (res.code === 200) {
+    empTreeData.value = res.data || [];
   }
-};
-// 获取项目列表
-const getProjectOptions = async () => {
-  try {
-    const res = await largeScreenApi.getProjList();
-    if (res.code === 200) {
-      projectOptions.value = res.data || [];
-    }
-  } catch (error) {
-    console.error("获取项目列表失败:", error);
-  }
-};
-// 初始化数据字典数据
-const initDictData = async () => {
-  await loadDicts();
-  purchaseMethodOptions.value = getDictList(dictMapping.purchaseMethod); // 采购方式
-  tenderMethodOptions.value = getDictList(dictMapping.tenderMethod); // 招标方式
-  billModeOptions.value = getDictList(dictMapping.billMode); // 清单模式
 };
 
 watch(
-  () => props.projectId,
+  () => props.selectedData,
   (val) => {
     if (val) {
       getConTypeList();
-      getSegOptions();
-      getProjectOptions();
-      initDictData();
+      getEmpTreeData();
       getDataList();
     }
   },
-  { immediate: true },
+  { immediate: true, deep: true },
 );
 </script>
 

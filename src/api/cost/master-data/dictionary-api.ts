@@ -146,11 +146,12 @@ export const dictionaryApi = {
 
   /**
    * 查询业务板块列表
-   * @returns Promise 业务板块列表
-   * @description 获取系统配置的所有业务板块
+   * @data - 查询参数
+   * @param data.isAuth - 是否需要权限控制，true需要  false不需要
+   * @description 获取系统配置的业务板块
    */
-  getsegmentList: () => {
-    return http.formPost("/mainData/segment/getList");
+  getsegmentList: (data?:{ isAuth?: boolean }) => {
+    return http.formPost("/mainData/segment/getList",data);
   },
 
   /**

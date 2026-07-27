@@ -45,12 +45,20 @@ const props = withDefaults(defineProps<Props>(), {
 
 const columns = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "projId", label: "项目" },
+  { prop: "projName", label: "项目", width: 200 },
   { prop: "tenderItemName", label: "招标明细" },
   { prop: "bldNames", label: "楼栋" },
-  { prop: "bidBondAmount", label: "应交投标保证金" },
-  { prop: "perfBondAmount", label: "应交履约保证金" },
-  { prop: "referAmount", label: "不含税参考价" },
+  { prop: "bidBondAmount", label: "应交投标保证金", width: 150 },
+  { prop: "perfBondAmount", label: "应交履约保证金", width: 150 },
+  // 不含税参考价 不给看，显示为******
+  {
+    prop: "referAmount",
+    label: "不含税参考价",
+    width: 150,
+    formatter: (row: any) => {
+      return "***";
+    },
+  },
 ];
 
 // 明细表

@@ -28,6 +28,29 @@ interface FlowCallbackChangeParams {
  * @description 提供招标事项、招标需求、招标单据的完整生命周期管理
  */
 export const biddingManageApi = {
+  // ==================== 招标需求 ====================
+  /**
+   * 新增招标需求
+   * @param data - 新增参数
+   * @param data.bill - 招标需求数据
+   * @param data.demand - 招标需求表单数据
+   * @param data.annexList - 附件列表
+   * @returns Promise
+   */
+  demandSave: (data: any) => {
+    return http.post("/bid/demand/save", data);
+  },
+  /**
+   * 保存并提交招标需求
+   * @param data - 新增参数
+   * @param data.bill - 招标需求数据
+   * @param data.demand - 招标需求表单数据
+   * @param data.annexList - 附件列表
+   * @returns Promise
+   */
+  demandSubmit: (data: any) => {
+    return http.post("/bid/demand/submit", data);
+  },
   // ==================== 招标事项管理 ====================
   /**
    * 查询招标事项列表
@@ -152,20 +175,27 @@ export const biddingManageApi = {
   /**
    * 删除招标需求
    * @param data - 删除参数
-   * @param data.id - 主键ID（必填）
-   * @returns Promise
+   * @param data.billId - 单据ID（必填）
    */
-  delDemand: (data: { id: number }) => {
+  delDemand: (data: { billId: number }) => {
     return http.formPost("/bid/demand/del", data);
+  },
+  /**
+   * 作废招标需求
+   * @param data - 删除参数
+   * @param data.billId - 单据ID（必填）
+   */
+  voidDemand: (data: { billId: number }) => {
+    return http.formPost("/bid/demand/void", data);
   },
 
   /**
    * 查询招标需求详情
    * @param data - 查询参数
-   * @param data.id - 主键ID（必填）
+   * @param data.billId - 单据ID（必填）
    * @returns Promise 招标需求详细信息
    */
-  getDemandInfo: (data: { id: number }) => {
+  getDemandInfo: (data: { billId: number }) => {
     return http.formPost("/bid/demand/getInfo", data);
   },
 
@@ -184,7 +214,7 @@ export const biddingManageApi = {
    * @param data.endDate - 结束时间
    * @returns Promise 招标单据列表
    */
-  getBillList: (data: BidTenderBillQueryParams) => {
+  getBillList: (data: any) => {
     return http.formPost("/bid/bill/getList", data);
   },
 
@@ -202,6 +232,20 @@ export const biddingManageApi = {
    */
   addBill: (data: BidTenderBillFormDataAdd) => {
     return http.post("/bid/bill/add", data);
+  },
+  /**
+   * 保存招标单据（新增/修改）
+   * @param data 
+   */
+  saveBill: (data: BidTenderBillFormDataAdd) => {
+    return http.post("/bid/bill/save", data);
+  },
+  /**
+   * 保存并提交招标单据
+   * @param data 
+   */
+  submitBill: (data: BidTenderBillFormDataAdd) => {
+    return http.post("/bid/bill/submit", data);
   },
 
   /**
@@ -221,20 +265,50 @@ export const biddingManageApi = {
    * @param data - 删除参数
    * @param data.bizItemCode - 业务类型代码（必填）
    * @param data.billId - 单据ID（必填）
-   * @returns Promise
    */
   delBill: (data: { bizItemCode: string; billId: number }) => {
     return http.formPost("/bid/bill/del", data);
+  },
+  /**
+   * 作废招标单据
+   * @param data - 删除参数
+   * @param data.billId - 单据ID（必填）
+   */
+  voidBill: (data: { billId: number }) => {
+    return http.formPost("/bid/bill/void", data);
+  },
+  /**
+   * 查询招标单据详情
+   * @param data - 删除参数
+   * @param data.billId - 单据ID（必填）
+   */
+  getBillInfo: (data: { billId: number }) => {
+    return http.formPost("/bid/bill/getInfo", data);
+  },
+  /**
+   * 查询招标保证金缴纳明细列表（在招标保证金退还里面使用）
+   * @param data - 删除参数
+   * @param data.tenderId - 事项ID（必填）
+   */
+  getBondRecvList: (data: { tenderId: number }) => {
+    return http.formPost("/bid/bondRecv/listByTender", data);
   },
 
   /**
    * 发起招标流程
    * @param data - 发起参数
    * @param data.billId - 单据ID（必填）
-   * @returns Promise
    */
   createBillFlow: (data: { billId: number }) => {
     return http.formPost("/bid/bill/createFlow", data);
+  },
+  /**
+   * 更新招标流程
+   * @param data - 发起参数
+   * @param data.billId - 单据ID（必填）
+   */
+  updateBillFlow: (data: { billId: number }) => {
+    return http.formPost("/bid/bill/updateFlow", data);
   },
 
   /**

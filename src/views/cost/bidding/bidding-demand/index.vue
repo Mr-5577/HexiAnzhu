@@ -1,14 +1,14 @@
 <!-- 招标需求 -->
 <template>
   <div class="bidding-management-page">
-    <!-- 城市-项目 -->
-    <urban-project-tree
-      ref="urbanProjectTreeRef"
+    <!-- 板块-公司-项目 -->
+    <sector-company-project-treet
+      ref="sectorCompanyProjectTreetRef"
       @select="handleProjectSelect"
     />
 
-    <div class="right-content" v-if="selectedProjectId">
-      <demand-table :project-id="selectedProjectId" />
+    <div class="right-content" v-if="selectedData">
+      <demand-table :selectedData="selectedData" />
     </div>
 
     <div class="right-content empty" v-else>
@@ -19,24 +19,22 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import UrbanProjectTree from "@/components/business/urban-project-tree.vue";
+import SectorCompanyProjectTreet from "@/components/business/sector-company-project-treet.vue.vue";
 import DemandTable from "./demand-table.vue";
 import type { ProjectTreeNode } from "@/types/cost/master-data/project-area-type.ts";
 
 defineOptions({ name: "bidding-demand" });
 
-const urbanProjectTreeRef = ref();
-const selectedProjectId = ref<number | null>(null);
+const selectedData = ref(null);
 
-// 处理选中的项目
-const handleProjectSelect = (project: ProjectTreeNode) => {
-  // console.log("选中的项目数据:", project);
-  console.log("选中项目ID:", urbanProjectTreeRef.value?.selectedProjectId);
-  if (project) {
-    selectedProjectId.value = project.orgId;
+// 处理选中
+const handleProjectSelect = (data: ProjectTreeNode) => {
+  console.log("选中的板块-公司、项目数据:", data);
+  if (data) {
+    selectedData.value = data;
   } else {
-    // console.log("已清空选中项目");
-    selectedProjectId.value = null;
+    // console.log("已清空选中");
+    selectedData.value = null;
   }
 };
 

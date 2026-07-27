@@ -19,7 +19,7 @@
           </el-menu-item>
           <el-menu-item index="tender-plan">
             <el-icon><Checked /></el-icon>
-            <span>招标计划</span>
+            <span>招标审批</span>
           </el-menu-item>
           <el-menu-item index="reference-price">
             <el-icon><PriceTag /></el-icon>

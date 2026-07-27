@@ -3,8 +3,8 @@
   <div class="bid-bond-pay-edit-page">
     <BondPayForm
       mode="edit"
-      :tender-id="tenderId"
-      :bondRecvId="bondRecvId"
+      :billId="billId"
+      :tenderId="tenderId"
       @success="handleSuccess"
       @cancel="handleCancel"
     />
@@ -20,9 +20,9 @@ const router = useRouter();
 
 defineOptions({ name: "bid-bond-pay-edit" });
 
-// 从路由参数获取 tenderId  bondRecvId
-const tenderId = Number(route.query.tenderId); // 事项ID
-const bondRecvId = Number(route.query.bondRecvId); // 投标保证金缴纳ID
+// 从路由参数获取
+const billId = Number(route.query.billId); // 单据ID
+const tenderId = Number(route.query.tenderId); // 招标事项id
 
 const handleSuccess = () => {
   router.back();

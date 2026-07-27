@@ -1,14 +1,16 @@
 <!-- 招标需求 -->
 <template>
   <div class="demand-form-page">
-    <!-- 基本信息 -->
-    <basic-info
-      :data="props.detailData"
-      :project-options="props.projectOptions"
-    ></basic-info>
-
     <div class="form-section">
-      <h3 class="section-title">需求明细</h3>
+      <!-- <h3 class="section-title">需求明细</h3> -->
+      <div class="actionBar-buttons">
+        <el-button plain type="primary" @click="getDemandList">
+          刷新列表
+        </el-button>
+        <el-button type="primary" @click="handleDemandDialog">
+          关联需求
+        </el-button>
+      </div>
       <base-table
         :columns="columns"
         :tableData="tableData"
@@ -19,18 +21,19 @@
         :height="'100%'"
         :show-toolbar="false"
       >
-        <!-- 列表外操作栏 -->
-        <template #actionBar>
-          <div class="actionBar-buttons">
-            <el-button
-              type="primary"
-              size="small"
-              plain
-              @click="handleDemandDialog"
-            >
-              关联需求
-            </el-button>
-          </div>
+        <template #status="{ row }">
+          <el-tag
+            size="small"
+            :type="getEnumType(approvalStatusEnum, row?.status || 0)"
+          >
+            {{ getEnumLabel(approvalStatusEnum, row?.status || 0) }}
+          </el-tag>
+        </template>
+
+        <template #actions="{ row }">
+          <el-button type="primary" link @click="handleDetail(row)">
+            详情
+          </el-button>
         </template>
       </base-table>
     </div>
@@ -44,7 +47,6 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import BasicInfo from "../basic-info.vue";
 import {
   BidDemand,
   BidTenderFormParams,
@@ -52,23 +54,21 @@ import {
 import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api.ts";
 import AssociationDemandDialog from "./association-demand-dialog.vue";
 import { ElMessage } from "element-plus";
+import { useRouter } from "vue-router";
+import { dateUtil } from "@/utils/date-util.ts";
+import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
+import { approvalStatusEnum } from "@/constants/bidding/enums.ts";
 
 defineOptions({ name: "demand" });
 
 interface Props {
-  tenderId: number;
-  detailData?: {
-    tender: BidTenderFormParams;
-    items: any[];
-    projIds: number[];
-  };
-  projectOptions: any[];
+  tenderId?: number; // 事项ID
 }
 const props = withDefaults(defineProps<Props>(), {
-  tenderId: null,
-  detailData: null,
-  projectOptions: () => [],
+  tenderId: null, // 事项ID
 });
+
+const router = useRouter();
 
 const dialogVisible = ref(false);
 const saveLoading = ref(false);
@@ -104,22 +104,43 @@ const handleDemandDialog = () => {
 const tableLoading = ref(false);
 const columns = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "segName", label: "业务板块", width: 120 },
-  { prop: "projName", label: "项目名称", width: 200 },
-  { prop: "companyName", label: "公司名称" },
-  { prop: "tenderName", label: "招标事项" },
-  { prop: "demandDate", label: "需求时间", width: 120 },
-  { prop: "demandRemark", label: "需求说明" },
+  { prop: "bizTitle", label: "标题", width: 200 },
+  { prop: "segName", label: "业务板块", width: 100 },
+  { prop: "projName", label: "项目", width: 150 },
+  { prop: "tenderName", label: "需求事项", minWidth: 200 },
+  { prop: "demandDate", label: "需求时间", width: 100 },
+  { slot: "status", label: "审批状态", width: 90 },
+  { prop: "createName", label: "创建人", width: 90 },
+  {
+    prop: "createDate",
+    label: "创建时间",
+    width: 120,
+    formatter: (row) => dateUtil(row.createDate).format("YYYY-MM-DD"),
+  },
+  {
+    label: "操作",
+    width: 120,
+    slot: "actions",
+    fixed: "right",
+  },
 ];
 // 投标表格
 const tableData = ref([]);
+
 const getDemandList = async () => {
   try {
     tableLoading.value = true;
-    const res = await biddingManageApi.getBillList({ bizItemCode: "ZB_XQ" });
+    const res = await biddingManageApi.getBillList({
+      tenderId: props.tenderId,
+      bizItemCode: "ZB_XQ",
+    });
     if (res.code === 200) {
-      const dataList = (res.data as any[]) || [];
-      tableData.value = dataList.map((item) => item.demand);
+      const dataList = res.data || [];
+      let list = [];
+      dataList.map((item) => {
+        list = list.concat(item.demandList || []);
+      });
+      tableData.value = list;
     }
   } catch (error) {
     console.error("获取招标需求列表失败:", error);
@@ -127,6 +148,17 @@ const getDemandList = async () => {
     tableLoading.value = false;
   }
 };
+
+// 详情
+const handleDetail = (row) => {
+  router.push({
+    path: "/bidding/bidding-demand/detail",
+    query: {
+      billId: row.bidBillId,
+    },
+  });
+};
+
 onMounted(() => {
   getDemandList();
 });
@@ -159,6 +191,7 @@ onMounted(() => {
   .actionBar-buttons {
     display: flex;
     justify-content: flex-end;
+    margin-bottom: 10px;
   }
 }
 </style>

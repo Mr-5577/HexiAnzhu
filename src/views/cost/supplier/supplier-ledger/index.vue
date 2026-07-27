@@ -217,7 +217,7 @@ const tableColumns = [
   { label: "法人电话", prop: "legalPhone", width: 120 },
   { label: "信用编码", prop: "uscCardNo", width: 180 },
   { label: "供应商地址", prop: "address", width: 200 },
-  { label: "供应商状态", slot: "supStatus", width: 90 },
+  { label: "供应商状态", slot: "supStatus", width: 100 },
   // { label: "审批流程", slot: "apprProcess", width: 120 },
   {
     slot: "actions",

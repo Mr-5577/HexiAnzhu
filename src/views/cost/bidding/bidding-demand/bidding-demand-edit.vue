@@ -1,10 +1,9 @@
-<!-- 编辑 招标参考价 -->
+<!-- 编辑 招标需求 -->
 <template>
-  <div class="reference-price-edit-page">
-    <ReferencePriceForm
+  <div class="bidding-demand-edit-page">
+    <BiddingDemandForm
       mode="edit"
       :billId="billId"
-      :tenderId="tenderId"
       @success="handleSuccess"
       @cancel="handleCancel"
     />
@@ -13,16 +12,14 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
-import ReferencePriceForm from "./reference-price-form.vue";
+import BiddingDemandForm from "./bidding-demand-form.vue";
+
+defineOptions({ name: "bidding-demand-edit" });
 
 const route = useRoute();
 const router = useRouter();
 
-defineOptions({ name: "reference-price-edit" });
-
-// 从路由参数获取
-const billId = Number(route.query.billId); // 单据ID
-const tenderId = Number(route.query.tenderId); // 招标事项id
+const billId = Number(route.query.billId); // 招标需求单据ID
 
 const handleSuccess = () => {
   router.back();
@@ -34,7 +31,7 @@ const handleCancel = () => {
 </script>
 
 <style scoped lang="scss">
-.reference-price-edit-page {
+.bidding-demand-edit-page {
   width: 100%;
   height: 100%;
   background-color: #fff;

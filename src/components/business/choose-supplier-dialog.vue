@@ -3,7 +3,7 @@
   <base-modal
     v-model="dialogVisible"
     title="选择供应商"
-    width="1500px"
+    width="1400px"
     :confirm-loading="confirmLoading"
     :confirm-text="'确定'"
     @confirm="handleConfirm"
@@ -158,14 +158,14 @@ const tableColumns = [
   {
     label: "供应商名称",
     prop: "supName",
-    width: 200,
+    width: 180,
     showOverflowTooltip: true,
   },
   { label: "供应商类别", slot: "supTypeId", width: 150 },
   {
     label: "企业性质",
     prop: "supNatureName",
-    width: 120,
+    width: 100,
     showOverflowTooltip: true,
   },
   {
@@ -177,7 +177,7 @@ const tableColumns = [
   {
     label: "法人代表",
     prop: "legalPerson",
-    width: 120,
+    width: 100,
     showOverflowTooltip: true,
   },
   { label: "法人电话", prop: "legalPhone", width: 120 },

@@ -3,7 +3,7 @@
   <base-modal
     v-model="dialogVisible"
     title="选择招标需求"
-    width="1000px"
+    width="1200px"
     :confirm-loading="confirmLoading"
     @confirm="handleConfirm"
     @cancel="handleClose"
@@ -22,7 +22,16 @@
         :selectionMode="'single'"
         :height="'500px'"
         @selection-change="handleSelectionChange"
-      />
+      >
+        <template #status="{ row }">
+          <el-tag
+            size="small"
+            :type="getEnumType(approvalStatusEnum, row?.status || 0)"
+          >
+            {{ getEnumLabel(approvalStatusEnum, row?.status || 0) }}
+          </el-tag>
+        </template>
+      </base-table>
     </div>
   </base-modal>
 </template>
@@ -36,6 +45,9 @@ import type {
   BidDemandQueryParams,
 } from "@/types/cost/bidding/bidding-management-type";
 import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api";
+import { getEnumLabel, getEnumType } from "@/utils/enum";
+import { approvalStatusEnum } from "@/constants/bidding/enums";
+import { dateUtil } from "@/utils/date-util";
 
 interface Props {
   /** 弹窗显示状态 */
@@ -51,7 +63,6 @@ const emit = defineEmits<{
   success: [selectedRows: BidDemand[]];
 }>();
 
-// ==================== 响应式数据 ====================
 const dialogVisible = ref(props.modelValue);
 const confirmLoading = ref(false);
 const tableLoading = ref(false);
@@ -60,10 +71,8 @@ const tableData = ref<BidDemand[]>([]);
 const selectedRows = ref<BidDemand[]>([]);
 
 // 查询参数
-const queryParams = ref<BidDemandQueryParams>({
-  segId: undefined,
-  companyId: undefined,
-  projId: undefined,
+const queryParams = ref({
+  status: 40, // 查询已审批的数据
   tenderName: "",
 });
 
@@ -71,15 +80,19 @@ const queryParams = ref<BidDemandQueryParams>({
 const columns: TableColumnItem[] = [
   { type: "selection", width: 50, fixed: "left" },
   { type: "index", label: "序号", width: 60 },
-  { prop: "segName", label: "业务板块" },
-  { prop: "projName", label: "项目名称", width: 120 },
-  { prop: "companyName", label: "公司名称" },
-  { prop: "tenderName", label: "招标事项" },
-  { prop: "demandDate", label: "需求时间", width: 120 },
-  { prop: "demandRemark", label: "需求说明" },
+  { prop: "bizTitle", label: "标题", width: 200 },
+  { prop: "segName", label: "业务板块", width: 90 },
+  { prop: "tenderName", label: "需求事项", minWidth: 200 },
+  { prop: "demandDate", label: "需求时间", width: 100 },
+  { slot: "status", label: "审批状态", width: 90 },
+  { prop: "createName", label: "创建人", width: 90 },
+  {
+    prop: "createDate",
+    label: "创建时间",
+    width: 120,
+    formatter: (row) => dateUtil(row.createDate).format("YYYY-MM-DD"),
+  },
 ];
-
-// ==================== 方法 ====================
 
 /**
  * 获取招标需求列表
@@ -144,7 +157,6 @@ const resetData = () => {
   }
 };
 
-// ==================== 监听器 ====================
 watch(
   () => props.modelValue,
   (val) => {

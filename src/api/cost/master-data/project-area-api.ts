@@ -20,6 +20,21 @@ export const projectAreaApi = {
   getMguProjList: () => {
     return http.post("/mainData/project/getMguProjList");
   },
+  /**
+   * 获取板块-公司-项目列表树形结构
+   * @returns Promise 板块-公司-项目的树形层级结构
+   */
+  getSegMguProjList: () => {
+    return http.post("/mainData/project/getSegMguProjList");
+  },
+  /**
+   * 通过项目查询项目所属信息
+   * @param data - 查询参数
+   * @param data.id - 项目ID（必填）
+   */
+  getInfoByProjId: (data: { id: number }) => {
+    return http.formPost("/mainData/project/getList", data);
+  },
 
   /**
    * 查询项目楼栋列表
@@ -186,5 +201,5 @@ export const projectAreaApi = {
    */
   getPrevListByVerMid: (data: { verMid: number | string }) => {
     return http.formPost("/mainData/areaVerD/getPrevList", data);
-  }
+  },
 };

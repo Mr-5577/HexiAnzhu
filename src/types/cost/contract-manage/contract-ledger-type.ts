@@ -267,7 +267,7 @@ export interface HConMainQuery {
   /** 板块ID */
   segId?: number;
   /** 项目ID */
-  projId: number;
+  projId?: number;
   /** 合同名称 */
   conName?: string;
   /** 合同状态 */

@@ -26,6 +26,14 @@ export const goalCostApi = {
   getProjectCostMList: (data: HCstProjectCostMQueryParams) => {
     return http.formPost("/cost/projectCostM/getList", data);
   },
+  /**
+   * 查询目标成本(主从表)详情
+   * @param data - 查询参数
+   * @param data.id - 目标成本ID
+   */
+  getProjectCostM: (data: { id: number }) => {
+    return http.formPost("/cost/projectCostM/get", data);
+  },
 
   /**
    * 新增目标成本版本

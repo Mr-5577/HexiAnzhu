@@ -23,11 +23,11 @@ export const supStatusEnum = [
  * 供应商单据审批状态 枚举
  */
 export const supApprovalStatusEnum = [
-  { value: 0, label: "待入库", type: "info" },
-  { value: 10, label: "审批中", type: "success" },
-  { value: 40, label: "已审批", type: "danger" },
-  { value: 80, label: "作废", type: "warning" },
-  { value: 99, label: "其他", type: "warning" },
+  { value: 0, label: "待入库", type: "info" }, // 待处理 - 灰色
+  { value: 10, label: "审批中", type: "primary" }, // 进行中 - 蓝色
+  { value: 40, label: "已审批", type: "success" }, // 已完成 - 绿色
+  { value: 80, label: "作废", type: "danger" }, // 异常 - 红色
+  { value: 99, label: "其他", type: "info" }, // 其他 - 灰色
 ] as const;
 
 /**

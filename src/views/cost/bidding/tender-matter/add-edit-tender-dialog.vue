@@ -3,7 +3,7 @@
   <base-modal
     v-model="dialogVisible"
     :title="dialogTitle"
-    width="1000px"
+    width="1300px"
     :confirm-loading="submitLoading"
     @confirm="handleSubmit"
     @cancel="handleClose"
@@ -23,8 +23,8 @@
               <el-select
                 v-model="formData.segId"
                 placeholder="请选择业务板块"
-                clearable
                 style="width: 100%"
+                @change="handleSeg"
               >
                 <el-option
                   v-for="item in segOptions"
@@ -35,46 +35,7 @@
               </el-select>
             </el-form-item>
           </el-col>
-          <el-col :span="8">
-            <el-form-item prop="projectId" label="项目" required>
-              <el-select
-                v-model="formData.projectId"
-                placeholder="请选择项目"
-                multiple
-                collapse-tags
-                style="width: 100%"
-                @change="handleChangeProj"
-              >
-                <el-option
-                  v-for="item in projectOptions"
-                  :key="item.id"
-                  :label="item.projName"
-                  :value="item.id"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item prop="conTypeId" label="合同分类" required>
-              <el-select
-                v-model="formData.conTypeId"
-                placeholder="请选择合同分类"
-                clearable
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="item in conTypeOptions"
-                  :key="item.id"
-                  :label="item.conTypeName"
-                  :value="item.id"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row>
-          <el-col :span="8">
+          <el-col :span="16">
             <el-form-item prop="tenderName" label="采购事项" required>
               <el-input
                 v-model="formData.tenderName"
@@ -84,6 +45,32 @@
               />
             </el-form-item>
           </el-col>
+        </el-row>
+
+        <el-row>
+          <el-col :span="8">
+            <!-- 合同分类树形结构数据 -->
+            <el-form-item prop="conTypeId" label="合同分类" required>
+              <el-cascader
+                v-model="formData.conTypeId"
+                :options="conTypeOptions"
+                :show-all-levels="false"
+                :props="{
+                  expandTrigger: 'hover',
+                  emitPath: false,
+                  checkStrictly: false,
+                  value: 'id',
+                  label: 'conTypeName',
+                  children: 'children',
+                }"
+                placeholder="请选择合同分类"
+                style="width: 100%"
+                clearable
+                filterable
+              />
+            </el-form-item>
+          </el-col>
+
           <el-col :span="8">
             <el-form-item prop="purchaseMethodId" label="采购方式" required>
               <el-select
@@ -140,6 +127,16 @@
           </el-col>
           <el-col :span="8">
             <el-form-item prop="planAmount" label="计划金额" required>
+              <!-- <el-input-number
+                v-model="formData.planAmount"
+                placeholder="请输入计划金额"
+                :precision="2"
+                :min="0"
+                :controls="false"
+                style="width: 100%"
+                :formatter="(value) => `￥ ${value}`"
+                :parser="(value) => value.replace(/￥\s?|(,*)/g, '')"
+              /> -->
               <el-input-number
                 v-model="formData.planAmount"
                 placeholder="请输入计划金额"
@@ -147,7 +144,11 @@
                 :min="0"
                 :controls="false"
                 style="width: 100%"
-              />
+              >
+                <template #prefix>
+                  <span style="color: #909399; font-weight: 500">￥</span>
+                </template>
+              </el-input-number>
             </el-form-item>
           </el-col>
           <el-col :span="8">
@@ -166,21 +167,30 @@
 
         <el-row>
           <el-col :span="8">
-            <el-form-item prop="dutyMan" label="招采负责人" required>
-              <el-select
+            <el-form-item prop="dutyMan" label="招采责任人" required>
+              <el-cascader
+                ref="projCascaderRef"
                 v-model="formData.dutyMan"
-                placeholder="请选择招采负责人"
+                :options="props.empTreeData"
+                :show-all-levels="false"
+                :props="{
+                  expandTrigger: 'click',
+                  emitPath: false,
+                  checkStrictly: false,
+                  value: 'orgId',
+                  label: 'orgName',
+                  children: 'children',
+                  // 通过 leaf 属性标识哪些是叶子节点（可选的）
+                  leaf: (data) => {
+                    // dataType: 0 表示人员，即叶子节点
+                    return data.dataType === 0;
+                  },
+                }"
+                placeholder="请选择"
+                style="width: 100%"
                 clearable
                 filterable
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="item in userOptions"
-                  :key="item.id"
-                  :label="item.userName"
-                  :value="item.id"
-                />
-              </el-select>
+              />
             </el-form-item>
           </el-col>
           <el-col :span="8">
@@ -271,30 +281,23 @@ import type {
 } from "@/types/cost/bidding/bidding-management-type";
 import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
+import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
+import { largeScreenApi } from "@/api/sales/large-screen-api";
+import { useDict } from "@/composables/use-dict";
+import { dictMapping } from "@/utils/dict-mapping";
 
-// ==================== Props & Emits ====================
 interface Props<T = any> {
   modelValue: boolean;
   editData?: BidTender | null;
-  projectId?: number | null;
-  segOptions?: T[];
+  empTreeData?: T[];
   conTypeOptions?: T[];
-  projectOptions: T[];
-  purchaseMethodOptions?: T[];
-  tenderMethodOptions?: T[];
-  billModeOptions?: T[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
   editData: null,
-  projectId: null,
-  segOptions: () => [],
+  empTreeData: () => [],
   conTypeOptions: () => [],
-  projectOptions: () => [],
-  purchaseMethodOptions: () => [],
-  tenderMethodOptions: () => [],
-  billModeOptions: () => [],
 });
 
 const emit = defineEmits<{
@@ -307,7 +310,25 @@ const formRef = ref<FormInstance>();
 const submitLoading = ref(false);
 const tableLoading = ref(false);
 const tableList = ref([]);
+// 业务板块
+const segOptions = ref([]);
+// 项目列表
+const projectOptions = ref([]);
+// 采购方式
+const purchaseMethodOptions = ref([]);
+// 招标方式
+const tenderMethodOptions = ref([]);
+// 清单模式
+const billModeOptions = ref([]);
+// 数据字典
+const { getDictList, loadDicts } = useDict([
+  dictMapping.purchaseMethod, // 采购方式
+  dictMapping.tenderMethod, // 招标方式
+  dictMapping.billMode, // 清单模式
+]);
 
+// 得到板块下的项目数据
+const projListBySegIdList = ref([]);
 const dynamicColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {
@@ -315,23 +336,16 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
     label: "项目",
     editable: true,
     editType: "select",
+    width: 150,
     showOverflowTooltip: false,
     // 自定义键名
     optionLabelField: "projName",
     optionValueField: "id",
-    getOptions: () => {
-      const selectedProjectIds = formData.value.projectId || [];
-      if (selectedProjectIds.length === 0) {
-        return [];
-      }
-      return props.projectOptions.filter((project) =>
-        selectedProjectIds.includes(project.id),
-      );
-    },
+    options: projListBySegIdList.value || [],
   },
   {
     prop: "tenderItemName",
-    label: "招标明细",
+    label: "招标明细事项",
     editable: true,
     editType: "input",
     showOverflowTooltip: false,
@@ -350,12 +364,15 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
     getOptions: (row: any) => row.buildingOptions || [],
   },
   {
+    // 增加￥符号
     prop: "bidBondAmount",
     label: "应交投标保证金",
     showSummary: true,
     editable: true,
     editType: "number",
+    width: 150,
     showOverflowTooltip: false,
+    prefix: "￥",
   },
   {
     prop: "perfBondAmount",
@@ -363,15 +380,21 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
     showSummary: true,
     editable: true,
     editType: "number",
+    width: 150,
     showOverflowTooltip: false,
   },
   {
+    // 默认值为****，不可查看
     prop: "referAmount",
     label: "不含税参考价",
     showSummary: true,
-    editable: true,
+    editable: false,
     editType: "number",
+    width: 150,
     showOverflowTooltip: false,
+    formatter: (row: any) => {
+      return "****";
+    },
   },
   {
     label: "操作",
@@ -379,12 +402,6 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
     slot: "actions",
     fixed: "right",
   },
-]);
-
-const userOptions = ref([
-  { id: 1, userName: "张三" },
-  { id: 2, userName: "李四" },
-  { id: 3, userName: "王五" },
 ]);
 
 const formData = ref<BidTenderFormParams>({
@@ -402,7 +419,7 @@ const formData = ref<BidTenderFormParams>({
   bidEndDate: null,
   dutyMan: null,
   tenderRemark: "",
-  tenderStatus: 0,
+  tenderStatus: 0, // 状态：0草稿 1已审批 2招标中 3已定标 4已签约
 });
 
 const validatePlanAmount = (_rule: any, value: number, callback: any) => {
@@ -433,7 +450,6 @@ const validateEndDateRange = (_rule: any, _value: any, callback: any) => {
 
 const formRules: FormRules = {
   segId: [{ required: true, message: "请选择业务板块", trigger: "change" }],
-  projectId: [{ required: true, message: "请选择项目", trigger: "change" }],
   conTypeId: [{ required: true, message: "请选择合同分类", trigger: "change" }],
   tenderName: [{ required: true, message: "请输入采购事项", trigger: "blur" }],
   purchaseMethodId: [
@@ -452,7 +468,7 @@ const formRules: FormRules = {
   demandDate: [
     { required: true, message: "请选择需求日期", trigger: "change" },
   ],
-  dutyMan: [{ required: true, message: "请选择招采负责人", trigger: "change" }],
+  dutyMan: [{ required: true, message: "请选择招采责任人", trigger: "change" }],
   bidStartDate: [
     { required: true, message: "请选择招采开始日期", trigger: "change" },
     { validator: validateStartDateRange, trigger: "change" },
@@ -468,16 +484,56 @@ const dialogTitle = computed(() => {
   return isEditMode.value ? "编辑招标事项" : "新增招标事项";
 });
 
-// 切换项目
-const handleChangeProj = async (value: any) => {
-  // 重置所有行的项目和楼栋
-  tableList.value = tableList.value.map((row) => ({
-    ...row,
-    projId: null,
-    bldIds: [],
-    buildingOptions: [],
-  }));
+const handleSeg = async (val: number) => {
+  // 清除列表内的楼栋数据
+  if (tableList.value.length) {
+    // 清空所有行的项目、楼栋数据以及对应的选项
+    tableList.value = tableList.value.map((item) => ({
+      ...item,
+      projId: null,
+      bldIds: [],
+      buildingOptions: [],
+    }));
+  }
+  if (val) {
+    projListBySegIdList.value = projectOptions.value.filter((item) => {
+      return formData.value.segId === item.segId;
+    });
+  } else {
+    projListBySegIdList.value = [];
+  }
 };
+// 获取业务板块列表
+const getSegOptions = async () => {
+  try {
+    const res = await dictionaryApi.getsegmentList({ isAuth: true });
+    if (res.code === 200) {
+      segOptions.value = res.data || [];
+    }
+  } catch (error) {
+    console.error("获取业务板块列表失败:", error);
+  }
+};
+
+// 获取项目列表
+const getProjectOptions = async () => {
+  try {
+    const res = await largeScreenApi.getProjList();
+    if (res.code === 200) {
+      projectOptions.value = res.data || [];
+    }
+  } catch (error) {
+    console.error("获取项目列表失败:", error);
+  }
+};
+// 初始化数据字典数据
+const initDictData = async () => {
+  await loadDicts();
+  purchaseMethodOptions.value = getDictList(dictMapping.purchaseMethod); // 采购方式
+  tenderMethodOptions.value = getDictList(dictMapping.tenderMethod); // 招标方式
+  billModeOptions.value = getDictList(dictMapping.billMode); // 清单模式
+};
+
 // 获取详情
 const getInfo = async () => {
   const res = await biddingManageApi.getTenderInfo({
@@ -503,6 +559,9 @@ const getInfo = async () => {
       tenderRemark: tender.tenderRemark,
       tenderStatus: tender.tenderStatus,
     };
+     projListBySegIdList.value = projectOptions.value.filter((item) => {
+      return tender.segId === item.segId;
+    });
     // 设置明细数据
     if (items && items.length) {
       const initialTableList = items.map((item: any) => ({
@@ -655,14 +714,13 @@ const handleSubmit = async () => {
       ElMessage.error("请填写明细中的履约保证金");
       return;
     }
-    // if (tableList.value.some((item) => !item.referAmount)) {
-    //   ElMessage.error("请填写明细中的不含税参考价");
-    //   return;
-    // }
 
     submitLoading.value = true;
+    const projIds = Array.from(
+      new Set(tableList.value.map((item) => item.projId)),
+    );
     const saveParams: BidTenderSaveParams = {
-      tender: formData.value,
+      tender: { ...formData.value, projectId: projIds },
       items: tableList.value.map((item) => {
         // 确保 bldIds 是数组
         const bldIds = Array.isArray(item.bldIds) ? item.bldIds : [];
@@ -682,7 +740,7 @@ const handleSubmit = async () => {
           referAmount: item.referAmount ?? 0,
         };
       }),
-      projIds: formData.value.projectId || [],
+      projIds: projIds,
     };
 
     const interfaceApi = isEditMode.value
@@ -705,10 +763,13 @@ const handleSubmit = async () => {
 
 watch(
   () => props.modelValue,
-  (val) => {
+  async (val) => {
     dialogVisible.value = val;
     if (val) {
       tableList.value = [];
+      await getSegOptions();
+      await getProjectOptions();
+      await initDictData();
       initFormData();
     }
   },

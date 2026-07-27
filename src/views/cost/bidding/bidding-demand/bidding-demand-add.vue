@@ -1,10 +1,8 @@
-<!-- 编辑招标计划 -->
+<!-- 新增 招标需求 -->
 <template>
-  <div class="tender-plan-edit-page">
-    <TenderPlanForm
-      mode="edit"
-      :billId="billId"
-      :tenderId="tenderId"
+  <div class="bidding-demand-add-page">
+    <BiddingDemandForm
+      mode="add"
       @success="handleSuccess"
       @cancel="handleCancel"
     />
@@ -13,16 +11,12 @@
 
 <script setup lang="ts">
 import { useRoute, useRouter } from "vue-router";
-import TenderPlanForm from "./tender-plan-form.vue";
+import BiddingDemandForm from "./bidding-demand-form.vue";
+
+defineOptions({ name: "bidding-demand-add" });
 
 const route = useRoute();
 const router = useRouter();
-
-defineOptions({ name: "tender-plan-edit" });
-
-// 从路由参数获取
-const billId = Number(route.query.billId); // 单据ID
-const tenderId = Number(route.query.tenderId); // 招标事项id
 
 const handleSuccess = () => {
   router.back();
@@ -34,7 +28,7 @@ const handleCancel = () => {
 </script>
 
 <style scoped lang="scss">
-.tender-plan-edit-page {
+.bidding-demand-add-page {
   width: 100%;
   height: 100%;
   background-color: #fff;

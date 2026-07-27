@@ -3,8 +3,8 @@
   <div class="award-approval-detail-page">
     <AwardApprovalForm
       mode="detail"
-      :tender-id="tenderId"
-      :award-id="awardId"
+      :billId="billId"
+      :tenderId="tenderId"
       @success="handleSuccess"
       @cancel="handleCancel"
     />
@@ -20,9 +20,9 @@ const router = useRouter();
 
 defineOptions({ name: "award-approval-detail" });
 
-// 从路由参数获取 tenderId  awardId
-const tenderId = Number(route.query.tenderId); // 事项ID
-const awardId = Number(route.query.awardId); // 定标审批ID
+// 从路由参数获取
+const billId = Number(route.query.billId); // 单据ID
+const tenderId = Number(route.query.tenderId); // 招标事项id
 
 const handleSuccess = () => {
   router.back();

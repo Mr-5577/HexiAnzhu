@@ -1,0 +1,239 @@
+<!-- 合同选择弹窗组件 -->
+<template>
+  <base-modal
+    v-model="dialogVisible"
+    title="选择合同"
+    width="1400px"
+    :confirm-loading="confirmLoading"
+    :confirm-text="'确定'"
+    @confirm="handleConfirm"
+    @close="handleClose"
+  >
+    <div class="contract-select-wrapper">
+      <!-- 筛选区域 -->
+      <el-form
+        :model="queryParams"
+        ref="queryRef"
+        :inline="true"
+        size="default"
+      >
+        <el-form-item label="合同名称" prop="conName">
+          <el-input
+            v-model="queryParams.conName"
+            placeholder="请输入合同名称"
+            clearable
+            style="width: 200px"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="handleQuery">查询</el-button>
+          <!-- <el-button @click="handleReset">重置</el-button> -->
+        </el-form-item>
+      </el-form>
+
+      <base-table
+        ref="tableRef"
+        :row-key="'id'"
+        :columns="tableColumns"
+        :table-data="tableData"
+        :loading="tableLoading"
+        :height="'400px'"
+        :highlight-current-row="true"
+        :pagination="false"
+        :selectionMode="props.selectionMode"
+        @selection-change="handleSelectionChange"
+      >
+      </base-table>
+    </div>
+  </base-modal>
+</template>
+
+<script setup lang="ts">
+import { ref, watch } from "vue";
+import { ElMessage } from "element-plus";
+import { buildTree } from "@/utils/tree";
+import { supTypeApi } from "@/api/cost/master-data/supplier-category-api";
+import { supplierApi } from "@/api/cost/supplier/supplier-ledger-api";
+import type {
+  Supplier,
+  SupplierQueryParams,
+} from "@/types/cost/supplier/supplier-ledger-type";
+import type {
+  SupplierTypeTreeNode,
+  SupplierType,
+} from "@/types/cost/master-data/supplier-category-type";
+import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api";
+
+// Props
+interface Props {
+  modelValue: boolean;
+  selectionMode?: "single" | "multiple"; // 选择模式，单选或多选
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  modelValue: false,
+  selectionMode: "single",
+});
+
+// Emits
+const emit = defineEmits<{
+  "update:modelValue": [value: boolean];
+  select: [row: Supplier[]];
+}>();
+
+// 弹窗显示状态
+const dialogVisible = ref(props.modelValue);
+// 确认按钮loading
+const confirmLoading = ref(false);
+// 表格loading
+const tableLoading = ref(false);
+// 表格数据
+const tableData = ref<Supplier[]>([]);
+// 选中行数据
+const selectedRows = ref<Supplier[]>([]);
+// 表格ref
+const tableRef = ref();
+
+// 查询参数
+const queryParams = ref({
+  projId: undefined,
+  conName: "",
+});
+
+// 表格列配置
+const tableColumns = [
+  { type: "selection", width: 50, fixed: "left" },
+  { type: "index", label: "序号", width: 60, fixed: "left" },
+  { prop: "segId", label: "业务板块", width: 150 },
+  { prop: "projId", label: "项目名称", width: 200 },
+  { prop: "conTypeId", label: "合同分类", width: 150 },
+  { prop: "conSysNo", label: "合同编号", minWidth: 220 },
+  { prop: "conName", label: "合同名称", width: 150 },
+  { prop: "conProperty", label: "合同类型", width: 150 },
+  { prop: "supId", label: "供应商名称", minWidth: 150 },
+  { prop: "signAmt", label: "签约金额(含税)", minWidth: 150 },
+  { prop: "signExclAmt", label: "签约金额(不含税)", minWidth: 150 },
+  { prop: "settleAmt", label: "结算金额", minWidth: 150 },
+  { prop: "priceType", label: "计价方式", minWidth: 150 },
+  { prop: "signDate", label: "签订日期", minWidth: 120 },
+  { prop: "effectiveDate", label: "生效日期", minWidth: 120 },
+  { prop: "expiryDate", label: "到期日期", minWidth: 120 },
+  { prop: "conStatus", label: "合同状态", minWidth: 120 },
+];
+
+// 重置状态
+const resetState = () => {
+  selectedRows.value = [];
+  queryParams.value = {
+    projId: undefined,
+    conName: "",
+  };
+  // 清除表格高亮
+  setTimeout(() => {
+    if (tableRef.value) {
+      tableRef.value.clearCurrentRow();
+    }
+  }, 0);
+};
+
+// 查询列表
+const getSupplierList = async () => {
+  try {
+    tableLoading.value = true;
+    tableData.value = [];
+    const params = {
+      ...queryParams.value,
+    };
+    const res = await contractLedgerApi.getContractLedgerList(params);
+    if (res.code === 200) {
+      tableData.value = res.data || [];
+    }
+  } catch (error) {
+    ElMessage.error("加载列表失败");
+  } finally {
+    tableLoading.value = false;
+  }
+};
+
+// 查询
+const handleQuery = () => {
+  getSupplierList();
+};
+
+// 重置
+const handleReset = () => {
+  queryParams.value = {
+    projId: undefined,
+    conName: "",
+  };
+  handleQuery();
+};
+
+const handleSelectionChange = (row: Supplier[]) => {
+  selectedRows.value = row;
+};
+
+// 确认选择
+const handleConfirm = () => {
+  if (!selectedRows.value || selectedRows.value.length === 0) {
+    ElMessage.warning("请先选择一条合同数据");
+    return;
+  }
+  confirmLoading.value = true;
+  emit("select", selectedRows.value);
+  handleClose();
+  confirmLoading.value = false;
+};
+
+// 关闭弹窗
+const handleClose = () => {
+  dialogVisible.value = false;
+  selectedRows.value = [];
+};
+
+// 监听modelValue
+watch(
+  () => props.modelValue,
+  (val) => {
+    dialogVisible.value = val;
+    if (val) {
+      // 打开弹窗时重置状态并加载数据
+      resetState();
+      handleQuery();
+    }
+  },
+);
+
+watch(dialogVisible, (val) => {
+  emit("update:modelValue", val);
+});
+
+// 暴露方法供父组件调用
+defineExpose({
+  open: () => {
+    dialogVisible.value = true;
+  },
+  close: () => {
+    handleClose();
+  },
+});
+</script>
+
+<style lang="scss" scoped>
+.contract-select-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 500px;
+
+  :deep(.base-table) {
+    .el-table__row {
+      cursor: pointer;
+    }
+
+    .current-row {
+      background-color: #ecf5ff;
+    }
+  }
+}
+</style>

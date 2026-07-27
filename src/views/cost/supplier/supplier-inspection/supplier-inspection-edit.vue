@@ -682,7 +682,7 @@ const handleViewAnnex = async (row: any) => {
     return;
   }
   try {
-    // 方案一：如果附件ID存在，通过接口获取附件URL
+    // 如果附件ID存在，通过接口获取附件URL
     const res = await commonApi.getFileList({ annexId: row.inspectAnnexId });
     if (res.code === 200 && res.data && res.data.length > 0) {
       const file = res.data[0];

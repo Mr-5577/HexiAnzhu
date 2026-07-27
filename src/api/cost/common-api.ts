@@ -107,7 +107,7 @@ export const commonApi = {
    * @param data - 请求参数
    * @param data.oaRequestId - OA流程请求ID
    */
-  generateRedirectUrl: (data: { oaRequestId: number }) => {
+  generateRedirectUrl: (data: { oaRequestId: string }) => {
     return http.formPost("/workflow/generateRedirectUrl", data);
   },
 };

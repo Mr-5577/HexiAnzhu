@@ -3,8 +3,8 @@
   <div class="bid-bond-refund-edit-page">
     <BondRefundForm
       mode="edit"
-      :tender-id="tenderId"
-      :bondRefundId="bondRefundId"
+      :billId="billId"
+      :tenderId="tenderId"
       @success="handleSuccess"
       @cancel="handleCancel"
     />
@@ -20,9 +20,9 @@ const router = useRouter();
 
 defineOptions({ name: "bid-bond-refund-edit" });
 
-// 从路由参数获取 tenderId  bondRefundId
-const tenderId = Number(route.query.tenderId); // 事项ID
-const bondRefundId = Number(route.query.bondRefundId); // 投标保证金退还ID
+// 从路由参数获取 
+const billId = Number(route.query.billId); // 单据ID
+const tenderId = Number(route.query.tenderId); // 招标事项id
 
 const handleSuccess = () => {
   router.back();

@@ -3,8 +3,8 @@
   <div class="reference-price-detail-page">
     <ReferencePriceForm
       mode="detail"
-      :tender-id="tenderId"
-      :refer-id="referId"
+      :billId="billId"
+      :tenderId="tenderId"
       @success="handleSuccess"
       @cancel="handleCancel"
     />
@@ -20,9 +20,9 @@ const router = useRouter();
 
 defineOptions({ name: "reference-price-detail" });
 
-// 从路由参数获取 tenderId  referId
-const tenderId = Number(route.query.tenderId); // 事项ID
-const referId = Number(route.query.referId); // 招标参考价ID
+// 从路由参数获取 
+const billId = Number(route.query.billId); // 单据ID
+const tenderId = Number(route.query.tenderId); // 招标事项id
 
 const handleSuccess = () => {
   router.back();

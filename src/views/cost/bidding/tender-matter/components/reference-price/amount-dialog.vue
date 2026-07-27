@@ -6,35 +6,48 @@
     width="1000px"
     :close-on-click-modal="false"
     :confirm-loading="submitLoading"
+    :showConfirmButton="!disabled"
+    :showCancelButton="!disabled"
     @close="handleClose"
-    @cancel="handleClose"
     @confirm="handleConfirm"
   >
     <div class="amount-table">
-      <div class="table-header">
-        <el-button type="primary" :icon="Plus" @click="handleAdd">
-          添加
-        </el-button>
-      </div>
+      <template v-if="disabled">
+        <base-table
+          :columns="detailColumns"
+          :tableData="tableData"
+          :rowKey="'id'"
+          :height="'400px'"
+          :pagination="false"
+        />
+      </template>
 
-      <editable-table
-        ref="detailtableRef"
-        :row-key="'uuid'"
-        :height="'400px'"
-        v-model="tableData"
-        :columns="dynamicColumns"
-        :loading="tableLoading"
-        :pagination="false"
-        :highlight-current-row="false"
-        :show-summary="false"
-        @data-change="handleDataChange"
-      >
-        <template #actions="{ row }">
-          <el-button link type="danger" @click="handleDelete(row)">
-            删除
+      <template v-else>
+        <div class="table-header">
+          <el-button type="primary" :icon="Plus" @click="handleAdd">
+            添加
           </el-button>
-        </template>
-      </editable-table>
+        </div>
+
+        <editable-table
+          ref="detailtableRef"
+          :row-key="'uuid'"
+          :height="'400px'"
+          v-model="tableData"
+          :columns="dynamicColumns"
+          :loading="tableLoading"
+          :pagination="false"
+          :highlight-current-row="false"
+          :show-summary="false"
+          @data-change="handleDataChange"
+        >
+          <template #actions="{ row }">
+            <el-button link type="danger" @click="handleDelete(row)">
+              删除
+            </el-button>
+          </template>
+        </editable-table>
+      </template>
     </div>
   </base-modal>
 </template>
@@ -49,15 +62,18 @@ import type { AmountItem } from "@/types/cost/bidding/bidding-management-type";
 import { costCategoryApi } from "@/api/cost/master-data/cost-category-api";
 import { goalCostApi } from "@/api/cost/cost-setting/goal-cost-api";
 import { ElMessage } from "element-plus";
+import { buildTree } from "@/utils/tree";
 
 // Props
 interface Props {
   modelValue: boolean;
+  disabled?: boolean;
   currentRowData?: any; // 当前行数据
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
+  disabled: false,
   currentRowData: null,
 });
 
@@ -72,8 +88,16 @@ const dialogVisible = ref(props.modelValue);
 const submitLoading = ref(false);
 const tableLoading = ref(false);
 const tableData = ref<AmountItem[]>([]);
+const flatSubjectOptions = ref([]);
 const subjectOptions = ref([]);
+const costList = ref([]);
 
+const detailColumns = [
+  { type: "index", label: "序号", width: 60 },
+  { prop: "subName", label: "目标成本科目", width: 240 },
+  { prop: "subAmount", label: "不含税参考价金额", width: 200 },
+  { prop: "amountRemark", label: "参考价说明" },
+];
 // 表格列配置
 const dynamicColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
@@ -81,11 +105,22 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
     prop: "subId",
     label: "目标成本科目",
     editable: true,
-    editType: "select",
+
+    editType: "cascader",
+    showOverflowTooltip: false,
+    width: 200,
     optionLabelField: "subName",
     optionValueField: "id",
-    showOverflowTooltip: false,
-    options: subjectOptions.value,
+    options: subjectOptions.value || [],
+    showAllLevels: false,
+    cascaderProps: {
+      children: "children", // 指定子节点字段名
+      label: "subName", // 指定标签字段名
+      value: "id", // 指定值字段名
+      emitPath: false, // 只返回叶子节点的值
+      showAllLevels: false, // 不显示所有层级
+      checkStrictly: false,
+    },
   },
   {
     prop: "subAmount",
@@ -93,6 +128,7 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
     editable: true,
     editType: "number",
     placeholder: "请输入金额",
+    width: 200,
     showOverflowTooltip: false,
   },
   {
@@ -132,29 +168,57 @@ const handleDelete = (row) => {
 // 数据变化处理
 const handleDataChange = async ({ row, column, newValue }: any) => {
   if (column === "subId") {
-    const selected = subjectOptions.value.find((opt) => opt.id === newValue);
+    const selected = flatSubjectOptions.value.find(
+      (opt) => opt.id === newValue,
+    );
     if (selected) {
       row.subName = selected.subName;
     }
+    row.subAmount = 0; // 切换科目时重置参考价金额
     row.costExclAmt = 0; // 切换科目时重置目标成本总额
-    // 通过选中的目标成本科目获取目标成本总额
-    try {
-      const params = {
-        projId: props.currentRowData?.projId,
-        subId: row.subId,
-      };
-      const res = await goalCostApi.getProjectCostDList(params);
-      if (res.code === 200) {
-        const list = res.data || [];
-        const totalCost = list.reduce(
-          (sum: number, item: any) => sum + (item.costExclAmt || 0),
-          0,
-        );
-        row.costExclAmt = totalCost;
-      }
-    } catch (error) {
-      console.error("获取目标成本总额失败:", error);
-    }
+
+    // 过滤出与当前 subId 匹配的数据
+    const filteredList = costList.value.filter(
+      (item) => item.subId === row.subId,
+    );
+    const totalCostExclAmt = filteredList.reduce(
+      (sum: number, item: any) => sum + (item.costExclAmt || 0),
+      0,
+    );
+    const totalCostAmt = filteredList.reduce(
+      (sum: number, item: any) => sum + (item.costAmt || 0),
+      0,
+    );
+    row.costExclAmt = totalCostExclAmt || 0;
+    row.subAmount = totalCostAmt || 0;
+
+    // // 通过选中的目标成本科目获取目标成本总额
+    // try {
+    //   const params = {
+    //     projId: props.currentRowData?.projId,
+    //     subId: row.subId,
+    //   };
+    //   const res = await goalCostApi.getProjectCostDList(params);
+    //   if (res.code === 200) {
+    //     const list = res.data || [];
+    //     // 过滤出与当前 subId 匹配的数据
+    //     const filteredList = list.filter(
+    //       (item: any) => item.subId === row.subId,
+    //     );
+    //     const totalCostExclAmt = filteredList.reduce(
+    //       (sum: number, item: any) => sum + (item.costExclAmt || 0),
+    //       0,
+    //     );
+    //     const totalCostAmt = filteredList.reduce(
+    //       (sum: number, item: any) => sum + (item.costAmt || 0),
+    //       0,
+    //     );
+    //     row.costExclAmt = totalCostExclAmt;
+    //     row.subAmount = totalCostAmt;
+    //   }
+    // } catch (error) {
+    //   console.error("获取目标成本总额失败:", error);
+    // }
   }
 };
 
@@ -172,13 +236,25 @@ const getCostSubjectProjList = async () => {
       withDetail: true,
     });
     if (res.code === 200) {
-      subjectOptions.value = res.data || [];
+      flatSubjectOptions.value = res.data || [];
+      subjectOptions.value = buildTree(res.data || []);
     } else {
       ElMessage.error(res.msg || "获取数据失败");
     }
   } catch (error) {
     console.error("获取数据失败:", error);
   }
+};
+// 通过项目获取目标成本信息
+const getProjectCostDList = async () => {
+  try {
+    const res = await goalCostApi.getProjectCostDList({
+      projId: props.currentRowData?.projId,
+    });
+    if (res.code === 200) {
+      costList.value = res.data || [];
+    }
+  } catch (error) {}
 };
 /**
  * 初始化页面数据
@@ -189,17 +265,39 @@ const initPage = () => {
     ...item,
     uuid: uuidv4(), // 为每行数据添加唯一标识
   }));
+  console.log("tableData", tableData.value);
 };
 
 // 确认提交
 const handleConfirm = async () => {
   console.log("tableData", tableData.value);
+  if (!tableData.value.length) {
+    ElMessage.error("请添加数据");
+    return;
+  }
   if (tableData.value.some((item) => !item.subId)) {
     ElMessage.error("请选择列表中的目标成本科目");
     return;
   }
   if (tableData.value.some((item) => !item.subAmount)) {
     ElMessage.error("请填写列表中的不含税参考价金额");
+    return;
+  }
+  // 检查是否有重复科目
+  const subIdMap = new Map();
+  const duplicateSubIds: number[] = [];
+
+  for (const item of tableData.value) {
+    if (item.subId) {
+      if (subIdMap.has(item.subId)) {
+        duplicateSubIds.push(item.subId);
+      } else {
+        subIdMap.set(item.subId, true);
+      }
+    }
+  }
+  if (duplicateSubIds.length > 0) {
+    ElMessage.error(`存在重复的目标成本科目，请检查后再提交`);
     return;
   }
   emit("confirm", tableData.value);
@@ -219,7 +317,12 @@ watch(
     if (val) {
       // 打开弹窗时加载数据
       await getCostSubjectProjList();
+      // 通过项目获取目标成本信息
+      await getProjectCostDList();
       initPage();
+    } else {
+      // 关闭弹窗时重置数据
+      tableData.value = [];
     }
   },
 );

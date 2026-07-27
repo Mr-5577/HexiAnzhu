@@ -1,3 +1,5 @@
+
+<!-- 发票明细 弹窗组件 -->
 <template>
   <base-modal
     v-model="dialogVisible"

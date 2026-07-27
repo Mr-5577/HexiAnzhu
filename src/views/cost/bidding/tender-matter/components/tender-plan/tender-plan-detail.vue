@@ -3,8 +3,8 @@
   <div class="tender-plan-detail-page">
     <TenderPlanForm
       mode="detail"
-      :tender-id="tenderId"
-      :plan-id="planId"
+      :billId="billId"
+      :tenderId="tenderId"
       @success="handleSuccess"
       @cancel="handleCancel"
     />
@@ -20,9 +20,9 @@ const router = useRouter();
 
 defineOptions({ name: "tender-plan-detail" });
 
-// 从路由参数获取 tenderId  planId
-const tenderId = Number(route.query.tenderId); // 事项ID
-const planId = Number(route.query.planId); // 计划ID
+// 从路由参数获取 
+const billId = Number(route.query.billId); // 单据ID
+const tenderId = Number(route.query.tenderId); // 招标事项id
 
 const handleSuccess = () => {
   router.back();

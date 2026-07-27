@@ -15,6 +15,7 @@ declare module 'vue' {
     BaseModal: typeof import('./src/components/base/base-modal.vue')['default']
     BaseTable: typeof import('./src/components/base/base-table.vue')['default']
     BaseUpload: typeof import('./src/components/base/base-upload.vue')['default']
+    ChooseContractDialog: typeof import('./src/components/business/choose-contract-dialog.vue')['default']
     ChooseSupplierDialog: typeof import('./src/components/business/choose-supplier-dialog.vue')['default']
     EditableTable: typeof import('./src/components/base/editable-table.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']
@@ -73,6 +74,7 @@ declare module 'vue' {
     ProjectTreeSelector2: typeof import('./src/components/business/project-tree-selector2.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    'SectorCompanyProjectTreet.vue': typeof import('./src/components/business/sector-company-project-treet.vue.vue')['default']
     UrbanProjectTree: typeof import('./src/components/business/urban-project-tree.vue')['default']
   }
   export interface GlobalDirectives {
