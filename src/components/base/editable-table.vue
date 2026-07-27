@@ -100,8 +100,22 @@
               :precision="getNumberPrecision(column)"
               :min="0"
               :placeholder="column.placeholder || '请输入'"
+              :formatter="
+                (value: any) =>
+                  column.thousandSeparator
+                    ? formatThousand(value, column)
+                    : value
+              "
+              :parser="
+                (value: string) =>
+                  column.thousandSeparator ? parseThousand(value) : value
+              "
               @change="handleSave(row, column, $index)"
-            />
+            >
+              <template v-if="column.prefix" #prefix>
+                <span class="input-prefix-inner">{{ column.prefix }}</span>
+              </template>
+            </el-input-number>
 
             <!-- 文本域 -->
             <el-input
@@ -345,6 +359,23 @@ const actualData = computed(() => {
   return props.tableData;
 });
 
+// 千分位格式化
+const formatThousand = (value: any, column: EditableColumn): string => {
+  if (value === null || value === undefined || value === '') return '';
+  const num = typeof value === 'string' ? parseFloat(value) : value;
+  if (isNaN(num)) return '';
+  const precision = column.precision !== undefined ? column.precision : 2;
+  return num.toLocaleString('en-US', {
+    minimumFractionDigits: precision > 0 ? precision : 0,
+    maximumFractionDigits: precision > 0 ? precision : 0,
+  });
+};
+
+// 解析千分位
+const parseThousand = (value: string): string => {
+  if (!value) return '';
+  return value.replace(/,/g, '');
+};
 /**
  * 获取列的 disabled 状态（支持布尔值或函数）
  */
@@ -908,7 +939,11 @@ defineExpose({
     }
   }
 }
-
+.input-prefix-inner {
+  color: var(--el-text-color-regular);
+  font-weight: 500;
+  font-size: 12px;
+}
 // 表格单元格样式
 :deep(.el-table) {
   .cell {
