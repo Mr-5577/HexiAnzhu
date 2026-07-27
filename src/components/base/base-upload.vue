@@ -41,6 +41,7 @@ import { ref, computed } from "vue";
 import { ElMessage } from "element-plus";
 import type { UploadFile, UploadProps } from "element-plus";
 import { getApiBaseUrl } from "@/utils/config";
+import { buildFileUrl } from "@/utils/file-path-util";
 
 // 附件信息接口
 interface AnnexInfo {
@@ -238,6 +239,10 @@ const handleError: UploadProps["onError"] = (_, file) => {
 // 移除文件
 const handleRemove: UploadProps["onRemove"] = (file, fileData) => {
   console.log("handleRemove", file, fileData);
+  if (props.disabled) {
+    ElMessage.warning("当前处于禁用状态，无法删除文件");
+    return;
+  }
   const fileId = (file as FileItem).id;
   if (fileId) {
     const newFileList = props.fileList.filter((f) => f.id !== fileId);
@@ -251,10 +256,16 @@ const handleRemove: UploadProps["onRemove"] = (file, fileData) => {
 };
 
 // 预览文件
-const handlePreview: UploadProps["onPreview"] = (file) => {
+const handlePreview: UploadProps["onPreview"] = (file: any) => {
+  console.log("handlePreview", file);
   // if (file.url) {
   //   window.open(file.url, "_blank");
   // }
+  if (file && file.annexPath) {
+    const url = buildFileUrl(file.annexPath);
+    // 直接在新窗口打开
+    window.open(url, "_blank");
+  }
 };
 
 // 超出数量限制
@@ -311,7 +322,16 @@ defineExpose({
     }
   }
 }
-
+// ✅ 禁用状态下隐藏删除按钮
+:deep(.el-upload-list--disabled) {
+  .el-upload-list__item {
+    .el-upload-list__item-actions {
+      .el-upload-list__item-delete {
+        display: none !important;
+      }
+    }
+  }
+}
 .el-upload__tip {
   margin-top: 8px;
   font-size: 12px;
