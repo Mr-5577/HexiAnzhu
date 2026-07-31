@@ -4,6 +4,7 @@
     v-model="dialogVisible"
     title="成本分摊"
     width="1400px"
+    :top="'8vh'"
     :confirm-loading="confirmLoading"
     :confirm-text="'确定'"
     @confirm="handleConfirm"

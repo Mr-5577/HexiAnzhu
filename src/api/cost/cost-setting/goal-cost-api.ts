@@ -196,4 +196,12 @@ export const goalCostApi = {
   getCostBillInfo: (params: { costMId: number }) => {
     return http.get("/cost/bill/getInfo", params);
   },
+  /**
+   * @name 查询上一版目标成本版本明细
+   * @param data - 查询参数
+   * @param data.costMid - 目标成本版本ID（必填）
+   */
+  getCostPrevList: (data: { costMid: number }) => {
+    return http.post("/cost/projectCostD/getPrevList", data);
+  },
 };

@@ -310,6 +310,7 @@ const handleDetail = (row: HCstProjectCostM) => {
       mode: "add",
       projId: row.projId, // 项目ID
       costMid: row.id, // 成本版本ID
+      areaVerMid: row.areaVerMid, // 面积版本ID
     },
   });
 };
@@ -332,6 +333,8 @@ const handleViewProcess = async (row: HCstProjectCostM) => {
       } catch (error) {
         console.error("查看流程失败:", error);
       }
+    } else {
+      ElMessage.warning("未找到审批流程");
     }
   }
 };

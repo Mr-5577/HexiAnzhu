@@ -89,12 +89,14 @@ interface Props {
   mode: "add" | "edit" | "detail";
   costMid?: undefined | number;
   projId?: undefined | number;
+  areaVerMid?: undefined | number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   mode: "add",
   costMid: undefined,
   projId: undefined,
+  areaVerMid: undefined,
 });
 
 const route = useRoute();
@@ -110,7 +112,6 @@ const saveLoading = ref(false);
 const tableLoading = ref(false);
 const tableData = ref([]);
 const annexFileList = ref([]);
-const detailInfo = ref(null);
 const detailTableList = ref([]); // 目标成本明细列表
 
 const flowBaseData = ref(null); // 流程基础信息
@@ -489,7 +490,7 @@ const buildTreeWithProducts = (nodes: any[]): any[] => {
  * 为所有节点（包括父级）初始化业态金额字段
  */
 const generateCombinations = async () => {
-  // 为每个科目节点添加业态数据
+  // 为每个科目节点添加基础业态数据
   const treeData = buildTreeWithProducts(subjectOptions.value);
   // 计算所有节点的小计（包括各业态汇总）
   tableData.value = calculateAllTotals(treeData);
@@ -668,7 +669,7 @@ const handleBatchSave = async () => {
   try {
     saveLoading.value = true;
     const params = {
-      costM: { id: detailInfo.value?.costM?.id },
+      costM: { id: props.costMid },
       costDList: saveData || [],
       annexList: annexFileList.value || [],
     };
@@ -693,9 +694,14 @@ const getDetailData = async () => {
     });
     console.log("详情res", res);
     if (res.code === 200 && res.data) {
-      detailInfo.value = res.data;
       const { costDList, annexList } = res.data;
-      detailTableList.value = costDList || [];
+      // 如果详情信息里面有明细数据表示之前已经保存过，直接回显，否则查询上一版面积明细
+      if (costDList && costDList.length > 0) {
+        detailTableList.value = costDList || [];
+      } else {
+        // 查询上一版面积明细
+        await getPrevVersionDetail();
+      }
 
       annexFileList.value = (annexList || [])?.map((item) => {
         return {
@@ -707,6 +713,24 @@ const getDetailData = async () => {
     }
   } catch (error) {}
 };
+
+// 获取上一版面积版本明细
+const getPrevVersionDetail = async () => {
+  if (!props.areaVerMid) return;
+  try {
+    const res = await goalCostApi.getCostPrevList({
+      costMid: props.costMid,
+    });
+    if (res.code === 200 && res.data) {
+      // console.log("上一版面积版本明细:", res.data);
+      // 回显上一版本明细数据到表格
+      detailTableList.value = res.data || [];
+    }
+  } catch (error) {
+    ElMessage.error("加载数据失败");
+  }
+};
+
 // 1. 新增：回显详情数据到表格（在表格数据生成后调用）
 const fillDetailDataToTable = (detailData: any[]) => {
   if (!detailData?.length) return;
@@ -769,6 +793,7 @@ const initOptions = async () => {
     getProductList(), // 项目下的业态
   ]);
 };
+
 // 初始化处理
 const syncRouteState = async () => {
   try {
@@ -776,18 +801,17 @@ const syncRouteState = async () => {
     // 获取下拉数据
     await initOptions();
 
+    // 先把基础科目和业态组合成基础列表数据
+    await generateCombinations(); // 生成组合列表数据并回填基础数据
+
     // 获取详情数据
     await getDetailData();
 
-    // 所有数据加载完成后，组合列表数据
-    await nextTick(); // 确保数据已更新
-    await generateCombinations(); // 生成组合列表数据并回填基础数据
-    // console.log("组合列表数据", tableData.value);
-    // 4. 如果有详情数据，回显到表格
-    if (detailTableList.value.length > 0) {
+    // 如果有明细数据，回显到表格
+    if (detailTableList.value && detailTableList.value.length > 0) {
       fillDetailDataToTable(detailTableList.value);
-      // console.log("组合列表数据（回显后）", tableData.value);
     }
+    // console.log("组合列表数据", tableData.value);
   } catch (error) {
     console.error("初始化数据失败:", error);
   } finally {

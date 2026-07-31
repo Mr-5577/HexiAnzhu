@@ -21,6 +21,7 @@
       @viewFlow="handleViewProcess"
     >
     </BillHeader>
+
     <div class="form-scroll-area">
       <el-form
         ref="paymentFormRef"
@@ -29,127 +30,14 @@
         label-width="120px"
         class="adapt-form"
       >
-        <div class="item-card">
-          <el-row :gutter="24">
-            <el-col :xs="24" :sm="12" :md="12" :lg="18" :xl="18">
-              <el-form-item label="标题" prop="bizTitle" required>
-                <el-input
-                  v-model="formData.bizTitle"
-                  clearable
-                  placeholder="标题"
-                  :disabled="isDetail || !!billData.status"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="审批状态" prop="approvalStatus">
-                <el-tag
-                  :type="getEnumType(conBillStatusEnum, billData?.status || 0)"
-                >
-                  {{ getEnumLabel(conBillStatusEnum, billData?.status || 0) }}
-                </el-tag>
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row :gutter="24">
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="业务板块" prop="segId" required>
-                <el-input
-                  v-model="formData.segName"
-                  disabled
-                  placeholder="业务板块"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="板块编码" prop="segNo">
-                <el-input
-                  v-model="formData.segNo"
-                  clearable
-                  disabled
-                  placeholder="板块编码"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="部门" prop="deptName">
-                <el-input
-                  v-model="formData.deptName"
-                  clearable
-                  disabled
-                  placeholder="部门"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="分部" prop="mguName">
-                <el-input
-                  v-model="formData.mguName"
-                  clearable
-                  disabled
-                  placeholder="分部"
-                />
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row :gutter="24">
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="所属项目" prop="projId" required>
-                <el-cascader
-                  ref="projCascaderRef"
-                  v-model="formData.projId"
-                  :options="projectOptions"
-                  :show-all-levels="false"
-                  :props="{
-                    expandTrigger: 'hover',
-                    emitPath: false,
-                    checkStrictly: false,
-                    value: 'orgId',
-                    label: 'orgName',
-                    children: 'children',
-                  }"
-                  placeholder="请选择项目"
-                  style="width: 100%"
-                  filterable
-                  :disabled="isDetail || !!billData.status"
-                  @change="changeProject"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="项目所属公司" prop="compName">
-                <el-input
-                  v-model="formData.compName"
-                  clearable
-                  placeholder="项目所属公司"
-                  disabled
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="提交人" prop="userName">
-                <el-input
-                  v-model="formData.userName"
-                  clearable
-                  disabled
-                  placeholder="提交人"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="提交时间" prop="createDate">
-                <el-date-picker
-                  v-model="formData.createDate"
-                  type="date"
-                  placeholder="提交时间"
-                  style="width: 100%"
-                  value-format="YYYY-MM-DD"
-                  disabled
-                />
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </div>
+        <BillInfo
+          v-model="formData"
+          :status="billData?.status || 0"
+          :disabled="isDetail || !!billData.status"
+          :project-options="projectOptions"
+          @project-change="changeProject"
+        />
+
         <div class="item-card">
           <div class="section-title">立项信息</div>
           <el-row :gutter="24">
@@ -690,6 +578,7 @@ import { buildFileUrl } from "@/utils/file-path-util.ts";
 import UploadInvoiceDialog from "@/components/business/upload-invoice-dialog.vue";
 import { buildTree } from "@/utils/tree.ts";
 import BillHeader from "@/components/business/bill-components/bill-header.vue";
+import BillInfo from "@/components/business/bill-components/bill-info.vue";
 
 defineOptions({ name: "cst-payment-form" });
 
@@ -715,8 +604,6 @@ const mode = ref<"add" | "edit" | "detail">(props.mode);
 const isDetail = computed(() => mode.value === "detail");
 const isEdit = computed(() => mode.value === "edit");
 const isAdd = computed(() => mode.value === "add");
-
-const projCascaderRef = useTemplateRef("projCascaderRef");
 
 const payTypeOptions = ref([]);
 const dedTypeOptions = ref([]);
