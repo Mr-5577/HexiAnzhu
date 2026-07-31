@@ -109,11 +109,11 @@ import {
   SubscriptionStatisticsMonthColumns,
   SubscriptionStatisticsDayColumns,
 } from "./project-columns";
-import { assetManagementApi } from "@/api/asset-management-api";
+import { assetManagementApi } from "@/api/sales/asset-management-api";
 import type {
   DayTableInterface,
   MonthTableInterface,
-} from "@/types/subscription-statistics-type";
+} from "@/types/sales/subscription-statistics-type";
 import { useSalesData } from "@/composables/use-sales";
 import { dateUtil } from "@/utils/date-util";
 import { ElMessage } from "element-plus";
@@ -209,7 +209,6 @@ const getParams = () => ({
     queryParams.value.type === "month"
       ? `${queryParams.value.day}-01 00:00:00`
       : `${queryParams.value.day} 00:00:00`,
-  current: currentPage.value,
 });
 // 获取列表
 const getTableList = async () => {

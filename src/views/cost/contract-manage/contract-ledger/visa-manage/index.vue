@@ -1,0 +1,191 @@
+<!-- 签证管理 列表 -->
+<template>
+  <div class="visa-management-wrapper">
+    <base-table
+      :columns="tableColumns"
+      :tableData="tableData"
+      :loading="tableLoading"
+      :rowKey="'id'"
+      :pagination="false"
+    >
+      <!-- 列表外操作栏 -->
+      <template #actionBar>
+        <div class="actionBar-buttons">
+          <el-button type="primary" icon="Refresh" @click="handleRefresh">
+            刷新列表
+          </el-button>
+          <el-button type="primary" @click="handleAdd"> 新增 </el-button>
+        </div>
+      </template>
+      <template #status="{ row }">
+        {{ getStatusText(row.status) }}
+      </template>
+      <template #actions="{ row }">
+        <el-button type="primary" link @click="handleEdit(row)">
+          编辑
+        </el-button>
+        <el-button type="danger" link @click="handleDelete(row)">
+          删除
+        </el-button>
+        <el-button type="primary" link> 审批 </el-button>
+      </template>
+    </base-table>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, watch, onMounted } from "vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import type { TableColumnItem } from "@/components/base/base-table.vue";
+import { ContractVisa } from "@/types/cost/contract-manage/visa-management-type.ts";
+import { visaManagementApi } from "@/api/cost/contract-manage/visa-management-api.ts";
+import { useRouter } from "vue-router";
+
+defineOptions({ name: "visa-management" });
+
+const props = defineProps<{
+  conId: number | null;
+}>();
+
+const router = useRouter();
+const tableLoading = ref(false);
+const tableData = ref<ContractVisa[]>([]);
+
+const tableColumns: TableColumnItem[] = [
+  { type: "index", label: "序号", width: 60 },
+  { prop: "ww", label: "变更类型" },
+  { prop: "visaType", label: "签证类型" },
+  { slot: "ww", label: "变更事项" },
+  { prop: "visaApplyAmt", label: "签证金额" },
+  { slot: "ww", label: "执行状态" },
+  { slot: "status", label: "状态" },
+  { prop: "ww", label: "申请人" },
+  { prop: "ww", label: "申请时间" },
+  // { prop: "visaApplyDesc", label: "签证申报说明", width: 200 },
+  // { prop: "costingReviewAmt", label: "成本审核金额", width: 120 },
+  // { prop: "costingCutAmt", label: "成本审减金额", width: 120 },
+  // { prop: "costingOpinion", label: "成本审核意见", width: 200 },
+  // { prop: "wasteCostAmt", label: "无效成本金额", width: 120 },
+  // { prop: "wasteCostReasonId", label: "无效成本原因", width: 120 },
+  // { prop: "auditReviewAmt", label: "审计审核金额", width: 120 },
+  // { prop: "auditCutAmt", label: "审计审减金额", width: 120 },
+  // { prop: "auditOpinion", label: "审计审核意见", width: 200 },
+  {
+    label: "操作",
+    width: 200,
+    slot: "actions",
+    fixed: "right",
+  },
+];
+const getStatusText = (status: number) => {
+  //  状态：0-草稿 5-审批中 10-已审批 30-已作废
+  switch (status) {
+    case 0:
+      return "草稿";
+    case 5:
+      return "审批中";
+    case 10:
+      return "已审批";
+    case 30:
+      return "已作废";
+    default:
+      return "未知状态";
+  }
+};
+// 获取列表数据
+const getDataList = async () => {
+  if (!props.conId) {
+    return;
+  }
+  try {
+    tableLoading.value = true;
+    tableData.value = [];
+    const res = await visaManagementApi.getVisaList({
+      conId: props.conId,
+    });
+    if (res.code === 200) {
+      tableData.value = res.data;
+    }
+  } catch (error) {
+    console.error("获取工程核价列表失败:", error);
+  } finally {
+    tableLoading.value = false;
+  }
+};
+
+const handleDelete = (row) => {
+  ElMessageBox.confirm("确定删除该数据吗？", "提示", { type: "warning" })
+    .then(async () => {
+      try {
+        const res = await visaManagementApi.delVisa({ id: row.id });
+        if (res.code === 200) {
+          ElMessage.success("删除成功");
+          getDataList();
+        }
+      } catch (error) {
+        console.error("删除失败:", error);
+      }
+    })
+    .catch(() => {});
+};
+// 刷新按钮
+const handleRefresh = () => {
+  getDataList();
+};
+
+// 新增
+const handleAdd = () => {
+  router.push({
+    path: "/con/visa-manage/add",
+    query: {
+      conId: props.conId,
+      t: Date.now(),
+    },
+  });
+};
+
+// 编辑
+const handleEdit = async (row: ContractVisa) => {
+  router.push({
+    path: "/con/visa-manage/edit",
+    query: {
+      conId: props.conId,
+      visaId: row.id,
+    },
+  });
+};
+
+// 监听合同ID变化，自动刷新列表
+// watch(
+//   () => props.conId,
+//   async (val) => {
+//     if (val) {
+//       getDataList();
+//     } else {
+//       tableData.value = [];
+//     }
+//   },
+//   { immediate: true },
+// );
+onMounted(() => {
+  getDataList();
+});
+</script>
+
+<style lang="scss" scoped>
+.visa-management-wrapper {
+  width: 100%;
+  height: 100%;
+  padding: 15px;
+  box-sizing: border-box;
+  background-color: #fff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  .actionBar-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+  }
+}
+</style>

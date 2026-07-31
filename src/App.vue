@@ -145,7 +145,7 @@ body {
 ::-webkit-scrollbar-thumb {
   background: var(--el-border-color-dark);
   border-radius: 3px;
-
+  cursor: pointer;
   &:hover {
     background: var(--el-border-color-darker);
   }

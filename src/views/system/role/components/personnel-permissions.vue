@@ -70,7 +70,7 @@
 
 <script setup lang="ts">
 import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
-import { roleApi } from "@/api/role-api";
+import { roleApi } from "@/api/system/role-api.ts";
 import { ElMessage, ElMessageBox } from "element-plus";
 
 import type { TableColumnItem } from "@/components/base/base-table.vue";
@@ -92,7 +92,7 @@ const modalVisible = ref(false);
 const currentPage = ref(1);
 const pageSize = ref(10);
 const total = ref(0);
-const selectionData = ref<any[]>([]);
+const selectionData = ref([]);
 const columns: TableColumnItem[] = [
   {
     type: "selection",
@@ -112,7 +112,7 @@ const columns: TableColumnItem[] = [
     slot: "action",
   },
 ];
-const tableData = ref<any[]>([]);
+const tableData = ref([]);
 // 获取数据列表
 const getDataList = async () => {
   try {

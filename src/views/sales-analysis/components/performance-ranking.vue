@@ -54,7 +54,7 @@ import BaseChart from "@/components/base/base-chart.vue";
 
 import { ref, computed, watch, onMounted, nextTick, onUnmounted } from "vue";
 import { dateUtil } from "@/utils/date-util";
-import { largeScreenApi } from "@/api/large-screen-api";
+import { largeScreenApi } from "@/api/sales/large-screen-api";
 import { useRouter } from "vue-router";
 
 const router = useRouter();

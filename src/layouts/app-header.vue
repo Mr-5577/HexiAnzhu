@@ -56,7 +56,7 @@ import { useRouter } from "vue-router";
 import { extractModules, getFirstRoutePath } from "@/utils/menu-util";
 import { useMenuStore } from "@/stores/menu-store";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { userApi } from "@/api/user-api";
+import { userApi } from "@/api/system/user-api";
 import { useUserStore } from "@/stores/user-store";
 import { useSalesData } from "@/composables/use-sales";
 
@@ -68,15 +68,9 @@ interface Props {
   activeModuleId?: number;
 }
 
-interface Emits {
-  (e: "moduleChange", module: any): void;
-}
-
 const props = withDefaults(defineProps<Props>(), {
   activeModuleId: 0,
 });
-
-const emit = defineEmits<Emits>();
 
 const router = useRouter();
 const activeNav = ref<number>(0);
@@ -126,7 +120,6 @@ watch(
 // 处理导航点击
 const handleNavClick = (module: any) => {
   activeNav.value = module.id;
-  emit("moduleChange", module);
 
   // 跳转到该模块下的第一个可访问页面
   const firstRoutePath = getFirstRoutePath(menuStore.menuData, module.id);

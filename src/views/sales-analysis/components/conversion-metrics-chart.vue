@@ -42,7 +42,7 @@ import {
   onActivated,
 } from "vue";
 import * as echarts from "echarts";
-import { largeScreenApi } from "@/api/large-screen-api";
+import { largeScreenApi } from "@/api/sales/large-screen-api";
 import { dateUtil } from "@/utils/date-util";
 import { useRouter } from "vue-router";
 const router = useRouter();

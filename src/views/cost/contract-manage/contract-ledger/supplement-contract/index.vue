@@ -45,13 +45,16 @@
         <!-- <el-button type="primary" link @click="handleDetail(row)">
           详情
         </el-button> -->
+        <el-button type="primary" link @click="handleApprove(row)">
+          审批
+        </el-button>
       </template>
     </base-table>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { useRouter } from "vue-router";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
@@ -64,6 +67,7 @@ import {
   getLabel,
   AddTypeEnum,
 } from "@/constants/contract-manage/enums";
+import { contractApprovalApi } from "@/api/cost/contract-manage/contract-approval-api";
 
 defineOptions({ name: "supplement-contract" });
 
@@ -96,7 +100,7 @@ const tableColumns: TableColumnItem[] = [
   { slot: "payMethod", label: "主合同付款方式", width: 180 },
   {
     label: "操作",
-    width: 220,
+    width: 180,
     slot: "actions",
     fixed: "right",
   },
@@ -130,25 +134,23 @@ const handleReset = () => {
 };
 const handleAdd = () => {
   router.push({
-    path: "/contract/supplement-contract/add",
+    path: "/con/supplement-contract/add",
     query: {
-      mode: "add",
       conId: props.conId, // 合同台账ID（合同单据ID）
     },
   });
 };
 const handleEdit = (row: SupplementContract) => {
   router.push({
-    path: "/contract/supplement-contract/edit",
+    path: "/con/supplement-contract/edit",
     query: {
-      mode: "edit",
       addId: row.id, // 补充合同ID
       conId: props.conId, // 合同台账ID（合同单据ID）
     },
   });
 };
 
-const handleDelete = (row) => {
+const handleDelete = (row: SupplementContract) => {
   ElMessageBox.confirm(`确定删除“${row.addName}”数据吗？`, "提示", {
     type: "warning",
   })
@@ -165,17 +167,40 @@ const handleDelete = (row) => {
     })
     .catch(() => {});
 };
-const handleDetail = (row) => {};
+// 详情
+const handleDetail = (row: SupplementContract) => {};
+// 审批
+const handleApprove = (row: SupplementContract) => {
+  return;
+  ElMessageBox.confirm(`确定审批“${row.addName}”数据吗？`, "提示", {
+    type: "warning",
+  })
+    .then(async () => {
+      try {
+        const res = await contractApprovalApi.createConAddFlow({
+          conAddId: row.id,
+        });
+        if (res.code === 200) {
+          ElMessage.success("审批成功");
+          getDataList();
+        }
+      } catch (error) {}
+    })
+    .catch(() => {});
+};
 
-watch(
-  () => props.conId,
-  (val) => {
-    if (val) {
-      getDataList();
-    }
-  },
-  { immediate: true },
-);
+// watch(
+//   () => props.conId,
+//   (val) => {
+//     if (val) {
+//       getDataList();
+//     }
+//   },
+//   { immediate: true },
+// );
+onMounted(() => {
+  getDataList();
+});
 </script>
 
 <style lang="scss" scoped>

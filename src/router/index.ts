@@ -10,9 +10,21 @@ import {
   RouteRecordRaw,
 } from "vue-router";
 import { addDynamicRoutes } from "./dynamic-routes";
-import { userApi } from "@/api/user-api";
+import { userApi } from "@/api/system/user-api";
 import { ElLoading } from "element-plus";
 import { costStaticRoutes } from "./static-routes";
+import { getEnvironmentName } from "@/utils/config";
+
+// 静态路由名称定义为常量
+const STATIC_ROUTE_NAMES = new Set([
+  "login",
+  "404",
+  "403",
+  "resetPassword",
+  "autoLogin",
+  "scanLogin",
+  "oaLogin",
+]);
 
 // 静态路由（登录页等）
 const staticRoutes: Array<RouteRecordRaw> = [
@@ -45,6 +57,14 @@ const staticRoutes: Array<RouteRecordRaw> = [
     component: () => import("@/views/login/scan-login.vue"),
     meta: {
       title: "扫码登录",
+    },
+  },
+  {
+    path: "/oaLogin",
+    name: "oaLogin",
+    component: () => import("@/views/login/oa-login.vue"),
+    meta: {
+      title: "OA登录",
     },
   },
   {
@@ -102,15 +122,7 @@ const cleanupDynamicRoutes = () => {
   // 找出动态路由（根据你的路由特征，比如meta中的标记）
   routes.forEach((route: any) => {
     // 只删除有名称且不是静态路由的路由
-    if (
-      route.name &&
-      route.name !== "login" &&
-      route.name !== "404" &&
-      route.name !== "403" &&
-      route.name !== "resetPassword" &&
-      route.name !== "autoLogin" &&
-      route.name !== "scanLogin"
-    ) {
+    if (route.name && !STATIC_ROUTE_NAMES.has(route.name)) {
       router.removeRoute(route.name);
     }
   });
@@ -133,6 +145,7 @@ const whiteListPaths = [
   "/test",
   "/autoLogin",
   "/scanLogin",
+  "/oaLogin",
   "/403",
   "/404",
   "/reset-password", // 重置密码
@@ -183,10 +196,15 @@ router.beforeEach(async (to, from, next) => {
       // console.log("获取到菜单数据:", res);
       if (res.code === 200) {
         let menuData = res.data || [];
-        // 手动管理成本模块的权限，管理员拥有成本模块的权限
-        if (localStorage.getItem("admin") === "1") {
+
+        // 手动管理成本模块的权限，开发环境和测试环境拥有成本模块的权限
+        if (
+          getEnvironmentName() == "development" ||
+          getEnvironmentName() == "test"
+        ) {
           menuData.push(costStaticRoutes);
         }
+
         // 提取按钮权限
         const buttonPermission = extractButtonPermissions(menuData);
         // console.log("权限列表:", buttonPermission);

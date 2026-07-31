@@ -1,5 +1,5 @@
 import { http } from "@/axios/service";
-import { ContractAuditPriceFormData } from "@/types/cost/contract-manage/engineering-price-type";
+import { ContractAuditPriceFormData, EngineeringPrice } from "@/types/cost/contract-manage/engineering-price-type";
 
 /**
  * 工程核价 相关接口
@@ -18,7 +18,7 @@ export const engineeringPriceApi = {
     return http.post("/con/auditPrice/add", data);
   },
   /** 编辑工程核价 */
-  editAuditPrice: (data: ContractAuditPriceFormData) => {
+  editAuditPrice: (data: EngineeringPrice) => {
     return http.post("/con/auditPrice/edit", data);
   },
   /** 删除工程核价 */

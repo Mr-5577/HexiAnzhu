@@ -1,11 +1,9 @@
 <template>
   <div
     class="tags-view-container"
-    :class="
-      route.path == '/sales-analysis/large-screen' ? 'dark-background' : ''
-    "
+    :class="isLargeScreen ? 'dark-background' : ''"
   >
-    <div class="tags-view-wrapper">
+    <div ref="wrapperRef" class="tags-view-wrapper">
       <router-link
         v-for="tag in visitedViews"
         :key="tag.uniqueId || tag.path"
@@ -42,24 +40,50 @@
 
 <script setup lang="ts">
 import { Close } from "@element-plus/icons-vue";
-import { computed, ref, onMounted, onUnmounted, watch, inject } from "vue";
+import { computed, ref, onMounted, onUnmounted, watch, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useTagsStore } from "@/stores/tags-store";
 import type { TagView } from "@/stores/tags-store";
-
-// 添加inject注入，用于清理缓存和恢复缓存
-const clearPageCache =
-  inject<(componentName: string) => void>("clearPageCache");
-const restorePageCache =
-  inject<(componentName: string) => void>("restorePageCache");
 
 const route = useRoute();
 const router = useRouter();
 const tagsStore = useTagsStore();
 
 const visitedViews = computed(() => tagsStore.visitedViews);
+const isLargeScreen = computed(
+  () => route.path === "/sales-analysis/large-screen",
+);
 
-// 右键菜单相关
+// ===== 滚轮滚动相关 =====
+const wrapperRef = ref<HTMLElement | null>(null);
+let rafId: number | null = null;
+let pendingDelta = 0;
+
+// 滚轮事件处理 - 使用 requestAnimationFrame 节流优化性能
+const handleWheel = (e: WheelEvent) => {
+  if (!wrapperRef.value) return;
+  // 阻止页面默认的垂直滚动
+  e.preventDefault();
+
+  // 累积滚动量（deltaY 正数向下滚动，负数向上滚动）
+  pendingDelta += e.deltaY;
+
+  // 如果已经有待执行的动画帧，不重复创建
+  if (rafId !== null) return;
+
+  // 使用 requestAnimationFrame 合并多个事件为一次 DOM 更新
+  rafId = requestAnimationFrame(() => {
+    if (wrapperRef.value) {
+      // 执行水平滚动
+      wrapperRef.value.scrollLeft += pendingDelta;
+    }
+    // 重置累积值和动画帧 ID
+    pendingDelta = 0;
+    rafId = null;
+  });
+};
+
+// ===== 右键菜单相关 =====
 const menuVisible = ref(false);
 const menuStyle = ref({ left: "0px", top: "0px" });
 const currentTag = ref<TagView | null>(null);
@@ -85,15 +109,8 @@ const closeCurrent = () => {
 // 关闭其他标签
 const closeOthers = () => {
   if (currentTag.value) {
-    // 先清理其他标签的缓存
-    const otherTags = visitedViews.value.filter(
-      (tag) => tag.path !== currentTag.value?.path && !tag.affix,
-    );
-    otherTags.forEach((tag) => clearTagCache(tag));
-
-    // 再删除 store 中的记录
+    // 直接删除其他标签
     tagsStore.delOtherViews(currentTag.value);
-
     // 跳转到当前标签
     router.push({
       path: currentTag.value.path,
@@ -102,16 +119,11 @@ const closeOthers = () => {
   }
   menuVisible.value = false;
 };
+
 // 关闭全部标签
 const closeAll = () => {
-  // 先清理所有非固定标签的缓存
-  const nonAffixTags = visitedViews.value.filter((tag) => !tag.affix);
-  nonAffixTags.forEach((tag) => clearTagCache(tag));
-
-  // 再删除 store 中的记录
   tagsStore.delAllViews();
 
-  // 跳转到固定标签或首页
   const affixTags = visitedViews.value.filter((tag) => tag.affix);
   if (affixTags.length > 0) {
     const lastAffixTag = affixTags[affixTags.length - 1];
@@ -149,28 +161,10 @@ const extractQueryParams = (tag: TagView) => {
 
   return query;
 };
-// 根据路径获取组件名
-const getComponentNameByPath = (path: string): string | null => {
-  const routeRecord = router.getRoutes().find((r) => r.path === path);
-  return (routeRecord?.components?.default?.name as string) || null;
-};
 
-// 清理指定标签的缓存
-const clearTagCache = (tag: TagView) => {
-  if (!clearPageCache) return;
-
-  const componentName = getComponentNameByPath(tag.path);
-  if (componentName) {
-    clearPageCache(componentName);
-  }
-};
-
-// 关闭选中的标签，关闭标签时需要清除页面的缓存，等从路由重新进入时再次缓存
+// 关闭选中的标签
 const closeSelectedTag = (tag: TagView) => {
-  // 清理缓存
-  clearTagCache(tag);
-
-  // 删除标签
+  // 删除标签（缓存会自动由 layout 中的 computed 清理）
   tagsStore.delView(tag);
 
   if (isActive(tag)) {
@@ -180,11 +174,6 @@ const closeSelectedTag = (tag: TagView) => {
         path: lastView.path,
         query: extractQueryParams(lastView),
       });
-      // 切换到新标签时，恢复其缓存
-      const newComponentName = getComponentNameByPath(lastView.path);
-      if (newComponentName && restorePageCache) {
-        restorePageCache(newComponentName);
-      }
     } else {
       router.push("/");
     }
@@ -193,34 +182,40 @@ const closeSelectedTag = (tag: TagView) => {
 
 // 监听路由变化，添加标签
 watch(
-  () => ({
-    path: route.path,
-    fullPath: route.fullPath,
-    meta: route.meta,
-  }),
-  (newRoute) => {
+  () => route.fullPath,
+  () => {
     if (route.path && route.path !== "/") {
       tagsStore.addView(route);
-      // 每次路由变化时，确保当前页面被缓存
-      const routeRecord = router
-        .getRoutes()
-        .find((r) => r.path === newRoute.path);
-      const componentName = routeRecord?.components?.default?.name as string;
-
-      if (componentName && restorePageCache) {
-        restorePageCache(componentName);
-      }
     }
   },
-  { immediate: true, deep: true },
+  { immediate: true },
 );
 
-// 添加事件监听
 onMounted(() => {
+  // 使用 nextTick 确保 DOM 已渲染
+  nextTick(() => {
+    if (wrapperRef.value) {
+      // 绑定滚轮事件
+      wrapperRef.value.addEventListener("wheel", handleWheel, {
+        passive: false,
+      });
+    }
+  });
+  // 添加点击关闭菜单事件
   document.addEventListener("click", closeMenu);
 });
-
 onUnmounted(() => {
+  // 移除滚轮事件
+  if (wrapperRef.value) {
+    wrapperRef.value.removeEventListener("wheel", handleWheel);
+  }
+  // 清理未完成的动画帧，防止内存泄漏
+  if (rafId !== null) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+    pendingDelta = 0;
+  }
+  // 移除点击事件
   document.removeEventListener("click", closeMenu);
 });
 </script>
@@ -230,7 +225,7 @@ onUnmounted(() => {
   height: 40px;
   width: 100%;
   background: #ffffff;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #e4e7ed;
 
   .tags-view-wrapper {
     height: 40px;
@@ -238,14 +233,18 @@ onUnmounted(() => {
     flex-wrap: nowrap;
     align-items: center;
     flex-shrink: 0;
-    overflow-x: auto;
     padding: 0 12px;
     box-sizing: border-box;
+    overflow-x: auto;
+    overflow-y: hidden;
     position: relative;
 
-    /* 美化滚动条样式 - Webkit浏览器 (Chrome, Safari, Edge) */
+    // 提示浏览器该元素会频繁滚动
+    will-change: scroll-position;
+
+    // 滚动条样式
     &::-webkit-scrollbar {
-      height: 4px;
+      height: 5px;
       background-color: transparent;
     }
     &::-webkit-scrollbar-track {
@@ -257,8 +256,10 @@ onUnmounted(() => {
       background-color: rgba(0, 0, 0, 0.15);
       border-radius: 2px;
       transition: background-color 0.3s ease;
+      cursor: pointer;
     }
     &::-webkit-scrollbar-thumb:hover {
+      cursor: pointer;
       background-color: rgba(0, 0, 0, 0.2) !important;
     }
 
@@ -273,10 +274,13 @@ onUnmounted(() => {
       box-sizing: border-box;
       font-size: 13px;
       margin-right: 6px;
-      border-radius: 4px;
+      border-radius: 6px;
       text-decoration: none;
       transition: all 0.2s ease;
       border: none;
+
+      // 防止文字被选中（提升拖拽体验）
+      user-select: none;
 
       &:hover {
         background: #f5f5f5;
@@ -289,9 +293,8 @@ onUnmounted(() => {
 
         .close-icon {
           color: rgba(255, 255, 255, 0.8);
-
           &:hover {
-            background-color: rgba(255, 255, 255, 0.2);
+            background-color: rgba(255, 255, 255, 0.3);
             color: #ffffff;
           }
         }
@@ -359,18 +362,12 @@ onUnmounted(() => {
   .tags-view-wrapper::-webkit-scrollbar-thumb {
     background-color: rgba(255, 255, 255, 0.2);
   }
-
   .tags-view-wrapper::-webkit-scrollbar-thumb:hover {
     background-color: rgba(255, 255, 255, 0.3);
   }
 
-  .tags-view-wrapper {
-    scrollbar-color: #095e92 transparent;
-  }
-
   .tags-view-item {
     color: #fff !important;
-
     &:hover {
       background: linear-gradient(135deg, #0a649c 0%, #063958 100%) !important;
     }

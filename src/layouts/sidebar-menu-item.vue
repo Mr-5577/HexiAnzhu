@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import type { SidebarMenuItem } from "@/types/menu-type";
+import type { SidebarMenuItem } from "@/types/system/menu-type";
 
 interface Props {
   item: SidebarMenuItem;

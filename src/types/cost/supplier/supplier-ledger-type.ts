@@ -1,11 +1,27 @@
 // ==================== 供应商台账主表类型定义 ====================
 
+/** 基础实体类型 */
+export interface BaseEntity {
+  /** 主键ID */
+  id?: number;
+  /** 删除标识：false-未删除 true-已删除 */
+  isDel?: boolean;
+  /** 创建人ID */
+  createId?: number;
+  /** 创建时间 */
+  createDate?: string;
+  /** 更新人ID */
+  operId?: number;
+  /** 更新时间 */
+  operDate?: string;
+}
 /**
  * 供应商台账信息 (h_sup_supplier_m)
  */
-export interface Supplier {
+export interface Supplier extends BaseEntity {
   /** 主键，自增 */
   id: number;
+  supBillId?: number;
   /** 供应商编码 */
   supCode: string;
   /** 供应商名称 */
@@ -58,20 +74,6 @@ export interface Supplier {
   entryDate: string | null;
   /** 备注 */
   remark: string | null;
-  /** 创建人 */
-  createId: number;
-  /** 创建人名称 */
-  createName?: string;
-  /** 创建时间 */
-  createDate: string;
-  /** 更新人 */
-  operId: number | null;
-  /** 更新人名称 */
-  operName?: string;
-  /** 更新时间 */
-  operDate: string | null;
-  /** 删除标识：false-未删除，true-已删除 */
-  isDel: boolean;
 }
 
 /**
@@ -84,42 +86,48 @@ export interface SupplierSaveParams {
   supCode?: string;
   /** 供应商名称 */
   supName: string;
-  /** 供应商关联类型 */
-  supLinkType?: number | string | null;
+  /** 供应商内外部 1-内部关联单位，2-外部单位 */
+  supLinkType: number | string | null;
   /** 供应商主要服务类别ID */
   supTypeId: number | string | null;
   /** 企业性质ID */
-  supNatureId?: number | string | null;
+  supNatureId: number | string | null;
   /** 纳税类型ID */
-  taxTypeId?: number | string | null;
+  taxTypeId: number | string | null;
   /** 来源类型ID */
-  sourceTypeId?: number | string | null;
+  sourceTypeId: number | string | null;
   /** 统一社会信用代码 */
-  uscCardNo?: string | null;
+  uscCardNo: string | null;
   /** 法人代表 */
-  legalPerson?: string | null;
+  legalPerson: string | null;
   /** 法人代表证件类型ID */
-  legalCardTypeId?: number | string | null;
+  legalCardTypeId: number | string | null;
   /** 法人代表证件号码 */
-  legalCardNo?: string;
+  legalCardNo: string;
   /** 法人代表邮箱 */
-  legalEmail?: string | null;
+  legalEmail: string | null;
   /** 法人代表电话 */
-  legalPhone?: string | null;
+  legalPhone: string | null;
   /** 注册资本 */
-  registeredAmount?: number | null;
+  registeredAmount: number | null;
   /** 企业主要资质及等级 */
-  supQual?: string | null;
+  supQual: string | null;
   /** 供应商地址 */
-  address?: string | null;
-  /** 供应商状态 */
-  supStatus?: number;
+  address: string | null;
+  /** 供应商状态 0=草稿；1=已审批；2=黑名单；3=作废  */
+  supStatus: number;
   /** 经营范围 */
-  bizDesc?: string | null;
+  bizDesc: string | null;
   /** 入库日期 */
-  entryDate?: string | null;
+  entryDate: string | null;
   /** 备注 */
-  remark?: string | null;
+  remark: string | null;
+  /** 实控人证件类型 */
+  actualLegalCardTypeId: number;
+  /** 实控人姓名 */
+  actualLegalPerson: string;
+  /** 实控人证件号码 */
+  actualLegalCardNo: string | number;
   /** 服务板块ID列表 */
   segIds?: number[];
   /** 银行账户列表 */
@@ -154,20 +162,12 @@ export interface SupplierQueryParams {
   entryDateEnd?: string;
 }
 
-/**
- * 删除供应商台账请求参数
- */
-export interface SupplierDeleteParams {
-  /** 供应商台账ID */
-  id: number;
-}
-
 // ==================== 供应商银行账户类型定义 ====================
 
 /**
  * 供应商银行账户信息 (h_sup_supplier_bank)
  */
-export interface SupplierBank {
+export interface SupplierBank extends BaseEntity {
   /** 主键，自增 */
   id: number;
   /** 供应商ID */
@@ -184,16 +184,6 @@ export interface SupplierBank {
   isEnabled: boolean;
   /** 备注 */
   remark: string | null;
-  /** 创建人 */
-  createId: number;
-  /** 创建时间 */
-  createDate: string;
-  /** 更新人 */
-  operId: number | null;
-  /** 更新时间 */
-  operDate: string | null;
-  /** 删除标识：false-未删除，true-已删除 */
-  isDel: boolean;
 }
 
 /**
@@ -230,40 +220,24 @@ export interface SupplierBankQueryParams {
   isEnabled?: boolean;
 }
 
-/**
- * 删除供应商银行账户请求参数
- */
-export interface SupplierBankDeleteParams {
-  /** 供应商台账ID */
-  id: number;
-}
-
 // ==================== 供应商服务板块类型定义 ====================
 
 /**
  * 供应商服务板块 (h_sup_supplier_seg)
  */
-export interface SupplierSegment {
+export interface SupplierSegment extends BaseEntity {
   /** 主键，自增 */
   id: number;
   /** 供应商ID */
   supId: number;
   /** 板块ID */
-  segId: number;
+  supTypeId: number;
   /** 板块名称（前端关联展示用） */
-  segName?: string;
+  supTypeName?: string;
+  /** 是否主类别 1:是 0:否 */
+  isPrimary: number;
   /** 备注 */
   remark: string | null;
-  /** 创建人 */
-  createId: number;
-  /** 创建时间 */
-  createDate: string;
-  /** 更新人 */
-  operId: number | null;
-  /** 更新时间 */
-  operDate: string | null;
-  /** 删除标识：false-未删除，true-已删除 */
-  isDel: boolean;
 }
 
 /**
@@ -275,7 +249,9 @@ export interface SupplierSegmentSaveParams {
   /** 供应商ID */
   supId: number;
   /** 板块ID */
-  segId: number;
+  supTypeId: number;
+  /** 是否主类别 1:是 0:否 */
+  isPrimary: number;
   /** 备注 */
   remark?: string;
 }
@@ -289,21 +265,13 @@ export interface SupplierSegmentQueryParams {
   /** 供应商ID */
   supId?: number;
   /** 板块ID */
-  segId?: number;
+  supTypeId?: number;
   /** 板块ID列表（批量查询） */
-  segIds?: number[];
+  supTypeIds?: number[];
   /** 供应商ID列表（批量查询） */
   supIds?: number[];
   /** 备注（模糊查询） */
   remark?: string;
-}
-
-/**
- * 删除供应商服务板块请求参数
- */
-export interface SupplierSegmentDeleteParams {
-  /** 主键ID */
-  id: number;
 }
 
 // ==================== 供应商资质类型定义 ====================
@@ -311,7 +279,7 @@ export interface SupplierSegmentDeleteParams {
 /**
  * 供应商资质 (h_sup_supplier_annex)
  */
-export interface SupplierAnnex {
+export interface SupplierAnnex extends BaseEntity {
   /** 主键，自增 */
   id: number;
   /** 供应商ID */
@@ -324,16 +292,6 @@ export interface SupplierAnnex {
   annexId: number;
   /** 备注 */
   remark: string | null;
-  /** 创建人 */
-  createId: number;
-  /** 创建时间 */
-  createDate: string;
-  /** 更新人 */
-  operId: number | null;
-  /** 更新时间 */
-  operDate: string | null;
-  /** 删除标识：false-未删除，true-已删除 */
-  isDel: boolean;
 }
 
 /**
@@ -345,7 +303,7 @@ export interface SupplierAnnexSaveParams {
   /** 供应商ID */
   supId: number;
   /** 附件类型 */
-  annexType: string;
+  annexType: string | number;
   /** 附件名称 */
   annexName: string;
   /** 附件ID */
@@ -372,20 +330,12 @@ export interface SupplierAnnexQueryParams {
   remark?: string;
 }
 
-/**
- * 删除供应商资质请求参数
- */
-export interface SupplierAnnexDeleteParams {
-  /** 主键ID */
-  id: number;
-}
-
 // ==================== 供应商项目业绩类型定义 ====================
 
 /**
  * 供应商项目业绩 (h_sup_supplier_perf)
  */
-export interface SupplierPerf {
+export interface SupplierPerf extends BaseEntity {
   /** 主键，自增 */
   id: number;
   /** 供应商ID */
@@ -404,16 +354,6 @@ export interface SupplierPerf {
   endDate: string | null;
   /** 相关附件ID */
   annexId: number | null;
-  /** 创建人 */
-  createId: number;
-  /** 创建时间 */
-  createDate: string;
-  /** 更新人 */
-  operId: number | null;
-  /** 更新时间 */
-  operDate: string | null;
-  /** 删除标识：false-未删除，true-已删除 */
-  isDel: boolean;
 }
 
 /**
@@ -466,10 +406,50 @@ export interface SupplierPerfQueryParams {
   endDateTo?: string;
 }
 
+// ==================== 供应商联系方式类型定义 ====================
 /**
- * 删除供应商项目业绩请求参数
+ * 供应商联系方式 (h_sup_supplier_contact)
  */
-export interface SupplierPerfDeleteParams {
-  /** 主键ID */
+export interface SupplierContact extends BaseEntity {
+  /** 主键，自增 */
   id: number;
+  /** 供应商ID */
+  supId: number;
+  /** 联系人 */
+  contactPerson: string;
+  /** 联系电话 */
+  contactPhone: string;
+  /** 联系人身份证 */
+  contactCardNo: string;
+  /** 职务 */
+  jobTitle: string;
+  /** 是否主要联系人 */
+  isMain: boolean;
+  /** 是否启用 */
+  isEnable: boolean;
+  /** 备注 */
+  remark: string;
+}
+
+/**
+ * 新增/修改供应商联系方式请求参数
+ */
+export interface SupplierContactSaveParams {
+  id?: number;
+  /** 供应商ID */
+  supId: number;
+  /** 联系人 */
+  contactPerson: string;
+  /** 联系电话 */
+  contactPhone: string;
+  /** 联系人身份证 */
+  contactCardNo: string;
+  /** 职务 */
+  jobTitle: string;
+  /** 是否主要联系人 */
+  isMain: boolean;
+  /** 是否启用 */
+  isEnable: boolean;
+  /** 备注 */
+  remark: string;
 }

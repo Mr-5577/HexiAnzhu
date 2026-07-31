@@ -14,10 +14,12 @@
           <el-button type="primary" icon="Refresh" @click="handleRefresh">
             刷新列表
           </el-button>
-          <el-button type="primary" @click="handleInitiate">
-            发起流程
-          </el-button>
+          <el-button type="primary" @click="handleAdd"> 新增 </el-button>
         </div>
+      </template>
+
+      <template #status="{ row }">
+        {{ getStatusName(row.status) }}
       </template>
 
       <template #actions="{ row }">
@@ -41,10 +43,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import AddEditVoidDialog from "./add-edit-void-dialog.vue";
+import { contractVoidApi } from "@/api/cost/contract-manage/contract-void-api.ts";
+import { ContractVoid } from "@/types/cost/contract-manage/contract-void-type.ts";
 
 defineOptions({ name: "contract-void" });
 
@@ -52,18 +57,28 @@ const props = defineProps<{
   conId: number | null;
 }>();
 
+const route = useRoute();
+const router = useRouter();
+
 const dialogVisible = ref(false);
 const editData = ref(null);
 const tableLoading = ref(false);
-const tableData = ref<any[]>([]);
+const tableData = ref<ContractVoid[]>([]);
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "changeType", label: "单据类型" },
-  { prop: "changeName", label: "流程标题" },
-  { prop: "changeAmt", label: "状态" },
-  { prop: "status", label: "申请人" },
-  { prop: "changeReasonId", label: "申请时间" },
+  { prop: "status", label: "状态", width: 100, slot: "status" },
+  { prop: "signAmt", label: "合同签约金额" },
+  { prop: "sumProdVal", label: "累计产值" },
+  { prop: "sumAppyAmt", label: "累计请款" },
+  { prop: "voidDate", label: "作废日期" },
+  { prop: "voidDesc", label: "作废说明", minWidth: 200 },
+  {
+    label: "操作",
+    width: 150,
+    slot: "actions",
+    fixed: "right",
+  },
 ];
 // 获取列表数据
 const getDataList = async () => {
@@ -73,10 +88,29 @@ const getDataList = async () => {
   try {
     tableLoading.value = true;
     tableData.value = [];
+    const res = await contractVoidApi.getVoidist({ conId: props.conId });
+    if (res.code === 200) {
+      tableData.value = res.data || [];
+    }
   } catch (error) {
     console.error("获取列表失败:", error);
   } finally {
     tableLoading.value = false;
+  }
+};
+
+const getStatusName = (status: number) => {
+  switch (status) {
+    case 0:
+      return "草稿";
+    case 5:
+      return "审批中";
+    case 10:
+      return "已审批";
+    case 30:
+      return "已作废";
+    default:
+      return "-";
   }
 };
 
@@ -85,23 +119,36 @@ const handleRefresh = () => {
   getDataList();
 };
 
-// 发起流程
-const handleInitiate = () => {
-  editData.value = null;
-  dialogVisible.value = true;
+// 新增
+const handleAdd = () => {
+  router.push({
+    path: "/con/contract-void/add",
+    query: {
+      conId: props.conId, // 合同ID
+      t: Date.now(),
+    },
+  });
 };
 // 编辑
-const handleEdit = async (row) => {
-  editData.value = row;
-  dialogVisible.value = true;
+const handleEdit = ({ id }) => {
+  router.push({
+    path: "/con/contract-void/edit",
+    query: {
+      conId: props.conId, // 合同ID
+      conVoidId: id, // 合同解除ID
+    },
+  });
 };
 // 删除
-const handleDelete = (row) => {
+const handleDelete = ({ id }) => {
   ElMessageBox.confirm("确定删除该数据吗？", "提示", { type: "warning" })
     .then(async () => {
       try {
-        ElMessage.success("删除成功");
-        getDataList();
+        const res = await contractVoidApi.delVoid({ id: id });
+        if (res.code === 200) {
+          ElMessage.success("删除成功");
+          getDataList();
+        }
       } catch (error) {
         console.error("删除失败:", error);
       }
@@ -110,17 +157,20 @@ const handleDelete = (row) => {
 };
 
 // 监听合同ID变化，自动刷新列表
-watch(
-  () => props.conId,
-  async (val) => {
-    if (val) {
-      getDataList();
-    } else {
-      tableData.value = [];
-    }
-  },
-  { immediate: true },
-);
+// watch(
+//   () => props.conId,
+//   async (val) => {
+//     if (val) {
+//       getDataList();
+//     } else {
+//       tableData.value = [];
+//     }
+//   },
+//   { immediate: true },
+// );
+onMounted(() => {
+  getDataList();
+});
 </script>
 
 <style lang="scss" scoped>

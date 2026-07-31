@@ -10,6 +10,7 @@
 
     <!-- 主要内容区域 -->
     <div class="welcome-content">
+      <!-- 工作概览 -->
       <el-card class="welcome-card" v-show="false">
         <template #header>
           <div class="card-header">
@@ -138,7 +139,7 @@ const colorPalette = [
   "#1ABC9C", // 青色
 ];
 
-// 计算属性：获取所有第二层菜单
+// 获取所有第二层菜单
 const secondLevelMenus = computed(() => {
   const secondLevel: any[] = [];
 
@@ -317,21 +318,11 @@ onMounted(() => {
   margin: 0;
 }
 
-// .welcome-content {
-//   display: grid;
-//   grid-template-columns: 1fr;
-//   gap: 24px;
-
-//   @media (min-width: 1200px) {
-//     grid-template-columns: 1fr 1fr;
-//   }
-// }
-
 .welcome-card {
   height: 100%;
   border-radius: 12px;
   border: none;
-
+  margin-bottom: 10px;
   :deep(.el-card__header) {
     border-bottom: 1px solid #f0f0f0;
     padding: 18px 24px;

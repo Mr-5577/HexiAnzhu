@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import { userApi } from "@/api/user-api";
+import { userApi } from "@/api/system/user-api";
 
 // 按钮点击事件处理
 const handlePrimaryClick = async () => {

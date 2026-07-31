@@ -78,7 +78,7 @@ import type { FormInstance, FormRules } from "element-plus";
 import { ElMessage } from "element-plus";
 import { useUserStore } from "@/stores/user-store";
 import { md5 } from "@/utils/crypto";
-import { userApi } from "@/api/user-api";
+import { userApi } from "@/api/system/user-api";
 
 const router = useRouter();
 const userStore = useUserStore();

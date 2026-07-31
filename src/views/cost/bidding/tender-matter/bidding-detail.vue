@@ -19,7 +19,7 @@
           </el-menu-item>
           <el-menu-item index="tender-plan">
             <el-icon><Checked /></el-icon>
-            <span>招标计划</span>
+            <span>招标审批</span>
           </el-menu-item>
           <el-menu-item index="reference-price">
             <el-icon><PriceTag /></el-icon>
@@ -30,33 +30,34 @@
             <span>定标审批</span>
           </el-menu-item>
           <el-menu-item index="bid-bond-pay">
-            <el-icon><CirclePlus /></el-icon>
-            <span>投标保证金缴纳</span>
+            <el-icon><Money /></el-icon>
+            <span>投标保证金缴纳登记</span>
           </el-menu-item>
           <el-menu-item index="bid-bond-refund">
-            <el-icon><Back /></el-icon>
-            <span>投标保证金退还</span>
+            <el-icon><RefreshRight /></el-icon>
+            <span>投标保证金退还登记</span>
           </el-menu-item>
         </el-menu>
       </el-aside>
 
       <!-- 右侧内容区 -->
       <el-main class="content-area">
-        <!-- <keep-alive> -->
-        <component
-          :is="currentComponent"
-          :tender-id="tenderId"
-          :detail-data="detailData"
-          :project-options="projectOptions"
-        />
-        <!-- </keep-alive> -->
+        <keep-alive>
+          <component
+            :key="activeTab"
+            :is="currentComponent"
+            :tender-id="tenderId"
+            :detail-data="detailData"
+            :project-options="projectOptions"
+          />
+        </keep-alive>
       </el-main>
     </el-container>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, shallowRef, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
 import {
@@ -65,8 +66,8 @@ import {
   Checked,
   PriceTag,
   Flag,
-  CirclePlus,
-  Back,
+  Money,
+  RefreshRight,
 } from "@element-plus/icons-vue";
 import Overview from "./components/overview/index.vue";
 import Demand from "./components/demand/index.vue";
@@ -76,10 +77,11 @@ import AwardApproval from "./components/award-approval/index.vue";
 import BidBondPay from "./components/bid-bond-pay/index.vue";
 import BidBondRefund from "./components/bid-bond-refund/index.vue";
 import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api.ts";
-import { largeScreenApi } from "@/api/large-screen-api";
+import { largeScreenApi } from "@/api/sales/large-screen-api.ts";
 import { BidTenderFormParams } from "@/types/cost/bidding/bidding-management-type.ts";
 
 defineOptions({ name: "bidding-detail" });
+
 type TenderDetailData = {
   tender: BidTenderFormParams;
   items: any[];
@@ -89,7 +91,7 @@ type TenderDetailData = {
 const route = useRoute();
 const tenderId = ref<number | null>(); // 事项ID
 
-const detailData = ref<TenderDetailData | null>(null); // 详情数据
+const detailData = shallowRef<TenderDetailData | null>(null); // 详情数据
 const projectOptions = ref([]); // 项目列表
 
 // ==================== Tab配置 ====================
@@ -104,6 +106,7 @@ const tabComponents: Record<string, any> = {
   "bid-bond-refund": BidBondRefund, // 投标保证金退还
 };
 
+// 当前显示组件内容
 const currentComponent = computed(() => tabComponents[activeTab.value]);
 
 // 获取详情数据
@@ -134,33 +137,67 @@ const getProjectOptions = async () => {
     console.error("获取项目列表失败:", error);
   }
 };
-
+// 切换tab
 const handleTabChange = (tab: string) => {
   activeTab.value = tab;
-};
 
+  // 更新 URL 但不触发路由更新（仅在不同的时候修改，避免无谓的 history.replaceState）
+  try {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("tab") !== tab) {
+      url.searchParams.set("tab", tab);
+      window.history.replaceState({}, "", url.toString());
+    }
+  } catch (e) {}
+};
+// 从路由获取初始tab
+const getInitialTab = (): string => {
+  const tabFromQuery = route.query.tab as string;
+  const validTabs = Object.keys(tabComponents);
+  if (tabFromQuery && validTabs.includes(tabFromQuery)) {
+    return tabFromQuery;
+  }
+  return "overview";
+};
 const initData = () => {
-  // 从路由参数中获取 tenderId
+  // 从路由参数中获取 tenderId 事项ID
   const queryTenderId = route.query.tenderId;
   if (queryTenderId) {
     // 保存事项ID到状态中
     tenderId.value = Number(queryTenderId);
     getDetailData();
     getProjectOptions();
+
+    // 重新设置tab（防止URL有变化）
+    activeTab.value = getInitialTab();
   } else {
     ElMessage.error("缺少招标事项ID");
   }
 };
 
-watch(
-  () => route.query.tenderId,
-  (newId) => {
-    if (newId) {
-      initData();
-    }
-  },
-  { immediate: true },
-);
+// watch(
+//   () => route.query.tenderId,
+//   (newId) => {
+//     if (newId) {
+//       initData();
+//     }
+//   },
+//   { immediate: true },
+// );
+// watch(
+//   () => route.query.tab,
+//   (newTab) => {
+//     if (newTab && typeof newTab === "string") {
+//       const validTabs = Object.keys(tabComponents);
+//       if (validTabs.includes(newTab)) {
+//         activeTab.value = newTab;
+//       }
+//     }
+//   },
+// );
+onMounted(() => {
+  initData();
+});
 </script>
 
 <style scoped lang="scss">

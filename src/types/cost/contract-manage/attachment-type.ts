@@ -49,5 +49,5 @@ export interface ContractAnnexFormData {
   /** 附件来源（必填） 1-审批流程 2-手工上传  */
   annexSrc: number;
   /** 已关联的附件ID */
-  annexId: number;
+  annexId: number | string;
 }

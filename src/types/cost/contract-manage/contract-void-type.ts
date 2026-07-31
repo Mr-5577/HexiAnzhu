@@ -34,11 +34,36 @@ export interface ContractVoid {
   /** 删除标识：false-未删除，true-已删除 */
   isDel: boolean;
 }
+/**
+ * 新增合同解除 参数
+ */
+export interface ContractVoidAddParams {
+  /** 合同ID */
+  conId: number;
+  rec: {
+    /** 单据ID */
+    conBillId: number;
+    /** 状态 */
+    status: number;
+    /** 合同签约金额 */
+    signAmt: number;
+    /** 累计产值 */
+    sumProdVal: number;
+    /** 累计请款 */
+    sumAppyAmt: number;
+    /** 经办人 */
+    agentId?: number;
+    /** 作废日期 */
+    voidDate: string;
+    /** 作废说明 */
+    voidDesc: string;
+  };
+}
 
 /**
- * 新增/编辑 合同解除参数
+ * 编辑 合同解除参数
  */
-export interface ContractVoidParams {
+export interface ContractVoidEditParams {
   /** 主键ID（编辑时必填） */
   id?: number;
   /** 单据ID */

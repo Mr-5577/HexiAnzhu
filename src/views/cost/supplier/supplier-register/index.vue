@@ -15,19 +15,19 @@
           </el-menu-item>
           <el-menu-item index="serve" :disabled="!supplierId">
             <el-icon><Briefcase /></el-icon>
-            <span>服务板块</span>
+            <span>服务类别</span>
           </el-menu-item>
-          <!-- <el-menu-item index="contact" :disabled="!supplierId">
+          <el-menu-item index="contact" :disabled="!supplierId">
             <el-icon><Phone /></el-icon>
             <span>联系方式</span>
-          </el-menu-item> -->
+          </el-menu-item>
           <el-menu-item index="bank" :disabled="!supplierId">
             <el-icon><CreditCard /></el-icon>
             <span>银行账户</span>
           </el-menu-item>
           <el-menu-item index="qualification" :disabled="!supplierId">
             <el-icon><Folder /></el-icon>
-            <span>相关资质</span>
+            <span>相关资料</span>
           </el-menu-item>
           <el-menu-item index="performance" :disabled="!supplierId">
             <el-icon><Trophy /></el-icon>
@@ -52,15 +52,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, Ref, watch, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { ElMessage } from "element-plus";
-import BasicInfo from "./basic-infor.vue";
-import SupplierServe from "./supplier-serve.vue";
-import ContactWay from "./contact-way.vue";
-import BankTable from "./bank-account.vue";
-import RelateQualification from "./relate-qualification.vue";
-import ProjectPerformance from "./project-performance.vue";
+import BasicInfo from "./basic-infor/index.vue";
+import SupplierServe from "./supplier-serve/index.vue";
+import ContactWay from "./contact-way/index.vue";
+import BankTable from "./bank-account/index.vue";
+import RelateQualification from "./relate-qualification/index.vue";
+import ProjectPerformance from "./project-performance/index.vue";
 
 const route = useRoute();
 const activeTab = ref("basic");
@@ -78,7 +78,7 @@ const tabComponents = {
 
 const currentComponent = computed(() => tabComponents[activeTab.value]);
 
-const handleTabChange = (tab) => {
+const handleTabChange = (tab: string) => {
   // 如果点击的是非基本信息菜单，且还没有供应商ID，则不允许切换
   if (tab !== "basic" && !supplierId.value) {
     ElMessage.warning("请先保存基本信息");
@@ -105,7 +105,6 @@ const syncRouteState = () => {
   }
 };
 
-// watch(() => [route.query.mode, route.query.supplierId], syncRouteState);
 onMounted(() => {
   syncRouteState();
 });

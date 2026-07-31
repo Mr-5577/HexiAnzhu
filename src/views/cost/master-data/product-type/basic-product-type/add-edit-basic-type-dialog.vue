@@ -256,8 +256,8 @@ const findParentLevel = (
 const validateProdCode = (_rule: any, value: string, callback: any) => {
   if (!value) {
     callback(new Error("请输入产品编号"));
-  } else if (!/^[A-Za-z0-9_]+$/i.test(value)) {
-    callback(new Error("产品编号只能包含字母、数字和下划线"));
+  } else if (!/^[A-Za-z0-9_.]+$/i.test(value)) {
+    callback(new Error("产品编号只能包含字母、数字、.和下划线"));
   } else if (value.length < 2) {
     callback(new Error("产品编号至少2个字符"));
   } else {

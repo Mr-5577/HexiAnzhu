@@ -57,7 +57,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, ref, watch, shallowRef } from "vue";
 import { ElMessage, type ElTree } from "element-plus";
-import { roleApi } from "@/api/role-api";
+import { roleApi } from "@/api/system/role-api";
 import { useMenuStore } from "@/stores/menu-store";
 import { Sort } from "@element-plus/icons-vue";
 

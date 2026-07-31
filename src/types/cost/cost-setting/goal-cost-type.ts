@@ -188,6 +188,8 @@ export interface HCstProjectCostDQueryParams {
   id?: number;
   /** 目标成本ID */
   costMid?: number;
+  /** 项目ID */
+  projId?: number;
   /** 科目ID */
   subId?: number;
   /** 业态ID */

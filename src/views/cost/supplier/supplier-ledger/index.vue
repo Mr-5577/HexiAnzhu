@@ -25,6 +25,7 @@
           :highlight-current="false"
           :default-expand-all="false"
           :accordion="false"
+          :expand-on-click-node="false"
           @node-click="handleNodeClick"
         >
           <template #default="{ node, data }">
@@ -35,7 +36,7 @@
               }"
             >
               <el-icon><Folder /></el-icon>
-              <span>{{ node.label }}</span>
+              <span class="node-label">{{ node.label }}</span>
             </span>
           </template>
         </el-tree>
@@ -72,6 +73,9 @@
             <el-button type="primary" @click="handleRegister">
               供应商登记
             </el-button>
+            <el-button type="primary" @click="batchApproval">
+              批量审批
+            </el-button>
           </el-form-item>
         </el-form>
         <base-table
@@ -79,20 +83,49 @@
           :columns="tableColumns"
           :tableData="tableData"
           :loading="tableLoading"
+          :pagination="false"
           :total="total"
           :current-page="currentPage"
           :page-size="pageSize"
           @pagination-change="handlePaginationChange"
+          @selection-change="handleSelectionChange"
         >
+          <!-- 供应商状态 -->
+          <template #supStatus="{ row }">
+            <el-tag :type="getStatusType(row.supStatus)">
+              {{ getStatusLabel(row.supStatus) }}
+            </el-tag>
+          </template>
+          <!-- 审批流程 -->
+          <template #apprProcess="{ row }">
+            <!-- 审批后才有审批流程 -->
+            <el-button
+              link
+              type="primary"
+              @click="handleViewProcess(row)"
+              v-if="row.supBillId"
+            >
+              查看流程
+            </el-button>
+          </template>
+          <!-- supStatus 0=草稿；1=已审批；2=黑名单；3=作废，草稿状态可以编辑/删除 -->
           <template #actions="{ row }">
             <el-button link type="primary" @click="handleEdit(row)">
               编辑
             </el-button>
+            <el-button type="primary" link @click="handleViewDetail(row)">
+              详情
+            </el-button>
             <el-button link type="danger" @click="handleDelete(row)">
               删除
             </el-button>
-            <el-button type="primary" link @click="handleViewDetail(row)">
-              查看详情
+            <el-button
+              link
+              type="primary"
+              @click="handleViewProcess(row)"
+              v-if="row.supBillId"
+            >
+              查看入库单据
             </el-button>
           </template>
         </base-table>
@@ -109,7 +142,6 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { Search, Folder } from "@element-plus/icons-vue";
 import { useRouter } from "vue-router";
 import { buildTree } from "@/utils/tree";
-import { ContractTypeTreeNode } from "@/types/cost/master-data/contract-category-type";
 import { supTypeApi } from "@/api/cost/master-data/supplier-category-api";
 import type {
   SupplierType,
@@ -120,6 +152,8 @@ import type {
   Supplier,
   SupplierQueryParams,
 } from "@/types/cost/supplier/supplier-ledger-type";
+import { supStatusEnum } from "@/constants/supplier/enums";
+import { commonApi } from "@/api/cost/common-api";
 
 const router = useRouter();
 
@@ -129,9 +163,9 @@ defineOptions({ name: "supplier-ledger" });
 // 树形数据
 const supTypeName = ref("");
 const listData = ref<SupplierType[]>([]);
-const treeData = ref<ContractTypeTreeNode[]>([]);
+const treeData = ref([]);
 const currentNodeKey = ref<string | number | null>(null);
-const selectedCategory = ref<SupplierTypeTreeNode | null>(null);
+const selectedCategory = ref(null);
 
 // 树配置
 const treeProps = {
@@ -140,43 +174,66 @@ const treeProps = {
   disabled: "disabled",
   isLeaf: "isLeaf",
 };
-
-// 右侧列表数据
-const tableLoading = ref<boolean>(false);
-const currentPage = ref<number>(1);
-const pageSize = ref<number>(20);
-const total = ref<number>(0);
-const tableData = ref<Supplier[]>([]);
-
+const allType = [
+  {
+    id: 99999,
+    isDel: false,
+    isEnabled: true,
+    pid: 99999,
+    remark: "全部类型",
+    supTypeCode: "ALL",
+    supTypeName: "全部",
+  },
+];
 // 查询参数
 const queryParams = ref<SupplierQueryParams>({
   supCode: "", // 供应商编码
   supName: "", // 供应商名称
 });
-
-// 表格列配置
+const tableLoading = ref<boolean>(false);
+const currentPage = ref<number>(1);
+const pageSize = ref<number>(20);
+const total = ref<number>(0);
+const tableData = ref<Supplier[]>([]);
+const selectedRows = ref<Supplier[]>([]);
 const tableColumns = [
-  // { type: "selection", width: 55 }, // 多选框
+  // {
+  //   type: "selection",
+  //   width: 55,
+  //   // 使用 selectable 回调控制行可选,返回 true 表示可选，false 表示不可选
+  //   selectable: (row: any, index: number) => {
+  //     return row.supStatus == 0; // 只有草稿状态可以勾选
+  //   },
+  // },
+  { type: "index", label: "序号", width: 60, fixed: "left" },
+  { label: "供应商名称", prop: "supName", width: 200, fixed: "left" },
   { label: "供应商编码", prop: "supCode", width: 150 },
-  { label: "供应商名称", prop: "supName", width: 200 },
-  { label: "供应商类别", prop: "supTypeName", width: 150 },
-  { label: "企业性质", prop: "supNatureName", width: 120 },
-  { label: "纳税类型", prop: "taxTypeName", width: 120 },
-  { label: "来源类型", prop: "sourceTypeName", width: 120 },
-  { label: "法人代表", prop: "legalPerson", width: 120 },
+  { label: "供应商类型", prop: "supTypeName", width: 120 },
+  { label: "内外部", prop: "supLinkTypeName", width: 90 },
+  { label: "企业性质", prop: "supNatureName", width: 90 },
+  { label: "纳税类型", prop: "taxTypeName", width: 100 },
+  { label: "来源类型", prop: "sourceTypeName", width: 90 },
+  { label: "法人代表", prop: "legalPerson", width: 90 },
   { label: "法人电话", prop: "legalPhone", width: 120 },
   { label: "信用编码", prop: "uscCardNo", width: 180 },
   { label: "供应商地址", prop: "address", width: 200 },
-  { label: "入库日期", prop: "entryDate", width: 120 },
+  { label: "供应商状态", slot: "supStatus", width: 100 },
+  // { label: "审批流程", slot: "apprProcess", width: 120 },
   {
-    label: "操作",
-    prop: "actions",
-    width: 200,
     slot: "actions",
+    label: "操作",
+    width: 240,
     fixed: "right",
   },
 ];
 
+const getStatusLabel = (status: number) => {
+  return supStatusEnum.find((item) => item.value === status)?.label || "未知";
+};
+
+const getStatusType = (status: number) => {
+  return supStatusEnum.find((item) => item.value === status)?.type || "info";
+};
 // 搜索供应商类别
 const handleSearch = () => {
   // 先清除之前选中的类别节点
@@ -193,7 +250,8 @@ const getSupplierTypeList = async () => {
     });
     if (res.code === 200 && res.data) {
       listData.value = res.data || [];
-      treeData.value = buildTree(res.data);
+      const treeList = buildTree(res.data);
+      treeData.value = [...allType, ...treeList];
     } else {
       ElMessage.error(res.message || "获取供应商类别失败");
     }
@@ -207,24 +265,32 @@ const getSupplierTypeList = async () => {
 const handleNodeClick = (data: SupplierTypeTreeNode) => {
   if (currentNodeKey.value === data.id) return;
   // 只有最后一层节点才能选中
-  if (!data.children || data.children.length === 0) {
-    // 设置当前选中的节点
-    currentNodeKey.value = data.id;
-    selectedCategory.value = data;
-    // 加载对应类别的供应商列表
-    getSupplierListData();
-  }
+  // if (!data.children || data.children.length === 0) {
+  //   // 设置当前选中的节点
+  //   currentNodeKey.value = data.id;
+  //   selectedCategory.value = data;
+  //   // 加载对应类别的供应商列表
+  //   getSupplierListData();
+  // }
+  // 设置当前选中的节点
+  currentNodeKey.value = data.id;
+  selectedCategory.value = data;
+  // 加载对应类别的供应商列表
+  getSupplierListData();
 };
 
 // 加载供应商列表
 const getSupplierListData = async () => {
   try {
     tableLoading.value = true;
+    selectedRows.value = [];
     tableData.value = [];
-
     const params: SupplierQueryParams = {
       ...queryParams.value,
-      supTypeId: selectedCategory.value?.id,
+      supTypeId:
+        selectedCategory.value?.id === 99999
+          ? undefined
+          : selectedCategory.value?.id,
     };
 
     const res = await supplierApi.getSupplierList(params);
@@ -271,10 +337,13 @@ const handleRegister = () => {
     path: "/supplier/supplier-register/add",
     query: {
       mode: "add",
+      t: Date.now(), // 添加时间戳，防止浏览器缓存
     },
   });
 };
-
+const handleSelectionChange = (rows: Supplier[]) => {
+  selectedRows.value = rows;
+};
 const handleEdit = (row: Supplier) => {
   router.push({
     path: "/supplier/supplier-register/edit",
@@ -302,13 +371,35 @@ const handleDelete = (row: Supplier) => {
 };
 const handleViewDetail = (row: Supplier) => {
   router.push({
-    path: "/supplier/supplier-register",
+    path: "/supplier/supplier-register/detail",
     query: { mode: "view", supplierId: row.id },
   });
 };
-
-onMounted(() => {
-  getSupplierTypeList();
+const batchApproval = () => {
+  router.push({
+    path: "/supplier/inspection/add",
+    query: { t: Date.now() },
+  });
+};
+const handleViewProcess = (row: Supplier) => {
+  router.push({
+    path: "/supplier/inspection/edit",
+    query: { supBillId: row.supBillId },
+  });
+};
+onMounted(async () => {
+  await getSupplierTypeList();
+  currentNodeKey.value = 99999;
+  selectedCategory.value = {
+    id: 99999,
+    isDel: false,
+    isEnabled: true,
+    pid: 99999,
+    remark: "全部类型",
+    supTypeCode: "ALL",
+    supTypeName: "全部",
+  };
+  getSupplierListData();
 });
 </script>
 
@@ -367,9 +458,20 @@ onMounted(() => {
           align-items: center;
           gap: 8px;
           font-size: 14px;
+          width: 100%;
+          min-width: 0; // 允许收缩
 
           .el-icon {
             color: #909399;
+            flex-shrink: 0; // 图标不收缩
+          }
+
+          .node-label {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 0; // 允许文本收缩
           }
 
           &.category-active {
@@ -384,6 +486,8 @@ onMounted(() => {
 
         .el-tree-node__content {
           height: 40px;
+          width: 100%;
+
           &:hover {
             background-color: #ecf5ff;
           }

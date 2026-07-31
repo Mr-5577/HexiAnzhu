@@ -66,16 +66,14 @@
           type="primary"
           :loading="exportLoading"
           @click="exportExcel"
-          :disabled="
-            !menuStore.hasExactPermission('visiting-record:export')
-          "
+          :disabled="!menuStore.hasExactPermission('visiting-record:export')"
         >
           导出
         </el-button>
       </el-form-item>
     </el-form>
     <base-table
-      :rowKey="'uuid'"
+      :rowKey="'id'"
       :columns="visitingRecordColumns"
       :tableData="paginatedData"
       :loading="tableLoading"
@@ -93,9 +91,9 @@
         <div>{{ getVisitTypeName(scope.row.visitTypeId) }}</div>
       </template>
       <!-- 置业顾问 -->
-      <template #salerName="scope">
+      <!-- <template #salerName="scope">
         <div>{{ getSalerName(scope.row.salerId) }}</div>
-      </template>
+      </template> -->
       <!-- 知晓途径 -->
       <template #knowWayName="scope">
         <div>{{ getKnowWayName(scope.row.knowWayId) }}</div>
@@ -161,7 +159,8 @@
             <template #label>
               <div class="cell-item">置业顾问</div>
             </template>
-            {{ getSalerName(currentPrintRow.salerId) }}
+            <!-- {{ getSalerName(currentPrintRow.salerId) }} -->
+            {{ currentPrintRow.salerName || "-" }}
           </el-descriptions-item>
           <el-descriptions-item>
             <template #label>
@@ -254,8 +253,8 @@
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { visitingRecordColumns } from "./project-columns";
 import { dateUtil } from "@/utils/date-util";
-import { assetManagementApi } from "@/api/asset-management-api";
-import { ConversionRateInterface } from "@/types/channel-analysis-type";
+import { assetManagementApi } from "@/api/sales/asset-management-api";
+import { ConversionRateInterface } from "@/types/sales/channel-analysis-type";
 import { v4 as uuidv4 } from "uuid";
 import BaseModal from "@/components/base/base-modal.vue";
 import { VuePrintNext } from "vue-print-next";
@@ -378,6 +377,7 @@ const fetchGetSalerList = async () => {
   try {
     const res = await assetManagementApi.getSalerList({
       projId: queryParams.value.projId,
+      isOnlyIn: false, // 是否只查询在职人员，true：只查询在职人员，false：查询所有人员
     });
     if (res.code === 200) {
       salerList.value = res.data || [];
@@ -414,10 +414,7 @@ const getTableList = async () => {
     };
     const res = await assetManagementApi.getVisitHis(params);
     if (res.code === 200) {
-      allTableList.value = (res.data || []).map((item: any) => ({
-        ...item,
-        uuid: uuidv4(),
-      }));
+      allTableList.value = res.data || [];
       total.value = res.data?.length || 0;
     }
   } catch (error) {
@@ -493,7 +490,7 @@ const initPageData = async () => {
   await getProjectList(); // 项目列表
   initDefaultParams(); // 初始化查询参数
   await fetchGetVisitType(); // 来访方式
-  await fetchGetSalerList(); // 置业顾问
+  // await fetchGetSalerList(); // 置业顾问
   await fetchGetKnowWay(); // 知晓途径
   await getTableList(); // 获取列表数据
 };

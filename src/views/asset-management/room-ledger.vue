@@ -96,8 +96,8 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { roomLedgerColumns } from "./project-columns";
-import { assetManagementApi } from "@/api/asset-management-api";
-import type { RoomTableInterface } from "@/types/asset-management-type";
+import { assetManagementApi } from "@/api/sales/asset-management-api";
+import type { RoomTableInterface } from "@/types/sales/asset-management-type";
 import { useSalesData } from "@/composables/use-sales";
 import { ElMessage } from "element-plus";
 import { v4 as uuidv4 } from "uuid";

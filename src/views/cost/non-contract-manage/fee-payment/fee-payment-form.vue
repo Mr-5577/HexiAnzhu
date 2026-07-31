@@ -1,0 +1,1912 @@
+<!-- 费用支付 表单 -->
+<template>
+  <div class="basic-form-content">
+    <div class="form-header">
+      <div class="header-title">无合同费用支付审批</div>
+      <div class="header-btn">
+        <el-button
+          type="primary"
+          icon="DocumentAdd"
+          :loading="submitLoading"
+          @click="handleSave"
+          :disabled="isDetail || !!billData.status"
+        >
+          保存
+        </el-button>
+        <el-button
+          type="success"
+          plain
+          icon="Promotion"
+          :loading="submitLoading"
+          @click="handleSubmit"
+          :disabled="isDetail || !!billData.status"
+        >
+          提交
+        </el-button>
+        <el-button
+          type="danger"
+          plain
+          icon="Delete"
+          @click="handleDelete"
+          :disabled="isDetail || isAdd || !!billData.status"
+        >
+          删除
+        </el-button>
+        <el-button
+          type="warning"
+          plain
+          icon="Remove"
+          @click="handleCancel"
+          :disabled="isDetail || isAdd || !!billData.status"
+        >
+          作废
+        </el-button>
+        <el-button
+          type="info"
+          plain
+          icon="View"
+          :disabled="isAdd"
+          @click="handleViewProcess"
+        >
+          查看流程
+        </el-button>
+      </div>
+    </div>
+    <div class="form-scroll-area">
+      <el-form
+        ref="feePaymentFormRef"
+        :model="formData"
+        :rules="formRules"
+        label-width="120px"
+        class="adapt-form"
+      >
+        <!-- 基本信息 -->
+        <div class="item-card">
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12" :md="12" :lg="18" :xl="18">
+              <el-form-item label="标题" prop="bizTitle" required>
+                <el-input
+                  v-model="formData.bizTitle"
+                  clearable
+                  placeholder="标题"
+                  :disabled="isDetail || !!billData.status"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="审批状态" prop="approvalStatus">
+                <el-tag
+                  :type="getEnumType(conBillStatusEnum, billData?.status || 0)"
+                >
+                  {{ getEnumLabel(conBillStatusEnum, billData?.status || 0) }}
+                </el-tag>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="业务板块" prop="segId" required>
+                <el-input
+                  v-model="formData.segName"
+                  disabled
+                  placeholder="业务板块"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="板块编码" prop="segNo">
+                <el-input
+                  v-model="formData.segNo"
+                  clearable
+                  disabled
+                  placeholder="板块编码"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="部门" prop="deptName">
+                <el-input
+                  v-model="formData.deptName"
+                  clearable
+                  disabled
+                  placeholder="部门"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="分部" prop="mguName">
+                <el-input
+                  v-model="formData.mguName"
+                  clearable
+                  disabled
+                  placeholder="分部"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="所属项目" prop="projId" required>
+                <el-cascader
+                  ref="projCascaderRef"
+                  v-model="formData.projId"
+                  :options="projectOptions"
+                  :show-all-levels="false"
+                  :props="{
+                    expandTrigger: 'hover',
+                    emitPath: false,
+                    checkStrictly: false,
+                    value: 'orgId',
+                    label: 'orgName',
+                    children: 'children',
+                  }"
+                  placeholder="请选择项目"
+                  style="width: 100%"
+                  filterable
+                  :disabled="isDetail || !!billData.status"
+                  @change="changeProject"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="项目所属公司" prop="compName">
+                <el-input
+                  v-model="formData.compName"
+                  clearable
+                  placeholder="项目所属公司"
+                  disabled
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="提交人" prop="userName">
+                <el-input
+                  v-model="formData.userName"
+                  clearable
+                  disabled
+                  placeholder="提交人"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="提交时间" prop="createDate">
+                <el-date-picker
+                  v-model="formData.createDate"
+                  type="date"
+                  placeholder="提交时间"
+                  style="width: 100%"
+                  value-format="YYYY-MM-DD"
+                  disabled
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </div>
+
+        <!-- 报销事项 -->
+        <div class="item-card">
+          <div class="section-title">报销事项</div>
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="请款金额" prop="reqAmt" required>
+                <el-input-number
+                  v-model="formData.reqAmt"
+                  :precision="2"
+                  :controls="false"
+                  style="width: 100%"
+                  :disabled="isDetail || !!billData.status"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="付款单号" prop="processNo">
+                <el-input
+                  v-model="formData.processNo"
+                  placeholder="付款单号"
+                  style="width: 100%"
+                  :disabled="isDetail || !!billData.status"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="归属月份" prop="belongMonth" required>
+                <el-date-picker
+                  v-model="formData.belongMonth"
+                  type="month"
+                  value-format="YYYY-MM-DD"
+                  placeholder="请选择归属月份"
+                  :disabled="isDetail || !!billData.status"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="费用类型" prop="finaTypeId">
+                <el-cascader
+                  v-model="formData.finaTypeId"
+                  :options="feeTypeOptions"
+                  :show-all-levels="false"
+                  :props="{
+                    expandTrigger: 'hover',
+                    emitPath: false,
+                    checkStrictly: false,
+                    value: 'id',
+                    label: 'finaTypeName',
+                    children: 'children',
+                  }"
+                  placeholder="请选择费用类型"
+                  style="width: 100%"
+                  filterable
+                  :disabled="isDetail || !!billData.status"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
+              <el-form-item label="请款说明" prop="reqDesc">
+                <el-input
+                  v-model="formData.reqDesc"
+                  type="textarea"
+                  :rows="3"
+                  maxlength="500"
+                  show-word-limit
+                  placeholder="请输入"
+                  :disabled="isDetail || !!billData.status"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </div>
+
+        <!-- 扣款事项明细 -->
+        <div class="item-card">
+          <div class="section-title">款项调整</div>
+          <template v-if="isDetail || !!billData.status">
+            <base-table
+              ref="dedTableRef"
+              :columns="dedDetailColumns"
+              :table-data="dedTable"
+              :row-key="'uuid'"
+              :pagination="false"
+              :show-toolbar="false"
+              :show-action-bar="false"
+              :height="'200px'"
+            >
+            </base-table>
+          </template>
+          <template v-else>
+            <editable-table
+              ref="dedTableRef"
+              :row-key="'uuid'"
+              :height="'200px'"
+              v-model="dedTable"
+              :columns="dedColumns"
+              :pagination="false"
+              :highlight-current-row="false"
+              :show-summary="true"
+              :compactEmpty="true"
+              :editable="true"
+              :on-save="handleDedSave"
+            >
+              <template #actionBar>
+                <div class="actionBar-buttons">
+                  <el-button type="primary" size="small" @click="handleAddDed">
+                    新增事项
+                  </el-button>
+                </div>
+              </template>
+              <template #actions="{ row }">
+                <el-button link type="danger" @click="handleDeleteDed(row)">
+                  删除
+                </el-button>
+              </template>
+            </editable-table>
+          </template>
+          <div class="deduction-summary">
+            实际请款：<span>{{ actualReqAmt.toFixed(2) }}</span>
+          </div>
+        </div>
+
+        <!-- 支付方式 -->
+        <div class="item-card">
+          <div class="section-title">支付方式</div>
+          <template v-if="isDetail || !!billData.status">
+            <base-table
+              ref="payWayTableRef"
+              :columns="payWayDetailColumns"
+              :table-data="payWayTable"
+              :row-key="'uuid'"
+              :pagination="false"
+              :show-toolbar="false"
+              :show-action-bar="false"
+              :height="'200px'"
+            >
+            </base-table>
+          </template>
+          <template v-else>
+            <editable-table
+              ref="payWayTableRef"
+              :row-key="'uuid'"
+              :height="'200px'"
+              v-model="payWayTable"
+              :columns="payWayColumns"
+              :pagination="false"
+              :highlight-current-row="false"
+              :show-summary="false"
+              :compactEmpty="true"
+              :editable="true"
+            >
+              <template #actionBar>
+                <div class="actionBar-buttons">
+                  <el-button type="primary" size="small" @click="addPayWay">
+                    新增支付方式
+                  </el-button>
+                </div>
+              </template>
+              <template #actions="{ row }">
+                <el-button link type="danger" @click="deletePayWay(row)">
+                  删除
+                </el-button>
+              </template>
+            </editable-table>
+          </template>
+          <div class="pay-summary">
+            付款合计：<span>{{ totalPayAmt.toFixed(2) }}</span>
+            <span
+              v-if="Math.abs(totalPayAmt - actualReqAmt) > 0.01"
+              class="pay-error"
+            >
+              （必须等于实际请款金额 {{ actualReqAmt.toFixed(2) }}）
+            </span>
+            <span v-else class="pay-success">（等于实际请款金额）</span>
+          </div>
+        </div>
+
+        <!-- 发票登记 -->
+        <div class="item-card">
+          <div class="section-title">发票登记</div>
+          <template v-if="isDetail || !!billData.status">
+            <base-table
+              ref="invoiceMTableRef"
+              :columns="invoiceMDetailColumns"
+              :table-data="invoiceMTable"
+              :row-key="'uuid'"
+              :pagination="false"
+              :show-toolbar="false"
+              :show-action-bar="false"
+              :height="'200px'"
+            >
+              <template #annexName="{ row }">
+                <div class="annex-cell">
+                  <el-link
+                    v-if="row.annexId"
+                    type="primary"
+                    :underline="'hover'"
+                    @click="handleViewAnnex(row)"
+                  >
+                    {{ row.annexName || "查看附件" }}
+                  </el-link>
+                </div>
+              </template>
+              <template #actions="{ row }">
+                <div class="actions-btn">
+                  <el-button
+                    link
+                    type="primary"
+                    :disabled="!(row.annexId && row.invoiceDs?.length)"
+                    @click="detailInvoiceM(row)"
+                  >
+                    发票明细
+                  </el-button>
+                </div>
+              </template>
+            </base-table>
+          </template>
+          <template v-else>
+            <editable-table
+              ref="invoiceMTableRef"
+              :row-key="'uuid'"
+              :height="'200px'"
+              v-model="invoiceMTable"
+              :columns="invoiceMColumns"
+              :pagination="false"
+              :highlight-current-row="false"
+              :show-summary="false"
+              :compactEmpty="true"
+              :editable="true"
+            >
+              <template #actionBar>
+                <div class="actionBar-buttons">
+                  <el-button
+                    type="primary"
+                    size="small"
+                    @click="handleUploadInvoice"
+                  >
+                    上传发票
+                  </el-button>
+                </div>
+              </template>
+
+              <template #annexName="{ row }">
+                <div class="annex-cell">
+                  <el-link
+                    v-if="row.annexId"
+                    type="primary"
+                    :underline="'hover'"
+                    @click="handleViewAnnex(row)"
+                  >
+                    {{ row.annexName || "查看附件" }}
+                  </el-link>
+                </div>
+              </template>
+
+              <template #actions="{ row }">
+                <div class="actions-btn">
+                  <el-button
+                    link
+                    type="primary"
+                    :disabled="!row.annexId"
+                    @click="handleRecognition(row)"
+                  >
+                    识别
+                  </el-button>
+                  <el-button
+                    link
+                    type="primary"
+                    :disabled="!row.annexId"
+                    @click="handleInspect(row)"
+                  >
+                    查验
+                  </el-button>
+                  <el-button
+                    link
+                    type="primary"
+                    :disabled="!(row.annexId && row.invoiceDs?.length)"
+                    @click="detailInvoiceM(row)"
+                  >
+                    发票明细
+                  </el-button>
+                  <el-button link type="danger" @click="deleteInvoiceM(row)">
+                    删除
+                  </el-button>
+                </div>
+              </template>
+            </editable-table>
+          </template>
+        </div>
+
+        <!-- 相关附件 -->
+        <div class="item-card">
+          <div class="section-title">相关附件</div>
+          <el-form-item label="上传附件">
+            <base-upload
+              v-model:file-list="annexFileList"
+              :limit="9"
+              :multiple="false"
+              :showIcon="true"
+              :showTip="true"
+              :maxSize="20"
+              :unrestricted="true"
+              :accept="''"
+              button-text="选择文件"
+              size="default"
+              :disabled="isDetail || !!billData.status"
+              @success="handleFileSuccess"
+            />
+          </el-form-item>
+        </div>
+      </el-form>
+
+      <!-- 上传发票弹窗 -->
+      <UploadInvoiceDialog
+        v-model="uploadVisibleDialog"
+        @success="getAnnexFileList"
+      />
+    </div>
+
+    <!-- 发票明细 弹窗 -->
+    <invoice-detail-dialog
+      ref="invoiceDetailDialogRef"
+      v-model="dialogVisible"
+      :detailList="detailList"
+      :disabled="isDetail || !!billData.status"
+      @success="handleInvoiceDetailSuccess"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, computed, useTemplateRef, watch } from "vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import EditableTable from "@/components/base/editable-table.vue";
+import { EditableColumn } from "@/components/base/editable-table.vue";
+import { v4 as uuidv4 } from "uuid";
+import { useRouter } from "vue-router";
+import { useUserStore } from "@/stores/user-store";
+import { useTagsStore } from "@/stores/tags-store";
+import { conBillStatusEnum } from "@/constants/contract-manage/enums";
+
+import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
+import BaseUpload from "@/components/base/base-upload.vue";
+import UploadInvoiceDialog from "@/components/business/upload-invoice-dialog.vue";
+import InvoiceDetailDialog from "@/components/business/invoice-detail-dialog.vue";
+import { commonApi } from "@/api/cost/common-api";
+import { NconBillInvoiceM } from "@/types/cost/non-contract-manage/cst-payment-type.ts";
+import { dictionaryApi } from "@/api/cost/master-data/dictionary-api.ts";
+import { useDict } from "@/composables/use-dict.ts";
+import { dictMapping } from "@/utils/dict-mapping.ts";
+import { feePaymentApi } from "@/api/cost/non-contract-manage/fee-payment-api";
+import { getEnumLabel, getEnumType } from "@/utils/enum";
+import { dateUtil } from "@/utils/date-util";
+import { buildFileUrl } from "@/utils/file-path-util";
+import { buildTree } from "@/utils/tree";
+
+defineOptions({ name: "fee-payment-form" });
+
+interface Props {
+  mode: "add" | "edit" | "detail";
+  feePaymentId?: number;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  mode: "add",
+  feePaymentId: undefined,
+});
+
+const emit = defineEmits<{
+  (e: "success", data: any): void;
+}>();
+
+const router = useRouter();
+const userStore = useUserStore();
+const tagsStore = useTagsStore();
+
+const mode = ref<"add" | "edit" | "detail">(props.mode);
+const isDetail = computed(() => mode.value === "detail");
+const isEdit = computed(() => mode.value === "edit");
+const isAdd = computed(() => mode.value === "add");
+
+const projCascaderRef = useTemplateRef("projCascaderRef");
+
+const payTypeOptions = ref([]);
+const dedTypeOptions = ref([]);
+const feePaymentFormRef = ref();
+const submitLoading = ref(false);
+const segOptions = ref([]);
+const annexFileList = ref([]);
+const feeTypeOptions = ref([]);
+const feeTypeFlatOptions = ref([]);
+const uploadVisibleDialog = ref(false);
+
+const billData = ref({
+  id: undefined,
+  bizTitle: "",
+  status: 0,
+  bizItemCode: "NCON_FEE",
+});
+const paymentData = ref({
+  id: undefined,
+  segId: undefined,
+  projId: undefined,
+  nconBillId: undefined,
+  status: 0,
+});
+const flowBaseData = ref(null);
+const flowListData = ref({
+  bizItemCode: "",
+  wfFlowId: null,
+  wfStatus: 0,
+  wfTitle: "",
+});
+
+const initFormData = () => ({
+  id: undefined,
+  nconBillId: undefined,
+  belongMonth: dateUtil().format("YYYY-MM"),
+  finaTypeId: undefined,
+  askType: 0,
+  processNo: "",
+  reqAmt: 0,
+  factReqAmt: 0,
+  reqDesc: "",
+  invRecAmt: 0,
+  invRcvdAmt: 0,
+  invOweAmt: 0,
+  bizTitle: "",
+  segId: undefined,
+  segName: "",
+  segNo: "",
+  deptName: "",
+  mguName: "",
+  projId: undefined,
+  projName: "",
+  compId: "",
+  compName: "",
+  userName: "",
+  createDate: "",
+});
+
+const formData = ref(initFormData());
+
+// 数据字典
+const { getDictList, loadDicts } = useDict(
+  [dictMapping.payType, dictMapping.dedType],
+  {
+    treeDictCodes: [dictMapping.dedType],
+  },
+);
+
+// 请款信息校验规则
+const formRules = {
+  bizTitle: [{ required: true, message: "请输入标题", trigger: "change" }],
+  segId: [{ required: true, message: "请选择业务板块", trigger: "change" }],
+  projId: [{ required: true, message: "请选择项目", trigger: "change" }],
+  belongMonth: [
+    { required: true, message: "请选择归属月份", trigger: "change" },
+  ],
+  reqAmt: [{ required: true, message: "请输入请款金额", trigger: "blur" }],
+};
+
+// 选择项目
+const changeProject = async (value: number) => {
+  if (value) {
+    const res = await projectAreaApi.getInfoByProjId({ id: value });
+    if (res.code === 200 && res.data) {
+      const { compName, compId, segId, segName } = res.data;
+      formData.value.compId = compId || "";
+      formData.value.compName = compName || "";
+      formData.value.segId = segId || "";
+      formData.value.segName = segName || "";
+      formData.value.finaTypeId = undefined;
+      feeTypeOptions.value = [];
+      feeTypeFlatOptions.value = [];
+      getPayTypeOptions(segId);
+    }
+  } else {
+    formData.value.compId = "";
+    formData.value.compName = "";
+    formData.value.segId = "";
+    formData.value.segName = "";
+    formData.value.finaTypeId = undefined;
+    feeTypeOptions.value = [];
+    feeTypeFlatOptions.value = [];
+  }
+};
+
+// 查询费用类型
+const getPayTypeOptions = async (segId: number) => {
+  try {
+    const res = await dictionaryApi.getCostTypeListBySegId({ segId: segId });
+    if (res.code === 200) {
+      feeTypeFlatOptions.value = res.data || [];
+      feeTypeOptions.value = buildTree(res.data || []);
+    }
+  } catch (error) {}
+};
+
+// ==================== 数据定义 ====================
+const dedTable = ref([]);
+const invoiceMTable = ref([]);
+const payWayTable = ref([]);
+
+// ==================== 计算逻辑 ====================
+
+// 1. 实际请款金额 = 请款金额 + 扣款金额汇总
+const actualReqAmt = computed(() => {
+  const reqAmt = formData.value.reqAmt || 0;
+  const totalDedAmt = dedTable.value.reduce((sum, item) => {
+    return sum + (Number(item.dedAmt) || 0);
+  }, 0);
+  return totalDedAmt + reqAmt;
+});
+
+// 2. 已收发票金额 = 发票列表发票总金额汇总
+const receivedInvoiceAmt = computed(() => {
+  return invoiceMTable.value.reduce((sum, item) => {
+    return sum + (Number(item.totalAmt) || 0);
+  }, 0);
+});
+
+// 3. 应收发票金额 = 实际请款金额
+const receivableInvoiceAmt = computed(() => {
+  return actualReqAmt.value;
+});
+
+// 4. 欠票金额 = 应收发票金额 - 已收发票金额
+const oweInvoiceAmt = computed(() => {
+  return receivableInvoiceAmt.value - receivedInvoiceAmt.value;
+});
+
+// 5. 支付方式付款金额合计
+const totalPayAmt = computed(() => {
+  return payWayTable.value.reduce((sum, item) => {
+    return sum + (Number(item.payAmt) || 0);
+  }, 0);
+});
+
+// ==================== Watch 监听 ====================
+watch(
+  actualReqAmt,
+  (newVal) => {
+    formData.value.factReqAmt = Number(newVal.toFixed(2));
+    formData.value.invRecAmt = Number(newVal.toFixed(2));
+    formData.value.invOweAmt = Number(oweInvoiceAmt.value.toFixed(2));
+  },
+  { immediate: true },
+);
+
+watch(
+  receivedInvoiceAmt,
+  () => {
+    formData.value.invRcvdAmt = Number(receivedInvoiceAmt.value.toFixed(2));
+    formData.value.invOweAmt = Number(oweInvoiceAmt.value.toFixed(2));
+  },
+  { immediate: true },
+);
+
+// 监听实际请款金额变化，如果只有一条支付方式则自动更新付款金额
+watch(
+  actualReqAmt,
+  (newVal) => {
+    if (payWayTable.value.length === 1) {
+      payWayTable.value[0].payAmt = newVal;
+      payWayTable.value = [...payWayTable.value];
+    }
+  },
+  { immediate: true },
+);
+
+// ==================== 扣款事项 ====================
+const dedDetailColumns = [
+  { type: "index", label: "序号", width: 60 },
+  { prop: "dedName", label: "事项名称", minWidth: 120 },
+  { prop: "dedTypeName", label: "调整类型", minWidth: 120 },
+  { prop: "dedAmt", label: "金额", minWidth: 120 },
+  { prop: "dedDesc", label: "说明", minWidth: 120 },
+];
+
+const dedColumns = computed<EditableColumn[]>(() => [
+  { type: "index", label: "序号", width: 60, editable: false },
+  {
+    prop: "dedName",
+    label: "事项名称",
+    editable: true,
+    editType: "input",
+    showOverflowTooltip: false,
+  },
+  {
+    prop: "dedTypeId",
+    label: "调整类型",
+    editable: true,
+    editType: "cascader",
+    showOverflowTooltip: false,
+    optionLabelField: "dicLabel",
+    optionValueField: "id",
+    options: dedTypeOptions.value || [],
+    showAllLevels: false,
+    cascaderProps: {
+      children: "children",
+      label: "dicLabel",
+      value: "id",
+      emitPath: false,
+      showAllLevels: false,
+      checkStrictly: false,
+    },
+  },
+  {
+    prop: "dedAmt",
+    label: "金额",
+    editable: true,
+    editType: "number",
+    showOverflowTooltip: false,
+    showSummary: true,
+    min: -999999999,
+    max: 999999999,
+  },
+  {
+    prop: "dedDesc",
+    label: "说明",
+    editable: true,
+    editType: "input",
+    showOverflowTooltip: false,
+  },
+  {
+    label: "操作",
+    width: 150,
+    slot: "actions",
+    fixed: "right",
+  },
+]);
+
+const handleAddDed = () => {
+  const newRowData = {
+    uuid: uuidv4(),
+    id: undefined,
+    srcType: "NCON_FEE",
+    nconBillId: undefined,
+    dedName: "",
+    dedAmt: 0,
+    dedTypeId: undefined,
+    dedDesc: "",
+  };
+  dedTable.value = [...dedTable.value, newRowData];
+};
+
+const handleDeleteDed = (row) => {
+  dedTable.value = dedTable.value.filter((item) => item.uuid !== row.uuid);
+};
+
+const updateDedRow = (rowIndex: number, data: any) => {
+  const newData = [...dedTable.value];
+  newData[rowIndex] = { ...dedTable.value[rowIndex], ...data };
+  dedTable.value = newData;
+};
+
+const handleDedSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
+  if (column === "dedTypeId") {
+    updateDedRow(rowIndex, { dedTypeId: newValue, dedAmt: 0 });
+    return;
+  }
+  if (column === "dedAmt") {
+    const targetData = dedTypeOptions.value?.find(
+      (item) => item.id == row.dedTypeId,
+    );
+    if (targetData) {
+      if (targetData.dicValue == "1") {
+        if (newValue <= 0) {
+          ElMessage.error("调增金额必须为正数");
+          updateDedRow(rowIndex, { dedAmt: 0 });
+          return;
+        }
+      } else {
+        if (newValue >= 0) {
+          ElMessage.error("扣款金额必须为负数");
+          updateDedRow(rowIndex, { dedAmt: 0 });
+          return;
+        }
+      }
+    }
+  }
+  updateDedRow(rowIndex, { [column]: newValue });
+};
+
+// ==================== 发票登记 ====================
+const invoiceMDetailColumns = [
+  { type: "index", label: "序号", width: 60 },
+  { prop: "invNo", label: "发票号", minWidth: 120 },
+  { prop: "invDate", label: "开票日期", minWidth: 120 },
+  { prop: "totalAmt", label: "发票总金额", minWidth: 120 },
+  { prop: "notTaxAmt", label: "不含税金额", minWidth: 120 },
+  { prop: "taxAmt", label: "税额", minWidth: 120 },
+  { prop: "invType", label: "发票类型", minWidth: 120 },
+  { slot: "annexName", label: "发票附件", minWidth: 200 },
+  { label: "操作", slot: "actions", width: 180, fixed: "right" },
+];
+
+const invoiceMColumns = computed<EditableColumn[]>(() => [
+  { type: "index", label: "序号", width: 60, editable: false },
+  {
+    prop: "invNo",
+    label: "发票号",
+    editable: false,
+    minWidth: 120,
+    showOverflowTooltip: false,
+  },
+  {
+    prop: "invDate",
+    label: "开票日期",
+    editable: false,
+    minWidth: 120,
+    showOverflowTooltip: false,
+  },
+  {
+    prop: "totalAmt",
+    label: "发票总金额",
+    editable: false,
+    minWidth: 120,
+    showOverflowTooltip: false,
+  },
+  {
+    prop: "notTaxAmt",
+    label: "不含税金额",
+    editable: false,
+    minWidth: 120,
+    showOverflowTooltip: false,
+  },
+  {
+    prop: "taxAmt",
+    label: "税额",
+    editable: false,
+    minWidth: 120,
+    showOverflowTooltip: false,
+  },
+  {
+    prop: "invType",
+    label: "发票类型",
+    editable: false,
+    minWidth: 120,
+    showOverflowTooltip: false,
+  },
+  {
+    slot: "annexName",
+    label: "发票附件",
+    editable: false,
+    minWidth: 200,
+    showOverflowTooltip: false,
+  },
+  {
+    label: "操作",
+    slot: "actions",
+    width: 260,
+    fixed: "right",
+  },
+]);
+
+// 查看附件
+const handleViewAnnex = async (row: any) => {
+  if (!row.annexId) {
+    ElMessage.warning("该附件不存在");
+    return;
+  }
+  try {
+    const res = await commonApi.getFileList({ annexId: row.annexId });
+    if (res.code === 200 && res.data && res.data.length > 0) {
+      const file = res.data[0];
+      const fileUrl = file.annexPath;
+      if (fileUrl) {
+        const url = buildFileUrl(fileUrl);
+        window.open(url, "_blank");
+      } else {
+        ElMessage.error("无法获取附件地址");
+      }
+    } else {
+      ElMessage.error("附件不存在");
+    }
+  } catch (error) {
+    ElMessage.error("查看附件失败，请稍后重试");
+  }
+};
+
+// 上传发票
+const handleUploadInvoice = async () => {
+  uploadVisibleDialog.value = true;
+};
+
+// 获取上传的发票
+const getAnnexFileList = async (fileList: any) => {
+  console.log("上传的发票", fileList);
+  if (fileList && fileList.length > 0) {
+    await batchInvoiceRecognition(fileList);
+  }
+};
+
+// 批量识别发票
+const batchInvoiceRecognition = async (invoiceDataList: any[]) => {
+  const recognitionPromises = invoiceDataList.map(async (item) => {
+    return await invoiceRecognition(item.id, item.annexName);
+  });
+
+  try {
+    const results: any = await Promise.allSettled(recognitionPromises);
+    console.log("识别结果List", results);
+
+    if (results && results.length > 0) {
+      const newData = results.map((result, index) => {
+        if (result.status === "fulfilled") {
+          return {
+            ...result.value,
+            uuid: uuidv4(),
+            id: undefined,
+            srcType: "NCON_FEE",
+            nconBillId: undefined,
+          };
+        } else {
+          const originalItem = invoiceDataList[index];
+          return {
+            annexId: originalItem.id,
+            annexName: originalItem.annexName,
+            uuid: uuidv4(),
+            id: undefined,
+            srcType: "NCON_FEE",
+            nconBillId: undefined,
+            invNo: undefined,
+            invDate: undefined,
+            totalAmt: 0,
+            notTaxAmt: 0,
+            taxAmt: 0,
+            invType: "",
+            invoiceDs: [],
+          };
+        }
+      });
+      invoiceMTable.value = [...invoiceMTable.value, ...newData];
+    }
+  } catch (error) {
+    console.error("批量识别发票失败:", error);
+  }
+};
+
+// 发票识别
+const invoiceRecognition = async (annexId: number, annexName: string) => {
+  try {
+    const res = await commonApi.recognizeAndCheckInvoice({ annexId: annexId });
+    console.log("识别结果", res);
+    if (res.code === 200 && res.data) {
+      const { finalData } = res.data;
+      if (finalData) {
+        let detailListData = [];
+        if (finalData.InvoiceProducts && finalData.InvoiceProducts.length > 0) {
+          finalData.InvoiceProducts.forEach((item: any) => {
+            detailListData.push({
+              itemName: item.Name,
+              size: item.SpecModel,
+              unit: item.MeasureUnit,
+              num: item.Qty,
+              price: item.Price,
+              totalAmt: item.Amount,
+              taxRate: item.TaxRate,
+              taxAmt: item.TaxPrice,
+            });
+          });
+        }
+        const newData = {
+          annexId: annexId,
+          annexName: annexName,
+          invNo: finalData.InvoiceNumber,
+          invDate: finalData.InvoiceDate,
+          totalAmt: finalData.Amount,
+          notTaxAmt: finalData.TotalPrice,
+          taxAmt: finalData.TotalTaxPrice,
+          invType: finalData.InvoiceCategoryName,
+          buyerCompany: finalData.BuyerCompany,
+          buyerTaxCode: finalData.BuyerTaxCode,
+          sellerCompany: finalData.InvoiceCompany,
+          sellerTaxCode: finalData.TaxpayerCode,
+          isValid: finalData.InvoiceValidate == 1 ? true : false,
+          validateMsg: finalData.ValidateMsg,
+          ocrRes: finalData.OCRRes || "",
+          validateRes: finalData.ValidateRes || "",
+          status:
+            finalData.InvoiceValidate == 1
+              ? 1
+              : finalData.InvoiceValidate == 0
+                ? 2
+                : 0,
+          invoiceDs: detailListData,
+        };
+        return newData;
+      } else {
+        return {
+          annexId: annexId,
+          annexName: annexName,
+          invoiceDs: [],
+        };
+      }
+    } else {
+      return {
+        annexId: annexId,
+        annexName: annexName,
+        invoiceDs: [],
+      };
+    }
+  } catch (error) {
+    return {
+      annexId: annexId,
+      annexName: annexName,
+      invoiceDs: [],
+    };
+  }
+};
+
+// 查验
+const handleInspect = async (row: any) => {
+  if (!row.annexId) {
+    ElMessage.warning("暂无发票！");
+    return;
+  }
+  try {
+    const res = await commonApi.recognizeAndCheckInvoice({
+      annexId: row.annexId,
+    });
+    console.log("识别查验结果", res);
+    if (res.code === 200 && res.data) {
+      const { checkData, finalData, recognizeData } = res.data;
+      if (finalData) {
+        const recogniRowIndex = invoiceMTable.value.findIndex(
+          (item) => item.uuid == row.uuid,
+        );
+        let detailListData = [];
+        if (finalData.InvoiceProducts && finalData.InvoiceProducts.length > 0) {
+          finalData.InvoiceProducts.forEach((item: any) => {
+            detailListData.push({
+              itemName: item.Name,
+              size: item.SpecModel,
+              unit: item.MeasureUnit,
+              num: item.Qty,
+              price: item.Price,
+              totalAmt: item.Amount,
+              taxRate: item.TaxRate,
+              taxAmt: item.TaxPrice,
+            });
+          });
+        }
+        const newData = {
+          annexId: row.annexId,
+          annexName: row.annexName,
+          invNo: finalData.InvoiceNumber,
+          invDate: finalData.InvoiceDate,
+          totalAmt: finalData.Amount,
+          notTaxAmt: finalData.TotalPrice,
+          taxAmt: finalData.TotalTaxPrice,
+          invType: finalData.InvoiceCategoryName,
+          buyerCompany: finalData.BuyerCompany,
+          buyerTaxCode: finalData.BuyerTaxCode,
+          sellerCompany: finalData.InvoiceCompany,
+          sellerTaxCode: finalData.TaxpayerCode,
+          isValid: finalData.InvoiceValidate == 1 ? true : false,
+          validateMsg: finalData.ValidateMsg,
+          ocrRes: recognizeData ? JSON.stringify(recognizeData) : "",
+          validateRes: checkData ? JSON.stringify(checkData) : "",
+          status:
+            finalData.InvoiceValidate == 1
+              ? 1
+              : finalData.InvoiceValidate == 0
+                ? 2
+                : 0,
+          invoiceDs: detailListData,
+        };
+        updateRow(recogniRowIndex, newData);
+      }
+    }
+  } catch (error) {}
+};
+
+// 识别
+const handleRecognition = async (row: any) => {
+  if (!row.annexId) return;
+  try {
+    const res = await commonApi.recognizeInvoice({ annexId: row.annexId });
+    console.log("识别结果", res);
+    if (res.code === 200 && res.data) {
+      const { Data } = res.data;
+      if (Data) {
+        const recogniRowIndex = invoiceMTable.value.findIndex(
+          (item) => item.uuid == row.uuid,
+        );
+        let detailListData = [];
+        if (Data.InvoiceProducts && Data.InvoiceProducts.length > 0) {
+          Data.InvoiceProducts.forEach((item: any) => {
+            detailListData.push({
+              itemName: item.Name,
+              size: item.SpecModel,
+              unit: item.MeasureUnit,
+              num: item.Qty,
+              price: item.Price,
+              totalAmt: item.Amount,
+              taxRate: item.TaxRate,
+              taxAmt: item.TaxPrice,
+            });
+          });
+        }
+        const newData = {
+          annexId: row.annexId,
+          annexName: row.annexName,
+          invNo: Data.InvoiceNumber,
+          invDate: Data.InvoiceDate,
+          totalAmt: Data.Amount,
+          notTaxAmt: Data.TotalPrice,
+          taxAmt: Data.TotalTaxPrice,
+          invType: Data.InvoiceCategoryName,
+          buyerCompany: Data.BuyerCompany,
+          buyerTaxCode: Data.BuyerTaxCode,
+          sellerCompany: Data.InvoiceCompany,
+          sellerTaxCode: Data.TaxpayerCode,
+          isValid: Data.InvoiceValidate == 1 ? true : false,
+          validateMsg: Data.ValidateMsg,
+          ocrRes: Data.OCRRes || "",
+          validateRes: Data.ValidateRes || "",
+          status:
+            Data.InvoiceValidate == 1 ? 1 : Data.InvoiceValidate == 0 ? 2 : 0,
+          invoiceDs: detailListData,
+        };
+        updateRow(recogniRowIndex, newData);
+      }
+    }
+  } catch (error) {}
+};
+
+const dialogVisible = ref(false);
+const detailList = ref([]);
+
+const updateRow = (rowIndex: number, data: any) => {
+  Object.assign(invoiceMTable.value[rowIndex], data);
+  invoiceMTable.value = [...invoiceMTable.value];
+};
+
+const detailInvoiceM = (row) => {
+  detailList.value = row.invoiceDs || [];
+  dialogVisible.value = true;
+};
+
+const handleInvoiceDetailSuccess = (data) => {
+  if (data && data.length > 0) {
+    const currInvoiceD = data[0];
+    const recogniRowIndex = invoiceMTable.value.findIndex(
+      (item) => item.id == currInvoiceD.invMid,
+    );
+    if (recogniRowIndex !== -1) {
+      updateRow(recogniRowIndex, { invoiceDs: data });
+    }
+  }
+};
+
+const deleteInvoiceM = ({ uuid }) => {
+  invoiceMTable.value = invoiceMTable.value.filter(
+    (item) => item.uuid !== uuid,
+  );
+};
+
+// ==================== 付款方式 ====================
+const payWayDetailColumns = [
+  { type: "index", label: "序号", width: 60 },
+  { prop: "payWayName", label: "付款方式", minWidth: 150 },
+  { prop: "bankName", label: "收款开户行", minWidth: 150 },
+  { prop: "accountName", label: "收款账户名", minWidth: 150 },
+  { prop: "bankAccount", label: "收款账号", minWidth: 150 },
+  { prop: "payAmt", label: "付款金额", minWidth: 120 },
+  { prop: "dedRoomAmt", label: "其中抵房金额", minWidth: 120 },
+  { prop: "payDesc", label: "事项说明", minWidth: 200 },
+];
+
+const payWayColumns = computed<EditableColumn[]>(() => [
+  { type: "index", label: "序号", width: 60, editable: false },
+  {
+    prop: "payWayId",
+    label: "付款方式",
+    editable: true,
+    editType: "select",
+    showOverflowTooltip: false,
+    optionLabelField: "dicLabel",
+    optionValueField: "id",
+    minWidth: 150,
+    options: payTypeOptions.value || [],
+  },
+  {
+    prop: "bankName",
+    label: "收款开户行",
+    editable: true,
+    editType: "input",
+    minWidth: 150,
+    showOverflowTooltip: false,
+  },
+  {
+    prop: "accountName",
+    label: "收款账户名",
+    editable: true,
+    editType: "input",
+    minWidth: 150,
+    showOverflowTooltip: false,
+  },
+  {
+    prop: "bankAccount",
+    label: "收款账号",
+    editable: true,
+    editType: "input",
+    minWidth: 150,
+    showOverflowTooltip: false,
+  },
+  {
+    prop: "payAmt",
+    label: "付款金额",
+    editable: true,
+    editType: "number",
+    minWidth: 120,
+    showOverflowTooltip: false,
+  },
+  {
+    prop: "dedRoomAmt",
+    label: "其中抵房金额",
+    editable: true,
+    editType: "number",
+    minWidth: 120,
+    showOverflowTooltip: false,
+  },
+  {
+    prop: "payDesc",
+    label: "事项说明",
+    editable: true,
+    editType: "input",
+    minWidth: 200,
+    showOverflowTooltip: false,
+  },
+  {
+    label: "操作",
+    slot: "actions",
+    fixed: "right",
+    width: 100,
+  },
+]);
+
+const addPayWay = () => {
+  const newRowData = {
+    uuid: uuidv4(),
+    id: undefined,
+    srcType: "NCON_FEE",
+    nconBillId: undefined,
+    payWayId: undefined,
+    bankName: "",
+    accountName: "",
+    bankAccount: "",
+    payAmt: 0,
+    dedRoomAmt: 0,
+    payDesc: "",
+  };
+  payWayTable.value = [...payWayTable.value, newRowData];
+};
+
+const deletePayWay = (row) => {
+  payWayTable.value = payWayTable.value.filter(
+    (item) => item.uuid !== row.uuid,
+  );
+};
+
+// ==================== 获取项目列表 ====================
+const projectOptions = ref([]);
+const getProjectOptions = async () => {
+  try {
+    const res = await projectAreaApi.getSegMguProjList();
+    if (res.code === 200) {
+      projectOptions.value = res.data || [];
+    }
+  } catch (error) {
+    console.error("获取项目列表失败:", error);
+  }
+};
+
+// 获取业务板块列表
+const getSegOptions = async () => {
+  try {
+    const res = await dictionaryApi.getsegmentList({ isAuth: true });
+    if (res.code === 200) {
+      segOptions.value = res.data || [];
+    }
+  } catch (error) {
+    console.error("获取业务板块列表失败:", error);
+  }
+};
+
+// ==================== 加载费用支付详情 ====================
+const loadDetail = async () => {
+  if (!props.feePaymentId) return;
+  const res = await feePaymentApi.geFeePaymentDetail({
+    id: props.feePaymentId,
+    isWithBill: true,
+  });
+  if (res.code === 200 && res.data) {
+    backfillData(res.data);
+  }
+};
+
+// 数据回填
+const backfillData = async (data) => {
+  const {
+    annexList,
+    bill,
+    deds,
+    invoiceMs,
+    payWays,
+    payment,
+    flowBase,
+    flowList,
+  } = data;
+
+  if (payment) {
+    Object.assign(formData.value, payment);
+  }
+
+  billData.value = { ...billData.value, ...bill };
+  paymentData.value = { ...paymentData.value, ...payment };
+  flowBaseData.value = { ...flowBaseData.value, ...flowBase };
+  flowListData.value = { ...flowListData.value, ...flowList };
+
+  formData.value.bizTitle = bill.bizTitle || "";
+  formData.value.segId = flowBase.segId || undefined;
+  formData.value.segName = flowBase.segName || undefined;
+  formData.value.segNo = flowBase.segNo || undefined;
+  formData.value.deptName = flowBase.deptName || undefined;
+  formData.value.mguName = flowBase.mguName || undefined;
+  formData.value.projId = flowBase.projId || undefined;
+  formData.value.projName = flowBase.projName || undefined;
+  formData.value.compId = flowBase.compId || undefined;
+  formData.value.compName = flowBase.compName || undefined;
+  formData.value.userName = flowBase.userName || undefined;
+  formData.value.createDate = bill.createDate || "";
+
+  if (payment.segId) {
+    getPayTypeOptions(payment.segId);
+  }
+
+  const mapWithUuid = <T,>(items: T[] = []) =>
+    items.map((item) => ({ ...item, uuid: uuidv4() }));
+
+  payWayTable.value = mapWithUuid(payWays);
+  dedTable.value = mapWithUuid(deds);
+
+  if (invoiceMs?.length) {
+    invoiceMTable.value = invoiceMs.map((item: NconBillInvoiceM) => {
+      return {
+        ...item,
+        uuid: uuidv4(),
+      };
+    });
+  } else {
+    invoiceMTable.value = [];
+  }
+
+  if (annexList?.length) {
+    annexFileList.value = annexList.map((item: any) => ({
+      ...item,
+      name: item.annexName,
+      url: item.annexPath,
+    }));
+  }
+};
+
+// ==================== 构建保存参数 ====================
+const buildSaveParams = () => {
+  const bill = {
+    ...billData.value,
+    id: billData.value.id || undefined,
+    bizTitle: formData.value.bizTitle,
+    bizItemCode: "NCON_FEE",
+    segId: formData.value.segId,
+    segName: formData.value.segName,
+    segNo: formData.value.segNo,
+    projId: formData.value.projId,
+    projName: formData.value.projName,
+    compId: formData.value.compId,
+    compName: formData.value.compName,
+  };
+
+  const payment = {
+    id: paymentData.value.id || undefined,
+    nconBillId: formData.value.nconBillId,
+    segId: formData.value.segId,
+    projId: formData.value.projId,
+    belongMonth: formData.value.belongMonth,
+    finaTypeId: formData.value.finaTypeId,
+    askType: formData.value.askType,
+    processNo: formData.value.processNo,
+    reqAmt: formData.value.reqAmt,
+    factReqAmt: formData.value.factReqAmt,
+    reqDesc: formData.value.reqDesc,
+    invRecAmt: formData.value.invRecAmt,
+    invRcvdAmt: formData.value.invRcvdAmt,
+    invOweAmt: formData.value.invOweAmt,
+  };
+
+  const deds = dedTable.value.map((item) => ({
+    id: item.id,
+    srcType: item.srcType,
+    nconBillId: item.nconBillId,
+    dedName: item.dedName || "",
+    dedAmt: item.dedAmt || 0,
+    dedTypeId: item.dedTypeId,
+    dedDesc: item.dedDesc || "",
+  }));
+
+  const invoiceMs: NconBillInvoiceM[] = [];
+  invoiceMTable.value.forEach((item) => {
+    if (item.annexId) {
+      const invM = {
+        id: item.id,
+        nconBillId: item.nconBillId,
+        srcType: item.srcType,
+        invNo: item.invNo || "",
+        invDate: item.invDate ? `${item.invDate} 00:00:00` : "",
+        totalAmt: item.totalAmt || 0,
+        notTaxAmt: item.notTaxAmt || 0,
+        taxAmt: item.taxAmt || 0,
+        invType: item.invType || "",
+        annexId: item.annexId,
+        isValid: item.isValid || false,
+        validateMsg: item.validateMsg || "",
+        ocrRes: item.ocrRes || "",
+        validateRes: item.validateRes || "",
+        status: item.status || 0,
+        invoiceDs: item.invoiceDs || [],
+      };
+      invoiceMs.push(invM);
+    }
+  });
+
+  const payWays: any[] = payWayTable.value.map((item) => ({
+    id: item.id,
+    srcType: item.srcType,
+    nconBillId: item.nconBillId,
+    payWayId: item.payWayId || "",
+    payAmt: item.payAmt || 0,
+    dedRoomAmt: item.dedRoomAmt || 0,
+    payDesc: item.payDesc || "",
+    bankName: item.bankName || "",
+    accountName: item.accountName || "",
+    bankAccount: item.bankAccount || "",
+  }));
+
+  return {
+    bill: bill,
+    payment: payment,
+    deds: deds.length > 0 ? deds : [],
+    invoiceMs: invoiceMs.length > 0 ? invoiceMs : [],
+    payWays: payWays.length > 0 ? payWays : [],
+    costAllocs: [],
+    finaDs: [],
+    annexList: annexFileList.value || [],
+  };
+};
+
+// ==================== 校验数据 ====================
+const validateData = () => {
+  // 校验扣款事项明细
+  if (dedTable.value && dedTable.value.length > 0) {
+    for (const item of dedTable.value) {
+      if (!item.dedName || item.dedName.trim() === "") {
+        ElMessage.error("事项名称为必填项，请完善后提交");
+        return false;
+      }
+      if (!item.dedTypeId) {
+        ElMessage.error("调整类型为必填项，请完善后提交");
+        return false;
+      }
+      if (!item.dedAmt || Number(item.dedAmt) === 0) {
+        ElMessage.error("金额不能为0，请完善后提交");
+        return false;
+      }
+    }
+  }
+
+  // 校验支付方式金额合计必须等于实际请款金额
+  const totalPay = totalPayAmt.value;
+  const actualAmt = actualReqAmt.value;
+  if (Math.abs(totalPay - actualAmt) > 0.01) {
+    ElMessage.error(
+      `支付方式付款金额合计(${totalPay.toFixed(2)})必须等于实际请款金额(${actualAmt.toFixed(2)})`,
+    );
+    return false;
+  }
+
+  // 校验支付方式
+  for (const item of payWayTable.value) {
+    if (!item.payWayId) {
+      ElMessage.error("请选择付款方式");
+      return false;
+    }
+    if (!item.payAmt || Number(item.payAmt) <= 0) {
+      ElMessage.error("付款金额必须大于0");
+      return false;
+    }
+  }
+
+  return true;
+};
+
+// ==================== 返回操作 ====================
+const goBack = () => {
+  if (isAdd.value) {
+    tagsStore.closeTagByPath("/ncon/fee-payment/add");
+  }
+  if (isEdit.value) {
+    tagsStore.closeTagByPath("/ncon/fee-payment/edit");
+  }
+  router.go(-1);
+};
+
+// ==================== 保存 ====================
+const handleSave = async () => {
+  feePaymentFormRef.value?.validate(async (valid: boolean) => {
+    if (!valid) {
+      ElMessage.error("请检查表单！");
+      return;
+    }
+    if (!validateData()) {
+      return;
+    }
+    submitLoading.value = true;
+    const params = buildSaveParams();
+    try {
+      const res = await feePaymentApi.saveFeePayment(params);
+      if (res.code === 200 && res.data) {
+        paymentData.value.id = res.data;
+        ElMessage.success("保存成功");
+      }
+    } finally {
+      submitLoading.value = false;
+    }
+  });
+};
+
+// ==================== 提交 ====================
+const handleSubmit = async () => {
+  feePaymentFormRef.value?.validate(async (valid: boolean) => {
+    if (!valid) {
+      ElMessage.error("请检查表单！");
+      return;
+    }
+    if (!validateData()) {
+      return;
+    }
+    submitLoading.value = true;
+    const params = buildSaveParams();
+    try {
+      const res = await feePaymentApi.submitFeePayment(params);
+      if (res.code === 200 && res.data) {
+        ElMessage.success("提交成功,已发起审批！");
+        const redirectRes = await commonApi.generateRedirectUrl({
+          oaRequestId: res.data,
+        });
+        goBack();
+
+        if (redirectRes.code === 200 && redirectRes.data) {
+          setTimeout(() => {
+            window.open(redirectRes.data, "_blank");
+          }, 800);
+        }
+      }
+    } finally {
+      submitLoading.value = false;
+    }
+  });
+};
+
+// ==================== 删除 ====================
+const handleDelete = async () => {
+  ElMessageBox.confirm("确定要删除吗？", "提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  }).then(async () => {
+    try {
+      const res = await feePaymentApi.delFeePayment({ id: props.feePaymentId });
+      if (res.code === 200) {
+        ElMessage.success("删除成功");
+        goBack();
+      }
+    } catch (error) {}
+  });
+};
+
+// ==================== 作废 ====================
+const handleCancel = async () => {
+  ElMessageBox.confirm("确定要作废吗？", "提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  }).then(async () => {
+    try {
+      const res = await feePaymentApi.voidFeePayment({
+        id: props.feePaymentId,
+      });
+      if (res.code === 200) {
+        ElMessage.success("作废成功");
+        goBack();
+      }
+    } catch (error) {}
+  });
+};
+
+// ==================== 查看流程 ====================
+const handleViewProcess = async () => {
+  if (flowListData.value && flowListData.value?.wfFlowId) {
+    try {
+      const redirectRes = await commonApi.generateRedirectUrl({
+        oaRequestId: flowListData.value.wfFlowId,
+      });
+      if (redirectRes.code === 200 && redirectRes.data) {
+        window.open(redirectRes.data, "_blank");
+      }
+    } catch (error) {
+      console.error("查看流程失败:", error);
+    }
+  } else {
+    ElMessage.warning("暂无流程信息");
+  }
+};
+
+const handleFileSuccess = (file: any) => {
+  console.log("相关附件上传成功", file);
+  annexFileList.value.push(file);
+};
+
+// ==================== 初始化数据字典 ====================
+const initDictData = async () => {
+  await loadDicts();
+  payTypeOptions.value = getDictList(dictMapping.payType);
+  dedTypeOptions.value = getDictList(dictMapping.dedType);
+};
+
+onMounted(async () => {
+  await initDictData();
+  await getProjectOptions();
+  await getSegOptions();
+  formData.value.userName = userStore.userInfo?.empName || "";
+  formData.value.createDate = dateUtil().format("YYYY-MM-DD");
+  formData.value.belongMonth = dateUtil().format("YYYY-MM-DD");
+  if (props.mode === "add") {
+    initFormData();
+    setTimeout(() => {
+      addPayWay();
+    });
+  } else {
+    await loadDetail();
+  }
+});
+</script>
+
+<style scoped lang="scss">
+.basic-form-content {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #f8fafc;
+  border-radius: 8px;
+  overflow: hidden;
+  padding: 0;
+}
+
+.form-header {
+  width: 100%;
+  background: #ffffff;
+  padding: 16px 24px 12px 24px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+  border-bottom: 1px solid #e4e7ed;
+
+  .header-title {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 8px 0;
+    box-sizing: border-box;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1d2129;
+    letter-spacing: 0.5px;
+  }
+
+  .header-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 4px 0;
+
+    .el-button {
+      border-radius: 6px;
+      font-weight: 500;
+      transition: all 0.25s ease;
+
+      &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+      }
+
+      &:active {
+        transform: translateY(0px);
+      }
+    }
+  }
+}
+
+.form-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px 15px 30px;
+  box-sizing: border-box;
+
+  .adapt-form {
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  .item-card {
+    background: #ffffff;
+    border-radius: 8px;
+    padding: 15px 15px;
+    margin-bottom: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    transition: box-shadow 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+.section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1d2129;
+  padding: 0 0 12px 14px;
+  position: relative;
+
+  &::before {
+    content: "";
+    width: 4px;
+    height: 18px;
+    background: linear-gradient(180deg, #409eff, #66b1ff);
+    border-radius: 2px;
+    position: absolute;
+    left: 0;
+    top: 4px;
+  }
+}
+
+.actionBar-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.actions-btn {
+  height: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.deduction-summary {
+  padding: 10px 15px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  background: #f5f7fa;
+  border-radius: 4px;
+
+  span {
+    color: #f56c6c;
+    font-size: 18px;
+  }
+}
+
+.pay-summary {
+  padding: 10px 15px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  background: #f5f7fa;
+  border-radius: 4px;
+  margin-top: 10px;
+
+  span {
+    color: #f56c6c;
+    font-size: 18px;
+  }
+
+  .pay-error {
+    color: #f56c6c;
+    font-size: 14px;
+    font-weight: normal;
+  }
+
+  .pay-success {
+    color: #67c23a;
+    font-size: 14px;
+    font-weight: normal;
+  }
+}
+
+.annex-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+</style>

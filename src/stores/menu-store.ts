@@ -1,6 +1,6 @@
 import { computed, ref } from "vue";
 import { defineStore } from "pinia";
-import { BackendMenuItem } from "@/types/menu-type";
+import { BackendMenuItem } from "@/types/system/menu-type";
 
 export const useMenuStore = defineStore("menu-store", () => {
   const menuData = ref<BackendMenuItem[]>([]);

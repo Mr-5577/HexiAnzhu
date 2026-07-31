@@ -33,6 +33,16 @@
       :tableLoading="tableLoading"
       :pagination="false"
     >
+      <!-- 管控方式 -->
+      <template #ctrlMode="{ row }">
+        <el-tag
+          :type="getCtrlModeType(row.ctrlMode)"
+          size="small"
+          effect="light"
+        >
+          {{ getCtrlModeLabel(row.ctrlMode) }}
+        </el-tag>
+      </template>
       <!-- 是否启用 -->
       <template #status="{ row }">
         <el-switch
@@ -78,6 +88,7 @@ import type {
 } from "@/types/cost/master-data/cost-category-type.ts";
 import AddEditBasicCategoryDialog from "./add-edit-basic-category-dialog.vue";
 import { buildTree } from "@/utils/tree";
+import { ctrlModeEnum } from "@/constants/master-data/enums.ts";
 
 defineOptions({ name: "basic-cost-category" });
 
@@ -105,11 +116,24 @@ const parentId = ref<number>(0);
 const tableColumns = [
   { type: "index", label: "序号", width: 60 },
   { prop: "subName", label: "科目名称", align: "left" },
-  { prop: "subCode", label: "科目编号", width: 200 },
+  { prop: "subCode", label: "科目编号", width: 120 },
+  { prop: "allocRuleName", label: "分摊规则", width: 180 },
+  { prop: "busiSegName", label: "业务归属", width: 120 },
   { prop: "remark", label: "说明" },
-  { label: "是否启用", width: 200, slot: "status" },
+  { label: "管控方式", width: 100, slot: "ctrlMode" },
+  { label: "是否启用", width: 100, slot: "status" },
   { label: "操作", width: 200, slot: "actions", fixed: "right" },
 ];
+
+// 获取标签文字
+const getCtrlModeLabel = (value: number | string | null) => {
+  return ctrlModeEnum.find((item) => item.value === value)?.label || "-";
+};
+
+// 获取标签颜色（直接从枚举里取 type，不用额外定义映射）
+const getCtrlModeType = (value: number | string | null) => {
+  return ctrlModeEnum.find((item) => item.value === value)?.type || "info";
+};
 
 // 获取数据
 const getBasicCostSubjectBaseList = async () => {
@@ -201,10 +225,14 @@ const handleEnabledChange = async (row: CostCategoryBaseNode) => {
       ctrlMode: row.ctrlMode,
       remark: row.remark,
       isEnabled: row.isEnabled,
+      allocRule: row.allocRule,
+      busiSegId: row.busiSegId,
     });
     if (res.code === 200) {
       ElMessage.success(`已${row.isEnabled ? "启用" : "禁用"}成功`);
-      await getBasicCostSubjectBaseList();
+      // row.isEnabled 已经通过 v-model 更新了，所以这里不需要再更新一次
+      // await getBasicCostSubjectBaseList();
+      // updateRowInTree(tableData.value, row.id, { isEnabled: row.isEnabled });
     } else {
       // 失败时回滚状态
       row.isEnabled = !row.isEnabled;
@@ -217,6 +245,25 @@ const handleEnabledChange = async (row: CostCategoryBaseNode) => {
   } finally {
     enabledLoading.value = false;
   }
+};
+// 在树中更新指定行
+const updateRowInTree = (
+  treeData: any[],
+  id: number,
+  updates: any,
+): boolean => {
+  for (let i = 0; i < treeData.length; i++) {
+    const item = treeData[i];
+    if (item.id === id) {
+      Object.assign(item, updates);
+      return true;
+    }
+    if (item.children && item.children.length > 0) {
+      const found = updateRowInTree(item.children, id, updates);
+      if (found) return true;
+    }
+  }
+  return false;
 };
 onMounted(() => {
   getBasicCostSubjectBaseList();

@@ -40,7 +40,7 @@ export const useTagsStore = defineStore(
 
       // 检查是否已存在相同唯一标识的标签
       const existingIndex = visitedViews.value.findIndex(
-        (v) => v.uniqueId === uniqueId
+        (v) => v.uniqueId === uniqueId,
       );
 
       if (existingIndex > -1) {
@@ -69,7 +69,7 @@ export const useTagsStore = defineStore(
     const handleNormalView = (view: RouteLocationNormalized) => {
       // 查找相同路径的标签页
       const existingIndex = visitedViews.value.findIndex(
-        (v) => v.path === view.path
+        (v) => v.path === view.path,
       );
 
       if (existingIndex > -1) {
@@ -98,7 +98,7 @@ export const useTagsStore = defineStore(
     // 删除标签页
     const delView = (view: TagView) => {
       const index = visitedViews.value.findIndex(
-        (v) => v.uniqueId === view.uniqueId
+        (v) => v.uniqueId === view.uniqueId,
       );
       if (index > -1) {
         visitedViews.value.splice(index, 1);
@@ -108,7 +108,7 @@ export const useTagsStore = defineStore(
     // 删除其他标签页
     const delOtherViews = (view: TagView) => {
       visitedViews.value = visitedViews.value.filter(
-        (v) => v.affix || v.uniqueId === view.uniqueId
+        (v) => v.affix || v.uniqueId === view.uniqueId,
       );
       setActiveTag(view.path, view.uniqueId);
     };
@@ -125,7 +125,7 @@ export const useTagsStore = defineStore(
     // 删除右侧标签页
     const delRightViews = (view: TagView) => {
       const index = visitedViews.value.findIndex(
-        (v) => v.uniqueId === view.uniqueId
+        (v) => v.uniqueId === view.uniqueId,
       );
       if (index > -1) {
         visitedViews.value = visitedViews.value
@@ -147,38 +147,46 @@ export const useTagsStore = defineStore(
 
     // 辅助函数：生成唯一标识
     const generateUniqueId = (view: RouteLocationNormalized): string => {
-      const { path, query } = view;
+      const { path, query, params, fullPath } = view;
 
       // 如果不支持多开，仅使用路径作为标识
       if (!view.meta?.isMultiOpen || Object.keys(query).length === 0) {
         return path;
       }
 
-      // 对于多开页面，使用路径+关键参数生成唯一标识
-      // 可以根据需要调整关键参数
+      // 对于多开页面，使用关键参数生成唯一标识
       const keyParams: string[] = [];
 
-      // 优先使用id作为标识
-      if (query.id) {
-        keyParams.push(`id=${query.id}`);
-      }
-      // 如果没有id，使用其他参数
-      else {
-        const sortedParams = Object.keys(query)
+      // 从 params 提取
+      const paramKeys = Object.keys(params);
+      if (paramKeys.length > 0) {
+        const sortedParams = paramKeys
           .sort()
-          .map((key) => `${key}=${query[key]}`)
+          .map((key) => `${key}=${params[key]}`)
           .join("&");
         keyParams.push(sortedParams);
       }
-
+      // 从 query 提取
+      const queryKeys = Object.keys(query);
+      if (queryKeys.length > 0) {
+        const sortedQuery = queryKeys
+          .sort()
+          .map((key) => `${key}=${query[key]}`)
+          .join("&");
+        keyParams.push(sortedQuery);
+      }
+      // 没有任何参数：使用路径作为标识
+      if (keyParams.length === 0) {
+        return path;
+      }
       return `${path}?${keyParams.join("&")}`;
     };
 
     // 辅助函数：生成标签标题
     const generateTagTitle = (view: RouteLocationNormalized): string => {
       const baseTitle = (view.meta?.title as string) || "未知页面";
-      const { query } = view;
 
+      // const { query } = view;
       // 如果是多开页面且有标识参数，显示在标题中
       // if (view.meta?.isMultiOpen) {
       //   if (query.taskName) {
@@ -198,7 +206,7 @@ export const useTagsStore = defineStore(
     // 检查标签是否激活
     const isTagActive = (
       tag: TagView,
-      currentRoute: RouteLocationNormalized
+      currentRoute: RouteLocationNormalized,
     ): boolean => {
       const currentUniqueId = generateUniqueId(currentRoute);
       return tag.uniqueId === currentUniqueId;
@@ -211,6 +219,21 @@ export const useTagsStore = defineStore(
       return false;
     };
 
+    // 关闭指定标签
+    const closeTagByPath = (path: string): boolean => {
+      // 查找要关闭的标签
+      const index = visitedViews.value.findIndex((v) => v.path === path);
+      if (index === -1) return false;
+
+      const tag = visitedViews.value[index];
+      // 固定标签不允许关闭
+      if (tag.affix) return false;
+
+      // 删除标签
+      visitedViews.value.splice(index, 1);
+      return true;
+    };
+
     return {
       visitedViews,
       activeTag,
@@ -221,6 +244,7 @@ export const useTagsStore = defineStore(
       delRightViews,
       setActiveTag,
       initAffixTags,
+      closeTagByPath,
       // 导出辅助函数
       generateUniqueId,
       generateTagTitle,
@@ -235,5 +259,5 @@ export const useTagsStore = defineStore(
       key: "tags-store",
       storage: sessionStorage,
     },
-  }
+  },
 );

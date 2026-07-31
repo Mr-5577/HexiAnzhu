@@ -63,7 +63,7 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { arAgingDetailColumns } from "./project-columns";
-import { assetManagementApi } from "@/api/asset-management-api";
+import { assetManagementApi } from "@/api/sales/asset-management-api";
 import { useSalesData } from "@/composables/use-sales";
 import { ElMessage } from "element-plus";
 import { useRoute } from "vue-router";
@@ -107,8 +107,8 @@ const exportLoading = ref<boolean>(false);
 const currentPage = ref<number>(1);
 const pageSize = ref<number>(20);
 const total = ref<number>(0);
-const tableData = ref<any[]>([]);
-const allTableList = ref<any[]>([]);
+const tableData = ref([]);
+const allTableList = ref([]);
 
 const handlePaginationChange = (params: any) => {
   currentPage.value = params.currentPage;
@@ -160,7 +160,6 @@ const initPageData = async () => {
 };
 const getParams = () => ({
   ...queryParams.value,
-  current: currentPage.value,
   isShowTel: menuStore.hasExactPermission("aging-detail:showTel"),
 });
 // 获取列表

@@ -74,16 +74,4 @@ export interface SupplierTypeQueryParams {
   supTypeName?: string;
   /** 是否启用 */
   isEnabled?: boolean;
-  /** 页码 */
-  pageNum?: number;
-  /** 每页条数 */
-  pageSize?: number;
-}
-
-/**
- * 删除供应商类别请求参数
- */
-export interface SupplierTypeDeleteParams {
-  /** 主键ID */
-  id: number;
 }

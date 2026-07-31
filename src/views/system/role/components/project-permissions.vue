@@ -63,7 +63,7 @@
 import { Sort } from "@element-plus/icons-vue";
 
 import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
-import { roleApi } from "@/api/role-api";
+import { roleApi } from "@/api/system/role-api";
 import { ElMessage } from "element-plus";
 
 import type { TableColumnItem } from "@/components/base/base-table.vue";
@@ -107,7 +107,7 @@ const columns: TableColumnItem[] = [
     showOverflowTooltip: false,
   },
 ];
-const tableData = ref<any[]>([]);
+const tableData = ref([]);
 // 获取数据列表
 const getDataList = async () => {
   try {

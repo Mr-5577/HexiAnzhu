@@ -23,9 +23,9 @@
           搜索
         </el-button>
         <el-button icon="Refresh" @click="handleReset">重置</el-button>
-        <el-button type="primary" @click="handleAddTopLevel">
+        <!-- <el-button type="primary" @click="handleAddTopLevel">
           新建顶级分类
-        </el-button>
+        </el-button> -->
       </el-form-item>
     </el-form>
 

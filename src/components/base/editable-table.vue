@@ -6,6 +6,11 @@
     :columns="enhancedColumns"
     :table-data="editableData"
     :dict-data="dictData"
+    :row-key="rowKey"
+    :tree-props="treeProps"
+    :default-expand-all="defaultExpandAll"
+    :lazy="lazy"
+    :load="load"
     @cell-event="handleCellEvent"
   >
     <!-- 透传所有插槽 -->
@@ -31,7 +36,7 @@
               :model-value="row[column.prop]"
               :placeholder="column.placeholder || '请选择'"
               size="small"
-              :disabled="column.disabled"
+              :disabled="getColumnDisabled(column, row)"
               readonly
               class="clickable-input"
               @click.stop="handleCellClick(row, column, $index)"
@@ -44,10 +49,9 @@
               v-if="column.editType === 'input'"
               v-model="row[column.prop]"
               size="small"
-              :disabled="column.disabled"
+              :disabled="getColumnDisabled(column, row)"
               :placeholder="column.placeholder || '请输入'"
-              @blur="handleSave(row, column, $index)"
-              @keyup.enter="handleSave(row, column, $index)"
+              @change="handleSave(row, column, $index)"
             />
 
             <!-- 选择器 -->
@@ -55,7 +59,7 @@
               v-else-if="column.editType === 'select'"
               v-model="row[column.prop]"
               size="small"
-              :disabled="column.disabled"
+              :disabled="getColumnDisabled(column, row)"
               :placeholder="column.placeholder || '请选择'"
               :multiple="column.multiple || false"
               :collapse-tags="column.collapseTags || true"
@@ -70,19 +74,51 @@
               />
             </el-select>
 
+            <!-- 级联选择器 -->
+            <el-cascader
+              v-else-if="column.editType === 'cascader'"
+              v-model="row[column.prop]"
+              size="small"
+              :disabled="getColumnDisabled(column, row)"
+              :placeholder="column.placeholder || '请选择'"
+              :options="getColumnOptions(column, row)"
+              :props="getCascaderProps(column)"
+              :clearable="column.clearable !== false"
+              :show-all-levels="column.showAllLevels !== false"
+              :collapse-tags="column.collapseTags || false"
+              @change="handleSave(row, column, $index)"
+            />
+
             <!-- 数字输入 -->
             <el-input-number
               v-else-if="column.editType === 'number'"
               v-model="row[column.prop]"
               size="small"
-              :disabled="column.disabled"
+              :disabled="getColumnDisabled(column, row)"
               controls-position="right"
               :controls="false"
               :precision="getNumberPrecision(column)"
-              :min="0"
+              :min="column.getMin ? column.getMin(row) : (column.min ?? 0)"
+              :max="
+                column.getMax ? column.getMax(row) : (column.max ?? 999999999)
+              "
               :placeholder="column.placeholder || '请输入'"
+              :formatter="
+                (value: any) =>
+                  column.thousandSeparator
+                    ? formatThousand(value, column)
+                    : value
+              "
+              :parser="
+                (value: string) =>
+                  column.thousandSeparator ? parseThousand(value) : value
+              "
               @change="handleSave(row, column, $index)"
-            />
+            >
+              <template v-if="column.prefix" #prefix>
+                <span class="input-prefix-inner">{{ column.prefix }}</span>
+              </template>
+            </el-input-number>
 
             <!-- 文本域 -->
             <el-input
@@ -91,9 +127,9 @@
               type="textarea"
               :rows="2"
               size="small"
-              :disabled="column.disabled"
+              :disabled="getColumnDisabled(column, row)"
               :placeholder="column.placeholder || '请输入'"
-              @blur="handleSave(row, column, $index)"
+              @change="handleSave(row, column, $index)"
             />
 
             <!-- 日期 -->
@@ -102,7 +138,7 @@
               v-model="row[column.prop]"
               type="date"
               size="small"
-              :disabled="column.disabled"
+              :disabled="getColumnDisabled(column, row)"
               :placeholder="column.placeholder || '请选择日期'"
               value-format="YYYY-MM-DD"
               @change="handleSave(row, column, $index)"
@@ -114,7 +150,7 @@
               v-model="row[column.prop]"
               type="datetime"
               size="small"
-              :disabled="column.disabled"
+              :disabled="getColumnDisabled(column, row)"
               :placeholder="column.placeholder || '请选择时间'"
               value-format="YYYY-MM-DD HH:mm:ss"
               @change="handleSave(row, column, $index)"
@@ -125,7 +161,7 @@
               v-else-if="column.editType === 'switch'"
               v-model="row[column.prop]"
               size="small"
-              :disabled="column.disabled"
+              :disabled="getColumnDisabled(column, row)"
               @change="handleSave(row, column, $index)"
             />
 
@@ -134,7 +170,7 @@
               v-else-if="column.editType === 'radio'"
               v-model="row[column.prop]"
               size="small"
-              :disabled="column.disabled"
+              :disabled="getColumnDisabled(column, row)"
               @change="handleSave(row, column, $index)"
             >
               <el-radio
@@ -151,10 +187,9 @@
               v-else
               v-model="row[column.prop]"
               size="small"
-              :disabled="column.disabled"
+              :disabled="getColumnDisabled(column, row)"
               :placeholder="column.placeholder || '请输入'"
-              @blur="handleSave(row, column, $index)"
-              @keyup.enter="handleSave(row, column, $index)"
+              @change="handleSave(row, column, $index)"
             />
           </template>
         </div>
@@ -169,46 +204,23 @@ import { ElMessage } from "element-plus";
 import BaseTable from "./base-table.vue";
 import type { TableColumnItem, DictData } from "./base-table.vue";
 
-// 扩展列配置
-export interface EditableColumn extends TableColumnItem {
-  /** 是否可编辑 */
-  editable?: boolean;
-  /** 编辑类型 */
-  editType?:
-    | "input"
-    | "select"
-    | "number"
-    | "textarea"
-    | "date"
-    | "datetime"
-    | "switch"
-    | "radio";
-  /** 占位符 */
-  placeholder?: string;
-  /** 选项列表（用于 select/radio）- 支持静态数组或动态函数 */
-  options?: Array<any> | ((row: any) => Array<any>);
-  /** 选项的标签字段名，默认 'label' */
-  optionLabelField?: string;
-  /** 选项的值字段名，默认 'value' */
-  optionValueField?: string;
-  /** 是否多选（仅 select 类型有效） */
-  multiple?: boolean;
-  /** 多选时是否折叠标签 */
-  collapseTags?: boolean;
-  /** 是否可清空 */
-  clearable?: boolean;
-  /** 数字精度（小数位数），不设置或设置为0表示整数 */
-  precision?: number;
-  /** 动态获取选项的函数（优先级高于 options） */
-  getOptions?: (row: any) => Array<any>;
-  /** 子列配置（递归支持多级表头） */
-  children?: EditableColumn[];
-}
+/**
+ * <!-- 方式一：只用 v-model（推荐） -->
+ * <editable-table v-model="tableData" />
+ *
+ * <!-- 方式二：只用 :table-data + @update -->
+ * <editable-table :table-data="tableData" @update:table-data="tableData = $event" />
+ *
+ * <!-- 方式三：用 v-model:table-data（等价于方式二） -->
+ * <editable-table v-model:table-data="tableData" />
+ */
 
-// Props
+// Props - 支持 v-model 和传统方式
 interface Props {
-  /** 表格数据 */
-  tableData: any[];
+  /** 表格数据（v-model 方式） */
+  modelValue?: any[];
+  /** 表格数据（传统方式，兼容旧代码） */
+  tableData?: any[];
   /** 列配置 */
   columns: EditableColumn[];
   /** 行数据的唯一标识字段 */
@@ -227,10 +239,97 @@ interface Props {
     oldValue: any;
     rowIndex: number;
   }) => Promise<void> | void;
+  /** 树形配置 */
+  treeProps?: {
+    children?: string;
+    hasChildren?: string;
+  };
+  /** 是否默认展开所有节点 */
+  defaultExpandAll?: boolean;
+  /** 是否懒加载 */
+  lazy?: boolean;
+  /** 懒加载方法 */
+  load?: (row: any, treeNode: any, resolve: (data: any[]) => void) => void;
+}
+
+// 扩展列配置
+export interface EditableColumn extends TableColumnItem {
+  /** 是否可编辑 */
+  editable?: boolean;
+  /** 编辑类型 */
+  editType?:
+    | "input"
+    | "select"
+    | "cascader"
+    | "number"
+    | "textarea"
+    | "date"
+    | "datetime"
+    | "switch"
+    | "radio";
+  /** 占位符 */
+  placeholder?: string;
+  /** 选项列表（用于 select/radio/cascader）- 支持静态数组或动态函数 */
+  options?: Array<any> | ((row: any) => Array<any>);
+  /** 选项的标签字段名，默认 'label' */
+  optionLabelField?: string;
+  /** 选项的值字段名，默认 'value' */
+  optionValueField?: string;
+  /** 是否多选（仅 select 类型有效） */
+  multiple?: boolean;
+  /** 多选时是否折叠标签 */
+  collapseTags?: boolean;
+  /** 是否可清空 */
+  clearable?: boolean;
+  /** 数字精度（小数位数），不设置或设置为0表示整数 */
+  precision?: number;
+  /** 动态获取选项的函数（优先级高于 options） */
+  getOptions?: (row: any) => Array<any>;
+  /** 子列配置（递归支持多级表头） */
+  children?: EditableColumn[];
+  /** 禁用状态（支持函数） */
+  disabled?: boolean | ((row: any) => boolean);
+  /** 点击事件处理（用于可点击列） */
+  clickable?: boolean;
+  /** 点击回调函数 */
+  onClick?: (row: any, column: EditableColumn, index: number) => void;
+  /** 级联选择器配置 */
+  cascaderProps?: {
+    /** 指定选项的子树为选项对象的某个属性值 */
+    children?: string;
+    /** 指定选项的标签为选项对象的某个属性值 */
+    label?: string;
+    /** 指定选项的值为选项对象的某个属性值 */
+    value?: string;
+    /** 是否可多选 */
+    multiple?: boolean;
+    /** 是否严格遵守 leetcode 模式 */
+    strict?: boolean;
+    /** 是否可搜索 */
+    filterable?: boolean;
+    /** 是否允许创建新条目 */
+    allowCreate?: boolean;
+    /** 是否只返回叶子节点的值 */
+    emitPath?: boolean;
+    /** 是否仅显示最后一级 */
+    showAllLevels?: boolean;
+  };
+  /** 是否显示所有层级（仅 cascader 类型有效） */
+  showAllLevels?: boolean;
+  /** 数字输入最小值 */
+  min?: number;
+  /** 数字输入最大值 */
+  max?: number;
+  /** 动态获取最小值（优先级高于 min） */
+  getMin?: (row: any) => number;
+  /** 动态获取最大值（优先级高于 max） */
+  getMax?: (row: any) => number;
 }
 
 // Emits
 interface Emits {
+  (e: "update:modelValue", data: any[]): void;
+  (e: "update:tableData", data: any[]): void; // 保留兼容
   (
     e: "data-change",
     data: {
@@ -241,21 +340,62 @@ interface Emits {
       rowIndex: number;
     },
   ): void;
-  (e: "update:tableData", data: any[]): void;
   (e: "editable-cell-click", payload: any): void;
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  modelValue: () => [],
+  tableData: () => [],
   rowKey: "id",
   dictData: () => ({}),
   globalOptionLabelField: "label",
   globalOptionValueField: "value",
+  treeProps: () => ({ children: "children" }),
+  defaultExpandAll: false,
+  lazy: false,
 });
 
 const emit = defineEmits<Emits>();
 
 const baseTableRef = ref<InstanceType<typeof BaseTable>>();
 const editableData = ref<any[]>([]);
+
+// ★★★ 核心修改：获取实际数据源 ★★★
+const actualData = computed(() => {
+  // 优先使用 modelValue（v-model 方式）
+  if (props.modelValue !== undefined && props.modelValue.length >= 0) {
+    return props.modelValue;
+  }
+  // 兼容传统的 tableData
+  return props.tableData;
+});
+
+// 千分位格式化
+const formatThousand = (value: any, column: EditableColumn): string => {
+  if (value === null || value === undefined || value === "") return "";
+  const num = typeof value === "string" ? parseFloat(value) : value;
+  if (isNaN(num)) return "";
+  const precision = column.precision !== undefined ? column.precision : 2;
+  return num.toLocaleString("en-US", {
+    minimumFractionDigits: precision > 0 ? precision : 0,
+    maximumFractionDigits: precision > 0 ? precision : 0,
+  });
+};
+
+// 解析千分位
+const parseThousand = (value: string): string => {
+  if (!value) return "";
+  return value.replace(/,/g, "");
+};
+/**
+ * 获取列的 disabled 状态（支持布尔值或函数）
+ */
+const getColumnDisabled = (column: EditableColumn, row: any): boolean => {
+  if (typeof column.disabled === "function") {
+    return column.disabled(row);
+  }
+  return column.disabled || false;
+};
 
 // 使用普通对象存储旧值，key 格式: "rowId_prop"
 const oldValueMap: Record<string, any> = {};
@@ -338,6 +478,25 @@ const getColumnOptions = (column: EditableColumn, row?: any): any[] => {
 
   return options;
 };
+
+/**
+ * 获取级联选择器的配置
+ */
+const getCascaderProps = (column: EditableColumn): any => {
+  const defaultProps = {
+    children: "children",
+    label: "label",
+    value: "value",
+    emitPath: false, // 默认只返回叶子节点值
+  };
+
+  if (column.cascaderProps) {
+    return { ...defaultProps, ...column.cascaderProps };
+  }
+
+  return defaultProps;
+};
+
 /**
  * 获取数字输入框的精度
  * 如果设置了 precision 且大于 0，则使用该值作为小数位数
@@ -406,7 +565,27 @@ const getCachedEditableColumns = (): EditableColumn[] => {
 };
 
 /**
- * 初始化所有旧值
+ * 深拷贝树形数据
+ */
+const deepCloneTree = (data: any[]): any[] => {
+  if (!data || !data.length) return [];
+
+  return data.map((item) => {
+    const cloned: any = { ...item };
+    // 如果有 children，递归深拷贝
+    if (
+      item.children &&
+      Array.isArray(item.children) &&
+      item.children.length > 0
+    ) {
+      cloned.children = deepCloneTree(item.children);
+    }
+    return cloned;
+  });
+};
+
+/**
+ * 初始化所有旧值（递归处理树形数据）
  */
 const initOldValues = () => {
   // 清空所有旧值
@@ -415,13 +594,38 @@ const initOldValues = () => {
   const editableColumns = getCachedEditableColumns();
   if (editableColumns.length === 0) return;
 
-  editableData.value.forEach((row) => {
-    editableColumns.forEach((col) => {
-      if (col.prop) {
-        setOldValue(row, col.prop, row[col.prop]);
+  // 递归遍历树形数据
+  const traverse = (data: any[]) => {
+    data.forEach((row) => {
+      editableColumns.forEach((col) => {
+        if (col.prop) {
+          setOldValue(row, col.prop, row[col.prop]);
+        }
+      });
+      // 递归处理子节点
+      if (
+        row.children &&
+        Array.isArray(row.children) &&
+        row.children.length > 0
+      ) {
+        traverse(row.children);
       }
     });
-  });
+  };
+
+  traverse(editableData.value);
+};
+
+/**
+ * ★★★ 核心修改：触发数据更新 ★★★
+ */
+const emitDataUpdate = () => {
+  // 优先使用 v-model 方式
+  if (props.modelValue !== undefined) {
+    emit("update:modelValue", editableData.value);
+  }
+  // 同时兼容传统方式
+  emit("update:tableData", editableData.value);
 };
 
 /**
@@ -436,12 +640,20 @@ const updateCell = async (
   const prop = column.prop!;
   const oldValue = getOldValue(row, prop);
 
-  // 没有旧值或值未变化，不处理
-  // if (oldValue === undefined || newValue === oldValue) {
-  //   clearOldValue(row, prop);
-  //   return;
-  // }
-  if (newValue === oldValue) {
+  // 对于级联选择器，需要特殊处理值的比较
+  let isValueChanged = true;
+  if (column.editType === "cascader") {
+    // 如果是路径数组，需要比较数组内容
+    if (Array.isArray(newValue) && Array.isArray(oldValue)) {
+      isValueChanged = JSON.stringify(newValue) !== JSON.stringify(oldValue);
+    } else {
+      isValueChanged = newValue !== oldValue;
+    }
+  } else {
+    isValueChanged = newValue !== oldValue;
+  }
+
+  if (!isValueChanged) {
     clearOldValue(row, prop);
     return;
   }
@@ -473,7 +685,9 @@ const updateCell = async (
     oldValue,
     rowIndex,
   });
-  emit("update:tableData", editableData.value);
+
+  // ★★★ 关键：触发数据更新 ★★★
+  emitDataUpdate();
 
   // 更新旧值为新值，以便下次编辑时比较
   setOldValue(row, prop, newValue);
@@ -483,15 +697,34 @@ const updateCell = async (
  * 保存单元格（内置组件使用）
  */
 const handleSave = (row: any, column: EditableColumn, rowIndex: number) => {
-  updateCell(row, column, rowIndex, row[column.prop!]);
+  // updateCell(row, column, rowIndex, row[column.prop!]);
+  const prop = column.prop!;
+  let value = row[prop];
+
+  // 如果是数字类型且值为空，转为 0
+  if (column.editType === "number") {
+    if (value === null || value === undefined || value === "") {
+      value = column.defaultValue ?? 0;
+      row[prop] = value;
+    }
+    // 确保是数字类型
+    if (typeof value !== "number") {
+      value = Number(value) || 0;
+      row[prop] = value;
+    }
+  }
+
+  updateCell(row, column, rowIndex, value);
 };
 
 // 处理单元格事件（透传给父组件）
 const handleCellEvent = (payload: any) => {
-  // 可以在这里处理自定义事件
   console.log("cell-event:", payload);
 };
 
+/**
+ * 可编辑单元格点击事件触发事件
+ */
 const handleCellClick = (
   row: any,
   column: EditableColumn,
@@ -500,13 +733,13 @@ const handleCellClick = (
   emit("editable-cell-click", { row, column, rowIndex });
 };
 
-// 监听外部数据变化
+// ★★★ 核心修改：监听实际数据源 ★★★
 watch(
-  () => props.tableData,
+  () => actualData.value,
   (newData) => {
     if (newData && newData.length) {
-      // 浅拷贝，避免修改原数据
-      editableData.value = newData.map((item) => ({ ...item }));
+      // ★★★ 使用深拷贝保持树形结构 ★★★
+      editableData.value = deepCloneTree(newData);
       // 重新初始化旧值
       initOldValues();
     } else {
@@ -514,7 +747,7 @@ watch(
       clearAllOldValues();
     }
   },
-  { immediate: true },
+  { immediate: true, deep: true },
 );
 
 // 监听列配置变化，重新初始化旧值
@@ -537,8 +770,9 @@ defineExpose({
   getData: () => editableData.value,
   /** 刷新数据 */
   refresh: () => {
-    if (props.tableData) {
-      editableData.value = props.tableData.map((item) => ({ ...item }));
+    if (actualData.value) {
+      // ★★★ 使用深拷贝 ★★★
+      editableData.value = deepCloneTree(actualData.value);
       initOldValues();
     }
   },
@@ -562,6 +796,7 @@ defineExpose({
   // 统一所有编辑组件的基础样式
   :deep(.el-input__wrapper),
   :deep(.el-select__wrapper),
+  :deep(.el-cascader .el-input__wrapper),
   :deep(.el-date-editor .el-input__wrapper),
   :deep(.el-input-number .el-input__wrapper) {
     border-radius: 0;
@@ -603,6 +838,22 @@ defineExpose({
 
     .el-select__caret {
       line-height: 28px;
+    }
+  }
+
+  // 级联选择器样式
+  :deep(.el-cascader) {
+    width: 100%;
+
+    .el-input__wrapper {
+      border-radius: 0;
+      padding: 0 8px;
+      height: 28px;
+    }
+
+    .el-input__suffix {
+      display: flex;
+      align-items: center;
     }
   }
 
@@ -692,7 +943,6 @@ defineExpose({
   .clickable-input-wrapper {
     :deep(.el-input__wrapper) {
       cursor: pointer;
-      // background-color: var(--el-fill-color-light);
 
       &:hover {
         // background-color: var(--el-fill-color);
@@ -700,7 +950,11 @@ defineExpose({
     }
   }
 }
-
+.input-prefix-inner {
+  color: var(--el-text-color-regular);
+  font-weight: 500;
+  font-size: 12px;
+}
 // 表格单元格样式
 :deep(.el-table) {
   .cell {

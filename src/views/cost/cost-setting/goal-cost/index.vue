@@ -1,26 +1,20 @@
 <template>
   <div class="goal-cost-page">
-    <!-- 城市-项目 -->
-    <urban-project-tree
-      ref="urbanProjectTreeRef"
+    <!-- 板块-公司-项目 -->
+    <sector-company-project-treet
+      ref="sectorCompanyProjectTreetRef"
       @select="handleProjectSelect"
     />
 
-    <div class="right-content" v-if="selectedProjectId">
+    <div class="right-content" v-if="selectedData">
       <div class="detail-tab">
         <el-tabs v-model="activeTab">
           <el-tab-pane label="目标成本版本" name="version" style="height: 100%">
             <cost-version
               v-if="activeTab === 'version'"
-              :project-id="selectedProjectId"
+              :selectedData="selectedData"
             />
           </el-tab-pane>
-          <!-- <el-tab-pane label="目标成本明细" name="detail" style="height: 100%">
-            <cost-detail
-              v-if="activeTab === 'detail'"
-              :project-id="selectedProjectId"
-            />
-          </el-tab-pane> -->
         </el-tabs>
       </div>
     </div>
@@ -37,6 +31,7 @@ import UrbanProjectTree from "@/components/business/urban-project-tree.vue";
 import CostVersion from "./components/cost-version/index.vue";
 import CostDetail from "./components/cost-detail/index.vue";
 import { ProjectTreeNode } from "@/types/cost/master-data/project-area-type.ts";
+import SectorCompanyProjectTreet from "@/components/business/sector-company-project-treet.vue.vue";
 
 defineOptions({ name: "goal-cost" });
 
@@ -44,18 +39,19 @@ defineOptions({ name: "goal-cost" });
 const urbanProjectTreeRef = ref();
 const selectedProjectId = ref<number | null>(null);
 const activeTab = ref("version");
+const selectedData = ref(null);
 
-// 处理选中的项目
-const handleProjectSelect = (project: ProjectTreeNode) => {
-  // console.log("选中的项目数据:", project);
-  console.log("选中项目ID:", urbanProjectTreeRef.value?.selectedProjectId);
-  if (project) {
-    selectedProjectId.value = project.orgId;
+// 处理选中
+const handleProjectSelect = (data: ProjectTreeNode) => {
+  console.log("选中的板块-公司、项目数据:", data);
+  if (data) {
+    selectedData.value = data;
   } else {
-    // console.log("已清空选中项目");
-    selectedProjectId.value = null;
+    // console.log("已清空选中");
+    selectedData.value = null;
   }
 };
+
 onMounted(() => {});
 </script>
 

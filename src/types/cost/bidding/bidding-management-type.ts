@@ -1,9 +1,24 @@
 // ==================== 招标事项相关 ====================
 
+/** 基础实体类型 */
+export interface BaseEntity {
+  /** 主键ID */
+  id?: number;
+  /** 删除标识：false-未删除 true-已删除 */
+  isDel?: boolean;
+  /** 创建人ID */
+  createId?: number;
+  /** 创建时间 */
+  createDate?: string;
+  /** 更新人ID */
+  operId?: number;
+  /** 更新时间 */
+  operDate?: string;
+}
 /**
  * 招标事项表 (h_bid_tender)
  */
-export interface BidTender {
+export interface BidTender extends BaseEntity {
   projectId?: number;
   /** 主键，自增 */
   id: number;
@@ -35,16 +50,6 @@ export interface BidTender {
   tenderRemark: string | null;
   /** 需求状态：0-草稿，1-已审批，2-招标中，3-已定标，4-已签约 */
   tenderStatus: number;
-  /** 创建人 */
-  createId: number;
-  /** 创建时间 */
-  createDate: string;
-  /** 更新人 */
-  operId: number | null;
-  /** 更新时间 */
-  operDate: string | null;
-  /** 删除标识：false-未删除，true-已删除 */
-  isDel: boolean;
 }
 
 /**
@@ -74,7 +79,9 @@ export interface BidTenderQueryParams {
   /** 需求日期结束 */
   demandDateEnd?: string;
 }
-
+/**
+ * 招标事项表单参数
+ */
 export interface BidTenderFormParams {
   /** 主键ID（修改时必传） */
   id?: number;
@@ -122,14 +129,6 @@ export interface BidTenderSaveParams {
   projIds?: number[];
 }
 
-/**
- * 删除招标事项请求参数
- */
-export interface BidTenderDeleteParams {
-  /** 主键ID */
-  id?: number;
-}
-
 // ==================== 招标单据相关相关 ====================
 /**
  * 招标单据查询参数
@@ -162,7 +161,7 @@ export interface BidTenderBillQueryParams {
 /**
  * 招标需求表 (h_bid_demand)
  */
-export interface BidDemand {
+export interface BidDemand extends BaseEntity {
   /** 主键，自增 */
   id: number;
   /** 招标单据ID */
@@ -181,16 +180,6 @@ export interface BidDemand {
   demandDate: string;
   /** 需求说明 */
   demandRemark: string | null;
-  /** 创建人 */
-  createId?: number;
-  /** 创建时间 */
-  createDate?: string;
-  /** 更新人 */
-  operId?: number | null;
-  /** 更新时间 */
-  operDate?: string | null;
-  /** 删除标识：false-未删除，true-已删除 */
-  isDel?: boolean;
 }
 /**
  * 招标需求查询参数
@@ -224,22 +213,15 @@ export interface BidDemandFormParams {
   /** 需求说明 */
   demandRemark?: string;
 }
-/**
- * 删除 招标需求参数
- */
-export interface BidDemandDeleteParams {
-  /** 主键ID */
-  id: number;
-}
 
 // ==================== 招标计划相关 ====================
 
 /**
  * 招标计划表 (h_bid_tender_plan)
  */
-export interface BidTenderPlan {
+export interface BidTenderPlan extends BaseEntity {
   /** 主键，自增 */
-  id: number;
+  id?: number;
   /** 招标单据ID */
   tenderBillId: number;
   /** 招标明细ID */
@@ -258,16 +240,31 @@ export interface BidTenderPlan {
   perfBondAmount: number | null;
   /** 说明 */
   itemRemark: string | null;
-  /** 创建人 */
-  createId: number;
-  /** 创建时间 */
-  createDate: string;
-  /** 更新人 */
-  operId: number | null;
-  /** 更新时间 */
-  operDate: string | null;
-  /** 删除标识：false-未删除，true-已删除 */
-  isDel: boolean;
+}
+/**
+ * 新增 招标计划参数
+ */
+export interface BidTenderPlanSaveParams {
+  /** 主键，自增 */
+  id?: number;
+  /** 事项ID */
+  tenderId: number;
+  /** 招标明细ID */
+  tenderItemId: number | null;
+  /** 招标明细事项 */
+  tenderItemName?: string | null;
+  /** 项目ID */
+  projId: number;
+  /** 楼栋ID（逗号分隔） */
+  bldIds: string | null;
+  /** 楼栋名称（逗号分隔） */
+  bldNames: string | null;
+  /** 应交投标保证金金额 */
+  bidBondAmount: number | null;
+  /** 应交履约保证金金额 */
+  perfBondAmount: number | null;
+  /** 说明 */
+  itemRemark?: string | null;
 }
 /**
  * 招标计划单据列表
@@ -281,7 +278,7 @@ export interface BidTenderPlanBill {
 /**
  * 定标参考价表 (h_bid_award_refer)
  */
-export interface BidAwardRefer {
+export interface BidAwardRefer extends BaseEntity {
   /** 主键，自增 */
   id: number;
   /** 招标单据ID */
@@ -298,16 +295,33 @@ export interface BidAwardRefer {
   referRemark: string | null;
   /** 成本预警：1-红灯（超预算），2-绿灯（未超预算） */
   costAlert: number | null;
-  /** 创建人 */
-  createId: number;
-  /** 创建时间 */
-  createDate: string;
-  /** 更新人 */
-  operId: number | null;
-  /** 更新时间 */
-  operDate: string | null;
-  /** 删除标识：false-未删除，true-已删除 */
-  isDel: boolean;
+}
+/**
+ * 新增 定标参考价表参数
+ */
+export interface BidAwardReferSaveParams {
+  /** 主键，自增 */
+  id?: number;
+  /** 事项ID */
+  tenderId: number;
+  /** 招标明细ID */
+  tenderItemId: number | null;
+  /** 招标明细事项 */
+  tenderItemName?: string | null;
+  /** 项目ID */
+  projId: number;
+  /** 楼栋ID（逗号分隔） */
+  bldIds: string | null;
+  /** 楼栋名称（逗号分隔） */
+  bldNames: string | null;
+  /** 不含税参考价金额 */
+  referAmount: number | null;
+  /** 参考价说明 */
+  referRemark: string | null;
+  /** 成本预警：1-红灯（超预算），2-绿灯（未超预算） */
+  costAlert: number | null;
+  /** 组价明细 */
+  amounts: AmountItem[];
 }
 /**
  * 定标参考价表单据列表
@@ -320,7 +334,9 @@ export interface BidAwardReferBill {
  * 组价明细项类型
  */
 export interface AmountItem {
+  /** 自定义uuid */
   uuid?: string;
+  /** 主键，自增 */
   id?: number;
   /** 定标参考价表ID */
   referId: number;
@@ -340,7 +356,7 @@ export interface AmountItem {
 /**
  * 定标审批表 (h_bid_award)
  */
-export interface BidAward {
+export interface BidAward extends BaseEntity {
   /** 主键，自增 */
   id: number;
   /** 招标单据ID */
@@ -365,16 +381,41 @@ export interface BidAward {
   bidExplain: string | null;
   /** 是否中标：false-否，true-是 */
   isWinner: boolean | null;
-  /** 创建人 */
-  createId: number;
-  /** 创建时间 */
-  createDate: string;
-  /** 更新人 */
-  operId: number | null;
-  /** 更新时间 */
-  operDate: string | null;
-  /** 删除标识：false-未删除，true-已删除 */
-  isDel: boolean;
+}
+/**
+ * 新增 定标审批表参数
+ */
+export interface BidAwardSaveParams {
+  /** 主键，自增 */
+  id?: number;
+  /** 事项ID */
+  tenderId: number;
+  /** 招标明细ID */
+  tenderItemId: number | null;
+  /** 招标明细事项 */
+  tenderItemName?: string | null;
+  /** 项目ID */
+  projId: number;
+  /** 楼栋ID（逗号分隔） */
+  bldIds: string | null;
+  /** 楼栋名称（逗号分隔） */
+  bldNames: string | null;
+  /** 中标供应商ID */
+  supId: number;
+  /** 中标供应商名称 */
+  supName?: string;
+  /** 中标金额(不含税) */
+  bidAmount: number | null;
+  /** 参考价金额(不含税) */
+  referAmount: number | null;
+  /** 价格偏差(不含税) */
+  priceVariance: number | null;
+  /** 税率 */
+  taxRate: number | null;
+  /** 评定说明 */
+  bidExplain: string | null;
+  /** 是否中标：false-否，true-是 */
+  isWinner: boolean | null;
 }
 /**
  * 定标审批单据列表
@@ -388,7 +429,7 @@ export interface BidAwardBill {
 /**
  * 投标保证金缴纳表 (h_bid_bond_recv)
  */
-export interface BidBondRecv {
+export interface BidBondRecv extends BaseEntity {
   /** 主键，自增 */
   id: number;
   /** 招标单据ID */
@@ -407,16 +448,33 @@ export interface BidBondRecv {
   recvDate: string | null;
   /** 缴纳凭证附件 */
   recvAnnexId: number | null;
-  /** 创建人 */
-  createId: number;
-  /** 创建时间 */
-  createDate: string;
-  /** 更新人 */
-  operId: number | null;
-  /** 更新时间 */
-  operDate: string | null;
-  /** 删除标识：false-未删除，true-已删除 */
-  isDel: boolean;
+}
+/**
+ * 新增 投标保证金缴纳表参数
+ */
+export interface BidBondRecvSaveParams {
+  /** 主键，自增 */
+  id?: number;
+  /** 事项ID */
+  tenderId: number;
+  /** 招标明细ID */
+  tenderItemId: number | null;
+  /** 供应商ID */
+  supId: number;
+  /** 供应商名称 */
+  supName?: string;
+  /** 应交保证金金额 */
+  needAmount: number;
+  /** 实交保证金金额 */
+  recvAmount: number;
+  /** 缴纳方式 */
+  recvMethod?: string;
+  /** 缴纳方式名称 */
+  recvMethodName?: string;
+  /** 缴纳日期 */
+  recvDate?: string;
+  /** 缴纳凭证附件 */
+  recvAnnexId: number;
 }
 /**
  * 投标保证金缴纳单据列表
@@ -429,7 +487,7 @@ export interface BidBondRecvBill {
 /**
  * 投标保证金退还表 (h_bid_bond_refund)
  */
-export interface BidBondRefund {
+export interface BidBondRefund extends BaseEntity {
   /** 主键，自增 */
   id: number;
   /** 招标单据ID */
@@ -450,16 +508,35 @@ export interface BidBondRefund {
   refundAnnexId: number | null;
   /** 合同ID */
   conId: number | null;
-  /** 创建人 */
-  createId: number;
-  /** 创建时间 */
-  createDate: string;
-  /** 更新人 */
-  operId: number | null;
-  /** 更新时间 */
-  operDate: string | null;
-  /** 删除标识：false-未删除，true-已删除 */
-  isDel: boolean;
+}
+/**
+ * 新增 投标保证金退还表参数
+ */
+export interface BidBondRefundSaveParams {
+  /** 主键，自增 */
+  id?: number;
+  /** 事项ID */
+  tenderId: number;
+  /** 招标明细ID */
+  tenderItemId: number | null;
+  /** 供应商ID */
+  supId: number;
+  /** 供应商名称 */
+  supName?: string;
+  /** 实交保证金金额 */
+  recvAmount: number;
+  /** 缴纳方式 */
+  recvMethod?: string;
+  /** 缴纳方式名称 */
+  recvMethodName?: string;
+  /** 退还方式 */
+  refundType: string;
+  /** refundAmount */
+  refundAmount: number;
+  /** 退还凭证附件 */
+  refundAnnexId: number;
+  /** 合同ID */
+  conId: number;
 }
 /**
  * 投标保证金退还单据列表
@@ -469,8 +546,6 @@ export interface BidBondRefundBill {
   bondRefunds: BidBondRefund[];
 }
 
-// ==================== 前端表单数据类型 ====================
-
 /**
  * 新增招标单据表单数据
  */
@@ -479,8 +554,18 @@ export interface BidTenderBillFormDataAdd {
   bizItemCode: string;
   /** 招标事项ID */
   tenderId: number;
-  /** 招标明细事项列表 */
-  childData: any[];
+  /** ZB_XQ：招标需求 */
+  demandList?: BidDemandFormParams[];
+  /** ZB_JH：招标计划 */
+  planList?: BidTenderPlanSaveParams[];
+  /** ZB_CK：招标参考 */
+  referList?: BidAwardReferSaveParams[];
+  /** ZB_DB：定标审批 */
+  awardList?: BidAwardSaveParams[];
+  /** ZB_BZJ：招标保证金 */
+  bondRecvList?: BidBondRecvSaveParams[];
+  /** ZB_BZJTH：招标保证金退还 */
+  bondRefundList?: BidBondRefundSaveParams[];
 }
 /**
  * 编辑招标单据表单数据
@@ -490,34 +575,16 @@ export interface BidTenderBillFormDataEdit {
   bizItemCode: string;
   /** 单据ID */
   id: number;
-  /** 招标明细事项列表 */
-  childData: any[];
+  /** ZB_XQ：招标需求 */
+  demandList?: BidDemandFormParams[];
+  /** ZB_JH：招标计划 */
+  planList?: BidTenderPlanSaveParams[];
+  /** ZB_CK：招标参考 */
+  referList?: BidAwardReferSaveParams[];
+  /** ZB_DB：定标审批 */
+  awardList?: BidAwardSaveParams[];
+  /** ZB_BZJ：招标保证金 */
+  bondRecvList?: BidBondRecvSaveParams[];
+  /** ZB_BZJTH：招标保证金退还 */
+  bondRefundList?: BidBondRefundSaveParams[];
 }
-
-// ==================== 常量定义 ====================
-
-/**
- * 招标状态常量 (tender_status)
- */
-export const TenderStatus = {
-  /** 草稿 */
-  DRAFT: 0,
-  /** 已审批 */
-  APPROVED: 1,
-  /** 招标中 */
-  BIDDING: 2,
-  /** 已定标 */
-  AWARDED: 3,
-  /** 已签约 */
-  SIGNED: 4,
-} as const;
-
-/**
- * 成本预警常量 (cost_alert)
- */
-export const CostAlert = {
-  /** 红灯（超预算） */
-  RED: 1,
-  /** 绿灯（未超预算） */
-  GREEN: 2,
-} as const;

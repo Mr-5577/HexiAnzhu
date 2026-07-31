@@ -95,7 +95,7 @@
           删除
         </el-button>
         <el-button type="primary" link @click="handleDetail(row)">
-          台账详情
+          详情
         </el-button>
       </template>
     </base-table>
@@ -109,7 +109,7 @@ import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { useRouter } from "vue-router";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
-import { largeScreenApi } from "@/api/large-screen-api";
+import { largeScreenApi } from "@/api/sales/large-screen-api";
 import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api";
 import {
   ConPropertyEnum,
@@ -150,23 +150,21 @@ const projectOptions = ref([]);
 
 const columns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "segName", label: "业务板块", width: 150 },
-  { prop: "projName", label: "项目名称", width: 200 },
+  { prop: "segId", label: "业务板块", width: 150 },
+  { prop: "projId", label: "项目名称", width: 200 },
   { prop: "conTypeId", label: "合同分类", width: 150 },
   { prop: "conSysNo", label: "合同编号", minWidth: 220 },
   { prop: "conName", label: "合同名称", width: 150 },
   { slot: "conProperty", label: "合同类型", width: 150 },
-  { prop: "supName", label: "供应商名称", minWidth: 150 },
-  { prop: "demandRemark", label: "预结算合同金额", minWidth: 150 },
-  { prop: "signAmt", label: "签约金额", minWidth: 150 },
-  { prop: "demandRemark", label: "补充合同金额", minWidth: 150 },
-  { prop: "demandRemark", label: "变更金额", minWidth: 150 },
+  { prop: "supId", label: "供应商名称", minWidth: 150 },
+  { prop: "signAmt", label: "签约金额(含税)", minWidth: 150 },
+  { prop: "signExclAmt", label: "签约金额(不含税)", minWidth: 150 },
   { prop: "settleAmt", label: "结算金额", minWidth: 150 },
   { slot: "priceType", label: "计价方式", minWidth: 150 },
-  { prop: "signDate", label: "签订日期", minWidth: 150 },
-  { prop: "effectiveDate", label: "生效日期", minWidth: 150 },
-  { prop: "expiryDate", label: "到期日期", minWidth: 150 },
-  { slot: "conStatus", label: "合同状态", minWidth: 150 },
+  { prop: "signDate", label: "签订日期", minWidth: 120 },
+  { prop: "effectiveDate", label: "生效日期", minWidth: 120 },
+  { prop: "expiryDate", label: "到期日期", minWidth: 120 },
+  { slot: "conStatus", label: "合同状态", minWidth: 120 },
   {
     label: "操作",
     prop: "actions",
@@ -211,33 +209,32 @@ const handleReset = () => {
   };
   getDataList();
 };
-
+// 新增合同台账
 const handleAdd = () => {
   router.push({
-    path: "/contract/contract-ledger/add",
+    path: "/con/contract-ledger/add",
     query: {
-      mode: "add",
+      t: Date.now(),
     },
   });
 };
-
+// 编辑合同台账
 const handleEdit = (row: HConMain) => {
   router.push({
-    path: "/contract/contract-ledger/edit",
+    path: "/con/contract-ledger/edit",
     query: {
-      mode: "edit",
       conId: row.id,
     },
   });
 };
-
+// 台账详情
 const handleDetail = (row: HConMain) => {
   router.push({
-    path: "/contract/contract-ledger/detail",
+    path: "/con/contract-ledger/detail",
     query: {
       conId: row.id,
       projId: props.projectId,
-      mode: "detail",
+      tab: "basic",
     },
   });
 };
