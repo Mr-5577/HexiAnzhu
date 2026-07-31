@@ -242,6 +242,23 @@
             </el-col>
           </el-row>
           <el-row :gutter="24">
+            <el-row :gutter="24">
+              <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+                <el-form-item label="请款类型" prop="askType" required>
+                  <el-select
+                    v-model="formData.askType"
+                    placeholder="请选择"
+                    style="width: 100%"
+                    :disabled="isDetail || !!billData.status"
+                  >
+                    <el-option label="正常请款" :value="0" />
+                    <el-option label="提高支付比例请款" :value="1" />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+          </el-row>
+          <el-row :gutter="24">
             <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
               <el-form-item label="请款说明" prop="reqDesc">
                 <el-input
