@@ -1,6 +1,9 @@
 <!-- 招标需求 -->
 <template>
   <div class="finance-allocation-page">
+    <div class="header-top">
+      <h2>财务分摊</h2>
+    </div>
     <base-table
       :columns="mainColumns"
       :tableData="tableData"
@@ -42,11 +45,9 @@
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
-import { biddingManageApi } from "@/api/cost/bidding/bidding-management-api";
 import { largeScreenApi } from "@/api/sales/large-screen-api";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { BidTenderPlanBill } from "@/types/cost/bidding/bidding-management-type";
 
 defineOptions({ name: "finance-allocation" });
 
@@ -56,6 +57,8 @@ const router = useRouter();
 const projectOptions = ref([]);
 
 // 主表列配置
+const tableData = ref([{ id: 12 }, { id: 1 }]);
+const tableLoading = ref(false);
 const mainColumns: TableColumnItem[] = [
   { type: "expand", width: "50", slot: "expand" },
   { type: "index", label: "序号", width: 60 },
@@ -108,8 +111,6 @@ const handleSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
   }
   updateDedRow(rowIndex, { [column]: newValue });
 };
-const tableData = ref([{id:12}]);
-const tableLoading = ref(false);
 
 // 获取项目列表
 const getProjectOptions = async () => {
@@ -147,6 +148,16 @@ onMounted(() => {});
       padding-left: 8px;
       border-left: 3px solid #409eff;
     }
+  }
+  .header-top {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .header-top h2 {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1f2937;
   }
 }
 </style>

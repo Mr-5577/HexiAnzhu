@@ -1,8 +1,8 @@
-<!-- 合同选择弹窗组件 -->
+<!-- 选择科目弹窗组件 -->
 <template>
   <base-modal
     v-model="dialogVisible"
-    title="选择合同"
+    title="选择科目"
     width="1400px"
     :confirm-loading="confirmLoading"
     :confirm-text="'确定'"
@@ -17,10 +17,10 @@
         :inline="true"
         size="default"
       >
-        <el-form-item label="合同名称" prop="conName">
+        <el-form-item label="科目名称" prop="conName">
           <el-input
             v-model="queryParams.conName"
-            placeholder="请输入合同名称"
+            placeholder="请输入科目名称"
             clearable
             style="width: 200px"
           />
@@ -40,7 +40,6 @@
         :height="'400px'"
         :highlight-current-row="true"
         :pagination="false"
-        :selectionMode="props.selectionMode"
         @selection-change="handleSelectionChange"
       >
       </base-table>
@@ -56,7 +55,6 @@ import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-ap
 // Props
 interface Props {
   modelValue: boolean;
-  selectionMode?: "single" | "multiple"; // 选择模式，单选或多选
 }
 
 const props = withDefaults(defineProps<Props>(), {

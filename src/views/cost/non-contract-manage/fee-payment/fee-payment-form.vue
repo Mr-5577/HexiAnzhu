@@ -242,21 +242,19 @@
             </el-col>
           </el-row>
           <el-row :gutter="24">
-            <el-row :gutter="24">
-              <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-                <el-form-item label="请款类型" prop="askType" required>
-                  <el-select
-                    v-model="formData.askType"
-                    placeholder="请选择"
-                    style="width: 100%"
-                    :disabled="isDetail || !!billData.status"
-                  >
-                    <el-option label="正常请款" :value="0" />
-                    <el-option label="提高支付比例请款" :value="1" />
-                  </el-select>
-                </el-form-item>
-              </el-col>
-            </el-row>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="请款类型" prop="askType" required>
+                <el-select
+                  v-model="formData.askType"
+                  placeholder="请选择"
+                  style="width: 100%"
+                  :disabled="isDetail || !!billData.status"
+                >
+                  <el-option label="正常请款" :value="0" />
+                  <el-option label="提高支付比例请款" :value="1" />
+                </el-select>
+              </el-form-item>
+            </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
@@ -270,6 +268,30 @@
                   placeholder="请输入"
                   :disabled="isDetail || !!billData.status"
                 />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </div>
+
+        <!-- 成本分摊：创建时不展示成本分摊模块，编辑时获取成本分摊数据进行展示查看详情 -->
+        <div class="item-card" v-if="isShowCostAllocation">
+          <div class="section-title">成本分摊</div>
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
+              <el-form-item label="分摊状态：" label-width="90px">
+                {{ costAllocationStatus }}
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
+              <el-form-item label="预警状态：" label-width="90px">
+                {{ costAllocationWarnStatus }}
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
+              <el-form-item label="分摊：" label-width="90px">
+                <el-button type="primary" @click="handleAllocationDetail">
+                  分摊详情
+                </el-button>
               </el-form-item>
             </el-col>
           </el-row>
@@ -529,6 +551,9 @@
       :disabled="isDetail || !!billData.status"
       @success="handleInvoiceDetailSuccess"
     />
+
+    <!-- 成本分摊 弹窗 -->
+    <CostAllocationDetailDialog v-model="costAllocationDialogVisible" />
   </div>
 </template>
 
@@ -549,6 +574,7 @@ import UploadInvoiceDialog from "@/components/business/upload-invoice-dialog.vue
 import InvoiceDetailDialog from "@/components/business/invoice-detail-dialog.vue";
 import { commonApi } from "@/api/cost/common-api";
 import { NconBillInvoiceM } from "@/types/cost/non-contract-manage/cst-payment-type.ts";
+import CostAllocationDetailDialog from "@/views/cost/cost-allocation/cost-allocation-detail-dialog.vue";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api.ts";
 import { useDict } from "@/composables/use-dict.ts";
 import { dictMapping } from "@/utils/dict-mapping.ts";
@@ -616,6 +642,10 @@ const flowListData = ref({
   wfTitle: "",
 });
 
+// 成本分摊相关
+const costAllocationDialogVisible = ref(false);
+const costAllocationData = ref(null);
+
 const initFormData = () => ({
   id: undefined,
   nconBillId: undefined,
@@ -658,6 +688,7 @@ const formRules = {
   bizTitle: [{ required: true, message: "请输入标题", trigger: "change" }],
   segId: [{ required: true, message: "请选择业务板块", trigger: "change" }],
   projId: [{ required: true, message: "请选择项目", trigger: "change" }],
+  askType: [{ required: true, message: "请选择请款类型", trigger: "change" }],
   belongMonth: [
     { required: true, message: "请选择归属月份", trigger: "change" },
   ],
@@ -1740,6 +1771,40 @@ const initDictData = async () => {
   payTypeOptions.value = getDictList(dictMapping.payType);
   dedTypeOptions.value = getDictList(dictMapping.dedType);
 };
+// 分摊详情
+const handleAllocationDetail = () => {
+  costAllocationDialogVisible.value = true;
+};
+// 费用类型所属大类是不是建安类
+const isShowCostAllocation = computed(() => {
+  // 如果没有选择费用类型，直接返回 false
+  if (!formData.value.finaTypeId) return false;
+  // 找到选择的费用类型
+  const targetData = feeTypeFlatOptions.value.find(
+    (item) => item.id === formData.value.finaTypeId,
+  );
+  if (!targetData) return false;
+  // 找到费用类型所属大类
+  const largeData = feeTypeFlatOptions.value.find(
+    (item) => item.id === targetData.pid,
+  );
+  // 如果大类存在且 finaTypeCode === '03'（建安类），则显示成本分摊
+  return !!(largeData && largeData.finaTypeCode === "03");
+});
+
+// 成本分摊状态
+const costAllocationStatus = computed(() => {
+  if (!costAllocationData.value) return "未分摊";
+  // 根据实际数据返回状态
+  return costAllocationData.value.status === 1 ? "已分摊" : "未分摊";
+});
+
+// 成本分摊预警状态
+const costAllocationWarnStatus = computed(() => {
+  if (!costAllocationData.value) return "正常";
+  // 根据实际数据返回预警状态
+  return costAllocationData.value.warnStatus === 1 ? "预警" : "正常";
+});
 
 onMounted(async () => {
   await initDictData();
