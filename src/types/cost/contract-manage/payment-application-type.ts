@@ -152,7 +152,7 @@ export interface HConPayment extends BaseEntity {
   paidOutRate?: number;
   /** 付款类型：0=请款、1=来票冲账 */
   reqType?: number;
-  /** 付款规则：0-正常请款 1-提高支付比例请款 */
+  /** 付款规则：0-正常请款 1-来票冲账 */
   payRule?: number;
   /** 剩余应付金额 */
   leavePayAmt?: number;

@@ -68,7 +68,7 @@ const tableColumns: TableColumnItem[] = [
     label: "付款规则",
     width: 140,
     formatter: (row: HConPayment) =>
-      row.payRule === 0 ? "正常请款" : "提高支付比例请款",
+      row.payRule === 0 ? "正常请款" : "来票冲账",
   },
   {
     prop: "reqAmt",

@@ -1,57 +1,26 @@
 <!-- 建安支付 表单 -->
 <template>
   <div class="basic-form-content">
-    <div class="form-header">
-      <div class="header-title">无合同支付审批</div>
-      <div class="header-btn">
-        <el-button
-          type="primary"
-          icon="DocumentAdd"
-          :loading="submitLoading"
-          @click="handleSave"
-          :disabled="isDetail || !!billData.status"
-        >
-          保存
-        </el-button>
-        <el-button
-          type="success"
-          plain
-          icon="Promotion"
-          :loading="submitLoading"
-          @click="handleSubmit"
-          :disabled="isDetail || !!billData.status"
-        >
-          提交
-        </el-button>
-        <el-button
-          type="danger"
-          plain
-          icon="Delete"
-          @click="handleDelete"
-          :disabled="isDetail || isAdd || !!billData.status"
-        >
-          删除
-        </el-button>
-        <el-button
-          type="warning"
-          plain
-          icon="Remove"
-          @click="handleCancel"
-          :disabled="isDetail || isAdd || !!billData.status"
-        >
-          作废
-        </el-button>
-        <el-button
-          type="info"
-          plain
-          icon="View"
-          :disabled="isAdd"
-          @click="handleViewProcess"
-        >
-          查看流程
-        </el-button>
-      </div>
-    </div>
+    <BillHeader
+      :title="'无合同支付审批'"
+      :contract-no="billData.bizNo || ''"
+      :submitter="formData.userName || ''"
+      :submit-time="formData.createDate || ''"
+      :status="billData.status"
+      :show-status="true"
+      :button-loading="submitLoading"
+      :save-disabled="isDetail || !!billData.status"
+      :submit-disabled="isDetail || !!billData.status"
+      :delete-disabled="isDetail || isAdd || !!billData.status"
+      :void-disabled="isDetail || isAdd || !!billData.status"
+      :view-disabled="isAdd"
+      @save="handleSave"
+      @submit="handleSubmit"
+      @delete="handleDelete"
+      @void="handleCancel"
+      @viewFlow="handleViewProcess"
+    >
+    </BillHeader>
     <div class="form-scroll-area">
       <el-form
         ref="paymentFormRef"
@@ -294,15 +263,15 @@
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="请款类型" prop="askType" required>
+              <el-form-item label="请款类型" prop="reqType" required>
                 <el-select
-                  v-model="formData.askType"
+                  v-model="formData.reqType"
                   placeholder="请选择"
                   style="width: 100%"
                   :disabled="isDetail || !!billData.status"
                 >
                   <el-option label="正常请款" :value="0" />
-                  <el-option label="提高支付比例请款" :value="1" />
+                  <el-option label="来票冲账" :value="1" />
                 </el-select>
               </el-form-item>
             </el-col>
@@ -399,32 +368,8 @@
           </el-row>
         </div>
 
-        <!-- 成本分摊：创建时不展示成本分摊模块，编辑时获取成本分摊数据进行展示查看详情 -->
-        <div class="item-card" v-if="isShowCostAllocation">
-          <div class="section-title">成本分摊</div>
-          <el-row :gutter="24">
-            <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
-              <el-form-item label="分摊状态：" label-width="90px">
-                {{ costAllocationStatus }}
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
-              <el-form-item label="预警状态：" label-width="90px">
-                {{ costAllocationWarnStatus }}
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
-              <el-form-item label="分摊：" label-width="90px">
-                <el-button type="primary" @click="handleAllocationDetail">
-                  分摊详情
-                </el-button>
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </div>
-
         <!-- 扣款事项明细 -->
-        <div class="item-card">
+        <div class="item-card" v-if="showDeductionAndPayWay">
           <div class="section-title">款项调整</div>
           <template v-if="isDetail || !!billData.status">
             <base-table
@@ -473,7 +418,7 @@
         </div>
 
         <!-- 付款方式 -->
-        <div class="item-card">
+        <div class="item-card" v-if="showDeductionAndPayWay">
           <div class="section-title">支付方式</div>
           <template v-if="isDetail || !!billData.status">
             <base-table
@@ -613,7 +558,7 @@
                     :disabled="!row.annexId"
                     @click="handleInspect(row)"
                   >
-                    识别并查验
+                    查验
                   </el-button>
                   <el-button
                     link
@@ -630,6 +575,33 @@
               </template>
             </editable-table>
           </template>
+        </div>
+
+        <!-- 成本分摊 费用类型所属大类为建安类并且请款类型为正常请款0时显示  -->
+        <div
+          class="item-card"
+          v-if="isShowCostAllocation && formData.reqType == 0"
+        >
+          <div class="section-title">成本分摊</div>
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
+              <el-form-item label="分摊状态：" label-width="90px">
+                {{ costAllocationStatus }}
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
+              <el-form-item label="预警状态：" label-width="90px">
+                {{ costAllocationWarnStatus }}
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
+              <el-form-item label="分摊：" label-width="90px">
+                <el-button type="primary" @click="handleAllocationDetail">
+                  分摊详情
+                </el-button>
+              </el-form-item>
+            </el-col>
+          </el-row>
         </div>
 
         <!-- 相关附件 -->
@@ -717,6 +689,7 @@ import { dateUtil } from "@/utils/date-util.ts";
 import { buildFileUrl } from "@/utils/file-path-util.ts";
 import UploadInvoiceDialog from "@/components/business/upload-invoice-dialog.vue";
 import { buildTree } from "@/utils/tree.ts";
+import BillHeader from "@/components/business/bill-components/bill-header.vue";
 
 defineOptions({ name: "cst-payment-form" });
 
@@ -767,8 +740,9 @@ const cstProcessData = ref({
 const billData = ref({
   id: undefined,
   bizTitle: "",
+  bizNo: "",
   status: 0,
-  bizItemCode: "NCON_CST", // 建安支付类型
+  bizItemCode: "NCON_CST", // 业务类型编码, NCON_PROC-非合同立项；NCON_CST-非合同建安支付； NCON_FEE-非合同费用支付
 });
 const paymentData = ref({
   id: undefined,
@@ -790,7 +764,7 @@ const initFormData = () => ({
   nconBillId: undefined,
   belongMonth: dateUtil().format("YYYY-MM"),
   finaTypeId: undefined,
-  askType: 0,
+  reqType: 0,
   isLastRec: 0,
   reqAmt: 0,
   factReqAmt: 0,
@@ -917,7 +891,7 @@ const formRules = {
   belongMonth: [
     { required: true, message: "请选择所属月份", trigger: "change" },
   ],
-  askType: [{ required: true, message: "请选择请款类型", trigger: "change" }],
+  reqType: [{ required: true, message: "请选择请款类型", trigger: "change" }],
   reqAmt: [{ required: true, message: "请输入本次请款金额", trigger: "blur" }],
   factReqAmt: [
     { required: true, message: "请输入实际请款金额", trigger: "blur" },
@@ -1082,13 +1056,6 @@ const invoiceMTable = ref([]);
 const invoiceMDetailColumns = [
   { type: "index", label: "序号", width: 60 },
   {
-    prop: "isRepeat",
-    label: "是否重复",
-    width: 90,
-    formatter: (row) => (row.isRepeat ? "是" : "否"),
-  },
-  { prop: "validateMsg", label: "查验结果", minWidth: 120 },
-  {
     // 发票状态（0=待查验 1=合格发票 2=待人工审核 3=人工通过 4=人工拒绝）
     prop: "status",
     label: "发票状态",
@@ -1106,6 +1073,14 @@ const invoiceMDetailColumns = [
     editable: false,
     formatter: (row) => (row.isValid ? "真发票" : "假发票"),
   },
+  {
+    prop: "isRepeat",
+    label: "是否重复",
+    width: 90,
+    formatter: (row) => (row.isRepeat ? "是" : "否"),
+  },
+  { prop: "validateMsg", label: "查验结果", minWidth: 120 },
+
   { prop: "invNo", label: "发票号", minWidth: 120 },
   { prop: "invDate", label: "开票日期", minWidth: 120 },
   { prop: "totalAmt", label: "发票总金额", minWidth: 120 },
@@ -1119,19 +1094,6 @@ const invoiceMDetailColumns = [
 const invoiceMColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {
-    prop: "isRepeat",
-    label: "是否重复",
-    width: 90,
-    editable: false,
-    formatter: (row) => (row.isRepeat ? "是" : "否"),
-  },
-  {
-    prop: "validateMsg",
-    label: "查验结果",
-    width: 120,
-    editable: false,
-  },
-  {
     // 发票状态（0=待查验 1=合格发票 2=待人工审核 3=人工通过 4=人工拒绝）
     prop: "status",
     label: "发票状态",
@@ -1149,6 +1111,20 @@ const invoiceMColumns = computed<EditableColumn[]>(() => [
     editable: false,
     formatter: (row) => (row.isValid ? "真发票" : "假发票"),
   },
+  {
+    prop: "isRepeat",
+    label: "是否重复",
+    width: 90,
+    editable: false,
+    formatter: (row) => (row.isRepeat ? "是" : "否"),
+  },
+  {
+    prop: "validateMsg",
+    label: "查验结果",
+    width: 120,
+    editable: false,
+  },
+
   {
     prop: "invNo",
     label: "发票号",
@@ -1423,16 +1399,24 @@ const invoiceRecognition = async (annexId: number, annexName: string) => {
     };
   }
 };
-
+// 查验
 const handleInspect = async (row: any) => {
   if (!row.annexId) {
     ElMessage.warning("暂无发票！");
     return;
   }
+  const notify = ElNotification({
+    title: "发票查验中",
+    message: "正在查验发票，请稍候...",
+    type: "info",
+    duration: 0,
+    position: "top-right",
+  });
   try {
     const res = await commonApi.recognizeAndCheckInvoice({
       annexId: row.annexId,
     });
+    notify.close();
     console.log("识别查验结果", res);
     if (res.code === 200 && res.data) {
       const { checkData, finalData, recognizeData } = res.data;
@@ -1481,9 +1465,20 @@ const handleInspect = async (row: any) => {
           invoiceDs: detailListData,
         };
         updateRow(recogniRowIndex, newData);
+
+        ElNotification({
+          title: "查验成功",
+          message: "已查验到发票相关信息",
+          type: "success",
+          duration: 3000,
+          position: "top-right",
+        });
       }
     }
-  } catch (error) {}
+  } catch (error) {
+  } finally {
+    notify.close();
+  }
 };
 
 const dialogVisible = ref(false);
@@ -1897,7 +1892,7 @@ const buildSaveParams = () => {
     ...billData.value,
     id: billData.value.id || undefined,
     bizTitle: formData.value.bizTitle,
-    bizItemCode: "NCON_CST",
+    bizItemCode: "NCON_CST", // 业务类型编码, NCON_PROC-非合同立项；NCON_CST-非合同建安支付； NCON_FEE-非合同费用支付
     segId: formData.value.segId,
     segName: formData.value.segName,
     segNo: formData.value.segNo,
@@ -1914,7 +1909,7 @@ const buildSaveParams = () => {
     projId: formData.value.projId,
     belongMonth: formData.value.belongMonth,
     finaTypeId: formData.value.finaTypeId,
-    askType: formData.value.askType,
+    reqType: formData.value.reqType,
     reqAmt: formData.value.reqAmt,
     factReqAmt: formData.value.factReqAmt,
     reqDesc: formData.value.reqDesc,
@@ -1928,15 +1923,20 @@ const buildSaveParams = () => {
     sumOwedAmt: cstProcessData.value.sumOwedAmt,
   };
 
-  const deds = dedTable.value.map((item) => ({
-    id: item.id,
-    srcType: item.srcType,
-    nconBillId: item.nconBillId,
-    dedName: item.dedName || "",
-    dedAmt: item.dedAmt || 0,
-    dedTypeId: item.dedTypeId,
-    dedDesc: item.dedDesc || "",
-  }));
+  // 如果是来票冲账  deds 和 payWays 传空数组
+  const isCreditInvoice = formData.value.reqType === 1;
+
+  const deds = isCreditInvoice
+    ? []
+    : dedTable.value.map((item) => ({
+        id: item.id,
+        srcType: item.srcType,
+        nconBillId: item.nconBillId,
+        dedName: item.dedName || "",
+        dedAmt: item.dedAmt || 0,
+        dedTypeId: item.dedTypeId,
+        dedDesc: item.dedDesc || "",
+      }));
 
   const invoiceMs: NconBillInvoiceM[] = [];
   invoiceMTable.value.forEach((item) => {
@@ -1953,25 +1953,37 @@ const buildSaveParams = () => {
         invType: item.invType || "",
         annexId: item.annexId,
         invoiceDs: item.invoiceDs || [],
+        // ✅ 补充查验相关字段
+        isValid: item.isValid ?? false,
+        validateMsg: item.validateMsg || "",
+        ocrRes: item.ocrRes || "",
+        validateRes: item.validateRes || "",
+        status: item.status ?? 0,
+        buyerCompany: item.buyerCompany || "",
+        buyerTaxCode: item.buyerTaxCode || "",
+        sellerCompany: item.sellerCompany || "",
+        sellerTaxCode: item.sellerTaxCode || "",
       };
       invoiceMs.push(invM);
     }
   });
 
-  const payWays: any[] = payWayTable.value.map((item) => ({
-    id: item.id,
-    srcType: item.srcType,
-    nconBillId: item.nconBillId,
-    payWayId: item.payWayId || "",
-    payAmt: item.payAmt || 0,
-    dedRoomAmt: item.dedRoomAmt || 0,
-    payDesc: item.payDesc || "",
-    bankName: item.bankName || "",
-    accountName: item.accountName || "",
-    bankAccount: item.bankAccount || "",
-  }));
+  const payWays = isCreditInvoice
+    ? []
+    : payWayTable.value.map((item) => ({
+        id: item.id,
+        srcType: item.srcType,
+        nconBillId: item.nconBillId,
+        payWayId: item.payWayId || "",
+        payAmt: item.payAmt || 0,
+        dedRoomAmt: item.dedRoomAmt || 0,
+        payDesc: item.payDesc || "",
+        bankName: item.bankName || "",
+        accountName: item.accountName || "",
+        bankAccount: item.bankAccount || "",
+      }));
 
-  const payAllocs: any[] = financeTable.value.map((item) => ({
+  const payAllocs = financeTable.value.map((item) => ({
     id: item.id,
     srcType: item.srcType,
     nconBillId: item.nconBillId,
@@ -2004,32 +2016,13 @@ const goBack = () => {
   router.go(-1);
 };
 
-const validateTables = () => {
-  if (dedTable.value.length === 0) {
-    ElMessage.error("请至少添加一条扣款事项明细");
-    return false;
-  }
-
-  if (payWayTable.value.length === 0) {
-    ElMessage.error("请至少添加一条支付方式");
-    return false;
-  }
-
-  if (invoiceMTable.value.length === 0) {
-    ElMessage.error("请至少添加一条发票登记");
-    return false;
-  }
-
-  const hasEmptyAnnex = invoiceMTable.value.some((item) => !item.annexId);
-  if (hasEmptyAnnex) {
-    ElMessage.error("请为所有发票登记上传附件");
-    return false;
-  }
-
-  return true;
-};
-
 const validateData = () => {
+  // 如果是来票冲账，跳过款项调整和支付方式的校验
+  if (formData.value.reqType === 1) {
+    // 只校验其他必要字段（如关联立项等）
+    return true;
+  }
+
   // 校验扣款事项明细
   if (dedTable.value && dedTable.value.length > 0) {
     for (const item of dedTable.value) {
@@ -2292,6 +2285,11 @@ const totalPayAmt = computed(() => {
   }, 0);
 });
 
+// 判断是否显示款项调整和支付方式模块（来票冲账时不显示）
+const showDeductionAndPayWay = computed(() => {
+  return formData.value.reqType !== 1; // 1 为来票冲账
+});
+
 // ==================== 自动更新表单字段 ====================
 
 // 监听实际请款金额变化，更新表单字段
@@ -2327,6 +2325,23 @@ watch(
   { immediate: true },
 );
 
+// 监听请款类型变化
+watch(
+  () => formData.value.reqType,
+  (newVal) => {
+    if (newVal === 1) {
+      // 来票冲账：清空款项调整和支付方式数据
+      dedTable.value = [];
+      payWayTable.value = [];
+    } else {
+      // 正常请款：如果没有支付方式，默认添加一条
+      if (payWayTable.value.length === 0) {
+        addPayWay();
+      }
+    }
+  },
+);
+
 onMounted(async () => {
   await initDictData();
   await getCstProcessList();
@@ -2358,53 +2373,6 @@ onMounted(async () => {
   border-radius: 8px;
   overflow: hidden;
   padding: 0;
-}
-
-.form-header {
-  width: 100%;
-  background: #ffffff;
-  padding: 16px 24px 12px 24px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  flex-shrink: 0;
-  border-bottom: 1px solid #e4e7ed;
-
-  .header-title {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 8px 0;
-    box-sizing: border-box;
-    font-size: 20px;
-    font-weight: 700;
-    color: #1d2129;
-    letter-spacing: 0.5px;
-  }
-
-  .header-btn {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-    flex-wrap: wrap;
-    padding: 4px 0;
-
-    .el-button {
-      border-radius: 6px;
-      font-weight: 500;
-      transition: all 0.25s ease;
-
-      &:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-      }
-
-      &:active {
-        transform: translateY(0px);
-      }
-    }
-  }
 }
 
 .form-scroll-area {

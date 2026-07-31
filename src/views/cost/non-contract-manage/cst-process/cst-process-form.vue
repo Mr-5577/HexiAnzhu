@@ -1,57 +1,27 @@
 <!-- 无合同事项台账信息 -->
 <template>
   <div class="basic-form-content">
-    <div class="form-header">
-      <div class="header-title">无合同事项审批</div>
-      <div class="header-btn">
-        <el-button
-          type="primary"
-          icon="DocumentAdd"
-          :loading="submitLoading"
-          @click="handleSave"
-          :disabled="isDetail || !!billData.status"
-        >
-          保存
-        </el-button>
-        <el-button
-          type="success"
-          plain
-          icon="Promotion"
-          :loading="submitLoading"
-          @click="handleSubmit"
-          :disabled="isDetail || !!billData.status"
-        >
-          提交
-        </el-button>
-        <el-button
-          type="danger"
-          plain
-          icon="Delete"
-          @click="handleDelete"
-          :disabled="isDetail || isAdd || !!billData.status"
-        >
-          删除
-        </el-button>
-        <el-button
-          type="warning"
-          plain
-          icon="Remove"
-          @click="handleCancel"
-          :disabled="isDetail || isAdd || !!billData.status"
-        >
-          作废
-        </el-button>
-        <el-button
-          type="info"
-          plain
-          icon="View"
-          :disabled="isAdd"
-          @click="handleViewProcess"
-        >
-          查看流程
-        </el-button>
-      </div>
-    </div>
+    <BillHeader
+      :title="'无合同事项审批'"
+      :contract-no="billData.bizNo || ''"
+      :submitter="formData.userName || ''"
+      :submit-time="formData.createDate || ''"
+      :status="billData.status"
+      :show-status="true"
+      :button-loading="submitLoading"
+      :save-disabled="isDetail || !!billData.status"
+      :submit-disabled="isDetail || !!billData.status"
+      :delete-disabled="isDetail || isAdd || !!billData.status"
+      :void-disabled="isDetail || isAdd || !!billData.status"
+      :view-disabled="isAdd"
+      @save="handleSave"
+      @submit="handleSubmit"
+      @delete="handleDelete"
+      @void="handleCancel"
+      @viewFlow="handleViewProcess"
+    >
+    </BillHeader>
+
     <div class="form-scroll-area">
       <el-form
         ref="formRef"
@@ -316,6 +286,7 @@ import { getEnumLabel, getEnumType } from "@/utils/enum";
 import { conBillStatusEnum } from "@/constants/contract-manage/enums";
 import { buildTree } from "@/utils/tree";
 import CostAllocationDetailDialog from "@/views/cost/cost-allocation/cost-allocation-detail-dialog.vue";
+import BillHeader from "@/components/business/bill-components/bill-header.vue";
 
 defineOptions({ name: "cst-process-form" });
 
@@ -379,6 +350,7 @@ const annexFileList = ref([]);
 const billData = ref({
   id: undefined,
   bizTitle: "",
+  bizNo: "",
   status: 0,
   bizItemCode: "NCON_PROC",
 });
@@ -806,53 +778,6 @@ onMounted(() => {
   border-radius: 8px;
   overflow: hidden;
   padding: 0;
-}
-
-.form-header {
-  width: 100%;
-  background: #ffffff;
-  padding: 16px 24px 12px 24px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  flex-shrink: 0;
-  border-bottom: 1px solid #e4e7ed;
-
-  .header-title {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 8px 0;
-    box-sizing: border-box;
-    font-size: 20px;
-    font-weight: 700;
-    color: #1d2129;
-    letter-spacing: 0.5px;
-  }
-
-  .header-btn {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-    flex-wrap: wrap;
-    padding: 4px 0;
-
-    .el-button {
-      border-radius: 6px;
-      font-weight: 500;
-      transition: all 0.25s ease;
-
-      &:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-      }
-
-      &:active {
-        transform: translateY(0px);
-      }
-    }
-  }
 }
 
 .form-scroll-area {

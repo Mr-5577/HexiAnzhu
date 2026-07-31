@@ -164,7 +164,7 @@
                 style="width: 100%"
               >
                 <el-option label="正常请款" :value="0" />
-                <el-option label="提高支付比例请款" :value="1" />
+                <el-option label="来票冲账" :value="1" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -556,7 +556,7 @@ const formData = ref({
   paidPayRate: 0, // 实付占应付比率
   paidOutRate: 0, // 实付占产值比率
   reqType: 0 as 0 | 1, // 请款类型 0=请款、1=来票冲账
-  payRule: 0 as 0 | 1, // 付款规则：0-正常请款 1-提高支付比例请款
+  payRule: 0 as 0 | 1, // 付款规则：0-正常请款 1-来票冲账
   leavePayAmt: 0, // 剩余应付金额
   reqAmt: 0, // 请款总金额
   pbAmount: 0, // 转履约保证金金额

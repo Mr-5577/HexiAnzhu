@@ -12,6 +12,7 @@
           v-model="queryParams.segId"
           placeholder="请选择业务板块"
           style="width: 220px"
+          clearable
         >
           <el-option
             v-for="item in segOptions"
@@ -174,12 +175,12 @@ const segOptions = ref([]);
 
 const columns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60, fixed: "left" },
-  { prop: "segName", label: "业务板块", width: 150 },
+  { prop: "segName", label: "业务板块", width: 120 },
   { prop: "bizTitle", label: "标题", width: 200 },
   { prop: "projName", label: "项目名称", width: 150 },
   // { prop: "feeTypeId", label: "费用类型", width: 150 },
-  { prop: "reqAmt", label: "实际请款金额", width: 150 },
-  { prop: "reqDesc", label: "请款说明", width: 150 },
+  { prop: "reqAmt", label: "实际请款金额", width: 120 },
+  { prop: "reqDesc", label: "请款说明", width: 200 },
   { slot: "status", label: "审批状态", width: 100 },
   { prop: "createName", label: "创建人", width: 100 },
   { prop: "createDate", label: "创建日期", width: 120 },
@@ -198,6 +199,7 @@ const getDataList = async () => {
     tableData.value = [];
     const params = {
       projId: queryParams.value.projId,
+      segId: queryParams.value.segId,
       status: queryParams.value.status,
       createId: queryParams.value.createId,
       createDateStart: queryParams.value.time?.[0] || "",
