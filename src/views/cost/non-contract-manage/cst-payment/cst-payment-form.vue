@@ -2084,6 +2084,25 @@ const validateData = () => {
 
   return true;
 };
+// 保存时选择的关联立项对应的金额是否有变化
+const getProcessData = async () => {
+  if (!cstProcessData.value.id) return;
+  try {
+    const res = await cstPaymentApi.getAccumByProcessId({
+      processId: cstProcessData.value.id,
+    });
+    if (res.code === 200 && res.data) {
+      cstProcessData.value.processAmt = res.data.processAmt;
+      cstProcessData.value.sumAppyAmt = res.data.sumAppyAmt;
+      cstProcessData.value.sumOwedAmt = res.data.sumOwedAmt;
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    return false;
+  }
+};
 
 const handleSave = async () => {
   paymentFormRef.value.validate(async (valid: boolean) => {
@@ -2095,6 +2114,10 @@ const handleSave = async () => {
       ElMessage.error("请选择关联立项！");
       return;
     }
+    // 获取选中的立项数据对应的金额信息
+    const isDataLoaded = await getProcessData();
+    if (!isDataLoaded) return;
+
     if (!validateData()) {
       return;
     }
@@ -2127,6 +2150,10 @@ const handleSubmit = async () => {
       ElMessage.error("请选择关联立项！");
       return;
     }
+    // 获取选中的立项数据对应的金额信息
+    const isDataLoaded = await getProcessData();
+    if (!isDataLoaded) return;
+
     if (!validateData()) {
       return;
     }

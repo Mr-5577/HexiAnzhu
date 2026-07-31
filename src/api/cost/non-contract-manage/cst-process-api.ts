@@ -10,7 +10,7 @@ export const cstProcessApi = {
    * @param params.projId 项目id
    * @returns
    */
-  getCstProcessList: (params?: { projId?: number }) => {
+  getCstProcessList: (params?: any) => {
     return http.get("/ncon/cstProcess/list", params);
   },
   /**
