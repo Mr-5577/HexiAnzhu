@@ -5,15 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:test": "vite --mode test",
+    "dev:staging": "vite --mode staging",
+    "dev:prod": "vite --mode production",
     "build": "vue-tsc && vite build",
-    "build:dev": "vue-tsc && vite build --mode development",
     "build:test": "vue-tsc && vite build --mode test",
     "build:staging": "vue-tsc && vite build --mode staging",
     "build:prod": "vue-tsc && vite build --mode production",
     "preview": "vite preview",
-    "preview:dev": "vite preview --mode development",
-    "preview:staging": "vite preview --mode staging",
-    "preview:prod": "vite preview --mode production",
     "type-check": "vue-tsc --noEmit"
   },
   "dependencies": {
