@@ -4,7 +4,7 @@
 
 ## 技术栈
 - 框架: Vue 3 + Composition API
-- 构建工具: Vite 5
+- 构建工具: Vite 7
 - 语言: TypeScript 5.x
 - UI 框架: Element Plus（按需引入）
 - 状态管理: Pinia
@@ -28,10 +28,14 @@ http://localhost:3000
 ## npm 脚本说明
 - `npm run dev`
   - 启动本地开发服务器，默认使用 `development` 模式
+- `npm run dev:test`
+  - 以 `test` 模式启动开发服务器
+- `npm run dev:staging`
+  - 以 `staging` 模式启动开发服务器
+- `npm run dev:prod`
+  - 以 `production` 模式启动开发服务器
 - `npm run build`
   - 进行类型检查后构建生产包
-- `npm run build:dev`
-  - 以 `development` 模式构建
 - `npm run build:test`
   - 以 `test` 模式构建
 - `npm run build:staging`
@@ -40,12 +44,6 @@ http://localhost:3000
   - 以 `production` 模式构建
 - `npm run preview`
   - 预览生产构建包
-- `npm run preview:dev`
-  - 预览 `development` 模式构建包
-- `npm run preview:staging`
-  - 预览 `staging` 模式构建包
-- `npm run preview:prod`
-  - 预览 `production` 模式构建包
 - `npm run type-check`
   - 仅执行 TypeScript 类型检查，不输出构建产物
 
