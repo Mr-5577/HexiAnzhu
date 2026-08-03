@@ -32,9 +32,9 @@ export const ManageTypeEnum = [
 
 /** 付款方式 */
 export const PayTypeEnum = [
-  { value: 1, label: "按进度支付" },
-  { value: 2, label: "按材料到货支付" },
-  { value: 3, label: "按节点支付" },
+  { value: 1, label: "按进度确认" },
+  { value: 2, label: "按材料到货确认" },
+ // { value: 3, label: "按节点确认" },
 ] as const;
 
 /** 印章类型 */

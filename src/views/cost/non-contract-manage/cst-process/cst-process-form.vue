@@ -30,123 +30,14 @@
         label-width="110px"
         class="adapt-form"
       >
-        <div class="item-card">
-          <el-row :gutter="24">
-            <el-col :xs="24" :sm="12" :md="12" :lg="18" :xl="18">
-              <el-form-item label="标题" prop="bizTitle" required>
-                <el-input
-                  v-model="formData.bizTitle"
-                  clearable
-                  :disabled="isDetail || !!billData.status"
-                  placeholder="标题"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="审批状态" prop="approvalStatus">
-                <el-tag
-                  :type="getEnumType(conBillStatusEnum, billData?.status || 0)"
-                >
-                  {{ getEnumLabel(conBillStatusEnum, billData?.status || 0) }}
-                </el-tag>
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row :gutter="24">
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="业务板块" prop="segId" required>
-                <el-input
-                  v-model="formData.segName"
-                  disabled
-                  placeholder="业务板块"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="板块编码" prop="segNo">
-                <el-input
-                  v-model="formData.segNo"
-                  disabled
-                  placeholder="板块编码"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="部门" prop="deptName">
-                <el-input
-                  v-model="formData.deptName"
-                  placeholder="部门"
-                  disabled
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="分部" prop="mguName">
-                <el-input
-                  v-model="formData.mguName"
-                  placeholder="分部"
-                  disabled
-                />
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row :gutter="24">
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="所属项目" prop="projId" required>
-                <el-cascader
-                  ref="projCascaderRef"
-                  v-model="formData.projId"
-                  :options="projectOptions"
-                  :show-all-levels="false"
-                  :props="{
-                    expandTrigger: 'hover',
-                    emitPath: false,
-                    checkStrictly: false,
-                    value: 'orgId',
-                    label: 'orgName',
-                    children: 'children',
-                  }"
-                  placeholder="请选择项目"
-                  style="width: 100%"
-                  filterable
-                  :disabled="isDetail || !!billData.status"
-                  @change="changeProject"
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="项目所属公司" prop="compName">
-                <el-input
-                  v-model="formData.compName"
-                  placeholder="项目所属公司"
-                  disabled
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="提交人" prop="userName">
-                <el-input
-                  v-model="formData.userName"
-                  clearable
-                  placeholder="提交人"
-                  disabled
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="提交时间" prop="createDate">
-                <el-date-picker
-                  v-model="formData.createDate"
-                  type="date"
-                  placeholder="提交时间"
-                  style="width: 100%"
-                  value-format="YYYY-MM-DD"
-                  disabled
-                />
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </div>
+        <BillInfo
+          v-model="formData"
+          :status="billData?.status || 0"
+          :disabled="isDetail || !!billData.status"
+          :project-options="projectOptions"
+          @project-change="changeProject"
+        />
+
         <div class="item-card">
           <div class="section-title">立项信息</div>
           <el-row :gutter="24">
@@ -287,6 +178,7 @@ import { conBillStatusEnum } from "@/constants/contract-manage/enums";
 import { buildTree } from "@/utils/tree";
 import CostAllocationDetailDialog from "@/views/cost/cost-allocation/cost-allocation-detail-dialog.vue";
 import BillHeader from "@/components/business/bill-components/bill-header.vue";
+import BillInfo from "@/components/business/bill-components/bill-info.vue";
 
 defineOptions({ name: "cst-process-form" });
 
@@ -314,9 +206,6 @@ const mode = ref<"add" | "edit" | "detail">(props.mode);
 const isDetail = computed(() => mode.value === "detail");
 const isEdit = computed(() => mode.value === "edit");
 const isAdd = computed(() => mode.value === "add");
-
-// 使用 useTemplateRef 获取模板引用
-const projCascaderRef = useTemplateRef("projCascaderRef");
 
 const initFormData = () => ({
   bizTitle: "",
@@ -461,42 +350,21 @@ const initOptions = async () => {
 
 // 选择项目
 const changeProject = async (value: number) => {
-  console.log(value);
   if (value) {
-    // 通过模板引用获取节点数据
-    const checkedNodes = projCascaderRef.value?.getCheckedNodes();
-    if (checkedNodes && checkedNodes.length > 0) {
-      console.log("选中的项目数据:", checkedNodes);
-      // const selectedNode = checkedNodes[0]; // 获取选中的项目ID
-      // // 获取父级信息
-      // const pathNodes = selectedNode.pathNodes || [];
-      // if (pathNodes.length > 1) {
-      //   console.log("直接父节点：", pathNodes[pathNodes.length - 2]?.data);
-      //   console.log("根节点：", pathNodes[0]?.data);
-      //   console.log(
-      //     "所有父级：",
-      //     pathNodes.slice(0, -1).map((n) => n.data),
-      //   );
-      //   const parent = pathNodes[pathNodes.length - 2]?.data;
-      //   formData.value.compName = parent?.orgName || "";
-      //   formData.value.compId = parent?.orgId || "";
-      // }
-
-      // 通过项目获取项目所属信息
-      const res = await projectAreaApi.getInfoByProjId({ id: value });
-      if (res.code === 200 && res.data) {
-        const { compName, compId, segId, segName } = res.data;
-        formData.value.compId = compId || "";
-        formData.value.compName = compName || "";
-        formData.value.segId = segId || "";
-        formData.value.segName = segName || "";
-        // 置空费用类型相关字段数据
-        formData.value.finaTypeId = "";
-        feeTypeFlatOptions.value = [];
-        feeTypeOptions.value = [];
-        // 根据业务板块查询费用类型
-        getpayTypeOptions(segId);
-      }
+    // 通过项目获取项目所属信息
+    const res = await projectAreaApi.getInfoByProjId({ id: value });
+    if (res.code === 200 && res.data) {
+      const { compName, compId, segId, segName } = res.data;
+      formData.value.compId = compId || "";
+      formData.value.compName = compName || "";
+      formData.value.segId = segId || "";
+      formData.value.segName = segName || "";
+      // 置空费用类型相关字段数据
+      formData.value.finaTypeId = "";
+      feeTypeFlatOptions.value = [];
+      feeTypeOptions.value = [];
+      // 根据业务板块查询费用类型
+      getpayTypeOptions(segId);
     }
   }
 };

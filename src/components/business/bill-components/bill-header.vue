@@ -1,4 +1,4 @@
-<!-- components/contract/ContractHeader.vue -->
+<!-- 单据 header -->
 <template>
   <header class="contract-header">
     <div class="header-row">

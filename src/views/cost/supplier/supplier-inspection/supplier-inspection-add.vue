@@ -79,7 +79,7 @@
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="业务板块" prop="segId" required>
-                <el-select
+                <!-- <el-select
                   v-model="formData.segId"
                   placeholder="请选择业务板块"
                   style="width: 100%"
@@ -91,7 +91,12 @@
                     :label="item.segName"
                     :value="item.id"
                   />
-                </el-select>
+                </el-select> -->
+                <el-input
+                  v-model="formData.segName"
+                  disabled
+                  placeholder="业务板块"
+                />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
@@ -482,7 +487,8 @@ const getSegOptions = async () => {
 // 获取项目列表
 const getProjectOptions = async () => {
   try {
-    const res = await projectAreaApi.getMguProjList();
+    // const res = await projectAreaApi.getMguProjList();
+    const res = await projectAreaApi.getSegMguProjList(); // 板块-公司-项目树形结构数据
     if (res.code === 200) {
       projectOptions.value = res.data || [];
     }
@@ -492,25 +498,35 @@ const getProjectOptions = async () => {
 };
 
 // 选择项目
-const changeProject = (value: number) => {
+const changeProject = async(value: number) => {
   if (value) {
     // 通过模板引用获取节点数据
     const checkedNodes = projCascaderRef.value?.getCheckedNodes();
     if (checkedNodes && checkedNodes.length > 0) {
       console.log("选中的项目数据:", checkedNodes);
-      const selectedNode = checkedNodes[0]; // 获取选中的项目ID
-      // 获取父级信息
-      const pathNodes = selectedNode.pathNodes || [];
-      if (pathNodes.length > 1) {
-        console.log("直接父节点：", pathNodes[pathNodes.length - 2]?.data);
-        console.log("根节点：", pathNodes[0]?.data);
-        console.log(
-          "所有父级：",
-          pathNodes.slice(0, -1).map((n) => n.data),
-        );
-        const parent = pathNodes[pathNodes.length - 2]?.data;
-        formData.value.compName = parent?.orgName || "";
-        formData.value.compId = parent?.orgId || "";
+      // const selectedNode = checkedNodes[0]; // 获取选中的项目ID
+      // // 获取父级信息
+      // const pathNodes = selectedNode.pathNodes || [];
+      // if (pathNodes.length > 1) {
+      //   console.log("直接父节点：", pathNodes[pathNodes.length - 2]?.data);
+      //   console.log("根节点：", pathNodes[0]?.data);
+      //   console.log(
+      //     "所有父级：",
+      //     pathNodes.slice(0, -1).map((n) => n.data),
+      //   );
+      //   const parent = pathNodes[pathNodes.length - 2]?.data;
+      //   formData.value.compName = parent?.orgName || "";
+      //   formData.value.compId = parent?.orgId || "";
+      // }
+
+      // 通过项目获取项目所属信息
+      const res = await projectAreaApi.getInfoByProjId({ id: value });
+      if (res.code === 200 && res.data) {
+        const { compName, compId, segId, segName } = res.data;
+        formData.value.compId = compId || "";
+        formData.value.compName = compName || "";
+        formData.value.segId = segId || "";
+        formData.value.segName = segName || "";
       }
     }
   }

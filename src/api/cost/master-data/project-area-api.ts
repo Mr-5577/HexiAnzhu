@@ -191,7 +191,7 @@ export const projectAreaApi = {
    * @returns Promise 面积版本明细列表
    * @description 查询指定版本下的所有面积明细数据
    */
-  getAreaVerDList: (data: { verMid: number | string }) => {
+  getAreaVerDList: (data: { verMid: number }) => {
     return http.formPost("/mainData/areaVerD/getList", data);
   },
   /**
@@ -199,7 +199,7 @@ export const projectAreaApi = {
    * @param data - 查询参数
    * @param data.verMid - 版本ID（必填）
    */
-  getPrevListByVerMid: (data: { verMid: number | string }) => {
+  getPrevListByVerMid: (data: { verMid: number }) => {
     return http.formPost("/mainData/areaVerD/getPrevList", data);
   },
 };

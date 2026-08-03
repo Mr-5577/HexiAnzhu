@@ -1,18 +1,50 @@
-<!-- 成本分摊 页面 -->
+<!-- 成本分摊 组件 -->
 <template>
-  <div class="app-container">
+  <div
+    class="cost-allocation-container"
+    :class="{ 'dialog-mode': isDialogMode }"
+  >
     <!-- 顶部业务头部 -->
     <header class="header-card">
       <div class="header-top">
         <h2>成本分摊</h2>
-        <!-- <el-button plain icon="DArrowLeft" type="primary">返回</el-button> -->
+        <!-- <el-button
+          v-if="!isDialogMode"
+          plain
+          icon="DArrowLeft"
+          type="primary"
+          @click="handleBack"
+        >
+          返回
+        </el-button> -->
+      </div>
+
+      <!-- 显示单据信息 -->
+      <div class="biz-info" v-if="pageParams.bizBillId">
+        <el-tag size="small" type="info"
+          >单据编号：{{ pageParams.bizBillId }}</el-tag
+        >
+        <el-tag size="small" type="info" v-if="pageParams.bizKeyId"
+          >业务ID：{{ pageParams.bizKeyId }}</el-tag
+        >
+        <el-tag size="small" type="warning"
+          >含税金额：{{ pageParams.allocAmt }}</el-tag
+        >
+        <el-tag size="small" type="warning"
+          >不含税金额：{{ pageParams.allocExclAmt }}</el-tag
+        >
       </div>
 
       <el-row :gutter="16" class="summary-cards">
         <el-col :span="6">
           <div class="summary-item">
             <div class="label">单据类型</div>
-            <el-select v-model="billType" size="default" style="width: 100%">
+            <el-select
+              v-model="billType"
+              size="default"
+              style="width: 100%"
+              :disabled="!!pageParams.bizType"
+            >
               <el-option label="定标参考价分摊" value="定标参考价分摊" />
               <el-option label="合同分摊" value="合同分摊" />
               <el-option label="变更分摊" value="变更分摊" />
@@ -24,19 +56,19 @@
         <el-col :span="6">
           <div class="summary-item bg-gray">
             <div class="label">总成本金额</div>
-            <div class="value large">100</div>
+            <div class="value large">{{ pageParams.allocAmt || 0 }}</div>
           </div>
         </el-col>
         <el-col :span="6">
           <div class="summary-item bg-green">
             <div class="label">已分摊金额</div>
-            <div class="value large green">100</div>
+            <div class="value large green">{{ allocatedAmount }}</div>
           </div>
         </el-col>
         <el-col :span="6">
           <div class="summary-item bg-gray-light">
             <div class="label">待分摊金额</div>
-            <div class="value large gray">0</div>
+            <div class="value large gray">{{ pendingAmount }}</div>
           </div>
         </el-col>
       </el-row>
@@ -47,7 +79,7 @@
       <div class="card-header">
         <span>
           <el-icon><OfficeBuilding /></el-icon>
-          产品分摊配置
+          产品分摊
         </span>
       </div>
 
@@ -70,7 +102,7 @@
     <el-card class="subject-card" shadow="never">
       <div class="card-header">
         <span>
-          <el-icon><List /></el-icon> 成本科目分摊明细
+          <el-icon><List /></el-icon> 成本分摊明细
         </span>
         <div>
           <el-button plain type="primary" @click="handleChoose">
@@ -78,24 +110,6 @@
           </el-button>
           <el-button type="primary" @click="handleSubmit"> 确认分摊 </el-button>
         </div>
-      </div>
-
-      <!-- 筛选栏 -->
-      <div class="filter-bar">
-        <span>筛选分摊状态：</span>
-        <el-select v-model="filterStatus" size="default" style="width: 140px">
-          <el-option label="全部" value="all" />
-          <el-option label="已分摊" value="done" />
-          <el-option label="部分分摊" value="part" />
-          <el-option label="未分摊" value="none" />
-        </el-select>
-        <span>搜索科目：</span>
-        <el-input
-          v-model="searchKeyword"
-          size="default"
-          placeholder="输入科目名称"
-          style="width: 180px"
-        />
       </div>
 
       <editable-table
@@ -109,7 +123,7 @@
         :show-summary="false"
         :compactEmpty="true"
         :editable="true"
-      ></editable-table>
+      />
     </el-card>
 
     <!-- 成本分摊预警 -->
@@ -130,13 +144,19 @@
         <div class="warning-stats">
           <span>
             <span class="dot red"></span>
-            红色预警（一级科目超支）：1条
+            红色预警
+            <!-- （一级科目超支）：{{ warningCount.red }}条 -->
           </span>
           <span>
             <span class="dot orange"></span>
-            黄色预警（二级科目超支）：1条
+            黄色预警
+            <!-- （二级科目超支）：{{ warningCount.orange }}条 -->
           </span>
-          <span> <span class="dot green"></span> 绿色预警（无异常）：2条 </span>
+          <span>
+            <span class="dot green"></span>
+            绿色预警
+            <!-- （无异常）：{{ warningCount.green }}条 -->
+          </span>
         </div>
 
         <base-table
@@ -153,7 +173,6 @@
           max-height="260"
           @cell-event="handleWarningCellEvent"
         >
-          <!-- 自定义预警列 -->
           <template #level="{ row }">
             <span class="dot" :class="row.level"></span>
           </template>
@@ -161,8 +180,8 @@
       </div>
     </el-card>
 
-    <!-- 底部操作按钮 -->
-    <!-- <div class="footer-actions">
+    <!-- 底部操作按钮（仅独立页面模式显示） -->
+    <!-- <div class="footer-actions" v-if="!isDialogMode">
       <el-button plain @click="handleSaveDraft">
         <el-icon><Document /></el-icon> 临时保存草稿
       </el-button>
@@ -170,11 +189,15 @@
         <el-icon><Check /></el-icon> 确认分摊提交
       </el-button>
     </div> -->
+
+    <!-- 选择分摊科目弹窗 -->
+    <CostAlocationDialog v-model="dialogVisible" @select="getSelectData" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, watch, nextTick } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import {
   OfficeBuilding,
@@ -182,68 +205,93 @@ import {
   WarningFilled,
   ArrowUp,
   ArrowDown,
+  Document,
+  Check,
 } from "@element-plus/icons-vue";
 import EditableTable from "@/components/base/editable-table.vue";
 import { EditableColumn } from "@/components/base/editable-table.vue";
 import { TableColumnItem } from "@/components/base/base-table.vue";
+import { v4 as uuidv4 } from "uuid";
+import { costCategoryApi } from "@/api/cost/master-data/cost-category-api";
+import { productTypeApi } from "@/api/cost/master-data/product-type-api";
+import CostAlocationDialog from "./choose-sub-dialog.vue";
 
+// ============= Props 定义 =============
+interface Props {
+  // 从父组件传入的参数（弹窗模式使用）
+  projId?: number;
+  bizType?: string;
+  bizBillId?: string;
+  bizKeyId?: string;
+  allocAmt?: number;
+  allocExclAmt?: number;
+  // 是否弹窗模式（由父组件控制）
+  isDialogMode?: boolean;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  projId: undefined,
+  bizType: "",
+  bizBillId: "",
+  bizKeyId: "",
+  allocAmt: 0,
+  allocExclAmt: 0,
+  isDialogMode: false,
+});
+
+// ============= Emits =============
+const emit = defineEmits<{
+  confirm: [data: any];
+  cancel: [];
+  "save-draft": [data: any];
+}>();
+
+// ============= 路由 =============
+const route = useRoute();
+const router = useRouter();
+
+// ============= 判断是否为弹窗模式 =============
+const isDialogMode = computed(() => {
+  // 优先使用props传入的判断
+  if (props.isDialogMode !== undefined) {
+    return props.isDialogMode;
+  }
+  // 如果路由名称不是成本分摊页面，认为是弹窗模式
+  return route.name !== "CostAllocation";
+});
+
+// ============= 响应式数据 =============
 const billType = ref("定标参考价分摊");
-const filterStatus = ref("all");
-const searchKeyword = ref("");
 const warningVisible = ref(true);
+const subjectOptions = ref<any[]>([]);
+const productOptions = ref<any[]>([]);
+const dialogVisible = ref(false);
+const confirmLoading = ref(false);
 
+// ============= 页面参数 =============
+const pageParams = ref({
+  projId: 0,
+  bizType: "定标参考价分摊",
+  bizBillId: "",
+  bizKeyId: "",
+  allocAmt: 0,
+  allocExclAmt: 0,
+});
+
+// ============= 数据 =============
 const baseProducts = ref([
   {
-    name: "高层",
-    buildingType: "住宅",
-    areaAbove: 50,
-    areaBelow: 16,
-    areaCountable: 48,
-    totalArea: 66,
-    areaAboveGround: 50,
-    areaBelowGround: 16,
-    households: 60,
-    avgAreaPerHousehold: 110,
-    plotRatio: 2.8,
-    buildingDensity: 0.22,
-    greenRate: 0.35,
-  },
-  {
-    name: "小高层",
-    buildingType: "住宅",
-    areaAbove: 30,
-    areaBelow: 16,
-    areaCountable: 28,
-    totalArea: 46,
-    areaAboveGround: 30,
-    areaBelowGround: 16,
-    households: 30,
-    avgAreaPerHousehold: 120,
-    plotRatio: 2.5,
-    buildingDensity: 0.2,
-    greenRate: 0.38,
+    prodName: "别墅",
+    agBuildArea: 50,
+    ugBuildArea: 16,
+    agSaleArea: 48,
+    ugSaleArea: 66,
+    houseNum: 50,
+    elvNum: 16,
   },
 ]);
-// 产品基数表格列配置
-const baseColumns: TableColumnItem[] = [
-  { type: "selection", width: 50, fixed: "left" },
-  { type: "index", label: "序号", width: 60, fixed: "left" },
-  { prop: "name", label: "产品名称", minWidth: 100, fixed: true },
-  { prop: "buildingType", label: "业态类型", width: 100 },
-  { prop: "areaAbove", label: "地上可售面积", width: 120 },
-  { prop: "areaBelow", label: "地下可售面积", width: 120 },
-  { prop: "areaCountable", label: "计容面积", width: 120 },
-  { prop: "totalArea", label: "总建筑面积", width: 120 },
-  { prop: "areaAboveGround", label: "地上建筑面积", width: 120 },
-  { prop: "areaBelowGround", label: "地下建筑面积", width: 120 },
-  { prop: "households", label: "总户数", width: 100 },
-  { prop: "avgAreaPerHousehold", label: "户均面积", width: 110 },
-  { prop: "plotRatio", label: "容积率", width: 100 },
-  { prop: "buildingDensity", label: "建筑密度", width: 100 },
-  { prop: "greenRate", label: "绿化率", width: 100 },
-];
 
-// 注意：这里直接用 ref 存储数据，不再使用 watch 同步
+// 可编辑表格数据
 const editableSubjectData = ref([
   {
     id: 1,
@@ -301,6 +349,65 @@ const editableSubjectData = ref([
   },
 ]);
 
+// ============= 计算属性 =============
+
+// 已分摊金额计算
+const allocatedAmount = computed(() => {
+  let total = 0;
+  const traverse = (data: any[]) => {
+    data.forEach((item) => {
+      if (item.children && item.children.length > 0) {
+        traverse(item.children);
+      } else {
+        total += Number(item.amount || 0);
+      }
+    });
+  };
+  traverse(editableSubjectData.value);
+  return total;
+});
+
+// 待分摊金额
+const pendingAmount = computed(() => {
+  return (pageParams.value.allocAmt || 0) - allocatedAmount.value;
+});
+
+// 预警统计
+const warningCount = computed(() => {
+  const count = { red: 0, orange: 0, green: 0 };
+  warningData.value.forEach((item) => {
+    if (item.level === "red") count.red++;
+    else if (item.level === "orange") count.orange++;
+    else if (item.level === "green") count.green++;
+  });
+  return count;
+});
+
+// ============= 表格列配置 =============
+
+// 产品基数表格列配置
+const baseColumns: TableColumnItem[] = [
+  { type: "selection", width: 50, fixed: "left" },
+  { type: "index", label: "序号", width: 60, fixed: "left" },
+  { prop: "prodName", label: "产品名称" },
+  {
+    label: "建筑面积(m²)",
+    children: [
+      { prop: "agBuildArea", label: "地上" },
+      { prop: "ugBuildArea", label: "地下" },
+    ],
+  },
+  {
+    label: "可售面积(m²)",
+    children: [
+      { prop: "agSaleArea", label: "地上" },
+      { prop: "ugSaleArea", label: "地下" },
+    ],
+  },
+  { prop: "houseNum", label: "户数" },
+  { prop: "elvNum", label: "电梯数" },
+];
+
 // 科目表格列配置
 const subjectColumns = computed<EditableColumn[]>(() => {
   const baseCols: EditableColumn[] = [
@@ -344,6 +451,7 @@ const subjectColumns = computed<EditableColumn[]>(() => {
       minWidth: 90,
       editable: true,
       editType: "number",
+      showOverflowTooltip: false,
     },
     {
       prop: "highRise",
@@ -381,7 +489,22 @@ const subjectColumns = computed<EditableColumn[]>(() => {
   return [...baseCols];
 });
 
-// ---------- 静态数据：预警数据 ----------
+// 预警表格列配置
+const warningColumns: TableColumnItem[] = [
+  {
+    prop: "level",
+    label: "状态",
+    width: 70,
+    slot: "level",
+  },
+  { prop: "subject", label: "科目编码" },
+  { prop: "subject", label: "科目名称" },
+  { prop: "balance", label: "分摊后余额" },
+  { prop: "targetCost", label: "目标成本可用额" },
+  { prop: "currentCost", label: "当前分摊额" },
+];
+
+// ============= 预警数据 =============
 const warningData = ref([
   {
     level: "red",
@@ -413,22 +536,197 @@ const warningData = ref([
   },
 ]);
 
-// 预警表格列配置
-const warningColumns: TableColumnItem[] = [
-  {
-    prop: "level",
-    label: "状态",
-    width: 70,
-    slot: "level",
-  },
-  { prop: "subject", label: "科目编码" },
-  { prop: "subject", label: "科目名称" },
-  { prop: "balance", label: "分摊后余额" },
-  { prop: "targetCost", label: "目标成本可用额" },
-  { prop: "currentCost", label: "当前分摊额" },
-];
+// ============= 方法 =============
 
-// ---------- 方法 ----------
+// 从URL或Props获取参数
+const getParams = () => {
+  // 优先使用props
+  if (props.projId) {
+    return {
+      projId: props.projId,
+      bizType: props.bizType || "定标参考价分摊",
+      bizBillId: props.bizBillId || "",
+      bizKeyId: props.bizKeyId || "",
+      allocAmt: props.allocAmt || 0,
+      allocExclAmt: props.allocExclAmt || 0,
+    };
+  }
+
+  // 从路由参数获取
+  return {
+    projId: route.query.projId ? Number(route.query.projId) : 0,
+    bizType: (route.query.bizType as string) || "定标参考价分摊",
+    bizBillId: (route.query.bizBillId as string) || "",
+    bizKeyId: (route.query.bizKeyId as string) || "",
+    allocAmt: route.query.allocAmt ? Number(route.query.allocAmt) : 0,
+    allocExclAmt: route.query.allocExclAmt
+      ? Number(route.query.allocExclAmt)
+      : 0,
+  };
+};
+
+// 初始化页面
+const initPage = async () => {
+  const params = getParams();
+  pageParams.value = params;
+
+  if (!params.projId) {
+    ElMessage.warning("缺少项目ID参数");
+    return;
+  }
+
+  // 设置billType
+  if (params.bizType) {
+    billType.value = params.bizType;
+  }
+
+  // 加载数据
+  await Promise.all([getCostSubjectProjList(), getProductList()]);
+
+  // 如果有业务单据ID，加载已保存的分摊数据
+  if (params.bizBillId) {
+    await loadAllocationData(params.bizBillId);
+  }
+};
+
+// 加载已保存的分摊数据
+const loadAllocationData = async (bizBillId: string) => {
+  try {
+    // TODO: 调用API获取已保存的分摊数据
+    // const res = await costAllocationApi.getAllocationDetail({ bizBillId });
+    // if (res.code === 200 && res.data) {
+    //   editableSubjectData.value = res.data;
+    // }
+    console.log("加载已有分摊数据:", bizBillId);
+  } catch (error) {
+    console.error("加载分摊数据失败:", error);
+  }
+};
+
+// 获取目标成本科目列表
+const getCostSubjectProjList = async () => {
+  if (!pageParams.value.projId) {
+    ElMessage.warning("请先选择项目");
+    return;
+  }
+  try {
+    const res = await costCategoryApi.getCostSubjectProjList({
+      projId: pageParams.value.projId,
+      withDetail: true,
+    });
+    if (res.code === 200) {
+      subjectOptions.value = res.data || [];
+      renderSubjectOptions();
+    } else {
+      ElMessage.error(res.msg || "获取数据失败");
+    }
+  } catch (error) {
+    console.error("获取数据失败:", error);
+  }
+};
+
+// 渲染科目列表
+const renderSubjectOptions = () => {
+  const list = subjectOptions.value.map((subject: any) => ({
+    uuid: uuidv4(),
+    subId: subject.id,
+    subName: subject.subName,
+    costAmt: 0,
+    costExclAmt: 0,
+    allocAmt: 0,
+    allocExclAmt: 0,
+    allocWarn: 2,
+  }));
+  console.log("渲染科目列表:", list);
+};
+
+// 获取项目产品类型
+const getProductList = async () => {
+  if (!pageParams.value.projId) return;
+  try {
+    const res = await productTypeApi.getProductProjList({
+      projId: pageParams.value.projId,
+      withDetail: true,
+    });
+    if (res.code === 200) {
+      productOptions.value = res.data || [];
+    } else {
+      ElMessage.error(res.msg || "获取数据失败");
+    }
+  } catch (error) {
+    console.error("获取业态列表失败:", error);
+  }
+};
+
+// 弹窗选择科目
+const handleChoose = () => {
+  dialogVisible.value = true;
+};
+
+// 接收选择的科目数据
+const getSelectData = (data: any) => {
+  editableSubjectData.value = data;
+};
+
+// 提交确认
+const handleSubmit = async () => {
+  confirmLoading.value = true;
+  try {
+    const currentData = editableSubjectData.value;
+    const params = pageParams.value;
+
+    const submitData = {
+      projId: params.projId,
+      bizType: params.bizType,
+      bizBillId: params.bizBillId,
+      bizKeyId: params.bizKeyId,
+      allocAmt: params.allocAmt,
+      allocExclAmt: params.allocExclAmt,
+      allocationData: currentData,
+    };
+
+    // TODO: 调用保存接口
+    // await costAllocationApi.saveAllocation(submitData);
+    console.log("提交数据:", submitData);
+
+    if (isDialogMode.value) {
+      // 弹窗模式：触发confirm事件给父组件
+      emit("confirm", submitData);
+      ElMessage.success("分摊数据确认提交！");
+    } else {
+      // 独立页面模式：提示成功
+      ElMessage.success(
+        "分摊数据确认提交！数据锁定，如需修改请执行撤销分摊操作",
+      );
+    }
+  } catch (error) {
+    console.error("提交失败:", error);
+    ElMessage.error("提交失败，请重试");
+  } finally {
+    confirmLoading.value = false;
+  }
+};
+
+// 返回（独立页面模式）
+const handleBack = () => {
+  router.back();
+};
+
+// 取消操作（弹窗模式使用）
+const handleCancel = () => {
+  if (isDialogMode.value) {
+    emit("cancel");
+  }
+};
+
+// 保存草稿（独立页面模式使用）
+const handleSaveDraft = () => {
+  const currentData = editableSubjectData.value;
+  console.log("保存草稿:", currentData);
+  // TODO: 调用保存草稿接口
+  ElMessage.success("草稿保存成功，可继续编辑");
+};
+
 // 预警面板切换
 const toggleWarningPanel = () => {
   warningVisible.value = !warningVisible.value;
@@ -446,39 +744,53 @@ const handleWarningCellEvent = (payload: any) => {
   }
 };
 
-// 保存草稿
-const handleSaveDraft = () => {
-  // 从可编辑表格获取当前数据
-  const currentData = editableSubjectData.value;
-  console.log("保存草稿:", currentData);
-  ElMessage.success("草稿保存成功，可继续编辑");
-};
-// 弹窗选择科目
-const handleChoose = () => {
-  
-}
+// ============= 生命周期 =============
 
-// 提交
-const handleSubmit = () => {
-  const currentData = editableSubjectData.value;
-  console.log("提交数据:", currentData);
-  ElMessage.success("分摊数据确认提交！数据锁定，如需修改请执行撤销分摊操作");
-};
+// 初始化
+onMounted(async () => {
+  // 如果是路由页面（非弹窗模式），初始化
+  if (!isDialogMode.value) {
+    await initPage();
+  }
+});
 
-// 暴露方法
+// 监听props变化（弹窗模式）
+watch(
+  () => [props.projId, props.bizBillId],
+  () => {
+    if (isDialogMode.value && props.projId) {
+      initPage();
+    }
+  },
+  { immediate: true },
+);
+
+// 暴露方法供父组件调用
 defineExpose({
+  initPage,
   getData: () => editableSubjectData.value,
   getBaseData: () => baseProducts.value,
+  getPageParams: () => pageParams.value,
 });
 </script>
 
 <style scoped>
-.app-container {
+.cost-allocation-container {
   max-width: 1600px;
   margin: 0 auto;
   padding: 16px;
   background: #f3f4f6;
   font-size: 14px;
+}
+
+/* 弹窗模式样式调整 */
+.cost-allocation-container.dialog-mode {
+  padding: 0;
+  background: transparent;
+}
+
+.cost-allocation-container.dialog-mode .header-card {
+  margin-top: 0;
 }
 
 /* 卡片通用 */
@@ -504,12 +816,23 @@ defineExpose({
 .header-top {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 12px;
 }
 .header-top h2 {
   font-size: 18px;
   font-weight: 700;
   color: #1f2937;
+}
+
+.biz-info {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: #f9fafb;
+  border-radius: 6px;
 }
 
 .summary-cards {
@@ -562,18 +885,6 @@ defineExpose({
   margin-right: 6px;
 }
 
-.filter-bar {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-}
-.filter-bar span {
-  font-size: 14px;
-  color: #4b5563;
-}
-
 .warning-stats {
   display: flex;
   gap: 24px;
@@ -615,4 +926,10 @@ defineExpose({
   z-index: 20;
   margin-top: 16px;
 }
+
+/* 弹窗模式下底部按钮隐藏 */
+.dialog-mode .footer-actions {
+  display: none;
+}
+
 </style>
