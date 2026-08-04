@@ -12,6 +12,7 @@
 
 <script setup lang="ts">
 import { userApi } from "@/api/system/user-api";
+import { goalCostApi } from "@/api/cost/cost-setting/goal-cost-api";
 import { ref, onMounted, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user-store";
@@ -29,7 +30,7 @@ let isProcessing = false;
 // 组件是否已卸载
 let isUnmounted = false;
 
-// 业务类型与页面路径的映射
+// 业务类型与页面路径映射（仅用于简单类型）
 const BIZ_CODE_ROUTE_MAP: Record<string, string> = {
   // 成本合同相关
   CST_CON_MAIN: "/cost/contract/approval", // 合同审批
@@ -44,6 +45,96 @@ const BIZ_CODE_ROUTE_MAP: Record<string, string> = {
   CST_NCON: "/cost/contract/non-contract", // 非合同
 };
 
+const buildRoutePath = (
+  basePath: string,
+  params: Record<string, string | number | undefined>,
+) => {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      query.append(key, String(value));
+    }
+  });
+  return query.toString() ? `${basePath}?${query.toString()}` : basePath;
+};
+
+const resolveBizRoute = async (
+  bizItemCode: string,
+  billId: string,
+  bizId: string,
+) => {
+  switch (bizItemCode) {
+    case "ZB_TND":
+      return buildRoutePath("/bidding/bidding-detail", {
+        tenderId: bizId,
+      });
+    case "ZB_XQ":
+      return buildRoutePath("/bidding/bidding-demand/detail", {
+        billId,
+      });
+    case "ZB_JH":
+      return buildRoutePath("/bidding/tender-plan/detail", {
+        billId,
+        tenderId: bizId,
+      });
+    case "ZB_CK":
+      return buildRoutePath("/bidding/reference-price/detail", {
+        billId,
+        tenderId: bizId,
+      });
+    case "ZB_DB":
+      return buildRoutePath("/bidding/award-approval/detail", {
+        billId,
+        tenderId: bizId,
+      });
+    case "ZB_BZJ":
+      return buildRoutePath("/bidding/bid-bond-pay/detail", {
+        billId,
+        tenderId: bizId,
+      });
+    case "ZB_BZJTH":
+      return buildRoutePath("/bidding/bid-bond-refund/detail", {
+        billId,
+        tenderId: bizId,
+      });
+    case "SUP_RK":
+      return buildRoutePath("/supplier/inspection/edit", {
+        supBillId: billId,
+      });
+    case "CST_COST_M": {
+      const costMid = Number(bizId);
+      if (!Number.isNaN(costMid)) {
+        try {
+          const res = await goalCostApi.getProjectCostMList({ id: costMid });
+          const data = Array.isArray(res?.data) ? res.data[0] : res?.data;
+          const projId = data?.projId ?? data?.proj_id;
+          const areaVerMid = data?.areaVerMid ?? data?.area_ver_mid;
+
+          return buildRoutePath("/cost/cost-detail/add", {
+            mode: "add",
+            projId,
+            costMid: bizId,
+            areaVerMid,
+          });
+        } catch (error) {
+          console.error("获取目标成本信息失败:", error);
+        }
+      }
+
+      return buildRoutePath("/cost/cost-detail/add", {
+        mode: "add",
+        projId: billId,
+        costMid: bizId,
+      });
+    }
+    default:
+      return buildRoutePath(BIZ_CODE_ROUTE_MAP[bizItemCode] || "/home", {
+        billId,
+        bizId,
+      });
+  }
+};
+
 // 安全获取查询参数
 const getQueryParam = (param: string | string[] | undefined): string => {
   if (!param) return "";
@@ -55,6 +146,36 @@ const checkIfUnmounted = () => {
   if (isUnmounted) {
     throw new Error("COMPONENT_UNMOUNTED");
   }
+};
+
+// 模拟登录，用于调试 isMock=true
+const handleMockLogin = async () => {
+  checkIfUnmounted();
+
+  const accountNonExpired = true;
+  const existingToken =
+    localStorage.getItem("token") || sessionStorage.getItem("token");
+  const token = existingToken || "mock-token";
+  const query = route.query;
+  const bizItemCode = getQueryParam(query.bizItemCode) || "ZB_TND";
+  const billId = getQueryParam(query.billId) || "1";
+  const bizId = getQueryParam(query.bizId) || "1";
+
+  if (!existingToken) {
+    localStorage.setItem("token", token);
+  }
+  localStorage.setItem("accountNonExpired", String(accountNonExpired));
+
+  ElMessage.success(
+    existingToken
+      ? "MOCK 跳转中..."
+      : "没有Token，请先登陆...",
+  );
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  checkIfUnmounted();
+  const targetPath = await resolveBizRoute(bizItemCode, billId, bizId);
+  await router.replace(targetPath);
 };
 
 // 处理OA鉴权登录
@@ -97,16 +218,7 @@ const handleOALogin = async (
       checkIfUnmounted();
 
       // 根据 bizItemCode 跳转不同页面
-      // let targetPath = BIZ_CODE_ROUTE_MAP[bizItemCode] || "/home";
-      let targetPath = `/channel-analysis/visiting-record`; // 来访记录地址
-      // 如果有 billId 和 bizId，可以拼接到URL中
-      if (billId || bizId) {
-        const params = new URLSearchParams();
-        if (bizId) params.append("bizId", bizId);
-        if (billId) params.append("billId", billId);
-        targetPath += `?${params.toString()}`;
-      }
-      // 跳转页面
+      const targetPath = await resolveBizRoute(bizItemCode, billId, bizId);
       await router.replace(targetPath);
     } else {
       // 接口返回错误
@@ -145,6 +257,7 @@ const handleRouteParams = async () => {
     errorMessage.value = "";
 
     const query = route.query;
+    const isMock = getQueryParam(query.isMock) === "true";
     const requestId = getQueryParam(query.requestId);
     const oaUserId = getQueryParam(query.oaUserId);
     const timestamp = getQueryParam(query.timestamp);
@@ -155,7 +268,16 @@ const handleRouteParams = async () => {
       oaUserId,
       timestamp,
       signature,
+      isMock,
+      bizItemCode: getQueryParam(query.bizItemCode),
+      billId: getQueryParam(query.billId),
+      bizId: getQueryParam(query.bizId),
     });
+
+    if (isMock) {
+      await handleMockLogin();
+      return;
+    }
 
     // 验证必要参数是否存在
     if (!requestId || !oaUserId || !timestamp || !signature) {
