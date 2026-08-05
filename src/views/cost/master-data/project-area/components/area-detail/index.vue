@@ -102,7 +102,7 @@ const getCurrentVersionId = async () => {
     if (res.code === 200) {
       const list = res.data || [];
       // 获取当前生效版本的版本
-      const currentVersion = list.find((item) => item.isEnabled);
+      const currentVersion = list.find((item) => item.status == 1);
       if (currentVersion) {
         const verMid = currentVersion.id;
         getDataList(verMid); // 获取数据列表

@@ -14,18 +14,18 @@
       label-width="110px"
       class="unit-form"
     >
-      <el-form-item prop="mguName" label="管理单元名称" required>
+      <el-form-item prop="mguName" label="分部名称" required>
         <el-input
           v-model="formData.mguName"
-          placeholder="请输入管理单元名称"
+          placeholder="请输入分部名称"
           maxlength="50"
           show-word-limit
         />
       </el-form-item>
-      <el-form-item prop="mguShortname" label="管理单元简称" required>
+      <el-form-item prop="mguShortname" label="分部简称" required>
         <el-input
           v-model="formData.mguShortname"
-          placeholder="请输入管理单元简称"
+          placeholder="请输入分部简称"
           maxlength="50"
           show-word-limit
         />
@@ -109,7 +109,7 @@ const submitLoading = ref(false);
 
 const isEditMode = computed(() => !!props.editData?.id);
 const dialogTitle = computed(() =>
-  isEditMode.value ? "编辑管理单元" : "新增管理单元",
+  isEditMode.value ? "编辑分部" : "新增分部",
 );
 
 const formData = ref<ManageUnitFormData>({
@@ -131,10 +131,10 @@ const validateCode = (_rule: any, value: string, callback: any) => {
   }
 };
 const formRules: FormRules = {
-  mguName: [{ required: true, message: "请输入管理单元名称", trigger: "blur" }],
+  mguName: [{ required: true, message: "请输入分部名称", trigger: "blur" }],
   segId: [{ required: true, message: "请选择业务板块", trigger: "blur" }],
   mguNo: [
-    { required: true, message: "请输入组织编码", trigger: "blur" },
+    { required: true, message: "请输入分部编码", trigger: "blur" },
     { validator: validateCode, trigger: ["blur", "change"] },
   ],
 };

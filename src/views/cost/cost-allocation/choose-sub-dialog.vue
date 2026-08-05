@@ -3,7 +3,7 @@
   <base-modal
     v-model="dialogVisible"
     title="选择分摊科目"
-    width="1400px"
+    width="1000px"
     :confirm-loading="confirmLoading"
     :confirm-text="'确定'"
     @confirm="handleConfirm"
@@ -14,7 +14,7 @@
         <!-- 左侧：树形结构 -->
         <div class="tree-area">
           <div class="tree-header">
-            <span class="tree-title">成本科目树</span>
+            <span class="tree-title">成本科目</span>
             <div class="tree-actions">
               <el-button
                 size="small"
@@ -34,7 +34,7 @@
               </el-button>
             </div>
           </div>
-          <div class="tree-wrapper">
+          <div class="tree-wrapper" v-loading="treeLoading">
             <el-tree
               ref="treeRef"
               :data="treeData"
@@ -46,7 +46,10 @@
             >
               <template #default="{ data }">
                 <span class="tree-node">
-                  <span class="node-label">{{ data.label }}</span>
+                  <span class="node-label">{{ data.subName }}</span>
+                  <!-- <span class="node-code" v-if="data.subCode">
+                    ({{ data.subCode }})
+                  </span> -->
                 </span>
               </template>
             </el-tree>
@@ -59,7 +62,7 @@
         <!-- 右侧：树形表格展示已选科目 -->
         <div class="table-area">
           <div class="table-header">
-            <span class="table-title">已选科目列表</span>
+            <span class="table-title">已选科目</span>
           </div>
           <div class="table-wrapper">
             <base-table
@@ -74,7 +77,7 @@
               :default-expand-all="false"
               :default-expanded-keys="defaultExpandedTableKeys"
             >
-              <template #default="{ row }">
+              <!-- <template #default="{ row }">
                 <el-button
                   v-if="row.isSelected"
                   size="small"
@@ -85,7 +88,7 @@
                   移除
                 </el-button>
                 <span v-else style="color: #c0c4cc; font-size: 12px">-</span>
-              </template>
+              </template> -->
             </base-table>
           </div>
         </div>
@@ -95,218 +98,148 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, nextTick } from "vue";
+import { ref, watch, computed, nextTick, shallowRef } from "vue";
 import { ElMessage } from "element-plus";
 import type { ElTree } from "element-plus";
+import { costAllocationApi } from "@/api/cost/contract-manage/cost-allocation-api";
+import { goalCostApi } from "@/api/cost/cost-setting/goal-cost-api";
+import { costCategoryApi } from "@/api/cost/master-data/cost-category-api";
+import { buildTree } from "@/utils/tree";
 
 // Props
 interface Props {
   modelValue: boolean;
+  projectId?: number;
+  selectedSubIds?: number[]; // 外部已选中的科目ID列表
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
+  projectId: undefined,
+  selectedSubIds: () => [],
 });
 
 // Emits
 const emit = defineEmits<{
   "update:modelValue": [value: boolean];
-  select: [data: any[]];
+  select: [data: any[], detailList: any[]];
 }>();
 
-// ---------- 静态树数据 ----------
-interface TreeNode {
-  id: string;
-  label: string;
-  code: string;
-  level?: string;
-  children?: TreeNode[];
-  parentId?: string;
+// ---------- 数据接口定义 ----------
+interface CostDetailItem {
+  isDel: boolean;
+  createId: number;
+  createDate: string;
+  operId: number;
+  operDate: string;
+  id: number;
+  costMid: number;
+  subId: number;
+  prodId: number;
+  busiSegId: number;
+  costAmt: number;
+  costExclAmt: number;
+  allocRule: string;
+  subName: string;
+  prodName: string;
+  busiSegName: string;
 }
 
-const treeData: TreeNode[] = [
-  {
-    id: "1",
-    label: "房屋建筑工程",
-    code: "A01",
-    level: "一级",
-    children: [
-      {
-        id: "1-1",
-        label: "地基与基础工程",
-        code: "A01-01",
-        level: "二级",
-        children: [
-          { id: "1-1-1", label: "土方工程", code: "A01-01-001", level: "三级" },
-          { id: "1-1-2", label: "桩基工程", code: "A01-01-002", level: "三级" },
-          { id: "1-1-3", label: "地基处理", code: "A01-01-003", level: "三级" },
-        ],
-      },
-      {
-        id: "1-2",
-        label: "主体结构工程",
-        code: "A01-02",
-        level: "二级",
-        children: [
-          {
-            id: "1-2-1",
-            label: "混凝土工程",
-            code: "A01-02-001",
-            level: "三级",
-          },
-          { id: "1-2-2", label: "钢筋工程", code: "A01-02-002", level: "三级" },
-          { id: "1-2-3", label: "模板工程", code: "A01-02-003", level: "三级" },
-          { id: "1-2-4", label: "砌体工程", code: "A01-02-004", level: "三级" },
-        ],
-      },
-      {
-        id: "1-3",
-        label: "建筑装饰装修工程",
-        code: "A01-03",
-        level: "二级",
-        children: [
-          { id: "1-3-1", label: "抹灰工程", code: "A01-03-001", level: "三级" },
-          { id: "1-3-2", label: "门窗工程", code: "A01-03-002", level: "三级" },
-          { id: "1-3-3", label: "吊顶工程", code: "A01-03-003", level: "三级" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "2",
-    label: "市政基础设施工程",
-    code: "A02",
-    level: "一级",
-    children: [
-      {
-        id: "2-1",
-        label: "道路工程",
-        code: "A02-01",
-        level: "二级",
-        children: [
-          { id: "2-1-1", label: "路基工程", code: "A02-01-001", level: "三级" },
-          { id: "2-1-2", label: "路面工程", code: "A02-01-002", level: "三级" },
-        ],
-      },
-      {
-        id: "2-2",
-        label: "桥梁工程",
-        code: "A02-02",
-        level: "二级",
-        children: [
-          { id: "2-2-1", label: "基础工程", code: "A02-02-001", level: "三级" },
-          { id: "2-2-2", label: "上部结构", code: "A02-02-002", level: "三级" },
-        ],
-      },
-    ],
-  },
-  {
-    id: "3",
-    label: "机电安装工程",
-    code: "A03",
-    level: "一级",
-    children: [
-      {
-        id: "3-1",
-        label: "电气工程",
-        code: "A03-01",
-        level: "二级",
-        children: [
-          {
-            id: "3-1-1",
-            label: "配电箱安装",
-            code: "A03-01-001",
-            level: "三级",
-          },
-          { id: "3-1-2", label: "电缆敷设", code: "A03-01-002", level: "三级" },
-        ],
-      },
-      {
-        id: "3-2",
-        label: "给排水工程",
-        code: "A03-02",
-        level: "二级",
-        children: [
-          { id: "3-2-1", label: "管道安装", code: "A03-02-001", level: "三级" },
-          { id: "3-2-2", label: "阀门安装", code: "A03-02-002", level: "三级" },
-        ],
-      },
-    ],
-  },
-];
+// 树节点接口（用于el-tree展示）
+interface TreeNode {
+  id: number;
+  pid: number;
+  subCode: string;
+  subName: string;
+  subLevel: number;
+  idPath: string;
+  ctrlMode: number;
+  isEnabled: boolean;
+  busiSegId: number;
+  allocRule: string;
+  busiSegName?: string;
+  allocRuleName?: string;
+  remark?: string;
+  children?: TreeNode[];
+  // 扩展字段
+  parentId?: number; // 父节点ID，用于快速查找
+}
 
-// 为每个节点添加 parentId
-const addParentId = (nodes: TreeNode[], parentId?: string) => {
-  for (const node of nodes) {
-    node.parentId = parentId;
-    if (node.children) {
-      addParentId(node.children, node.id);
-    }
-  }
-};
-addParentId(treeData);
-
-// ---------- 表格列配置 ----------
-const tableColumns = [
-  { type: "index", label: "序号", width: 60, fixed: "left", align: "center" },
-  { prop: "label", label: "科目名称", minWidth: 200, align: "left" },
-  { prop: "code", label: "科目编码", width: 180 },
-  {
-    prop: "level",
-    label: "层级",
-    width: 100,
-    align: "center",
-    formatter: (row: any) => {
-      return row.level || "-";
-    },
-  },
-  {
-    label: "操作",
-    width: 100,
-    fixed: "right",
-    align: "center",
-    slot: "default",
-  },
-];
+// 表格树节点
+interface TableTreeNode extends TreeNode {
+  isSelected: boolean;
+  isPartialSelected: boolean;
+  hasChildren: boolean;
+  children?: TableTreeNode[];
+}
 
 // ---------- 响应式数据 ----------
+const goalCostDetailList = ref([]);
+const treeData = ref<TreeNode[]>([]);
+const treeLoading = ref(false);
 const dialogVisible = ref(props.modelValue);
 const confirmLoading = ref(false);
 const tableLoading = ref(false);
 
 // Tree ref
 const treeRef = ref<InstanceType<typeof ElTree>>();
-const tableRef = ref();
 
 // 默认展开的节点
-const defaultExpandedKeys = ref(["1", "2", "3"]);
-const defaultExpandedTableKeys = ref<string[]>([]);
+const defaultExpandedKeys = ref<number[]>([]);
+const defaultExpandedTableKeys = ref<number[]>([]);
 
 // Tree 配置
 const treeProps = {
   children: "children",
-  label: "label",
+  label: "subName",
 };
 
 // 存储选中的节点ID集合
-const selectedNodeIds = ref<Set<string>>(new Set());
+const selectedNodeIds = ref<Set<number>>(new Set());
 // 存储所有被选中的叶子节点ID（用于统计）
-const selectedLeafIds = ref<Set<string>>(new Set());
+const selectedLeafIds = ref<Set<number>>(new Set());
 
-// 节点映射
-const nodeMap = ref<Map<string, TreeNode>>(new Map());
-// ====== 优化1：后代缓存 ======
-const descendantsCache = ref<Map<string, string[]>>(new Map());
+// 节点映射（id -> TreeNode）
+const nodeMap = ref<Map<number, TreeNode>>(new Map());
+// 后代缓存（id -> 所有后代id列表）
+const descendantsCache = ref<Map<number, number[]>>(new Map());
 
-// 递归构建映射 + 缓存后代
-const buildNodeMap = (nodes: TreeNode[]) => {
+// ---------- 表格列配置 ----------
+const tableColumns = [
+  { type: "index", label: "序号", width: 60, fixed: "left", align: "center" },
+  { prop: "subName", label: "科目名称", minWidth: 200, align: "left" },
+  { prop: "subCode", label: "科目编码", width: 150, align: "left" },
+  { prop: "subLevel", label: "层级", width: 80, align: "center" },
+  // {
+  //   label: "操作",
+  //   width: 100,
+  //   fixed: "right",
+  //   align: "center",
+  //   slot: "default",
+  // },
+];
+
+// 右侧树形表格数据
+const selectedTreeTableData = shallowRef<TableTreeNode[]>([]);
+
+// 构建缓存
+let buildCache = new Map<string, TableTreeNode[]>();
+
+// ---------- 核心方法：从原始数据构建节点映射 ----------
+const buildNodeMapFromData = (nodes: TreeNode[], parentId?: number) => {
   for (const node of nodes) {
+    // 设置父节点ID
+    if (parentId !== undefined) {
+      node.parentId = parentId;
+    }
+
+    // 存入映射
     nodeMap.value.set(node.id, node);
 
-    // 缓存所有后代ID（包含自己）
-    const collectDescendants = (n: TreeNode): string[] => {
+    // 收集所有后代节点ID
+    const collectDescendants = (n: TreeNode): number[] => {
       let ids = [n.id];
-      if (n.children) {
+      if (n.children && n.children.length > 0) {
         for (const child of n.children) {
           ids = ids.concat(collectDescendants(child));
         }
@@ -315,37 +248,27 @@ const buildNodeMap = (nodes: TreeNode[]) => {
     };
     descendantsCache.value.set(node.id, collectDescendants(node));
 
-    if (node.children) {
-      buildNodeMap(node.children);
+    // 递归处理子节点
+    if (node.children && node.children.length > 0) {
+      buildNodeMapFromData(node.children, node.id);
     }
   }
 };
-buildNodeMap(treeData);
+
+// 清空映射
+const clearNodeMap = () => {
+  nodeMap.value.clear();
+  descendantsCache.value.clear();
+  buildCache.clear();
+};
 
 // ---------- 辅助方法 ----------
-// ====== 优化2：从缓存获取后代 ======
-const getAllDescendantIds = (node: TreeNode): string[] => {
+const getAllDescendantIds = (node: TreeNode): number[] => {
   return descendantsCache.value.get(node.id) || [node.id];
 };
 
-// 判断节点是否为叶子节点
 const isLeafNode = (node: TreeNode): boolean => {
   return !node.children || node.children.length === 0;
-};
-
-// 获取节点的完整路径
-const getNodeFullPath = (node: TreeNode): string => {
-  const path: string[] = [];
-  let current: TreeNode | undefined = node;
-  while (current) {
-    path.unshift(current.label);
-    if (current.parentId) {
-      current = nodeMap.value.get(current.parentId);
-    } else {
-      break;
-    }
-  }
-  return path.join(" / ");
 };
 
 // 计算选中的叶子节点数量
@@ -354,41 +277,30 @@ const selectedLeafCount = computed(() => {
 });
 
 // ---------- 核心：构建右侧树形表格数据 ----------
-interface TableTreeNode extends TreeNode {
-  isSelected: boolean;
-  isPartialSelected: boolean;
-  hasChildren: boolean;
-  children?: TableTreeNode[];
-}
-
-const selectedTreeTableData = computed(() => {
-  // 如果没有任何选中，返回空数组
+const buildTableTree = (nodes: TreeNode[]): TableTreeNode[] => {
   if (selectedNodeIds.value.size === 0) {
     return [];
   }
 
-  // 获取所有被选中的节点（包括父节点和子节点）
-  const allSelectedNodes: TreeNode[] = [];
-  for (const id of selectedNodeIds.value) {
-    const node = nodeMap.value.get(id);
-    if (node) {
-      allSelectedNodes.push(node);
-    }
+  const cacheKey = Array.from(selectedNodeIds.value).sort().join(",");
+  if (buildCache.has(cacheKey)) {
+    return buildCache.get(cacheKey)!;
   }
 
-  // 获取所有需要展示的节点ID（包括被选中的父节点和子节点）
-  const displayNodeIds = new Set<string>();
+  // 收集所有需要显示的节点ID（选中的节点 + 它们的父节点 + 它们的子节点）
+  const displayNodeIds = new Set<number>();
 
-  for (const node of allSelectedNodes) {
+  for (const id of selectedNodeIds.value) {
+    const node = nodeMap.value.get(id);
+    if (!node) continue;
+
     // 添加节点自身
-    displayNodeIds.add(node.id);
+    displayNodeIds.add(id);
 
-    // ====== 优化3：使用缓存获取后代 ======
-    if (node.children) {
-      const descendants = getAllDescendantIds(node);
-      for (const id of descendants) {
-        displayNodeIds.add(id);
-      }
+    // 添加所有后代节点
+    const descendants = getAllDescendantIds(node);
+    for (const descId of descendants) {
+      displayNodeIds.add(descId);
     }
 
     // 添加所有祖先节点
@@ -401,23 +313,21 @@ const selectedTreeTableData = computed(() => {
     }
   }
 
-  // 构建树形数据
-  const buildTableTree = (nodes: TreeNode[]): TableTreeNode[] => {
+  // 递归构建树
+  const buildTreeInternal = (nodesList: TreeNode[]): TableTreeNode[] => {
     const result: TableTreeNode[] = [];
 
-    for (const node of nodes) {
-      // 检查当前节点是否在展示列表中
+    for (const node of nodesList) {
       if (!displayNodeIds.has(node.id)) {
         continue;
       }
 
       const isSelected = selectedNodeIds.value.has(node.id);
-      const children = node.children ? buildTableTree(node.children) : [];
+      const children = node.children ? buildTreeInternal(node.children) : [];
 
-      // 判断是否有子节点被选中（半选状态）
+      // 判断是否部分选中（有子节点被选中但自身未被选中）
       let isPartialSelected = false;
-      if (node.children) {
-        // ====== 优化4：使用缓存判断 ======
+      if (node.children && node.children.length > 0) {
         const descendants = getAllDescendantIds(node);
         const hasSelectedChild = descendants.some(
           (id) => selectedNodeIds.value.has(id) && id !== node.id,
@@ -427,7 +337,6 @@ const selectedTreeTableData = computed(() => {
         }
       }
 
-      // 判断是否有子节点需要展示
       const hasChildren = children.length > 0;
 
       const tableNode: TableTreeNode = {
@@ -438,7 +347,7 @@ const selectedTreeTableData = computed(() => {
         children: hasChildren ? children : undefined,
       };
 
-      // 如果节点没有任何子节点被选中，且自身也没有被选中，则不展示
+      // 如果没有被选中、没有部分选中、也没有子节点被保留，则跳过
       if (!isSelected && !isPartialSelected && children.length === 0) {
         continue;
       }
@@ -449,28 +358,44 @@ const selectedTreeTableData = computed(() => {
     return result;
   };
 
-  return buildTableTree(treeData);
-});
+  const result = buildTreeInternal(nodes);
+
+  // 缓存限制，防止内存溢出
+  if (buildCache.size > 50) {
+    const firstKey = buildCache.keys().next().value;
+    buildCache.delete(firstKey);
+  }
+  buildCache.set(cacheKey, result);
+
+  return result;
+};
 
 // ---------- Tree 事件处理 ----------
-// ====== 优化5：简化逻辑，减少循环 ======
+let isBatchUpdating = false;
+
 const handleTreeCheck = () => {
-  // 获取所有选中的节点
+  if (isBatchUpdating) return;
+
   const checkedNodes = treeRef.value?.getCheckedNodes() || [];
 
-  // 直接使用 Set 构造，减少循环
-  selectedNodeIds.value = new Set(checkedNodes.map((node: any) => node.id));
-
-  // 筛选叶子节点
-  selectedLeafIds.value = new Set(
-    checkedNodes
-      .filter((node: any) => isLeafNode(node))
-      .map((node: any) => node.id),
+  // 更新选中的节点ID集合
+  selectedNodeIds.value = new Set(
+    checkedNodes.map((node: TreeNode) => node.id),
   );
 
-  // 自动展开右侧表格的父节点
+  // 更新选中的叶子节点ID集合（用于统计）
+  selectedLeafIds.value = new Set(
+    checkedNodes
+      .filter((node: TreeNode) => isLeafNode(node))
+      .map((node: TreeNode) => node.id),
+  );
+
+  // 重新构建右侧表格数据
+  selectedTreeTableData.value = buildTableTree(treeData.value);
+
+  // 设置表格默认展开的节点（选中的父节点）
   nextTick(() => {
-    const parentIds = new Set<string>();
+    const parentIds = new Set<number>();
     for (const id of selectedNodeIds.value) {
       const node = nodeMap.value.get(id);
       if (node?.parentId) {
@@ -478,6 +403,16 @@ const handleTreeCheck = () => {
       }
     }
     defaultExpandedTableKeys.value = Array.from(parentIds);
+  });
+};
+
+// 批量更新选择状态
+const batchUpdateSelection = (fn: () => void) => {
+  isBatchUpdating = true;
+  fn();
+  isBatchUpdating = false;
+  nextTick(() => {
+    handleTreeCheck();
   });
 };
 
@@ -506,10 +441,141 @@ const handleCollapseAll = () => {
 
 // ---------- 表格操作 ----------
 const handleRemoveRow = (row: TableTreeNode) => {
-  // 取消树的选中状态
-  treeRef.value?.setChecked(row.id, false, true);
-  // 重新计算选中状态
-  handleTreeCheck();
+  batchUpdateSelection(() => {
+    treeRef.value?.setChecked(row.id, false, true);
+  });
+};
+
+// 获取生效的目标成本版本
+const getEffectiveCostVersion = async (projId: number) => {
+  try {
+    const res = await costAllocationApi.getProjectCostMEnabled({ projId });
+    if (res.code === 200) {
+      return res.data;
+    }
+    return null;
+  } catch (error) {
+    console.error("获取目标成本版本失败：", error);
+    return null;
+  }
+};
+
+// 获取目标成本明细列表
+const getGoalCostDetailList = async (projId: number) => {
+  if (!projId) {
+    ElMessage.warning("项目ID不能为空");
+    return [];
+  }
+  treeLoading.value = true;
+  try {
+    // 先获取当前可用的目标成本版本
+    const data: any = await getEffectiveCostVersion(projId);
+    if (!data) {
+      ElMessage.warning("未找到生效的目标成本版本");
+      return [];
+    }
+
+    // 获取目标成本明细列表
+    const params = {
+      projId: data.projId,
+      costMid: data.id,
+      isHasAlloc: true, // true表示查询动态成本总额
+    };
+    const res = await goalCostApi.getProjectCostDList(params);
+    if (res.code === 200) {
+      // console.log("目标成本明细列表：", res.data);
+      /**
+       * 目标成本明细列表示例：
+       *  costAmt; // 目标成本总额(含税)
+       *  costExclAmt; // 目标成本总额(不含税)
+       *  costDynAmt; // 动态成本总额(含税)
+       * costDynExclAmt; // 动态成本总额(不含税)
+       */
+      const listData = (res.data || []).map((item: any) => {
+        return {
+          ...item,
+          costDynAmt: item.costDynAmt || 0,
+          costDynExclAmt: item.costDynExclAmt || 0,
+        };
+      });
+      // 保存目标成本明细列表
+      goalCostDetailList.value = listData;
+      // 提取所有 subId
+      const subIds: any = new Set(listData.map((item: any) => item.subId));
+
+      // 获取基础成本科目列表
+      const costSubjectsRes = await costCategoryApi.getCostSubjectBase({
+        isWithParent: true,
+      });
+      if (costSubjectsRes.code === 200) {
+        // 构建树形数据
+        const rawTreeData = costSubjectsRes.data || [];
+        const subTreeData: any = buildTree(rawTreeData);
+        // console.log("完整树形结构：", subTreeData);
+
+        // 使用 filterTreeByIds 过滤出包含目标 ID 的树
+        const filteredTreeData = filterTreeByIds(
+          subTreeData,
+          Array.from(subIds),
+        );
+        // console.log("过滤后的树形结构：", filteredTreeData);
+
+        // 保存树形数据
+        treeData.value = filteredTreeData;
+
+        // 构建节点映射
+        clearNodeMap();
+        buildNodeMapFromData(treeData.value);
+
+        // 默认展开第一级节点
+        defaultExpandedKeys.value = treeData.value.map((node) => node.id);
+
+        return listData;
+      }
+    }
+    return [];
+  } catch (error) {
+    console.error("获取目标成本明细失败：", error);
+    return [];
+  } finally {
+    treeLoading.value = false;
+  }
+};
+
+/**
+ * 从树形数据中过滤出指定ID的节点，并保留其父级路径
+ * 返回的数据保持树形结构
+ */
+const filterTreeByIds = (
+  treeData: TreeNode[],
+  targetIds: number[],
+): TreeNode[] => {
+  const targetSet = new Set(targetIds);
+
+  function filterNodes(nodes: TreeNode[]): TreeNode[] {
+    const result: TreeNode[] = [];
+
+    for (const node of nodes) {
+      const isTarget = targetSet.has(node.id);
+
+      let filteredChildren: TreeNode[] = [];
+      if (node.children && node.children.length > 0) {
+        filteredChildren = filterNodes(node.children);
+      }
+
+      if (isTarget || filteredChildren.length > 0) {
+        const newNode: TreeNode = {
+          ...node,
+          children: filteredChildren,
+        };
+        result.push(newNode);
+      }
+    }
+
+    return result;
+  }
+
+  return filterNodes(treeData);
 };
 
 // ---------- 弹窗确认/关闭 ----------
@@ -519,24 +585,23 @@ const handleConfirm = () => {
     return;
   }
   confirmLoading.value = true;
-  console.log("selectedTreeTableData", selectedTreeTableData.value);
-  // 构造返回数据：只返回叶子节点（参与分摊的末级科目）
-  // const resultData: any[] = [];
-  // for (const id of selectedLeafIds.value) {
-  //   const node = nodeMap.value.get(id);
-  //   if (node) {
-  //     resultData.push({
-  //       id: node.id,
-  //       label: node.label,
-  //       code: node.code,
-  //       level: node.level,
-  //       fullPath: getNodeFullPath(node),
-  //       parentId: node.parentId,
-  //     });
-  //   }
-  // }
+  console.log("选择的列表数据", selectedTreeTableData.value);
+  // 获取选中的叶子节点数据
+  // const selectedSubjects = Array.from(selectedLeafIds.value)
+  //   .map((id) => nodeMap.value.get(id))
+  //   .filter(Boolean)
+  //   .map((node) => ({
+  //     id: node!.id,
+  //     subName: node!.subName,
+  //     subCode: node!.subCode,
+  //     subLevel: node!.subLevel,
+  //     idPath: node!.idPath,
+  //     busiSegId: node!.busiSegId,
+  //     allocRule: node!.allocRule,
+  //   }));
+  // emit("select", selectedSubjects);
 
-  emit("select", selectedTreeTableData.value);
+  emit("select", selectedTreeTableData.value, goalCostDetailList.value);
   handleClose();
   confirmLoading.value = false;
 };
@@ -549,8 +614,62 @@ const handleClose = () => {
 const resetState = () => {
   selectedNodeIds.value = new Set();
   selectedLeafIds.value = new Set();
+  selectedTreeTableData.value = [];
+  buildCache.clear();
   treeRef.value?.setCheckedKeys([]);
   defaultExpandedTableKeys.value = [];
+};
+
+// 新增方法：查找叶子节点ID
+const findLeafIds = (subIds: number[]): number[] => {
+  const leafIds: number[] = [];
+  const subIdSet = new Set(subIds);
+
+  function traverse(nodes: TreeNode[]) {
+    for (const node of nodes) {
+      if (isLeafNode(node) && subIdSet.has(node.id)) {
+        leafIds.push(node.id);
+      }
+      if (node.children && node.children.length > 0) {
+        traverse(node.children);
+      }
+    }
+  }
+
+  traverse(treeData.value);
+  return leafIds;
+};
+
+// 初始化页面
+const initPage = async () => {
+  resetState();
+  if (!props.projectId) {
+    ElMessage.warning("项目ID不能为空");
+    return;
+  }
+  await getGoalCostDetailList(props.projectId);
+
+  // 回显外部已选中的数据
+  if (props.selectedSubIds && props.selectedSubIds.length > 0) {
+    await nextTick();
+    const leafIds = findLeafIds(props.selectedSubIds);
+    if (leafIds.length > 0) {
+      // 先展开包含选中节点的父节点
+      const parentIds = new Set<number>();
+      for (const id of leafIds) {
+        const node = nodeMap.value.get(id);
+        if (node?.parentId) {
+          parentIds.add(node.parentId);
+        }
+      }
+      defaultExpandedKeys.value = Array.from(parentIds);
+
+      // 设置选中
+      batchUpdateSelection(() => {
+        treeRef.value?.setCheckedKeys(leafIds);
+      });
+    }
+  }
 };
 
 // ---------- 监听 ----------
@@ -559,17 +678,9 @@ watch(
   (val) => {
     dialogVisible.value = val;
     if (val) {
+      initPage();
+    } else {
       resetState();
-      nextTick(() => {
-        const nodes = treeRef.value?.store?.nodesMap;
-        if (nodes) {
-          Object.values(nodes).forEach((node: any) => {
-            if (node.data && node.level === 1) {
-              node.expanded = true;
-            }
-          });
-        }
-      });
     }
   },
 );
@@ -583,10 +694,9 @@ defineExpose({
   open: () => {
     dialogVisible.value = true;
   },
-  close: () => {
-    handleClose();
-  },
+  close: handleClose,
   reset: resetState,
+  batchUpdate: batchUpdateSelection,
 });
 </script>
 
@@ -602,7 +712,6 @@ defineExpose({
     gap: 20px;
     height: 500px;
 
-    // 左侧树区域
     .tree-area {
       flex: 0 0 380px;
       display: flex;
@@ -658,11 +767,17 @@ defineExpose({
           .tree-node {
             display: flex;
             align-items: center;
+            gap: 8px;
             font-size: 13px;
             width: 100%;
 
             .node-label {
               color: #303133;
+            }
+
+            .node-code {
+              color: #909399;
+              font-size: 12px;
             }
           }
         }
@@ -682,7 +797,6 @@ defineExpose({
       }
     }
 
-    // 右侧表格区域
     .table-area {
       flex: 1;
       display: flex;

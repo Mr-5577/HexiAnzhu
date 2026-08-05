@@ -711,7 +711,7 @@
         <div class="item-card">
           <div class="section-title">收款信息</div>
           <el-row :gutter="24">
-            <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="开户行" prop="conName">
                 <el-input
                   v-model="formData.conName"
@@ -760,6 +760,26 @@
               </el-form-item>
             </el-col>
           </el-row>
+        </div>
+
+        <!-- 相关附件 -->
+        <div class="item-card">
+          <div class="section-title">相关附件</div>
+          <el-form-item label="上传附件">
+            <base-upload
+              v-model:file-list="annexFileList"
+              :limit="9"
+              :multiple="false"
+              :showIcon="true"
+              :showTip="true"
+              :maxSize="20"
+              :unrestricted="true"
+              :accept="''"
+              button-text="选择文件"
+              size="default"
+              @success="handleFileSuccess"
+            />
+          </el-form-item>
         </div>
       </el-form>
     </div>
@@ -845,6 +865,7 @@ const isAdd = computed(() => mode.value === "add");
 
 const segOptions = ref([]);
 const projectOptions = ref([]);
+const annexFileList = ref([]);
 
 const { getDictList, loadDicts } = useDict([dictMapping.payType], {
   treeDictCodes: [],
@@ -967,11 +988,9 @@ const handleUploadSuccess = (file: any) => {
   //   const annexId = file.id;
   //   const annexName = file.annexName || file.name;
   //   const recogStatus = 3;
-
   //   currentUploadRow.value.annexId = annexId;
   //   currentUploadRow.value.annexName = annexName;
   //   currentUploadRow.value.recogStatus = recogStatus;
-
   //   const currIndex = invoiceMTable.value.findIndex(
   //     (item) => item.uuid === currentUploadRow.value?.uuid,
   //   );
@@ -980,7 +999,6 @@ const handleUploadSuccess = (file: any) => {
   //     return;
   //   }
   //   updateRow(currIndex, { annexId, annexName, recogStatus });
-
   //   ElMessage.success("发票上传成功，正在识别...");
   //   recognizeInvoiceAsync(currentUploadRow.value.uuid, annexId);
   // }
@@ -1361,8 +1379,9 @@ const handleViewFlow = () => {
   ElMessage.info("查看流程待实现");
 };
 
-const handleCancel = () => {
-  emit("cancel");
+const handleFileSuccess = (file: any) => {
+  console.log("相关附件上传成功", file);
+  annexFileList.value.push(file);
 };
 
 // 加载付款申请详情
@@ -1372,6 +1391,21 @@ const loadDetail = async () => {
     // TODO: 调用详情接口
   } catch (error) {
     console.error("加载详情失败:", error);
+  }
+};
+const initData = async () => {
+  await loadDicts();
+  payTypeOptions.value = getDictList(dictMapping.payType);
+
+  await Promise.all([getSegOptions(), getProjectOptions()]);
+
+  formData.submiterName = "当前用户";
+  formData.submiterDate = new Date().toLocaleString();
+
+  if (isAdd.value) {
+    await generateApplyNo();
+  } else if (paymentId.value) {
+    await loadDetail();
   }
 };
 
@@ -1394,22 +1428,6 @@ watch(
   },
   { deep: true },
 );
-
-const initData = async () => {
-  await loadDicts();
-  payTypeOptions.value = getDictList(dictMapping.payType);
-
-  await Promise.all([getSegOptions(), getProjectOptions()]);
-
-  formData.submiterName = "当前用户";
-  formData.submiterDate = new Date().toLocaleString();
-
-  if (isAdd.value) {
-    await generateApplyNo();
-  } else if (paymentId.value) {
-    await loadDetail();
-  }
-};
 
 onMounted(() => {
   initData();

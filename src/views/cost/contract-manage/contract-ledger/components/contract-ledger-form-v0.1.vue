@@ -30,11 +30,11 @@
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="18" :xl="18">
               <el-form-item label="标题" prop="bizTitle">
-                <el-input
+                <!-- <el-input
                   v-model="formData.bizTitle"
                   clearable
                   placeholder="标题"
-                />
+                /> -->
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">

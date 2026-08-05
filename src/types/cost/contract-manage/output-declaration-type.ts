@@ -191,18 +191,3 @@ export interface ContractBillPayNode extends BaseEntity {
   remark?: string;
 }
 
-/**
- * 新增/编辑 产值申报参数
- */
-export interface ContractProdValParams {
-  /** 合同ID */
-  conId: number;
-  /** 产值信息 */
-  prodVal: ContractProdVal;
-  /** 合同支付比例 */
-  billPayrates: ContractBillPayRate[];
-  /** 材料合同产值 */
-  billMaterials: ContractBillMaterial[];
-  /** 合同支付节点 */
-  billPaynodes: ContractBillPayNode[];
-}
