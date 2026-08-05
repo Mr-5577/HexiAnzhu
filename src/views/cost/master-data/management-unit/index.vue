@@ -2,7 +2,7 @@
 <template>
   <div class="management-unit-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
-      <el-form-item label="管理单元名称" prop="mguName">
+      <el-form-item label="分部名称" prop="mguName">
         <el-input
           v-model="queryParams.mguName"
           placeholder="请输入名称"
@@ -10,7 +10,7 @@
           style="width: 200px"
         />
       </el-form-item>
-      <el-form-item label="管理单元编号" prop="mguNo">
+      <el-form-item label="分部编号" prop="mguNo">
         <el-input
           v-model="queryParams.mguNo"
           placeholder="请输入编码"
@@ -101,8 +101,8 @@ const parentId = ref<number>(0);
 // 表格列配置
 const columns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "mguName", label: "管理单元名称" },
-  { prop: "mguNo", label: "组织编码" },
+  { prop: "mguName", label: "分部名称" },
+  { prop: "mguNo", label: "分部编码" },
   { slot: "segId", label: "业务板块名称" },
   { prop: "memo", label: "说明" },
   { label: "操作", width: 200, slot: "actions", fixed: "right" },

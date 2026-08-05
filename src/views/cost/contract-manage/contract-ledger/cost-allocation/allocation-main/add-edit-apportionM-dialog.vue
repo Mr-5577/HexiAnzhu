@@ -142,14 +142,13 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
 import { ElMessage, type FormInstance, type FormRules } from "element-plus";
-import type { CostAllocationDTO } from "@/types/cost/contract-manage/cost-allocation-type";
 import { costAllocationApi } from "@/api/cost/contract-manage/cost-allocation-api";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 
 interface Props {
   modelValue: boolean;
   projId?: number;
-  editData?: CostAllocationDTO | null;
+  editData?: any | null;
   bizTypeOptions: any[];
   allocStatusOptions: any[];
   allocWarnOptions: any[];
@@ -176,7 +175,7 @@ const submitLoading = ref(false);
 const projectOptions = ref([]); // 项目列表
 
 // 表单数据
-const formData = ref<CostAllocationDTO>({
+const formData = ref({
   id: undefined,
   projId: props.projId, // 项目ID
   projName: "", // 项目名称

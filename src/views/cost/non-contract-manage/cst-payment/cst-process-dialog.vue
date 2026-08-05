@@ -120,6 +120,7 @@ import { roleApi } from "@/api/system/role-api";
 const props = defineProps<{
   modelValue: boolean;
   projId: number | undefined;
+  segId: number | undefined;
 }>();
 
 const emit = defineEmits<{
@@ -131,6 +132,7 @@ const dialogVisible = ref(props.modelValue);
 
 const queryParams = ref({
   projId: props.projId,
+  segId: props.segId,
   processName: "",
   status: undefined,
   createId: undefined,
@@ -150,6 +152,7 @@ const tableColumns: TableColumnItem[] = [
   { prop: "processNo", label: "事项编号", width: 140 },
   { prop: "processName", label: "事项名称", width: 150 },
   { prop: "processAmt", label: "事项计划金额", width: 120 },
+  { prop: "ww", label: "剩余金额", width: 120 },
   { prop: "createName", label: "创建人", width: 100 },
   { prop: "createDate", label: "创建日期", width: 120 },
   {
@@ -163,6 +166,7 @@ const getCstProcessList = async () => {
   try {
     const params = {
       projId: queryParams.value.projId,
+      segId: queryParams.value.segId,
       processName: queryParams.value.processName,
       status: 40, // 查询已审批的数据
       createId: queryParams.value.createId,
@@ -182,6 +186,7 @@ const handleSearch = () => {
 const handleReset = () => {
   queryParams.value = {
     projId: undefined,
+    segId: undefined,
     processName: "",
     status: undefined,
     createId: undefined,
@@ -235,6 +240,7 @@ watch(
   async (val) => {
     dialogVisible.value = val;
     queryParams.value.projId = props.projId;
+    queryParams.value.segId = props.segId;
     if (val) {
       await Promise.all([getProjectOptions(), getEmpTreeData()]);
       getCstProcessList();

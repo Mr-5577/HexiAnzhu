@@ -104,29 +104,17 @@
           </el-row>
         </div>
 
-        <!-- 成本分摊：创建时不展示成本分摊模块，编辑时获取成本分摊数据进行展示查看详情 -->
-        <div class="item-card" v-if="isShowCostAllocation">
-          <div class="section-title">成本分摊</div>
-          <el-row :gutter="24">
-            <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
-              <el-form-item label="分摊状态：" label-width="90px">
-                未分摊456
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
-              <el-form-item label="预警状态：" label-width="90px">
-                正常132
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
-              <el-form-item label="分摊：" label-width="90px">
-                <el-button type="primary" @click="handleAllocationDetail">
-                  分摊详情
-                </el-button>
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </div>
+        <!-- 成本分摊  费用类型所属大类为建安类，并且是编辑/查看时显示 -->
+        <CostAllocationCard
+          :visible="isShowCostAllocation"
+          :allocation-status="0"
+          :warning-status="0"
+          :bizType="'NCON_PROC'"
+          :projId="formData.projId"
+          :allocAmt="formData.processAmt"
+          :bizBillId="processData.nconBillId"
+          @selectData="getSelectCostAllocation"
+        />
 
         <!-- 相关附件 -->
         <div class="item-card">
@@ -150,9 +138,6 @@
         </div>
       </el-form>
     </div>
-
-    <!-- 成本分摊详情 -->
-    <CostAllocationDetailDialog v-model="costAllocationDialogVisible" />
   </div>
 </template>
 
@@ -173,12 +158,10 @@ import { commonApi } from "@/api/cost/common-api";
 import BaseUpload from "@/components/base/base-upload.vue";
 import { cstProcessApi } from "@/api/cost/non-contract-manage/cst-process-api";
 import { dateUtil } from "@/utils/date-util";
-import { getEnumLabel, getEnumType } from "@/utils/enum";
-import { conBillStatusEnum } from "@/constants/contract-manage/enums";
 import { buildTree } from "@/utils/tree";
-import CostAllocationDetailDialog from "@/views/cost/cost-allocation/cost-allocation-detail-dialog.vue";
 import BillHeader from "@/components/business/bill-components/bill-header.vue";
 import BillInfo from "@/components/business/bill-components/bill-info.vue";
+import CostAllocationCard from "@/views/cost/cost-allocation/cost-allocation-card.vue";
 
 defineOptions({ name: "cst-process-form" });
 
@@ -236,6 +219,19 @@ const projectOptions = ref([]);
 const feeTypeFlatOptions = ref([]);
 const feeTypeOptions = ref([]);
 const annexFileList = ref([]);
+// 成本分摊明细数据
+const cstMData = ref({
+  id: undefined,
+  projId: undefined,
+  bizType: "",
+  bizBillId: undefined,
+  bizKeyId: 0,
+  allocAmt: "",
+  allocExclAmt: "",
+  allocStatus: "",
+  allocWarn: "",
+  detailList: [], // 分摊明细
+});
 const billData = ref({
   id: undefined,
   bizTitle: "",
@@ -262,8 +258,6 @@ const flowListData = ref({
   wfStatus: 0, // 审批状态；0=草稿，10=审批中，40=已审批，80=作废，99=其他
   wfTitle: "", // 流程标题
 }); // 流程数据
-
-const costAllocationDialogVisible = ref(false);
 
 // 表单校验规则
 const formRules: FormRules = {
@@ -314,9 +308,14 @@ const isShowCostAllocation = computed(() => {
   // 如果大类存在且 finaTypeCode === '03'（建安类），则显示成本分摊
   return !!(largeData && largeData.finaTypeCode === "03");
 });
-// 分摊详情
-const handleAllocationDetail = () => {
-  costAllocationDialogVisible.value = true;
+
+const getSelectCostAllocation = (data: any) => {
+  console.log("选中的成本分摊数据:", data);
+  cstMData.value.allocAmt = data.allocAmt;
+  cstMData.value.allocExclAmt = data.allocExclAmt;
+  cstMData.value.allocStatus = data.allocStatus;
+  cstMData.value.allocWarn = data.allocWarn;
+  cstMData.value.detailList = data?.detailList || [];
 };
 // 获取业务板块列表
 const getSegOptions = async () => {
@@ -416,27 +415,26 @@ const loadDetail = async () => {
       finaDsList.value = finaDs || [];
       flowBaseData.value = { ...flowBaseData.value, ...flowBase };
       flowListData.value = { ...flowListData.value, ...flowList };
-
       // 通过业务板块查询费用类型
       if (process.segId) {
         getpayTypeOptions(process.segId);
       }
       formData.value.bizTitle = bill.bizTitle || "";
       formData.value.segId = process.segId || undefined;
-      formData.value.segNo = flowBase.segNo || undefined;
-      formData.value.projId = flowBase.projId || undefined;
-      formData.value.projName = flowBase.projName || "";
-      formData.value.compId = flowBase.compId || undefined;
-      formData.value.compName = flowBase.compName || "";
+      formData.value.segNo = flowBase?.segNo || undefined;
+      formData.value.projId = process?.projId || undefined;
+      formData.value.projName = process?.projName || "";
+      formData.value.compId = flowBase?.compId || undefined;
+      formData.value.compName = flowBase?.compName || "";
       formData.value.processName = process.processName || "";
       formData.value.processNo = process.processNo || "";
       formData.value.processAmt = process.processAmt || "";
       formData.value.finaTypeId = process.finaTypeId || undefined;
       formData.value.remark = process.remark || "";
 
-      formData.value.deptName = flowBase.deptName || "";
-      formData.value.mguName = flowBase.mguName || "";
-      formData.value.userName = flowBase.userName || "";
+      formData.value.deptName = flowBase?.deptName || "";
+      formData.value.mguName = flowBase?.mguName || "";
+      formData.value.userName = flowBase?.userName || "";
       formData.value.createDate = bill.createDate || "";
 
       if (annexList && annexList.length > 0) {
