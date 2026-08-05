@@ -109,7 +109,7 @@ export const costAllocationApi = {
       allocExclAmt: number;
     }>;
   }) => {
-   return http.post("/cost/subAlloc/getStatus", data);
-    // return http.post("/cost/subAlloc/getWarn", data);
+  //  return http.post("/cost/subAlloc/getStatus", data);
+    return http.post("/cost/subAlloc/getWarn", data);
   },
 };

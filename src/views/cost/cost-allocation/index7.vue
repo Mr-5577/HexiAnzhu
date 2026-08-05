@@ -429,7 +429,7 @@ const handleViewAlloc = async () => {
       projId: pageParams.value.projId,
       subAllocList: subList,
     };
-    await getStatusSubAlloc(params);
+    await getWarnSubAlloc(params);
     warningVisible.value = true;
   } catch (error) {}
 };
@@ -1142,10 +1142,10 @@ const getCostSubjectProjList = async () => {
 /**
  * 计算单次分摊预警状态
  */
-const getStatusSubAlloc = async (params: any) => {
+const getWarnSubAlloc = async (params: any) => {
   if (!pageParams.value.projId) return;
   try {
-    const res = await costAllocationApi.getStatusSubAlloc(params);
+    const res = await costAllocationApi.getWarnSubAlloc(params);
     if (res.code === 200 && res.data) {
       const { statusList } = res.data;
 
@@ -1350,7 +1350,7 @@ const handleSave = async (data: any) => {
   // clearTimeout((handleSave as any)._timer);
   // (handleSave as any)._timer = setTimeout(() => {
   //   // 只传递当前修改的科目数据
-  //   getStatusSubAlloc({
+  //   getWarnSubAlloc({
   //     projId: pageParams.value.projId,
   //     subAllocList: [
   //       {

@@ -53,7 +53,7 @@ const dialogVisible = ref(props.modelValue);
 // 确认按钮loading
 const confirmLoading = ref(false);
 
-const handleConfirm =async () => {
+const handleConfirm = async () => {
   // 校验列表数据
   const reslut = costAllocationRef.value?.validateTable();
   if (!reslut) return;
