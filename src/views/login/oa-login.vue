@@ -101,6 +101,18 @@ const resolveBizRoute = async (
       return buildRoutePath("/supplier/inspection/edit", {
         supBillId: billId,
       });
+    case "NCON_PROC":
+      return buildRoutePath("/ncon/cst-process/detail", {
+        cstProcessId: billId,
+      });
+    case "NCON_CST":
+      return buildRoutePath("/ncon/cst-payment/detail", {
+        cstPaymentId: billId,
+      });
+    case "NCON_FEE":
+      return buildRoutePath("/ncon/fee-payment/detail", {
+        feePaymentId: billId,
+      });
     case "CST_COST_M": {
       const costMid = Number(bizId);
       if (!Number.isNaN(costMid)) {
