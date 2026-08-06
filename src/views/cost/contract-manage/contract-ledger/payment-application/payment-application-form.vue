@@ -503,7 +503,7 @@ import { largeScreenApi } from "@/api/sales/large-screen-api";
 import { costCategoryApi } from "@/api/cost/master-data/cost-category-api";
 import BaseUpload from "@/components/base/base-upload.vue";
 import { commonApi } from "@/api/cost/common-api";
-import InvoiceDetailDialog from "./invoice-detail-dialog.vue";
+import InvoiceDetailDialog from "@/components/business/invoice-detail-dialog.vue";
 import {
   ConPaySaveParam,
   HConBillInvoiceD,

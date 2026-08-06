@@ -256,7 +256,7 @@ const initFormData = () => {
   } else {
     formData.value = {
       id: null,
-      conBillId: props.conId,
+      conBillId: null,
       status: 0,
       signAmt: 0,
       applyAmt: 0,

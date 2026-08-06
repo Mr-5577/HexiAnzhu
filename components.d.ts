@@ -75,6 +75,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     'SectorCompanyProjectTreet.vue': typeof import('./src/components/business/sector-company-project-treet.vue.vue')['default']
+    UploadInvoiceDialog: typeof import('./src/components/business/upload-invoice-dialog.vue')['default']
     UrbanProjectTree: typeof import('./src/components/business/urban-project-tree.vue')['default']
   }
   export interface GlobalDirectives {

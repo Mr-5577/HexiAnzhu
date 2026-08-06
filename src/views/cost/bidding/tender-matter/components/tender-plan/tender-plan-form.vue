@@ -181,7 +181,7 @@
         <!-- 招标文件 -->
         <div class="item-card">
           <div class="section-title">招标文件</div>
-          <el-form-item label="招标文件" label-width="90px">
+          <el-form-item label="招标文件" label-width="90px" required>
             <base-upload
               v-model:file-list="biddingFileList"
               :limit="9"
@@ -497,13 +497,15 @@ const getProjectOptions = async () => {
 };
 
 // 附件上传成功
-const handleAnnexSuccess = (fileList: any) => {
-  // console.log("相关附件上传成功", fileList);
+const handleAnnexSuccess = (file: any) => {
+  // console.log("相关附件上传成功", file);
+  annexFileList.value.push(file);
   console.log("附件列表", annexFileList.value);
 };
 // 招标文件上传成功
-const handleBiddingSuccess = (fileList: any) => {
-  // console.log("招标文件上传成功", fileList);
+const handleBiddingSuccess = (file: any) => {
+  // console.log("招标文件上传成功", file);
+  biddingFileList.value.push(file);
   console.log("招标文件列表", biddingFileList.value);
 };
 // 验证表单数据
@@ -536,6 +538,10 @@ const validateForm = () => {
   }
   if (tableData.value.some((item) => !item.perfBondAmount)) {
     ElMessage.error("请填写列表中的应交履约保证金");
+    return false;
+  }
+  if (biddingFileList.value.length === 0) {
+    ElMessage.error("请上传招标文件");
     return false;
   }
   return true;
@@ -695,7 +701,7 @@ const handleViewProcess = async () => {
       console.error("查看流程失败:", error);
     }
   } else {
-    ElMessage.error("暂无流程信息");
+    ElMessage.warning("暂无流程信息");
   }
 };
 // 返回操作

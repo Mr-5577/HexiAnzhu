@@ -1,12 +1,11 @@
 /**
- * 合同关联模块的常量定义
+ * 合同管理模块 常量定义
  */
 /** 合同类型 */
 export const ConPropertyEnum = [
   { value: 1, label: "普通合同" },
   { value: 2, label: "战略合同" },
-  { value: 3, label: "订单合同" },
-  { value: 4, label: "采购订单" },
+  { value: 3, label: "战略执行" },
 ] as const;
 
 /** 计价方式 */
@@ -113,6 +112,42 @@ export const allocWarnEnum = [
   { label: "黄色预警", value: 1, type: "warning" }, // 超95%
   { label: "绿色预警", value: 2, type: "success" },
 ] as const;
+
+/**
+ * @name 成本合同相关类型枚举
+ */
+export const costTypeEnum = [
+  { label: "合同审批", value: "CST_CON_MAIN" },
+  { label: "补充合同审批", value: "CST_CON_ADD" },
+  { label: "订单合同", value: "CST_CON_ORD" },
+  { label: "采购订单", value: "CST_CON_BILL" },
+  { label: "合同变更", value: "CST_CON_BG" },
+  { label: "合同签证", value: "CST_CON_QZ" },
+  { label: "合同产值", value: "CST_CON_PROD" },
+  { label: "合同预结算", value: "CST_CON_PRE_SETTLE" },
+  { label: "合同结算", value: "CST_CON_SETTLE" },
+  { label: "非合同", value: "CST_NCON" },
+];
+
+/**
+ * 合同管理 单据审批状态 枚举
+ */
+export const conBillStatusEnum = [
+  { value: 0, label: "草稿", type: "info" }, // 待处理 - 灰色
+  { value: 10, label: "审批中", type: "primary" }, // 进行中 - 蓝色
+  { value: 40, label: "已审批", type: "success" }, // 已完成 - 绿色
+  { value: 80, label: "作废", type: "warning" }, // 异常 - 橙色
+  { value: 99, label: "其他", type: "info" }, // 其他 - 灰色
+];
+
+/** 发票登记 发票状态 枚举 */
+export const invoiceStatusEnum = [
+  { value: 0, label: "待查验", type: "warning" }, // 警告色 - 需要用户操作
+  { value: 1, label: "合格发票", type: "success" }, // 绿色 - 通过
+  { value: 2, label: "待人工审核", type: "primary" }, // 蓝色 - 需要人工介入
+  { value: 3, label: "人工通过", type: "success" }, // 绿色 - 通过
+  { value: 4, label: "人工拒绝", type: "danger" }, // 红色 - 拒绝
+];
 
 // 辅助函数：根据value获取label
 export const getLabel = <T extends { value: number | string; label: string }>(

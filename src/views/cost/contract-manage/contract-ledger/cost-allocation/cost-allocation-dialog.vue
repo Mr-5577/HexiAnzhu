@@ -198,12 +198,14 @@ import type { EditableColumn } from "@/components/base/editable-table.vue";
 interface Props {
   modelValue: boolean;
   projId?: number;
+  bizType?: number;
   editData?: CostAllocationDTO | null;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
-  projId: undefined,
+  projId: undefined, // 项目ID
+  bizType: undefined, // 业务类型ID
   editData: null,
 });
 
@@ -451,7 +453,7 @@ const initFormData = async () => {
       id: undefined,
       projId: props.projId,
       projName: projName,
-      bizType: undefined,
+      bizType: props.bizType,
       bizBillId: 0,
       bizKeyId: 0,
       allocAmt: 0,

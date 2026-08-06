@@ -2,7 +2,7 @@
 <template>
   <div class="basic-form-content">
     <div class="form-header">
-      <div class="header-title">投标保证金缴纳</div>
+      <div class="header-title">投标保证金缴纳登记</div>
       <div class="header-btn">
         <el-button
           type="primary"
@@ -565,6 +565,7 @@ const openUploadForRow = (row: any) => {
 
 // 上传成功回调
 const handleUploadSuccess = (file: any) => {
+  tempFileList.value = [file];
   if (currentUploadRow.value) {
     const annexId = file.id;
     const annexName = file.annexName || file.name;
@@ -666,8 +667,9 @@ const getTreeProjectOptions = async () => {
   }
 };
 
-const handleAnnexSuccess = (fileList: any) => {
-  console.log("文件上传成功", fileList);
+const handleAnnexSuccess = (file: any) => {
+  console.log("文件上传成功", file);
+  annexFileList.value.push(file);
 };
 
 // 获取事项详情数据（新增时使用）
@@ -973,7 +975,7 @@ const handleViewProcess = async () => {
       console.error("查看流程失败:", error);
     }
   } else {
-    ElMessage.error("暂无流程信息");
+    ElMessage.warning("暂无流程信息");
   }
 };
 

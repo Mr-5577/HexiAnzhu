@@ -235,14 +235,14 @@ export const biddingManageApi = {
   },
   /**
    * 保存招标单据（新增/修改）
-   * @param data 
+   * @param data
    */
   saveBill: (data: BidTenderBillFormDataAdd) => {
     return http.post("/bid/bill/save", data);
   },
   /**
    * 保存并提交招标单据
-   * @param data 
+   * @param data
    */
   submitBill: (data: BidTenderBillFormDataAdd) => {
     return http.post("/bid/bill/submit", data);
@@ -289,8 +289,9 @@ export const biddingManageApi = {
    * 查询招标保证金缴纳明细列表（在招标保证金退还里面使用）
    * @param data - 删除参数
    * @param data.tenderId - 事项ID（必填）
+   * @param data.isNoRefund - 是否未退还的（必填）
    */
-  getBondRecvList: (data: { tenderId: number }) => {
+  getBondRecvList: (data: { tenderId: number; isNoRefund: boolean }) => {
     return http.formPost("/bid/bondRecv/listByTender", data);
   },
 

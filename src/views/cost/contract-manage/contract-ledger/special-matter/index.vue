@@ -43,6 +43,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import AddEditSpecialDialog from "./add-edit-special-dialog.vue";
@@ -55,6 +56,9 @@ const props = defineProps<{
   conId: number | null;
 }>();
 
+const route = useRoute();
+const router = useRouter();
+
 const dialogVisible = ref(false);
 const editData = ref<ContractSpecial | null>(null);
 const tableLoading = ref(false);
@@ -62,13 +66,18 @@ const tableData = ref<ContractSpecial[]>([]);
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
-  { slot: "status", label: "状态", width: 100 },
-  { prop: "signAmt", label: "合同签约金额", width: 120 },
-  { prop: "totalProdVal", label: "合同总产值", width: 120 },
-  { prop: "totalPayable", label: "总应付", width: 120 },
-  { prop: "totalPaid", label: "总已付", width: 120 },
-  { prop: "totalOwed", label: "总欠款", width: 120 },
-  { prop: "specialDesc", label: "特殊说明", width: 200 },
+  // { slot: "status", label: "状态", width: 100 },
+  // { prop: "signAmt", label: "合同签约金额", width: 120 },
+  // { prop: "totalProdVal", label: "合同总产值", width: 120 },
+  // { prop: "totalPayable", label: "总应付", width: 120 },
+  // { prop: "totalPaid", label: "总已付", width: 120 },
+  // { prop: "totalOwed", label: "总欠款", width: 120 },
+  // { prop: "specialDesc", label: "特殊说明", width: 200 },
+  { prop: "ww", label: "审批单编号", width: 200 },
+  { prop: "ww", label: "审批流程" },
+  { slot: "status", label: "审批状态", width: 120 },
+  { prop: "ww", label: "申请人" },
+  { prop: "ww", label: "申请日期" },
   {
     label: "操作",
     width: 200,
@@ -134,14 +143,21 @@ const handleRefresh = () => {
 
 // 新增
 const handleAdd = () => {
-  editData.value = null;
-  dialogVisible.value = true;
+  router.push({
+    path: "/con/special-matter/add",
+    query: {
+      t: Date.now(),
+    },
+  });
 };
-
 // 编辑
-const handleEdit = async (row: ContractSpecial) => {
-  editData.value = row;
-  dialogVisible.value = true;
+const handleEdit = ({ id }) => {
+  router.push({
+    path: "/con/special-matter/edit",
+    query: {
+      specialId: id, // 特殊事项ID
+    },
+  });
 };
 
 // 监听合同ID变化，自动刷新列表

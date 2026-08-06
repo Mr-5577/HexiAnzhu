@@ -48,6 +48,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import AddEditDedDialog from "./add-edit-ded-dialog.vue";
@@ -61,6 +62,9 @@ const props = defineProps<{
   conId: number | null;
 }>();
 
+const route = useRoute();
+const router = useRouter();
+
 const dialogVisible = ref(false);
 const editData = ref(null);
 const tableLoading = ref(false);
@@ -68,14 +72,22 @@ const tableData = ref([]);
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "dedName", label: "款项标题" },
-  { slot: "dedTypeId", label: "调整类型" },
-  { prop: "dedAmt", label: "调整金额" },
-  { prop: "dedDesc", label: "说明" },
-  { slot: "status", label: "状态" },
+  // { prop: "dedName", label: "款项标题" },
+  // { slot: "dedTypeId", label: "调整类型" },
+  // { prop: "dedAmt", label: "调整金额" },
+  // { prop: "dedDesc", label: "说明" },
+  { prop: "ww", label: "大类" },
+  { prop: "ww", label: "小类" },
+  { prop: "dedDesc", label: "事项说明", width: 200  },
+  { prop: "ww", label: "金额" },
+  { prop: "ww", label: "是否兑现" },
+  { prop: "ww", label: "兑现金额" },
+  { slot: "status", label: "审批状态" },
+  { prop: "ww", label: "申请人" },
+  { prop: "ww", label: "申请日期" },
   {
     label: "操作",
-    width: 150,
+    width: 180,
     slot: "actions",
     fixed: "right",
   },
@@ -123,15 +135,23 @@ const handleRefresh = () => {
   getDataList();
 };
 
-// 发起流程
+// 新增
 const handleAdd = () => {
-  editData.value = null;
-  dialogVisible.value = true;
+  router.push({
+    path: "/con/payment-adjust/add",
+    query: {
+      t: Date.now(),
+    },
+  });
 };
 // 编辑
-const handleEdit = async (row: ContractDed) => {
-  editData.value = row;
-  dialogVisible.value = true;
+const handleEdit = ({ id }) => {
+  router.push({
+    path: "/con/payment-adjust/edit",
+    query: {
+      dedId: id, // 奖罚/款项调整ID
+    },
+  });
 };
 // 删除
 const handleDelete = (row: ContractDed) => {

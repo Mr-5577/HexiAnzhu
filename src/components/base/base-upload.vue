@@ -220,8 +220,8 @@ const handleSuccess: UploadProps["onSuccess"] = (res, file) => {
     };
 
     // 通知父组件更新列表
-    const newFileList = [...props.fileList, newAnnex];
-    emit("update:fileList", newFileList);
+    // const newFileList = [...props.fileList, newAnnex];
+    // emit("update:fileList", newFileList);
     emit("success", newAnnex);
 
     ElMessage.success(`${file.name} 上传成功`);

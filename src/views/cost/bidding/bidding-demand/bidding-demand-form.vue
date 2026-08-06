@@ -438,8 +438,9 @@ const handleSeg = (value: number) => {
 };
 
 // 附件上传成功
-const handleUploadSuccess = (fileList: any) => {
-  console.log("当前上传成功文件", fileList);
+const handleUploadSuccess = (file: any) => {
+  console.log("当前上传成功文件", file);
+  tempFileList.value = [...tempFileList.value, file];
   console.log("文件列表", tempFileList.value);
 };
 

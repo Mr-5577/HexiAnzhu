@@ -44,6 +44,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import AddEditVoidDialog from "./add-edit-void-dialog.vue";
@@ -55,6 +56,9 @@ defineOptions({ name: "contract-void" });
 const props = defineProps<{
   conId: number | null;
 }>();
+
+const route = useRoute();
+const router = useRouter();
 
 const dialogVisible = ref(false);
 const editData = ref(null);
@@ -115,15 +119,25 @@ const handleRefresh = () => {
   getDataList();
 };
 
-// 发起流程
+// 新增
 const handleAdd = () => {
-  editData.value = null;
-  dialogVisible.value = true;
+  router.push({
+    path: "/con/contract-void/add",
+    query: {
+      conId: props.conId, // 合同ID
+      t: Date.now(),
+    },
+  });
 };
 // 编辑
-const handleEdit = async (row) => {
-  editData.value = row;
-  dialogVisible.value = true;
+const handleEdit = ({ id }) => {
+  router.push({
+    path: "/con/contract-void/edit",
+    query: {
+      conId: props.conId, // 合同ID
+      conVoidId: id, // 合同解除ID
+    },
+  });
 };
 // 删除
 const handleDelete = ({ id }) => {

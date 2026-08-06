@@ -97,6 +97,7 @@ const cascaderRef = useTemplateRef("cascaderRef");
 const dialogVisible = ref(props.modelValue);
 const formRef = ref<FormInstance>();
 const submitLoading = ref(false);
+const baseFlatList = ref([]);
 const productTreeData = ref<CostCategoryBaseNode[]>([]);
 const productTreeLoading = ref(false);
 const segOptions = ref([]);
@@ -123,6 +124,8 @@ const getBaseProductList = async () => {
   try {
     const res = await costCategoryApi.getCostSubjectBaseList({ subName: "" });
     if (res.code === 200) {
+      // 保存基础扁平数据结构
+      baseFlatList.value = res.data || [];
       // 构建树形数据
       productTreeData.value = buildTree(res.data || []);
     }
@@ -178,12 +181,15 @@ const handleSubmit = async () => {
     }
     submitLoading.value = true;
     const uniqueIds = flatAndUnique(paths);
+    // 得到选中的科目数据
+    const newData = baseFlatList.value.filter((item) => uniqueIds.includes(item.id));
     // 使用 Promise.allSettled 支持部分成功
-    const savePromises = uniqueIds.map((subId) => {
+    const savePromises = newData.map((item) => {
       const params = {
         projId: formData.value.projId as number,
-        subId: subId as number,
-        segId: formData.value.segId as number,
+        subId: item.id as number,
+        segId: item.busiSegId as number,
+        allocRule: item.allocRule,
         remark: formData.value.remark,
       };
       return costCategoryApi.addCostSubjectProj(params);
@@ -197,7 +203,6 @@ const handleSubmit = async () => {
       handleClose();
     }
   } catch {
-    ElMessage.error("保存失败，请重试");
   } finally {
     submitLoading.value = false;
   }

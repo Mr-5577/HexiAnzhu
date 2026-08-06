@@ -132,6 +132,7 @@ const formRules: FormRules = {
 // 附件上传成功
 const uploadSuccess = (file: any) => {
   console.log("文件上传成功", file);
+  tempFileList.value = [file];
   if (file) {
     formData.value.annexId = file.id;
     formData.value.annexName = file.annexName;
@@ -140,6 +141,7 @@ const uploadSuccess = (file: any) => {
 // 附件移除
 const handleRemove = (file: any) => {
   console.log("文件移除", file);
+  tempFileList.value = [];
   if (file) {
     formData.value.annexId = undefined;
     formData.value.annexName = "";

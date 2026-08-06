@@ -2,7 +2,7 @@
 <template>
   <div class="basic-form-content">
     <div class="form-header">
-      <div class="header-title">投标保证金退还</div>
+      <div class="header-title">投标保证金退还登记</div>
       <div class="header-btn">
         <el-button
           type="primary"
@@ -257,6 +257,14 @@
       @select="handleContractSelect"
     />
 
+    <!-- 选择缴纳明细弹窗 -->
+    <choose-pay-dialog
+      ref="payDialogRef"
+      v-model="payDialogVisible"
+      :tenderId="props.tenderId"
+      @select="handlePaySelect"
+    />
+
     <!-- 隐藏的上传组件 -->
     <Teleport to="body">
       <div style="display: none" @click.stop @mousedown.stop>
@@ -306,6 +314,7 @@ import { dictMapping } from "@/utils/dict-mapping";
 import { buildFileUrl } from "@/utils/file-path-util";
 import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
 import { purchaseBillStatusEnum } from "@/constants/bidding/enums.ts";
+import ChoosePayDialog from "./choose-pay-dialog.vue";
 
 defineOptions({ name: "bid-bond-refund-form" });
 
@@ -366,7 +375,6 @@ const flowListData = ref({
 }); // 流程数据
 const tableData = ref([]);
 const tableLoading = ref(false);
-const bondRecvTable = ref([]); // 事项下的保证金缴纳列表
 
 // 供应商弹窗相关
 const supplierDialogVisible = ref(false);
@@ -376,6 +384,10 @@ const supplierDialogRef = useTemplateRef("supplierDialogRef");
 // 合同弹窗相关
 const contractDialogVisible = ref(false);
 const contractDialogRef = useTemplateRef("contractDialogRef");
+
+// 缴纳明细弹窗相关
+const payDialogVisible = ref(false);
+const payDialogRef = useTemplateRef("payDialogRef");
 
 // 附件上传相关
 const tempFileList = ref([]);
@@ -399,14 +411,8 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
     // 不可编辑
     prop: "tenderItemName",
     label: "招标明细事项",
-    minWidth: 150,
-    editable: true,
-    editType: "select",
-    showOverflowTooltip: false,
-    // 自定义键名
-    optionLabelField: "tenderItemName",
-    optionValueField: "tenderItemId",
-    options: bondRecvTable.value || [],
+    minWidth: 200,
+    editable: false,
   },
   {
     // 不可编辑
@@ -502,27 +508,6 @@ const updateRow = (rowIndex: number, data: any) => {
 const handleTableSave = async (data) => {
   const { row, column, newValue, oldValue, rowIndex } = data;
   if (newValue === oldValue) return;
-  // 选择保证金缴纳明细事项
-  if (column === "tenderItemName") {
-    const bondRecv = bondRecvTable.value.find(
-      (option: any) => option.tenderItemId === newValue,
-    );
-    const newData = {
-      tenderId: bondRecv.tenderId,
-      tenderItemId: bondRecv.tenderItemId,
-      tenderItemName: bondRecv.tenderItemName,
-      bldIds: bondRecv.bldIds,
-      bldNames: bondRecv.bldNames,
-      supId: bondRecv.supId,
-      supName: bondRecv.supName,
-      recvAmount: bondRecv.recvAmount, // 实交保证金金额
-      recvMethod: bondRecv.recvMethod, // 缴纳方式id
-      recvMethodName: bondRecv.recvMethodName, // 缴纳方式name
-      refundAmount: bondRecv.recvAmount, // 退还金额，和实缴一致
-    };
-    updateRow(rowIndex, { ...newData });
-    return;
-  }
   // 退还方式变更时，同步更新退还方式名称
   if (column === "refundType") {
     const selectedOption = refundMethodOptions.value.find(
@@ -577,7 +562,47 @@ const handleContractSelect = (data: any) => {
     }
   }
 };
+// 缴纳明细选择
+const handlePaySelect = (data: any) => {
+  if (data && data.length > 0) {
+    const bondRecv = data[0];
+    // 检查是否已存在相同的 supId + tenderItemId 组合
+    const isDuplicate = tableData.value.some(
+      (item) =>
+        item.supId === bondRecv.supId &&
+        item.tenderItemId === bondRecv.tenderItemId,
+    );
+    if (isDuplicate) {
+      ElMessage.warning(
+        `供应商 "${bondRecv.supName}" 的 "${bondRecv.tenderItemName}" 已存在，请勿重复添加`,
+      );
+      return;
+    }
 
+    const newData = {
+      uuid: uuidv4(),
+      id: undefined,
+      tenderId: bondRecv.tenderId, // 事项ID
+      tenderItemId: bondRecv.tenderItemId, // 事项明细ID
+      tenderItemName: bondRecv.tenderItemName, // 招标明细事项
+      bldIds: bondRecv.bldIds,
+      bldNames: bondRecv.bldNames,
+      supId: bondRecv.supId,
+      supName: bondRecv.supName,
+      recvAmount: bondRecv.recvAmount, // 实交保证金金额
+      recvMethod: bondRecv.recvMethod, // 缴纳方式id
+      recvMethodName: bondRecv.recvMethodName, // 缴纳方式name
+      refundType: undefined,
+      refundTypeName: "",
+      refundAmount: bondRecv.recvAmount, // 退还金额,和实缴一致
+      refundAnnexId: undefined,
+      refundAnnexName: "",
+      conId: "", // 合同ID
+      conName: "", // 合同名称
+    };
+    tableData.value = [...tableData.value, newData];
+  }
+};
 // 打开上传
 const openUploadForRow = (row: any) => {
   currentUploadRow.value = row;
@@ -589,6 +614,7 @@ const openUploadForRow = (row: any) => {
 
 // 上传成功回调
 const handleUploadSuccess = (file: any) => {
+  tempFileList.value = [file];
   if (currentUploadRow.value) {
     const annexId = file.id;
     const annexName = file.annexName || file.name;
@@ -632,28 +658,30 @@ const handleViewAnnex = async (row: any) => {
 };
 
 const handleAddRefund = () => {
-  const newRowData = {
-    uuid: uuidv4(),
-    id: undefined,
-    tenderId: undefined, // 事项ID
-    tenderItemId: undefined, // 事项明细ID
-    tenderItemName: "", // 招标明细事项
-    bldIds: "",
-    bldNames: "",
-    supId: undefined,
-    supName: "",
-    recvAmount: 0, // 实交保证金金额
-    recvMethod: undefined,
-    recvMethodName: "",
-    refundType: undefined,
-    refundTypeName: "",
-    refundAmount: 0, // 退还金额
-    refundAnnexId: undefined,
-    refundAnnexName: "",
-    conId: "", // 合同ID
-    conName: "", // 合同名称
-  };
-  tableData.value = [...tableData.value, newRowData];
+  // const newRowData = {
+  //   uuid: uuidv4(),
+  //   id: undefined,
+  //   tenderId: undefined, // 事项ID
+  //   tenderItemId: undefined, // 事项明细ID
+  //   tenderItemName: "", // 招标明细事项
+  //   bldIds: "",
+  //   bldNames: "",
+  //   supId: undefined,
+  //   supName: "",
+  //   recvAmount: 0, // 实交保证金金额
+  //   recvMethod: undefined,
+  //   recvMethodName: "",
+  //   refundType: undefined,
+  //   refundTypeName: "",
+  //   refundAmount: 0, // 退还金额
+  //   refundAnnexId: undefined,
+  //   refundAnnexName: "",
+  //   conId: "", // 合同ID
+  //   conName: "", // 合同名称
+  // };
+  // tableData.value = [...tableData.value, newRowData];
+
+  payDialogVisible.value = true;
 };
 
 const handleDeleteRefund = (row: any) => {
@@ -682,26 +710,11 @@ const getProjectOptions = async () => {
   }
 };
 
-const handleAnnexSuccess = (fileList: any) => {
-  console.log("文件上传成功", fileList);
+const handleAnnexSuccess = (file: any) => {
+  console.log("文件上传成功", file);
+  annexFileList.value.push(file);
 };
-// 通过事项ID获取保证金缴纳明细列表
-const getBondRecvTableByTenderId = async (tenderId: number) => {
-  if (!tenderId) return;
-  try {
-    const res = await biddingManageApi.getBondRecvList({
-      tenderId: tenderId,
-    });
-    if (res.code === 200 && res.data) {
-      const list = res.data || [];
-      // 把事项ID加入到列表里面提供给后面使用
-      bondRecvTable.value = list.map((item: any) => ({
-        ...item,
-        tenderId: tenderId,
-      }));
-    }
-  } catch (error) {}
-};
+
 // 获取事项详情数据（新增时使用）
 const getTenderInfo = async (tenderId: number) => {
   if (!tenderId) return;
@@ -764,8 +777,6 @@ const getBillDetail = async () => {
         res.data;
       // 通过事项ID获取基本信息
       await getTenderInfo(tenderId);
-      // 保证金缴纳退还明细使用保证金缴纳明细列表
-      await getBondRecvTableByTenderId(props.tenderId);
 
       billData.value = { ...billData.value, ...bill };
       flowBasData.value = { ...flowBasData.value, ...flowBase };
@@ -826,10 +837,16 @@ const validateForm = () => {
     return false;
   }
 
-  // 验证：通过 tenderItemId 判断是否有重复数据
-  const ids = tableData.value.map((item) => item.tenderItemId).filter(Boolean);
-  if (new Set(ids).size !== ids.length) {
-    ElMessage.error("存在重复的招标明细事项，请检查");
+  // 验证：通过 tenderItemId + supId 组合判断是否有重复数据
+  const pairs = tableData.value
+    .map((item) => `${item.tenderItemId}_${item.supId}`)
+    .filter((pair) => {
+      const [tenderItemId, supId] = pair.split("_");
+      return tenderItemId && supId; // 两者都必须有值才参与去重校验
+    });
+
+  if (new Set(pairs).size !== pairs.length) {
+    ElMessage.error("存在重复的招标明细事项和供应商组合，请检查！");
     return false;
   }
 
@@ -875,7 +892,6 @@ const handleSave = async () => {
       bondRefunds: dataList, //  招标保证金退还
       annexList: annexFileList.value, // 附件列表
     };
-    debugger;
     const res = await biddingManageApi.saveBill(params);
     if (res.code === 200 && res.data) {
       billData.value.id = res.data || undefined; // 保存单据id
@@ -1003,7 +1019,7 @@ const handleViewProcess = async () => {
       console.error("查看流程失败:", error);
     }
   } else {
-    ElMessage.error("暂无流程信息");
+    ElMessage.warning("暂无流程信息");
   }
 };
 
@@ -1026,8 +1042,6 @@ const initData = async () => {
     await getTenderInfo(props.tenderId);
     // 2.使用详情信息初始化表格数据
     // await initAddTableData();
-    // 保证金缴纳退还明细使用保证金缴纳明细列表
-    await getBondRecvTableByTenderId(props.tenderId);
   } else {
     await getBillDetail();
   }

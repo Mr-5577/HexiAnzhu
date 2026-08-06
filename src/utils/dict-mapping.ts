@@ -39,6 +39,8 @@ export const dictMapping = {
   paymentType: "PAYMENT_TYPE",
   /** 支付方式 */
   payType: "PAY_TYPE",
+  /** 扣款类型 */
+  dedType: "DED_TYPE",
 } as const;
 
 // 导出类型，用于类型提示

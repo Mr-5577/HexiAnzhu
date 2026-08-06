@@ -27,11 +27,12 @@ export const goalCostApi = {
     return http.formPost("/cost/projectCostM/getList", data);
   },
   /**
-   * 查询目标成本(主从表)详情
+   * 查询目标成本详情
    * @param data - 查询参数
    * @param data.id - 目标成本ID
+   * @param data.projId - 项目ID
    */
-  getProjectCostM: (data: { id: number }) => {
+  getProjectCostM: (data: { id?: number; projId?: number }) => {
     return http.formPost("/cost/projectCostM/get", data);
   },
 
@@ -93,7 +94,8 @@ export const goalCostApi = {
   /**
    * 查询目标成本明细列表
    * @param data - 查询参数
-   * @param data.costMid - 目标成本ID（必填）
+   * @param data.costMid - 目标成本ID
+   * @param data.projId - 项目ID
    * @param data.subId - 科目ID
    * @param data.prodId - 业态ID
    * @returns Promise 目标成本明细列表
@@ -157,5 +159,41 @@ export const goalCostApi = {
     return http.post(`/cost/projectCostD/batchSave?costMid=${costMid}`, data, {
       addQueryFast: false,
     });
+  },
+
+  /**
+   * @name 保存目标成本明细
+   * @param data - 目标成本明细列表
+   * @param data.costM - 目标成本
+   * @param data.costDList - 明细列表
+   * @param data.annexList - 附件列表
+   */
+  saveProjectCostD: (data: any) => {
+    return http.post("/cost/projectCostD/save", data);
+  },
+
+  /**
+   * @name 发起/更新目标成本审批流程
+   * @param data - 流程参数
+   * @param data.costMId - 目标成本版本ID（必填）
+   */
+  saveCostMFlow: (data: { costMId: number }) => {
+    return http.formPost("/cost/bill/saveFlow", data);
+  },
+  /**
+   * @name 作废目标成本
+   * @param data - 流程参数
+   * @param data.id - 目标成本版本ID（必填）
+   */
+  voidProjectCostM: (data: { id: number }) => {
+    return http.formPost("/cost/projectCostM/void", data);
+  },
+  /**
+   * @name 查询目标成本单据详情
+   * @param data - 查询参数
+   * @param data.costMId - 目标成本版本ID（必填）
+   */
+  getCostBillInfo: (params: { costMId: number }) => {
+    return http.get("/cost/bill/getInfo", params);
   },
 };

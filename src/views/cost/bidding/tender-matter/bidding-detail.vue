@@ -31,11 +31,11 @@
           </el-menu-item>
           <el-menu-item index="bid-bond-pay">
             <el-icon><Money /></el-icon>
-            <span>投标保证金缴纳</span>
+            <span>投标保证金缴纳登记</span>
           </el-menu-item>
           <el-menu-item index="bid-bond-refund">
             <el-icon><RefreshRight /></el-icon>
-            <span>投标保证金退还</span>
+            <span>投标保证金退还登记</span>
           </el-menu-item>
         </el-menu>
       </el-aside>

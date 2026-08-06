@@ -39,15 +39,6 @@
         </el-button>
       </template>
     </base-table>
-
-    <initiate-dialog
-      v-model="dialogVisible"
-      :changeReasonOptions="changeReasonOptions"
-      :conId="props.conId"
-      :projId="props.projId"
-      :editData="editData"
-      @success="handleRefresh"
-    />
   </div>
 </template>
 
@@ -56,9 +47,9 @@ import { ref, watch, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { changeOrderApi } from "@/api/cost/contract-manage/change-order-api.ts";
-import InitiateDialog from "./initiate-dialog.vue";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";
+import { useRouter } from "vue-router";
 import { ChangeTypeEnum } from "@/constants/contract-manage/enums.ts";
 import { associatedApprovalApi } from "@/api/cost/contract-manage/associated-approval-api.ts";
 
@@ -69,8 +60,8 @@ const props = defineProps<{
   projId: number | null;
 }>();
 
-const dialogVisible = ref(false);
-const editData = ref(null);
+const router = useRouter();
+
 const tableLoading = ref(false);
 const tableData = ref([]);
 const changeReasonOptions = ref([]); // 变更原因列表
@@ -87,16 +78,19 @@ const { getDictList, loadDicts } = useDict(
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
-  { slot: "changeType", label: "变更类型", width: 150 },
-  { prop: "changeName", label: "变更事项", width: 200 },
-  { prop: "changeAmt", label: "变更预估金额", width: 150 },
-  { slot: "status", label: "审批状态", width: 150 },
-  { slot: "changeReasonId", label: "变更原因", width: 150 },
-  { prop: "changeReasonDesc", label: "变更原因说明", width: 200 },
-  { prop: "changeConent", label: "变更内容", width: 200 },
+  { slot: "changeType", label: "变更类型" },
+  { prop: "changeName", label: "变更事项" },
+  { prop: "changeAmt", label: "变更预估金额" },
+  { slot: "status", label: "审批状态" },
+  { slot: "ww", label: "执行状态" },
+  // { slot: "changeReasonId", label: "变更原因", width: 150 },
+  // { prop: "changeReasonDesc", label: "变更原因说明", width: 200 },
+  // { prop: "changeConent", label: "变更内容", width: 200 },
+  { prop: "ww", label: "申请人" },
+  { prop: "ww", label: "申请时间" },
   {
     label: "操作",
-    width: 200,
+    width: 160,
     slot: "actions",
     fixed: "right",
   },
@@ -152,13 +146,25 @@ const handleRefresh = () => {
 
 // 发起流程
 const handleAdd = () => {
-  editData.value = null;
-  dialogVisible.value = true;
+  router.push({
+    path: "/con/change-order/add",
+    query: {
+      projId: props.projId,
+      conId: props.conId,
+      t: Date.now(),
+    },
+  });
 };
 // 编辑
 const handleEdit = async (row) => {
-  editData.value = row;
-  dialogVisible.value = true;
+  router.push({
+    path: "/con/change-order/edit",
+    query: {
+      projId: props.projId,
+      conId: props.conId,
+      changeId: row.id,
+    },
+  });
 };
 // 审批
 const handleApproval = async (row) => {

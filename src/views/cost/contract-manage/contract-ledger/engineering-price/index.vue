@@ -44,6 +44,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import {
@@ -58,6 +59,9 @@ defineOptions({ name: "engineering-price" });
 const props = defineProps<{
   conId: number | null;
 }>();
+
+const route = useRoute();
+const router = useRouter();
 
 const dialogVisible = ref(false);
 const editData = ref<ContractAuditPrice | null>(null);
@@ -141,14 +145,23 @@ const handleRefresh = () => {
 
 // 新增
 const handleAdd = () => {
-  editData.value = null;
-  dialogVisible.value = true;
+  router.push({
+    path: "/con/engineering-price/add",
+    query: {
+      conId: props.conId,
+      t: Date.now(),
+    },
+  });
 };
-
 // 编辑
-const handleEdit = async (row: ContractAuditPrice) => {
-  editData.value = row;
-  dialogVisible.value = true;
+const handleEdit = ({ id }) => {
+  router.push({
+    path: "/con/engineering-price/edit",
+    query: {
+      conId: props.conId,
+      auditPriceId: id, // 工程核价ID
+    },
+  });
 };
 
 // 监听合同ID变化，自动刷新列表

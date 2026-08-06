@@ -41,16 +41,56 @@
       :rowKey="'id'"
       :pagination="false"
     >
+      <template #status="{ row }">
+        <el-tag
+          size="small"
+          :type="getEnumType(costBillStatusEnum, row?.status || 0)"
+        >
+          {{ getEnumLabel(costBillStatusEnum, row?.status || 0) }}
+        </el-tag>
+      </template>
       <template #actions="{ row }">
-        <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
-        <el-button type="danger" link @click="handleDelete(row)">
-          删除
-        </el-button>
-        <el-button type="primary" link @click="handleDetail(row)">
+        <el-button
+          type="primary"
+          link
+          @click="handleEdit(row)"
+          :disabled="row.status != 0"
+          >编辑</el-button
+        >
+        <el-button
+          type="primary"
+          link
+          @click="handleDetail(row)"
+          :disabled="row.status != 0"
+        >
           明细
         </el-button>
-        <el-button type="primary" link @click="viewDetails(row)">
-          详情
+        <el-button
+          type="primary"
+          link
+          @click="handleApprove(row)"
+          :disabled="row.status != 0"
+        >
+          提交审批
+        </el-button>
+        <el-button
+          type="primary"
+          link
+          @click="handleCancel(row)"
+          :disabled="row.status != 0"
+        >
+          作废
+        </el-button>
+        <el-button
+          type="danger"
+          link
+          @click="handleDelete(row)"
+          :disabled="row.status != 0"
+        >
+          删除
+        </el-button>
+        <el-button type="primary" link @click="handleViewProcess(row)">
+          查看流程
         </el-button>
       </template>
     </base-table>
@@ -58,7 +98,6 @@
     <!-- 新增/编辑弹窗 -->
     <add-edit-version-dialog
       v-model="dialogVisible"
-      :project-id="props.projectId"
       :edit-data="currentEditData"
       :verTypeOptions="verTypeOptions"
       @success="handleSuccess"
@@ -76,12 +115,15 @@ import AddEditVersionDialog from "./add-edit-version-dialog.vue";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";
 import { useRouter } from "vue-router";
+import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
+import { costBillStatusEnum } from "@/constants/cost/enums.ts";
+import { commonApi } from "@/api/cost/common-api.ts";
 
 defineOptions({ name: "cost-version" });
 
 // Props
 const props = defineProps<{
-  projectId: number;
+  selectedData: any;
 }>();
 
 const router = useRouter();
@@ -99,7 +141,6 @@ const { getDictList, loadDicts } = useDict(
 
 // 查询参数
 const queryParams = ref({
-  projId: props.projectId,
   versionNo: "",
   versionType: "",
 });
@@ -115,59 +156,36 @@ const currentEditData = ref<HCstProjectCostM | null>(null);
 // 表格列配置
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: "60" },
+  { prop: "areaVerMTitle", label: "标题", width: 200 },
   { prop: "projName", label: "项目名称", width: 150 },
   { prop: "versionNo", label: "版本号", minWidth: 200 },
-  { prop: "versionTypeName", label: "版本类型", width: 150 },
-  // {
-  //   prop: "costAmt",
-  //   label: "目标成本总额(含税)",
-  //   width: 150,
-  //   formatter: (row: HCstProjectCostM) => {
-  //     return row.costAmt?.toLocaleString() || "-";
-  //   },
-  // },
-  // {
-  //   prop: "costExclAmt",
-  //   label: "目标成本总额(不含税)",
-  //   width: 180,
-  //   formatter: (row: HCstProjectCostM) => {
-  //     return row.costExclAmt?.toLocaleString() || "-";
-  //   },
-  // },
-  // {
-  //   prop: "costDynAmt",
-  //   label: "动态成本总额(含税)",
-  //   width: 150,
-  //   formatter: (row: HCstProjectCostM) => {
-  //     return row.costDynAmt?.toLocaleString() || "-";
-  //   },
-  // },
-  // {
-  //   prop: "costDynExclAmt",
-  //   label: "动态成本总额(不含税)",
-  //   width: 180,
-  //   formatter: (row: HCstProjectCostM) => {
-  //     return row.costDynExclAmt?.toLocaleString() || "-";
-  //   },
-  // },
-  { prop: "segName", label: "业务板块", width: 150 },
+  { prop: "versionTypeName", label: "版本类型", width: 120 },
+  { prop: "segName", label: "业务板块", width: 120 },
   {
     prop: "isEnabled",
     label: "当前使用",
-    width: 120,
+    width: 90,
     formatter: (row: HCstProjectCostM) => {
       return row.isEnabled ? "是" : "否";
     },
   },
   { prop: "remark", label: "备注", minWidth: 200 },
-  { label: "操作", width: 200, slot: "actions", fixed: "right" },
+  { slot: "status", label: "审批状态", width: 100 },
+  { label: "操作", width: 320, slot: "actions", fixed: "right" },
 ];
 
 // 获取数据列表
 const getDataList = async () => {
   try {
     tableLoading.value = true;
-    const res = await goalCostApi.getProjectCostMList(queryParams.value);
+    const { orgId, dataType } = props.selectedData;
+    const params = {
+      projSegId: dataType === 4 ? orgId : undefined, // 板块
+      projMguId: dataType === 3 ? orgId : undefined, // 公司
+      projId: dataType === 1 ? orgId : undefined, // 项目
+    };
+    const query = { ...queryParams.value, ...params };
+    const res = await goalCostApi.getProjectCostMList(query);
     if (res.code === 200) {
       tableData.value = res.data || [];
     }
@@ -187,7 +205,6 @@ const handleSearch = () => {
 // 重置
 const handleReset = () => {
   queryParams.value = {
-    projId: props.projectId,
     versionNo: "",
     versionType: "",
   };
@@ -227,27 +244,98 @@ const handleDelete = async (row: HCstProjectCostM) => {
     }
   }
 };
+// 提交审批
+const handleApprove = async (row: HCstProjectCostM) => {
+  ElMessageBox.confirm("确定要提交审批吗？", "提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  }).then(async () => {
+    try {
+      const res = await goalCostApi.saveCostMFlow({
+        costMId: row.id,
+      });
+      if (res.code === 200 && res.data) {
+        ElMessage.success("提交成功");
+        getDataList();
+        // 生成OA审批页面重定向地址
+        generateRedirectUrl(res.data);
+      }
+    } catch (error) {
+      console.error("操作失败:", error);
+    }
+  });
+};
+// 生成OA审批重定向地址
+const generateRedirectUrl = async (oaRequestId: string) => {
+  try {
+    const res = await commonApi.generateRedirectUrl({
+      oaRequestId,
+    });
+    if (res.code === 200 && res.data) {
+      // 打开OA审批页面
+      setTimeout(() => {
+        window.open(res.data, "_blank");
+      }, 800);
+    }
+  } catch (error) {
+    console.error("生成OA审批重定向地址失败:", error);
+  }
+};
+// 作废
+const handleCancel = async (row: HCstProjectCostM) => {
+  ElMessageBox.confirm("确定要作废当前数据吗？", "提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  }).then(async () => {
+    try {
+      const res = await goalCostApi.voidProjectCostM({
+        id: row.id,
+      });
+      if (res.code === 200) {
+        ElMessage.success("提交成功");
+        getDataList();
+      }
+    } catch (error) {
+      console.error("操作失败:", error);
+    }
+  });
+};
+// 明细
 const handleDetail = (row: HCstProjectCostM) => {
   router.push({
     path: "/cost/cost-detail/add",
     query: {
       mode: "add",
-      projId: props.projectId, // 项目ID
+      projId: row.projId, // 项目ID
       costMid: row.id, // 成本版本ID
     },
   });
 };
-const viewDetails = (row: HCstProjectCostM) => {
-  router.push({
-    path: "/cost/cost-detail/view",
-    query: {
-      mode: "detail",
-      projId: props.projectId, // 项目ID
-      costMid: row.id, // 成本版本ID
-    },
+// 查看流程
+const handleViewProcess = async (row: HCstProjectCostM) => {
+  // 获取单据详情查看流程
+  const detailRes = await goalCostApi.getCostBillInfo({
+    costMId: row.id,
   });
+  if (detailRes.code === 200 && detailRes.data) {
+    const { flowList } = detailRes.data;
+    if (flowList && flowList.wfFlowId) {
+      try {
+        const redirectRes = await commonApi.generateRedirectUrl({
+          oaRequestId: flowList.wfFlowId,
+        });
+        if (redirectRes.code === 200 && redirectRes.data) {
+          window.open(redirectRes.data, "_blank");
+        }
+      } catch (error) {
+        console.error("查看流程失败:", error);
+      }
+    }
+  }
 };
-// 操作成功回调
+// 操作成功
 const handleSuccess = () => {
   getDataList();
 };
@@ -259,10 +347,9 @@ const initDictData = async () => {
 };
 
 watch(
-  () => props.projectId,
+  () => props.selectedData,
   async (newVal) => {
     if (newVal) {
-      queryParams.value.projId = newVal;
       await initDictData();
       getDataList();
     }

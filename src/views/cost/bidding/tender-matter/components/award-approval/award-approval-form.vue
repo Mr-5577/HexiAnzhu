@@ -163,6 +163,7 @@
               :rows="3"
               maxlength="500"
               show-word-limit
+              :disabled="isDetail || !!billData.status"
               placeholder="其他补充信息"
             />
           </el-form-item>
@@ -171,7 +172,7 @@
         <!-- 合同附件 -->
         <div class="item-card">
           <div class="section-title">相关附件</div>
-          <el-form-item label="上传附件" label-width="90px">
+          <el-form-item label="上传附件" label-width="90px" required>
             <base-upload
               v-model:file-list="annexFileList"
               :limit="9"
@@ -320,6 +321,12 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
     width: 150,
   },
   {
+    prop: "tenderItemName",
+    label: "招标明细事项",
+    width: 200,
+    editable: false,
+  },
+  {
     prop: "bldNames",
     label: "楼栋",
     width: 150,
@@ -355,16 +362,20 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
     },
   },
   {
+    // 不可编辑并且显示***号
     prop: "priceVariance",
     label: "价格偏差(不含税)",
     width: 130,
     editable: false,
     showOverflowTooltip: false,
+    formatter: (row: any) => {
+      return "***";
+    },
   },
   {
     prop: "taxRate",
     label: "税率(%)",
-    width: 120,
+    width: 100,
     showSummary: true,
     editable: !isDetail.value,
     editType: "number",
@@ -374,8 +385,8 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
   {
     prop: "isWinner",
     label: "是否中标",
-    width: 100,
-    editable: !isDetail.value,
+    width: 90,
+    editable: false,
     editType: "select",
     showOverflowTooltip: false,
     options: [
@@ -384,7 +395,7 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
     ],
     formatter: (row: any) => {
       return row.isWinner ? "是" : "否";
-    }
+    },
   },
   {
     prop: "bidExplain",
@@ -465,8 +476,9 @@ const getProjectOptions = async () => {
   }
 };
 
-const handleAnnexSuccess = (fileList: any) => {
-  console.log("文件上传成功", fileList);
+const handleAnnexSuccess = (file: any) => {
+  console.log("文件上传成功", file);
+  annexFileList.value.push(file);
 };
 
 // 获取事项详情数据（新增时使用）
@@ -510,7 +522,7 @@ const initAddTableData = async () => {
       priceVariance: 0, // 价格偏差
       taxRate: 0, // 税率
       bidExplain: "", // 评定说明
-      isWinner: undefined, // 是否中标
+      isWinner: true, // 是否中标
     }));
     tableData.value = initialTableList || [];
   } else {
@@ -545,7 +557,7 @@ const getBillDetail = async () => {
           return {
             ...item,
             tenderId: tenderId, // 事项ID
-          }
+          };
         });
       }
 
@@ -599,6 +611,12 @@ const validateForm = () => {
     ElMessage.error("请填写列表中的税率");
     return false;
   }
+  // 相关附件必传
+  if (annexFileList.value.length === 0) {
+    ElMessage.error("请上传相关附件");
+    return false;
+  }
+
   return true;
 };
 // 保存
@@ -766,7 +784,7 @@ const handleViewProcess = async () => {
       console.error("查看流程失败:", error);
     }
   } else {
-    ElMessage.error("暂无流程信息");
+    ElMessage.warning("暂无流程信息");
   }
 };
 

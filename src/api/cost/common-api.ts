@@ -94,6 +94,31 @@ export const commonApi = {
     return http.formPost("/system/recognizeInvoice", data);
   },
   /**
+   * @name 查验发票文件
+   * @param data - 请求参数
+   * @param data.invoiceCode - 发票代码
+   * @param data.invoiceNumber - 发票号码
+   * @param data.invoiceDate - 开票日期（yyyy-MM-dd）
+   * @param data.invoiceCheckCode - 校验码
+   * @param data.totalPrice - 不含税金额
+   * @param data.amount - 价税合计
+   * @param data.barcode - 二维码信息（包含发票代码、发票号码等，有则可不填其它信息）
+   * @param data.buyerCompany - 购买方名称
+   * @param data.sellerTaxCode - 销售方纳税人识别号
+   * @param data.invoiceCategoryCode - 发票种类代码
+   */
+  checkInvoice: (data: any) => {
+    return http.post("/system/checkInvoice", data);
+  },
+  /**
+   * @name 识别并查验发票文件
+   * @param data - 请求参数
+   * @param data.annexId - 附件ID（必传）
+   */
+  recognizeAndCheckInvoice: (data: { annexId: number }) => {
+    return http.formPost("/system/recognizeAndCheckInvoice", data);
+  },
+  /**
    * @name 生成业务流水号
    * @param data - 请求参数
    * @param data.bizType - 业务类型

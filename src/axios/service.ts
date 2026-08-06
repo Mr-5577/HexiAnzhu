@@ -273,7 +273,7 @@ service.interceptors.response.use(
           ElMessage.error("请求超时");
           break;
         case 500:
-          ElMessage.error("服务器内部错误");
+          ElMessage.error(errorMessage || "服务器内部错误");
           break;
         case 502:
           ElMessage.error("升级中，请稍后再试");

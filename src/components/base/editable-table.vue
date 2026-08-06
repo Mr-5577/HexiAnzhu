@@ -98,7 +98,10 @@
               controls-position="right"
               :controls="false"
               :precision="getNumberPrecision(column)"
-              :min="0"
+              :min="column.getMin ? column.getMin(row) : (column.min ?? 0)"
+              :max="
+                column.getMax ? column.getMax(row) : (column.max ?? 999999999)
+              "
               :placeholder="column.placeholder || '请输入'"
               :formatter="
                 (value: any) =>
@@ -313,6 +316,14 @@ export interface EditableColumn extends TableColumnItem {
   };
   /** 是否显示所有层级（仅 cascader 类型有效） */
   showAllLevels?: boolean;
+  /** 数字输入最小值 */
+  min?: number;
+  /** 数字输入最大值 */
+  max?: number;
+  /** 动态获取最小值（优先级高于 min） */
+  getMin?: (row: any) => number;
+  /** 动态获取最大值（优先级高于 max） */
+  getMax?: (row: any) => number;
 }
 
 // Emits
@@ -361,11 +372,11 @@ const actualData = computed(() => {
 
 // 千分位格式化
 const formatThousand = (value: any, column: EditableColumn): string => {
-  if (value === null || value === undefined || value === '') return '';
-  const num = typeof value === 'string' ? parseFloat(value) : value;
-  if (isNaN(num)) return '';
+  if (value === null || value === undefined || value === "") return "";
+  const num = typeof value === "string" ? parseFloat(value) : value;
+  if (isNaN(num)) return "";
   const precision = column.precision !== undefined ? column.precision : 2;
-  return num.toLocaleString('en-US', {
+  return num.toLocaleString("en-US", {
     minimumFractionDigits: precision > 0 ? precision : 0,
     maximumFractionDigits: precision > 0 ? precision : 0,
   });
@@ -373,8 +384,8 @@ const formatThousand = (value: any, column: EditableColumn): string => {
 
 // 解析千分位
 const parseThousand = (value: string): string => {
-  if (!value) return '';
-  return value.replace(/,/g, '');
+  if (!value) return "";
+  return value.replace(/,/g, "");
 };
 /**
  * 获取列的 disabled 状态（支持布尔值或函数）

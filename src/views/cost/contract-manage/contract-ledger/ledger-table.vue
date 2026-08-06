@@ -212,7 +212,7 @@ const handleReset = () => {
 // 新增合同台账
 const handleAdd = () => {
   router.push({
-    path: "/contract/contract-ledger/add",
+    path: "/con/contract-ledger/add",
     query: {
       t: Date.now(),
     },
@@ -221,7 +221,7 @@ const handleAdd = () => {
 // 编辑合同台账
 const handleEdit = (row: HConMain) => {
   router.push({
-    path: "/contract/contract-ledger/edit",
+    path: "/con/contract-ledger/edit",
     query: {
       conId: row.id,
     },
@@ -230,7 +230,7 @@ const handleEdit = (row: HConMain) => {
 // 台账详情
 const handleDetail = (row: HConMain) => {
   router.push({
-    path: "/contract/contract-ledger/detail",
+    path: "/con/contract-ledger/detail",
     query: {
       conId: row.id,
       projId: props.projectId,

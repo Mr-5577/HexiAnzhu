@@ -150,8 +150,16 @@ export const dictionaryApi = {
    * @param data.isAuth - 是否需要权限控制，true需要  false不需要
    * @description 获取系统配置的业务板块
    */
-  getsegmentList: (data?:{ isAuth?: boolean }) => {
-    return http.formPost("/mainData/segment/getList",data);
+  getsegmentList: (data?: { isAuth?: boolean }) => {
+    return http.formPost("/mainData/segment/getList", data);
+  },
+  /**
+   * 根据业务板块查询费用类型
+   * @param data - 查询参数
+   * @param data.segId - 业务板块ID
+   */
+  getCostTypeListBySegId: (data: { segId: number }) => {
+    return http.formPost("/mainData/finaType/getList", data);
   },
 
   /**

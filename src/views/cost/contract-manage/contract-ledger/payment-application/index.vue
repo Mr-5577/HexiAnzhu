@@ -252,7 +252,7 @@ const handleRefresh = () => {
 // 新增
 const handleAdd = () => {
   router.push({
-    path: "/contract/payment-application/add",
+    path: "/con/payment-application/add",
     query: {
       projId: props.projId, // 项目ID
       conId: props.conId, // 合同ID
@@ -262,7 +262,7 @@ const handleAdd = () => {
 // 编辑
 const handleEdit = async ({ id }) => {
   router.push({
-    path: "/contract/payment-application/edit",
+    path: "/con/payment-application/edit",
     query: {
       projId: props.projId, // 项目ID
       conId: props.conId, // 合同ID

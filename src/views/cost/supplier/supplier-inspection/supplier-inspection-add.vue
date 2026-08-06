@@ -254,25 +254,6 @@
             </div>
           </Teleport>
         </div>
-        <!-- 合同附件 -->
-        <!-- <div class="item-card">
-          <div class="section-title">相关附件</div>
-          <el-form-item label="上传附件" label-width="90px">
-            <base-upload
-              v-model:file-list="annexFileList"
-              :limit="1"
-              :multiple="false"
-              :showIcon="true"
-              :showTip="true"
-              :maxSize="100"
-              :unrestricted="true"
-              :accept="''"
-              button-text="选择文件"
-              size="default"
-              @success="handleAnnexSuccess"
-            ></base-upload>
-          </el-form-item>
-        </div> -->
       </el-form>
     </div>
 
@@ -543,11 +524,6 @@ const handleSeg = (value: number) => {
     formData.value.segNo = target?.segNo || "";
   }
 };
-// 附件上传成功
-const handleAnnexSuccess = (fileList: any) => {
-  console.log("当前上传成功文件", fileList);
-  console.log("文件列表", tempFileList.value);
-};
 // 生成业务编号
 const generatebizNo = async () => {
   try {
@@ -721,6 +697,7 @@ const updateRow = (rowIndex: number, data: any) => {
 };
 
 const handleUploadSuccess = (file: any) => {
+  tempFileList.value = [file];
   if (currentUploadRow.value) {
     const annexId = file.id;
     const annexName = file.annexName || file.name;

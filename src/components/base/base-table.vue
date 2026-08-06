@@ -120,9 +120,35 @@ import {
   type VNode,
   type Slots,
 } from "vue";
-import { Setting, Refresh } from "@element-plus/icons-vue";
+import { Setting, Refresh, ArrowDown } from "@element-plus/icons-vue";
 import type { TableInstance, Sort } from "element-plus";
 import { formatNumber, formatNumberDisplay } from "@/utils/common";
+
+// ============ 类型定义 ============
+
+// 操作按钮配置接口
+export interface TableActionItem<T = any> {
+  /** 按钮名称/标识，用于事件回调区分 */
+  name: string;
+  /** 按钮显示文本 */
+  label: string;
+  /** 按钮类型 */
+  type?: "primary" | "success" | "warning" | "danger" | "info" | "text";
+  /** 是否为主要按钮（显示在外面），默认 false */
+  main?: boolean;
+  /** 是否显示分割线（下拉菜单中），默认 false */
+  divided?: boolean;
+  /** 是否禁用 */
+  disabled?: boolean | ((row: T) => boolean);
+  /** 是否显示 */
+  visible?: boolean | ((row: T) => boolean);
+  /** 按钮图标（暂未使用，预留） */
+  icon?: string;
+  /** 点击处理函数（也可以使用事件监听方式） */
+  handler?: (row: T) => void;
+  /** 按钮大小 */
+  size?: "large" | "default" | "small";
+}
 
 // 定义列接口
 export interface TableColumnItem<T = any> {
@@ -130,8 +156,8 @@ export interface TableColumnItem<T = any> {
   prop?: string;
   /** 表头显示的文本内容 */
   label?: string;
-  /** 列类型：selection（多选列）、index（序号列）、expand（可展开列） */
-  type?: "selection" | "index" | "expand";
+  /** 列类型：selection（多选列）、index（序号列）、expand（可展开列）、action（操作列） */
+  type?: "selection" | "index" | "expand" | "action";
   /** 列宽度，支持像素(px)或百分比(%) */
   width?: string | number;
   /** 列最小宽度，支持像素(px)或百分比(%) */
@@ -179,6 +205,8 @@ export interface TableColumnItem<T = any> {
   selectable?: (row: T, index: number) => boolean;
   /** 选择列专用：根据行数据的字段名判断是否可选，值为 true 表示不可选 */
   disabledField?: string;
+  /** 操作列配置：按钮列表（仅当 type 为 'action' 时生效） */
+  actions?: TableActionItem<T>[];
   /** 其他自定义属性 */
   [key: string]: any;
 }
@@ -298,6 +326,8 @@ interface Emits {
   ): void;
 }
 
+// ============ 递归列组件 ============
+
 // 递归列组件的 Props
 interface TableColumnProps {
   column: TableColumnItem;
@@ -352,6 +382,152 @@ const TableColumn = {
       // 默认单元格点击事件
       emit("cell-click", { row, column, event });
     };
+
+    // ============ 新增：渲染操作按钮 ============
+    const renderActionButtons = (
+      row: any,
+      actions: TableActionItem[],
+      index: number,
+    ) => {
+      // 过滤出可见的按钮
+      const visibleActions = actions.filter((action) => {
+        if (action.visible === false) return false;
+        if (typeof action.visible === "function") return action.visible(row);
+        return true;
+      });
+
+      // 如果没有按钮，返回空
+      if (visibleActions.length === 0) {
+        return h("span", "--");
+      }
+
+      // 分离主要按钮和次要按钮
+      const mainActions = visibleActions.filter(
+        (action) => action.main === true,
+      );
+      const moreActions = visibleActions.filter(
+        (action) => action.main !== true,
+      );
+
+      const children: VNode[] = [];
+
+      // 渲染主要按钮
+      mainActions.forEach((action, idx) => {
+        const isDisabled =
+          typeof action.disabled === "function"
+            ? action.disabled(row)
+            : action.disabled || false;
+
+        children.push(
+          h(
+            resolveComponent("el-button"),
+            {
+              key: action.name,
+              link: true,
+              type: action.type || "primary",
+              size: action.size || "default",
+              disabled: isDisabled,
+              onClick: () => handleActionClick(action, row, index),
+            },
+            () => action.label,
+          ),
+        );
+
+        // 添加分隔符（除了最后一个）
+        if (idx < mainActions.length - 1 || moreActions.length > 0) {
+          children.push(
+            h(
+              "span",
+              { key: `divider-${action.name}`, class: "action-divider" },
+              "|",
+            ),
+          );
+        }
+      });
+
+      // 如果有更多操作，渲染下拉菜单
+      if (moreActions.length > 0) {
+        const dropdownItems = moreActions.map((action) => {
+          const isDisabled =
+            typeof action.disabled === "function"
+              ? action.disabled(row)
+              : action.disabled || false;
+
+          return h(
+            resolveComponent("el-dropdown-item"),
+            {
+              key: action.name,
+              command: action.name,
+              disabled: isDisabled,
+              divided: action.divided || false,
+            },
+            () => action.label,
+          );
+        });
+
+        children.push(
+          h(
+            resolveComponent("el-dropdown"),
+            {
+              key: "more-actions",
+              onCommand: (command: string) => {
+                const action = visibleActions.find((a) => a.name === command);
+                if (action) handleActionClick(action, row, index);
+              },
+            },
+            {
+              default: () =>
+                h(
+                  resolveComponent("el-button"),
+                  {
+                    link: true,
+                    type: "primary",
+                    size: "default",
+                  },
+                  () => [
+                    h("span", "更多"),
+                    h(
+                      resolveComponent("el-icon"),
+                      { style: { marginLeft: "4px" } },
+                      () => h(resolveComponent("ArrowDown")),
+                    ),
+                  ],
+                ),
+              dropdown: () =>
+                h(
+                  resolveComponent("el-dropdown-menu"),
+                  {},
+                  () => dropdownItems,
+                ),
+            },
+          ),
+        );
+      }
+
+      return h("div", { class: "action-buttons" }, () => children);
+    };
+
+    // 处理操作按钮点击
+    const handleActionClick = (
+      action: TableActionItem,
+      row: any,
+      index: number,
+    ) => {
+      // 如果有 handler，直接调用
+      if (action.handler) {
+        action.handler(row);
+        return;
+      }
+
+      // 否则触发事件，让父组件处理
+      emit("cell-event", {
+        eventName: `action:${action.name}`,
+        row,
+        column: props.column,
+        index,
+      });
+    };
+    // ============ 新增结束 ============
 
     const renderColumn = (column: TableColumnItem): VNode => {
       // 选择列
@@ -412,6 +588,26 @@ const TableColumn = {
           },
         );
       }
+
+      // ============ 新增：操作列 ============
+      if (column.type === "action" && column.actions) {
+        return h(
+          resolveComponent("el-table-column"),
+          {
+            prop: column.prop,
+            label: column.label || "操作",
+            width: column.width || "160",
+            minWidth: column.minWidth,
+            align: column.align || "center",
+            fixed: column.fixed || "right",
+          },
+          {
+            default: (scope: any) =>
+              renderActionButtons(scope.row, column.actions!, scope.$index),
+          },
+        );
+      }
+      // ============ 新增结束 ============
 
       // 普通列或多级表头
       const columnProps: any = {
@@ -526,6 +722,8 @@ const TableColumn = {
     return () => renderColumn(props.column);
   },
 };
+
+// ============ 组件主体 ============
 
 const attrs = useAttrs();
 const slots = useSlots();
@@ -1119,6 +1317,23 @@ defineExpose({
     }
   }
 }
+
+/* ============ 新增：操作按钮样式 ============ */
+.action-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-wrap: wrap;
+
+  .action-divider {
+    color: #dcdfe6;
+    margin: 0 2px;
+    font-size: 12px;
+  }
+
+}
+
 @media (max-width: 768px) {
   .toolbar {
     flex-direction: column;

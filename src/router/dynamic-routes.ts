@@ -3,6 +3,7 @@ import type { Component } from "vue";
 import AdminLayout from "@/layouts/index.vue";
 import type { BackendMenuItem } from "@/types/system/menu-type";
 import { extractAllMenus } from "@/utils/menu-util";
+import { independentRoutes } from "./independent-routes";
 
 // 使用 glob 动态导入所有 Vue 组件
 const modules = import.meta.glob("@/views/**/*.vue");
@@ -170,7 +171,14 @@ export async function addDynamicRoutes(
 ) {
   const dynamicRoutes = transformMenuToRoutes(menuData);
 
+  // 添加动态路由
   dynamicRoutes.forEach((route) => {
+    router.addRoute(route);
+  });
+
+
+   // 批量添加独立路由
+  independentRoutes.forEach((route) => {
     router.addRoute(route);
   });
 
@@ -181,7 +189,6 @@ export async function addDynamicRoutes(
     component: () => import("@/views/404.vue"),
     meta: { title: "页面未找到", requiresAuth: false, hide: true },
   };
-
   router.addRoute(notFoundRoute);
 
   return dynamicRoutes;

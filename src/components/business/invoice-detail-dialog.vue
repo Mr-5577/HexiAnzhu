@@ -1,4 +1,3 @@
-
 <!-- 发票明细 弹窗组件 -->
 <template>
   <base-modal
@@ -7,28 +6,29 @@
     width="1000px"
     :showConfirmButton="false"
     :showCancelButton="false"
+    @confirm="handleConfirm"
     @close="handleClose"
   >
-    <!-- <base-table
-      :columns="tableColumns"
-      :tableData="tableData"
-      :loading="false"
-      :rowKey="'uuid'"
-      :height="'500px'"
-      :pagination="false"
-    >
-    </base-table> -->
-    <editable-table
-      :row-key="'uuid'"
-      :height="'260px'"
-      v-model="tableData"
-      :columns="dynamicColumns"
-      :pagination="false"
-      :highlight-current-row="false"
-      :show-summary="false"
-      :compactEmpty="true"
-    >
-    </editable-table>
+      <base-table
+        :columns="tableColumns"
+        :tableData="tableData"
+        :loading="false"
+        :rowKey="'uuid'"
+        :height="'500px'"
+        :pagination="false"
+      >
+      </base-table>
+      <!-- <editable-table
+        :row-key="'uuid'"
+        :height="'260px'"
+        v-model="tableData"
+        :columns="dynamicColumns"
+        :pagination="false"
+        :highlight-current-row="false"
+        :show-summary="false"
+        :compactEmpty="true"
+      >
+      </editable-table> -->
   </base-modal>
 </template>
 
@@ -42,25 +42,16 @@ import { HConBillInvoiceD } from "@/types/cost/contract-manage/payment-applicati
 
 const props = defineProps<{
   modelValue: boolean;
-  detailList: HConBillInvoiceD[];
+  detailList?: HConBillInvoiceD[];
 }>();
 
 const emit = defineEmits<{
   "update:modelValue": [value: boolean];
-  success: [];
+  success: [data: any[]];
 }>();
 
 const dialogVisible = ref(props.modelValue);
-
-const tableData = computed(() => {
-  if (!props.detailList) return [];
-  return props.detailList.map((item) => {
-    return {
-      ...item,
-      uuid: uuidv4(),
-    };
-  });
-});
+const tableData = ref([]);
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
@@ -134,6 +125,10 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
   },
 ]);
 
+const handleConfirm = () => {
+  emit("success", tableData.value);
+  handleClose();
+};
 const handleClose = () => {
   dialogVisible.value = false;
 };
@@ -142,6 +137,14 @@ watch(
   () => props.modelValue,
   (val) => {
     dialogVisible.value = val;
+    if (val) {
+      tableData.value = props.detailList?.map((item) => {
+        return {
+          ...item,
+          uuid: uuidv4(),
+        };
+      });
+    }
   },
 );
 

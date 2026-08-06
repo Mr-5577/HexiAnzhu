@@ -125,7 +125,7 @@ const handleRefresh = () => {
 // 发起流程
 const handleAdd = () => {
   router.push({
-    path: "/contract/contract-settle/add",
+    path: "/con/contract-settle/add",
     query: {
       conId: props.conId, // 合同ID
     },
@@ -134,7 +134,7 @@ const handleAdd = () => {
 // 编辑
 const handleEdit = async ({ id }) => {
   router.push({
-    path: "/contract/contract-settle/edit",
+    path: "/con/contract-settle/edit",
     query: {
       conId: props.conId, // 合同ID
       settleId: id, // 结算ID

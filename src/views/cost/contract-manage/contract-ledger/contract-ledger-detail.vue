@@ -82,7 +82,7 @@ const menuItems = [
     index: "visaManagement",
     icon: markRaw(Icons.Postcard),
     label: "签证管理",
-    component: () => import("./visa-management/index.vue"),
+    component: () => import("./visa-manage/index.vue"),
   },
   {
     index: "outputDeclaration",

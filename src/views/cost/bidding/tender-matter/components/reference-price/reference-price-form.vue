@@ -388,8 +388,9 @@ const amountConfirm = (amounts: any) => {
   }
 };
 
-const handleAnnexSuccess = (fileList: any) => {
-  console.log("文件上传成功", fileList);
+const handleAnnexSuccess = (file: any) => {
+  console.log("文件上传成功", file);
+  annexFileList.value.push(file);
 };
 
 // 获取事项详情数据（新增时使用）
@@ -513,12 +514,12 @@ const handleSave = async () => {
     ElMessage.error("不含税参考价不能为0");
     return;
   }
-  if (
-    tableData.value.some((item) => !item.amounts || item.amounts.length === 0)
-  ) {
-    ElMessage.error("请为列表中的每一项添加组价明细");
-    return;
-  }
+  // if (
+  //   tableData.value.some((item) => !item.amounts || item.amounts.length === 0)
+  // ) {
+  //   ElMessage.error("请为列表中的每一项添加组价明细");
+  //   return;
+  // }
 
   try {
     submitLoading.value = true;
@@ -574,12 +575,12 @@ const handleSubmit = async () => {
     ElMessage.error("不含税参考价不能为0");
     return;
   }
-  if (
-    tableData.value.some((item) => !item.amounts || item.amounts.length === 0)
-  ) {
-    ElMessage.error("请为列表中的每一项添加组价明细");
-    return;
-  }
+  // if (
+  //   tableData.value.some((item) => !item.amounts || item.amounts.length === 0)
+  // ) {
+  //   ElMessage.error("请为列表中的每一项添加组价明细");
+  //   return;
+  // }
   try {
     submitLoading.value = true;
     const dataList = tableData.value.map((item) => {
@@ -685,7 +686,7 @@ const handleViewProcess = async () => {
       console.error("查看流程失败:", error);
     }
   } else {
-    ElMessage.error("暂无流程信息");
+    ElMessage.warning("暂无流程信息");
   }
 };
 // 返回操作

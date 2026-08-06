@@ -110,7 +110,7 @@ const handleRefresh = () => {
 // 发起流程
 const handleAdd = () => {
   router.push({
-    path: "/contract/output-declaration/add",
+    path: "/con/output-declaration/add",
     query: {
       conId: props.conId, // 合同ID
     },
@@ -119,7 +119,7 @@ const handleAdd = () => {
 // 编辑
 const handleEdit = async ({ id }) => {
   router.push({
-    path: "/contract/output-declaration/edit",
+    path: "/con/output-declaration/edit",
     query: {
       conId: props.conId, // 合同ID
       outputId: id, // 产值ID
