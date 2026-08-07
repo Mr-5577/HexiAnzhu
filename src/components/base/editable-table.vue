@@ -86,6 +86,14 @@
               :clearable="column.clearable !== false"
               :show-all-levels="column.showAllLevels !== false"
               :collapse-tags="column.collapseTags || false"
+              :filterable="
+                column.filterable !== undefined
+                  ? column.filterable
+                  : column.cascaderProps?.filterable || false
+              "
+              :filter-method="
+                column.filterMethod || column.cascaderProps?.filterMethod
+              "
               @change="handleSave(row, column, $index)"
             />
 
