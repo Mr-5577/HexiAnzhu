@@ -384,7 +384,7 @@ const handleViewFlow = () => emit("viewFlow");
         box-shadow: 0 6px 16px rgba(103, 194, 58, 0.35);
 
         .el-icon {
-          transform: translateX(3px);
+          transform: scale(1.15) rotate(-6deg);
         }
       }
     }

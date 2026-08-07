@@ -59,11 +59,19 @@ export const costAllocationApi = {
   saveProjectAlloc: (data: SaveCostAllocationDTO) => {
     return http.post("/cost/projectAlloc/save", data);
   },
-  /** 删除项目成本分摊（主从表） */
+  /**
+   * 删除项目成本分摊（主从表）
+   * @param data - 删除参数
+   * @param data.id - 成本分摊主表ID
+   */
   delProjectAlloc: (data: { id: number }) => {
     return http.formPost("/cost/projectAlloc/del", data);
   },
-  /** 查询项目成本分摊（主从表） */
+  /**
+   * 查询项目成本分摊（主从表）
+   * @param data - 查询参数
+   * @param data.id - 成本分摊主表ID
+   */
   getProjectAlloc: (data: { id: number }) => {
     return http.formPost("/cost/projectAlloc/getList", data);
   },
@@ -109,7 +117,15 @@ export const costAllocationApi = {
       allocExclAmt: number;
     }>;
   }) => {
-  //  return http.post("/cost/subAlloc/getStatus", data);
     return http.post("/cost/subAlloc/getWarn", data);
+  },
+  /**
+   * @name 查询合同动态成本分摊（主从表复合结构）,OA打开成本分摊时调用查询
+   * @param data - 查询参数
+   * @param data.conId - 合同ID
+   * @param data.isWithCost - 是否附带目标成本数据，默认为false
+   */
+  getCostAllocDetail: (data: { conId: number; isWithCost?: boolean }) => {
+    return http.post("/con/main/getAlloc", data);
   },
 };

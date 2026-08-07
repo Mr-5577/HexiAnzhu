@@ -1,48 +1,42 @@
-<!-- 成本分摊 组件 -->
+<!-- 财务分摊 组件 -->
 <template>
   <base-modal
     v-model="dialogVisible"
-    title="成本分摊"
-    width="1500px"
+    title="财务分摊"
+    width="1400px"
     :top="'8vh'"
     :confirm-loading="confirmLoading"
     :confirm-text="'确定'"
     @confirm="handleConfirm"
     @close="handleClose"
   >
-    <CostAllocationDetail
-      ref="costAllocationRef"
+    <FinanceAllocationDetail
+      ref="financeAllocationRef"
       :projId="props.projId"
-      :bizBillId="props.bizBillId"
-      :bizType="props.bizType"
-      :allocAmt="props.allocAmt"
-      :cstMData="props.cstMData"
+      :segId="props.segId"
       :isDialogMode="true"
-    ></CostAllocationDetail>
+      :payWayTable="payWayTable"
+    ></FinanceAllocationDetail>
   </base-modal>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import { ElMessage } from "element-plus";
-import CostAllocationDetail from "./index.vue";
+import FinanceAllocationDetail from "./index.vue";
 
 interface Props {
   modelValue: boolean;
-  projId?: number;
-  bizType?: string | number;
-  bizBillId?: number;
-  allocAmt?: number;
-  cstMData?: any;
+  projId?: number | undefined;
+  segId?: number | undefined;
+  payWayTable?: any[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
   projId: undefined,
-  bizType: undefined,
-  bizBillId: undefined,
-  allocAmt: 0,
-  cstMData: null,
+  segId: undefined,
+  payWayTable: () => [],
 });
 
 // Emits
@@ -50,22 +44,34 @@ const emit = defineEmits<{
   "update:modelValue": [value: boolean];
   select: [data: any[]];
 }>();
-const costAllocationRef = ref(null);
+
 // 弹窗显示状态
 const dialogVisible = ref(props.modelValue);
 // 确认按钮loading
 const confirmLoading = ref(false);
+const financeAllocationRef = ref(null);
 
 const handleConfirm = async () => {
   // 校验列表数据
-  const reslut = costAllocationRef.value?.validateTable();
-  if (!reslut) return;
-  // 获取列转行数据
-  const submitData = await costAllocationRef.value?.getSubmitData();
-  console.log("分摊明细数据，列转行后的数据：", submitData);
-  // 拿到数据抛给父组件进行成本数据保存
-  emit("select", submitData);
-  handleClose();
+  const reslut = financeAllocationRef.value?.validateData();
+  if (reslut) {
+    const data = financeAllocationRef.value?.getData();
+    console.log("校验通过", data);
+    if (data && data.length > 0) {
+      // const detailListArray = data.flatMap((item) => {
+      //   // 判断 detailList 是否存在且为数组
+      //   if (Array.isArray(item.detailList) && item.detailList.length > 0) {
+      //     return item.detailList;
+      //   }
+      //   return []; // 如果没有数据，返回空数组
+      // });
+      emit("select", data);
+      handleClose();
+    } else {
+      emit("select", []);
+      handleClose();
+    }
+  }
 };
 const handleClose = () => {
   dialogVisible.value = false;

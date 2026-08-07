@@ -18,7 +18,7 @@ export const cstProcessApi = {
    * @param params.id 非合同建安立项id
    * @returns
    */
-  getCstProcessDetail: (params: { id: number; isWithBill?: boolean }) => {
+  getCstProcessDetail: (params: { id: number; isWithFlow?: boolean }) => {
     return http.get("/ncon/cstProcess/get", params);
   },
   /**

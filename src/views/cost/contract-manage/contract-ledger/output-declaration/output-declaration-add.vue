@@ -22,11 +22,11 @@ defineOptions({ name: "output-declaration-add" });
 const conId = Number(route.query.conId); // 合同ID
 
 const handleSuccess = () => {
-  router.back();
+  // router.back();
 };
 
 const handleCancel = () => {
-  router.back();
+  // router.back();
 };
 </script>
 

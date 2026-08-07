@@ -282,7 +282,7 @@ export const biddingManageApi = {
    * @param data - 删除参数
    * @param data.billId - 单据ID（必填）
    */
-  getBillInfo: (data: { billId: number }) => {
+  getBillInfo: (data: { billId: number; isWithFlow?: boolean }) => {
     return http.formPost("/bid/bill/getInfo", data);
   },
   /**

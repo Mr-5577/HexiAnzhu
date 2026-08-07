@@ -12,9 +12,11 @@
           报销明细
         </span>
         <div>
+          <!-- <el-button plain type="primary"  @click="handleAddPay">
+            新增
+          </el-button> -->
           <el-button
             type="primary"
-            :loading="submitLoading"
             v-if="!props.isDialogMode"
             @click="handleSubmit"
           >
@@ -33,7 +35,6 @@
         :height="'100%'"
         :border="true"
         :stripe="true"
-        :isExpandAll="true"
       >
         <!-- 展开行：显示明细子表格 -->
         <template #expand="{ row }">
@@ -42,6 +43,7 @@
             <editable-table
               ref="getDedTableRef(row)"
               :row-key="'uuid'"
+              :height="'200px'"
               v-model="row.finaDs"
               :columns="detailColumns"
               :pagination="false"
@@ -50,7 +52,6 @@
               :compactEmpty="true"
               :editable="true"
               :on-save="handleSave"
-              :max-height="'150px'"
             >
               <template #actions="{ row: detailRow, $index }">
                 <el-button
@@ -70,14 +71,31 @@
                 </el-button>
               </template>
             </editable-table>
+            <!-- 明细底部统计 -->
+            <div class="detail-footer">
+              <div class="footer-item total">
+                <span>支付金额</span>
+                <strong>
+                  {{ formatMoney(parseFloat(row.payAmt) || 0) }}
+                </strong>
+              </div>
+              <div class="footer-divider"></div>
+              <div class="footer-item total">
+                <span>支付明细合计</span>
+                <strong>
+                  {{ formatMoney(getDetailTotal(row.finaDs)) }}
+                </strong>
+              </div>
+              <div class="footer-divider"></div>
+              <div
+                class="footer-item diff"
+                :class="getDiffClass(getDiffAmount(row))"
+              >
+                <span>差额</span>
+                <strong>{{ formatMoney(getDiffAmount(row)) }}</strong>
+              </div>
+            </div>
           </div>
-        </template>
-
-        <!-- 差额 -->
-        <template #diffAmount="{ row }">
-          <span :class="getDiffClass(getDiffAmount(row))">
-            {{ formatMoney(getDiffAmount(row)) }}
-          </span>
         </template>
       </base-table>
     </el-card>
@@ -90,7 +108,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { List } from "@element-plus/icons-vue";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { largeScreenApi } from "@/api/sales/large-screen-api";
-import { useRoute, useRouter } from "vue-router";
+import { useRouter } from "vue-router";
 import { v4 as uuidv4 } from "uuid";
 import EditableTable from "@/components/base/editable-table.vue";
 import { EditableColumn } from "@/components/base/editable-table.vue";
@@ -99,8 +117,6 @@ import { goalCostApi } from "@/api/cost/cost-setting/goal-cost-api";
 import { costCategoryApi } from "@/api/cost/master-data/cost-category-api";
 import { buildTree } from "@/utils/tree";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
-import { financeAllocationApi } from "@/api/cost/contract-manage/finance-allocation-api";
-import { feePaymentApi } from "@/api/cost/non-contract-manage/fee-payment-api";
 
 defineOptions({ name: "finance-allocation" });
 
@@ -119,24 +135,9 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const router = useRouter();
-const route = useRoute();
 
-const nconBillId = Number(route.query.nconBillId); // 非合同单据ID
-const lightweightDetail = ref({
-  nconBillId: undefined,
-  bizItemCode: "",
-  bizItemName: "",
-  bizNo: "",
-  bizTitle: "",
-  fee: {
-    id: undefined,
-    nconBillId: undefined,
-    segId: undefined,
-    projId: undefined,
-  },
-});
-
-const submitLoading = ref(false);
+// 项目列表
+const projectOptions = ref([]);
 // 科目列表
 const subjectOptions = shallowRef([]);
 // 组织列表
@@ -153,42 +154,10 @@ const getDedTableRef = (row: any) => {
     }
   };
 };
-// 获取差额样式类（与之前保持一致）
-const getDiffClass = (diff: number): string => {
-  if (diff === 0) return "diff-zero";
-  if (diff > 0) return "diff-positive";
-  return "diff-negative";
-};
-
-// 获取明细合计
-const getDetailTotal = (finaDs: any[]): number => {
-  if (!finaDs || finaDs.length === 0) return 0;
-  return finaDs.reduce((sum, item) => {
-    const amount = parseFloat(item.finaSubAmt) || 0;
-    return sum + amount;
-  }, 0);
-};
-
-// 获取差额（主表金额 - 明细合计）
-const getDiffAmount = (row: any): number => {
-  const mainAmount = parseFloat(row.payAmt) || 0;
-  const detailTotal = getDetailTotal(row.finaDs);
-  return mainAmount - detailTotal;
-};
-
-// 格式化金额（保留两位小数，带千分位）
-const formatMoney = (value: number): string => {
-  if (value === null || value === undefined || isNaN(value)) {
-    return "0.00";
-  }
-  return value.toLocaleString("zh-CN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-};
 
 // 主表列配置
-const mainColumns = computed<TableColumnItem[]>(() => [
+const mainTableData = ref([]);
+const mainColumns: TableColumnItem[] = [
   { type: "expand", width: "50", slot: "expand" },
   { type: "index", label: "序号", width: 60 },
   { prop: "payDesc", label: "摘要", minWidth: 200 },
@@ -197,12 +166,7 @@ const mainColumns = computed<TableColumnItem[]>(() => [
   { prop: "accountName", label: "收款账户名", minWidth: 150 },
   { prop: "bankAccount", label: "收款账号", minWidth: 150 },
   { prop: "payAmt", label: "付款金额", minWidth: 120 },
-  {
-    slot: "diffAmount",
-    label: "差额",
-    minWidth: 120,
-  },
-]);
+];
 
 // 子表格列配置
 const detailColumns = computed<EditableColumn[]>(() => [
@@ -275,7 +239,39 @@ const detailColumns = computed<EditableColumn[]>(() => [
   },
 ]);
 
-const mainTableData = ref([]);
+// 格式化金额（保留两位小数，带千分位）
+const formatMoney = (value: number): string => {
+  if (value === null || value === undefined || isNaN(value)) {
+    return "0.00";
+  }
+  return value.toLocaleString("zh-CN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
+// 获取明细合计
+const getDetailTotal = (finaDs: any[]): number => {
+  if (!finaDs || finaDs.length === 0) return 0;
+  return finaDs.reduce((sum, item) => {
+    const amount = parseFloat(item.finaSubAmt) || 0;
+    return sum + amount;
+  }, 0);
+};
+
+// 获取差额（主表金额 - 明细合计）
+const getDiffAmount = (row: any): number => {
+  const mainAmount = parseFloat(row.payAmt) || 0;
+  const detailTotal = getDetailTotal(row.finaDs);
+  return mainAmount - detailTotal;
+};
+
+// 获取差额样式类
+const getDiffClass = (diff: number): string => {
+  if (diff === 0) return "diff-zero";
+  if (diff > 0) return "diff-positive";
+  return "diff-negative";
+};
 
 // 保存单元格数据
 const handleSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
@@ -284,19 +280,23 @@ const handleSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
 
 // 拆分明细（新增一行）
 const handleSplitDetail = (parentRow: any, detailRow: any, index: number) => {
+  // console.log(parentRow, detailRow, index);
   // 创建新行，复制当前行的数据
   const newDetail = {
     uuid: uuidv4(),
     id: undefined,
-    nconBillId: detailRow.nconBillId || undefined,
-    payWayId: parentRow.payWayId,
+    nconBillId: undefined,
+    payWayId: detailRow.payWayId,
     finaSubDesc: detailRow.finaSubDesc || "",
     finaOrgId: undefined,
     finaSubId: undefined,
     finaSubAmt: 0, // 金额默认为0
-    pmWayId: detailRow.pmWayId,
   };
 
+  // 在当前行后面插入
+  // parentRow.finaDs.splice(index + 1, 0, newDetail);
+  // 再最后面插入
+  // parentRow.finaDs.push(newDetail);
   parentRow.finaDs = [...parentRow.finaDs, newDetail];
 };
 
@@ -307,11 +307,29 @@ const handleDeleteDetail = async (parentRow: any, index: number) => {
     ElMessage.warning("至少保留一行明细，无法删除");
     return;
   }
+  // parentRow.finaDs.splice(index, 1);
   parentRow.finaDs = parentRow.finaDs.filter(
     (_: any, i: number) => i !== index,
   );
+  // ElMessage.success("删除成功");
 };
 
+// 新增主表
+const handleAddPay = () => {
+  // const newRow = {
+  //   id: uuidv4(),
+  //   tenderNo: "",
+  //   tenderName: "",
+  //   finaSubDesc: "",
+  //   companyNames: "",
+  //   bidStartDate: "",
+  //   payAmt: "0.00",
+  //   dutyMan: "",
+  //   finaDs: [],
+  // };
+  // mainTableData.value.push(newRow);
+  // ElMessage.success("新增成功");
+};
 // 校验单条明细是否完整
 const validateDetailRow = (
   detailRow: any,
@@ -377,29 +395,18 @@ const validateData = () => {
   return true;
 };
 // 提交确认支付
-const handleSubmit = async () => {
-  console.log("提交数据:", mainTableData.value);
+const handleSubmit = () => {
   const allValid = validateData();
   if (allValid) {
-    submitLoading.value = true;
-    const detailList = mainTableData.value.flatMap((item) => item.finaDs || []);
-    try {
-      const res = await financeAllocationApi.saveNconAlloc(detailList);
-      if (res.code === 200) {
-        ElMessage.success("保存成功");
-      }
-    } catch (error) {
-    } finally {
-      submitLoading.value = false;
-    }
+    console.log("提交数据:", mainTableData.value);
   }
 };
 
 // 获取业务板块下的费用组织
-const getFinaOrgListBySegId = async (segId: number) => {
-  if (!segId) return;
+const getFinaOrgListBySegId = async () => {
+  if (!props.segId) return;
   try {
-    const res = await dictionaryApi.getFinaOrgList({ segId: segId });
+    const res = await dictionaryApi.getFinaOrgList({ segId: props.segId });
     if (res.code === 200) {
       const list = res.data || [];
       const orgTreeData: any = buildTree(list);
@@ -410,10 +417,10 @@ const getFinaOrgListBySegId = async (segId: number) => {
   }
 };
 // 获取业务板块下的费用科目
-const getFinaSubjectListBySegId = async (segId: number) => {
-  if (!segId) return;
+const getFinaSubjectListBySegId = async () => {
+  if (!props.segId) return;
   try {
-    const res = await dictionaryApi.getFinaSubjectList({ segId: segId });
+    const res = await dictionaryApi.getFinaSubjectList({ segId: props.segId });
     if (res.code === 200) {
       const list = res.data || [];
       const subTreeData: any = buildTree(list);
@@ -423,10 +430,10 @@ const getFinaSubjectListBySegId = async (segId: number) => {
     console.error("获取项目列表失败:", error);
   }
 };
-const processData = (list) => {
-  console.log("处理分摊数据", list);
-  if (list && list.length > 0) {
-    const data = list.map((item) => {
+const processData = () => {
+  console.log("props.payWayTable", props.payWayTable);
+  if (props.payWayTable && props.payWayTable.length > 0) {
+    const data = props.payWayTable.map((item) => {
       // 判断 finaDs 是否有数据
       const hasFinaDs = item?.finaDs && item.finaDs.length > 0;
       let finaDs;
@@ -459,49 +466,94 @@ const processData = (list) => {
     mainTableData.value = data; // 将处理后的数据赋值给 tableData
   }
 };
-// 获取轻亮级的非合同详情
-const getNconDetail = async () => {
-  if (!nconBillId) return;
-  try {
-    const res = await feePaymentApi.getNconInfoLite({ nconBillId });
-    console.log("合同详情", res);
-    if (res.code == 200 && res.data) {
-      const { fee } = res.data;
-      lightweightDetail.value = { ...lightweightDetail.value, ...res.data };
-      await getFinaOrgListBySegId(fee?.segId); // 获取业务板块下的费用组织
-      await getFinaSubjectListBySegId(fee?.segId); // 获取业务板块下的费用科目
-      // 通过传入的合同/非合同单据ID查询财务分摊数据进行分摊
-      getFinanceAllocDetaiByBillId();
-    }
-  } catch (error) {}
-};
-// 查询分摊详情
-const getFinanceAllocDetaiByBillId = async () => {
-  if (!nconBillId) return;
-  try {
-    const res = await financeAllocationApi.getNconAlloc({ nconBillId });
-    console.log("分摊详情", res);
-    if (res.code == 200) {
-      const list = res.data || [];
-      processData(list);
-    }
-  } catch (error) {}
-};
+/**
+ * 从树形数据中过滤出指定ID的节点，并保留其父级路径
+ * 返回的数据保持树形结构
+ */
+const filterTreeByIds = (treeData: any[], targetIds: number[]): any[] => {
+  const targetSet = new Set(targetIds);
 
-onMounted(async () => {
+  function filterNodes(nodes: any[]): any[] {
+    const result: any[] = [];
+
+    for (const node of nodes) {
+      const isTarget = targetSet.has(node.id);
+
+      let filteredChildren: any[] = [];
+      if (node.children && node.children.length > 0) {
+        filteredChildren = filterNodes(node.children);
+      }
+
+      if (isTarget || filteredChildren.length > 0) {
+        const newNode: any = {
+          ...node,
+          children: filteredChildren,
+        };
+        result.push(newNode);
+      }
+    }
+
+    return result;
+  }
+
+  return filterNodes(treeData);
+};
+// 获取生效的目标成本版本
+const getEffectiveCostVersion = async (projId: number) => {
+  try {
+    const res = await costAllocationApi.getProjectCostMEnabled({ projId });
+    if (res.code === 200) {
+      return res.data;
+    }
+    return null;
+  } catch (error) {
+    console.error("获取目标成本版本失败：", error);
+    return null;
+  }
+};
+// 获取科目数据
+const getSubOptions = async () => {
+  if (!props.projId) return;
+  // 先获取当前可用的目标成本版本
+  const data: any = await getEffectiveCostVersion(props.projId);
+  if (!data) {
+    ElMessage.warning("未找到生效的目标成本版本");
+    return [];
+  }
+  // 获取目标成本明细列表
+  const params = {
+    projId: data.projId,
+    costMid: data.id,
+    isHasAlloc: false, // true表示查询动态成本总额
+  };
+  const res = await goalCostApi.getProjectCostDList(params);
+  if (res.code === 200) {
+    const listData = res.data || [];
+    const subIds: any = new Set(listData.map((item: any) => item.subId));
+    // 获取基础成本科目列表
+    const costSubjectsRes = await costCategoryApi.getCostSubjectBase({
+      isWithParent: true,
+    });
+    if (costSubjectsRes.code === 200) {
+      // 构建树形数据
+      const rawTreeData = costSubjectsRes.data || [];
+      const subTreeData: any = buildTree(rawTreeData);
+      // 使用 filterTreeByIds 过滤出包含目标 ID 的树
+      const filteredTreeData = filterTreeByIds(subTreeData, Array.from(subIds));
+      // console.log("过滤后的树形结构：", filteredTreeData);
+      subjectOptions.value = markRaw(filteredTreeData);
+    }
+  }
+};
+onMounted(() => {
+  // getSubOptions();
+  getFinaOrgListBySegId(); // 获取业务板块下的费用组织
+  getFinaSubjectListBySegId(); // 获取业务板块下的费用科目
   // 判断是不是弹窗模式
   if (props.isDialogMode) {
-    if (props?.segId) {
-      getFinaOrgListBySegId(props.segId); // 获取业务板块下的费用组织
-      getFinaSubjectListBySegId(props.segId); // 获取业务板块下的费用科目
-    }
-    if (props?.payWayTable && props?.payWayTable?.length > 0) {
-      const list = props?.payWayTable || [];
-      processData(list);
-    }
+    processData();
   } else {
     console.log("OA模式");
-    await getNconDetail();
   }
 });
 
@@ -585,21 +637,64 @@ defineExpose({
       padding-left: 8px;
       border-left: 3px solid #409eff;
     }
+
+    // 明细底部统计 - 优化版
+    .detail-footer {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 16px;
+      font-size: 16px;
+      padding: 10px 15px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #303133;
+      background: #f5f7fa;
+
+      .footer-item {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+
+        span {
+          color: #909399;
+          font-size: 16px;
+        }
+
+        strong {
+          font-weight: 600;
+          font-size: 16px;
+        }
+
+        &.total strong {
+          color: #303133;
+        }
+
+        &.diff {
+          strong {
+            transition: color 0.2s;
+          }
+
+          &.diff-zero strong {
+            color: #67c23a;
+          }
+
+          &.diff-positive strong {
+            color: #e6a23c;
+          }
+
+          &.diff-negative strong {
+            color: #f56c6c;
+          }
+        }
+      }
+
+      .footer-divider {
+        width: 1px;
+        height: 18px;
+        background: #dcdfe6;
+      }
+    }
   }
-}
-// 差额颜色样式
-.diff-zero {
-  color: #67c23a; // 绿色
-  font-weight: 600;
-}
-
-.diff-positive {
-  color: #e6a23c; // 橙色（正差额）
-  font-weight: 600;
-}
-
-.diff-negative {
-  color: #f56c6c; // 红色（负差额）
-  font-weight: 600;
 }
 </style>

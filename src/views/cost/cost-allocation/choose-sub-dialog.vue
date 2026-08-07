@@ -105,6 +105,7 @@ import { costAllocationApi } from "@/api/cost/contract-manage/cost-allocation-ap
 import { goalCostApi } from "@/api/cost/cost-setting/goal-cost-api";
 import { costCategoryApi } from "@/api/cost/master-data/cost-category-api";
 import { buildTree } from "@/utils/tree";
+import { filterReservedCost, filterTreeByIds } from "./helpers";
 
 // Props
 interface Props {
@@ -125,26 +126,6 @@ const emit = defineEmits<{
   select: [data: any[], detailList: any[]];
 }>();
 
-// ---------- 数据接口定义 ----------
-interface CostDetailItem {
-  isDel: boolean;
-  createId: number;
-  createDate: string;
-  operId: number;
-  operDate: string;
-  id: number;
-  costMid: number;
-  subId: number;
-  prodId: number;
-  busiSegId: number;
-  costAmt: number;
-  costExclAmt: number;
-  allocRule: string;
-  subName: string;
-  prodName: string;
-  busiSegName: string;
-}
-
 // 树节点接口（用于el-tree展示）
 interface TreeNode {
   id: number;
@@ -158,6 +139,7 @@ interface TreeNode {
   busiSegId: number;
   allocRule: string;
   busiSegName?: string;
+  segName?: string;
   allocRuleName?: string;
   remark?: string;
   children?: TreeNode[];
@@ -463,7 +445,7 @@ const getEffectiveCostVersion = async (projId: number) => {
 // 获取目标成本明细列表
 const getGoalCostDetailList = async (projId: number) => {
   if (!projId) {
-    ElMessage.warning("项目ID不能为空");
+    // ElMessage.warning("项目ID不能为空");
     return [];
   }
   treeLoading.value = true;
@@ -518,10 +500,10 @@ const getGoalCostDetailList = async (projId: number) => {
           subTreeData,
           Array.from(subIds),
         );
-        // console.log("过滤后的树形结构：", filteredTreeData);
+        console.log("过滤后的树形结构：", filteredTreeData);
 
-        // 保存树形数据
-        treeData.value = filteredTreeData;
+        // 过滤掉 土地成本和费用类 以及建安类下的预留费用 得到树形数据
+        treeData.value = filterReservedCost(filteredTreeData);
 
         // 构建节点映射
         clearNodeMap();
@@ -541,43 +523,6 @@ const getGoalCostDetailList = async (projId: number) => {
     treeLoading.value = false;
   }
 };
-
-/**
- * 从树形数据中过滤出指定ID的节点，并保留其父级路径
- * 返回的数据保持树形结构
- */
-const filterTreeByIds = (
-  treeData: TreeNode[],
-  targetIds: number[],
-): TreeNode[] => {
-  const targetSet = new Set(targetIds);
-
-  function filterNodes(nodes: TreeNode[]): TreeNode[] {
-    const result: TreeNode[] = [];
-
-    for (const node of nodes) {
-      const isTarget = targetSet.has(node.id);
-
-      let filteredChildren: TreeNode[] = [];
-      if (node.children && node.children.length > 0) {
-        filteredChildren = filterNodes(node.children);
-      }
-
-      if (isTarget || filteredChildren.length > 0) {
-        const newNode: TreeNode = {
-          ...node,
-          children: filteredChildren,
-        };
-        result.push(newNode);
-      }
-    }
-
-    return result;
-  }
-
-  return filterNodes(treeData);
-};
-
 // ---------- 弹窗确认/关闭 ----------
 const handleConfirm = () => {
   if (selectedLeafIds.value.size === 0) {
@@ -644,7 +589,7 @@ const findLeafIds = (subIds: number[]): number[] => {
 const initPage = async () => {
   resetState();
   if (!props.projectId) {
-    ElMessage.warning("项目ID不能为空");
+    // ElMessage.warning("项目ID不能为空");
     return;
   }
   await getGoalCostDetailList(props.projectId);

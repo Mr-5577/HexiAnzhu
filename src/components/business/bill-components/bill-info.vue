@@ -23,7 +23,7 @@
 
     <el-row :gutter="24">
       <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-        <el-form-item label="业务板块" prop="segId" required>
+        <el-form-item label="业务板块" prop="segId">
           <el-input
             v-model="formData.segName"
             disabled

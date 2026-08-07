@@ -138,7 +138,7 @@ const getDemandList = async () => {
       const dataList = res.data || [];
       let list = [];
       dataList.map((item) => {
-        list = list.concat(item.demandList || []);
+        list = list.concat(item.demands || []);
       });
       tableData.value = list;
     }

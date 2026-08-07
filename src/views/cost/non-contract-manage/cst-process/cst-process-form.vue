@@ -106,13 +106,14 @@
 
         <!-- 成本分摊  费用类型所属大类为建安类，并且是编辑/查看时显示 -->
         <CostAllocationCard
-          :visible="isShowCostAllocation"
-          :allocation-status="0"
-          :warning-status="0"
+          :visible="isShowCostAllocation && formData.processAmt > 0"
+          :allocation-status="cstMData.allocStatus"
+          :warning-status="cstMData.allocWarn"
           :bizType="'NCON_PROC'"
           :projId="formData.projId"
           :allocAmt="formData.processAmt"
           :bizBillId="processData.nconBillId"
+          :cstMData="cstMData"
           @selectData="getSelectCostAllocation"
         />
 
@@ -228,9 +229,9 @@ const cstMData = ref({
   bizKeyId: 0,
   allocAmt: "",
   allocExclAmt: "",
-  allocStatus: "",
-  allocWarn: "",
-  detailList: [], // 分摊明细
+  allocStatus: undefined,
+  allocWarn: undefined,
+  allocDs: [], // 分摊明细
 });
 const billData = ref({
   id: undefined,
@@ -315,7 +316,7 @@ const getSelectCostAllocation = (data: any) => {
   cstMData.value.allocExclAmt = data.allocExclAmt;
   cstMData.value.allocStatus = data.allocStatus;
   cstMData.value.allocWarn = data.allocWarn;
-  cstMData.value.detailList = data?.detailList || [];
+  cstMData.value.allocDs = data?.allocDs || [];
 };
 // 获取业务板块列表
 const getSegOptions = async () => {
@@ -406,11 +407,13 @@ const loadDetail = async () => {
   try {
     const res = await cstProcessApi.getCstProcessDetail({
       id: props.cstProcessId,
-      isWithBill: true,
+      isWithFlow: true,
     });
     if (res.code === 200 && res.data) {
-      const { bill, process, flowBase, finaDs, annexList, flowList } = res.data;
+      const { bill, process, flowBase, finaDs, annexList, flowList, cstM } =
+        res.data;
       billData.value = { ...billData.value, ...bill };
+      cstMData.value = { ...cstMData.value, ...cstM }; // 动态成本分摊数据
       processData.value = { ...processData.value, ...process };
       finaDsList.value = finaDs || [];
       flowBaseData.value = { ...flowBaseData.value, ...flowBase };
@@ -457,6 +460,46 @@ const goBack = () => {
   }
   router.go(-1); // 返回上个页面
 };
+const buildSaveParams = () => {
+  let params = {
+    bill: {
+      ...billData.value,
+      id: billData.value.id || undefined,
+      bizTitle: formData.value.bizTitle, // 业务标题
+      bizItemCode: "NCON_PROC", // 业务类型编码, NCON_PROC-非合同立项；NCON_CST-非合同建安支付； NCON_FEE-非合同费用支付
+      segId: formData.value.segId, // 板块ID
+      segName: formData.value.segName, // 板块名称
+      segNo: formData.value.segNo, // 板块编号
+      projId: formData.value.projId, // 项目ID
+      projName: formData.value.projName, // 项目名称
+      compId: formData.value.compId, // 公司ID
+      compName: formData.value.compName, // 公司名称
+    },
+    process: {
+      id: processData.value.id || undefined,
+      bizTitle: formData.value.bizTitle, // 业务标题
+      segId: formData.value.segId, // 板块ID
+      projId: formData.value.projId, // 项目ID
+      processNo: formData.value.processNo, // 事项编号
+      processName: formData.value.processName, // 事项名称
+      processAmt: formData.value.processAmt, // 事项计划金额
+      finaTypeId: formData.value.finaTypeId, // 费用类型
+      remark: formData.value.remark, // 事项说明
+      status: 0,
+      nconBillId: undefined,
+    },
+    annexList: annexFileList.value || [], // 附件列表
+    cstM: null, // 成本分摊数据
+  };
+  if (cstMData.value?.allocDs && cstMData.value.allocDs?.length > 0) {
+    params.cstM = {
+      ...cstMData.value,
+      projId: formData.value.projId,
+      bizType: "NCON_PROC",
+    };
+  }
+  return params;
+};
 // 保存
 const handleSave = async () => {
   console.log("保存表单", formData.value);
@@ -464,35 +507,8 @@ const handleSave = async () => {
   try {
     await formRef.value.validate();
     submitLoading.value = true;
-    const params = {
-      bill: {
-        ...billData.value,
-        id: billData.value.id || undefined,
-        bizTitle: formData.value.bizTitle, // 业务标题
-        bizItemCode: "NCON_PROC", // 业务类型编码, NCON_PROC-非合同立项；NCON_CST-非合同建安支付； NCON_FEE-非合同费用支付
-        segId: formData.value.segId, // 板块ID
-        segName: formData.value.segName, // 板块名称
-        segNo: formData.value.segNo, // 板块编号
-        projId: formData.value.projId, // 项目ID
-        projName: formData.value.projName, // 项目名称
-        compId: formData.value.compId, // 公司ID
-        compName: formData.value.compName, // 公司名称
-      },
-      process: {
-        id: processData.value.id || undefined,
-        bizTitle: formData.value.bizTitle, // 业务标题
-        segId: formData.value.segId, // 板块ID
-        projId: formData.value.projId, // 项目ID
-        processNo: formData.value.processNo, // 事项编号
-        processName: formData.value.processName, // 事项名称
-        processAmt: formData.value.processAmt, // 事项计划金额
-        finaTypeId: formData.value.finaTypeId, // 费用类型
-        remark: formData.value.remark, // 事项说明
-        status: 0,
-        nconBillId: undefined,
-      },
-      annexList: annexFileList.value || [], // 附件列表
-    };
+
+    const params = buildSaveParams();
     const res = await cstProcessApi.saveCstProcess(params);
     if (res.code === 200 && res.data) {
       // res.data返回的是业务ID
@@ -511,35 +527,8 @@ const handleSubmit = async () => {
   try {
     await formRef.value.validate();
     submitLoading.value = true;
-    const params = {
-      bill: {
-        ...billData.value,
-        id: billData.value.id || undefined,
-        bizTitle: formData.value.bizTitle, // 业务标题
-        bizItemCode: "NCON_PROC", // 业务类型编码, NCON_PROC-非合同立项；NCON_CST-非合同建安支付； NCON_FEE-非合同费用支付
-        segId: formData.value.segId, // 板块ID
-        segName: formData.value.segName, // 板块名称
-        segNo: formData.value.segNo, // 板块编号
-        projId: formData.value.projId, // 项目ID
-        projName: formData.value.projName, // 项目名称
-        compId: formData.value.compId, // 公司ID
-        compName: formData.value.compName, // 公司名称
-      },
-      process: {
-        id: processData.value.id || undefined,
-        bizTitle: formData.value.bizTitle, // 业务标题
-        segId: formData.value.segId, // 板块ID
-        projId: formData.value.projId, // 项目ID
-        processNo: formData.value.processNo, // 事项编号
-        processName: formData.value.processName, // 事项名称
-        processAmt: formData.value.processAmt, // 事项计划金额
-        finaTypeId: formData.value.finaTypeId, // 费用类型
-        remark: formData.value.remark, // 事项说明
-        status: processData.value.status || 0,
-        nconBillId: processData.value.nconBillId || undefined,
-      },
-      annexList: annexFileList.value || [], // 附件列表
-    };
+
+    const params = buildSaveParams();
     const submitRes = await cstProcessApi.submitCstProcess(params);
     if (submitRes.code === 200 && submitRes.data) {
       ElMessage.success("提交成功,已发起审批！");

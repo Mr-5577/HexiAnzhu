@@ -24,11 +24,11 @@ const conId = Number(route.query.conId); // 合同ID
 const outputId = Number(route.query.outputId); // 产值ID
 
 const handleSuccess = () => {
-  router.back();
+  // router.back();
 };
 
 const handleCancel = () => {
-  router.back();
+  // router.back();
 };
 </script>
 

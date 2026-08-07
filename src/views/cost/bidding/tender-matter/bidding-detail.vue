@@ -29,14 +29,14 @@
             <el-icon><Flag /></el-icon>
             <span>定标审批</span>
           </el-menu-item>
-          <el-menu-item index="bid-bond-pay">
+          <!-- <el-menu-item index="bid-bond-pay">
             <el-icon><Money /></el-icon>
             <span>投标保证金缴纳登记</span>
           </el-menu-item>
           <el-menu-item index="bid-bond-refund">
             <el-icon><RefreshRight /></el-icon>
             <span>投标保证金退还登记</span>
-          </el-menu-item>
+          </el-menu-item> -->
         </el-menu>
       </el-aside>
 

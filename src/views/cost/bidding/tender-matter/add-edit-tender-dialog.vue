@@ -706,14 +706,14 @@ const handleSubmit = async () => {
       ElMessage.error("请选择明细中的楼栋");
       return;
     }
-    if (tableList.value.some((item) => !item.bidBondAmount)) {
-      ElMessage.error("请填写明细中的投标保证金");
-      return;
-    }
-    if (tableList.value.some((item) => !item.perfBondAmount)) {
-      ElMessage.error("请填写明细中的履约保证金");
-      return;
-    }
+    // if (tableList.value.some((item) => !item.bidBondAmount)) {
+    //   ElMessage.error("请填写明细中的投标保证金");
+    //   return;
+    // }
+    // if (tableList.value.some((item) => !item.perfBondAmount)) {
+    //   ElMessage.error("请填写明细中的履约保证金");
+    //   return;
+    // }
 
     submitLoading.value = true;
     const projIds = Array.from(

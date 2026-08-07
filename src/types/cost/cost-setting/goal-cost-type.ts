@@ -120,6 +120,7 @@ export interface HCstProjectCostD {
   busiSegId: number;
   /** 业务归属名称（前端关联展示用） */
   busiSegName?: string;
+  segName?: string;
   /** 目标成本总额(含税) */
   costAmt: number;
   /** 目标成本总额(不含税) */
@@ -168,6 +169,7 @@ export interface HCstProjectCostDAddEditParams {
   busiSegId?: number;
   /** 业务归属名称 */
   busiSegName?: string;
+  segName?: string;
   /** 目标成本总额(含税) */
   costAmt?: number;
   /** 目标成本总额(不含税) */

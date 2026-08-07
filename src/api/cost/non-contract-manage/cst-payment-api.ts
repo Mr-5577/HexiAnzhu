@@ -17,9 +17,9 @@ export const cstPaymentApi = {
   /**
    * @name 查询单个非合同建安支付
    * @param params.id 非合同建安支付id
-   * @param params.isWithBill 是否关联查询单据
+   * @param params.isWithFlow 是否关联查询单据
    */
-  getCstPaymentDetail: (params: { id: number,isWithBill?:boolean }) => {
+  getCstPaymentDetail: (params: { id: number,isWithFlow?:boolean }) => {
     return http.get("/ncon/cstPayment/get", params);
   },
   // 新增非合同建安支付

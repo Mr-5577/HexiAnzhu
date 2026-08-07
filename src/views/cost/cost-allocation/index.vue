@@ -71,6 +71,7 @@
         :show-summary="false"
         :compact-empty="true"
         :editable="true"
+        :default-expand-level="1"
         :on-save="handleSave"
       >
         <template #actions="{ row }">
@@ -166,6 +167,8 @@ import { allocRuleEnum } from "@/constants/master-data/enums.ts";
 import { costAllocationApi } from "@/api/cost/contract-manage/cost-allocation-api.ts";
 import { getEnumLabel } from "@/utils/enum.ts";
 import { bizTypeEnum } from "@/constants/contract-manage/enums.ts";
+import { buildTree } from "@/utils/tree.ts";
+import { filterTreeByIds } from "./helpers";
 
 interface Props {
   projId?: number; // 项目ID
@@ -176,6 +179,7 @@ interface Props {
   allocAmt?: number; // 分摊金额(含税)
   allocExclAmt?: number; // 分摊金额(不含税)
   isDialogMode?: boolean; // 是否为弹窗模式
+  cstMData?: any; // 弹窗传参
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -186,6 +190,7 @@ const props = withDefaults(defineProps<Props>(), {
   allocAmt: 0,
   allocExclAmt: 0,
   isDialogMode: false, // 页面模式，默认非弹窗模式
+  cstMData: null,
 });
 
 const emit = defineEmits<{
@@ -202,7 +207,6 @@ const isDialogMode = computed(() => {
   return props.isDialogMode;
 });
 
-const billType = ref(0); // 单据类型
 const warningVisible = ref(false); // 预警面板展开状态
 const confirmLoading = ref(false); // 自动分摊加载状态
 const dialogVisible = ref(false); // 选择科目弹窗
@@ -381,7 +385,7 @@ const handleViewAlloc = async () => {
 /**
  * 在原数据上修改，进行汇总，从子级累加到父级
  */
-const summarizeTree = (treeData, productList) => {
+const summarizeTree2 = (treeData, productList) => {
   const productIds = productList.map((item) => item.prodId);
   // 深拷贝数据，避免修改原数据
   const cloneData = JSON.parse(JSON.stringify(treeData));
@@ -487,6 +491,200 @@ const summarizeTree = (treeData, productList) => {
   // 对每个根节点进行汇总
   return cloneData.map((node) => summarize(node));
 };
+/**
+ * 在原数据上修改，进行汇总，从子级累加到父级
+ * 叶子节点：subjectAmt = 各业态金额之和（自动计算）
+ * 父级节点：subjectAmt = 子节点 subjectAmt 之和
+ */
+const summarizeTree = (treeData, productList) => {
+  const productIds = productList.map((item) => item.prodId);
+  // 深拷贝数据，避免修改原数据
+  const cloneData = JSON.parse(JSON.stringify(treeData));
+
+  // 递归汇总
+  function summarize(node) {
+    // 如果是叶子节点
+    if (!node.children || node.children.length === 0) {
+      // 1. 计算各业态金额之和
+      let totalAmt = 0;
+      let totalExclAmt = 0;
+
+      productIds.forEach((id) => {
+        const amt = Number(node[`allocAmt_${id}`]) || 0;
+        const exclAmt = Number(node[`allocExclAmt_${id}`]) || 0;
+        node[`allocAmt_${id}`] = Math.round(amt * 100) / 100;
+        node[`allocExclAmt_${id}`] = Math.round(exclAmt * 100) / 100;
+        totalAmt += amt;
+        totalExclAmt += exclAmt;
+      });
+
+      // 2. 叶子节点的科目金额 = 各业态金额之和（自动计算，覆盖用户输入）
+      node.subjectAmt = Math.round(totalAmt * 100) / 100;
+      node.subjectAmtExcl = Math.round(totalExclAmt * 100) / 100;
+
+      return node;
+    }
+
+    // 1. 先递归处理所有子节点
+    node.children = node.children.map((child) => summarize(child));
+
+    // 2. 重置当前节点的所有汇总字段为 0
+    productIds.forEach((id) => {
+      node[`allocAmt_${id}`] = 0;
+      node[`allocExclAmt_${id}`] = 0;
+      node[`allocWarn_${id}`] = 0;
+    });
+    node.subjectAmt = 0;
+    node.subjectAmtExcl = 0;
+    node.allocWarn = 0;
+
+    // 3. 累加所有子节点的值
+    node.children.forEach((child) => {
+      productIds.forEach((id) => {
+        if (
+          child[`allocAmt_${id}`] !== undefined &&
+          child[`allocAmt_${id}`] !== null
+        ) {
+          node[`allocAmt_${id}`] += Number(child[`allocAmt_${id}`]) || 0;
+        }
+        if (
+          child[`allocExclAmt_${id}`] !== undefined &&
+          child[`allocExclAmt_${id}`] !== null
+        ) {
+          node[`allocExclAmt_${id}`] +=
+            Number(child[`allocExclAmt_${id}`]) || 0;
+        }
+        if (
+          child[`allocWarn_${id}`] !== undefined &&
+          child[`allocWarn_${id}`] !== null
+        ) {
+          node[`allocWarn_${id}`] = Math.max(
+            node[`allocWarn_${id}`] || 0,
+            Number(child[`allocWarn_${id}`]) || 0,
+          );
+        }
+      });
+
+      if (child.subjectAmt !== undefined && child.subjectAmt !== null) {
+        node.subjectAmt += Number(child.subjectAmt) || 0;
+      }
+      if (child.subjectAmtExcl !== undefined && child.subjectAmtExcl !== null) {
+        node.subjectAmtExcl += Number(child.subjectAmtExcl) || 0;
+      }
+      if (child.allocWarn !== undefined && child.allocWarn !== null) {
+        node.allocWarn = Math.max(
+          node.allocWarn || 0,
+          Number(child.allocWarn) || 0,
+        );
+      }
+    });
+
+    // 4. 保留两位小数
+    productIds.forEach((id) => {
+      node[`allocAmt_${id}`] = Math.round(node[`allocAmt_${id}`] * 100) / 100;
+      node[`allocExclAmt_${id}`] =
+        Math.round(node[`allocExclAmt_${id}`] * 100) / 100;
+    });
+    node.subjectAmt = Math.round(node.subjectAmt * 100) / 100;
+    node.subjectAmtExcl = Math.round(node.subjectAmtExcl * 100) / 100;
+
+    return node;
+  }
+
+  return cloneData.map((node) => summarize(node));
+};
+
+/**
+ * 在原数据上修改，进行汇总，从子级累加到父级
+ * 叶子节点：保留用户输入的 subjectAmt 和 subjectAmtExcl（不自动计算）
+ * 父级节点：累加所有子节点的 subjectAmt 和 subjectAmtExcl
+ */
+// const summarizeTree = (treeData, productList) => {
+//   const productIds = productList.map((item) => item.prodId);
+//   // 深拷贝数据，避免修改原数据
+//   const cloneData = JSON.parse(JSON.stringify(treeData));
+
+//   // 递归汇总
+//   function summarize(node) {
+//     // 如果是叶子节点，直接返回（保留用户输入的值）
+//     if (!node.children || node.children.length === 0) {
+//       // 叶子节点：只确保数值格式正确，不覆盖用户输入
+//       node.subjectAmt = Number(node.subjectAmt) || 0;
+//       node.subjectAmtExcl = Number(node.subjectAmtExcl) || 0;
+
+//       // 确保业态金额数值格式正确
+//       productIds.forEach((id) => {
+//         node[`allocAmt_${id}`] = Number(node[`allocAmt_${id}`]) || 0;
+//         node[`allocExclAmt_${id}`] = Number(node[`allocExclAmt_${id}`]) || 0;
+//       });
+
+//       return node;
+//     }
+
+//     // 1. 先递归处理所有子节点
+//     node.children = node.children.map((child) => summarize(child));
+
+//     // 2. 重置当前节点的所有汇总字段为 0（父级节点）
+//     productIds.forEach((id) => {
+//       node[`allocAmt_${id}`] = 0;
+//       node[`allocExclAmt_${id}`] = 0;
+//       node[`allocWarn_${id}`] = 0;
+//     });
+//     node.subjectAmt = 0;
+//     node.subjectAmtExcl = 0;
+//     node.allocWarn = 0;
+
+//     // 3. 累加所有子节点的值（只累加父级节点）
+//     node.children.forEach((child) => {
+//       productIds.forEach((id) => {
+//         // allocAmt_xxx 累加
+//         if (child[`allocAmt_${id}`] !== undefined && child[`allocAmt_${id}`] !== null) {
+//           node[`allocAmt_${id}`] += Number(child[`allocAmt_${id}`]) || 0;
+//         }
+//         // allocExclAmt_xxx 累加
+//         if (child[`allocExclAmt_${id}`] !== undefined && child[`allocExclAmt_${id}`] !== null) {
+//           node[`allocExclAmt_${id}`] += Number(child[`allocExclAmt_${id}`]) || 0;
+//         }
+//         // allocWarn_xxx 取最大值
+//         if (child[`allocWarn_${id}`] !== undefined && child[`allocWarn_${id}`] !== null) {
+//           node[`allocWarn_${id}`] = Math.max(
+//             node[`allocWarn_${id}`] || 0,
+//             Number(child[`allocWarn_${id}`]) || 0,
+//           );
+//         }
+//       });
+
+//       // ====== 关键修改：父级节点的 subjectAmt 和 subjectAmtExcl 从子节点累加 ======
+//       if (child.subjectAmt !== undefined && child.subjectAmt !== null) {
+//         node.subjectAmt += Number(child.subjectAmt) || 0;
+//       }
+//       if (child.subjectAmtExcl !== undefined && child.subjectAmtExcl !== null) {
+//         node.subjectAmtExcl += Number(child.subjectAmtExcl) || 0;
+//       }
+//       // allocWarn 取最大值
+//       if (child.allocWarn !== undefined && child.allocWarn !== null) {
+//         node.allocWarn = Math.max(
+//           node.allocWarn || 0,
+//           Number(child.allocWarn) || 0,
+//         );
+//       }
+//     });
+
+//     // 4. 保留两位小数（父级节点）
+//     productIds.forEach((id) => {
+//       node[`allocAmt_${id}`] = Math.round(node[`allocAmt_${id}`] * 100) / 100;
+//       node[`allocExclAmt_${id}`] = Math.round(node[`allocExclAmt_${id}`] * 100) / 100;
+//     });
+//     node.subjectAmt = Math.round(node.subjectAmt * 100) / 100;
+//     node.subjectAmtExcl = Math.round(node.subjectAmtExcl * 100) / 100;
+
+//     return node;
+//   }
+
+//   // 对每个根节点进行汇总
+//   return cloneData.map((node) => summarize(node));
+// };
+
 /**
  * 1. 获取树形科目数据中的所有叶子节点（最末级科目）
  */
@@ -612,7 +810,7 @@ const mergeTreeWithApiData = (treeData: any[], apiData: any[]) => {
       isLeaf: true,
       // 只有叶子节点才有业务归属和分摊规则
       busiSegId: apiItems[0]?.busiSegId || 0,
-      busiSegName: apiItems[0]?.busiSegName || "",
+      segName: apiItems[0]?.segName || "",
       allocRule: apiItems[0]?.allocRule || "",
       subjectAmt: 0,
       subjectAmtExcl: 0,
@@ -650,7 +848,7 @@ const mergeTreeWithApiData = (treeData: any[], apiData: any[]) => {
           isLeaf: false,
           // 非叶子节点强制设为 undefined
           busiSegId: undefined,
-          busiSegName: undefined,
+          segName: undefined,
           allocRule: undefined,
           subjectAmt: 0,
           subjectAmtExcl: 0,
@@ -686,6 +884,136 @@ const mergeTreeWithApiData = (treeData: any[], apiData: any[]) => {
 };
 
 /**
+ * 2. 核心方法：合并树形科目数据和接口数据，进行行转列
+ * 只有叶子节点才会显示业务归属、分摊规则等字段，并将明细字段回填
+ */
+const mergeTreeWithDetailApiData = (treeData: any[], apiData: any[]) => {
+  // 获取所有叶子节点
+  const leafSubjects = getLeafSubjects(treeData);
+
+  // 提取唯一的业态列表
+  const products = Array.from(
+    new Map(apiData.map((item) => [item.prodId, { ...item }])).values(),
+  );
+
+  // 按 subId 分组接口数据
+  const apiDataBySubId = groupBy(apiData, "subId");
+
+  // 创建叶子节点数据映射
+  const leafDataMap = new Map();
+  for (const subject of leafSubjects) {
+    const apiItems = apiDataBySubId.get(subject.id) || [];
+
+    // 取第一条数据作为公共字段
+    const firstItem = apiItems[0] || {};
+
+    // 聚合该科目下所有业态的明细数据
+    const row: any = {
+      id: subject.id,
+      subId: subject.id,
+      subName: subject.subName,
+      subCode: subject.subCode,
+      fullPath: subject.fullPath || subject.subName,
+      level: subject.subLevel || 1,
+      isLeaf: true,
+      // 只有叶子节点才有业务归属和分摊规则
+      busiSegId: firstItem.busiSegId ?? 0,
+      segName: firstItem.segName ?? "",
+      // allocRuleId: firstItem.allocRuleId || firstItem.allocRule || "",
+      allocRule: firstItem.allocRuleId || firstItem.allocRule || "",
+      allocRuleName: firstItem.allocRuleName ?? "",
+      allocMid: firstItem.allocMid ?? 0,
+      subjectAmt: 0, // 科目金额含税（累加）
+      subjectAmtExcl: 0, // 科目金额不含税（累加）
+      _treeNode: subject,
+    };
+
+    // 初始化业态相关字段，并回填明细数据
+    let totalAmt = 0;
+    let totalExclAmt = 0;
+
+    for (const product of products) {
+      const pid = product.prodId;
+      // 查找当前业态的明细数据
+      const detailItem = apiItems.find((item) => item.prodId === pid);
+
+      const allocAmt = detailItem?.allocAmt ?? 0;
+      const allocExclAmt = detailItem?.allocExclAmt ?? 0;
+
+      // 回填明细数据
+      row[`allocAmt_${pid}`] = allocAmt;
+      row[`allocExclAmt_${pid}`] = allocExclAmt;
+      row[`allocWarn_${pid}`] = detailItem?.allocWarn ?? 0;
+
+      // 累加科目金额
+      totalAmt += allocAmt;
+      totalExclAmt += allocExclAmt;
+    }
+
+    // 设置汇总后的科目金额
+    row.subjectAmt = totalAmt;
+    row.subjectAmtExcl = totalExclAmt;
+
+    leafDataMap.set(subject.id, row);
+  }
+
+  // 构建树形结构：非叶子节点不显示业务归属和分摊规则
+  const buildTree = (nodes: any[]): any[] => {
+    return nodes.map((node) => {
+      const hasChildren = !!node.children?.length;
+
+      if (hasChildren) {
+        // 非叶子节点：只保留结构，不显示业务归属和分摊规则
+        const nonLeafNode: any = {
+          ...node,
+          id: node.id,
+          subId: node.id,
+          subName: node.subName,
+          subCode: node.subCode,
+          level: node.subLevel || 1,
+          hasChildren: true,
+          isLeaf: false,
+          // 非叶子节点强制设为 undefined 或空值
+          busiSegId: undefined,
+          segName: undefined,
+          allocRuleId: undefined,
+          allocRuleName: undefined,
+          allocMid: undefined,
+          allocRule: undefined,
+          subjectAmt: 0,
+          subjectAmtExcl: 0,
+          children: buildTree(node.children),
+        };
+
+        // 初始化业态字段（非叶子节点全部为0）
+        for (const product of products) {
+          const pid = product.prodId;
+          nonLeafNode[`allocAmt_${pid}`] = 0;
+          nonLeafNode[`allocExclAmt_${pid}`] = 0;
+          nonLeafNode[`allocWarn_${pid}`] = 0;
+        }
+
+        return nonLeafNode;
+      }
+
+      // 叶子节点：使用合并后的数据
+      const leafNode = leafDataMap.get(node.id);
+      return {
+        ...node,
+        ...leafNode,
+        children: [],
+      };
+    });
+  };
+
+  return {
+    subjects: leafSubjects,
+    products: products,
+    mergedData: buildTree(treeData),
+  };
+};
+
+/**
  * 3. 合并已有数据到新数据中（保留已填写的金额和配置）
  */
 const mergeExistingData = (newData: any[], oldData: any[]): any[] => {
@@ -700,7 +1028,7 @@ const mergeExistingData = (newData: any[], oldData: any[]): any[] => {
           subjectAmt: node.subjectAmt || 0,
           subjectAmtExcl: node.subjectAmtExcl || 0,
           busiSegId: node.busiSegId,
-          busiSegName: node.busiSegName,
+          segName: node.segName,
           allocRule: node.allocRule,
         };
         // 保存业态金额
@@ -782,7 +1110,7 @@ const generateColumns = (
     {
       prop: "busiSegId",
       label: "业务归属",
-      width: 100,
+      width: 80,
       editable: true,
       editType: "select",
       optionLabelField: "segName",
@@ -796,7 +1124,7 @@ const generateColumns = (
     {
       prop: "allocRule",
       label: "分摊规则",
-      width: 160,
+      width: 120,
       editable: true,
       editType: "select",
       optionLabelField: "label",
@@ -810,7 +1138,7 @@ const generateColumns = (
     {
       prop: "subjectAmt",
       label: "科目金额(含税)",
-      width: 140,
+      width: 120,
       editable: true,
       editType: "number",
       placeholder: " ",
@@ -820,7 +1148,7 @@ const generateColumns = (
     {
       prop: "subjectAmtExcl",
       label: "科目金额(不含税)",
-      width: 140,
+      width: 120,
       editable: true,
       editType: "number",
       placeholder: " ",
@@ -902,7 +1230,7 @@ const convertTreeDataToRows = (treeData: any[], products: any[]): any[] => {
             allocAmt: safeNumber(node[`allocAmt_${pid}`]),
             allocExclAmt: safeNumber(node[`allocExclAmt_${pid}`]),
             busiSegId: node.busiSegId || 0,
-            busiSegName: node.busiSegName || "",
+            segName: node.segName || "",
             allocRule: node.allocRule || "",
             level: node.level,
             fullPath: node.fullPath,
@@ -1168,29 +1496,71 @@ const getParams: any = () => {
  * 初始化页面
  */
 const initPage = async () => {
+  // 获取业务归属列表
   await getBusiSegList();
 
   // 解析参数，OA打开和业务弹窗打开
   pageParams.value = getParams();
 
   if (!pageParams.value.projId) {
-    ElMessage.warning("缺少项目ID参数");
+    // ElMessage.warning("缺少项目ID参数");
     return;
   }
-
-  if (pageParams.value.bizType) {
-    billType.value = pageParams.value.bizType as any;
-  }
-
+  // 获取项目产品类型列表
   await Promise.all([getCostSubjectProjList(), getProductList()]);
 
-  if (pageParams.value.bizBillId) {
-    await loadAllocationData(pageParams.value.bizBillId);
+  // 判断是否弹窗模式，弹窗模式则是从erp系统打开弹窗操作，否则就是OA单独引用分摊页面
+  if (isDialogMode.value) {
+    // 业务弹窗打开处理
+    processPopupData();
+  } else {
+    // OA打开处理
+    if (pageParams.value.bizBillId) {
+      await loadAllocationData(pageParams.value.bizBillId);
+    }
+  }
+};
+// 处理弹窗打开数据回显
+const processPopupData = async () => {
+  // 弹窗模式从本地获取数据
+  if (props.cstMData && props.cstMData?.allocDs?.length > 0) {
+    const detaiList = props.cstMData?.allocDs || [];
+    const subIds: any = new Set(detaiList.map((item: any) => item.subId));
+    console.log("数据:", props.cstMData);
+    // 获取基础成本科目列表
+    const costSubjectsRes = await costCategoryApi.getCostSubjectBase({
+      isWithParent: true,
+    });
+    if (costSubjectsRes.code === 200) {
+      // 构建树形数据
+      const rawTreeData = costSubjectsRes.data || [];
+      const subTreeData: any = buildTree(rawTreeData);
+      console.log("subTreeData:", subTreeData);
+      const treeData = filterTreeByIds(subTreeData, Array.from(subIds));
+      console.log("treeData:", treeData);
+      // 执行数据合并（行转列）
+      const result = mergeTreeWithDetailApiData(treeData, detaiList);
+      currentProducts.value = result.products;
+      console.log("result:", result);
+
+      // 生成动态表头
+      subjectColumns.value = generateColumns(
+        result.products,
+        busiSegOptions.value,
+      );
+      editableSubjectData.value = result.mergedData;
+
+      // 更新树形结构数据，累加子级数据到父级
+      editableSubjectData.value = summarizeTree(
+        editableSubjectData.value,
+        currentProducts.value,
+      );
+    }
   }
 };
 
 /**
- * 加载已保存的分摊数据
+ * 加载OA打开的分摊数据
  */
 const loadAllocationData = async (bizBillId: number | string) => {
   try {
@@ -1240,7 +1610,7 @@ const getSelectData = (treeData: any, goalCostDetailList: any) => {
   // 执行数据合并（行转列）
   const result = mergeTreeWithApiData(treeData, goalCostDetailList);
   currentProducts.value = result.products;
-
+  console.log("currentProducts:", currentProducts.value);
   // 如果有已有数据，进行合并保留
   let finalData = result.mergedData;
   if (hasExistingData && editableSubjectData.value.length) {
@@ -1356,12 +1726,22 @@ const handleSave = async (data: any) => {
   //   "保存编辑:",
   //   summarizeTree(editableSubjectData.value, currentProducts.value),
   // );
-  setTimeout(() => {
-    editableSubjectData.value = summarizeTree(
-      editableSubjectData.value,
-      currentProducts.value,
-    );
-  });
+  // 编辑科目金额含税和科目金额不含税时不计算
+  if (column == "subjectAmt" || column == "subjectAmtExcl") {
+    setTimeout(() => {
+      editableSubjectData.value = summarizeTree2(
+        editableSubjectData.value,
+        currentProducts.value,
+      );
+    });
+  } else {
+    setTimeout(() => {
+      editableSubjectData.value = summarizeTree(
+        editableSubjectData.value,
+        currentProducts.value,
+      );
+    });
+  }
 };
 
 /**
@@ -1505,6 +1885,22 @@ const validateTable = () => {
     ElMessage.error("请输入科目金额");
     return false;
   }
+  // ====== 校验：不含税金额 ≤ 含税金额 ======
+  const invalidTaxItems: string[] = [];
+  leafSubjects.forEach((item: any) => {
+    const subjectAmt = Number(item.subjectAmt) || 0;
+    const subjectAmtExcl = Number(item.subjectAmtExcl) || 0;
+    if (subjectAmtExcl > subjectAmt) {
+      invalidTaxItems.push(item.subName);
+    }
+  });
+  if (invalidTaxItems.length > 0) {
+    ElMessage.error(
+      `科目金额(不含税)不能大于科目金额(含税)：${invalidTaxItems.join("、")}`,
+    );
+    return false;
+  }
+
   // 判断各业态金额是否等于科目金额
   const result = validateLeafNodesStrict(leafSubjects);
   if (!result.valid) {
@@ -1518,6 +1914,52 @@ const validateTable = () => {
   }
   return true;
 };
+const getSubmitData = async () => {
+  const leafSubjects = getLeafSubjects(editableSubjectData.value);
+  const subList = leafSubjects.map((item) => {
+    return {
+      subId: item.id,
+      allocAmt: safeNumber(item.subjectAmt),
+      allocExclAmt: safeNumber(item.subjectAmtExcl),
+    };
+  });
+  const params = {
+    projId: pageParams.value.projId,
+    subAllocList: subList,
+  };
+  const res = await costAllocationApi.getWarnSubAlloc(params);
+  const { totalAllocWarn, statusList = [] } = res.data;
+  let allocStatus = 0; // 分摊状态(0:未分摊,1:已分摊,2:部分分摊)
+  // 已分摊金额为0，未分摊0
+  if (allocatedAmount.value == 0) {
+    allocStatus = 0;
+  } else if (pendingAmount.value > 0) {
+    // 待分摊金额大于0，部分分摊2
+    allocStatus = 2;
+  } else {
+    // 成本金额=已分摊金额，已分摊1
+    allocStatus = 1;
+  }
+  console.log("statusList", editableSubjectData.value, currentProducts.value);
+  const detailList = convertTreeDataToRows(
+    editableSubjectData.value,
+    currentProducts.value,
+  );
+  const newData = detailList.map((item) => {
+    const statusInfo = statusList.find((i) => i.subId === item.subId);
+    return {
+      ...item,
+      allocWarn: statusInfo?.allocWarn || 0,
+    };
+  });
+  return {
+    allocAmt: allocatedAmount.value, // 分摊金额(含税)
+    allocExclAmt: allocExclAmtTotal.value, // 分摊金额(不含税)
+    allocStatus: allocStatus, // 分摊状态(0:未分摊,1:已分摊,2:部分分摊)
+    allocWarn: totalAllocWarn, // 分摊预警
+    allocDs: newData, // 分摊明细列表
+  };
+};
 defineExpose({
   // 分摊列表基础数据，树形数据结构数据
   getData: () => editableSubjectData.value,
@@ -1530,51 +1972,7 @@ defineExpose({
     return leafSubjects;
   },
   // 获取分摊的明细列表，列转行过后的数据
-  getSubmitData: async () => {
-    const leafSubjects = getLeafSubjects(editableSubjectData.value);
-    const subList = leafSubjects.map((item) => {
-      return {
-        subId: item.id,
-        allocAmt: safeNumber(item.subjectAmt),
-        allocExclAmt: safeNumber(item.subjectAmtExcl),
-      };
-    });
-    const params = {
-      projId: pageParams.value.projId,
-      subAllocList: subList,
-    };
-    const res = await costAllocationApi.getWarnSubAlloc(params);
-    const { totalAllocWarn, statusList = [] } = res.data;
-    let allocStatus = 0; // 分摊状态(0:未分摊,1:已分摊,2:部分分摊)
-    // 已分摊金额为0，未分摊0
-    if (allocatedAmount.value == 0) {
-      allocStatus = 0;
-    } else if (pendingAmount.value > 0) {
-      // 待分摊金额大于0，部分分摊2
-      allocStatus = 2;
-    } else {
-      // 成本金额=已分摊金额，已分摊1
-      allocStatus = 1;
-    }
-    const detailList = convertTreeDataToRows(
-      editableSubjectData.value,
-      currentProducts.value,
-    );
-    const newData = detailList.map((item) => {
-      const statusInfo = statusList.find((i) => i.subId === item.subId);
-      return {
-        ...item,
-        allocWarn: statusInfo?.allocWarn || 0,
-      };
-    });
-    return {
-      allocAmt: allocatedAmount.value, // 分摊金额(含税)
-      allocExclAmt: allocExclAmtTotal.value, // 分摊金额(不含税)
-      allocStatus: allocStatus, // 分摊状态(0:未分摊,1:已分摊,2:部分分摊)
-      allocWarn: totalAllocWarn, // 分摊预警
-      detailList: newData, // 分摊明细列表
-    };
-  },
+  getSubmitData: getSubmitData,
   // 校验
   validateTable,
 });

@@ -4,13 +4,25 @@
     <div class="section-title">成本分摊</div>
     <el-row :gutter="24">
       <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
+        <!-- 分摊状态(0:未分摊,1:已分摊,2:部分分摊) -->
         <el-form-item label="分摊状态：" label-width="90px">
-          {{ allocationStatus }}
+          <el-tag
+            size="small"
+            :type="getEnumType(allocStatusEnum, props.allocationStatus || 0)"
+          >
+            {{ getEnumLabel(allocStatusEnum, props.allocationStatus || 0) }}
+          </el-tag>
         </el-form-item>
       </el-col>
       <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
+        <!-- 预警状态(0:红色预警,1:黄色预警,2:绿色预警) -->
         <el-form-item label="预警状态：" label-width="90px">
-          {{ warningStatus }}
+          <el-tag
+            size="small"
+            :type="getEnumType(allocWarnEnum, props.warningStatus || 0)"
+          >
+            {{ getEnumLabel(allocWarnEnum, props.warningStatus || 0) }}
+          </el-tag>
         </el-form-item>
       </el-col>
       <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
@@ -27,6 +39,7 @@
       :bizBillId="props.bizBillId"
       :bizType="props.bizType"
       :allocAmt="props.allocAmt"
+      :cstMData="props.cstMData"
       @select="getData"
     />
   </div>
@@ -36,6 +49,11 @@
 import { ref, computed, toRefs } from "vue";
 import CostAllocationDetailDialog from "./cost-allocation-detail-dialog.vue";
 import { ElMessage } from "element-plus";
+import {
+  allocStatusEnum,
+  allocWarnEnum,
+} from "@/constants/contract-manage/enums.ts";
+import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
 
 defineOptions({ name: "CostAllocationCard" });
 
@@ -47,13 +65,15 @@ interface Props {
   /** 预警状态 */
   warningStatus?: number;
   /** 项目ID */
-  projId: number;
+  projId: number | undefined;
   /** 业务单据ID */
-  bizBillId?: number;
+  bizBillId?: number | undefined;
   /** 业务类型 */
   bizType?: string;
   /** 成本金额 */
   allocAmt?: number;
+  /** 成本分摊数据 */
+  cstMData?: any;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -64,6 +84,7 @@ const props = withDefaults(defineProps<Props>(), {
   bizBillId: undefined,
   bizType: undefined,
   allocAmt: 0,
+  cstMData: null,
 });
 
 const emit = defineEmits<{
@@ -87,16 +108,6 @@ const handleDetail = () => {
   // 触发外部事件，让父组件自行处理
   emit("detail-click");
 };
-
-// 暴露方法给父组件
-defineExpose({
-  openDetailDialog: () => {
-    dialogVisible.value = true;
-  },
-  closeDetailDialog: () => {
-    dialogVisible.value = false;
-  },
-});
 </script>
 
 <style scoped lang="scss">

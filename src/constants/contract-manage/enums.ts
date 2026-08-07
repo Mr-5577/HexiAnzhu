@@ -30,11 +30,17 @@ export const ManageTypeEnum = [
   { value: 2, label: "外部" },
 ] as const;
 
+/** 请款类型 */
+export const ReqTypeEnum = [
+  { value: 0, label: "正常请款" },
+  { value: 1, label: "来票冲账" },
+] as const;
+
 /** 付款方式 */
 export const PayTypeEnum = [
   { value: 1, label: "按进度确认" },
   { value: 2, label: "按材料到货确认" },
- // { value: 3, label: "按节点确认" },
+  // { value: 3, label: "按节点确认" },
 ] as const;
 
 /** 印章类型 */
@@ -93,21 +99,21 @@ export const bizTypeEnum = [
   { label: "非合同", value: "NCON" },
   { label: "非合同立项", value: "NCON_PROC" },
   { label: "非合同请款", value: "NCON_CST" },
-]
+];
 
 /** 分摊状态选项 */
 export const allocStatusEnum = [
   { label: "未分摊", value: 0, type: "info" },
   { label: "已分摊", value: 1, type: "success" },
   { label: "部分分摊", value: 2, type: "warning" },
-] as const;
+]
 
 /** 分摊预警选项 */
 export const allocWarnEnum = [
   { label: "红色预警", value: 0, type: "danger" },
   { label: "黄色预警", value: 1, type: "warning" }, // 超95%
   { label: "绿色预警", value: 2, type: "success" },
-] as const;
+]
 
 /**
  * @name 成本合同相关类型枚举

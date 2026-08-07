@@ -1196,7 +1196,7 @@ defineExpose({
 }
 .table-wrapper {
   flex: 1;
-  min-height: 180px;
+  min-height: 150px;
   :deep(.el-table) {
     .el-table__header-wrapper {
       background-color: #f8f8f9 !important;

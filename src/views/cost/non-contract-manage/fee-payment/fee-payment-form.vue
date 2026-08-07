@@ -2,7 +2,7 @@
 <template>
   <div class="basic-form-content">
     <BillHeader
-      :title="'无合同费用支付审批'"
+      :title="'费用报销审批'"
       :contract-no="billData.bizNo || ''"
       :submitter="formData.userName || ''"
       :submit-time="formData.createDate || ''"
@@ -212,6 +212,14 @@
             >
               <template #actionBar>
                 <div class="actionBar-buttons">
+                  <el-button
+                    type="primary"
+                    size="small"
+                    :disabled="payWayTable.length == 0"
+                    @click="handleFinanceAlloc"
+                  >
+                    财务分摊
+                  </el-button>
                   <el-button type="primary" size="small" @click="addPayWay">
                     新增支付方式
                   </el-button>
@@ -379,6 +387,15 @@
       @success="handleInvoiceDetailSuccess"
     />
 
+    <!-- 财务分摊 -->
+    <FinanceAllocationDialog
+      ref="financeAllocationDialogRef"
+      v-model="financeAllocVisible"
+      :payWayTable="payWayTable"
+      :segId="formData.segId"
+      :projId="formData.projId"
+      @select="getFinaList"
+    ></FinanceAllocationDialog>
   </div>
 </template>
 
@@ -411,6 +428,7 @@ import { buildFileUrl } from "@/utils/file-path-util";
 import { buildTree } from "@/utils/tree";
 import BillHeader from "@/components/business/bill-components/bill-header.vue";
 import BillInfo from "@/components/business/bill-components/bill-info.vue";
+import FinanceAllocationDialog from "@/views/cost/finance-allocation/finance-allocation-dialog.vue";
 
 defineOptions({ name: "fee-payment-form" });
 
@@ -471,6 +489,7 @@ const flowListData = ref({
 
 // 成本分摊相关
 const costAllocationDialogVisible = ref(false);
+const financeAllocVisible = ref(false); // 财务分摊弹窗
 
 const initFormData = () => ({
   id: undefined,
@@ -1268,6 +1287,21 @@ const payWayColumns = computed<EditableColumn[]>(() => [
   },
 ]);
 
+const getFinaList = (data) => {
+  console.log("获取的财务分摊数据", data);
+  payWayTable.value = data || [];
+};
+const handleFinanceAlloc = () => {
+  if (!formData.value.segId) {
+    ElMessage.error("请先选择项目");
+    return;
+  }
+  if (payWayTable.value.length > 0) {
+    financeAllocVisible.value = true;
+  } else {
+    ElMessage.error("请先添加付款方式");
+  }
+};
 const addPayWay = () => {
   const newRowData = {
     uuid: uuidv4(),
@@ -1343,7 +1377,7 @@ const loadDetail = async () => {
   if (!props.feePaymentId) return;
   const res = await feePaymentApi.geFeePaymentDetail({
     id: props.feePaymentId,
-    isWithBill: true,
+    isWithFlow: true,
   });
   if (res.code === 200 && res.data) {
     backfillData(res.data);
@@ -1479,7 +1513,7 @@ const buildSaveParams = () => {
         annexId: item.annexId,
         invoiceDs: item.invoiceDs || [],
 
-        // ✅ 补充查验相关字段
+        // 补充查验相关字段
         isValid: item.isValid ?? false,
         validateMsg: item.validateMsg || "",
         ocrRes: item.ocrRes || "",
@@ -1507,6 +1541,7 @@ const buildSaveParams = () => {
         bankName: item.bankName || "",
         accountName: item.accountName || "",
         bankAccount: item.bankAccount || "",
+        finaDs: item?.finaDs || [],
       }));
 
   return {
@@ -1591,7 +1626,34 @@ const validateData = () => {
 
   return true;
 };
-
+// 获取差额（主表金额 - 明细合计）
+const getDiffAmount = (row: any): number => {
+  const mainAmount = parseFloat(row.payAmt) || 0;
+  if (!row.finaDs || row.finaDs.length === 0) return 0; // 当没有分摊明细数据时，跳过校验
+  const detailTotal = getDetailTotal(row.finaDs);
+  return mainAmount - detailTotal;
+};
+// 获取明细合计
+const getDetailTotal = (finaDs: any[]): number => {
+  if (!finaDs || finaDs.length === 0) return 0;
+  return finaDs.reduce((sum, item) => {
+    const amount = parseFloat(item.finaSubAmt) || 0;
+    return sum + amount;
+  }, 0);
+};
+// 校验支付方式明细金额是否等于主数据金额
+const validatePayDetail = () => {
+  for (const row of payWayTable.value) {
+    const diff = getDiffAmount(row);
+    if (diff !== 0) {
+      ElMessage.warning(
+        `报销事项 "${row.payDesc || ""}" 存在差额，请检查明细金额`,
+      );
+      return false; // ✅ 立即终止
+    }
+  }
+  return true;
+};
 // ==================== 返回操作 ====================
 const goBack = () => {
   if (isAdd.value) {
@@ -1611,6 +1673,9 @@ const handleSave = async () => {
       return;
     }
     if (!validateData()) {
+      return;
+    }
+    if (!validatePayDetail()) {
       return;
     }
     submitLoading.value = true;
@@ -1635,6 +1700,9 @@ const handleSubmit = async () => {
       return;
     }
     if (!validateData()) {
+      return;
+    }
+    if (!validatePayDetail()) {
       return;
     }
     submitLoading.value = true;

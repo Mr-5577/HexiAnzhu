@@ -2,7 +2,7 @@
 <template>
   <div class="basic-form-content">
     <BillHeader
-      :title="'无合同支付审批'"
+      :title="'非合同请款审批'"
       :contract-no="billData.bizNo || ''"
       :submitter="formData.userName || ''"
       :submit-time="formData.createDate || ''"
@@ -681,25 +681,6 @@ const isShowCostAllocation = computed(() => {
   // 如果大类存在且 finaTypeCode === '03'（建安类），则显示成本分摊
   return !!(largeData && largeData.finaTypeCode === "03");
 });
-
-// 成本分摊状态
-const costAllocationStatus = computed(() => {
-  if (!costAllocationData.value) return "未分摊";
-  // 根据实际数据返回状态
-  return costAllocationData.value.status === 1 ? "已分摊" : "未分摊";
-});
-
-// 成本分摊预警状态
-const costAllocationWarnStatus = computed(() => {
-  if (!costAllocationData.value) return "正常";
-  // 根据实际数据返回预警状态
-  return costAllocationData.value.warnStatus === 1 ? "预警" : "正常";
-});
-
-// 分摊详情
-const handleAllocationDetail = () => {
-  costAllocationDialogVisible.value = true;
-};
 
 const { getDictList, getDictTree, loadDicts } = useDict(
   [dictMapping.payType, dictMapping.dedType],
@@ -1526,131 +1507,7 @@ const handlePayWaySave = async (data) => {
 };
 
 const projectOptions = ref([]);
-const financeTable = ref([]);
-const financeColumns = computed<EditableColumn[]>(() => [
-  { type: "index", label: "序号", width: 60, editable: false },
-  {
-    prop: "projId",
-    label: "项目",
-    editable: true,
-    editType: "select",
-    showOverflowTooltip: false,
-    optionLabelField: "projName",
-    optionValueField: "id",
-    options: projectOptions.value,
-    placeholder: "请选择项目",
-  },
-  {
-    prop: "accProjId",
-    label: "建筑核算项目",
-    editable: true,
-    editType: "select",
-    showOverflowTooltip: false,
-    optionLabelField: "label",
-    optionValueField: "value",
-    options: [
-      { label: "核算项目1", value: 1 },
-      { label: "核算项目2", value: 2 },
-    ],
-  },
-  {
-    prop: "subId",
-    label: "科目",
-    editable: true,
-    editType: "select",
-    showOverflowTooltip: false,
-    optionLabelField: "subName",
-    optionValueField: "id",
-    getOptions: (row: any) => row.subOptions || [],
-    placeholder: "请选择项目后选择科目",
-  },
-  {
-    prop: "subAmt",
-    label: "金额",
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "subDesc",
-    label: "摘要",
-    editable: true,
-    editType: "input",
-    showOverflowTooltip: false,
-  },
-  {
-    label: "操作",
-    slot: "actions",
-    fixed: "right",
-  },
-]);
-
-const addFinance = () => {
-  const newRowData = {
-    uuid: uuidv4(),
-    id: undefined,
-    srcType: "NCON_CST",
-    nconBillId: undefined,
-    projId: undefined,
-    accProjId: undefined,
-    subId: undefined,
-    subOptions: [],
-    subAmt: 0,
-    subDesc: "",
-  };
-  financeTable.value = [...financeTable.value, newRowData];
-};
-
-const deleteFinance = (row) => {
-  financeTable.value = financeTable.value.filter(
-    (item) => item.uuid !== row.uuid,
-  );
-};
-
-const updateFinanceRow = (rowIndex: number, data: any) => {
-  const newData = [...financeTable.value];
-  newData[rowIndex] = { ...financeTable.value[rowIndex], ...data };
-  financeTable.value = newData;
-};
-
-const handleFinanceSave = async (data: any) => {
-  const { row, column, newValue, oldValue, rowIndex } = data;
-  if (newValue === oldValue) return;
-  if (column === "projId") {
-    if (!newValue) {
-      updateFinanceRow(rowIndex, {
-        projId: undefined,
-        subOptions: [],
-        subId: undefined,
-      });
-    } else {
-      updateFinanceRow(rowIndex, {
-        projId: newValue,
-        subOptions: [],
-        subId: undefined,
-      });
-      getSubOptionByProjId(newValue, rowIndex);
-    }
-    return;
-  }
-  updateFinanceRow(rowIndex, { [column]: newValue });
-};
-
-const getSubOptionByProjId = async (projId: number, rowIndex: number) => {
-  try {
-    const res = await costCategoryApi.getCostSubjectProjList({
-      projId,
-      withDetail: true,
-    });
-    if (res.code === 200) {
-      updateFinanceRow(rowIndex, {
-        subOptions: res.data || [],
-        subId: undefined,
-      });
-    }
-  } catch (error) {}
-};
-
+// 获取项目数据
 const getProjectOptions = async () => {
   try {
     const res = await projectAreaApi.getSegMguProjList();
@@ -1661,7 +1518,7 @@ const getProjectOptions = async () => {
     console.error("获取项目列表失败:", error);
   }
 };
-
+// 获取业务板块数据
 const getSegOptions = async () => {
   try {
     const res = await dictionaryApi.getsegmentList({ isAuth: true });
@@ -1677,19 +1534,7 @@ const getSegOptions = async () => {
 const loadCostAllocation = async () => {
   if (!paymentData.value.id) return;
   try {
-    // 假设有一个获取成本分摊数据的接口
-    // const res = await costAllocationApi.getCostAllocationByBizId({
-    //   bizId: paymentData.value.id,
-    //   bizType: 6
-    // });
-    // if (res.code === 200 && res.data) {
-    //   costAllocationData.value = res.data;
-    // }
-    // 如果没有接口，可以模拟数据
-    costAllocationData.value = {
-      status: 1,
-      warnStatus: 0,
-    };
+    // 获取成本分摊数据的接口
   } catch (error) {
     console.error("获取成本分摊数据失败:", error);
   }
@@ -1699,7 +1544,7 @@ const loadDetail = async () => {
   if (!props.cstPaymentId) return;
   const res = await cstPaymentApi.getCstPaymentDetail({
     id: props.cstPaymentId,
-    isWithBill: true,
+    isWithFlow: true,
   });
   if (res.code === 200 && res.data) {
     backfillData(res.data);
@@ -1710,7 +1555,6 @@ const backfillData = async (data) => {
   const {
     payment,
     payWays,
-    payAllocs,
     invoiceMs,
     deds,
     costAllocs,
@@ -1775,7 +1619,6 @@ const backfillData = async (data) => {
     items.map((item) => ({ ...item, uuid: uuidv4() }));
 
   payWayTable.value = mapWithUuid(payWays);
-  financeTable.value = mapWithUuid(payAllocs);
   dedTable.value = mapWithUuid(deds);
 
   // 回填成本分摊数据
@@ -1891,25 +1734,14 @@ const buildSaveParams = () => {
         bankAccount: item.bankAccount || "",
       }));
 
-  const payAllocs = financeTable.value.map((item) => ({
-    id: item.id,
-    srcType: item.srcType,
-    nconBillId: item.nconBillId,
-    projId: item.projId,
-    accProjId: item.accProjId,
-    subId: item.subId,
-    subAmt: item.subAmt || 0,
-    subDesc: item.subDesc || "",
-  }));
-
   return {
     bill: bill,
     payment: payment,
     deds: deds.length > 0 ? deds : [],
     invoiceMs: invoiceMs.length > 0 ? invoiceMs : [],
     payWays: payWays.length > 0 ? payWays : [],
-    payAllocs: payAllocs.length > 0 ? payAllocs : [],
-    costAllocs: costAllocationData.value ? [costAllocationData.value] : [],
+    finaDs: [], // 财务分摊
+    costAllocs: [], // 成本分摊
     annexList: annexFileList.value || [],
   };
 };
@@ -2177,8 +2009,6 @@ const initDictData = async () => {
   dedTypeOptions.value = getDictList(dictMapping.dedType);
 };
 
-// ==================== 核心计算逻辑 ====================
-
 // 1. 实际请款金额 = 本次请款金额 + 扣款金额汇总
 const actualReqAmt = computed(() => {
   const reqAmt = formData.value.reqAmt || 0;
@@ -2216,8 +2046,6 @@ const totalPayAmt = computed(() => {
 const showDeductionAndPayWay = computed(() => {
   return formData.value.reqType !== 1; // 1 为来票冲账
 });
-
-// ==================== 自动更新表单字段 ====================
 
 // 监听实际请款金额变化，更新表单字段
 watch(

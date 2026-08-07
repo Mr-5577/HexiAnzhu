@@ -39,7 +39,7 @@
         {{ tenderData?.bidEndDate || "-" }}
       </el-descriptions-item>
       <el-descriptions-item label="招采责任人">
-        {{ tenderData?.createName || "-" }}
+        {{ tenderData?.dutyManName || "-" }}
       </el-descriptions-item>
     </el-descriptions>
 

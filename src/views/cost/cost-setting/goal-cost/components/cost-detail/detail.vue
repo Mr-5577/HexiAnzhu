@@ -468,7 +468,7 @@ const buildTreeWithProducts = (nodes: any[]): any[] => {
       subLevel: node.subLevel || 0,
       isLeaf: isLeaf,
       busiSegId: isLeaf ? node.busiSegId : null,
-      busiSegName: isLeaf ? node.busiSegName : "",
+      segName: isLeaf ? node.segName : "",
       allocRule: isLeaf ? node.allocRule : null,
       allocRuleName: isLeaf ? node.allocRuleName : "",
       totalCostAmt: 0,
@@ -538,14 +538,14 @@ const handleSave = async (data: any) => {
         tableData.value = updateTreeNode(tableData.value, row.uuid, (node) => ({
           ...node,
           busiSegId: newValue,
-          busiSegName: targetData.segName,
+          segName: targetData.segName,
         }));
       }
     } else {
       tableData.value = updateTreeNode(tableData.value, row.uuid, (node) => ({
         ...node,
         busiSegId: null,
-        busiSegName: "",
+        segName: "",
       }));
     }
     // 重置叶子节点缓存版本
@@ -592,21 +592,21 @@ const validateTable = () => {
     return false;
   }
 
-  for (let i = 0; i < leafNodes.length; i++) {
-    const item = leafNodes[i];
-    let hasValidAmount = false;
+  // for (let i = 0; i < leafNodes.length; i++) {
+  //   const item = leafNodes[i];
+  //   let hasValidAmount = false;
 
     // 检查业务归属是否已选择
-    if (!item.busiSegId) {
-      ElMessage.error(`科目 "${item.subName}"：请选择业务归属`);
-      return false;
-    }
+    // if (!item.busiSegId) {
+    //   ElMessage.error(`科目 "${item.subName}"：请选择业务归属`);
+    //   return false;
+    // }
 
-    // 检查分摊规则是否已选择
-    if (!item.allocRule) {
-      ElMessage.error(`科目 "${item.subName}"：请选择分摊规则`);
-      return false;
-    }
+    // // 检查分摊规则是否已选择
+    // if (!item.allocRule) {
+    //   ElMessage.error(`科目 "${item.subName}"：请选择分摊规则`);
+    //   return false;
+    // }
 
     // 检查所有业态的金额
     // productOptions.value.forEach((product) => {
@@ -622,7 +622,7 @@ const validateTable = () => {
     //   ElMessage.error(`科目 "${item.subName}"：至少需要填写一个业态的金额`);
     //   return false;
     // }
-  }
+  // }
   return true;
 };
 
@@ -646,7 +646,7 @@ const transformDataForSave = () => {
         prodId: product.id,
         prodName: product.prodName,
         busiSegId: row.busiSegId,
-        busiSegName: row.busiSegName,
+        segName: row.segName,
         costAmt: costAmt || 0,
         costExclAmt: costExclAmt || 0,
         allocRule: row.allocRule,
@@ -761,7 +761,7 @@ const fillDetailDataToTable = (detailData: any[]) => {
           const firstDetail = detailData.find((d) => d.subId === node.subId);
           if (firstDetail) {
             node.busiSegId = firstDetail.busiSegId;
-            node.busiSegName = firstDetail.busiSegName || "";
+            node.segName = firstDetail.segName || "";
             node.allocRule = firstDetail.allocRule;
             const rule = allocRuleEnum.find(
               (r) => r.value === firstDetail.allocRule,
