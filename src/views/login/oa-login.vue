@@ -35,21 +35,6 @@ let isProcessing = false;
 // 组件是否已卸载
 let isUnmounted = false;
 
-// 业务类型与页面路径映射
-const BIZ_CODE_ROUTE_MAP: Record<string, string> = {
-  // 成本合同相关
-  CST_CON_MAIN: "/cost/contract/approval", // 合同审批
-  CST_CON_ADD: "/cost/contract/supplement", // 补充合同审批
-  CST_CON_ORD: "/cost/contract/order", // 订单合同
-  CST_CON_BILL: "/cost/contract/purchase", // 采购订单
-  CST_CON_BG: "/cost/contract/change", // 合同变更
-  CST_CON_QZ: "/cost/contract/visa", // 合同签证
-  CST_CON_PROD: "/cost/contract/production", // 合同产值
-  CST_CON_PRE_SETTLE: "/cost/contract/pre-settle", // 合同预结算
-  CST_CON_SETTLE: "/cost/contract/settle", // 合同结算
-  CST_NCON: "/cost/contract/non-contract", // 非合同
-};
-
 // 构建路由路径
 const buildRoutePath = (
   basePath: string,
@@ -62,6 +47,23 @@ const buildRoutePath = (
     }
   });
   return query.toString() ? `${basePath}?${query.toString()}` : basePath;
+};
+
+// COST 子业务路径映射（subBizCode = COST 时生效）
+const COST_ROUTE: Record<string, string> = {
+  CON_MAIN: "approval",
+  CON_ADD: "supplement",
+  CON_BG: "change",
+  CON_QZ: "visa",
+  CON_PRE_SETTLE: "pre-settle",
+  CON_SETTLE: "settle",
+};
+
+// FINA 子业务路径映射（subBizCode = FINA 时生效）
+const FINA_ROUTE: Record<string, string> = {
+  NCON_FEE: "/cost/contract/non-contract",
+  NCON_CST: "/home", // 占位，待补充真实路由
+  CON_PAY: "/home", // 占位，待补充真实路由
 };
 
 // 安全获取查询参数
@@ -92,473 +94,70 @@ const resolveBizRoute = async (
   // 第一层：根据 bizItemCode 分支
   // ========================================
   switch (bizItemCode) {
-    // ---------- 非合同费用 ----------
-    case "NCON_FEE": {
-      // 第二层：根据 subBizCode 分支
-      switch (subBizCode) {
-        case "COST":
-          // 第三层：根据 mode 分支
-          switch (mode) {
-            case "view":
-              // 只读页面 - 成本分摊查看
-              return buildRoutePath("/cost/contract/non-contract/cost/view", {
-                billId,
-              });
-            case "edit":
-              // 编辑页面 - 成本分摊编辑
-              return buildRoutePath("/cost/contract/non-contract/cost/edit", {
-                billId,
-              });
-            case "add":
-              // 新增页面 - 成本分摊新增
-              return buildRoutePath("/cost/contract/non-contract/cost/add", {
-                billId,
-              });
-            default:
-              // 默认：编辑模式
-              return buildRoutePath("/cost/contract/non-contract/cost/edit", {
-                billId,
-              });
-          }
-
-        case "FINA":
-          // 第三层：根据 mode 分支
-          switch (mode) {
-            case "view":
-              return buildRoutePath("/cost/contract/non-contract/fina/view", {
-                billId,
-              });
-            case "edit":
-              return buildRoutePath("/cost/contract/non-contract/fina/edit", {
-                billId,
-              });
-            case "add":
-              return buildRoutePath("/cost/contract/non-contract/fina/add", {
-                billId,
-              });
-            default:
-              return buildRoutePath("/cost/contract/non-contract/fina/edit", {
-                billId,
-              });
-          }
-
-        default:
-          // subBizCode 为空或未知，跳转到非合同默认页面
-          return buildRoutePath("/cost/contract/non-contract", {
-            billId,
-          });
+    // ========================================
+    // subBizCode = COST 判断（仅 mode 生效）：合同审批 / 补充 / 变更 / 签证 / 预结算 / 结算
+    // ========================================
+    case "CON_MAIN":
+    case "CON_ADD":
+    case "CON_BG":
+    case "CON_QZ":
+    case "CON_PRE_SETTLE":
+    case "CON_SETTLE": {
+      if (subBizCode === "COST") {
+        switch (mode) {
+          case "view":
+            return buildRoutePath(`/cost/contract/${COST_ROUTE[bizItemCode]}/cost/view`, {
+              billId,
+            });
+          case "edit":
+          default:
+            return buildRoutePath(`/cost/contract/${COST_ROUTE[bizItemCode]}/cost/edit`, {
+              billId,
+            });
+        }
       }
+      return buildRoutePath(`/cost/contract/${COST_ROUTE[bizItemCode]}`, {
+        billId,
+      });
     }
 
-    // ---------- 合同审批 ----------
-    case "CST_CON_MAIN": {
-      switch (subBizCode) {
-        case "COST":
-          switch (mode) {
-            case "view":
-              return buildRoutePath("/cost/contract/approval/cost/view", {
-                billId,
-              });
-            case "edit":
-              return buildRoutePath("/cost/contract/approval/cost/edit", {
-                billId,
-              });
-            default:
-              return buildRoutePath("/cost/contract/approval/cost/edit", {
-                billId,
-              });
-          }
-        case "FINA":
-          switch (mode) {
-            case "view":
-              return buildRoutePath("/cost/contract/approval/fina/view", {
-                billId,
-              });
-            case "edit":
-              return buildRoutePath("/cost/contract/approval/fina/edit", {
-                billId,
-              });
-            default:
-              return buildRoutePath("/cost/contract/approval/fina/edit", {
-                billId,
-              });
-          }
-        default:
-          return buildRoutePath("/cost/contract/approval", {
-            billId,
-          });
+    // ========================================
+    // subBizCode = FINA 判断（仅 mode 生效）：非合同费用 / 非合同建安支付 / 合同支付
+    // ========================================
+    case "NCON_FEE":
+    case "NCON_CST":
+    case "CON_PAY": {
+      if (subBizCode === "FINA") {
+        switch (mode) {
+          case "view":
+            return buildRoutePath(`${FINA_ROUTE[bizItemCode]}/fina/view`, {
+              billId,
+            });
+          case "add":
+            return buildRoutePath(`${FINA_ROUTE[bizItemCode]}/fina/add`, {
+              billId,
+            });
+          case "edit":
+          default:
+            return buildRoutePath(`${FINA_ROUTE[bizItemCode]}/fina/edit`, {
+              billId,
+            });
+        }
       }
+      return buildRoutePath(FINA_ROUTE[bizItemCode], {
+        billId,
+      });
     }
 
-    // ---------- 补充合同审批 ----------
-    case "CST_CON_ADD": {
-      switch (subBizCode) {
-        case "COST":
-          switch (mode) {
-            case "view":
-              return buildRoutePath("/cost/contract/supplement/cost/view", {
-                billId,
-              });
-            case "edit":
-              return buildRoutePath("/cost/contract/supplement/cost/edit", {
-                billId,
-              });
-            default:
-              return buildRoutePath("/cost/contract/supplement/cost/edit", {
-                billId,
-              });
-          }
-        case "FINA":
-          switch (mode) {
-            case "view":
-              return buildRoutePath("/cost/contract/supplement/fina/view", {
-                billId,
-              });
-            case "edit":
-              return buildRoutePath("/cost/contract/supplement/fina/edit", {
-                billId,
-              });
-            default:
-              return buildRoutePath("/cost/contract/supplement/fina/edit", {
-                billId,
-              });
-          }
-        default:
-          return buildRoutePath("/cost/contract/supplement", {
-            billId,
-          });
-      }
-    }
+    // ---------- 合同产值（单路径，无 subBizCode/mode） ----------
+    case "CON_PROD":
+      return buildRoutePath("/cost/contract/production", { billId });
 
-    // ---------- 订单合同 ----------
-    case "CST_CON_ORD": {
-      switch (subBizCode) {
-        case "COST":
-          switch (mode) {
-            case "view":
-              return buildRoutePath("/cost/contract/order/cost/view", {
-                billId,
-              });
-            case "edit":
-              return buildRoutePath("/cost/contract/order/cost/edit", {
-                billId,
-              });
-            default:
-              return buildRoutePath("/cost/contract/order/cost/edit", {
-                billId,
-              });
-          }
-        case "FINA":
-          switch (mode) {
-            case "view":
-              return buildRoutePath("/cost/contract/order/fina/view", {
-                billId,
-              });
-            case "edit":
-              return buildRoutePath("/cost/contract/order/fina/edit", {
-                billId,
-              });
-            default:
-              return buildRoutePath("/cost/contract/order/fina/edit", {
-                billId,
-              });
-          }
-        default:
-          return buildRoutePath("/cost/contract/order", {
-            billId,
-          });
-      }
-    }
+    // ---------- 非合同立项（单路径） ----------
+    case "NCON_PROC":
+      return buildRoutePath("/home", { billId });
 
-    // ---------- 采购订单 ----------
-    case "CST_CON_BILL": {
-      switch (subBizCode) {
-        case "COST":
-          switch (mode) {
-            case "view":
-              return buildRoutePath("/cost/contract/purchase/cost/view", {
-                billId,
-              });
-            case "edit":
-              return buildRoutePath("/cost/contract/purchase/cost/edit", {
-                billId,
-              });
-            default:
-              return buildRoutePath("/cost/contract/purchase/cost/edit", {
-                billId,
-              });
-          }
-        case "FINA":
-          switch (mode) {
-            case "view":
-              return buildRoutePath("/cost/contract/purchase/fina/view", {
-                billId,
-              });
-            case "edit":
-              return buildRoutePath("/cost/contract/purchase/fina/edit", {
-                billId,
-              });
-            default:
-              return buildRoutePath("/cost/contract/purchase/fina/edit", {
-                billId,
-              });
-          }
-        default:
-          return buildRoutePath("/cost/contract/purchase", {
-            billId,
-          });
-      }
-    }
-
-    // ---------- 合同变更 ----------
-    case "CST_CON_BG": {
-      switch (subBizCode) {
-        case "COST":
-          switch (mode) {
-            case "view":
-              return buildRoutePath("/cost/contract/change/cost/view", {
-                billId,
-              });
-            case "edit":
-              return buildRoutePath("/cost/contract/change/cost/edit", {
-                billId,
-              });
-            default:
-              return buildRoutePath("/cost/contract/change/cost/edit", {
-                billId,
-              });
-          }
-        case "FINA":
-          switch (mode) {
-            case "view":
-              return buildRoutePath("/cost/contract/change/fina/view", {
-                billId,
-              });
-            case "edit":
-              return buildRoutePath("/cost/contract/change/fina/edit", {
-                billId,
-              });
-            default:
-              return buildRoutePath("/cost/contract/change/fina/edit", {
-                billId,
-              });
-          }
-        default:
-          return buildRoutePath("/cost/contract/change", {
-            billId,
-          });
-      }
-    }
-
-    // ---------- 合同签证 ----------
-    case "CST_CON_QZ": {
-      switch (subBizCode) {
-        case "COST":
-          switch (mode) {
-            case "view":
-              return buildRoutePath("/cost/contract/visa/cost/view", {
-                billId,
-              });
-            case "edit":
-              return buildRoutePath("/cost/contract/visa/cost/edit", {
-                billId,
-              });
-            default:
-              return buildRoutePath("/cost/contract/visa/cost/edit", {
-                billId,
-              });
-          }
-        case "FINA":
-          switch (mode) {
-            case "view":
-              return buildRoutePath("/cost/contract/visa/fina/view", {
-                billId,
-              });
-            case "edit":
-              return buildRoutePath("/cost/contract/visa/fina/edit", {
-                billId,
-              });
-            default:
-              return buildRoutePath("/cost/contract/visa/fina/edit", {
-                billId,
-              });
-          }
-        default:
-          return buildRoutePath("/cost/contract/visa", {
-            billId,
-          });
-      }
-    }
-
-    // ---------- 合同产值 ----------
-    case "CST_CON_PROD": {
-      switch (subBizCode) {
-        case "COST":
-          switch (mode) {
-            case "view":
-              return buildRoutePath("/cost/contract/production/cost/view", {
-                billId,
-              });
-            case "edit":
-              return buildRoutePath("/cost/contract/production/cost/edit", {
-                billId,
-              });
-            default:
-              return buildRoutePath("/cost/contract/production/cost/edit", {
-                billId,
-              });
-          }
-        case "FINA":
-          switch (mode) {
-            case "view":
-              return buildRoutePath("/cost/contract/production/fina/view", {
-                billId,
-              });
-            case "edit":
-              return buildRoutePath("/cost/contract/production/fina/edit", {
-                billId,
-              });
-            default:
-              return buildRoutePath("/cost/contract/production/fina/edit", {
-                billId,
-              });
-          }
-        default:
-          return buildRoutePath("/cost/contract/production", {
-            billId,
-          });
-      }
-    }
-
-    // ---------- 合同预结算 ----------
-    case "CST_CON_PRE_SETTLE": {
-      switch (subBizCode) {
-        case "COST":
-          switch (mode) {
-            case "view":
-              return buildRoutePath("/cost/contract/pre-settle/cost/view", {
-                billId,
-              });
-            case "edit":
-              return buildRoutePath("/cost/contract/pre-settle/cost/edit", {
-                billId,
-              });
-            default:
-              return buildRoutePath("/cost/contract/pre-settle/cost/edit", {
-                billId,
-              });
-          }
-        case "FINA":
-          switch (mode) {
-            case "view":
-              return buildRoutePath("/cost/contract/pre-settle/fina/view", {
-                billId,
-              });
-            case "edit":
-              return buildRoutePath("/cost/contract/pre-settle/fina/edit", {
-                billId,
-              });
-            default:
-              return buildRoutePath("/cost/contract/pre-settle/fina/edit", {
-                billId,
-              });
-          }
-        default:
-          return buildRoutePath("/cost/contract/pre-settle", {
-            billId,
-          });
-      }
-    }
-
-    // ---------- 合同结算 ----------
-    case "CST_CON_SETTLE": {
-      switch (subBizCode) {
-        case "COST":
-          switch (mode) {
-            case "view":
-              return buildRoutePath("/cost/contract/settle/cost/view", {
-                billId,
-              });
-            case "edit":
-              return buildRoutePath("/cost/contract/settle/cost/edit", {
-                billId,
-              });
-            default:
-              return buildRoutePath("/cost/contract/settle/cost/edit", {
-                billId,
-              });
-          }
-        case "FINA":
-          switch (mode) {
-            case "view":
-              return buildRoutePath("/cost/contract/settle/fina/view", {
-                billId,
-              });
-            case "edit":
-              return buildRoutePath("/cost/contract/settle/fina/edit", {
-                billId,
-              });
-            default:
-              return buildRoutePath("/cost/contract/settle/fina/edit", {
-                billId,
-              });
-          }
-        default:
-          return buildRoutePath("/cost/contract/settle", {
-            billId,
-          });
-      }
-    }
-
-    // ---------- 非合同 ----------
-    case "CST_NCON": {
-      switch (subBizCode) {
-        case "COST":
-          switch (mode) {
-            case "view":
-              return buildRoutePath("/cost/contract/non-contract/cost/view", {
-                billId,
-              });
-            case "edit":
-              return buildRoutePath("/cost/contract/non-contract/cost/edit", {
-                billId,
-              });
-            case "add":
-              return buildRoutePath("/cost/contract/non-contract/cost/add", {
-                billId,
-              });
-            default:
-              return buildRoutePath("/cost/contract/non-contract/cost/edit", {
-                billId,
-              });
-          }
-        case "FINA":
-          switch (mode) {
-            case "view":
-              return buildRoutePath("/cost/contract/non-contract/fina/view", {
-                billId,
-              });
-            case "edit":
-              return buildRoutePath("/cost/contract/non-contract/fina/edit", {
-                billId,
-              });
-            case "add":
-              return buildRoutePath("/cost/contract/non-contract/fina/add", {
-                billId,
-              });
-            default:
-              return buildRoutePath("/cost/contract/non-contract/fina/edit", {
-                billId,
-              });
-          }
-        default:
-          return buildRoutePath("/cost/contract/non-contract", {
-            billId,
-          });
-      }
-    }
-
-    // ---------- 招投标相关 ----------
+    // ---------- 招投标相关（单路径） ----------
     case "ZB_TND":
       return buildRoutePath("/bidding/bidding-detail", {
         tenderId: bizId,
@@ -599,11 +198,13 @@ const resolveBizRoute = async (
         tenderId: bizId,
       });
 
-    // ---------- 供应商 ----------
+    // ---------- 供应商（单路径） ----------
     case "SUP_RK":
       return buildRoutePath("/supplier/inspection/edit", {
         supBillId: billId,
       });
+
+    // ---------- 目标成本版本（mode 仍生效） ----------
     case "CST_COST_M": {
       const costMid = Number(bizId);
       if (!Number.isNaN(costMid)) {
@@ -631,9 +232,18 @@ const resolveBizRoute = async (
       });
     }
 
+    // ---------- 以下业务为单路径占位，待补充真实路由 ----------
+    case "CON_TSSX": // 合同特殊事项申请
+    case "CON_GCHJ": // 合同工程核价
+    case "CON_VOID": // 合同作废
+    case "CON_DED": // 合同奖罚
+    case "CON_LV_RECV": // 履约保证金收取
+    case "CON_LV_REFU": // 履约保证金退还
+      return buildRoutePath("/home", { billId });
+
     // ---------- 默认 ----------
     default:
-      return buildRoutePath(BIZ_CODE_ROUTE_MAP[bizItemCode] || "/home", {
+      return buildRoutePath("/home", {
         billId,
         bizId,
       });
