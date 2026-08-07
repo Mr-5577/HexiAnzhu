@@ -49,6 +49,7 @@
             :tender-id="tenderId"
             :detail-data="detailData"
             :project-options="projectOptions"
+            :proj-id="currentProjId"
           />
         </keep-alive>
       </el-main>
@@ -108,6 +109,12 @@ const tabComponents: Record<string, any> = {
 
 // 当前显示组件内容
 const currentComponent = computed(() => tabComponents[activeTab.value]);
+
+// 当前事项所属项目ID（取第一个项目）
+const currentProjId = computed<number | undefined>(() => {
+  const projIds = detailData.value?.projIds;
+  return projIds && projIds.length > 0 ? projIds[0] : undefined;
+});
 
 // 获取详情数据
 const getDetailData = async () => {
