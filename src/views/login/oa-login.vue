@@ -47,9 +47,32 @@ const buildRoutePath = (
     }
   });
   return query.toString() ? `${basePath}?${query.toString()}` : basePath;
+
+  // const query = new URLSearchParams();
+  // let path = basePath;
+
+  // // 👇 支持 mode 参数
+  // if (params.mode === "edit") {
+  //   path = `${basePath}/edit`;
+  // } else if (params.mode === "view") {
+  //   path = `${basePath}/detail`;
+  // }
+
+  // Object.entries(params).forEach(([key, value]) => {
+  //   if (
+  //     value !== undefined &&
+  //     value !== null &&
+  //     value !== "" &&
+  //     key !== "mode"
+  //   ) {
+  //     query.append(key, String(value));
+  //   }
+  // });
+
+  // return query.toString() ? `${path}?${query.toString()}` : path;
 };
 
-// COST 子业务路径映射（subBizCode = COST 时生效）
+// COST 子业务路径映射（subBizCode = COST 时生效），成本分摊页面
 const COST_ROUTE: Record<string, string> = {
   CON_MAIN: "/cost-allocation",
   CON_ADD: "/cost-allocation",
@@ -61,24 +84,34 @@ const COST_ROUTE: Record<string, string> = {
   NCON_PROC: "/cost-allocation",
 };
 
-// FINA 子业务路径映射（subBizCode = FINA 时生效）
+// FINA 子业务路径映射（subBizCode = FINA 时生效），财务分摊页面
 const FINA_ROUTE: Record<string, string> = {
   NCON_FEE: "/finance-allocation",
   NCON_CST: "/finance-allocation",
   CON_PAY: "/finance-allocation",
 };
 
-// 默認路徑映射
+// 默認路徑映射，对应业务的单据详情页
 const DEFAULT_ROUTE: Record<string, string> = {
-  CON_MAIN: "/home",
-  CON_ADD: "/home",
-  CON_BG: "/home",
-  CON_QZ: "/home",
-  CON_PRE_SETTLE: "/home",
-  CON_SETTLE: "/home",
-  NCON_CST: "/home",
-  NCON_PROC: "/home",
-  NCON_FEE: "/home",
+  CON_MAIN_edit: "/con/contract-ledger/edit",
+  CON_MAIN_view: "/con/contract-ledger/detail",
+  CON_ADD_edit: "/con/supplement-contract/edit",
+  CON_ADD_view: "/con/supplement-contract/detail",
+  CON_BG_edit: "/con/change-order/edit",
+  CON_BG_view: "/con/change-order/detail",
+  CON_QZ_edit: "/con/visa-manage/edit",
+  CON_QZ_view: "/con/visa-manage/detail",
+
+  CON_PRE_SETTLE_edit: "/home",
+  CON_PRE_SETTLE_view: "/home",
+  CON_SETTLE_edit: "/home",
+  CON_SETTLE_view: "/home",
+  NCON_CST_edit: "/ncon/cst-payment/edit",
+  NCON_CST_view: "/ncon/cst-payment/detail",
+  NCON_PROC_edit: "/ncon/cst-process/edit",
+  NCON_PROC_view: "/ncon/cst-process/detail",
+  NCON_FEE_edit: "/ncon/fee-payment/edit",
+  NCON_FEE_view: "/ncon/fee-payment/detail",
   CON_PAY: "/home",
 };
 
@@ -139,7 +172,8 @@ const resolveBizRoute = async (
         }
       }
       // 这里走单据详情页
-      return buildRoutePath(DEFAULT_ROUTE[bizItemCode], {
+      const pageMode = `${bizItemCode}_${mode}`
+      return buildRoutePath(DEFAULT_ROUTE[pageMode], {
         billId,
       });
     }
@@ -167,7 +201,9 @@ const resolveBizRoute = async (
             });
         }
       }
-      return buildRoutePath(DEFAULT_ROUTE[bizItemCode], {
+      // 这里走单据详情页
+      const pageMode = `${bizItemCode}_${mode}`
+      return buildRoutePath(DEFAULT_ROUTE[pageMode], {
         billId,
       });
     }
@@ -314,6 +350,8 @@ const handleOALogin = async (
   oaUserId: string,
   timestamp: string,
   signature: string,
+  subBizCode: string,
+  mode: string,
 ) => {
   checkIfUnmounted();
 
@@ -333,9 +371,6 @@ const handleOALogin = async (
       const bizItemCode = res.data.bizItemCode || "";
       const billId = res.data.billId || "";
       const bizId = res.data.bizId || "";
-      const subBizCode =
-        res.data.subBizCode || getQueryParam(route.query.subBizCode) || "";
-      const mode = res.data.mode || getQueryParam(route.query.mode) || "";
 
       localStorage.setItem("token", token);
       localStorage.setItem("accountNonExpired", String(accountNonExpired));
@@ -388,7 +423,6 @@ const handleRouteParams = async () => {
     const oaUserId = getQueryParam(query.oaUserId);
     const timestamp = getQueryParam(query.timestamp);
     const signature = getQueryParam(query.signature);
-
     // 获取新增参数
     const subBizCode = getQueryParam(query.subBizCode);
     const mode = getQueryParam(query.mode);
@@ -425,7 +459,14 @@ const handleRouteParams = async () => {
       return;
     }
 
-    await handleOALogin(requestId, oaUserId, timestamp, signature);
+    await handleOALogin(
+      requestId,
+      oaUserId,
+      timestamp,
+      signature,
+      subBizCode,
+      mode,
+    );
   } catch (err) {
     if (err instanceof Error && err.message === "COMPONENT_UNMOUNTED") {
       return;

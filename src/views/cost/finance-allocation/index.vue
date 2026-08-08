@@ -15,7 +15,7 @@
           <el-button
             type="primary"
             :loading="submitLoading"
-            v-if="!props.isDialogMode"
+            v-if="!props.isDialogMode && !isDetail"
             @click="handleSubmit"
           >
             确认分摊
@@ -39,37 +39,54 @@
         <template #expand="{ row }">
           <div class="expand-table-wrapper">
             <div class="expand-title">拆分明细</div>
-            <editable-table
-              ref="getDedTableRef(row)"
-              :row-key="'uuid'"
-              v-model="row.finaDs"
-              :columns="detailColumns"
-              :pagination="false"
-              :highlight-current-row="false"
-              :show-summary="false"
-              :compactEmpty="true"
-              :editable="true"
-              :on-save="handleSave"
-              :max-height="'150px'"
-            >
-              <template #actions="{ row: detailRow, $index }">
-                <el-button
-                  type="primary"
-                  link
-                  @click="handleSplitDetail(row, detailRow, $index)"
-                >
-                  拆分
-                </el-button>
-                <el-button
-                  type="danger"
-                  link
-                  :disabled="row.finaDs?.length <= 1"
-                  @click="handleDeleteDetail(row, $index)"
-                >
-                  删除
-                </el-button>
-              </template>
-            </editable-table>
+            <template v-if="isEdit">
+              <editable-table
+                ref="getDedTableRef(row)"
+                :row-key="'uuid'"
+                v-model="row.finaDs"
+                :columns="detailColumns"
+                :pagination="false"
+                :highlight-current-row="false"
+                :show-summary="false"
+                :compactEmpty="true"
+                :editable="true"
+                :on-save="handleSave"
+                :max-height="'150px'"
+              >
+                <template #actions="{ row: detailRow, $index }">
+                  <el-button
+                    type="primary"
+                    link
+                    @click="handleSplitDetail(row, detailRow, $index)"
+                  >
+                    拆分
+                  </el-button>
+                  <el-button
+                    type="danger"
+                    link
+                    :disabled="row.finaDs?.length <= 1"
+                    @click="handleDeleteDetail(row, $index)"
+                  >
+                    删除
+                  </el-button>
+                </template>
+              </editable-table>
+            </template>
+
+            <template v-else>
+              <base-table
+                :columns="viewColumns"
+                :tableData="row.finaDs"
+                :rowKey="'uuid'"
+                :pagination="false"
+                :show-toolbar="false"
+                :auto-height="false"
+                :max-height="'150px'"
+                :border="true"
+                :stripe="true"
+                :isExpandAll="true"
+              ></base-table>
+            </template>
           </div>
         </template>
 
@@ -125,6 +142,13 @@ const route = useRoute();
 const billId = route.query?.billId ? Number(route.query.billId) : undefined;
 // 业务类型，例：NCON_FEE
 const bizType = route.query?.bizType ? route.query.bizType : undefined;
+
+const isEdit = computed(() => {
+  return route.query.mode == "edit";
+});
+const isDetail = computed(() => {
+  return route.query.mode == "view";
+});
 
 const lightweightDetail = ref({
   nconBillId: undefined,
@@ -278,6 +302,13 @@ const detailColumns = computed<EditableColumn[]>(() => [
     fixed: "right",
   },
 ]);
+const viewColumns = [
+  { type: "index", label: "序号", width: 60 },
+  { prop: "finaSubDesc", label: "摘要", minWidth: 120 },
+  { prop: "finaOrgName", label: "所属组织", minWidth: 100 },
+  { prop: "finaSubName", label: "科目名称", minWidth: 100 },
+  { prop: "finaSubAmt", label: "金额", minWidth: 100 },
+];
 
 const mainTableData = ref([]);
 
@@ -387,6 +418,7 @@ const handleSubmit = async () => {
   if (allValid) {
     submitLoading.value = true;
     const detailList = mainTableData.value.flatMap((item) => item.finaDs || []);
+    
     try {
       let res;
       // 根据业务类型选择接口
@@ -456,7 +488,7 @@ const processData = (list) => {
           {
             uuid: uuidv4(),
             id: undefined,
-            nconBillId: undefined,
+            nconBillId: item.nconBillId,
             payWayId: item.id,
             finaSubDesc: item.payDesc,
             finaOrgId: undefined,
@@ -478,7 +510,7 @@ const getNconDetail = async () => {
   if (!billId) return;
   try {
     const res = await feePaymentApi.getNconInfoLite({ nconBillId: billId });
-    console.log("合同详情", res);
+    console.log("详情", res);
     if (res.code == 200 && res.data) {
       const { fee } = res.data;
       lightweightDetail.value = { ...lightweightDetail.value, ...res.data };
@@ -532,8 +564,8 @@ onMounted(async () => {
   // 判断是不是弹窗模式
   if (props.isDialogMode) {
     if (props?.segId) {
-      getFinaOrgListBySegId(props.segId); // 获取业务板块下的费用组织
-      getFinaSubjectListBySegId(props.segId); // 获取业务板块下的费用科目
+      await getFinaOrgListBySegId(props.segId); // 获取业务板块下的费用组织
+      await getFinaSubjectListBySegId(props.segId); // 获取业务板块下的费用科目
     }
     if (props?.payWayTable && props?.payWayTable?.length > 0) {
       const list = props?.payWayTable || [];

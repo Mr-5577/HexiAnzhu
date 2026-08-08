@@ -59,46 +59,6 @@
         </div>
       </div>
 
-      <!-- 项目、楼栋基本信息 -->
-      <div class="card-info">
-        <div class="info-item">
-          <span class="info-label">项目名称：</span>
-          <span class="info-value">{{ pageParams.projName || "" }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">事项名称：</span>
-          <span class="info-value">{{ pageParams.displayName || "" }}</span>
-        </div>
-        <div class="info-row">
-          <!-- 楼栋：使用 Element Plus 多选下拉 -->
-          <div class="info-item half">
-            <span class="info-label">楼栋：</span>
-            <el-select
-              v-model="selectedBuildings"
-              multiple
-              placeholder="请选择楼栋"
-              class="building-select"
-              filterable
-              clearable
-              collapse-tags
-              collapse-tags-tooltip
-              :max-collapse-tags="2"
-            >
-              <el-option
-                v-for="item in buildingOptions"
-                :key="item.id"
-                :label="item.bldName"
-                :value="item.id"
-              />
-            </el-select>
-          </div>
-          <div class="info-item half">
-            <span class="info-label">业态：</span>
-            <span class="info-value">{{ businessType }}</span>
-          </div>
-        </div>
-      </div>
-
       <!-- 可编辑表格：只有叶子节点可编辑 -->
       <editable-table
         ref="editableTableRef"
@@ -208,13 +168,10 @@ import { costAllocationApi } from "@/api/cost/contract-manage/cost-allocation-ap
 import { getEnumLabel } from "@/utils/enum.ts";
 import { bizTypeEnum } from "@/constants/contract-manage/enums.ts";
 import { buildTree } from "@/utils/tree.ts";
-import { filterTreeByIds } from "./helpers";
-import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
+import { filterTreeByIds } from "./helpers.ts";
 
 interface Props {
   projId?: number; // 项目ID
-  projName?: string; // 项目名称
-  displayName?: string;
   bizType?: string; // 业务类型
   allocAmt?: number; // 分摊金额(含税)
   allocExclAmt?: number; // 分摊金额(不含税)
@@ -223,8 +180,6 @@ interface Props {
 }
 const props = withDefaults(defineProps<Props>(), {
   projId: undefined,
-  projName: "",
-  displayName: "",
   bizType: "",
   allocAmt: 0,
   allocExclAmt: 0,
@@ -244,14 +199,6 @@ const router = useRouter();
 // 是否为弹窗模式（通过props或路由名称判断）
 const isDialogMode = computed(() => {
   return props.isDialogMode;
-});
-
-// OA打开判断详情还是编辑
-const isEdit = computed(() => {
-  return route.query.mode == "edit";
-});
-const isDetail = computed(() => {
-  return route.query.mode == "view";
 });
 
 const warningVisible = ref(false); // 预警面板展开状态
@@ -282,41 +229,9 @@ const apportionInfo = ref({
   allocWarn: 0,
 });
 
-const businessType = computed(() => {
-  if (!selectedBuildings.value.length || !buildingOptions.value.length) {
-    return "";
-  }
-
-  const prodNames = buildingOptions.value
-    .filter((item) => selectedBuildings.value.includes(item.id))
-    .map((item) => item.prodNames || "")
-    .filter((name) => name);
-
-  // 去重后拼接成字符串
-  return [...new Set(prodNames)].join("、");
-});
-const businessTypeIds = computed(() => {
-  if (!selectedBuildings.value.length || !buildingOptions.value.length) {
-    return [];
-  }
-  const prodIds = buildingOptions.value
-    .filter((item) => selectedBuildings.value.includes(item.id))
-    .map((item) => item.prodIds || [])
-    .flat();
-  // 去重后返回数组
-  return [...new Set(prodIds)];
-});
-
-// ---------- 楼栋选项 ----------
-const buildingOptions = ref([]);
-// 已选中的楼栋 (存储 value 数组)
-const selectedBuildings = ref([]);
-
 // 页面参数
 const pageParams = ref({
   projId: undefined,
-  projName: "",
-  displayName: "",
   bizType: "",
   billId: undefined,
   bizKeyId: 0,
@@ -1483,20 +1398,6 @@ const getProductList = async () => {
     console.error("获取业态列表失败:", error);
   }
 };
-// 获取项目下的楼栋数据
-const getBuildingListByProjId = async () => {
-  if (!pageParams.value.projId) return;
-  try {
-    const res = await projectAreaApi.getBuildingList({
-      projId: pageParams.value.projId,
-    });
-    if (res.code === 200) {
-      buildingOptions.value = res.data || [];
-    }
-  } catch (error) {
-    console.error("获取楼栋列表失败:", error);
-  }
-};
 
 /**
  * 获取目标成本科目列表
@@ -1571,8 +1472,6 @@ const initPage = async () => {
   // 解析参数，业务弹窗打开
   pageParams.value = {
     projId: props.projId,
-    projName: props.projName || "",
-    displayName: props.displayName || "",
     bizType: props.bizType || "",
     billId: undefined,
     bizKeyId: undefined,
@@ -1580,11 +1479,7 @@ const initPage = async () => {
     allocExclAmt: props.allocExclAmt || 0,
   };
   // 获取项目产品类型列表
-  await Promise.all([
-    getCostSubjectProjList(),
-    getProductList(),
-    getBuildingListByProjId(),
-  ]);
+  await Promise.all([getCostSubjectProjList(), getProductList()]);
   // 弹窗模式则是从erp系统打开弹窗操作，否则就是OA单独引用分摊页面
   // 处理弹窗数据
   if (props?.cstMData && props.cstMData?.allocDs?.length > 0) {
@@ -1598,7 +1493,7 @@ const processPopupData = async (cstList: any) => {
   if (cstList && cstList?.length > 0) {
     const detaiList = cstList || [];
     const subIds: any = new Set(detaiList.map((item: any) => item.subId));
-    console.log("数据:", detaiList, subIds);
+    console.log("数据:", props.cstMData);
     // 获取基础成本科目列表
     const costSubjectsRes = await costCategoryApi.getCostSubjectBase({
       isWithParent: true,
@@ -1607,13 +1502,13 @@ const processPopupData = async (cstList: any) => {
       // 构建树形数据
       const rawTreeData = costSubjectsRes.data || [];
       const subTreeData: any = buildTree(rawTreeData);
-      // console.log("subTreeData:", subTreeData);
+      console.log("subTreeData:", subTreeData);
       const treeData = filterTreeByIds(subTreeData, Array.from(subIds));
-      // console.log("treeData:", treeData);
+      console.log("treeData:", treeData);
       // 执行数据合并（行转列）
       const result = mergeTreeWithDetailApiData(treeData, detaiList);
       currentProducts.value = result.products;
-      // console.log("result:", result);
+      console.log("result:", result);
 
       // 生成动态表头
       subjectColumns.value = generateColumns(
@@ -1636,12 +1531,12 @@ const processPopupData = async (cstList: any) => {
  */
 const loadAllocationData = async () => {
   try {
-    console.log("OA加载分摊数据:", route.query);
+    console.log("加载分摊数据:", route.query);
     // 从路由获取参数
     const billId = route.query.billId as string; // 单据ID
     const bizType = route.query.bizItemCode as string; // 业务类型编码，例：NCON_PROC
 
-    // console.log("billId:", billId);
+    console.log("billId:", billId);
     const res = await costAllocationApi.getProjectAlloc({
       bizBillId: billId,
       bizType: bizType,
@@ -1700,7 +1595,7 @@ const getSelectData = (treeData: any, goalCostDetailList: any) => {
   // 执行数据合并（行转列）
   const result = mergeTreeWithApiData(treeData, goalCostDetailList);
   currentProducts.value = result.products;
-  // console.log("currentProducts:", currentProducts.value);
+  console.log("currentProducts:", currentProducts.value);
   // 如果有已有数据，进行合并保留
   let finalData = result.mergedData;
   if (hasExistingData && editableSubjectData.value.length) {
@@ -1711,7 +1606,7 @@ const getSelectData = (treeData: any, goalCostDetailList: any) => {
   subjectColumns.value = generateColumns(result.products, busiSegOptions.value);
   editableSubjectData.value = finalData;
 
-  // console.log("editableSubjectData.value:", editableSubjectData.value);
+  console.log("editableSubjectData.value:", editableSubjectData.value);
 
   // ====== 初始化预警数据（复制一份 editableSubjectData 的结构） ======
   // 深拷贝一份作为预警数据的基础结构
@@ -1943,6 +1838,24 @@ const autoAllocation = async () => {
   }
 };
 
+onMounted(async () => {
+  // 非弹窗模式时初始化
+  if (!isDialogMode.value) {
+    await loadAllocationData();
+  }
+});
+
+// 监听弹窗模式下的参数变化
+watch(
+  () => [props.projId],
+  () => {
+    if (isDialogMode.value && props.projId) {
+      initPage();
+    }
+  },
+  { immediate: true },
+);
+
 // 确认时校验
 const validateTable = () => {
   if (!editableSubjectData.value?.length) {
@@ -2033,25 +1946,6 @@ const getSubmitData = async () => {
     allocDs: newData, // 分摊明细列表
   };
 };
-
-onMounted(async () => {
-  // 非弹窗模式时初始化
-  if (!isDialogMode.value) {
-    await loadAllocationData();
-  }
-});
-
-// 监听弹窗模式下的参数变化
-watch(
-  () => [props.projId],
-  () => {
-    if (isDialogMode.value && props.projId) {
-      initPage();
-    }
-  },
-  { immediate: true },
-);
-
 defineExpose({
   // 分摊列表基础数据，树形数据结构数据
   getData: () => editableSubjectData.value,
@@ -2223,73 +2117,5 @@ defineExpose({
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
   margin-top: 16px;
   z-index: 20;
-}
-.card-info {
-  background: #ffffff;
-  border-radius: 8px;
-  padding: 0.5rem 1rem;
-  border: 1px solid #e8edf4;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: nowrap;
-  min-width: 0;
-}
-
-.info-row {
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-  flex-wrap: nowrap;
-  width: 100%;
-  min-width: 0;
-}
-
-.info-item {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  gap: 0.3rem;
-}
-
-/* 固定宽度的字段：项目名称、事项名称、业态 */
-.info-item:not(:nth-child(3)) {
-  /* flex: 0 1 20%; */
-  min-width: 260px;
-}
-
-/* 楼栋字段自适应剩余空间 */
-.info-item:nth-child(3) {
-  flex: 1 1 auto;
-  min-width: 120px;
-  max-width: 100%;
-}
-
-.info-label {
-  flex-shrink: 0;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: #5a6e82;
-  white-space: nowrap;
-}
-
-.info-value {
-  font-weight: 500;
-  color: #1a2634;
-  font-size: 0.88rem;
-  min-width: 0;
-  flex: 1;
-}
-
-.ellipsis {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-}
-
-.building-select {
-  width: 300px;
-  min-width: 80px;
-  flex: 1;
 }
 </style>
