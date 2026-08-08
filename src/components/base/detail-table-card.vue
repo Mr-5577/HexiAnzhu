@@ -7,9 +7,13 @@
         {{ title }}
         <span class="count">{{ count }}</span>
       </span>
-      <el-button type="primary" size="small" @click="$emit('add')">
-        + {{ addText }}
-      </el-button>
+      
+      <div class="header-actions">
+        <el-button v-if="showAdd" type="primary" size="small" @click="$emit('add')">
+          + {{ addText }}
+        </el-button>
+        <slot name="header-extra" />
+      </div>
     </div>
     <editable-table
       :row-key="'uuid'"
@@ -18,7 +22,7 @@
       :columns="columns"
       :pagination="false"
       :highlight-current-row="false"
-      :show-summary="false"
+      :show-summary="showSummary" 
       :compact-empty="true"
       :editable="true"
       @update:model-value="$emit('update:modelValue', $event)"
@@ -41,12 +45,16 @@ interface Props {
   count?: number;
   addText?: string;
   height?: string;
+  showSummary?: boolean; 
+  showAdd?: boolean;
 }
 withDefaults(defineProps<Props>(), {
   title: "",
   count: 0,
   addText: "新增",
   height: "160px",
+  showSummary: false,
+  showAdd:true,
 });
 defineEmits<{
   (e: "update:modelValue", val: any[]): void;
@@ -81,6 +89,15 @@ defineEmits<{
         font-size: 12px;
       }
     }
+
+    /* 按钮容器：统一靠右 */
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;   /* 关键：推到最右边 */
+    }
   }
+
 }
 </style>

@@ -135,7 +135,6 @@ export interface ContractChangeData {
 
 /** 新增/编辑 变更合同 */
 export interface ContractChangeFormData {
-  conId: number;
-  change: ContractChangeData;
-  conlist: ContractChangeDetailFormData[];
+  //change: ContractChangeData;
+ // conlist: ContractChangeDetailFormData[];
 }

@@ -265,13 +265,27 @@ export interface HTableAnnex extends BaseEntity {
 /** 查询合同台账列表参数 */
 export interface HConMainQuery {
   /** 板块ID */
-  segId?: number;
+  projSegId?: number;
+  /** 分部ID */
+  projMguId: number;
   /** 项目ID */
   projId?: number;
   /** 合同名称 */
   conName?: string;
   /** 合同状态 */
   conStatus?: number;
+  /** 供应商名称 */
+  supName?: string;
+  /** 合同分类 */
+  conTypeId?: number;
+  /** 经办人 */
+  agentId?: number;
+  /** 创建人 */
+  createId?: number;
+  /** 创建日期 */
+  startDate?: any;
+  /** 创建日期 */
+  endDate?: any;
 }
 
 /** 新增/编辑合同台账完整参数 */
