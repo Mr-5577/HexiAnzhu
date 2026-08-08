@@ -38,7 +38,7 @@ withDefaults(defineProps<Props>(), {
   modelValue: undefined,
   options: () => [],
   placeholder: "请选择",
-  disabled: false,
+  disabled: undefined,
   multiple: false,
   clearable: false,
 });

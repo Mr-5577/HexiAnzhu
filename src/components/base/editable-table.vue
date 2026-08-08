@@ -343,6 +343,7 @@ interface Props {
   load?: (row: any, treeNode: any, resolve: (data: any[]) => void) => void;
   /** 默认展开的层级（0: 不展开, 1: 仅第一层, 2: 第一层和第二层） */
   defaultExpandLevel?: number;
+  disabled?: boolean;//只读
 }
 
 // Emits
@@ -375,6 +376,7 @@ const props = withDefaults(defineProps<Props>(), {
   expandRowKeys: () => [],
   lazy: false,
   defaultExpandLevel: 0,
+  disabled: false,
 });
 
 const emit = defineEmits<Emits>();
@@ -428,11 +430,16 @@ const parseThousand = (value: string): string => {
 /**
  * 获取列的 disabled 状态（支持布尔值或函数）
  */
+// const getColumnDisabled = (column: EditableColumn, row: any): boolean => {
+//   if (typeof column.disabled === "function") {
+//     return column.disabled(row);
+//   }
+//   return column.disabled || false;
+// };
 const getColumnDisabled = (column: EditableColumn, row: any): boolean => {
-  if (typeof column.disabled === "function") {
-    return column.disabled(row);
-  }
-  return column.disabled || false;
+  if (props.disabled) return true;                       // detail 直接禁用
+  if (typeof column.disabled === "function") return column.disabled(row);
+  return column.disabled ?? undefined;                  // 否则继承 el-form 的禁用
 };
 
 // 使用普通对象存储旧值，key 格式: "rowId_prop"

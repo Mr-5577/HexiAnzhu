@@ -113,26 +113,33 @@ const tableColumns = [
   {
     label: "合同名称",
     prop: "conName",
-    width: 130,
+    width: 250,
     showOverflowTooltip: true,
   },
   {
     label: "签证名称",
-    prop: "visaName",
+    prop: "bizTitle",
     width: 250,
     showOverflowTooltip: true,
   },
   {
-    label: "签证金额",
+    label: "申报金额",
     prop: "auditReviewAmt",
-    width: 250,
+    width: 120,
+    formatType:"#,##0.00",
+    showOverflowTooltip: true,
+  },
+  {
+    label: "审核金额",
+    prop: "auditReviewAmt",
+    width: 120,
     formatType:"#,##0.00",
     showOverflowTooltip: true,
   },
   {
     label: "创建人",
     prop: "createName",
-    width: 180,
+    width: 100,
     showOverflowTooltip: true,
   },
   {
@@ -143,8 +150,7 @@ const tableColumns = [
   },
   {
     label: "签证说明",
-    prop: "remark",
-    width: 120,
+    prop: "visaApplyDesc",
     showOverflowTooltip: true,
   },
 ];

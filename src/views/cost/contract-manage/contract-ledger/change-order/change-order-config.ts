@@ -55,6 +55,7 @@ export const createLinkConColumns = (reasonOptions: Ref<any[]>,): ComputedRef<Ed
       showSummary: true,
       showOverflowTooltip: false,
       width:120,
+      min: -Infinity,
     },
     {
       prop: "needVisa",

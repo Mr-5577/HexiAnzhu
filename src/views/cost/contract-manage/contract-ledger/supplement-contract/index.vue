@@ -83,7 +83,7 @@
           </el-tag>
         </template>
         <template #actions="{ row }">
-          <el-button type="primary" link class="row-link" @click="handleEdit(row)" :disabled="row.conStatus !== 0 && row.createId === userStore.userInfo.id">
+          <el-button type="primary" link class="row-link" @click="handleEdit(row)" :disabled="row.conStatus !== 0 || row.createId !== userStore.userInfo.id">
             编辑
           </el-button>
           <el-button type="primary" link class="row-link" @click="handleDetail(row)">
@@ -92,7 +92,7 @@
           <!-- <el-button type="primary" link class="row-link" @click="handleApprove(row)">
             审批
           </el-button> -->
-          <el-button type="danger" link class="row-link" @click="handleDelete(row)" :disabled="row.conStatus !== 0 && row.createId === userStore.userInfo.id">
+          <el-button type="danger" link class="row-link" @click="handleDelete(row)" :disabled="row.conStatus !== 0 || row.createId !== userStore.userInfo.id">
             删除
           </el-button>
         </template>

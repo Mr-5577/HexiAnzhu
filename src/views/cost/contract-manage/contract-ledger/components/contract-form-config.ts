@@ -22,7 +22,7 @@ export const NAV_CARDS: NavCard[] = [
 ];
 
 /** 创建价税明细列定义 */
-export const createPriceColumns = (): ComputedRef<EditableColumn[]> =>
+export const createPriceColumns = (isReadonly): ComputedRef<EditableColumn[]> =>
   computed<EditableColumn[]>(() => [
     { type: "index", label: "序号", width: 60, editable: false },
     {
@@ -39,6 +39,7 @@ export const createPriceColumns = (): ComputedRef<EditableColumn[]> =>
       showSummary: true,
       editable: true,
       editType: "number",
+      formatType:"#,##0.00",
       showOverflowTooltip: false,
       width:200,
     },
@@ -48,6 +49,7 @@ export const createPriceColumns = (): ComputedRef<EditableColumn[]> =>
       showSummary: true,
       editable: true,
       editType: "number",
+      formatType:"d%",
       showOverflowTooltip: false,
       width:100,
     },
@@ -57,6 +59,7 @@ export const createPriceColumns = (): ComputedRef<EditableColumn[]> =>
       showSummary: true,
       editable: false,
       editType: "number",
+      formatType:"#,##0.00",
       showOverflowTooltip: false,
       width:200,
     },
@@ -66,6 +69,7 @@ export const createPriceColumns = (): ComputedRef<EditableColumn[]> =>
       showSummary: true,
       editable: false,
       editType: "number",
+      formatType:"#,##0.00",
       showOverflowTooltip: false,
       width:200,
     },

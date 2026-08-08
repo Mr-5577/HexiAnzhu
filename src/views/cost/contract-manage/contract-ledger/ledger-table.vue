@@ -110,21 +110,21 @@
         type="primary"
         link
         @click="handleEdit(row)"
-        :disabled="row.conStatus !== 0 && row.createId === userStore.userInfo.id"
+        :disabled="row.conStatus !== 0 || row.createId === userStore.userInfo.id"
       >
         编辑
       </el-button>
       <el-button type="primary" link @click="handleDetail(row)">
         合同详情
       </el-button>
-      <el-button type="primary" link @click="handleBookDetail(row)">
+      <el-button type="primary" link @click="handleBookDetail(row)" :disabled="row.conStatus === 0 || row.conStatus === 10 || !row.conStatus">
         台账详情
       </el-button>
       <el-button
         type="danger"
         link
         @click="handleDelete(row)"
-        :disabled="row.conStatus !== 0 && row.createId === userStore.userInfo.id"
+        :disabled="row.conStatus !== 0 || row.createId !== userStore.userInfo.id"
       >
         删除
       </el-button>
@@ -303,7 +303,7 @@ const handleEdit = (row: HConMain) => {
 // 查看合同
 const handleDetail = (row: HConMain) => {
   router.push({
-    path: "/con/contract-ledger/edit",
+    path: "/con/contract-ledger/detail",
     query: {
       conId: row.id,
       mode: "detail"
@@ -315,7 +315,7 @@ const handleDetail = (row: HConMain) => {
 // 台账详情
 const handleBookDetail = (row: HConMain) => {
   router.push({
-    path: "/con/contract-ledger/detail",
+    path: "/con/contract-ledger/main",
     query: {
       conId: row.id,
       projId: row.projId,

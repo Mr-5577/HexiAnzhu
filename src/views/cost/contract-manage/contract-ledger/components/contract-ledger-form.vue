@@ -48,6 +48,7 @@
           id="card-basic"
           icon="📄"
           title="基本信息"
+          :disabled="isReadonly"
           v-model:collapsed="collapsedCards.basic"
         >
           <el-row :gutter="24">
@@ -94,6 +95,7 @@
                   placeholder="请选择合同分类"
                   style="width: 100%"
                   :width="'100%'"
+                  :disabled="isReadonly"
                   clearable
                   filterable
                 />
@@ -107,6 +109,7 @@
           id="card-contract"
           icon="📑"
           title="合同信息"
+          :disabled="isReadonly"
           v-model:collapsed="collapsedCards.contract"
         >
           <el-row
@@ -152,7 +155,8 @@
                 <EnumSelect
                   v-model="formData.manageType"
                   :options="ManageTypeEnum"
-                  placeholder="请选择管理类型"
+                  placeholder="请选择管理类型"     
+                  :disabled="isReadonly"
                 />
               </el-form-item>
             </el-col>
@@ -193,6 +197,7 @@
                   v-model="formData.priceType"
                   :options="PriceTypeEnum"
                   placeholder="请选择计价方式"
+                  :disabled="isReadonly"
                 />
               </el-form-item>
             </el-col>
@@ -202,6 +207,7 @@
                   v-model="formData.payMethod"
                   :options="PayTypeEnum"
                   placeholder="请选择产值确认方式"
+                  :disabled="isReadonly"
                 />
               </el-form-item>
             </el-col>            
@@ -343,7 +349,7 @@
                   v-model="formData.needSeal"
                   :options="BOOL_OPTIONS"
                   :clearable="false"
-                  placeholder="请选择"
+                  placeholder="请选择"      
                 />
               </el-form-item>
             </el-col>
@@ -353,7 +359,7 @@
                   v-model="formData.sealTypes"
                   :options="SealTypesEnum"
                   multiple
-                  :disabled="!formData.needSeal"
+                  :disabled="!formData.needSeal || isReadonly"
                   placeholder="请选择印章类型"
                 />
               </el-form-item>
@@ -380,6 +386,7 @@
           id="card-price"
           icon="💰"
           title="价款及税率"
+          :disabled="isReadonly"
           v-model:collapsed="collapsedCards.price"
         >
           <SummaryBar :items="summaryItems" />
@@ -404,6 +411,7 @@
           id="card-supplier"
           icon="🏢"
           title="供方信息"
+          :disabled="isReadonly"
           v-model:collapsed="collapsedCards.supplier"
         >
           <el-row :gutter="24">
@@ -484,10 +492,12 @@
           id="card-payrate"
           icon="📊"
           title="支付比例"
+          :disabled="isReadonly"
           v-model:collapsed="collapsedCards.payrate"
         >
           <DetailTableCard
             title="支付比例明细"
+            :disabled="isReadonly"
             :count="payrateTable.length"
             add-text="新增支付明细"
             v-model="payrateTable"
@@ -507,6 +517,7 @@
           id="card-annex"
           icon="📎"
           title="合同附件"
+          :disabled="isReadonly"
           v-model:collapsed="collapsedCards.annex"
         >
           <el-form-item label="合同正文及附件" required>

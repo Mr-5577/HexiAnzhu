@@ -1,4 +1,4 @@
-import { computed, ref, type ComputedRef, type Ref } from "vue";
+import { computed, ref, vShow, type ComputedRef, type Ref } from "vue";
 import type { EditableColumn } from "@/components/base/editable-table.vue";
 import type { NavCard } from "@/composables/use-form-layout";
 import { AddProcessSrcEnum, dedTypeEnum, invoiceStatusEnum } from "@/constants/contract-manage/enums";
@@ -76,7 +76,7 @@ export const invoiceMColumns = computed<EditableColumn[]>(() => [
     // 发票状态（0=待查验 1=合格发票 2=待人工审核 3=人工通过 4=人工拒绝）
     prop: "status",
     label: "发票状态",
-    width: 120,
+    width: 90,
     editable: false,
     formatter: (row) => {
       const target = getEnumLabel(invoiceStatusEnum, row?.status || 0);
@@ -86,7 +86,7 @@ export const invoiceMColumns = computed<EditableColumn[]>(() => [
   {
     prop: "isValid",
     label: "查验真假",
-    width: 120,
+    width: 90,
     editable: false,
     formatter: (row) => (row.isValid ? "真发票" : "假发票"),
   },
@@ -115,7 +115,7 @@ export const invoiceMColumns = computed<EditableColumn[]>(() => [
     prop: "invDate",
     label: "开票日期",
     editable: false,
-    minWidth: 120,
+    minWidth: 100,
     showOverflowTooltip: false,
   },
   {
@@ -171,62 +171,72 @@ export const dedDetailColumns = [
   { prop: "dedDesc", label: "说明", minWidth: 120 },
 ];
 
+interface DedColumnOptions {
+  dedTypeOptions: Ref<any[]>;  // 扣款类型
+}
 
-export const dedColumns = computed<EditableColumn[]>(() => [
+export const createDedColumns = (options: DedColumnOptions) => {
+  const { dedTypeOptions } = options;
+  
+  return computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {
     prop: "dedName",
-    label: "扣款事项",
+    label: "事项名称",
     editable: true,
     editType: "input",
     showOverflowTooltip: false,
+    width: 350,
   },
   {
     prop: "dedTypeId",
-    label: "扣款类型",
+    label: "类型",
     editable: true,
     editType: "select",
     showOverflowTooltip: false,
     // 自定义键名
-    optionLabelField: "label",
-    optionValueField: "value",
-    options: dedTypeEnum as any,
+    optionLabelField: "dicLabel",
+    optionValueField: "id",
+    options: dedTypeOptions .value || [],
+    width:150,
   },
-  {
-    prop: "dedAmt",
-    label: "应扣款金额",
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-  },
+  // {
+  //   prop: "dedAmt",
+  //   label: "应扣款金额",
+  //   editable: true,
+  //   editType: "number",
+  //   showOverflowTooltip: false,
+  // },
   {
     prop: "dedThisAmt",
-    label: "本次扣款金额",
+    label: "金额(元)",
     editable: true,
     editType: "number",
     showOverflowTooltip: false,
+    width:150,
+    showSummary: true,
   },
-  {
-    prop: "dedAlreadyAmt",
-    label: "已扣款金额",
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "dedLeaveAmt",
-    label: "未扣金额",
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-  },
+  // {
+  //   prop: "dedAlreadyAmt",
+  //   label: "已扣款金额",
+  //   editable: true,
+  //   editType: "number",
+  //   showOverflowTooltip: false,
+  // },
+  // {
+  //   prop: "dedLeaveAmt",
+  //   label: "未扣金额",
+  //   editable: true,
+  //   editType: "number",
+  //   showOverflowTooltip: false,
+  // },
   {
     prop: "dedDesc",
-    label: "扣款说明",
+    label: "事项说明",
     editable: true,
     editType: "input",
     showOverflowTooltip: false,
-    width: 240,
+
   },
   {
     label: "操作",
@@ -235,6 +245,7 @@ export const dedColumns = computed<EditableColumn[]>(() => [
     fixed: "right",
   },
 ]);
+}
 
 // ==================== 付款方式 ====================
 export const payWayDetailColumns = [

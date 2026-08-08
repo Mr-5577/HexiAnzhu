@@ -94,13 +94,13 @@
         {{ getReasonText(row.changeReasonId) }}
       </template>
       <template #actions="{ row }">
-        <el-button type="primary" link @click="handleEdit(row)" :disabled="row.status !== 0 && row.createId === userStore.userInfo.id">
+        <el-button type="primary" link @click="handleEdit(row)" :disabled="row.status !== 0 || row.createId !== userStore.userInfo.id">
           编辑
         </el-button>
         <el-button type="primary" link @click="handleDetail(row)">
           详情
         </el-button>
-        <el-button type="danger" link @click="handleDelete(row)" :disabled="row.status !== 0 && row.createId === userStore.userInfo.id">
+        <el-button type="danger" link @click="handleDelete(row)" :disabled="row.status !== 0 || row.createId !== userStore.userInfo.id">
           删除
         </el-button>
         <!-- <el-button type="primary" link @click="handleApproval(row)">

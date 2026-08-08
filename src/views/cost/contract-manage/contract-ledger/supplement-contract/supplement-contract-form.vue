@@ -108,7 +108,7 @@
           </el-row>
           <el-row :gutter="24" v-show="isJianAn">
             <el-col v-if="isJianAn" :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
-              <el-form-item label="楼栋范围" prop="mainBldNames" required>
+              <el-form-item label="楼栋范围" prop="mainBldNames">
                 <SelectWithAll
                   v-model="formData.mainBldIds"
                   v-model:labelText="formData.mainBldNames"
@@ -725,8 +725,8 @@ const initFormData = () => ({
   remark: "", // 备注
   userName: userStore.userInfo?.empName,
   createDate: dateUtil().format("YYYY-MM-DD"),
-  projId: props.projId,
-  mainConId: props.conId,
+  projId:null,
+  mainConId: null,
   agentId: userStore.userInfo.id,
   deptName: userStore.userInfo?.deptName,
   mguName: userStore.userInfo?.mguName,
@@ -934,7 +934,7 @@ watch(
     priceTable.value.forEach((item) => {
       const amt = Number(item.itemAmt) || 0; // ← 确认这行存在
       const rate = Number(item.itemTaxRate) || 0; // ← 确认这行存在
-      if (amt > 0 && rate >= 0) {
+      if (rate >= 0) {
         item.itemExclAmt =
           Math.round((amt / (1 + rate / 100)) * 100) / 100;
         item.itemTaxAmt =
@@ -988,21 +988,22 @@ const handleVisaSelect = (data) => {
     let newData = data || [];
     const selected = newData[0];
     // 去重：合同已存在于明细中则提示并跳过
-    const exists = tableList.value.some((item) => (item.src_id === selected.visaId && item.srcType === 0));
+    const exists = tableList.value.some((item) => (item.src_id === selected.id && item.srcType === 0));
     if (exists) {
       ElMessage.warning(`签证「${selected.visaName}」已在事项明细中，不可重复关联`);
       return;
     }
     addProcess()
     if (tableList.value.length>0) {
-      tableList.value[tableList.value.length-1].srcType = 0;//签证
-      tableList.value[tableList.value.length-1].src_id = selected.visaId;
+      debugger
+      tableList.value[tableList.value.length-1].src_id = selected.id;
       tableList.value[tableList.value.length-1].src_apply_id = selected.createId;
       tableList.value[tableList.value.length-1].src_apply_date = selected.createDate;
-      tableList.value[tableList.value.length-1].process_name = selected.visaName;
+      tableList.value[tableList.value.length-1].process_name = selected.bizTitle;
       tableList.value[tableList.value.length-1].process_amt = selected.auditReviewAmt;
       tableList.value[tableList.value.length-1].process_excl_amt = selected.auditReviewAmt;
-      tableList.value[tableList.value.length-1].remark = selected.remark;
+      tableList.value[tableList.value.length-1].remark = selected.visaApplyDesc;
+      tableList.value[tableList.value.length-1].srcType = 0;//签证
     }
   }
 };
@@ -1052,6 +1053,8 @@ const changeProject = async (value: number) => {
       formData.value.bldNames = "";
       formData.value.mainConId = null;
       formData.value.mainConName = "";
+      formData.value.mainBldIds=[];
+      formData.value.mainBldNames="";
       tableList.value=[];
       if (value) {
         await getBuildingListByProjId(value);
@@ -1075,9 +1078,7 @@ const handleMainConSelect = (data) => {
   if (data && data.length > 0) {
     let newData = data || [];
     if (formData.value.supId != newData[0].id) {
-      formData.value.mainConId = newData[0].id;
-      formData.value.mainConName = newData[0].conName;
-      getConMainData(formData.value.mainConId);
+      getConMainData(newData[0].id);
     }
   }
 };
@@ -1279,12 +1280,13 @@ const getEmpTreeData = async () => {
 };
 
 // 获取主合同信息
-const getConMainData = async (conId) => {
-  if (!conId) return;
-  if (conId === formData.value.mainConId) return;
+const getConMainData = async (inConId) => {
+  debugger
+  if (!inConId) return;
+  if (inConId === formData.value.mainConId) return;
   try {
     const res = await contractLedgerApi.getContractLedgerById({
-      id: conId,
+      id: inConId,
     });
     if (res.code === 200 && res.data) {
       const {
@@ -1292,8 +1294,8 @@ const getConMainData = async (conId) => {
       } = res.data;
 
       if (formData.value.projId != conMain.projId)
-        getBuildingListByProjId(conMain.projId);
-
+        await getBuildingListByProjId(conMain.projId);
+      debugger
       formData.value.segId = conMain.segId;
       formData.value.segName = conMain.segName;
       formData.value.segNo = conMain.segNo;
@@ -1420,12 +1422,12 @@ const getBuildingListByProjId = async (projId: number) => {
     const buildingRes = await projectAreaApi.getBuildingList({ projId });
     if (buildingRes.code === 200) {
       buildingOptions.value = buildingRes.data || [];
-      if (formData.value.bldIds && formData.value.bldIds.length > 0) {
-        const names = buildingOptions.value
-          .filter((v: any) => formData.value.bldIds.includes(v.id))
-          .map((v: any) => v.bldName);
-        formData.value.bldNames = names.join(",");
-      }
+      // if (formData.value.bldIds && formData.value.bldIds.length > 0) {
+      //   const names = buildingOptions.value
+      //     .filter((v: any) => formData.value.bldIds.includes(v.id))
+      //     .map((v: any) => v.bldName);
+      //   formData.value.bldNames = names.join(",");
+      // }
     }
   } catch (error) {
     console.error("获取楼栋列表失败:", error);

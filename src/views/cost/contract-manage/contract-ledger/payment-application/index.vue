@@ -75,8 +75,16 @@
             {{ getEnumLabel(approvalStatusEnum, row?.conStatus || 0) }}
           </el-tag>
         </template>
+        <template #reqType="{ row }">
+          <el-tag
+            size="small"
+            :type="getEnumType(ReqTypeEnum, row?.reqType || 0)"
+          >
+            {{ getEnumLabel(ReqTypeEnum, row?.reqType || 0) }}
+          </el-tag>
+        </template>
         <template #actions="{ row }">
-          <el-button type="primary" link class="row-link" @click="handleEdit(row)" :disabled="row.status !== 0 && row.createId === userStore.userInfo.id">
+          <el-button type="primary" link class="row-link" @click="handleEdit(row)" :disabled="row.status !== 0 || row.createId !== userStore.userInfo.id">
             编辑
           </el-button>
           <el-button type="primary" link class="row-link" @click="handleDetail(row)">
@@ -85,7 +93,7 @@
           <!-- <el-button type="primary" link class="row-link" @click="handleApprove(row)">
             审批
           </el-button> -->
-          <el-button type="danger" link class="row-link" @click="handleDelete(row)" :disabled="row.status !== 0 && row.createId === userStore.userInfo.id">
+          <el-button type="danger" link class="row-link" @click="handleDelete(row)" :disabled="row.status !== 0 || row.createId !== userStore.userInfo.id">
             删除
           </el-button>
         </template>
@@ -104,6 +112,7 @@ import { HConPayment } from "@/types/cost/contract-manage/payment-application-ty
 import { approvalStatusEnum } from "@/constants/bidding/enums";
 import { getEnumLabel, getEnumType } from "@/utils/enum";
 import { useUserStore } from "@/stores/user-store";
+import { ReqTypeEnum } from "@/constants/contract-manage/enums";
 
 defineOptions({ name: "payment-application" });
 
@@ -134,13 +143,13 @@ const handleReset = () => {
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
   {
-    prop: "reqDesc",
+    prop: "bizTitle",
     label: "付款申请说明",
     minWidth: 150,
     showOverflowTooltip: true,
   },
   {
-    prop: "reqType",
+    slot: "reqType",
     label: "付款类型",
     width: 120,
     formatter: (row: HConPayment) => (row.reqType === 0 ? "请款" : "来票冲账"),

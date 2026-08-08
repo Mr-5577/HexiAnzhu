@@ -54,6 +54,7 @@ export const createProcessColumns = (): ComputedRef<EditableColumn[]> =>
       editType: "number",
       showOverflowTooltip: false,
       width:200,
+      min: -Infinity,
     },
     {
       prop: "visaApplyDate",
@@ -99,6 +100,7 @@ export const createPriceColumns = (): ComputedRef<EditableColumn[]> =>
       editType: "number",
       showOverflowTooltip: false,
       width:200,
+      min: -Infinity,
     },
     {
       prop: "itemTaxRate",
@@ -117,6 +119,7 @@ export const createPriceColumns = (): ComputedRef<EditableColumn[]> =>
       editType: "number",
       showOverflowTooltip: false,
       width:200,
+      min: -Infinity,
     },
     {
       prop: "itemTaxAmt",
@@ -126,6 +129,7 @@ export const createPriceColumns = (): ComputedRef<EditableColumn[]> =>
       editType: "number",
       showOverflowTooltip: false,
       width:200,
+      min: -Infinity,
     },
     {
       prop: "remark",

@@ -795,7 +795,6 @@ const getProjectOptions = async () => {
 // 初始化数据字典
 const initDictData = async () => {
   await loadDicts();
-  debugger
   wasteCostReasonOptions.value = getDictList(dictMapping.invalidCostReason); // 无效成本原因
   changeReasonOptions.value = getDictList(dictMapping.changeReason); // 变更原因列表
 };

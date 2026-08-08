@@ -110,7 +110,7 @@
                   placeholder="请选择变更发生日期"
                   style="width: 100%"
                   value-format="YYYY-MM-DD"
-                  :disabled-date="(time: Date) => time.getTime() > Date.now() - 8.64e7"
+                  :disabled-date="(time: Date) => time.getTime() >= new Date(new Date().toLocaleDateString()).getTime() + 86400000"
                 />
               </el-form-item>
             </el-col>

@@ -32,7 +32,7 @@ export const ManageTypeEnum = [
 
 /** 请款类型 */
 export const ReqTypeEnum = [
-  { value: 0, label: "正常请款" },
+  { value: 0, label: "请款" },
   { value: 1, label: "来票冲账" },
 ] as const;
 

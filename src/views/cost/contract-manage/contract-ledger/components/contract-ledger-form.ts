@@ -166,7 +166,7 @@ export function useContractForm(props: ContractFormProps, emit: ContractFormEmit
 
   // ---- 明细表 ----
   const priceTable = ref<any[]>([]);
-  const priceColumns = createPriceColumns();
+  const priceColumns = createPriceColumns(isReadonly);
   const payrateTable = ref<any[]>([]);
   const payrateColumns = createPayrateColumns(paymentTypeOptions);
 
@@ -1079,6 +1079,7 @@ export function useContractForm(props: ContractFormProps, emit: ContractFormEmit
     } else if (isEditMode.value || isDetailMode.value) {
       if (conId.value) {
         await loadContractDetail();
+        debugger
       }
     }
   };
