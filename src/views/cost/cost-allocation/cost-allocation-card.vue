@@ -36,6 +36,8 @@
     <CostAllocationDetailDialog
       v-model="dialogVisible"
       :projId="props.projId"
+      :projName="props.projName"
+      :displayName="props.displayName"
       :bizType="props.bizType"
       :allocAmt="props.allocAmt"
       :cstMData="props.cstMData"
@@ -65,6 +67,8 @@ interface Props {
   warningStatus?: number;
   /** 项目ID */
   projId: number | undefined;
+  projName?: string;
+  displayName?: string;
   /** 业务单据ID */
   bizBillId?: number | undefined;
   /** 业务类型 */
@@ -80,6 +84,8 @@ const props = withDefaults(defineProps<Props>(), {
   allocationStatus: undefined,
   warningStatus: undefined,
   projId: undefined,
+  projName: undefined,
+  displayName: undefined,
   bizBillId: undefined,
   bizType: undefined,
   allocAmt: 0,

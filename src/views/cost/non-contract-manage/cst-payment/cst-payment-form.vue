@@ -311,6 +311,26 @@
         <!-- 付款方式 -->
         <div class="item-card" v-if="showDeductionAndPayWay">
           <div class="section-title">支付方式</div>
+          <div
+            style="display: flex; justify-content: flex-end; margin-bottom: 8px"
+          >
+            <el-button
+              type="primary"
+              size="small"
+              :disabled="payWayTable.length == 0"
+              @click="handleFinanceAlloc"
+            >
+              财务分摊
+            </el-button>
+            <el-button
+              type="primary"
+              size="small"
+              @click="addPayWay"
+              v-if="!isDetail"
+            >
+              新增支付方式
+            </el-button>
+          </div>
           <template v-if="isDetail || !!billData.status">
             <base-table
               ref="tableRef"
@@ -338,13 +358,6 @@
               :editable="true"
               :on-save="handlePayWaySave"
             >
-              <template #actionBar>
-                <div class="actionBar-buttons">
-                  <el-button type="primary" size="small" @click="addPayWay">
-                    新增支付方式
-                  </el-button>
-                </div>
-              </template>
               <template #actions="{ row }">
                 <el-button link type="danger" @click="deletePayWay(row)">
                   删除
@@ -526,6 +539,17 @@
       :detailList="detailList"
       @success="handleInvoiceDetailSuccess"
     />
+
+    <!-- 财务分摊 -->
+    <FinanceAllocationDialog
+      ref="financeAllocationDialogRef"
+      v-model="financeAllocVisible"
+      :payWayTable="payWayTable"
+      :segId="formData.segId"
+      :projId="formData.projId"
+      :dialogMode="isDetail ? 'view' : 'edit'"
+      @select="getFinaList"
+    ></FinanceAllocationDialog>
   </div>
 </template>
 
@@ -565,6 +589,7 @@ import { buildTree } from "@/utils/tree.ts";
 import BillHeader from "@/components/business/bill-components/bill-header.vue";
 import BillInfo from "@/components/business/bill-components/bill-info.vue";
 import CostAllocationCard from "@/views/cost/cost-allocation/cost-allocation-card.vue";
+import FinanceAllocationDialog from "@/views/cost/finance-allocation/finance-allocation-dialog.vue";
 
 defineOptions({ name: "cst-payment-form" });
 
@@ -601,6 +626,7 @@ const feeTypeOptions = ref([]);
 const feeTypeFlatOptions = ref([]);
 const annexFileList = ref([]);
 const uploadVisibleDialog = ref(false);
+const financeAllocVisible = ref(false); // 财务分摊弹窗
 
 const cstProcessData = ref({
   id: undefined,
@@ -1459,7 +1485,21 @@ const payWayColumns = computed<EditableColumn[]>(() => [
     width: 100,
   },
 ]);
-
+const getFinaList = (data) => {
+  console.log("获取的财务分摊数据", data);
+  payWayTable.value = data || [];
+};
+const handleFinanceAlloc = () => {
+  if (!formData.value.segId) {
+    ElMessage.error("请先选择项目");
+    return;
+  }
+  if (payWayTable.value.length > 0) {
+    financeAllocVisible.value = true;
+  } else {
+    ElMessage.error("请先添加付款方式");
+  }
+};
 const addPayWay = () => {
   const newRowData = {
     uuid: uuidv4(),

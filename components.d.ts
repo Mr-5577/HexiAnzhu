@@ -11,7 +11,6 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    2: typeof import('./src/components/business/choose-bid-award-item-dialog copy 2.vue')['default']
     BaseChart: typeof import('./src/components/base/base-chart.vue')['default']
     BaseEnumSelect: typeof import('./src/components/base/base-enum-select.vue')['default']
     BaseFloatNav: typeof import('./src/components/base/base-float-nav.vue')['default']
@@ -24,7 +23,6 @@ declare module 'vue' {
     BillHeader: typeof import('./src/components/business/bill-components/bill-header.vue')['default']
     BillInfo: typeof import('./src/components/business/bill-components/bill-info.vue')['default']
     ChooseBidAwardItemDialog: typeof import('./src/components/business/choose-bid-award-item-dialog.vue')['default']
-    ChooseBidTenderDialog: typeof import('./src/components/business/choose-bid-tender-dialog.vue')['default']
     ChooseContractDialog: typeof import('./src/components/business/choose-contract-dialog.vue')['default']
     ChooseCostChangeDialog: typeof import('./src/components/business/choose-cost-change-dialog.vue')['default']
     ChooseCostVisaDialog: typeof import('./src/components/business/choose-cost-visa-dialog.vue')['default']
@@ -88,7 +86,6 @@ declare module 'vue' {
     ElTreeSelect: typeof import('element-plus/es')['ElTreeSelect']
     ElUpload: typeof import('element-plus/es')['ElUpload']
     InvoiceDetailDialog: typeof import('./src/components/business/invoice-detail-dialog.vue')['default']
-    PickInput: typeof import('./src/components/base/pick-input.vue')['default']
     ProjectSelector: typeof import('./src/components/business/project-selector.vue')['default']
     ProjectTreeSelector: typeof import('./src/components/business/project-tree-selector.vue')['default']
     ProjectTreeSelector2: typeof import('./src/components/business/project-tree-selector2.vue')['default']

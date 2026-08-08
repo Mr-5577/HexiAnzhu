@@ -120,15 +120,15 @@ const bindUnderGroundList = ref([]);
 // 关联地下室验证规则（动态）
 const bindUnderGroundRules = computed(() => {
   // 只有非地下室才需要关联地下室
-  if (!formData.value.isUnderGround) {
-    return [
-      {
-        required: true,
-        message: "请关联地下室",
-        trigger: "change",
-      },
-    ];
-  }
+  // if (!formData.value.isUnderGround) {
+  //   return [
+  //     {
+  //       required: true,
+  //       message: "请关联地下室",
+  //       trigger: "change",
+  //     },
+  //   ];
+  // }
   return [];
 });
 
