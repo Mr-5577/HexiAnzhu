@@ -7,6 +7,8 @@
     :top="'8vh'"
     :confirm-loading="confirmLoading"
     :confirm-text="'确定'"
+    :showConfirmButton="props.dialogMode == 'edit'"
+    :showCancelButton="props.dialogMode == 'edit'"
     @confirm="handleConfirm"
     @close="handleClose"
   >
@@ -14,6 +16,7 @@
       ref="financeAllocationRef"
       :projId="props.projId"
       :segId="props.segId"
+      :dialogMode="props.dialogMode"
       :isDialogMode="true"
       :payWayTable="payWayTable"
     ></FinanceAllocationDetail>
@@ -30,6 +33,7 @@ interface Props {
   projId?: number | undefined;
   segId?: number | undefined;
   payWayTable?: any[];
+  dialogMode?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -37,6 +41,7 @@ const props = withDefaults(defineProps<Props>(), {
   projId: undefined,
   segId: undefined,
   payWayTable: () => [],
+  dialogMode: "edit", // edit:编辑模式，view:查看模式
 });
 
 // Emits

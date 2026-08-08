@@ -183,6 +183,26 @@
         <!-- 支付方式 -->
         <div class="item-card" v-if="showDeductionAndPayWay">
           <div class="section-title">支付方式</div>
+          <div
+            style="display: flex; justify-content: flex-end; margin-bottom: 8px"
+          >
+            <el-button
+              type="primary"
+              size="small"
+              :disabled="payWayTable.length == 0"
+              @click="handleFinanceAlloc"
+            >
+              财务分摊
+            </el-button>
+            <el-button
+              type="primary"
+              size="small"
+              @click="addPayWay"
+              v-if="!isDetail"
+            >
+              新增支付方式
+            </el-button>
+          </div>
           <template v-if="isDetail || !!billData.status">
             <base-table
               ref="payWayTableRef"
@@ -210,21 +230,6 @@
               :editable="true"
               :on-save="handlePayWaySave"
             >
-              <template #actionBar>
-                <div class="actionBar-buttons">
-                  <el-button
-                    type="primary"
-                    size="small"
-                    :disabled="payWayTable.length == 0"
-                    @click="handleFinanceAlloc"
-                  >
-                    财务分摊
-                  </el-button>
-                  <el-button type="primary" size="small" @click="addPayWay">
-                    新增支付方式
-                  </el-button>
-                </div>
-              </template>
               <template #actions="{ row }">
                 <el-button link type="danger" @click="deletePayWay(row)">
                   删除
@@ -394,6 +399,7 @@
       :payWayTable="payWayTable"
       :segId="formData.segId"
       :projId="formData.projId"
+      :dialogMode="isDetail ? 'view' : 'edit'"
       @select="getFinaList"
     ></FinanceAllocationDialog>
   </div>
@@ -672,7 +678,7 @@ watch(
 );
 
 // ==================== 扣款事项 ====================
-const dedDetailColumns:any = [
+const dedDetailColumns: any = [
   { type: "index", label: "序号", width: 60 },
   { prop: "dedName", label: "事项名称", minWidth: 120 },
   { prop: "dedTypeName", label: "调整类型", minWidth: 120 },
@@ -786,7 +792,7 @@ const handleDedSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
 };
 
 // ==================== 发票登记 ====================
-const invoiceMDetailColumns:any = [
+const invoiceMDetailColumns: any = [
   { type: "index", label: "序号", width: 60 },
   {
     // 发票状态（0=待查验 1=合格发票 2=待人工审核 3=人工通过 4=人工拒绝）
@@ -1207,7 +1213,7 @@ const deleteInvoiceM = ({ uuid }) => {
 };
 
 // ==================== 付款方式 ====================
-const payWayDetailColumns:any = [
+const payWayDetailColumns: any = [
   { type: "index", label: "序号", width: 60 },
   { prop: "payDesc", label: "摘要", minWidth: 200 },
   { prop: "payWayName", label: "付款方式", minWidth: 150 },

@@ -1765,8 +1765,8 @@ const loadAllocationData = async () => {
       await Promise.all([getBusiSegList(), getProductList()]);
       // 处理查询到的分摊数据，回显到页面
       const allocDs = res.data?.allocDs || [];
-      const newData = allocDs.filter((item: any) => item.prodId);
-      processPopupData(newData);
+      const newData = allocDs.filter((item: any) => item.allocAmt > 0);
+      processPopupData(allocDs);
     }
   } catch (error) {}
 };

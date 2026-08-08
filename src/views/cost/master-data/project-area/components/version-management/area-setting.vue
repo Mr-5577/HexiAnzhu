@@ -179,6 +179,7 @@ const handleBack = () => {
 
 // 加载数据
 const getTableData = async () => {
+  if (!queryParams.value.bldId) return;
   try {
     tableLoading.value = true;
     tableList.value = [];
@@ -375,7 +376,7 @@ const getBuildingList = async () => {
       buildingList.value = res.data || [];
       if (buildingList.value.length > 0) {
         queryParams.value.bldId = buildingList.value[0].id; // 默认选中第一个楼栋
-        // await getTableData(); // 获取默认选中楼栋的数据
+        await getTableData(); // 获取默认选中楼栋的数据
       } else {
         ElMessage.warning("该项目下没有楼栋数据");
       }
@@ -407,7 +408,7 @@ onMounted(async () => {
     await getPrevVersionDetail(); // 获取上一版面积版本明细
   }
   await getBuildingList(); // 先获取楼栋列表
-  await getTableData(); // 默认查询选中的第一个楼栋下的数据
+  // await getTableData(); // 默认查询选中的第一个楼栋下的数据
 });
 </script>
 

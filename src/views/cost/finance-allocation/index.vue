@@ -39,7 +39,7 @@
         <template #expand="{ row }">
           <div class="expand-table-wrapper">
             <div class="expand-title">拆分明细</div>
-            <template v-if="isEdit">
+            <template v-if="!isDetail">
               <editable-table
                 ref="getDedTableRef(row)"
                 :row-key="'uuid'"
@@ -76,7 +76,7 @@
             <template v-else>
               <base-table
                 :columns="viewColumns"
-                :tableData="row.finaDs"
+                :tableData="row.finaDs || []"
                 :rowKey="'uuid'"
                 :pagination="false"
                 :show-toolbar="false"
@@ -85,6 +85,7 @@
                 :border="true"
                 :stripe="true"
                 :isExpandAll="true"
+                :compactEmpty="true"
               ></base-table>
             </template>
           </div>
@@ -125,6 +126,7 @@ interface Props {
   projId?: number; // 项目ID
   segId?: number; // 板块ID
   isDialogMode?: boolean; // 是否为弹窗模式
+  dialogMode?: string; // 弹窗模式，edit  view
   payWayTable?: any[]; // 支付方式表格数据
 }
 
@@ -132,6 +134,7 @@ const props = withDefaults(defineProps<Props>(), {
   projId: undefined,
   segId: undefined,
   isDialogMode: false, // 页面模式，默认非弹窗模式
+  dialogMode: "edit", // 弹窗模式，edit  view
   payWayTable: () => [],
 });
 
@@ -147,7 +150,7 @@ const isEdit = computed(() => {
   return route.query.mode == "edit";
 });
 const isDetail = computed(() => {
-  return route.query.mode == "view";
+  return route.query.mode == "view" || props.dialogMode == "view";
 });
 
 const lightweightDetail = ref({
@@ -414,11 +417,12 @@ const validateData = () => {
 // 提交确认支付
 const handleSubmit = async () => {
   console.log("提交数据:", mainTableData.value);
+  debugger;
   const allValid = validateData();
   if (allValid) {
     submitLoading.value = true;
     const detailList = mainTableData.value.flatMap((item) => item.finaDs || []);
-    
+
     try {
       let res;
       // 根据业务类型选择接口
@@ -484,18 +488,21 @@ const processData = (list) => {
         }));
       } else {
         // 没有数据：添加一行默认数据
-        finaDs = [
-          {
-            uuid: uuidv4(),
-            id: undefined,
-            nconBillId: item.nconBillId,
-            payWayId: item.id,
-            finaSubDesc: item.payDesc,
-            finaOrgId: undefined,
-            finaSubId: undefined,
-            finaSubAmt: item.payAmt || 0,
-          },
-        ];
+        if(!isDetail.value) {
+          finaDs = [
+            {
+              uuid: uuidv4(),
+              id: undefined,
+              nconBillId: item.nconBillId,
+              payWayId: undefined,
+              pmWayId: props.isDialogMode ? undefined : item.id,
+              finaSubDesc: item.payDesc,
+              finaOrgId: undefined,
+              finaSubId: undefined,
+              finaSubAmt: item.payAmt || 0,
+            },
+          ];
+        }
       }
       return {
         ...item,

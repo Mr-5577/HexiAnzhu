@@ -94,7 +94,7 @@
           </div>
           <div class="info-item half">
             <span class="info-label">业态：</span>
-            <span class="info-value">{{ businessTypeNames }}</span>
+            <span class="info-value">{{ businessType }}</span>
           </div>
         </div>
       </div>
@@ -113,7 +113,6 @@
         :editable="true"
         :default-expand-level="1"
         :on-save="handleSave"
-        :key="tableKey"
       >
         <template #actions="{ row }">
           <el-button
@@ -199,6 +198,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { List, WarningFilled } from "@element-plus/icons-vue";
 import EditableTable from "@/components/base/editable-table.vue";
 import type { EditableColumn } from "@/components/base/editable-table.vue";
+import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { costCategoryApi } from "@/api/cost/master-data/cost-category-api";
 import { productTypeApi } from "@/api/cost/master-data/product-type-api";
 import CostAlocationDialog from "./choose-sub-dialog.vue";
@@ -272,11 +272,6 @@ const warningData = ref([]); // 预警表格数据
 const subjectColumns = ref<EditableColumn[]>([]); // 动态生成的列配置
 
 const baseRawTreeData = ref([]); // 原始树形数据
-const editableTableRef = ref(null);
-const tableKey = ref(0);
-
-const backupSubjectData = ref([]); // 备份原始数据
-const backupProducts = ref([]); // 备份原始产品列表
 
 // 分摊信息
 const apportionInfo = ref({
@@ -288,8 +283,8 @@ const apportionInfo = ref({
   allocStatus: 0,
   allocWarn: 0,
 });
-// 业态name信息
-const businessTypeNames = computed(() => {
+
+const businessType = computed(() => {
   if (!selectedBuildings.value.length || !buildingOptions.value.length) {
     return "";
   }
@@ -303,8 +298,18 @@ const businessTypeNames = computed(() => {
   return [...new Set(prodNames)].join("、");
 });
 
+const businessTypeIds = computed(() => {
+  if (!selectedBuildings.value.length || !buildingOptions.value.length) {
+    return [];
+  }
+  const prodIds = buildingOptions.value
+    .filter((item) => selectedBuildings.value.includes(item.id))
+    .map((item) => item.prodIds || []);
+  // 去重后返回数组
+  return [...new Set(prodIds)];
+});
 // 处理得到的选中楼栋关联的业态数据
-const getBusinessType = () => {
+const handleBusinessType = () => {
   const prodList = buildingOptions.value
     .filter((item) => selectedBuildings.value.includes(item.id))
     .flatMap((item) => {
@@ -329,156 +334,15 @@ const getBusinessType = () => {
       (item, index, self) =>
         index === self.findIndex((t) => t.prodId === item.prodId),
     );
+  console.log("prodList:", prodList);
   return prodList;
 };
-// ==================== 新增：过滤树形数据，只保留指定业态的字段 ====================
-const filterTreeDataByProducts = (treeData: any[], products: any[]) => {
-  if (!treeData || treeData.length === 0) return treeData;
-  if (!products || products.length === 0) {
-    // 没有业态时，清空所有业态字段
-    return clearAllProductFields(treeData);
+
+const handleBuilding = (data: any[]) => {
+  if (!data.length) return;
+  const prodList = handleBusinessType();
+  if (prodList.length) {
   }
-
-  const validProdIds = products.map((p) => p.prodId);
-
-  const traverse = (nodes: any[]): any[] => {
-    return nodes.map((node) => {
-      const newNode = { ...node };
-
-      // 找出所有需要删除的业态字段
-      const keysToDelete: string[] = [];
-      Object.keys(newNode).forEach((key) => {
-        const match = key.match(/^(allocAmt|allocExclAmt|allocWarn)_(\d+)$/);
-        if (match) {
-          const prodId = Number(match[2]);
-          if (!validProdIds.includes(prodId)) {
-            keysToDelete.push(key);
-          }
-        }
-      });
-
-      // 删除不相关的业态字段
-      keysToDelete.forEach((key) => {
-        delete newNode[key];
-      });
-
-      // 递归处理子节点
-      if (node.children && node.children.length > 0) {
-        newNode.children = traverse(node.children);
-      }
-
-      return newNode;
-    });
-  };
-
-  return traverse(treeData);
-};
-
-// 清空所有业态字段
-const clearAllProductFields = (treeData: any[]) => {
-  const traverse = (nodes: any[]): any[] => {
-    return nodes.map((node) => {
-      const newNode = { ...node };
-      Object.keys(newNode).forEach((key) => {
-        if (key.match(/^(allocAmt|allocExclAmt|allocWarn)_\d+$/)) {
-          delete newNode[key];
-        }
-      });
-      if (node.children && node.children.length > 0) {
-        newNode.children = traverse(node.children);
-      }
-      return newNode;
-    });
-  };
-  return traverse(treeData);
-};
-// ==================== 修改：处理楼栋选择变化 ====================
-const handleBuilding = async (selectedIds: any[]) => {
-  if (!selectedIds || selectedIds.length === 0) {
-    // 取消所有楼栋：保存备份，清空显示
-    if (editableSubjectData.value.length > 0) {
-      // 备份当前数据
-      backupSubjectData.value = JSON.parse(
-        JSON.stringify(editableSubjectData.value),
-      );
-      backupProducts.value = JSON.parse(JSON.stringify(currentProducts.value));
-    }
-
-    // 清空显示
-    currentProducts.value = [];
-    subjectColumns.value = [];
-    editableSubjectData.value = [];
-    warningData.value = [];
-    tableKey.value++;
-    return;
-  }
-
-  // 获取选中楼栋关联的业态列表
-  const prodList = getBusinessType();
-
-  if (prodList.length === 0) {
-    ElMessage.warning("所选楼栋暂无关联业态");
-    currentProducts.value = [];
-    subjectColumns.value = [];
-    editableSubjectData.value = [];
-    warningData.value = [];
-    tableKey.value++;
-    return;
-  }
-
-  // 检查业态是否发生变化
-  const oldProductIds = currentProducts.value.map((p) => p.prodId).sort();
-  const newProductIds = prodList.map((p) => p.prodId).sort();
-
-  if (JSON.stringify(oldProductIds) === JSON.stringify(newProductIds)) {
-    return;
-  }
-
-  // 更新产品列表
-  currentProducts.value = prodList;
-
-  // 重新生成列配置（只包含当前业态）
-  subjectColumns.value = generateColumns(
-    currentProducts.value,
-    busiSegOptions.value,
-  );
-
-  // 判断是否有备份数据可用
-  let dataToUse = [];
-  if (backupSubjectData.value.length > 0) {
-    // 从备份恢复数据
-    dataToUse = JSON.parse(JSON.stringify(backupSubjectData.value));
-    // 清空备份，避免重复使用
-    backupSubjectData.value = [];
-    backupProducts.value = [];
-  } else if (editableSubjectData.value.length > 0) {
-    // 使用当前数据
-    dataToUse = JSON.parse(JSON.stringify(editableSubjectData.value));
-  }
-
-  if (dataToUse.length > 0) {
-    // 过滤掉不相关的业态字段
-    editableSubjectData.value = filterTreeDataByProducts(
-      dataToUse,
-      currentProducts.value,
-    );
-
-    // 重新汇总
-    editableSubjectData.value = summarizeTree(
-      editableSubjectData.value,
-      currentProducts.value,
-    );
-
-    // 同步更新预警数据
-    if (warningData.value?.length) {
-      warningData.value = JSON.parse(JSON.stringify(editableSubjectData.value));
-    }
-  }
-
-  // 强制刷新表格
-  await nextTick();
-  editableTableRef.value?.refresh();
-  tableKey.value++;
 };
 // ---------- 楼栋选项 ----------
 const buildingOptions = ref([]);
@@ -624,7 +488,6 @@ const handleViewAlloc = async () => {
     const subList = leafSubjects.map((item) => {
       return {
         subId: item.id,
-        // allocRule: item.allocRule,
         allocAmt: safeNumber(item.subjectAmt),
         allocExclAmt: safeNumber(item.subjectAmtExcl),
       };
@@ -632,9 +495,7 @@ const handleViewAlloc = async () => {
     const params = {
       projId: pageParams.value.projId,
       subAllocList: subList,
-      bldIds: selectedBuildings.value,
     };
-    console.log("分摊预警参数", params);
     await getWarnSubAlloc(params);
     warningVisible.value = true;
   } catch (error) {}
@@ -1061,7 +922,7 @@ const mergeTreeWithDetailApiData = (treeData: any[], prodList: any[]) => {
   const products = Array.from(
     new Map(prodList.map((item) => [item.prodId, { ...item }])).values(),
   );
-  console.log("products66", products);
+
   // 按 subId 分组接口数据
   const apiDataBySubId = groupBy(prodList, "subId");
 
@@ -1255,7 +1116,9 @@ const checkHasData = (treeData: any[]): boolean => {
   return hasData;
 };
 
-// ==================== 修改：生成动态表头 ====================
+/**
+ * 5. 生成动态表头（只有叶子节点可编辑）
+ */
 const generateColumns = (
   products: any[],
   busiSegOptions: any[],
@@ -1282,6 +1145,7 @@ const generateColumns = (
       options: busiSegOptions,
       placeholder: " ",
       showOverflowTooltip: false,
+      // disabled: (row: any) => !isLeafNode(row), // 只有叶子节点可编辑
       disabled: true,
     },
     {
@@ -1295,6 +1159,7 @@ const generateColumns = (
       options: allocRuleEnum as any,
       placeholder: " ",
       showOverflowTooltip: false,
+      // disabled: (row: any) => !isLeafNode(row), // 只有叶子节点可编辑
       disabled: true,
     },
     {
@@ -1318,12 +1183,12 @@ const generateColumns = (
       disabled: (row: any) => !isLeafNode(row),
     },
   ];
-    console.log("products", products);
-  // 只有 products 有数据时才添加业态列
-  if (products && products.length > 0) {
+
+  // 如果有产品，添加业态分摊明细列
+  if (products.length) {
     const productColumns: EditableColumn[] = products.map((product) => ({
       prop: `prod_${product.prodId}`,
-      label: product.prodName || `业态${product.prodId}`,
+      label: product.prodName,
       children: [
         {
           prop: `allocAmt_${product.prodId}`,
@@ -1355,12 +1220,14 @@ const generateColumns = (
     });
   }
 
+  // ====== 删除操作列 ======
   baseColumns.push({
     prop: "actions",
     label: "操作",
     width: 80,
     editable: false,
     fixed: "right",
+    // 自定义渲染插槽
     slot: "actions",
   });
 
@@ -1672,70 +1539,43 @@ const initPage = async () => {
     processPopupData(detaiList);
   }
 };
-// ==================== 新增：自动匹配楼栋 ====================
-const autoMatchBuildings = (prodIds: number[]) => {
-  if (!prodIds || prodIds.length === 0 || !buildingOptions.value.length) return;
-
-  const matchedBuildings = buildingOptions.value
-    .filter((bld) => {
-      const bldProdIds = bld.prodIds?.split(",").map(Number) || [];
-      return prodIds.some((id) => bldProdIds.includes(id));
-    })
-    .map((bld) => bld.id);
-
-  if (matchedBuildings.length) {
-    selectedBuildings.value = matchedBuildings;
-  }
-};
-// ==================== 修改：处理弹窗打开数据回显 ====================
+// 处理弹窗打开数据回显
 const processPopupData = async (cstList: any) => {
+  // 弹窗模式从本地获取数据
   if (cstList && cstList?.length > 0) {
     const detaiList = cstList || [];
     const subIds: any = new Set(detaiList.map((item: any) => item.subId));
-
+    console.log("数据:", detaiList, subIds);
+    // 获取基础成本科目列表
     const costSubjectsRes = await costCategoryApi.getCostSubjectBase({
       isWithParent: true,
     });
-
     if (costSubjectsRes.code === 200) {
+      // 构建基础树形数据
+      const baseRawTreeData = costSubjectsRes.data || [];
       const rawTreeData = costSubjectsRes.data || [];
       const subTreeData: any = buildTree(rawTreeData);
+      // console.log("subTreeData:", subTreeData);
+      // 过滤出指定子节点的科目并保留父级路径
       const treeData = filterTreeByIds(subTreeData, Array.from(subIds));
-
+      // console.log("treeData:", treeData);
+      // 执行数据合并（行转列）
       const result = mergeTreeWithDetailApiData(treeData, detaiList);
-      console.log("result:", result);
       currentProducts.value = result.products;
+      console.log("result:", result);
+
+      // 生成动态表头
       subjectColumns.value = generateColumns(
         result.products,
         busiSegOptions.value,
       );
-
       editableSubjectData.value = result.mergedData;
+
+      // 更新树形结构数据，累加子级数据到父级
       editableSubjectData.value = summarizeTree(
         editableSubjectData.value,
         currentProducts.value,
       );
-
-      // ★★★ 初始化备份数据（深拷贝） ★★★
-      backupSubjectData.value = JSON.parse(
-        JSON.stringify(editableSubjectData.value),
-      );
-      backupProducts.value = JSON.parse(JSON.stringify(currentProducts.value));
-
-      if (editableSubjectData.value.length > 0) {
-        warningData.value = JSON.parse(
-          JSON.stringify(editableSubjectData.value),
-        );
-      }
-
-      if (currentProducts.value.length > 0) {
-        autoMatchBuildings(currentProducts.value.map((p) => p.prodId));
-      }
-
-      // 强制刷新
-      await nextTick();
-      editableTableRef.value?.refresh();
-      tableKey.value++;
     }
   }
 };
@@ -1761,12 +1601,10 @@ const loadAllocationData = async () => {
       pageParams.value.billId = billId;
       pageParams.value.allocAmt = res.data?.cstM?.costAmt || 0;
       pageParams.value.allocExclAmt = res.data?.cstM?.costExclAmt || 0;
-      await getBuildingListByProjId();
-      await Promise.all([getBusiSegList(), getProductList()]);
+      // await Promise.all([getBusiSegList(), getProductList()]);
       // 处理查询到的分摊数据，回显到页面
       const allocDs = res.data?.allocDs || [];
-      const newData = allocDs.filter((item: any) => item.prodId);
-      processPopupData(newData);
+      processPopupData(allocDs);
     }
   } catch (error) {}
 };
@@ -1797,52 +1635,45 @@ const handleChoose = () => {
   dialogVisible.value = true;
 };
 
-// ==================== 修改：接收选择的科目数据 ====================
+/**
+ * 接收选择的科目数据（包含合并逻辑）
+ */
 const getSelectData = (treeData: any, goalCostDetailList: any) => {
   console.log("接收选择的科目数据:", treeData, goalCostDetailList);
+  // 重新选择分摊科目时隐藏分摊预警明细
   warningVisible.value = false;
 
+  // 检查是否有已有数据
   const hasExistingData = checkHasData(editableSubjectData.value);
 
-  const result = mergeTreeWithDetailApiData(treeData, goalCostDetailList);
+  // 执行数据合并（行转列）
+  const result = mergeTreeWithApiData(treeData, goalCostDetailList);
   currentProducts.value = result.products;
-
-  subjectColumns.value = generateColumns(result.products, busiSegOptions.value);
-
+  // console.log("currentProducts:", currentProducts.value);
+  // 如果有已有数据，进行合并保留
   let finalData = result.mergedData;
   if (hasExistingData && editableSubjectData.value.length) {
     finalData = mergeExistingData(result.mergedData, editableSubjectData.value);
   }
 
+  // 生成动态表头
+  subjectColumns.value = generateColumns(result.products, busiSegOptions.value);
   editableSubjectData.value = finalData;
-  editableSubjectData.value = summarizeTree(
-    editableSubjectData.value,
-    currentProducts.value,
-  );
 
-  // ★★★ 备份数据 ★★★
-  backupSubjectData.value = JSON.parse(
-    JSON.stringify(editableSubjectData.value),
-  );
-  backupProducts.value = JSON.parse(JSON.stringify(currentProducts.value));
+  // console.log("editableSubjectData.value:", editableSubjectData.value);
 
+  // ====== 初始化预警数据（复制一份 editableSubjectData 的结构） ======
+  // 深拷贝一份作为预警数据的基础结构
   warningData.value = JSON.parse(JSON.stringify(finalData));
+
+  // 如果有接口返回的预警数据，进行合并
   if (goalCostDetailList && goalCostDetailList.length) {
     warningData.value = mergeTreeDetailData(
       warningData.value,
       goalCostDetailList,
     );
   }
-
-  if (currentProducts.value.length > 0) {
-    autoMatchBuildings(currentProducts.value.map((p) => p.prodId));
-  }
-
-  // 强制刷新
-  nextTick(() => {
-    editableTableRef.value?.refresh();
-    tableKey.value++;
-  });
+  // console.log("初始化预警数据完成", warningData.value);
 };
 const handleDeleteNode = (targetNode: any) => {
   if (!targetNode.isLeaf) {

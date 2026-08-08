@@ -97,7 +97,6 @@
                   v-model="formData.signAmt"
                   :precision="2"
                   :controls="false"
-                  :min="0"
                   placeholder="0.00"
                   style="width: 100%"
                   disabled
@@ -112,7 +111,6 @@
                   v-model="formData.addAmt"
                   :precision="2"
                   :controls="false"
-                  :min="0"
                   placeholder="0.00"
                   style="width: 100%"
                   disabled
@@ -125,7 +123,6 @@
                   v-model="formData.preSettleAmt"
                   :precision="2"
                   :controls="false"
-                  :min="0"
                   placeholder="0.00"
                   style="width: 100%"
                   disabled
@@ -138,7 +135,6 @@
                   v-model="formData.sumChangeAmt"
                   :precision="2"
                   :controls="false"
-                  :min="0"
                   placeholder="0.00"
                   style="width: 100%"
                   disabled
@@ -151,7 +147,6 @@
                   v-model="formData.sumProdVal"
                   :precision="2"
                   :controls="false"
-                  :min="0"
                   placeholder="0.00"
                   style="width: 100%"
                   disabled
@@ -166,7 +161,6 @@
                   v-model="formData.sumPayAmt"
                   :precision="2"
                   :controls="false"
-                  :min="0"
                   placeholder="0.00"
                   style="width: 100%"
                   disabled
@@ -179,7 +173,6 @@
                   v-model="formData.sumAppyAmt"
                   :precision="2"
                   :controls="false"
-                  :min="0"
                   placeholder="0.00"
                   style="width: 100%"
                   disabled
@@ -192,7 +185,6 @@
                   v-model="formData.sumPaidAmt"
                   :precision="2"
                   :controls="false"
-                  :min="0"
                   placeholder="0.00"
                   style="width: 100%"
                   disabled
@@ -205,7 +197,6 @@
                   v-model="formData.sumOwedAmt"
                   :precision="2"
                   :controls="false"
-                  :min="0"
                   placeholder="0.00"
                   style="width: 100%"
                   disabled
@@ -354,7 +345,7 @@
 
         <!-- 材料合同产值 -->
         <div class="item-card">
-          <div class="section-title">材料合同产值</div>
+          <div class="section-title">合同产值</div>
 
           <!-- 非甲供材  产值申报方式：按进度确认 -> 显示非甲供材  -->
           <div class="detail-table" v-if="formData.payMethod == 1">
@@ -379,7 +370,7 @@
               :highlight-current-row="false"
               :show-summary="false"
               :compactEmpty="true"
-              :editable="!isDetail && !billData.status"
+              :on-save="handleNonSelfSupplySave"
             >
               <template #actions="{ row }">
                 <el-button
@@ -621,6 +612,7 @@ import BillInfo from "@/components/business/bill-components/bill-info.vue";
 import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api";
 import { PayTypeEnum } from "@/constants/contract-manage/enums";
 import { buildFileUrl } from "@/utils/file-path-util";
+import { cumulativeDataApi } from "@/api/cost/contract-manage/cumulative-data-api";
 
 defineOptions({ name: "output-value-approval-form" });
 
@@ -1140,41 +1132,43 @@ const handleViewAnnex = async (row: any) => {
 
 // ==================== 非甲供材 ====================
 const nonSelfSupplyTable = ref([]);
-const nonSelfSupplyRef = ref();
+const billPayratesList = ref([]);
 
 const nonSelfSupplyColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {
-    prop: "payType",
+    prop: "payTypeId",
     label: "款项类型",
     editable: true,
     editType: "select",
+    clearable: false,
     showOverflowTooltip: false,
-    optionLabelField: "dicLabel",
-    optionValueField: "id",
-    options: [],
-    width: 120,
+    optionLabelField: "payTypeId",
+    optionValueField: "payTypeId",
+    options: billPayratesList.value || [],
+    minWidth: 120,
   },
   {
     prop: "payRate",
     label: "应付比例(%)",
     editable: false,
-    width: 120,
+    minWidth: 100,
   },
   {
     prop: "isCtrl",
-    label: "强控支付比例",
+    label: "强控支付",
     editable: false,
-    width: 120,
+    minWidth: 100,
+    formatter: (row: any) => (row.isCtrl ? "是" : "否"),
   },
   {
     prop: "payIntvl",
-    label: "支付周期",
+    label: "支付周期(月)",
     editable: false,
     editType: "number",
     precision: 0, // 整数
     showOverflowTooltip: false,
-    width: 120,
+    minWidth: 100,
   },
   {
     prop: "applyProdVal",
@@ -1182,7 +1176,7 @@ const nonSelfSupplyColumns = computed<EditableColumn[]>(() => [
     editable: true,
     editType: "number",
     showOverflowTooltip: false,
-    width: 150,
+    minWidth: 120,
   },
   {
     prop: "applyPayAmt",
@@ -1190,7 +1184,7 @@ const nonSelfSupplyColumns = computed<EditableColumn[]>(() => [
     editable: true,
     editType: "number",
     showOverflowTooltip: false,
-    width: 150,
+    minWidth: 120,
   },
   {
     prop: "buildPeriod",
@@ -1200,7 +1194,7 @@ const nonSelfSupplyColumns = computed<EditableColumn[]>(() => [
     editType: "number",
     precision: 0, // 整数
     showOverflowTooltip: false,
-    width: 150,
+    minWidth: 120,
   },
   {
     prop: "prodValPeriod",
@@ -1210,7 +1204,7 @@ const nonSelfSupplyColumns = computed<EditableColumn[]>(() => [
     editType: "number",
     precision: 0, // 整数
     showOverflowTooltip: false,
-    width: 150,
+    minWidth: 120,
   },
   {
     prop: "payDate",
@@ -1220,23 +1214,23 @@ const nonSelfSupplyColumns = computed<EditableColumn[]>(() => [
     editType: "number",
     precision: 0, // 整数
     showOverflowTooltip: false,
-    width: 150,
+    minWidth: 120,
   },
   {
     prop: "costProdVal",
     label: "成本复核产值",
     editable: false,
-    width: 150,
+    minWidth: 120,
   },
   {
     prop: "costPayAmt",
     label: "成本复核应付",
     editable: false,
-    width: 150,
+    minWidth: 120,
   },
   {
     label: "操作",
-    width: 100,
+    width: 120,
     slot: "actions",
     fixed: "right",
   },
@@ -1252,10 +1246,10 @@ const addNonSelfSupply = () => {
     isCtrl: false,
     payIntvl: 0,
     applyProdVal: 0,
-    payAmt: 0,
-    buildPeriod: "",
-    prodValPeriod: "",
-    payDate: "",
+    applyPayAmt: 0,
+    buildPeriod: 0,
+    prodValPeriod: 0,
+    payDate: 0,
     costProdVal: 0,
     costPayAmt: 0,
   };
@@ -1266,6 +1260,30 @@ const deleteNonSelfSupply = (row: any) => {
   nonSelfSupplyTable.value = nonSelfSupplyTable.value.filter(
     (item) => item.uuid !== row.uuid,
   );
+};
+const updateNonSelfSupplyRow = (rowIndex: number, data: any) => {
+  const newData = [...nonSelfSupplyTable.value];
+  newData[rowIndex] = { ...nonSelfSupplyTable.value[rowIndex], ...data };
+  nonSelfSupplyTable.value = newData;
+};
+
+const handleNonSelfSupplySave = async (data) => {
+  const { row, column, newValue, oldValue, rowIndex } = data;
+  console.log("非甲供材保存", data);
+  // 选择款项类型时回填应付比例、是否强控、支付周期
+  if (column === "payTypeId") {
+    const targetPayType = billPayratesList.value.find(
+      (item) => item.payTypeId === newValue,
+    );
+    const { payRate, isCtrl, payIntvl } = targetPayType || {};
+    updateNonSelfSupplyRow(rowIndex, { payRate, isCtrl, payIntvl });
+    console.log(
+      "选择款项类型时回填应付比例、是否强控、支付周期",
+      nonSelfSupplyTable.value,
+    );
+    return;
+  }
+  updateNonSelfSupplyRow(rowIndex, { [column]: newValue });
 };
 
 // 获取项目数据
@@ -1382,7 +1400,8 @@ const getConDetail = async () => {
     });
     console.log("合同详情", res);
     if (res.code === 200 && res.data) {
-      const { conMain, conMainExt } = res.data;
+      const { conMain, conMainExt, billPayrates } = res.data;
+      billPayratesList.value = billPayrates || []; // 产值明细（非甲供材）的款项类型
       formData.value.conName = conMain?.conName || "";
       formData.value.conPhyNo = conMain?.conPhyNo || "";
       formData.value.supId = conMain?.supId || "";
@@ -1394,9 +1413,59 @@ const getConDetail = async () => {
     }
   } catch (error) {}
 };
+// 查询合同累计数据
+const getConTotal = async () => {
+  if (!conId) return;
+  try {
+    // 0=产值,1=应付,2=请款,3=已付,4=欠款,5=扣款,6=已扣,7=变更,8=签证
+    const res = await cumulativeDataApi.getAccumData({
+      conId: conId,
+      typeList: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    });
+    console.log("合同累计数据", res);
+    if (res.code === 200 && res.data) {
+      const list = res.data || [];
+      // 累加逻辑
+      list.forEach((item) => {
+        const total = item.archAmt + item.inTransAmt; // 归档 + 在途
+        switch (item.type) {
+          case 0: // 产值
+            formData.value.sumProdVal += total;
+            break;
+          case 1: // 应付
+            formData.value.sumPayAmt += total;
+            break;
+          case 2: // 请款
+            formData.value.sumAppyAmt += total;
+            break;
+          case 3: // 已付
+            formData.value.sumPaidAmt += total;
+            break;
+          case 4: // 欠款
+            formData.value.sumOwedAmt += total;
+            break;
+          case 5: // 扣款
+            formData.value.addAmt += total;
+            break;
+          case 6: // 已扣
+            formData.value.preSettleAmt += total;
+            break;
+          case 7: // 变更
+          case 8: // 签证
+            formData.value.sumChangeAmt += total;
+            break;
+          default:
+            break;
+        }
+      });
+    }
+  } catch (error) {}
+};
+
 const initData = async () => {
   await getProjectOptions(); // 获取项目数据
   await getConDetail(); // 查询合同详情
+  await getConTotal(); // 查询合同累计数据
   formData.value.userName = userStore.userInfo?.empName || "";
   formData.value.createDate = new Date().toLocaleString();
 
