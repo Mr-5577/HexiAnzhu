@@ -1,11 +1,11 @@
-<!-- 新增补充合同 -->
+<!-- 编辑补充合同 -->
 <template>
-  <div class="supplement-contract-add-page">
+  <div class="supplement-contract-detail-page">
     <SupplementContractForm
-      mode="add"
-      :proj-id="projId"
+      mode="detail"
       :con-id="conId"
-      :con-name="conName"
+      :add-id="addId"
+      :proj-id="projId"
       @success="handleSuccess"
       @cancel="handleCancel"
     />
@@ -19,12 +19,11 @@ import SupplementContractForm from "./supplement-contract-form.vue";
 const route = useRoute();
 const router = useRouter();
 
-defineOptions({ name: "supplement-contract-add" });
+defineOptions({ name: "supplement-contract-detail" });
 
-// 从路由参数获取合同ID conId
 const conId = Number(route.query.conId);
+const addId = Number(route.query.addId);
 const projId = Number(route.query.projId);
-const conName = String(route.query.conName);
 
 const handleSuccess = () => {
   //router.back();
@@ -36,7 +35,7 @@ const handleCancel = () => {
 </script>
 
 <style scoped lang="scss">
-.supplement-contract-add-page {
+.supplement-contract-detail-page {
   width: 100%;
   height: 100%;
   background-color: #fff;
