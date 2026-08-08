@@ -5,6 +5,7 @@
       mode="add"
       :conId="conId"
       :projId="projId"
+      :conName="conName"
       @success="handleSuccess"
       @cancel="handleCancel"
     />
@@ -21,6 +22,7 @@ const router = useRouter();
 
 const projId = Number(route.query.projId); // 项目ID
 const conId = Number(route.query.conId); // 合同ID
+const conName = String(route.query.conName); // 合同名称
 
 const handleSuccess = () => {
   router.back();

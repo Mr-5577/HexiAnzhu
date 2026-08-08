@@ -8,12 +8,12 @@
             v-model="formData.bizTitle"
             clearable
             :disabled="disabled"
-            placeholder="标题"
+            placeholder="请输入标题"
           />
         </el-form-item>
       </el-col>
       <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-        <el-form-item label="审批状态" prop="approvalStatus">
+        <el-form-item label="审批状态">
           <el-tag :type="getEnumType(conBillStatusEnum, status || 0)">
             {{ getEnumLabel(conBillStatusEnum, status || 0) }}
           </el-tag>
@@ -27,23 +27,23 @@
           <el-input
             v-model="formData.segName"
             disabled
-            placeholder="业务板块"
+            placeholder=""
           />
         </el-form-item>
       </el-col>
       <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
         <el-form-item label="板块编码" prop="segNo">
-          <el-input v-model="formData.segNo" disabled placeholder="板块编码" />
+          <el-input v-model="formData.segNo" disabled placeholder="" />
         </el-form-item>
       </el-col>
       <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
         <el-form-item label="部门" prop="deptName">
-          <el-input v-model="formData.deptName" placeholder="部门" disabled />
+          <el-input v-model="formData.deptName" placeholder="" disabled />
         </el-form-item>
       </el-col>
       <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
         <el-form-item label="分部" prop="mguName">
-          <el-input v-model="formData.mguName" placeholder="分部" disabled />
+          <el-input v-model="formData.mguName" placeholder="" disabled />
         </el-form-item>
       </el-col>
     </el-row>
@@ -57,7 +57,7 @@
             :options="projectOptions"
             :show-all-levels="false"
             :props="cascaderProps"
-            placeholder="请选择项目"
+            placeholder=""
             style="width: 100%"
             filterable
             :disabled="disabled"
@@ -69,7 +69,7 @@
         <el-form-item label="项目所属公司" prop="compName">
           <el-input
             v-model="formData.compName"
-            placeholder="项目所属公司"
+            placeholder=""
             disabled
           />
         </el-form-item>
@@ -79,7 +79,7 @@
           <el-input
             v-model="formData.userName"
             clearable
-            placeholder="提交人"
+            placeholder=""
             disabled
           />
         </el-form-item>
@@ -89,7 +89,7 @@
           <el-date-picker
             v-model="formData.createDate"
             type="date"
-            placeholder="提交时间"
+            placeholder=""
             style="width: 100%"
             value-format="YYYY-MM-DD"
             disabled
@@ -163,13 +163,14 @@ const handleProjectChange = async (value: number) => {
     try {
       const res = await projectAreaApi.getInfoByProjId({ id: value });
       if (res.code === 200 && res.data) {
-        const { compName, compId, segId, segName } = res.data;
+        const { compName, compId, segId, segName,segNo } = res.data;
         // 更新表单数据
         const newData = {
           ...formData.value,
           compId: compId || "",
           compName: compName || "",
           segId: segId || "",
+          segNo: segNo || "",
           segName: segName || "",
           projId: value,
         };

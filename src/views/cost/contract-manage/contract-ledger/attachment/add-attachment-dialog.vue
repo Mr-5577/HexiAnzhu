@@ -19,12 +19,13 @@
           v-model="formData.annexType"
           placeholder="请选择附件类型"
           style="width: 100%"
+          disabled
         >
           <el-option
-            v-for="item in annexTypeOptions"
-            :key="item.id"
-            :label="item.dicLabel"
-            :value="item.id"
+            v-for="item in AnnexTypeEnum"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
           />
         </el-select>
       </el-form-item>
@@ -33,6 +34,7 @@
           v-model="formData.annexSrc"
           placeholder="请选择附件来源"
           style="width: 100%"
+          disabled
         >
           <el-option
             v-for="item in FileSourceEnum"
@@ -55,7 +57,7 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import { ElMessage, type FormInstance, type FormRules } from "element-plus";
-import { FileSourceEnum } from "@/constants/contract-manage/enums";
+import { FileSourceEnum,AnnexTypeEnum } from "@/constants/contract-manage/enums";
 import { attachmentApi } from "@/api/cost/contract-manage/attachment-api";
 import BaseUpload from "@/components/base/base-upload.vue";
 import { commonApi } from "@/api/cost/common-api";
@@ -63,7 +65,6 @@ import { commonApi } from "@/api/cost/common-api";
 const props = defineProps<{
   modelValue: boolean;
   conId: number | null;
-  annexTypeOptions: any[];
 }>();
 
 const emit = defineEmits<{
@@ -94,7 +95,9 @@ const handleClose = () => {
   formRef.value?.clearValidate();
 };
 const handleFileListUpdate = (newList) => {
+  debugger
   formData.value.annexList = newList;
+  //annexContractFileList.value.push(file);
 };
 const handleSubmit = async () => {
   console.log("handleSubmit", { ...formData.value, conId: props.conId });
@@ -128,6 +131,8 @@ watch(
   () => props.modelValue,
   (val) => {
     visible.value = val;
+    formData.value.annexSrc = 1;
+    formData.value.annexType = 1;
   },
 );
 

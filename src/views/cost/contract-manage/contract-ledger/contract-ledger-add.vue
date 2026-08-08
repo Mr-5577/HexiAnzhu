@@ -18,11 +18,11 @@ const router = useRouter();
 defineOptions({ name: "contract-ledger-add" });
 
 const handleSuccess = () => {
-  router.back();
+  //router.back();
 };
 
 const handleCancel = () => {
-  router.back();
+  //router.back();
 };
 </script>
 

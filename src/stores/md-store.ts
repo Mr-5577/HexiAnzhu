@@ -1,7 +1,9 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { mdApi } from "@/api/system/md-api";
-import { useUserStore } from "@/stores/user-store";
+import { conTypeApi } from "@/api/cost/master-data/contract-category-api.ts";
+import { buildTree } from "@/utils/tree.ts";
+import { roleApi } from "@/api/system/role-api.ts";
 
 // API 返回的完整数据结构
 interface ProjectInfo {
@@ -39,10 +41,8 @@ interface CacheItem {
 const CACHE_DURATION = 60 * 60 * 1000;
 
 export const useMDStore = defineStore("md-store", () => {
-  // 按 segId 缓存公司列表
-  const companyCache = ref<Map<number, CacheItem>>(new Map());
-  const userStore = useUserStore();
-
+  const conTypeOptions = ref([]);
+  const empTreeData = ref([]);
   /**
    * 获取指定 segId 的公司列表（内部方法）
    */
@@ -94,8 +94,49 @@ export const useMDStore = defineStore("md-store", () => {
     );
   };
 
+    /**
+   * 获取合同分类（对外方法）
+   * @returns 合同分类树
+   */
+  const getConTypeTree = async ()=> {
+    if (conTypeOptions.value.length >0) {
+      return conTypeOptions.value
+    }
+    try {
+      const res = await conTypeApi.getConTypeList();
+      if (res.code === 200) {
+        conTypeOptions.value = buildTree(res.data || []);
+        return conTypeOptions.value
+      }
+    } catch (error) {
+      console.error("获取合同分类失败:", error);
+    }
+  };
+
+  /**
+   * 获取人员树（对外方法）
+   * @returns 人员树
+   */
+  const getEmployeeTree = async () => {
+    if (empTreeData.value.length >0) {
+      return empTreeData.value
+    }
+    try {
+      const res = await roleApi.getEmpTree({ empName: "", isIncludeLeave: false });
+      // console.log("获取人员列表", res);
+      if (res.code === 200) {
+        empTreeData.value = res.data || [];
+        return empTreeData.value
+      }
+    } catch (error) {
+      console.error("获取人员信息失败:", error);
+    }
+  };
+
   return {   
     // 方法
     getProjCompanyList,           // 主要方法：按 projId 过滤
+    getConTypeTree,
+    getEmployeeTree,
   };
 });

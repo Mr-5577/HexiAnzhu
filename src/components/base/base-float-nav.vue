@@ -171,10 +171,10 @@ onBeforeUnmount(() => {
 
   .nav-collapse-btn {
     position: absolute;
-    top: -6px;
-    right: -6px;
-    width: 18px;
-    height: 18px;
+    top: -9px;
+    right: -9px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     background: #fff;
     border: 1px solid #e4e7ed;
@@ -182,10 +182,10 @@ onBeforeUnmount(() => {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 18px;
     line-height: 1;
     color: #86909c;
-    opacity: 0.65;
+    opacity: 0.8;
     transition: all 0.2s;
     z-index: 2;
   }
@@ -195,8 +195,10 @@ onBeforeUnmount(() => {
   }
 
   .nav-collapse-btn:hover {
-    color: #f56c6c;
+    color: #fff;
+    background: #f56c6c;
     border-color: #f56c6c;
+    transform: scale(1.15);
   }
 
   .float-nav-title {

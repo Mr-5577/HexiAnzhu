@@ -205,6 +205,8 @@ export interface TableColumnItem<T = any> {
   selectable?: (row: T, index: number) => boolean;
   /** 选择列专用：根据行数据的字段名判断是否可选，值为 true 表示不可选 */
   disabledField?: string;
+  /** 格式化类型 */
+  formatType?: 'd%' | '0.00%' | '#,##0.00%' | 'fixed2' | 'thousand' | '0.00' | '#,##0.00';
   /** 操作列配置：按钮列表（仅当 type 为 'action' 时生效） */
   actions?: TableActionItem<T>[];
   /** 其他自定义属性 */
@@ -326,6 +328,55 @@ interface Emits {
   ): void;
 }
 
+// ============ 根据 formatType 格式化值 ============
+const formatValueByType = (value: any, formatType: string): string => {
+  // 处理空值
+  if (value === null || value === undefined || value === '') return '-';
+  
+  const num = Number(value);
+  if (isNaN(num)) return String(value);
+  
+  switch (formatType) {
+    case 'd%':
+      // 整数百分比：13 → 13%
+      return `${Math.floor(num)}%`;
+      
+    case '0.00%':
+      // 保留原始小数位数百分比：0.131234 → 0.131234%
+      return `${num}%`;
+      
+    case '#,##0.00%':
+      // 千分位两位小数百分比：12345.678 → 12,345.68%
+      const percentage = num * 100;
+      const formatted = percentage.toLocaleString('zh-CN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+      return `${formatted}%`;
+      
+    case 'fixed2':
+    case '0.00':
+      // 固定保留两位小数：13.4567 → 13.46
+      return num.toFixed(2);
+      
+    case 'thousand':
+      // 千分位格式化，保留原始小数位数
+      return num.toLocaleString('zh-CN', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 20,
+      });
+      
+    case '#,##0.00':
+      // 千分位固定保留两位小数：1234567.89 → 1,234,567.89
+      return num.toLocaleString('zh-CN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+      
+    default:
+      return String(value);
+  }
+};
 // ============ 递归列组件 ============
 
 // 递归列组件的 Props
@@ -694,7 +745,12 @@ const TableColumn = {
             contentValue = column.formatter(scope.row, column, scope.$index);
           } else if (column.dict) {
             contentValue = getDictLabel(column.dict, scope.row[column.prop!]);
+          } else if (column.formatType) {
+            // 3. 使用 formatType 格式化（新增逻辑）
+            const rawValue = scope.row[column.prop!];
+            contentValue = formatValueByType(rawValue, column.formatType);
           } else {
+            // 4. 显示原始值
             contentValue = scope.row[column.prop!];
           }
 
@@ -985,8 +1041,14 @@ const defaultSummaryMethod = ({
       const numValue = formatNumber(value, 2);
       sum += numValue;
     });
-    // 格式化显示（使用 formatMoneyDisplay）
-    sums[index] = formatNumberDisplay(sum, 2);
+
+    // 根据列的 formatType 格式化合计值
+    if (colConfig?.formatType) {
+      sums[index] = formatValueByType(sum, colConfig.formatType);
+    } else {
+      // 默认使用金额格式化
+      sums[index] = formatNumberDisplay(sum, 2);
+    }
   });
   return sums;
 };

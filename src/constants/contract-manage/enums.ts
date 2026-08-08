@@ -18,10 +18,10 @@ export const PriceTypeEnum = [
 /** 合同状态 */
 export const ConStatusEnum = [
   { value: 0, label: "草稿" },
-  { value: 5, label: "审批中" },
-  { value: 10, label: "已审批" },
-  { value: 20, label: "已结算" },
-  { value: 30, label: "已作废" },
+  { value: 10, label: "审批中" },
+  { value: 40, label: "已审批" },
+  { value: 60, label: "已结算" },
+  { value: 80, label: "已作废" },
 ] as const;
 
 /** 管理类型 */
@@ -53,8 +53,14 @@ export const SealTypesEnum = [
 
 /** 附件来源 */
 export const FileSourceEnum = [
-  { value: 1, label: "审批流程" },
-  { value: 2, label: "手工上传" },
+  { value: 0, label: "审批流程" },
+  { value: 1, label: "手工上传" },
+] as const;
+
+/** 合同附件类型 */
+export const AnnexTypeEnum = [
+  { value: 0, label: "电子文档" },
+  { value: 1, label: "扫描件" },
 ] as const;
 
 /** 补充合同类型 */
@@ -62,6 +68,13 @@ export const AddTypeEnum = [
   { value: 1, label: "变更转补充" },
   { value: 2, label: "普通补充合同" },
 ] as const;
+
+/** 补充合同事项明细来源类型 */
+export const AddProcessSrcEnum = [
+  { value: 0, label: "签证" },
+  { value: 1, label: "变更" },
+  { value: 2, label: "手工新增" }
+];
 
 /** 签证类型 */
 export const VisaTypeEnum = [
@@ -71,8 +84,8 @@ export const VisaTypeEnum = [
 
 /** 变更类型 */
 export const ChangeTypeEnum = [
-  { value: 1, label: "工程指令" },
-  { value: 2, label: "设计变更" },
+  { value: 1, label: "工程指令" ,type: "success" },
+  { value: 2, label: "设计变更" ,type: "info" },
 ] as const;
 
 /** 扣款类型选项 */
@@ -138,6 +151,7 @@ export const conBillStatusEnum = [
   { value: 0, label: "草稿", type: "info" }, // 待处理 - 灰色
   { value: 10, label: "审批中", type: "primary" }, // 进行中 - 蓝色
   { value: 40, label: "已审批", type: "success" }, // 已完成 - 绿色
+  { value: 60, label: "已结算", type: "success" }, // 已结算 - 绿色
   { value: 80, label: "作废", type: "warning" }, // 异常 - 橙色
   { value: 99, label: "其他", type: "info" }, // 其他 - 灰色
 ];

@@ -203,6 +203,13 @@ export const supplierApi = {
   getBankList: (data: SupplierBankQueryParams) => {
     return http.formPost("/sup/bank/getList", data);
   },
+  /**
+   * 查询供应商默认银行账号
+   * @param data.supId - 供应商ID（必填）
+   */
+  getDefBankList: (supId: number) => {
+    return http.formPost("/sup/bank/getDefaultBank?supId="+ supId );
+  },
 
   /**
    * 新增供应商银行账户
@@ -384,6 +391,13 @@ export const supplierApi = {
    */
   getContactList: (data: { supId: number; isEnable?: boolean }) => {
     return http.formPost("/sup/contact/getList", data);
+  },
+  /**
+   * 查询供应商默认联系人/最近一个联系人
+   * @param data.supId - 供应商ID（必填）
+   */
+  getDefContactList: (supId: number) => {
+    return http.formPost("/sup/contact/getSupContact?supId="+ supId );
   },
   /**
    * 新增供应商联系方式

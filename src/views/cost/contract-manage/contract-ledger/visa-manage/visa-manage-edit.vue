@@ -5,6 +5,7 @@
       mode="edit"
       :conId="conId"
       :visaId="visaId"
+      :projId="projId"
       @success="handleSuccess"
       @cancel="handleCancel"
     />
@@ -21,13 +22,14 @@ const router = useRouter();
 
 const conId = Number(route.query.conId); // 合同ID
 const visaId = Number(route.query.visaId); // 签证ID
+const projId = Number(route.query.projId); // 项目ID
 
 const handleSuccess = () => {
-  router.back();
+  //router.back();
 };
 
 const handleCancel = () => {
-  router.back();
+  //router.back();
 };
 </script>
 
