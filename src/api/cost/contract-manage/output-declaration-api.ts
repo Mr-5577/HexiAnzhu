@@ -1,5 +1,4 @@
 import { http } from "@/axios/service";
-import { ContractProdValParams } from "@/types/cost/contract-manage/output-declaration-type";
 
 /**
  * 产值申报 相关接口
@@ -9,20 +8,24 @@ export const outputDeclarationApi = {
   getProdValList: (data: { conId: number }) => {
     return http.formPost("/con/prodVal/list", data);
   },
-  /** 查询合同产值（含子表） */
+  /** 查询单个合同产值 */
   getProdValById: (data: { id: number }) => {
     return http.formPost("/con/prodVal/get", data);
   },
-  /** 新增补充合同 */
-  addProdVal: (data: ContractProdValParams) => {
-    return http.post("/con/prodVal/add", data);
+  /** 保存合同产值（新增/修改） */
+  saveProdVal: (data: any) => {
+    return http.post("/con/prodVal/save", data);
   },
-  /** 修改补充合同 */
-  editProdVal: (data: ContractProdValParams) => {
-    return http.post("/con/prodVal/edit", data);
+  /** 保存并提交合同产值审批 */
+  submitProdVal: (data: any) => {
+    return http.post("/con/prodVal/submit", data);
   },
-  /** 删除补充合同 */
+  /** 删除合同产值 */
   delProdVal: (data: { id: number }) => {
     return http.formPost("/con/prodVal/del", data);
+  },
+  /** 作废合同产值 */
+  voidProdVal: (data: { id: number }) => {
+    return http.formPost("/con/prodVal/void", data);
   },
 };

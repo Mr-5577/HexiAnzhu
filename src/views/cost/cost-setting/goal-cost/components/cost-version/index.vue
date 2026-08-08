@@ -41,10 +41,18 @@
       :rowKey="'id'"
       :pagination="false"
     >
+      <template #isEnabled="{ row }">
+        <el-tag
+          size="small"
+          :type="row.isEnabled ? 'success' : 'info'"
+        >
+          {{ row.isEnabled ? "是" : "否" }}
+        </el-tag>
+      </template>
       <template #status="{ row }">
         <el-tag
           size="small"
-          :type="getEnumType(costBillStatusEnum, row?.status || 0)"
+          :type="getEnumType(costBillStatusEnum, row?.status || 0) as 'primary' | 'success' | 'warning' | 'info' | 'danger'"
         >
           {{ getEnumLabel(costBillStatusEnum, row?.status || 0) }}
         </el-tag>
@@ -161,14 +169,7 @@ const tableColumns: TableColumnItem[] = [
   { prop: "versionNo", label: "版本号", minWidth: 200 },
   { prop: "versionTypeName", label: "版本类型", width: 120 },
   { prop: "segName", label: "业务板块", width: 120 },
-  {
-    prop: "isEnabled",
-    label: "当前使用",
-    width: 90,
-    formatter: (row: HCstProjectCostM) => {
-      return row.isEnabled ? "是" : "否";
-    },
-  },
+  { slot: "isEnabled", label: "当前使用", width: 90 },
   { prop: "remark", label: "备注", minWidth: 200 },
   { slot: "status", label: "审批状态", width: 100 },
   { label: "操作", width: 320, slot: "actions", fixed: "right" },

@@ -188,10 +188,15 @@ export const projectAreaApi = {
    * 查询面积版本明细列表
    * @param data - 查询参数
    * @param data.verMid - 版本ID（必填）
-   * @returns Promise 面积版本明细列表
+   * @param data.bldId - 楼栋ID
+   * @param data.prodId - 业态ID
    * @description 查询指定版本下的所有面积明细数据
    */
-  getAreaVerDList: (data: { verMid: number }) => {
+  getAreaVerDList: (data: {
+    verMid: number;
+    bldId?: number;
+    prodId?: number;
+  }) => {
     return http.formPost("/mainData/areaVerD/getList", data);
   },
   /**

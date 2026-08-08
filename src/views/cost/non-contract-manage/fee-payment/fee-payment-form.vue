@@ -208,6 +208,7 @@
               :show-summary="false"
               :compactEmpty="true"
               :editable="true"
+              :on-save="handlePayWaySave"
             >
               <template #actionBar>
                 <div class="actionBar-buttons">
@@ -340,33 +341,6 @@
           </template>
         </div>
 
-        <!-- 成本分摊 费用类型所属大类为建安类并且请款类型为正常请款0时显示  -->
-        <div
-          class="item-card"
-          v-if="isShowCostAllocation && formData.reqType == 0"
-        >
-          <div class="section-title">成本分摊</div>
-          <el-row :gutter="24">
-            <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
-              <el-form-item label="分摊状态：" label-width="90px">
-                {{ costAllocationStatus }}
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
-              <el-form-item label="预警状态：" label-width="90px">
-                {{ costAllocationWarnStatus }}
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
-              <el-form-item label="分摊：" label-width="90px">
-                <el-button type="primary" @click="handleAllocationDetail">
-                  分摊详情
-                </el-button>
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </div>
-
         <!-- 相关附件 -->
         <div class="item-card">
           <div class="section-title">相关附件</div>
@@ -405,8 +379,6 @@
       @success="handleInvoiceDetailSuccess"
     />
 
-    <!-- 成本分摊 弹窗 -->
-    <CostAllocationDetailDialog v-model="costAllocationDialogVisible" />
   </div>
 </template>
 
@@ -429,7 +401,6 @@ import UploadInvoiceDialog from "@/components/business/upload-invoice-dialog.vue
 import InvoiceDetailDialog from "@/components/business/invoice-detail-dialog.vue";
 import { commonApi } from "@/api/cost/common-api";
 import { NconBillInvoiceM } from "@/types/cost/non-contract-manage/cst-payment-type.ts";
-import CostAllocationDetailDialog from "@/views/cost/cost-allocation/cost-allocation-detail-dialog.vue";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api.ts";
 import { useDict } from "@/composables/use-dict.ts";
 import { dictMapping } from "@/utils/dict-mapping.ts";
@@ -500,7 +471,6 @@ const flowListData = ref({
 
 // 成本分摊相关
 const costAllocationDialogVisible = ref(false);
-const costAllocationData = ref(null);
 
 const initFormData = () => ({
   id: undefined,
@@ -583,7 +553,12 @@ const getPayTypeOptions = async (segId: number) => {
     const res = await dictionaryApi.getCostTypeListBySegId({ segId: segId });
     if (res.code === 200) {
       feeTypeFlatOptions.value = res.data || [];
-      feeTypeOptions.value = buildTree(res.data || []);
+      const dataTreeList = buildTree(res.data || []);
+      // 过滤数据，费用支付过滤掉“建安类03”和“土地款类01”选项
+
+      feeTypeOptions.value = dataTreeList.filter(
+        (item: any) => item.finaTypeCode != "03" && item.finaTypeCode != "01",
+      );
     }
   } catch (error) {}
 };
@@ -1215,17 +1190,25 @@ const deleteInvoiceM = ({ uuid }) => {
 // ==================== 付款方式 ====================
 const payWayDetailColumns = [
   { type: "index", label: "序号", width: 60 },
+  { prop: "payDesc", label: "摘要", minWidth: 200 },
   { prop: "payWayName", label: "付款方式", minWidth: 150 },
   { prop: "bankName", label: "收款开户行", minWidth: 150 },
   { prop: "accountName", label: "收款账户名", minWidth: 150 },
   { prop: "bankAccount", label: "收款账号", minWidth: 150 },
   { prop: "payAmt", label: "付款金额", minWidth: 120 },
   { prop: "dedRoomAmt", label: "其中抵房金额", minWidth: 120 },
-  { prop: "payDesc", label: "事项说明", minWidth: 200 },
 ];
 
 const payWayColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
+  {
+    prop: "payDesc",
+    label: "摘要",
+    editable: true,
+    editType: "input",
+    minWidth: 200,
+    showOverflowTooltip: false,
+  },
   {
     prop: "payWayId",
     label: "付款方式",
@@ -1278,14 +1261,6 @@ const payWayColumns = computed<EditableColumn[]>(() => [
     showOverflowTooltip: false,
   },
   {
-    prop: "payDesc",
-    label: "事项说明",
-    editable: true,
-    editType: "input",
-    minWidth: 200,
-    showOverflowTooltip: false,
-  },
-  {
     label: "操作",
     slot: "actions",
     fixed: "right",
@@ -1314,6 +1289,28 @@ const deletePayWay = (row) => {
   payWayTable.value = payWayTable.value.filter(
     (item) => item.uuid !== row.uuid,
   );
+};
+const updatePayWayRow = (rowIndex: number, data: any) => {
+  const newData = [...payWayTable.value];
+  newData[rowIndex] = { ...payWayTable.value[rowIndex], ...data };
+  payWayTable.value = newData;
+};
+
+const handlePayWaySave = async (data) => {
+  const { row, column, newValue, oldValue, rowIndex } = data;
+  // 修改“其中抵房金额”不能大于付款金额
+  if (column === "dedRoomAmt") {
+    // 如果新值大于付款金额，提示错误并重置为0
+    if (newValue > row.payAmt) {
+      ElMessage.error("其中抵房金额不能大于付款金额");
+      updatePayWayRow(rowIndex, { dedRoomAmt: 0 });
+      return;
+    } else {
+      updatePayWayRow(rowIndex, { [column]: newValue });
+      return;
+    }
+  }
+  updatePayWayRow(rowIndex, { [column]: newValue });
 };
 
 // ==================== 获取项目列表 ====================
@@ -1526,9 +1523,13 @@ const buildSaveParams = () => {
 
 // ==================== 校验数据 ====================
 const validateData = () => {
-  // 如果是来票冲账，跳过款项调整和支付方式的校验
+  // 如果是来票冲账，跳过款项调整和支付方式的校验，但是发票登记必填一条数据
   if (formData.value.reqType === 1) {
     // 只校验其他必要字段（如关联立项等）
+    if (!invoiceMTable.value || invoiceMTable.value.length === 0) {
+      ElMessage.error("来票冲账必须填写至少一条发票登记信息");
+      return false;
+    }
     return true;
   }
 
@@ -1562,12 +1563,28 @@ const validateData = () => {
 
   // 校验支付方式
   for (const item of payWayTable.value) {
+    if (!item.payDesc) {
+      ElMessage.error("请填写支付摘要");
+      return false;
+    }
     if (!item.payWayId) {
       ElMessage.error("请选择付款方式");
       return false;
     }
     if (!item.payAmt || Number(item.payAmt) <= 0) {
       ElMessage.error("付款金额必须大于0");
+      return false;
+    }
+    if (!item.bankName) {
+      ElMessage.error("请填写收款开户行");
+      return false;
+    }
+    if (!item.accountName) {
+      ElMessage.error("请填写收款账户名");
+      return false;
+    }
+    if (!item.bankAccount) {
+      ElMessage.error("请填写收款账号");
       return false;
     }
   }
@@ -1712,36 +1729,6 @@ const initDictData = async () => {
 const handleAllocationDetail = () => {
   costAllocationDialogVisible.value = true;
 };
-// 费用类型所属大类是不是建安类
-const isShowCostAllocation = computed(() => {
-  // 如果没有选择费用类型，直接返回 false
-  if (!formData.value.finaTypeId) return false;
-  // 找到选择的费用类型
-  const targetData = feeTypeFlatOptions.value.find(
-    (item) => item.id === formData.value.finaTypeId,
-  );
-  if (!targetData) return false;
-  // 找到费用类型所属大类
-  const largeData = feeTypeFlatOptions.value.find(
-    (item) => item.id === targetData.pid,
-  );
-  // 如果大类存在且 finaTypeCode === '03'（建安类），则显示成本分摊
-  return !!(largeData && largeData.finaTypeCode === "03");
-});
-
-// 成本分摊状态
-const costAllocationStatus = computed(() => {
-  if (!costAllocationData.value) return "未分摊";
-  // 根据实际数据返回状态
-  return costAllocationData.value.status === 1 ? "已分摊" : "未分摊";
-});
-
-// 成本分摊预警状态
-const costAllocationWarnStatus = computed(() => {
-  if (!costAllocationData.value) return "正常";
-  // 根据实际数据返回预警状态
-  return costAllocationData.value.warnStatus === 1 ? "预警" : "正常";
-});
 
 // 判断是否显示款项调整和支付方式模块（来票冲账时不显示）
 const showDeductionAndPayWay = computed(() => {

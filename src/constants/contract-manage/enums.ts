@@ -94,23 +94,19 @@ export const dedTypeEnum = [
 
 /** 业务类型选项 */
 export const bizTypeEnum = [
-  // { label: "合同", value: "CON_MAIN" },
-  // { label: "补充合同", value: "CON_ADD" },
-  // { label: "订单合同", value: "CON_ORD" },
-  // { label: "采购订单", value: "CON_BILL" },
-  // { label: "合同变更", value: "CON_BG" },
-  // { label: "合同签证", value: "CON_QZ" },
-  // { label: "合同产值", value: "CON_PROD" },
-  // { label: "合同预结算", value: "CON_PRE_SETTLE" },
-  // { label: "合同结算", value: "CON_SETTLE" },
-  // { label: "非合同", value: "NCON" },
-  { label: "合同", value: 1 },
-  { label: "补充合同", value: 2 },
-  { label: "合同变更", value: 3 },
-  { label: "合同签证", value: 4 },
-  { label: "合同结算", value: 5 },
-  { label: "非合同", value: 6 },
-] as const;
+  { label: "合同", value: "CON_MAIN" },
+  { label: "补充合同", value: "CON_ADD" },
+  { label: "订单合同", value: "CON_ORD" },
+  { label: "采购订单", value: "CON_BILL" },
+  { label: "合同变更", value: "CON_BG" },
+  { label: "合同签证", value: "CON_QZ" },
+  { label: "合同产值", value: "CON_PROD" },
+  { label: "合同预结算", value: "CON_PRE_SETTLE" },
+  { label: "合同结算", value: "CON_SETTLE" },
+  { label: "非合同", value: "NCON" },
+  { label: "非合同立项", value: "NCON_PROC" },
+  { label: "非合同请款", value: "NCON_CST" },
+]
 
 /** 分摊状态选项 */
 export const allocStatusEnum = [
