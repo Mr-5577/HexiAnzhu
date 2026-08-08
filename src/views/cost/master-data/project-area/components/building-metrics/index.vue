@@ -53,7 +53,13 @@
         <el-button link type="primary" @click="handleEdit(row)">
           编辑
         </el-button>
-        <el-button link type="danger" @click="handleDelete(row)">
+        <!-- 当面积版本有生效的时候不能删除楼栋 -->
+        <el-button
+          link
+          type="danger"
+          @click="handleDelete(row)"
+          :disabled="props.hasEffectiveVersion"
+        >
           删除
         </el-button>
       </template>
@@ -82,6 +88,7 @@ defineOptions({ name: "building-metrics" });
 // Props
 const props = defineProps<{
   projectId: number;
+  hasEffectiveVersion?: boolean; // 是否有生效版本
 }>();
 
 // 数据

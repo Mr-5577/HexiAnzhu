@@ -106,7 +106,7 @@ export const allocStatusEnum = [
   { label: "未分摊", value: 0, type: "info" },
   { label: "已分摊", value: 1, type: "success" },
   { label: "部分分摊", value: 2, type: "warning" },
-]
+] as const;
 
 /** 分摊预警选项 */
 export const allocWarnEnum = [

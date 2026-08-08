@@ -131,6 +131,10 @@ const props = defineProps<{
   projectId: number;
 }>();
 
+const emit = defineEmits<{
+  (e: 'effective-status-change', value: boolean): void;
+}>();
+
 // 数据
 const verTypeList = ref<VersionTypeOption[]>([]);
 const tableLoading = ref(false);
@@ -139,7 +143,8 @@ const queryParams = ref({
   projId: props.projectId,
   verTypeId: null,
 });
-
+// 是否有生效版本
+const hasEffectiveVersion = ref(false);
 // 弹窗相关
 const dialogVisible = ref(false);
 const currentEditData = ref<ProjectAreaVersion | null>(null);
@@ -177,6 +182,10 @@ const getVersionList = async () => {
         ...item,
         verTypeName: getNameById(item.verTypeId),
       }));
+      // 是否有生效版本
+      hasEffectiveVersion.value = list.some((item) => item.status === 1);
+      // 通知父组件
+      emit('effective-status-change', hasEffectiveVersion.value);
     }
   } catch (error) {
     ElMessage.error("加载数据失败");

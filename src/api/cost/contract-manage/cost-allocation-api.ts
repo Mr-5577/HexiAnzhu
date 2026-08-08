@@ -71,8 +71,14 @@ export const costAllocationApi = {
    * 查询项目成本分摊（主从表）
    * @param data - 查询参数
    * @param data.id - 成本分摊主表ID
+   * @param data.bizBillId - 单据ID
+   * @param data.bizType - 业务类型
    */
-  getProjectAlloc: (data: { id: number }) => {
+  getProjectAlloc: (data: {
+    id?: number;
+    bizBillId?: number | string;
+    bizType?: string;
+  }) => {
     return http.formPost("/cost/projectAlloc/getList", data);
   },
   /**

@@ -672,7 +672,7 @@ watch(
 );
 
 // ==================== 扣款事项 ====================
-const dedDetailColumns = [
+const dedDetailColumns:any = [
   { type: "index", label: "序号", width: 60 },
   { prop: "dedName", label: "事项名称", minWidth: 120 },
   { prop: "dedTypeName", label: "调整类型", minWidth: 120 },
@@ -786,7 +786,7 @@ const handleDedSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
 };
 
 // ==================== 发票登记 ====================
-const invoiceMDetailColumns = [
+const invoiceMDetailColumns:any = [
   { type: "index", label: "序号", width: 60 },
   {
     // 发票状态（0=待查验 1=合格发票 2=待人工审核 3=人工通过 4=人工拒绝）
@@ -1207,7 +1207,7 @@ const deleteInvoiceM = ({ uuid }) => {
 };
 
 // ==================== 付款方式 ====================
-const payWayDetailColumns = [
+const payWayDetailColumns:any = [
   { type: "index", label: "序号", width: 60 },
   { prop: "payDesc", label: "摘要", minWidth: 200 },
   { prop: "payWayName", label: "付款方式", minWidth: 150 },

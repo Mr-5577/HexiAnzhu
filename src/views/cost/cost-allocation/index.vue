@@ -5,7 +5,7 @@
     :class="{ 'dialog-mode': isDialogMode }"
   >
     <header class="header-card">
-      <div class="header-top">
+      <div class="header-top" v-if="!isDialogMode">
         <h2>成本分摊</h2>
       </div>
 
@@ -172,21 +172,15 @@ import { filterTreeByIds } from "./helpers";
 
 interface Props {
   projId?: number; // 项目ID
-  bizType?: string | number; // 业务类型
-  bizBillId?: number; // 单据ID
-
-  bizKeyId?: string | number; // 业务主键ID
+  bizType?: string; // 业务类型
   allocAmt?: number; // 分摊金额(含税)
   allocExclAmt?: number; // 分摊金额(不含税)
   isDialogMode?: boolean; // 是否为弹窗模式
   cstMData?: any; // 弹窗传参
 }
-
 const props = withDefaults(defineProps<Props>(), {
   projId: undefined,
   bizType: "",
-  bizBillId: undefined,
-  bizKeyId: "0",
   allocAmt: 0,
   allocExclAmt: 0,
   isDialogMode: false, // 页面模式，默认非弹窗模式
@@ -239,7 +233,7 @@ const apportionInfo = ref({
 const pageParams = ref({
   projId: undefined,
   bizType: "",
-  bizBillId: undefined,
+  billId: undefined,
   bizKeyId: 0,
   allocAmt: 0,
   allocExclAmt: 0,
@@ -292,7 +286,7 @@ const pendingAmount = computed(
 /**
  * 预警表格列配置
  */
-const warningColumns = [
+const warningColumns: any = [
   {
     prop: "subName",
     label: "成本科目",
@@ -304,25 +298,25 @@ const warningColumns = [
   {
     label: "分摊后余额",
     children: [
-      { prop: "totalBalanceAmt", label: "小计" },
-      { prop: "balanceAmt", label: "金额(含税)" },
+      // { prop: "totalBalanceAmt", label: "小计" },
       { prop: "balanceExclAmt", label: "金额(不含税)" },
+      { prop: "balanceAmt", label: "金额(含税)" },
     ],
   },
   {
     label: "目标成本可用额",
     children: [
-      { prop: "totalAvailAmt", label: "小计" },
-      { prop: "availAmt", label: "金额(含税)" },
+      // { prop: "totalAvailAmt", label: "小计" },
       { prop: "availExclAmt", label: "金额(不含税)" },
+      { prop: "availAmt", label: "金额(含税)" },
     ],
   },
   {
     label: "当前分摊额",
     children: [
-      { prop: "totalAllocAmt", label: "小计" },
-      { prop: "allocAmt", label: "金额(含税)" },
+      // { prop: "totalAllocAmt", label: "小计" },
       { prop: "allocExclAmt", label: "金额(不含税)" },
+      { prop: "allocAmt", label: "金额(含税)" },
     ],
   },
 ];
@@ -1469,62 +1463,35 @@ const getWarnSubAlloc = async (params: any) => {
 };
 
 /**
- * 从URL或Props获取参数
- */
-const getParams: any = () => {
-  if (props.projId) {
-    return {
-      projId: props.projId,
-      bizType: props.bizType || "",
-      bizBillId: props.bizBillId,
-      bizKeyId: safeNumber(props.bizKeyId),
-      allocAmt: props.allocAmt || 0,
-      allocExclAmt: props.allocExclAmt || 0,
-    };
-  }
-  return {
-    projId: route.query.projId ? Number(route.query.projId) : undefined,
-    bizType: (route.query.bizType as string) || "",
-    bizBillId: route.query.bizBillId as string,
-    bizKeyId: Number(route.query.bizKeyId) || 0,
-    allocAmt: Number(route.query.allocAmt) || 0,
-    allocExclAmt: Number(route.query.allocExclAmt) || 0,
-  };
-};
-
-/**
- * 初始化页面
+ * 弹窗初始化
  */
 const initPage = async () => {
   // 获取业务归属列表
   await getBusiSegList();
 
-  // 解析参数，OA打开和业务弹窗打开
-  pageParams.value = getParams();
-
-  if (!pageParams.value.projId) {
-    // ElMessage.warning("缺少项目ID参数");
-    return;
-  }
+  // 解析参数，业务弹窗打开
+  pageParams.value = {
+    projId: props.projId,
+    bizType: props.bizType || "",
+    billId: undefined,
+    bizKeyId: undefined,
+    allocAmt: props.allocAmt || 0,
+    allocExclAmt: props.allocExclAmt || 0,
+  };
   // 获取项目产品类型列表
   await Promise.all([getCostSubjectProjList(), getProductList()]);
-
-  // 判断是否弹窗模式，弹窗模式则是从erp系统打开弹窗操作，否则就是OA单独引用分摊页面
-  if (isDialogMode.value) {
-    // 业务弹窗打开处理
-    processPopupData();
-  } else {
-    // OA打开处理
-    if (pageParams.value.bizBillId) {
-      await loadAllocationData(pageParams.value.bizBillId);
-    }
+  // 弹窗模式则是从erp系统打开弹窗操作，否则就是OA单独引用分摊页面
+  // 处理弹窗数据
+  if (props?.cstMData && props.cstMData?.allocDs?.length > 0) {
+    const detaiList = props.cstMData?.allocDs || [];
+    processPopupData(detaiList);
   }
 };
 // 处理弹窗打开数据回显
-const processPopupData = async () => {
+const processPopupData = async (cstList: any) => {
   // 弹窗模式从本地获取数据
-  if (props.cstMData && props.cstMData?.allocDs?.length > 0) {
-    const detaiList = props.cstMData?.allocDs || [];
+  if (cstList && cstList?.length > 0) {
+    const detaiList = cstList || [];
     const subIds: any = new Set(detaiList.map((item: any) => item.subId));
     console.log("数据:", props.cstMData);
     // 获取基础成本科目列表
@@ -1562,12 +1529,483 @@ const processPopupData = async () => {
 /**
  * 加载OA打开的分摊数据
  */
-const loadAllocationData = async (bizBillId: number | string) => {
+const loadAllocationData = async () => {
   try {
-    console.log("加载分摊数据:", bizBillId);
-  } catch (error) {
-    console.error("加载分摊数据失败:", error);
-  }
+    console.log("加载分摊数据:", route.query);
+    // 从路由获取参数
+    const billId = route.query.billId as string; // 单据ID
+    const bizType = route.query.bizItemCode as string; // 业务类型编码，例：NCON_PROC
+
+    console.log("billId:", billId);
+    // const res = await costAllocationApi.getProjectAlloc({
+    //   bizBillId: billId,
+    //   bizType: bizType,
+    // });
+    const res = {
+      code: 200,
+      message: "success",
+      data: {
+        isDel: false,
+        createId: 15,
+        createDate: "2026-08-05 16:18:36",
+        operId: 14,
+        operDate: "2026-08-05 21:12:36",
+        id: 2,
+        projId: 30,
+        bizType: "NCON_PROC",
+        bizBillId: 49,
+        bizKeyId: 27,
+        allocAmt: 600.0,
+        allocExclAmt: 30.0,
+        allocStatus: 2,
+        allocWarn: 0,
+        projName: "和喜·江山云璟",
+        allocDs: [
+          {
+            isDel: false,
+            createId: 15,
+            createDate: "2026-08-05 16:48:46",
+            operId: 14,
+            operDate: "2026-08-05 21:12:36",
+            id: 32,
+            allocMid: 2,
+            subId: 1,
+            prodId: 3017,
+            allocAmt: 0.0,
+            allocExclAmt: 0.0,
+            allocWarn: 2,
+            subName: "土地成本",
+            prodName: "小高",
+            busiSegId: 2,
+            busiSegName: "地产",
+            subPid: 0,
+            cstD: {
+              isDel: false,
+              costAmt: 12.0,
+              costExclAmt: 11.0,
+              costDynAmt: 0.0,
+              costDynExclAmt: 0.0,
+            },
+          },
+          {
+            isDel: false,
+            createId: 15,
+            createDate: "2026-08-05 16:48:46",
+            operId: 14,
+            operDate: "2026-08-05 21:12:36",
+            id: 33,
+            allocMid: 2,
+            subId: 1,
+            prodId: 3019,
+            allocAmt: 0.0,
+            allocExclAmt: 0.0,
+            allocWarn: 2,
+            subName: "土地成本",
+            prodName: "独立商业",
+            busiSegId: 2,
+            busiSegName: "地产",
+            subPid: 0,
+            cstD: {
+              isDel: false,
+              costAmt: 23.0,
+              costExclAmt: 21.0,
+              costDynAmt: 0.0,
+              costDynExclAmt: 0.0,
+            },
+          },
+          {
+            isDel: false,
+            createId: 15,
+            createDate: "2026-08-05 16:48:46",
+            operId: 14,
+            operDate: "2026-08-05 21:12:36",
+            id: 34,
+            allocMid: 2,
+            subId: 1,
+            prodId: 3025,
+            allocAmt: 100.0,
+            allocExclAmt: 10.0,
+            allocWarn: 2,
+            subName: "土地成本",
+            prodName: "人防",
+            busiSegId: 2,
+            busiSegName: "地产",
+            subPid: 0,
+            cstD: {
+              isDel: false,
+              costAmt: 32.0,
+              costExclAmt: 31.0,
+              costDynAmt: 100.0,
+              costDynExclAmt: 10.0,
+            },
+          },
+          {
+            isDel: false,
+            createId: 15,
+            createDate: "2026-08-05 16:48:46",
+            operId: 14,
+            operDate: "2026-08-05 21:12:36",
+            id: 35,
+            allocMid: 2,
+            subId: 1,
+            prodId: 3026,
+            allocAmt: 0.0,
+            allocExclAmt: 0.0,
+            allocWarn: 2,
+            subName: "土地成本",
+            prodName: "非人防",
+            busiSegId: 2,
+            busiSegName: "地产",
+            subPid: 0,
+            cstD: {
+              isDel: false,
+              costAmt: 43.0,
+              costExclAmt: 41.0,
+              costDynAmt: 0.0,
+              costDynExclAmt: 0.0,
+            },
+          },
+          {
+            isDel: false,
+            createId: 15,
+            createDate: "2026-08-05 16:48:46",
+            operId: 14,
+            operDate: "2026-08-05 21:12:36",
+            id: 36,
+            allocMid: 2,
+            subId: 1,
+            prodId: 3027,
+            allocAmt: 0.0,
+            allocExclAmt: 0.0,
+            allocWarn: 2,
+            subName: "土地成本",
+            prodName: "高层",
+            busiSegId: 2,
+            busiSegName: "地产",
+            subPid: 0,
+            cstD: {
+              isDel: false,
+              costAmt: 454.0,
+              costExclAmt: 51.0,
+              costDynAmt: 0.0,
+              costDynExclAmt: 0.0,
+            },
+          },
+          {
+            isDel: false,
+            allocMid: 2,
+            subId: 2,
+            allocWarn: 2,
+            subName: "费用类",
+            busiSegId: 0,
+            subPid: 0,
+            cstD: {
+              isDel: false,
+              costAmt: 220.0,
+              costExclAmt: 68.0,
+              costDynAmt: 500.0,
+              costDynExclAmt: 20.0,
+            },
+          },
+          {
+            isDel: false,
+            allocMid: 2,
+            subId: 8,
+            allocWarn: 2,
+            subName: "管理费",
+            busiSegId: 0,
+            subPid: 2,
+            cstD: {
+              isDel: false,
+              costAmt: 220.0,
+              costExclAmt: 68.0,
+              costDynAmt: 500.0,
+              costDynExclAmt: 20.0,
+            },
+          },
+          {
+            isDel: false,
+            createId: 15,
+            createDate: "2026-08-05 16:48:46",
+            operId: 14,
+            operDate: "2026-08-05 21:12:36",
+            id: 37,
+            allocMid: 2,
+            subId: 10,
+            prodId: 3017,
+            allocAmt: 66.66,
+            allocExclAmt: 3.33,
+            allocWarn: 2,
+            subName: "办公费用",
+            prodName: "小高",
+            busiSegId: 2,
+            busiSegName: "地产",
+            subPid: 8,
+            cstD: {
+              isDel: false,
+              costAmt: 22.0,
+              costExclAmt: 11.0,
+              costDynAmt: 66.66,
+              costDynExclAmt: 3.33,
+            },
+          },
+          {
+            isDel: false,
+            createId: 15,
+            createDate: "2026-08-05 16:48:46",
+            operId: 14,
+            operDate: "2026-08-05 21:12:36",
+            id: 38,
+            allocMid: 2,
+            subId: 10,
+            prodId: 3019,
+            allocAmt: 66.66,
+            allocExclAmt: 3.33,
+            allocWarn: 2,
+            subName: "办公费用",
+            prodName: "独立商业",
+            busiSegId: 2,
+            busiSegName: "地产",
+            subPid: 8,
+            cstD: {
+              isDel: false,
+              costAmt: 33.0,
+              costExclAmt: 12.0,
+              costDynAmt: 66.66,
+              costDynExclAmt: 3.33,
+            },
+          },
+          {
+            isDel: false,
+            createId: 15,
+            createDate: "2026-08-05 16:48:46",
+            operId: 14,
+            operDate: "2026-08-05 21:12:36",
+            id: 39,
+            allocMid: 2,
+            subId: 10,
+            prodId: 3025,
+            allocAmt: 33.34,
+            allocExclAmt: 1.67,
+            allocWarn: 2,
+            subName: "办公费用",
+            prodName: "人防",
+            busiSegId: 2,
+            busiSegName: "地产",
+            subPid: 8,
+            cstD: {
+              isDel: false,
+              costAmt: 44.0,
+              costExclAmt: 14.0,
+              costDynAmt: 33.34,
+              costDynExclAmt: 1.67,
+            },
+          },
+          {
+            isDel: false,
+            createId: 15,
+            createDate: "2026-08-05 16:48:46",
+            operId: 14,
+            operDate: "2026-08-05 21:12:36",
+            id: 40,
+            allocMid: 2,
+            subId: 10,
+            prodId: 3026,
+            allocAmt: 33.34,
+            allocExclAmt: 1.67,
+            allocWarn: 2,
+            subName: "办公费用",
+            prodName: "非人防",
+            busiSegId: 2,
+            busiSegName: "地产",
+            subPid: 8,
+            cstD: {
+              isDel: false,
+              costAmt: 55.0,
+              costExclAmt: 15.0,
+              costDynAmt: 33.34,
+              costDynExclAmt: 1.67,
+            },
+          },
+          {
+            isDel: false,
+            createId: 15,
+            createDate: "2026-08-05 16:48:46",
+            operId: 14,
+            operDate: "2026-08-05 21:12:36",
+            id: 41,
+            allocMid: 2,
+            subId: 10,
+            prodId: 3027,
+            allocAmt: 0.0,
+            allocExclAmt: 0.0,
+            allocWarn: 2,
+            subName: "办公费用",
+            prodName: "高层",
+            busiSegId: 2,
+            busiSegName: "地产",
+            subPid: 8,
+            cstD: {
+              isDel: false,
+              costAmt: 66.0,
+              costExclAmt: 16.0,
+              costDynAmt: 0.0,
+              costDynExclAmt: 0.0,
+            },
+          },
+          {
+            isDel: false,
+            createId: 15,
+            createDate: "2026-08-05 16:48:46",
+            operId: 14,
+            operDate: "2026-08-05 21:12:36",
+            id: 42,
+            allocMid: 2,
+            subId: 13,
+            prodId: 3017,
+            allocAmt: 150.0,
+            allocExclAmt: 5.0,
+            allocWarn: 1,
+            subName: "差旅费",
+            prodName: "小高",
+            busiSegId: 2,
+            busiSegName: "地产",
+            subPid: 8,
+            cstD: {
+              isDel: false,
+              costAmt: 0.0,
+              costExclAmt: 0.0,
+              costDynAmt: 150.0,
+              costDynExclAmt: 5.0,
+            },
+          },
+          {
+            isDel: false,
+            createId: 15,
+            createDate: "2026-08-05 16:48:46",
+            operId: 14,
+            operDate: "2026-08-05 21:12:36",
+            id: 43,
+            allocMid: 2,
+            subId: 13,
+            prodId: 3019,
+            allocAmt: 150.0,
+            allocExclAmt: 5.0,
+            allocWarn: 1,
+            subName: "差旅费",
+            prodName: "独立商业",
+            busiSegId: 2,
+            busiSegName: "地产",
+            subPid: 8,
+            cstD: {
+              isDel: false,
+              costAmt: 0.0,
+              costExclAmt: 0.0,
+              costDynAmt: 150.0,
+              costDynExclAmt: 5.0,
+            },
+          },
+          {
+            isDel: false,
+            createId: 15,
+            createDate: "2026-08-05 16:48:46",
+            operId: 14,
+            operDate: "2026-08-05 21:12:36",
+            id: 44,
+            allocMid: 2,
+            subId: 13,
+            prodId: 3025,
+            allocAmt: 0.0,
+            allocExclAmt: 0.0,
+            allocWarn: 2,
+            subName: "差旅费",
+            prodName: "人防",
+            busiSegId: 2,
+            busiSegName: "地产",
+            subPid: 8,
+            cstD: {
+              isDel: false,
+              costAmt: 0.0,
+              costExclAmt: 0.0,
+              costDynAmt: 0.0,
+              costDynExclAmt: 0.0,
+            },
+          },
+          {
+            isDel: false,
+            createId: 15,
+            createDate: "2026-08-05 16:48:46",
+            operId: 14,
+            operDate: "2026-08-05 21:12:37",
+            id: 45,
+            allocMid: 2,
+            subId: 13,
+            prodId: 3026,
+            allocAmt: 0.0,
+            allocExclAmt: 0.0,
+            allocWarn: 2,
+            subName: "差旅费",
+            prodName: "非人防",
+            busiSegId: 2,
+            busiSegName: "地产",
+            subPid: 8,
+            cstD: {
+              isDel: false,
+              costAmt: 0.0,
+              costExclAmt: 0.0,
+              costDynAmt: 0.0,
+              costDynExclAmt: 0.0,
+            },
+          },
+          {
+            isDel: false,
+            createId: 15,
+            createDate: "2026-08-05 16:48:46",
+            operId: 14,
+            operDate: "2026-08-05 21:12:37",
+            id: 46,
+            allocMid: 2,
+            subId: 13,
+            prodId: 3027,
+            allocAmt: 0.0,
+            allocExclAmt: 0.0,
+            allocWarn: 2,
+            subName: "差旅费",
+            prodName: "高层",
+            busiSegId: 2,
+            busiSegName: "地产",
+            subPid: 8,
+            cstD: {
+              isDel: false,
+              costAmt: 0.0,
+              costExclAmt: 0.0,
+              costDynAmt: 0.0,
+              costDynExclAmt: 0.0,
+            },
+          },
+        ],
+        cstM: {
+          isDel: false,
+          costAmt: 784.0,
+          costExclAmt: 223.0,
+          costDynAmt: 600.0,
+          costDynExclAmt: 30.0,
+        },
+      },
+    };
+    console.log("res:", res);
+    if (res.code === 200) {
+      pageParams.value.projId = res.data?.projId;
+      pageParams.value.bizType = res.data?.bizType;
+      pageParams.value.billId = billId;
+      pageParams.value.allocAmt = res.data?.cstM?.costAmt || 0;
+      pageParams.value.allocExclAmt = res.data?.cstM?.costExclAmt || 0;
+      // await Promise.all([getBusiSegList(), getProductList()]);
+      // 处理查询到的分摊数据，回显到页面
+      const allocDs = res.data?.allocDs || [];
+      processPopupData(allocDs);
+    }
+  } catch (error) {}
 };
 
 /**
@@ -1856,13 +2294,13 @@ const autoAllocation = async () => {
 onMounted(async () => {
   // 非弹窗模式时初始化
   if (!isDialogMode.value) {
-    await initPage();
+    await loadAllocationData();
   }
 });
 
 // 监听弹窗模式下的参数变化
 watch(
-  () => [props.projId, props.bizBillId],
+  () => [props.projId],
   () => {
     if (isDialogMode.value && props.projId) {
       initPage();
@@ -1870,6 +2308,7 @@ watch(
   },
   { immediate: true },
 );
+
 // 确认时校验
 const validateTable = () => {
   if (!editableSubjectData.value?.length) {
@@ -2027,10 +2466,6 @@ defineExpose({
   font-size: 18px;
   font-weight: 700;
   color: #1f2937;
-}
-
-.summary-cards {
-  margin: 12px 0;
 }
 
 .summary-item {

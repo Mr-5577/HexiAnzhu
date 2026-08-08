@@ -26,7 +26,7 @@ export const getEnumType = <T extends EnumItem>(
   list: readonly T[],
   value: T["value"],
 ): string => {
-  return list.find((item) => item.value == value)?.type || "";
+  return list.find((item) => item.value == value)?.type || "info";
 };
 
 /**

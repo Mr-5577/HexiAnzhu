@@ -51,19 +51,35 @@ const buildRoutePath = (
 
 // COST 子业务路径映射（subBizCode = COST 时生效）
 const COST_ROUTE: Record<string, string> = {
-  CON_MAIN: "approval",
-  CON_ADD: "supplement",
-  CON_BG: "change",
-  CON_QZ: "visa",
-  CON_PRE_SETTLE: "pre-settle",
-  CON_SETTLE: "settle",
+  CON_MAIN: "/cost-allocation",
+  CON_ADD: "/cost-allocation",
+  CON_BG: "/cost-allocation",
+  CON_QZ: "/cost-allocation",
+  CON_PRE_SETTLE: "/cost-allocation",
+  CON_SETTLE: "/cost-allocation",
+  NCON_CST: "/cost-allocation",
+  NCON_PROC: "/cost-allocation",
 };
 
 // FINA 子业务路径映射（subBizCode = FINA 时生效）
 const FINA_ROUTE: Record<string, string> = {
-  NCON_FEE: "/cost/contract/non-contract",
-  NCON_CST: "/home", // 占位，待补充真实路由
-  CON_PAY: "/home", // 占位，待补充真实路由
+  NCON_FEE: "/finance-allocation",
+  NCON_CST: "/finance-allocation",
+  CON_PAY: "/finance-allocation",
+};
+
+// 默認路徑映射
+const DEFAULT_ROUTE: Record<string, string> = {
+  CON_MAIN: "/home",
+  CON_ADD: "/home",
+  CON_BG: "/home",
+  CON_QZ: "/home",
+  CON_PRE_SETTLE: "/home",
+  CON_SETTLE: "/home",
+  NCON_CST: "/home",
+  NCON_PROC: "/home",
+  NCON_FEE: "/home",
+  CON_PAY: "/home",
 };
 
 // 安全获取查询参数
@@ -102,21 +118,28 @@ const resolveBizRoute = async (
     case "CON_BG":
     case "CON_QZ":
     case "CON_PRE_SETTLE":
-    case "CON_SETTLE": {
+    case "CON_SETTLE":
+    case "NCON_CST":
+    case "NCON_PROC": {
       if (subBizCode === "COST") {
         switch (mode) {
-          case "view":
-            return buildRoutePath(`/cost/contract/${COST_ROUTE[bizItemCode]}/cost/view`, {
-              billId,
-            });
           case "edit":
+            return buildRoutePath(COST_ROUTE[bizItemCode], {
+              billId, // 单据ID
+              bizType: bizItemCode, // 业务类型
+              mode: "edit",
+            });
+          case "view":
           default:
-            return buildRoutePath(`/cost/contract/${COST_ROUTE[bizItemCode]}/cost/edit`, {
-              billId,
+            return buildRoutePath(COST_ROUTE[bizItemCode], {
+              billId, // 单据ID
+              bizType: bizItemCode, // 业务类型
+              mode: "view",
             });
         }
       }
-      return buildRoutePath(`/cost/contract/${COST_ROUTE[bizItemCode]}`, {
+      // 这里走单据详情页
+      return buildRoutePath(DEFAULT_ROUTE[bizItemCode], {
         billId,
       });
     }
@@ -129,22 +152,22 @@ const resolveBizRoute = async (
     case "CON_PAY": {
       if (subBizCode === "FINA") {
         switch (mode) {
-          case "view":
-            return buildRoutePath(`${FINA_ROUTE[bizItemCode]}/fina/view`, {
-              billId,
-            });
-          case "add":
-            return buildRoutePath(`${FINA_ROUTE[bizItemCode]}/fina/add`, {
-              billId,
-            });
           case "edit":
+            return buildRoutePath(`${FINA_ROUTE[bizItemCode]}`, {
+              billId, // 单据ID
+              bizType: bizItemCode, // 业务类型
+              mode: "edit",
+            });
+          case "view":
           default:
-            return buildRoutePath(`${FINA_ROUTE[bizItemCode]}/fina/edit`, {
-              billId,
+            return buildRoutePath(`${FINA_ROUTE[bizItemCode]}`, {
+              billId, // 单据ID
+              bizType: bizItemCode, // 业务类型
+              mode: "view",
             });
         }
       }
-      return buildRoutePath(FINA_ROUTE[bizItemCode], {
+      return buildRoutePath(DEFAULT_ROUTE[bizItemCode], {
         billId,
       });
     }
@@ -214,7 +237,7 @@ const resolveBizRoute = async (
           const projId = data?.projId ?? data?.proj_id;
           const areaVerMid = data?.areaVerMid ?? data?.area_ver_mid;
 
-          return buildRoutePath("/cost/cost-detail/add", {
+          return buildRoutePath("/cost/cost-detail", {
             mode: mode || "add",
             projId,
             costMid: bizId,
@@ -225,7 +248,7 @@ const resolveBizRoute = async (
         }
       }
 
-      return buildRoutePath("/cost/cost-detail/add", {
+      return buildRoutePath("/cost/cost-detail", {
         mode: mode || "add",
         projId: billId,
         costMid: bizId,

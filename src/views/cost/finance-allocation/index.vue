@@ -121,7 +121,11 @@ const props = withDefaults(defineProps<Props>(), {
 const router = useRouter();
 const route = useRoute();
 
-const nconBillId = Number(route.query.nconBillId); // 非合同单据ID
+// 合同单据ID
+const billId = route.query?.billId ? Number(route.query.billId) : undefined;
+// 业务类型，例：NCON_FEE
+const bizType = route.query?.bizType ? route.query.bizType : undefined;
+
 const lightweightDetail = ref({
   nconBillId: undefined,
   bizItemCode: "",
@@ -384,7 +388,17 @@ const handleSubmit = async () => {
     submitLoading.value = true;
     const detailList = mainTableData.value.flatMap((item) => item.finaDs || []);
     try {
-      const res = await financeAllocationApi.saveNconAlloc(detailList);
+      let res;
+      // 根据业务类型选择接口
+      if (bizType === "CON_PAY") {
+        // 合同费用分摊保存
+        res = await financeAllocationApi.saveConAlloc(detailList);
+      } else if (bizType === "NCON_CST" || bizType === "NCON_FEE") {
+        // 非合同费用分摊
+        res = await financeAllocationApi.saveNconAlloc(detailList);
+      } else {
+        throw new Error(`未知的业务类型: ${bizType}`);
+      }
       if (res.code === 200) {
         ElMessage.success("保存成功");
       }
@@ -459,28 +473,54 @@ const processData = (list) => {
     mainTableData.value = data; // 将处理后的数据赋值给 tableData
   }
 };
-// 获取轻亮级的非合同详情
+// 获取轻量级的合同/非合同财务分摊详情
 const getNconDetail = async () => {
-  if (!nconBillId) return;
+  if (!billId) return;
   try {
-    const res = await feePaymentApi.getNconInfoLite({ nconBillId });
+    const res = await feePaymentApi.getNconInfoLite({ nconBillId: billId });
     console.log("合同详情", res);
     if (res.code == 200 && res.data) {
       const { fee } = res.data;
       lightweightDetail.value = { ...lightweightDetail.value, ...res.data };
       await getFinaOrgListBySegId(fee?.segId); // 获取业务板块下的费用组织
       await getFinaSubjectListBySegId(fee?.segId); // 获取业务板块下的费用科目
-      // 通过传入的合同/非合同单据ID查询财务分摊数据进行分摊
-      getFinanceAllocDetaiByBillId();
+      // 根据业务类型获取对应详情
+      switch (bizType) {
+        case "NCON_CST": // 非合同建安支付
+        case "NCON_FEE": // 非合同费用支付
+          getNconFinanceAllocDetaiByBillId();
+          break;
+        case "CON_PAY": // 合同支付
+          getConFinanceAllocDetaiByBillId();
+          break;
+        default:
+          console.warn(`未知的业务类型: ${bizType}，请检查配置`);
+          ElMessage.warning(
+            `未知的业务类型: ${bizType},当前业务类型暂不支持查看详情`,
+          );
+          break;
+      }
     }
   } catch (error) {}
 };
-// 查询分摊详情
-const getFinanceAllocDetaiByBillId = async () => {
-  if (!nconBillId) return;
+// 通过传入的合同单据ID查询财务分摊数据进行分摊，查询分摊详情
+const getConFinanceAllocDetaiByBillId = async () => {
+  if (!billId) return;
   try {
-    const res = await financeAllocationApi.getNconAlloc({ nconBillId });
-    console.log("分摊详情", res);
+    const res = await financeAllocationApi.getConAlloc({ conBillId: billId });
+    console.log("合同分摊详情", res);
+    if (res.code == 200) {
+      const list = res.data || [];
+      processData(list);
+    }
+  } catch (error) {}
+};
+// 通过传入的非合同单据ID查询财务分摊数据进行分摊，查询分摊详情
+const getNconFinanceAllocDetaiByBillId = async () => {
+  if (!billId) return;
+  try {
+    const res = await financeAllocationApi.getNconAlloc({ nconBillId: billId });
+    console.log("非合同分摊详情", res);
     if (res.code == 200) {
       const list = res.data || [];
       processData(list);

@@ -36,7 +36,6 @@
     <CostAllocationDetailDialog
       v-model="dialogVisible"
       :projId="props.projId"
-      :bizBillId="props.bizBillId"
       :bizType="props.bizType"
       :allocAmt="props.allocAmt"
       :cstMData="props.cstMData"

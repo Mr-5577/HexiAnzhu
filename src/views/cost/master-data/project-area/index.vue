@@ -92,6 +92,7 @@
             <version-management
               v-if="activeTab === 'version'"
               :project-id="selectedProject?.id"
+              @effective-status-change="handleEffectiveStatusChange"
             />
           </el-tab-pane>
           <el-tab-pane
@@ -102,6 +103,7 @@
             <building-metrics
               v-if="activeTab === 'building'"
               :project-id="selectedProject?.id"
+              :has-effective-version="hasEffectiveVersion"
             />
           </el-tab-pane>
           <el-tab-pane label="面积详情" name="area" style="height: 100%">
@@ -151,9 +153,13 @@ const activeTab = ref("version");
 const currentNodeKey = ref<string | number | null>(null);
 const dataLoading = ref(false);
 const verMid = ref(null);
+// 状态
+const hasEffectiveVersion = ref(false);
+const versionManagementRef = ref();
+const buildingMetricsRef = ref();
 
 // 树配置 - 根据新接口调整
-const treeProps = {
+const treeProps:any = {
   children: "children",
   label: "orgName",
   disabled: false,
@@ -200,7 +206,7 @@ const getCurrentVersionId = async (projId: number) => {
     if (res.code === 200) {
       const list = res.data || [];
       // 获取当前生效版本的版本
-      const currentVersion = list.find((item) => item.isEnabled);
+      const currentVersion = list.find((item) => item.status == 1);
       if (currentVersion) {
         // const verMid = currentVersion.id;
         verMid.value = currentVersion.id;
@@ -323,6 +329,11 @@ const loadprojectData = async () => {
   } catch (error) {
     console.error("加载项目数据失败:", error);
   }
+};
+
+// 处理有效版本状态变化
+const handleEffectiveStatusChange = (value: boolean) => {
+  hasEffectiveVersion.value = value;
 };
 
 provide("updateDetailByProjectId", getDetailByProjectId);

@@ -291,7 +291,7 @@ const pendingAmount = computed(
 /**
  * 预警表格列配置
  */
-const warningColumns = [
+const warningColumns: any = [
   {
     prop: "subName",
     label: "成本科目",

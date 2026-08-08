@@ -57,6 +57,9 @@ export interface ProjectBuildingSaveParams {
   bldName: string;
   /** 是否地下室 */
   isUnderGround?: boolean;
+  prodIds: any,
+  prodNames: any,
+  bindUnderGround: number
 }
 
 /**

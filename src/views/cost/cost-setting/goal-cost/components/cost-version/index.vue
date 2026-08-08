@@ -306,7 +306,7 @@ const handleCancel = async (row: HCstProjectCostM) => {
 // 明细
 const handleDetail = (row: HCstProjectCostM) => {
   router.push({
-    path: "/cost/cost-detail/add",
+    path: "/cost/cost-detail",
     query: {
       mode: "add",
       projId: row.projId, // 项目ID

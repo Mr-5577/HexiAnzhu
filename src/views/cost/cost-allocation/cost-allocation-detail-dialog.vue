@@ -13,7 +13,6 @@
     <CostAllocationDetail
       ref="costAllocationRef"
       :projId="props.projId"
-      :bizBillId="props.bizBillId"
       :bizType="props.bizType"
       :allocAmt="props.allocAmt"
       :cstMData="props.cstMData"
@@ -30,8 +29,7 @@ import CostAllocationDetail from "./index.vue";
 interface Props {
   modelValue: boolean;
   projId?: number;
-  bizType?: string | number;
-  bizBillId?: number;
+  bizType?: string;
   allocAmt?: number;
   cstMData?: any;
 }
@@ -40,7 +38,6 @@ const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
   projId: undefined,
   bizType: undefined,
-  bizBillId: undefined,
   allocAmt: 0,
   cstMData: null,
 });
