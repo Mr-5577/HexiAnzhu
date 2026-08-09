@@ -109,4 +109,20 @@ export const costCategoryApi = {
   delCostSubjectProj: (data: { subId: number; projId: number }) => {
     return http.formPost("/mainData/costSubjectProj/del", data);
   },
+  /**
+   * 查询基准成本科目列表
+   * @param data - 查询参数
+   * @param data.subCode - 科目代码
+   * @param data.subName - 科目名称
+   * @param data.subIds - 科目IDs
+   * @param data.isWithParent - 是否携带父节点
+   */
+  getCostSubjectBase: (data: {
+    subCode?: string;
+    subName?: string;
+    subIds?: number[];
+    isWithParent?: boolean;
+  }) => {
+    return http.formPost("/mainData/costSubjectBase/getList", data);
+  },
 };

@@ -4,7 +4,7 @@
     ref="uploadRef"
     :action="uploadUrl"
     :headers="headers"
-    :file-list="fileList"
+    :file-list="internalFileList"
     :multiple="multiple"
     :limit="limit"
     :accept="accept"
@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { ElMessage } from "element-plus";
 import type { UploadFile, UploadProps } from "element-plus";
 import { getApiBaseUrl } from "@/utils/config";
@@ -148,6 +148,25 @@ const tipTextComputed = computed(() => {
     return `单个文件不超过 ${props.maxSize}MB，最多上传 ${props.limit} 个文件`;
   }
   return `支持 ${props.accept} 格式，单个文件不超过 ${props.maxSize}MB，最多上传 ${props.limit} 个文件`;
+});
+
+/**
+ * 核心方法：将 AnnexInfo 转换为 UploadFile 格式
+ * 自动生成 url 字段，无需父组件处理
+ */
+const convertToUploadFile = (annex): UploadFile => {
+  return {
+    ...annex,
+    name: annex.annexName,
+    url: annex.annexPath,
+  };
+};
+
+/**
+ * 内部文件列表（自动转换）
+ */
+const internalFileList = computed(() => {
+  return props.fileList.map(convertToUploadFile);
 });
 
 // 上传前校验

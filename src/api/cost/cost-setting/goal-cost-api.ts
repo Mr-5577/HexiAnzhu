@@ -94,7 +94,7 @@ export const goalCostApi = {
   /**
    * 查询目标成本明细列表
    * @param data - 查询参数
-   * @param data.costMid - 目标成本ID
+   * @param data.costMid - 目标成本版本ID
    * @param data.projId - 项目ID
    * @param data.subId - 科目ID
    * @param data.prodId - 业态ID
@@ -195,5 +195,13 @@ export const goalCostApi = {
    */
   getCostBillInfo: (params: { costMId: number }) => {
     return http.get("/cost/bill/getInfo", params);
+  },
+  /**
+   * @name 查询上一版目标成本版本明细
+   * @param data - 查询参数
+   * @param data.costMid - 目标成本版本ID（必填）
+   */
+  getCostPrevList: (data: { costMid: number }) => {
+    return http.post("/cost/projectCostD/getPrevList", data);
   },
 };

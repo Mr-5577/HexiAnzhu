@@ -732,7 +732,10 @@ const initAddTableData = async () => {
 const getBillDetail = async () => {
   if (!props.billId) return;
   try {
-    const res = await biddingManageApi.getBillInfo({ billId: props.billId });
+    const res = await biddingManageApi.getBillInfo({
+      billId: props.billId,
+      isWithFlow: true,
+    });
     if (res.code === 200 && res.data) {
       const { annexList, bill, flowBase, bondRecvs, tenderId, flowList } =
         res.data;
@@ -745,8 +748,8 @@ const getBillDetail = async () => {
       flowListData.value = { ...flowListData.value, ...flowList };
 
       formData.value.bizTitle = bill.bizTitle || "";
-      formData.value.deptName = flowBase.deptName || "";
-      formData.value.mguName = flowBase.mguName || "";
+      formData.value.deptName = flowBase?.deptName || "";
+      formData.value.mguName = flowBase?.mguName || "";
       formData.value.userName = bill.createName || "";
       formData.value.createDate = bill.createDate || "";
 
@@ -791,13 +794,13 @@ const validateForm = () => {
     ElMessage.warning("暂无数据保存");
     return false;
   }
-    // 验证：通过 tenderItemId 判断是否有重复数据
+  // 验证：通过 tenderItemId 判断是否有重复数据
   const ids = tableData.value.map((item) => item.tenderItemId).filter(Boolean);
   if (new Set(ids).size !== ids.length) {
     ElMessage.error("存在重复的招标明细事项，请检查");
     return false;
   }
-  
+
   if (
     tableData.value.some((item) => !item.recvAmount && item.recvAmount !== 0)
   ) {

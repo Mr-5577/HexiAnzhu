@@ -1,500 +1,753 @@
-<!-- 付款申请 表单 -->
+<!-- 付款申请 表单（界面风格对齐变更申请/补充合同审批：BillHeader + FormCard + FloatNav，逻辑不变） -->
 <template>
   <div class="payment-application-form">
+    <!-- ============ 顶部操作栏 ============ -->
+    <BillHeader
+      :title="'付款申请'"
+      :contract-no="formData.bizNo || ''"
+      :submitter="formData.userName || ''"
+      :submit-time="formData.createDate || ''"
+      :status="billData.status || 0"
+      :show-status="true"
+      :button-loading="submitLoading"
+      :save-disabled="isReadonly"
+      :submit-disabled="isReadonly"
+      :delete-disabled="isDetail || isAdd || !!billData.status"
+      :void-disabled="isDetail || isAdd || !!billData.status"
+      :view-disabled="isAdd"
+      @save="handleFormDataSave"
+      @submit="handleFormDataSubmit"
+      @delete="handleDelete"
+      @void="handleCancel"
+      @viewFlow="handleViewProcess"
+    />
+
     <div class="form-scroll-area">
       <el-form
         ref="formRef"
         :model="formData"
         :rules="formRules"
+        :disabled="isReadonly"
+        :validate-on-rule-change="false"
         label-width="134px"
         class="adapt-form"
       >
-        <div class="section-title">基本信息</div>
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="合同签约金额" prop="signAmt">
-              <el-input-number
-                v-model="formData.signAmt"
-                :precision="2"
-                :controls="false"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="补充合同金额" prop="addAmt" required>
-              <el-input-number
-                v-model="formData.addAmt"
-                :precision="2"
-                :controls="false"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="累计变更签证" prop="sumChangeAmt" required>
-              <el-input-number
-                v-model="formData.sumChangeAmt"
-                :precision="2"
-                :controls="false"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="预结算合同金额" prop="preSettleAmt" required>
-              <el-input-number
-                v-model="formData.preSettleAmt"
-                :precision="2"
-                :controls="false"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
+        <!-- ====== 卡片1：单据信息 ====== -->
+        <BillInfo
+          v-model="formData"
+          :status="billData?.status || 0"
+          :disabled="isReadonly"
+          :project-options="projectOptions"
+          @project-change="changeProject"
+        />
 
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="累计产值" prop="sumProdVal" required>
-              <el-input-number
-                v-model="formData.sumProdVal"
-                :precision="2"
-                :controls="false"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="累计应付" prop="sumPayAmt" required>
-              <el-input-number
-                v-model="formData.sumPayAmt"
-                :precision="2"
-                :controls="false"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="累计请款" prop="sumAppyAmt" required>
-              <el-input-number
-                v-model="formData.sumAppyAmt"
-                :precision="2"
-                :controls="false"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="累计实付" prop="sumPaidAmt" required>
-              <el-input-number
-                v-model="formData.sumPaidAmt"
-                :precision="2"
-                :controls="false"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="累计欠款" prop="sumOwedAmt" required>
-              <el-input-number
-                v-model="formData.sumOwedAmt"
-                :precision="2"
-                :controls="false"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="应付占产值比" prop="payOutRate">
-              <el-input-number
-                v-model="formData.payOutRate"
-                disabled
-                :precision="2"
-                :controls="false"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="实付占应付比" prop="paidPayRate">
-              <el-input-number
-                v-model="formData.paidPayRate"
-                disabled
-                :precision="2"
-                :controls="false"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="实付占产值比" prop="paidOutRate">
-              <el-input-number
-                v-model="formData.paidOutRate"
-                disabled
-                :precision="2"
-                :controls="false"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <!-- <div class="section-title">付款申请信息</div> -->
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="付款类型" prop="reqType" required>
-              <el-select
-                v-model="formData.reqType"
-                placeholder="请选择"
-                style="width: 100%"
-              >
-                <el-option label="请款" :value="0" />
-                <el-option label="来票冲账" :value="1" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="付款规则" prop="payRule" required>
-              <el-select
-                v-model="formData.payRule"
-                placeholder="请选择"
-                style="width: 100%"
-              >
-                <el-option label="正常请款" :value="0" />
-                <el-option label="提高支付比例请款" :value="1" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="剩余应付金额" prop="leavePayAmt">
-              <el-input-number
-                v-model="formData.leavePayAmt"
-                disabled
-                :precision="2"
-                :controls="false"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="请款总金额" prop="reqAmt" required>
-              <el-input-number
-                v-model="formData.reqAmt"
-                :min="0"
-                :precision="2"
-                :controls="false"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="转履约保证金" prop="pbAmount">
-              <el-input-number
-                v-model="formData.pbAmount"
-                :min="0"
-                :precision="2"
-                :controls="false"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="奖罚总金额(扣款)" prop="changeAmt">
-              <el-input-number
-                v-model="formData.changeAmt"
-                :precision="2"
-                :controls="false"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="实际请款金额" prop="factReqAmt">
-              <el-input-number
-                v-model="formData.factReqAmt"
-                disabled
-                :precision="2"
-                :controls="false"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
-            <el-form-item label="请款说明" prop="reqDesc">
-              <el-input
-                v-model="formData.reqDesc"
-                type="textarea"
-                :rows="3"
-                maxlength="500"
-                show-word-limit
-                placeholder="请输入"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <!-- <div class="section-title">发票信息</div> -->
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="应收发票金额" prop="invRecAmt">
-              <el-input-number
-                v-model="formData.invRecAmt"
-                :precision="2"
-                :controls="false"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="已收发票" prop="invRcvdAmt">
-              <el-input-number
-                v-model="formData.invRcvdAmt"
-                disabled
-                :precision="2"
-                :controls="false"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="欠票金额" prop="invOweAmt">
-              <el-input-number
-                v-model="formData.invOweAmt"
-                disabled
-                :precision="2"
-                :controls="false"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <!-- <div class="section-title">收款账号信息</div> -->
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="修改收款账号" prop="isModifyAcc" required>
-              <el-select
-                v-model="formData.isModifyAcc"
-                placeholder="请选择"
-                style="width: 100%"
-              >
-                <el-option label="否" :value="0" />
-                <el-option label="是" :value="1" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="收款开户行" prop="bankName">
-              <el-input v-model="formData.bankName" placeholder="请输入" />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="收款账户名" prop="accountName">
-              <el-input v-model="formData.accountName" placeholder="请输入" />
-            </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="收款账号" prop="bankAccount">
-              <el-input v-model="formData.bankAccount" placeholder="请输入" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="24">
-          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-            <el-form-item label="修改凭证附件" prop="modifyAccAnnex">
-              <el-input v-model="formData.modifyAccAnnex" placeholder="" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
-      <!-- 扣款事项明细 -->
-      <div>
-        <div class="section-title">扣款事项明细</div>
-        <editable-table
-          ref="dedTableRef"
-          :row-key="'uuid'"
-          :height="'200px'"
-          v-model="dedTable"
-          :columns="dedColumns"
-          :pagination="false"
-          :highlight-current-row="false"
-          :show-summary="false"
-          :compactEmpty="true"
-          :editable="true"
+        <!-- ====== 卡片：基本信息 ====== -->
+        <FormCard
+          id="card-base"
+          icon="📋"
+          title="基本信息"
+          v-model:collapsed="collapsedCards.base"
         >
-          <template #actionBar>
-            <div class="actionBar-buttons">
-              <el-button type="primary" size="small" @click="handleAddDed">
-                新增扣款事项
-              </el-button>
-            </div>
-          </template>
-          <template #actions="{ row }">
-            <el-button link type="danger" @click="handleDeleteDed(row)">
-              删除
-            </el-button>
-          </template>
-        </editable-table>
-      </div>
-      <!-- 发票登记 -->
-      <div>
-        <div class="section-title">发票登记</div>
-        <editable-table
-          ref="invoiceMTableRef"
-          :row-key="'uuid'"
-          :height="'200px'"
-          v-model="invoiceMTable"
-          :columns="invoiceMColumns"
-          :pagination="false"
-          :highlight-current-row="false"
-          :show-summary="false"
-          :compactEmpty="true"
-          :editable="true"
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
+              <el-form-item label="合同名称" prop="conId" required>
+                <PickInput
+                  v-model="formData.conName"
+                  placeholder="请选择主合同"
+                  :readonly="isReadonly"
+                  v-model:model-value-id="formData.conId"
+                  @pick="openMainConDialog"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="单位名称" prop="supName">
+                <el-input
+                  v-model="formData.supName"
+                  placeholder="单位名称"
+                  style="width: 100%"
+                  disabled
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="合同分类" prop="conTypeName" required>
+                <el-input
+                  v-model="formData.conTypeName"
+                  placeholder="合同分类"
+                  style="width: 100%"
+                  disabled
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="合同签约金额" prop="signAmt">
+                <el-input-number
+                  v-model="formData.signAmt"
+                  :precision="2"
+                  :controls="false"
+                  style="width: 100%"
+                  disabled
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="补充合同金额" prop="addAmt" required>
+                <el-input-number
+                  v-model="formData.addAmt"
+                  :precision="2"
+                  :controls="false"
+                  style="width: 100%"
+                  disabled
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="累计变更签证" prop="sumChangeAmt" required>
+                <el-input-number
+                  v-model="formData.sumChangeAmt"
+                  :precision="2"
+                  :controls="false"
+                  style="width: 100%"
+                  disabled
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="预结算合同金额" prop="preSettleAmt" required>
+                <el-input-number
+                  v-model="formData.preSettleAmt"
+                  :precision="2"
+                  :controls="false"
+                  style="width: 100%"
+                  disabled
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="累计产值" prop="sumProdVal" required>
+                <el-input-number
+                  v-model="formData.sumProdVal"
+                  :precision="2"
+                  :controls="false"
+                  style="width: 100%"
+                  disabled
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="累计应付" prop="sumPayAmt" required>
+                <el-input-number
+                  v-model="formData.sumPayAmt"
+                  :precision="2"
+                  :controls="false"
+                  style="width: 100%"
+                  disabled
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="累计请款" prop="sumAppyAmt" required>
+                <el-input-number
+                  v-model="formData.sumAppyAmt"
+                  :precision="2"
+                  :controls="false"
+                  style="width: 100%"
+                  disabled
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="累计实付" prop="sumPaidAmt" required>
+                <el-input-number
+                  v-model="formData.sumPaidAmt"
+                  :precision="2"
+                  :controls="false"
+                  style="width: 100%"
+                  disabled
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="累计欠款" prop="sumOwedAmt" required>
+                <el-input-number
+                  v-model="formData.sumOwedAmt"
+                  disabled
+                  :precision="2"
+                  :controls="false"
+                  style="width: 100%"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="应付占产值比" prop="payOutRate">
+                <el-input-number
+                  v-model="formData.payOutRate"
+                  disabled
+                  :precision="2"
+                  :controls="false"
+                  style="width: 100%"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="实付占应付比" prop="paidPayRate">
+                <el-input-number
+                  v-model="formData.paidPayRate"
+                  disabled
+                  :precision="2"
+                  :controls="false"
+                  style="width: 100%"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="实付占产值比" prop="paidOutRate">
+                <el-input-number
+                  v-model="formData.paidOutRate"
+                  disabled
+                  :precision="2"
+                  :controls="false"
+                  style="width: 100%"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </FormCard>
+
+        <!-- ====== 卡片：付款申请信息 ====== -->
+        <FormCard
+          id="card-pay"
+          icon="📄"
+          title="付款申请信息"
+          v-model:collapsed="collapsedCards.pay"
         >
-          <template #actionBar>
-            <div class="actionBar-buttons">
-              <el-button type="primary" size="small" @click="addInvoiceM">
-                新增发票
-              </el-button>
-            </div>
-          </template>
-          <template #recogStatus="{ row }">
-            <el-tag
-              :type="getRecogStatusType(row.recogStatus)"
-              disable-transitions
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="款项类型" prop="payTypeId" required>
+                <el-select
+                  v-model="formData.payTypeId"
+                  placeholder="请选择"
+                  style="width: 100%"
+                >
+                  <el-option
+                    v-for="item in paymentTypeOptions"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="付款类型" prop="reqType" required>
+                <el-select
+                  v-model="formData.reqType"
+                  placeholder="请选择"
+                  style="width: 100%"
+                >
+                  <el-option label="请款" :value="0" />
+                  <el-option label="来票冲账" :value="1" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="付款规则" prop="payRule" required>
+                <el-select
+                  v-model="formData.payRule"
+                  placeholder="请选择"
+                  style="width: 100%"
+                >
+                  <el-option label="正常请款" :value="0" />
+                  <el-option label="来票冲账" :value="1" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="归属月份" prop="belongMonth" required>
+                <el-date-picker
+                  v-model="formData.belongMonth"
+                  type="month"
+                  value-format="YYYY-MM-DD"
+                  placeholder="请选择归属月份"
+                  :disabled="isDetail || !!billData.status"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="剩余应付金额" prop="leavePayAmt">
+                <el-input-number
+                  v-model="formData.leavePayAmt"
+                  disabled
+                  :precision="2"
+                  :controls="false"
+                  style="width: 100%"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="请款总金额" prop="reqAmt" required>
+                <el-input-number
+                  v-model="formData.reqAmt"
+                  :min="0"
+                  :precision="2"
+                  :controls="false"
+                  style="width: 100%"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="是否最后一笔支付" prop="isLastPay" v-if="showLastPay" required>
+                <el-select
+                  v-model="formData.isLastPay"
+                  :disabled="isDetail"
+                  placeholder="请选择"
+                  style="width: 100%"
+                >
+                  <el-option label="是" :value="true" />
+                  <el-option label="否" :value="false" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
+
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="转履约保证金" prop="pbAmount">
+                <el-input-number
+                  v-model="formData.pbAmount"
+                  :min="0"
+                  :precision="2"
+                  :controls="false"
+                  style="width: 100%"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="奖罚总金额(扣款)" prop="changeAmt">
+                <el-input-number
+                  v-model="formData.changeAmt"
+                  :precision="2"
+                  :controls="false"
+                  style="width: 100%"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="实际请款金额" prop="factReqAmt">
+                <el-input-number
+                  v-model="formData.factReqAmt"
+                  disabled
+                  :precision="2"
+                  :controls="false"
+                  style="width: 100%"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
+              <el-form-item label="请款说明" prop="reqDesc">
+                <el-input
+                  v-model="formData.reqDesc"
+                  type="textarea"
+                  :rows="3"
+                  maxlength="500"
+                  show-word-limit
+                  placeholder="请输入"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </FormCard>
+
+        <!-- ====== 卡片：发票信息 ====== -->
+        <FormCard
+          id="card-invoice"
+          icon="🧾"
+          title="发票信息"
+          v-model:collapsed="collapsedCards.invoice"
+        >
+          <!-- <el-row :gutter="24">
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="应收发票金额" prop="invRecAmt">
+                <el-input-number
+                  v-model="formData.invRecAmt"
+                  :precision="2"
+                  :controls="false"
+                  style="width: 100%"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="已收发票" prop="invRcvdAmt">
+                <el-input-number
+                  v-model="formData.invRcvdAmt"
+                  disabled
+                  :precision="2"
+                  :controls="false"
+                  style="width: 100%"
+                />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="欠票金额" prop="invOweAmt">
+                <el-input-number
+                  v-model="formData.invOweAmt"
+                  disabled
+                  :precision="2"
+                  :controls="false"
+                  style="width: 100%"
+                />
+              </el-form-item>
+            </el-col>
+          </el-row> -->
+          <SummaryBar :items="summaryItems" />
+
+          <template v-if="isDetail || !!billData.status">
+            <base-table
+              ref="invoiceMTableRef"
+              :columns="invoiceMDetailColumns"
+              :table-data="invoiceMTable"
+              :row-key="'uuid'"
+              :pagination="false"
+              :show-toolbar="false"
+              :show-action-bar="false"
+              :height="'200px'"
             >
-              {{ getRecogStatusText(row.recogStatus) }}
-            </el-tag>
+              <template #annexName="{ row }">
+                <div class="annex-cell">
+                  <el-link
+                    v-if="row.annexId"
+                    type="primary"
+                    :underline="'hover'"
+                    @click="handleViewAnnex(row)"
+                  >
+                    {{ row.annexName || "查看附件" }}
+                  </el-link>
+                </div>
+              </template>
+              <template #actions="{ row }">
+                <div class="actions-btn">
+                  <el-button
+                    link
+                    type="primary"
+                    :disabled="!(row.annexId && row.invoiceDs?.length)"
+                    @click="detailInvoiceM(row)"
+                  >
+                    发票明细
+                  </el-button>
+                </div>
+              </template>
+            </base-table>
           </template>
+          <template v-else>
+            <editable-table
+              ref="invoiceMTableRef"
+              :row-key="'uuid'"
+              :height="'200px'"
+              v-model="invoiceMTable"
+              :columns="invoiceMColumns"
+              :pagination="false"
+              :highlight-current-row="false"
+              :show-summary="false"
+              :compactEmpty="true"
+              :editable="true"
+            >
+              <template #actionBar>
+                <div class="actionBar-buttons">
+                  <el-button
+                    type="primary"
+                    size="small"
+                    @click="handleUploadInvoice"
+                  >
+                    上传发票
+                  </el-button>
+                </div>
+              </template>
 
-          <template #actions="{ row }">
-            <div class="actions-btn">
-              <!-- 用按钮触发上传，不直接放上传组件 -->
-              <el-button
-                link
-                type="primary"
-                @click.stop="openUploadForRow(row)"
+              <template #annexName="{ row }">
+                <div class="annex-cell">
+                  <el-link
+                    v-if="row.annexId"
+                    type="primary"
+                    :underline="'hover'"
+                    @click="handleViewAnnex(row)"
+                  >
+                    {{ row.annexName || "查看附件" }}
+                  </el-link>
+                </div>
+              </template>
+
+              <template #actions="{ row }">
+                <div class="actions-btn">
+                  <el-button
+                    link
+                    type="primary"
+                    :disabled="!row.annexId"
+                    @click="handleInspect(row)"
+                  >
+                    查验
+                  </el-button>
+                  <el-button
+                    link
+                    type="primary"
+                    :disabled="!(row.annexId && row.invoiceDs?.length)"
+                    @click="detailInvoiceM(row)"
+                  >
+                    发票明细
+                  </el-button>
+                  <el-button link type="danger" @click="deleteInvoiceM(row)">
+                    删除
+                  </el-button>
+                </div>
+              </template>
+            </editable-table>
+          </template>
+        </FormCard>
+
+        <!-- ====== 卡片：收款账号信息 ====== -->
+        <FormCard
+          id="card-account"
+          icon="🏦"
+          title="收款账号信息"
+          v-model:collapsed="collapsedCards.account"
+        >
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="修改收款账号" prop="isModifyAcc" required>
+                <el-select
+                  v-model="formData.isModifyAcc"
+                  placeholder="请选择"
+                  style="width: 100%"
+                >
+                  <el-option label="否" :value="0" />
+                  <el-option label="是" :value="1" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="收款开户行" prop="bankName">
+                <el-input v-model="formData.bankName" placeholder="请输入" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="收款账户名" prop="accountName">
+                <el-input v-model="formData.accountName" placeholder="请输入" />
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="收款账号" prop="bankAccount">
+                <el-input v-model="formData.bankAccount" placeholder="请输入" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="修改凭证附件" prop="modifyAccAnnex">
+                <el-input v-model="formData.modifyAccAnnex" placeholder="" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+        </FormCard>
+
+        <!-- ====== 卡片：扣款事项明细 ====== -->
+        <FormCard
+          id="card-ded"
+          icon="📑"
+          title="扣款事项明细"
+          v-model:collapsed="collapsedCards.ded"
+        >
+          <template v-if="isDetail || !!billData.status">
+              <base-table
+                ref="dedTableRef"
+                :columns="dedDetailColumns"
+                :table-data="dedTable"
+                :row-key="'uuid'"
+                :pagination="false"
+                :show-toolbar="false"
+                :show-action-bar="false"
+                :height="'200px'"
               >
-                {{ row.annexId ? "重新上传" : "上传发票" }}
-              </el-button>
-              <el-button
-                link
-                type="primary"
-                :disabled="!(row.annexId && row.recogStatus == 1)"
-                @click="detailInvoiceM(row)"
+              </base-table>
+            </template>
+            <template v-else>
+              <editable-table
+                ref="dedTableRef"
+                :row-key="'uuid'"
+                :height="'200px'"
+                v-model="dedTable"
+                :columns="dedColumns"
+                :pagination="false"
+                :highlight-current-row="false"
+                :show-summary="true"
+                :compactEmpty="true"
+                :editable="true"
+                :on-save="handleDedSave"
               >
-                发票明细
-              </el-button>
-              <el-button link type="danger" @click="deleteInvoiceM(row)">
+                <template #actionBar>
+                  <div class="actionBar-buttons">
+                    <el-button type="primary" size="small" @click="handleAddDed">
+                      新增事项
+                    </el-button>
+                  </div>
+                </template>
+                <template #actions="{ row }">
+                  <el-button link type="danger" @click="handleDeleteDed(row)">
+                    删除
+                  </el-button>
+                </template>
+              </editable-table>
+            </template>
+            <div class="deduction-summary">
+              实际请款：<span>{{ actualReqAmt.toFixed(2) }}</span>
+            </div>
+            
+        </FormCard>
+
+        <!-- ====== 卡片：付款方式 ====== -->
+        <FormCard
+          id="card-payway"
+          icon="💳"
+          title="付款方式"
+          v-model:collapsed="collapsedCards.payway"
+        >
+          <template v-if="isDetail || !!billData.status">
+              <base-table
+                ref="payWayTableRef"
+                :columns="payWayDetailColumns"
+                :table-data="payWayTable"
+                :row-key="'uuid'"
+                :pagination="false"
+                :show-toolbar="false"
+                :show-action-bar="false"
+                :height="'200px'"
+              >
+              </base-table>
+            </template>
+            <template v-else>
+              <editable-table
+                ref="payWayTableRef"
+                :row-key="'uuid'"
+                :height="'200px'"
+                v-model="payWayTable"
+                :columns="payWayColumns"
+                :pagination="false"
+                :highlight-current-row="false"
+                :show-summary="false"
+                :compactEmpty="true"
+                :editable="true"
+              >
+                <template #actionBar>
+                  <div class="actionBar-buttons">
+                    <el-button type="primary" size="small" @click="addPayWay">
+                      新增支付方式
+                    </el-button>
+                  </div>
+                </template>
+                <template #actions="{ row }">
+                  <el-button link type="danger" @click="deletePayWay(row)">
+                    删除
+                  </el-button>
+                </template>
+              </editable-table>
+            </template>
+            <div class="pay-summary">
+              付款合计：<span>{{ totalPayAmt.toFixed(2) }}</span>
+              <span
+                v-if="Math.abs(totalPayAmt - actualReqAmt) > 0.01"
+                class="pay-error"
+              >
+                （必须等于实际请款金额 {{ actualReqAmt.toFixed(2) }}）
+              </span>
+              <span v-else class="pay-success">（等于实际请款金额）</span>
+            </div>
+        </FormCard>
+
+        <!-- ====== 卡片：财务明细 ====== -->
+        <FormCard
+          id="card-finance"
+          icon="📊"
+          title="财务明细"
+          v-model:collapsed="collapsedCards.finance"
+        >
+          <editable-table
+            ref="financeTableRef"
+            :row-key="'uuid'"
+            :height="'200px'"
+            v-model="financeTable"
+            :columns="financeColumns"
+            :pagination="false"
+            :highlight-current-row="false"
+            :show-summary="false"
+            :compactEmpty="true"
+            :editable="true"
+          >
+            <template #actionBar>
+              <div class="actionBar-buttons">
+                <el-button type="primary" size="small" @click="addFinance">
+                  新增财务明细
+                </el-button>
+              </div>
+            </template>
+            <template #actions="{ row }">
+              <el-button link type="danger" @click="deleteFinance(row)">
                 删除
               </el-button>
-            </div>
-          </template>
-        </editable-table>
-        <!-- 放在表格外面的上传组件（隐藏） -->
-        <Teleport to="body">
-          <div style="display: none" @click.stop @mousedown.stop>
+            </template>
+          </editable-table>
+        </FormCard>
+
+        <!-- ====== 卡片：相关附件 ====== -->
+        <FormCard
+          id="card-annex"
+          icon="📎"
+          title="相关附件"
+          v-model:collapsed="collapsedCards.annex"
+        >
+          <el-form-item label="相关附件">
             <base-upload
-              ref="hiddenUploadRef"
               v-model:file-list="tempFileList"
-              :limit="1"
+              :limit="9"
               :multiple="false"
               :showIcon="true"
-              :showTip="false"
+              :showTip="true"
+              :maxSize="20"
+              :unrestricted="true"
+              :accept="''"
               button-text="选择文件"
               size="default"
-              button-type="primary"
+              :disabled="isReadonly"
               @success="handleUploadSuccess"
             />
-          </div>
-        </Teleport>
-        <!-- 发票明细 弹窗 -->
-        <invoice-detail-dialog
-          ref="invoiceDetailDialogRef"
-          v-model="dialogVisible"
-          :detailList="detailList"
-        />
-      </div>
-      <!-- 付款方式 -->
-      <div>
-        <div class="section-title">付款方式</div>
-        <editable-table
-          ref="payWayTableRef"
-          :row-key="'uuid'"
-          :height="'200px'"
-          v-model="payWayTable"
-          :columns="payWayColumns"
-          :pagination="false"
-          :highlight-current-row="false"
-          :show-summary="false"
-          :compactEmpty="true"
-          :editable="true"
-        >
-          <template #actionBar>
-            <div class="actionBar-buttons">
-              <el-button type="primary" size="small" @click="addPayWay">
-                新增付款方式
-              </el-button>
-            </div>
-          </template>
-          <template #actions="{ row }">
-            <el-button link type="danger" @click="deletePayWay(row)">
-              删除
-            </el-button>
-          </template>
-        </editable-table>
-      </div>
-      <!-- 财务明细 -->
-      <div>
-        <div class="section-title">财务明细</div>
-        <editable-table
-          ref="financeTableRef"
-          :row-key="'uuid'"
-          :height="'200px'"
-          v-model="financeTable"
-          :columns="financeColumns"
-          :pagination="false"
-          :highlight-current-row="false"
-          :show-summary="false"
-          :compactEmpty="true"
-          :editable="true"
-        >
-          <template #actionBar>
-            <div class="actionBar-buttons">
-              <el-button type="primary" size="small" @click="addFinance">
-                新增财务明细
-              </el-button>
-            </div>
-          </template>
-          <template #actions="{ row }">
-            <el-button link type="danger" @click="deleteFinance(row)">
-              删除
-            </el-button>
-          </template>
-        </editable-table>
-      </div>
+          </el-form-item>
+        </FormCard>
+      
+      </el-form>
     </div>
 
-    <div class="btn-row">
-      <el-button type="primary" :loading="submitLoading" @click="handleSubmit">
-        保存
-      </el-button>
-    </div>
+    <!-- ============ 悬浮定位栏 ============ -->
+    <FloatNav :items="visibleNavCards" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted, computed, nextTick } from "vue";
+import {
+  ElMessageBox,ElNotification,
+} from "element-plus";
+import { ref, reactive, watch, onMounted, computed, nextTick } from "vue";
 import { ElMessage } from "element-plus";
+import FormCard from "@/components/base/base-form-card.vue";
+import FloatNav from "@/components/base/base-float-nav.vue";
 import EditableTable from "@/components/base/editable-table.vue";
 import { EditableColumn } from "@/components/base/editable-table.vue";
 import { v4 as uuidv4 } from "uuid";
@@ -514,6 +767,21 @@ import {
   HConPaymentWay,
 } from "@/types/cost/contract-manage/payment-application-type.ts";
 import { paymentRequestApi } from "@/api/cost/contract-manage/payment-application-api.ts";
+import { NAV_CARDS ,invoiceMDetailColumns ,invoiceMColumns,dedDetailColumns, dedColumns,payWayDetailColumns, createFinanceColumns} from "./payment-application-config";
+import { formType } from "@/types/form/form-types";
+import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
+import { useUserStore } from "@/stores/user-store";
+import { useMDStore } from "@/stores/md-store.ts";
+import { useTagsStore } from "@/stores/tags-store";
+import { loadOptions } from "@/composables/use-options-loader.ts";
+import { useRouter } from "vue-router";
+import { dateUtil } from "@/utils/date-util";
+import { useFormLayout } from "@/composables/use-form-layout.ts";
+import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api";
+const { collapsedCards, toggleCard, formatMoney } = useFormLayout(NAV_CARDS);
+import { buildFileUrl } from "@/utils/file-path-util";
+import { useDict } from "@/composables/use-dict";
+import { dictMapping } from "@/utils/dict-mapping";
 
 defineOptions({ name: "payment-application-form" });
 
@@ -537,16 +805,116 @@ const emit = defineEmits<{
 
 const formRef = ref();
 const submitLoading = ref(false);
-const isDetail = ref(props.mode === "detail");
+const isDetail = computed(() => props.mode === "detail");
+const isEdit = computed(() => props.mode === "edit");
+const isAdd = computed(() => props.mode === "add");
+const isReadonly = computed(
+  () => isDetail.value || !!billData.value.status,
+);
+
+const conId = ref<number | undefined>(props.conId);
+const paymentId = ref<number | undefined>(props.conId);
+
+const uploadVisibleDialog = ref(false);
+
+// const collapsedMap = reactive({
+//   base: false,
+//   pay: false,
+//   invoice: false,
+//   account: false,
+//   ded: false,
+//   invoicereg: false,
+//   payway: false,
+//   finance: false,
+//   annex: false,
+// });
+
+
+const visibleNavCards = computed(() =>
+  showMaterial.value ? NAV_CARDS : NAV_CARDS.filter(card => card.id !== "card-payway")
+);
+
+const showMaterial = computed(() => {
+  //const item = AddTypeEnum.find(item => item.value === formData.value.addType);
+  //return !item || item.value === 1;
+  return true;
+});
+
+const showLastPay = computed(() => {
+  return !formData.value.needSettle;
+});
+
+// ===================== 单据 / 流程状态 =====================
+const billData = ref({
+  id: undefined,
+  bizTitle: "",
+  bizNo: "",
+  status: 0,
+  bizItemCode: formType.CON_PAY,
+  flowId: null,
+});
+
+const flowListData = ref<any>(null);
+const flowBaseData = ref<any>(null);
+
+// ===================== 路由 / 状态仓库 =====================
+const router = useRouter();
+const userStore = useUserStore();
+const mdStore = useMDStore();
+const tagsStore = useTagsStore();
+
+// ==================== 数据定义 ====================
+const dedTable = ref([]);
+const invoiceMTable = ref([]);
+const payWayTable = ref([]);
+const projectOptions = ref([]);
+const subjectOptions = ref([]);
+const paymentTypeOptions = ref<any[]>([]);
+
+
+const financeColumns = createFinanceColumns({
+  projectOptions,
+  subjectOptions
+});
 
 // 仅 付款申请主表 字段
 const formData = ref({
   id: undefined as number | undefined,
   conBillId: undefined as number | undefined,
+  flowId:null,
+  bizTitle: "",
+  bizNo:"",
+  segId: undefined,
+  segCode: "",
+  segNo : "",
+  segName: "",
+  projId: undefined,
+  userName: userStore.userInfo?.empName,
+  createDate: dateUtil().format("YYYY-MM-DD"),
+  deptName: userStore.userInfo?.deptName,
+  mguName: userStore.userInfo?.mguName,
+  compId : null,
+  compName:"",
+  status: 0, // 状态 0 草稿，5 审批中，10 已审批，30 已作废
+
+  conId:null,
+  conName:"",
+  supId:null,
+  supName:"",
+  conTypeId:null,
+  conTypeName:"",
+  conSysNo:"",
+  conPhyNo:"",
+
+  payTypeId:null,//款项类型
+  belongMonth:null,
+  needSettle:true,
+  isLastPay:null,//是否最后一次支付，需结算时，才显示该项
   signAmt: 0, // 合同签约金额
   addAmt: 0, // 补充合同金额
   sumChangeAmt: 0, // 累计变更签证
   preSettleAmt: 0, // 预结算合同金额
+  settledAmt:null,//结算金额
   sumProdVal: 0, // 累计产值
   sumPayAmt: 0, // 累计应付
   sumAppyAmt: 0, // 累计请款
@@ -556,7 +924,7 @@ const formData = ref({
   paidPayRate: 0, // 实付占应付比率
   paidOutRate: 0, // 实付占产值比率
   reqType: 0 as 0 | 1, // 请款类型 0=请款、1=来票冲账
-  payRule: 0 as 0 | 1, // 付款规则：0-正常请款 1-提高支付比例请款
+  payRule: 0 as 0 | 1, // 付款规则：0-正常请款 1-来票冲账
   leavePayAmt: 0, // 剩余应付金额
   reqAmt: 0, // 请款总金额
   pbAmount: 0, // 转履约保证金金额
@@ -572,6 +940,14 @@ const formData = ref({
   bankAccount: "", // 收款账号
   modifyAccAnnex: undefined, // 修改凭证附件
 });
+
+// 价款汇总条数据
+const summaryItems = computed(() => [
+  { label: "应收发票金额", value: `¥ ${formatMoney(formData.value.invRecAmt)}` },
+  { label: "已收发票金额", value: `¥ ${formatMoney(formData.value.invRcvdAmt)}` },
+  { label: "本次收票金额", value: `¥ ${formatMoney(formData.value.invRcvdAmt)}` },
+  { label: "欠票金额", value: `¥ ${formatMoney(formData.value.invOweAmt)}`, type: "tax" as const },
+]);
 
 const formRules = {
   addAmt: [{ required: true, message: "请输入补充合同金额", trigger: "blur" }],
@@ -620,70 +996,6 @@ const calcFields = () => {
       : 0;
 };
 
-const dedTable = ref([]);
-const dedColumns = computed<EditableColumn[]>(() => [
-  { type: "index", label: "序号", width: 60, editable: false },
-  {
-    prop: "dedName",
-    label: "扣款事项",
-    editable: true,
-    editType: "input",
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "dedTypeId",
-    label: "扣款类型",
-    editable: true,
-    editType: "select",
-    showOverflowTooltip: false,
-    // 自定义键名
-    optionLabelField: "label",
-    optionValueField: "value",
-    options: dedTypeEnum as any,
-  },
-  {
-    prop: "dedAmt",
-    label: "应扣款金额",
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "dedThisAmt",
-    label: "本次扣款金额",
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "dedAlreadyAmt",
-    label: "已扣款金额",
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "dedLeaveAmt",
-    label: "未扣金额",
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "dedDesc",
-    label: "扣款说明",
-    editable: true,
-    editType: "input",
-    showOverflowTooltip: false,
-    width: 240,
-  },
-  {
-    label: "操作",
-    width: 100,
-    slot: "actions",
-    fixed: "right",
-  },
-]);
 const handleAddDed = () => {
   const newRowData = {
     uuid: uuidv4(),
@@ -695,7 +1007,7 @@ const handleAddDed = () => {
     dedTypeId: undefined, // 扣款类型ID
     dedThisAmt: 0, // 本次扣款金额
     dedAlreadyAmt: 0, // 已扣款金额
-    dedLeaveAmt: 0, // 未扣款金额
+    dedLeaveAmt: 0, // 未扣金额
     dedDesc: "", // 扣款说明
   };
   dedTable.value = [...dedTable.value, newRowData];
@@ -703,70 +1015,375 @@ const handleAddDed = () => {
 const handleDeleteDed = (row) => {
   dedTable.value = dedTable.value.filter((item) => item.uuid !== row.uuid);
 };
-const invoiceMTable = ref([]);
-const invoiceMColumns = computed<EditableColumn[]>(() => [
-  { type: "index", label: "序号", width: 60, editable: false },
-  {
-    prop: "invNo",
-    label: "发票号",
-    editable: true,
-    editType: "input",
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "invDate",
-    label: "开票日期",
-    editable: true,
-    editType: "date",
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "totalAmt",
-    label: "发票总金额",
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "notTaxAmt",
-    label: "不含税金额",
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "taxAmt",
-    label: "税额",
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "invType",
-    label: "发票类型",
-    editable: true,
-    editType: "input",
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "annexName",
-    label: "附件",
-    editable: false,
-    editType: "input",
-    showOverflowTooltip: false,
-  },
-  {
-    slot: "recogStatus",
-    label: "识别状态",
-    editable: false,
-  },
-  {
-    label: "操作",
-    slot: "actions",
-    width: 230,
-    fixed: "right",
-  },
-]);
+
+
+
+/**
+ * 获取目标成本科目列表
+ */
+const getCostSubjectProjList = async () => {
+  if (!props.projId) {
+    ElMessage.warning("请先选择项目");
+    return;
+  }
+  try {
+    const res = await costCategoryApi.getCostSubjectProjList({
+      projId: props.projId,
+      withDetail: true,
+    });
+    if (res.code === 200) {
+      subjectOptions.value = res.data || [];
+    } else {
+      ElMessage.error(res.msg || "getData失败");
+    }
+  } catch (error) {
+    console.error("getData失败:", error);
+  }
+};
+
+// 获取项目列表
+const getProjectOptions = async () => {
+  try {
+    const res = await projectAreaApi.getSegMguProjList();
+    if (res.code === 200) {
+      projectOptions.value = res.data || [];
+    }
+  } catch (error) {
+    console.error("获取项目列表失败:", error);
+  }
+};
+
+// 初始化数据字典
+const { getDictList, loadDicts } = useDict(
+  [dictMapping.paymentType],
+);
+
+const initDictData = async () => {
+  await loadDicts();
+  paymentTypeOptions.value = getDictList(dictMapping.paymentType);
+};
+
+
+//////////////////////////////
+
+// 查看附件
+const handleViewAnnex = async (row: any) => {
+  if (!row.annexId) {
+    ElMessage.warning("该附件不存在");
+    return;
+  }
+  try {
+    const res = await commonApi.getFileList({ annexId: row.annexId });
+    if (res.code === 200 && res.data && res.data.length > 0) {
+      const file = res.data[0];
+      const fileUrl = file.annexPath;
+      if (fileUrl) {
+        const url = buildFileUrl(fileUrl);
+        window.open(url, "_blank");
+      } else {
+        ElMessage.error("无法获取附件地址");
+      }
+    } else {
+      ElMessage.error("附件不存在");
+    }
+  } catch (error) {
+    ElMessage.error("查看附件失败，请稍后重试");
+  }
+};
+
+// 上传发票
+const handleUploadInvoice = async () => {
+  uploadVisibleDialog.value = true;
+};
+
+// 获取上传的发票
+const getAnnexFileList = async (fileList: any) => {
+  console.log("上传的发票", fileList);
+  if (fileList && fileList.length > 0) {
+    // 使用通知提示
+    const notify = ElNotification({
+      title: "发票识别中",
+      message: `正在识别 ${fileList.length} 张发票，请稍候...`,
+      type: "info",
+      duration: 0, // 不自动关闭
+      position: "top-right",
+    });
+    try {
+      await batchInvoiceRecognition(fileList);
+      // 关闭通知并显示成功
+      notify.close();
+      ElNotification({
+        title: "识别完成",
+        message: `成功识别 ${fileList.length} 张发票！`,
+        type: "success",
+        duration: 3000,
+        position: "top-right",
+      });
+    } catch (error) {
+      ElMessage.error("发票识别失败");
+    } finally {
+      notify.close();
+    }
+  }
+};
+
+// 批量识别发票
+const batchInvoiceRecognition = async (invoiceDataList: any[]) => {
+  const recognitionPromises = invoiceDataList.map(async (item) => {
+    return await invoiceRecognition(item.id, item.annexName);
+  });
+
+  try {
+    const results: any = await Promise.allSettled(recognitionPromises);
+    console.log("识别结果List", results);
+
+    if (results && results.length > 0) {
+      const newData = results.map((result, index) => {
+        if (result.status === "fulfilled") {
+          return {
+            ...result.value,
+            uuid: uuidv4(),
+            id: undefined,
+            srcType: "NCON_FEE",
+            nconBillId: undefined,
+          };
+        } else {
+          const originalItem = invoiceDataList[index];
+          return {
+            annexId: originalItem.id,
+            annexName: originalItem.annexName,
+            uuid: uuidv4(),
+            id: undefined,
+            srcType: "NCON_FEE",
+            nconBillId: undefined,
+            invNo: undefined,
+            invDate: undefined,
+            totalAmt: 0,
+            notTaxAmt: 0,
+            taxAmt: 0,
+            invType: "",
+            invoiceDs: [],
+          };
+        }
+      });
+      invoiceMTable.value = [...invoiceMTable.value, ...newData];
+    }
+  } catch (error) {
+    console.error("批量识别发票失败:", error);
+  }
+};
+
+// 发票识别
+const invoiceRecognition = async (annexId: number, annexName: string) => {
+  try {
+    const res = await commonApi.recognizeAndCheckInvoice({ annexId: annexId });
+    console.log("识别结果", res);
+    if (res.code === 200 && res.data) {
+      const { finalData } = res.data;
+      if (finalData) {
+        let detailListData = [];
+        if (finalData.InvoiceProducts && finalData.InvoiceProducts.length > 0) {
+          finalData.InvoiceProducts.forEach((item: any) => {
+            detailListData.push({
+              itemName: item.Name,
+              size: item.SpecModel,
+              unit: item.MeasureUnit,
+              num: item.Qty,
+              price: item.Price,
+              totalAmt: item.Amount,
+              taxRate: item.TaxRate,
+              taxAmt: item.TaxPrice,
+            });
+          });
+        }
+        const newData = {
+          annexId: annexId,
+          annexName: annexName,
+          invNo: finalData.InvoiceNumber,
+          invDate: finalData.InvoiceDate,
+          totalAmt: finalData.Amount,
+          notTaxAmt: finalData.TotalPrice,
+          taxAmt: finalData.TotalTaxPrice,
+          invType: finalData.InvoiceCategoryName,
+          buyerCompany: finalData.BuyerCompany,
+          buyerTaxCode: finalData.BuyerTaxCode,
+          sellerCompany: finalData.InvoiceCompany,
+          sellerTaxCode: finalData.TaxpayerCode,
+          isValid: finalData.InvoiceValidate == 1 ? true : false,
+          validateMsg: finalData.ValidateMsg,
+          ocrRes: finalData.OCRRes || "",
+          validateRes: finalData.ValidateRes || "",
+          status:
+            finalData.InvoiceValidate == 1
+              ? 1
+              : finalData.InvoiceValidate == 0
+                ? 2
+                : 0,
+          invoiceDs: detailListData,
+        };
+        return newData;
+      } else {
+        return {
+          annexId: annexId,
+          annexName: annexName,
+          invoiceDs: [],
+        };
+      }
+    } else {
+      return {
+        annexId: annexId,
+        annexName: annexName,
+        invoiceDs: [],
+      };
+    }
+  } catch (error) {
+    return {
+      annexId: annexId,
+      annexName: annexName,
+      invoiceDs: [],
+    };
+  }
+};
+
+// 查验
+const handleInspect = async (row: any) => {
+  if (!row.annexId) {
+    ElMessage.warning("暂无发票！");
+    return;
+  }
+  const notify = ElNotification({
+    title: "发票查验中",
+    message: "正在查验发票，请稍候...",
+    type: "info",
+    duration: 0,
+    position: "top-right",
+  });
+  try {
+    const res = await commonApi.recognizeAndCheckInvoice({
+      annexId: row.annexId,
+    });
+    notify.close();
+    console.log("识别查验结果", res);
+    if (res.code === 200 && res.data) {
+      const { checkData, finalData, recognizeData } = res.data;
+      if (finalData) {
+        const recogniRowIndex = invoiceMTable.value.findIndex(
+          (item) => item.uuid == row.uuid,
+        );
+        let detailListData = [];
+        if (finalData.InvoiceProducts && finalData.InvoiceProducts.length > 0) {
+          finalData.InvoiceProducts.forEach((item: any) => {
+            detailListData.push({
+              itemName: item.Name,
+              size: item.SpecModel,
+              unit: item.MeasureUnit,
+              num: item.Qty,
+              price: item.Price,
+              totalAmt: item.Amount,
+              taxRate: item.TaxRate,
+              taxAmt: item.TaxPrice,
+            });
+          });
+        }
+        const newData = {
+          annexId: row.annexId,
+          annexName: row.annexName,
+          invNo: finalData.InvoiceNumber,
+          invDate: finalData.InvoiceDate,
+          totalAmt: finalData.Amount,
+          notTaxAmt: finalData.TotalPrice,
+          taxAmt: finalData.TotalTaxPrice,
+          invType: finalData.InvoiceCategoryName,
+          buyerCompany: finalData.BuyerCompany,
+          buyerTaxCode: finalData.BuyerTaxCode,
+          sellerCompany: finalData.InvoiceCompany,
+          sellerTaxCode: finalData.TaxpayerCode,
+          isValid: finalData.InvoiceValidate == 1 ? true : false,
+          validateMsg: finalData.ValidateMsg,
+          ocrRes: recognizeData ? JSON.stringify(recognizeData) : "",
+          validateRes: checkData ? JSON.stringify(checkData) : "",
+          status:
+            finalData.InvoiceValidate == 1
+              ? 1
+              : finalData.InvoiceValidate == 0
+                ? 2
+                : 0,
+          invoiceDs: detailListData,
+        };
+        updateRow(recogniRowIndex, newData);
+        ElNotification({
+          title: "查验成功",
+          message: "已查验到发票相关信息",
+          type: "success",
+          duration: 3000,
+          position: "top-right",
+        });
+      }
+    }
+  } catch (error) {
+  } finally {
+    notify.close();
+  }
+};
+
+const updateRow = (rowIndex: number, data: any) => {
+  Object.assign(invoiceMTable.value[rowIndex], data);
+  invoiceMTable.value = [...invoiceMTable.value];
+};
+
+const detailInvoiceM = (row) => {
+  detailList.value = row.invoiceDs || [];
+  dialogVisible.value = true;
+};
+
+const handleInvoiceDetailSuccess = (data) => {
+  if (data && data.length > 0) {
+    const currInvoiceD = data[0];
+    const recogniRowIndex = invoiceMTable.value.findIndex(
+      (item) => item.id == currInvoiceD.invMid,
+    );
+    if (recogniRowIndex !== -1) {
+      updateRow(recogniRowIndex, { invoiceDs: data });
+    }
+  }
+};
+
+const deleteInvoiceM = ({ uuid }) => {
+  invoiceMTable.value = invoiceMTable.value.filter(
+    (item) => item.uuid !== uuid,
+  );
+};
+
+/////////////////////////
+
+const changeProject = async (value: number) => {
+  if (value) {
+    debugger
+    const res = await projectAreaApi.getInfoByProjId({ id: value });
+    if (res.code === 200 && res.data) {
+      const { compName, compId, segId, segName,segNo } = res.data;
+      formData.value.segId = segId || "";
+      formData.value.segName = segName || "";
+      formData.value.segNo = segNo || "";
+      // formData.value.companyId = null;
+      // formData.value.compName = "";
+      // formData.value.bldIds = [];
+      // formData.value.bldNames = "";
+      // formData.value.mainConId = null;
+      // formData.value.mainConName = "";
+      // tableList.value=[];
+      // if (value) {
+      //   await getBuildingListByProjId(value);
+      //   await getCompanyListByProjId(value);
+      // }
+
+      // 程序化重置了若干字段，清除误报的必填红
+      await nextTick();
+      formRef.value?.clearValidate();
+    }
+  }
+};
+
 const getRecogStatusType = (status: number) => {
   switch (status) {
     case 0: // 未识别
@@ -844,12 +1461,7 @@ const openUploadForRow = (row: any) => {
   //   createId: 15,
   // });
 };
-const updateRow = (rowIndex: number, data: any) => {
-  // 直接修改对象属性，避免创建新对象
-  Object.assign(invoiceMTable.value[rowIndex], data);
-  // 触发响应式更新
-  invoiceMTable.value = [...invoiceMTable.value];
-};
+
 // 上传组件的成功回调
 const handleUploadSuccess = (file: any) => {
   console.log("上传组件的成功回调", file);
@@ -953,16 +1565,8 @@ const recognizeInvoiceAsync = async (currUuid: string, annexId: number) => {
     }
   } catch (error) {}
 };
-const detailInvoiceM = (row) => {
-  detailList.value = row.detailList || [];
-  dialogVisible.value = true;
-};
-const deleteInvoiceM = ({ uuid }) => {
-  invoiceMTable.value = invoiceMTable.value.filter(
-    (item) => item.uuid !== uuid,
-  );
-};
-const payWayTable = ref([]);
+
+
 const payWayColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {
@@ -1016,60 +1620,9 @@ const deletePayWay = (row) => {
     (item) => item.uuid !== row.uuid,
   );
 };
-const projectOptions = ref([]);
-const subjectOptions = ref([]);
+
 const financeTable = ref([]);
-const financeColumns = computed<EditableColumn[]>(() => [
-  { type: "index", label: "序号", width: 60, editable: false },
-  {
-    prop: "projId",
-    label: "项目",
-    editable: true,
-    editType: "select",
-    showOverflowTooltip: false,
-    // 自定义键名
-    optionLabelField: "projName",
-    optionValueField: "id",
-    options: projectOptions.value,
-  },
-  {
-    prop: "acctProjId",
-    label: "建筑核算项目",
-    editable: true,
-    editType: "select",
-    showOverflowTooltip: false,
-    // 自定义键名
-    optionLabelField: "label",
-    optionValueField: "value",
-    options: [
-      { label: "核算项目1", value: 1 },
-      { label: "核算项目2", value: 2 },
-    ],
-  },
-  {
-    prop: "subId",
-    label: "科目",
-    editable: true,
-    editType: "select",
-    showOverflowTooltip: false,
-    // 自定义键名
-    optionLabelField: "subName",
-    optionValueField: "id",
-    options: subjectOptions.value,
-  },
-  {
-    prop: "subAmt",
-    label: "金额",
-    editable: true,
-    editType: "number",
-    showOverflowTooltip: false,
-  },
-  {
-    label: "操作",
-    slot: "actions",
-    fixed: "right",
-  },
-]);
+
 const addFinance = () => {
   const newRowData = {
     uuid: uuidv4(),
@@ -1087,44 +1640,13 @@ const deleteFinance = (row) => {
     (item) => item.uuid !== row.uuid,
   );
 };
-// 获取项目列表
-const getProjectOptions = async () => {
-  try {
-    const res = await largeScreenApi.getProjList();
-    if (res.code === 200) {
-      projectOptions.value = res.data || [];
-    }
-  } catch (error) {
-    console.error("获取项目列表失败:", error);
-  }
-};
-/**
- * 获取目标成本科目列表
- */
-const getCostSubjectProjList = async () => {
-  if (!props.projId) {
-    ElMessage.warning("请先选择项目");
-    return;
-  }
-  try {
-    const res = await costCategoryApi.getCostSubjectProjList({
-      projId: props.projId,
-      withDetail: true,
-    });
-    if (res.code === 200) {
-      subjectOptions.value = res.data || [];
-    } else {
-      ElMessage.error(res.msg || "获取数据失败");
-    }
-  } catch (error) {
-    console.error("获取数据失败:", error);
-  }
-};
+
 // 加载付款申请详情
 const loadDetail = async () => {
-  if (!props.paymentId) return;
+  if (!paymentId.value) return;
   const res = await paymentRequestApi.getPayDetail({
-    id: props.paymentId,
+    id: paymentId.value,
+    isWithFlow: true,
   });
   if (res.code === 200 && res.data) {
     backfillData(res.data);
@@ -1171,6 +1693,89 @@ const backfillData = async (data) => {
     }) || [];
 };
 
+
+// ==================== 计算逻辑 ====================
+
+// 1. 实际请款金额 = 请款金额 + 扣款金额汇总
+const actualReqAmt = computed(() => {
+  const reqAmt = formData.value.reqAmt || 0;
+  const totalDedAmt = dedTable.value.reduce((sum, item) => {
+    return sum + (Number(item.dedAmt) || 0);
+  }, 0);
+  return totalDedAmt + reqAmt;
+});
+
+// 2. 已收发票金额 = 发票列表发票总金额汇总
+const receivedInvoiceAmt = computed(() => {
+  return invoiceMTable.value.reduce((sum, item) => {
+    return sum + (Number(item.totalAmt) || 0);
+  }, 0);
+});
+
+// 3. 应收发票金额 = 实际请款金额
+const receivableInvoiceAmt = computed(() => {
+  return actualReqAmt.value;
+});
+
+// 4. 欠票金额 = 应收发票金额 - 已收发票金额
+const oweInvoiceAmt = computed(() => {
+  return receivableInvoiceAmt.value - receivedInvoiceAmt.value;
+});
+
+// 5. 支付方式付款金额合计
+const totalPayAmt = computed(() => {
+  return payWayTable.value.reduce((sum, item) => {
+    return sum + (Number(item.payAmt) || 0);
+  }, 0);
+});
+
+
+const handleDedSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
+  if (column === "dedTypeId") {
+   // updateDedRow(rowIndex, { dedTypeId: newValue, dedAmt: 0 });
+    return;
+  }
+  if (column === "dedAmt") {
+    // const targetData = dedTypeOptions.value?.find(
+    //   (item) => item.id == row.dedTypeId,
+    // );
+    // if (targetData) {
+    //   if (targetData.dicValue == "1") {
+    //     if (newValue <= 0) {
+    //       ElMessage.error("调增金额必须为正数");
+    //      // updateDedRow(rowIndex, { dedAmt: 0 });
+    //       return;
+    //     }
+    //   } else {
+    //     if (newValue >= 0) {
+    //       ElMessage.error("扣款金额必须为负数");
+    //      // updateDedRow(rowIndex, { dedAmt: 0 });
+    //       return;
+    //     }
+    //   }
+    // }
+  }
+  //updateDedRow(rowIndex, { [column]: newValue });
+};
+
+// ===================== 校验失败辅助 =====================
+// ---- 校验失败后：滚动到第一个错误项并聚焦对应控件 ----
+const focusFirstError = (invalidFields?: Record<string, any>) => {
+  const firstProp = Object.keys(invalidFields ?? {})[0];
+  if (!firstProp) return;
+  const formInst = formRef.value as any;
+  const field = formInst?.fields?.find((f: any) => f.prop === firstProp);
+  const el = field?.$el as HTMLElement | undefined;
+  if (!el) return;
+  el.scrollIntoView({ behavior: "smooth", block: "center" });
+  nextTick(() => {
+    const focusable = el.querySelector<HTMLElement>(
+      'input:not([type="hidden"]), textarea, .el-select__wrapper, .el-date-editor input, [tabindex]',
+    );
+    focusable?.focus({ preventScroll: true });
+  });
+};
+
 // 构建保存参数
 const buildSaveParams = (): ConPaySaveParam => {
   // 优先使用 formData 中的值（编辑时回填的），否则使用 props.conId
@@ -1207,11 +1812,6 @@ const buildSaveParams = (): ConPaySaveParam => {
     bankAccount: formData.value.bankAccount || "",
     modifyAccAnnex: formData.value.modifyAccAnnex,
   };
-
-  // 如果是编辑模式，带上 id
-  if (props.mode === "edit" && props.paymentId) {
-    payment.id = props.paymentId;
-  }
 
   // 构建扣款明细
   const billDeds: HConDedUsed[] = dedTable.value.map((item: HConDedUsed) => ({
@@ -1303,6 +1903,188 @@ const buildSaveParams = (): ConPaySaveParam => {
     paySubs: paySubs.length > 0 ? paySubs : undefined,
   };
 };
+
+const handleCancel = async () => {
+  ElMessageBox.confirm("确定要作废吗？", "提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  }).then(async () => {
+    try {
+      const res = await paymentRequestApi.voidPay({id:formData.value.id});
+      if (res.code === 200) {
+        ElMessage.success("作废成功");
+        goBack();
+      }
+    } catch (error) {
+      console.error("作废失败:", error);
+    }
+  });
+};
+
+const handleViewProcess = async () => {
+  if (flowListData.value && flowListData.value?.wfFlowId) {
+    try {
+      const redirectRes = await commonApi.generateRedirectUrl({
+        oaRequestId: flowListData.value.wfFlowId,
+      });
+      if (redirectRes.code === 200 && redirectRes.data) {
+        window.open(redirectRes.data, "_blank");
+      }
+    } catch (error) {
+      console.error("查看流程失败:", error);
+    }
+  } else {
+    ElMessage.warning("暂无流程信息");
+  }
+};
+
+const handleDelete = async () => {
+  ElMessageBox.confirm("确定要删除吗？", "提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  }).then(async () => {
+    try {
+      const res = await paymentRequestApi.delPay({id: formData.value.id});
+      if (res.code === 200) {
+        ElMessage.success("删除成功");
+        goBack();
+      }
+    } catch (error) {
+      console.error("删除失败:", error);
+    }
+  });
+};
+
+const buildSubmitParams = () => {
+    return {
+      // conMain: {
+      //   ...conMainData.value,
+      //   id: formData.value.mainConId,
+      // }, 
+      // bill: {
+      //   ...billData.value,
+      //   id: billData.value.id || undefined,
+      //   bizTitle: formData.value.bizTitle,
+      //   bizItemCode: formType.CON_ADD,
+      //   segId: formData.value.segId,
+      //   segName: formData.value.segName,
+      //   segNo: formData.value.segNo,
+      //   projId: formData.value.projId,
+      //   compId: formData.value.companyId,
+      //   compName: formData.value.compName,
+      //   flowId:formData.value.flowId,
+      // },
+      // conAdd: {
+      //   id: formData.value.id,
+      //   conBillId: props.conId,
+      //   addName: formData.value.addName,
+      //   companyId: formData.value.companyId,
+      //   addSysNo: formData.value.addSysNo,
+      //   addPhyNo: formData.value.addPhyNo,
+      //   addType: formData.value.addType,
+      //   conTypeId: formData.value.conTypeId,
+      //   conProperty: formData.value.conProperty,
+      //   supId: formData.value.supId,
+      //   priceType: formData.value.priceType,
+      //   bldIds: formData.value.bldIds?.join(",") || "",
+      //   bldNames: formData.value.bldNames,
+      //   payMethod: formData.value.payMethod,
+      //   addAmt: priceTaxData.value.totalPriceTax,
+      //   addExclAmt: priceTaxData.value.totalPrice,
+      //   taxAmt: priceTaxData.value.taxAmount,
+      //   signDate: formData.value.signDate,
+      //   agentId: formData.value.agentId,
+      //   taxRate: priceTaxData.value.taxRate,
+      // },
+      // conAddExt: {
+      //   id: formData.value.id,
+      //   conBillId: props.conId,
+      //   addId: formData.value.id,
+      //   needSeal: formData.value.needSeal,
+      //   sealTypes: formData.value.sealTypes?.join(",") || "",
+      //   signAddr: formData.value.signAddr || "",
+      //   supCmanName: formData.value.supCmanName || "",
+      //   supCmanIdno: formData.value.supCmanIdno || "",
+      //   supCmanTel: formData.value.supCmanTel || "",
+      //   supCmanJob: formData.value.supCmanJob || "",
+      //   remark: formData.value.remark || "",
+      // },
+      // addProcesses: formData.value.addType == 1 ? tableList.value : [],
+      // billPrices: priceTable.value,
+      // annexContractList: annexContractFileList.value || [],
+      // annexList: annexFileList.value || [],
+    };
+  };
+
+const handleFormDataSave = async () => {
+  submitLoading.value = true;
+  try {
+    await formRef.value.validateField(["bizTitle","addName"]); 
+
+    const params = buildSubmitParams()
+    const res = await paymentRequestApi.editPay(params);
+    if (res.code === 200 && res.data) {
+      formData.value.id = res.data;
+      paymentId.value = formData.value.id;
+      ElMessage.success("保存成功");
+      await loadDetail();
+    }
+  } catch (error) {
+    focusFirstError(error as Record<string, any>);
+  } finally {
+    submitLoading.value = false;
+  }
+};
+
+const handleFormDataSubmit = async () => {
+  submitLoading.value = true;
+  try {
+    await formRef.value.validate();
+    // 校验各个明细表
+    // if (!validatePriceTable()) return;
+    // if (!validateProcessTable()) return;
+    // if (!validateProcessAmountMatch()) return;   // ← 加这一行
+
+    const params = buildSubmitParams()
+    let res;
+    res = await paymentRequestApi.submitPay(params);
+
+    if (res.code === 200) {
+      ElMessage.success("提交成功,已发起审批！");
+      // 生成OA审批页面重定向地址
+      const redirectRes = await commonApi.generateRedirectUrl({
+        oaRequestId: res.data,
+      });
+      // 提交成功后，关闭当前页面，跳转到单据列表页面
+      goBack();
+
+      if (redirectRes.code === 200 && redirectRes.data) {
+        // 打开OA审批页面
+        setTimeout(() => {
+          window.open(redirectRes.data, "_blank");
+        }, 800);
+      }
+    }
+  } catch (error) {
+    focusFirstError(error as Record<string, any>);
+  } finally {
+    submitLoading.value = false;
+  }
+};
+
+// 返回操作
+const goBack = () => {
+  if (isAdd.value) {
+    tagsStore.closeTagByPath("/con/supplement-contract/add");
+  }
+  if (isEdit.value) {
+    tagsStore.closeTagByPath("/con/supplement-contract/edit");
+  }
+  router.go(-1); // 返回上个页面
+};
+
 // 提交
 const handleSubmit = async () => {
   console.log("表单", formData.value);
@@ -1332,6 +2114,75 @@ const handleSubmit = async () => {
   }
 };
 
+const createBillNo = async () => {
+  try {
+    // BCBH:补充合同编号前缀
+    const conRes = await commonApi.getBillNo({ bizType: formType.CON_ADD });
+    if (conRes.code === 200) {
+      formData.value.bizNo = conRes.data;
+    }
+  } catch (error) {
+    console.error("生成合同编号失败:", error);
+  }
+};
+
+
+// 获取主合同信息
+const getConMainData = async (conId) => {
+  if (!conId) return;
+  if (conId === formData.value.conId) return
+  try {
+    const res = await contractLedgerApi.getContractLedgerById({
+      id: conId,
+    });
+    if (res.code === 200 && res.data) {
+      const {
+        conMain,
+      } = res.data;
+
+      if (formData.value.projId != conMain.projId) {
+        formData.value.projId = conMain.projId;
+        await changeProject(formData.value.projId);
+        //getBuildingListByProjId(conMain.projId);
+      }
+
+      // formData.value.segId = conMain.segId;
+      // formData.value.segName = conMain.segName;
+      // formData.value.segNo = conMain.segNo;
+      formData.value.compName = conMain.companyName;
+      formData.value.projId = conMain.projId;
+      formData.value.compId = conMain.companyId;
+      formData.value.conName = conMain.conName;
+      formData.value.conId = conMain.id;
+      formData.value.supId = conMain.supId;
+      formData.value.supName = conMain.supName;
+      formData.value.conTypeId = conMain.conTypeId;
+      formData.value.conTypeName = conMain.conTypeName;
+      formData.value.conSysNo = conMain.conSysNo;
+      formData.value.conPhyNo = conMain.conPhyNo;
+      formData.value.needSettle = conMain.needSettle;
+
+      formData.value.signAmt= conMain.signAmt; // 合同签约金额
+      formData.value.addAmt= conMain.addAmt; // 补充合同金额
+      formData.value.sumChangeAmt= conMain.sumChangeAmt; // 累计变更签证
+      formData.value.preSettleAmt= conMain.preSettleAmt; // 预结算合同金额
+      formData.value.settledAmt= conMain.settledAmt; //结算金额
+      formData.value.sumProdVal= conMain.sumProdVal; // 累计产值
+      formData.value.sumPayAmt= conMain.sumPayAmt;// 累计应付
+      formData.value.sumAppyAmt= conMain.sumAppyAmt; // 累计请款
+      formData.value.sumPaidAmt= conMain.sumPaidAmt; // 累计实付
+      formData.value.sumOwedAmt= conMain.sumOwedAmt; // 累计欠款
+      formData.value.payOutRate= conMain.payOutRate; // 应付占产值比率
+      formData.value.paidPayRate= conMain.paidPayRate; // 实付占应付比率
+      formData.value.paidOutRate= conMain.paidOutRate; // 实付占产值比率
+      formData.value.leavePayAmt= conMain.leavePayAmt; // 剩余应付金额 
+
+    }
+  } catch (error) {
+    console.error("获取合同信息失败:", error);
+  }
+};
+
 // 监听变化自动计算
 watch(
   () => [
@@ -1352,50 +2203,148 @@ watch(
   () => calcFields(),
 );
 
-onMounted(() => {
-  getProjectOptions();
-  getCostSubjectProjList();
-  if (props.mode === "edit" && props.paymentId) {
+// ===================== 初始化 / 生命周期 =====================
+// 初始化
+const initData = async () => {
+  await initDictData();
+  await getProjectOptions();
+  await getCostSubjectProjList();
+  if (props.mode === "add") {
+    await createBillNo();
+    await getConMainData(conId.value);
+  } else if (props.mode === "edit" && props.paymentId) {
     loadDetail();
   }
+}
+
+onMounted(() => {
+  initData();
 });
+
 </script>
 
 <style scoped lang="scss">
 .payment-application-form {
   height: 100%;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  background: #fff;
-  padding: 0 10px;
+  background: #f5f7fa;
+  border-radius: 8px;
+  overflow: hidden;
 }
+
+/* ============ 表单滚动区 ============ */
 .form-scroll-area {
   flex: 1;
   overflow-y: auto;
-  padding: 0 15px;
+  padding: 16px 24px 30px;
+  box-sizing: border-box;
 }
+
 .adapt-form {
   width: 100%;
+  margin: 0 auto;
+
+  :deep(.el-form-item) {
+    margin-bottom: 16px;
+  }
+
+  :deep(.el-form-item__label) {
+    font-size: 13px;
+    color: #4e5969;
+    line-height: 32px;
+    padding-right: 12px;
+  }
+
+  :deep(.el-input__wrapper),
+  :deep(.el-textarea__inner),
+  :deep(.el-select__wrapper) {
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
 }
+
 .section-title {
   font-size: 16px;
   font-weight: 600;
-  color: #303133;
-  margin: 10px 0;
-  padding-left: 10px;
+  color: #1d2129;
+  padding: 0 0 12px 14px;
   position: relative;
+
   &::before {
     content: "";
     width: 4px;
-    height: 16px;
-    background: #409eff;
+    height: 18px;
+    background: linear-gradient(180deg, #409eff, #66b1ff);
     border-radius: 2px;
     position: absolute;
-    left: -4px;
-    top: 50%;
-    transform: translateY(-50%);
+    left: 0;
+    top: 4px;
   }
 }
+
+.actionBar-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.actions-btn {
+  height: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.deduction-summary {
+  padding: 10px 15px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  background: #f5f7fa;
+  border-radius: 4px;
+
+  span {
+    color: #f56c6c;
+    font-size: 18px;
+  }
+}
+
+.pay-summary {
+  padding: 10px 15px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+  background: #f5f7fa;
+  border-radius: 4px;
+  margin-top: 10px;
+
+  span {
+    color: #f56c6c;
+    font-size: 18px;
+  }
+
+  .pay-error {
+    color: #f56c6c;
+    font-size: 14px;
+    font-weight: normal;
+  }
+
+  .pay-success {
+    color: #67c23a;
+    font-size: 14px;
+    font-weight: normal;
+  }
+}
+
+.annex-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .actionBar-buttons {
   display: flex;
   align-items: center;
@@ -1408,11 +2357,20 @@ onMounted(() => {
   align-items: center;
   gap: 12px;
 }
-.btn-row {
-  display: flex;
-  justify-content: center;
-  padding: 16px 24px 30px;
-  border-top: 1px solid #eef2f6;
-  flex-shrink: 0;
+
+/* 滚动条美化 */
+.form-scroll-area::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.form-scroll-area::-webkit-scrollbar-thumb {
+  background: #c0c4cc;
+  border-radius: 4px;
+}
+.form-scroll-area::-webkit-scrollbar-thumb:hover {
+  background: #909399;
+}
+.form-scroll-area::-webkit-scrollbar-track {
+  background: transparent;
 }
 </style>

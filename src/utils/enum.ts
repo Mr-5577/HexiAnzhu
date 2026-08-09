@@ -25,8 +25,10 @@ export const getEnumLabel = <T extends EnumItem>(
 export const getEnumType = <T extends EnumItem>(
   list: readonly T[],
   value: T["value"],
-): string => {
-  return list.find((item) => item.value == value)?.type || "";
+): "primary" | "success" | "warning" | "danger" | "info" => {
+  const type = list.find((item) => item.value == value)?.type || "info";
+  // 确保返回的类型是有效的
+  return type as "primary" | "success" | "warning" | "danger" | "info";
 };
 
 /**

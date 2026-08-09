@@ -18,6 +18,7 @@
           plain
           icon="Promotion"
           @click="handleSubmit"
+          :loading="submitLoading"
           :disabled="isDetail || !!billData.status"
         >
           提交
@@ -478,6 +479,9 @@ const handleSave = async () => {
     const res = await biddingManageApi.demandSave(params);
     if (res.code === 200 && res.data) {
       billData.value.id = res.data || undefined; // 保存单据id
+      if(res.data) {
+        loadDetail(res.data);
+      }
       ElMessage.success("保存成功");
     }
   } catch (error) {
@@ -616,11 +620,11 @@ const handleViewProcess = async () => {
 };
 
 // 加载详情（编辑/详情模式）
-const loadDetail = async () => {
-  if (!billId.value) return;
+const loadDetail = async (billId) => {
+  if (!billId) return;
   try {
     const res = await biddingManageApi.getDemandInfo({
-      billId: billId.value,
+      billId: billId,
     });
     if (res.code === 200 && res.data) {
       const { bill, demand, annexList, flowList, flowBase } = res.data;
@@ -679,7 +683,7 @@ const initData = async () => {
   formData.value.createDate = dateUtil().format("YYYY-MM-DD HH:mm:ss");
 
   if (isEdit.value || isDetail.value) {
-    await loadDetail();
+    await loadDetail(billId.value);
   }
 };
 

@@ -2,16 +2,21 @@
 <template>
   <div class="auto-login-page">
     <div v-if="loading" class="loading-container">
+      <div class="loading-spinner"></div>
       <span>正在处理登录...</span>
     </div>
     <div v-else-if="errorMessage" class="error-container">
       <span class="error-message">{{ errorMessage }}</span>
+      <button v-if="showRetry" class="retry-btn" @click="handleRetry">
+        重试
+      </button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { userApi } from "@/api/system/user-api";
+import { goalCostApi } from "@/api/cost/cost-setting/goal-cost-api";
 import { ref, onMounted, onUnmounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user-store";
@@ -23,25 +28,91 @@ const router = useRouter();
 
 const loading = ref(true);
 const errorMessage = ref("");
+const showRetry = ref(true);
 
 // 防止重复处理标志
 let isProcessing = false;
 // 组件是否已卸载
 let isUnmounted = false;
 
-// 业务类型与页面路径的映射
-const BIZ_CODE_ROUTE_MAP: Record<string, string> = {
-  // 成本合同相关
-  CST_CON_MAIN: "/cost/contract/approval", // 合同审批
-  CST_CON_ADD: "/cost/contract/supplement", // 补充合同审批
-  CST_CON_ORD: "/cost/contract/order", // 订单合同
-  CST_CON_BILL: "/cost/contract/purchase", // 采购订单
-  CST_CON_BG: "/cost/contract/change", // 合同变更
-  CST_CON_QZ: "/cost/contract/visa", // 合同签证
-  CST_CON_PROD: "/cost/contract/production", // 合同产值
-  CST_CON_PRE_SETTLE: "/cost/contract/pre-settle", // 合同预结算
-  CST_CON_SETTLE: "/cost/contract/settle", // 合同结算
-  CST_NCON: "/cost/contract/non-contract", // 非合同
+// 构建路由路径
+const buildRoutePath = (
+  basePath: string,
+  params: Record<string, string | number | undefined>,
+) => {
+  const query = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      query.append(key, String(value));
+    }
+  });
+  return query.toString() ? `${basePath}?${query.toString()}` : basePath;
+
+  // const query = new URLSearchParams();
+  // let path = basePath;
+
+  // // 👇 支持 mode 参数
+  // if (params.mode === "edit") {
+  //   path = `${basePath}/edit`;
+  // } else if (params.mode === "view") {
+  //   path = `${basePath}/detail`;
+  // }
+
+  // Object.entries(params).forEach(([key, value]) => {
+  //   if (
+  //     value !== undefined &&
+  //     value !== null &&
+  //     value !== "" &&
+  //     key !== "mode"
+  //   ) {
+  //     query.append(key, String(value));
+  //   }
+  // });
+
+  // return query.toString() ? `${path}?${query.toString()}` : path;
+};
+
+// COST 子业务路径映射（subBizCode = COST 时生效），成本分摊页面
+const COST_ROUTE: Record<string, string> = {
+  CON_MAIN: "/cost-allocation",
+  CON_ADD: "/cost-allocation",
+  CON_BG: "/cost-allocation",
+  CON_QZ: "/cost-allocation",
+  CON_PRE_SETTLE: "/cost-allocation",
+  CON_SETTLE: "/cost-allocation",
+  NCON_CST: "/cost-allocation",
+  NCON_PROC: "/cost-allocation",
+};
+
+// FINA 子业务路径映射（subBizCode = FINA 时生效），财务分摊页面
+const FINA_ROUTE: Record<string, string> = {
+  NCON_FEE: "/finance-allocation",
+  NCON_CST: "/finance-allocation",
+  CON_PAY: "/finance-allocation",
+};
+
+// 默認路徑映射，对应业务的单据详情页
+const DEFAULT_ROUTE: Record<string, string> = {
+  CON_MAIN_edit: "/con/contract-ledger/edit",
+  CON_MAIN_view: "/con/contract-ledger/detail",
+  CON_ADD_edit: "/con/supplement-contract/edit",
+  CON_ADD_view: "/con/supplement-contract/detail",
+  CON_BG_edit: "/con/change-order/edit",
+  CON_BG_view: "/con/change-order/detail",
+  CON_QZ_edit: "/con/visa-manage/edit",
+  CON_QZ_view: "/con/visa-manage/detail",
+
+  CON_PRE_SETTLE_edit: "/home",
+  CON_PRE_SETTLE_view: "/home",
+  CON_SETTLE_edit: "/home",
+  CON_SETTLE_view: "/home",
+  NCON_CST_edit: "/ncon/cst-payment/edit",
+  NCON_CST_view: "/ncon/cst-payment/detail",
+  NCON_PROC_edit: "/ncon/cst-process/edit",
+  NCON_PROC_view: "/ncon/cst-process/detail",
+  NCON_FEE_edit: "/ncon/fee-payment/edit",
+  NCON_FEE_view: "/ncon/fee-payment/detail",
+  CON_PAY: "/home",
 };
 
 // 安全获取查询参数
@@ -57,17 +128,234 @@ const checkIfUnmounted = () => {
   }
 };
 
-// 处理OA鉴权登录
+/**
+ * 核心路由解析函数
+ * 优先级: bizItemCode -> subBizCode -> mode
+ */
+const resolveBizRoute = async (
+  bizItemCode: string,
+  billId: string,
+  bizId: string,
+  subBizCode: string = "",
+  mode: string = "",
+) => {
+  // ========================================
+  // 第一层：根据 bizItemCode 分支
+  // ========================================
+  switch (bizItemCode) {
+    // ========================================
+    // subBizCode = COST 判断（仅 mode 生效）：合同审批 / 补充 / 变更 / 签证 / 预结算 / 结算
+    // ========================================
+    case "CON_MAIN":
+    case "CON_ADD":
+    case "CON_BG":
+    case "CON_QZ":
+    case "CON_PRE_SETTLE":
+    case "CON_SETTLE":
+    case "NCON_CST":
+    case "NCON_PROC": {
+      if (subBizCode === "COST") {
+        switch (mode) {
+          case "edit":
+            return buildRoutePath(COST_ROUTE[bizItemCode], {
+              billId, // 单据ID
+              bizType: bizItemCode, // 业务类型
+              mode: "edit",
+            });
+          case "view":
+          default:
+            return buildRoutePath(COST_ROUTE[bizItemCode], {
+              billId, // 单据ID
+              bizType: bizItemCode, // 业务类型
+              mode: "view",
+            });
+        }
+      }
+      // 这里走单据详情页
+      const pageMode = `${bizItemCode}_${mode}`
+      return buildRoutePath(DEFAULT_ROUTE[pageMode], {
+        billId,
+      });
+    }
+
+    // ========================================
+    // subBizCode = FINA 判断（仅 mode 生效）：非合同费用 / 非合同建安支付 / 合同支付
+    // ========================================
+    case "NCON_FEE":
+    case "NCON_CST":
+    case "CON_PAY": {
+      if (subBizCode === "FINA") {
+        switch (mode) {
+          case "edit":
+            return buildRoutePath(`${FINA_ROUTE[bizItemCode]}`, {
+              billId, // 单据ID
+              bizType: bizItemCode, // 业务类型
+              mode: "edit",
+            });
+          case "view":
+          default:
+            return buildRoutePath(`${FINA_ROUTE[bizItemCode]}`, {
+              billId, // 单据ID
+              bizType: bizItemCode, // 业务类型
+              mode: "view",
+            });
+        }
+      }
+      // 这里走单据详情页
+      const pageMode = `${bizItemCode}_${mode}`
+      return buildRoutePath(DEFAULT_ROUTE[pageMode], {
+        billId,
+      });
+    }
+
+    // ---------- 合同产值（单路径，无 subBizCode/mode） ----------
+    case "CON_PROD":
+      return buildRoutePath("/cost/contract/production", { billId });
+
+    // ---------- 非合同立项（单路径） ----------
+    case "NCON_PROC":
+      return buildRoutePath("/home", { billId });
+
+    // ---------- 招投标相关（单路径） ----------
+    case "ZB_TND":
+      return buildRoutePath("/bidding/bidding-detail", {
+        tenderId: bizId,
+      });
+
+    case "ZB_XQ":
+      return buildRoutePath("/bidding/bidding-demand/detail", {
+        billId,
+      });
+
+    case "ZB_JH":
+      return buildRoutePath("/bidding/tender-plan/detail", {
+        billId,
+        tenderId: bizId,
+      });
+
+    case "ZB_CK":
+      return buildRoutePath("/bidding/reference-price/detail", {
+        billId,
+        tenderId: bizId,
+      });
+
+    case "ZB_DB":
+      return buildRoutePath("/bidding/award-approval/detail", {
+        billId,
+        tenderId: bizId,
+      });
+
+    case "ZB_BZJ":
+      return buildRoutePath("/bidding/bid-bond-pay/detail", {
+        billId,
+        tenderId: bizId,
+      });
+
+    case "ZB_BZJTH":
+      return buildRoutePath("/bidding/bid-bond-refund/detail", {
+        billId,
+        tenderId: bizId,
+      });
+
+    // ---------- 供应商（单路径） ----------
+    case "SUP_RK":
+      return buildRoutePath("/supplier/inspection/edit", {
+        supBillId: billId,
+      });
+
+    // ---------- 目标成本版本（mode 仍生效） ----------
+    case "CST_COST_M": {
+      const costMid = Number(bizId);
+      if (!Number.isNaN(costMid)) {
+        try {
+          const res = await goalCostApi.getProjectCostMList({ id: costMid });
+          const data = Array.isArray(res?.data) ? res.data[0] : res?.data;
+          const projId = data?.projId ?? data?.proj_id;
+          const areaVerMid = data?.areaVerMid ?? data?.area_ver_mid;
+
+          return buildRoutePath("/cost/cost-detail", {
+            mode: mode || "add",
+            projId,
+            costMid: bizId,
+            areaVerMid,
+          });
+        } catch (error) {
+          console.error("获取目标成本信息失败:", error);
+        }
+      }
+
+      return buildRoutePath("/cost/cost-detail", {
+        mode: mode || "add",
+        projId: billId,
+        costMid: bizId,
+      });
+    }
+
+    // ---------- 以下业务为单路径占位，待补充真实路由 ----------
+    case "CON_TSSX": // 合同特殊事项申请
+    case "CON_GCHJ": // 合同工程核价
+    case "CON_VOID": // 合同作废
+    case "CON_DED": // 合同奖罚
+    case "CON_LV_RECV": // 履约保证金收取
+    case "CON_LV_REFU": // 履约保证金退还
+      return buildRoutePath("/home", { billId });
+
+    // ---------- 默认 ----------
+    default:
+      return buildRoutePath("/home", {
+        billId,
+        bizId,
+      });
+  }
+};
+
+// 模拟登录
+const handleMockLogin = async () => {
+  checkIfUnmounted();
+
+  const existingToken =
+    localStorage.getItem("token") || sessionStorage.getItem("token");
+  const token = existingToken || "mock-token";
+  const query = route.query;
+  const bizItemCode = getQueryParam(query.bizItemCode) || "ZB_TND";
+  const billId = getQueryParam(query.billId) || "1";
+  const bizId = getQueryParam(query.bizId) || "1";
+  const subBizCode = getQueryParam(query.subBizCode) || "";
+  const mode = getQueryParam(query.mode) || "";
+
+  if (!existingToken) {
+    localStorage.setItem("token", token);
+  }
+  localStorage.setItem("accountNonExpired", "true");
+
+  ElMessage.success(
+    existingToken ? "MOCK 跳转中..." : "没有Token，请先登陆...",
+  );
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  checkIfUnmounted();
+  const targetPath = await resolveBizRoute(
+    bizItemCode,
+    billId,
+    bizId,
+    subBizCode,
+    mode,
+  );
+  await router.replace(targetPath);
+};
+
+// OA鉴权登录
 const handleOALogin = async (
   requestId: string,
   oaUserId: string,
   timestamp: string,
   signature: string,
+  subBizCode: string,
+  mode: string,
 ) => {
   checkIfUnmounted();
 
   try {
-    // 调用OA鉴权接口
     const res = await userApi.getOaAuthRedirectUrl({
       requestId,
       oaUserId,
@@ -78,52 +366,39 @@ const handleOALogin = async (
     checkIfUnmounted();
 
     if (res.code === 200 && res.data) {
-      const accountNonExpired = res.data.accountNonExpired || false; // 密码是否过期，true表示未过期，false表示过期
-      const token = res.data.token || ""; // 用户token
-      const bizItemCode = res.data.bizItemCode || ""; // 业务类型编码
-      const billId = res.data.billId || ""; // 单据ID
-      const bizId = res.data.bizId || ""; // 业务ID
-      // 存储token
+      const accountNonExpired = res.data.accountNonExpired || false;
+      const token = res.data.token || "";
+      const bizItemCode = res.data.bizItemCode || "";
+      const billId = res.data.billId || "";
+      const bizId = res.data.bizId || "";
+
       localStorage.setItem("token", token);
-      // 密码是否过期标识
-      localStorage.setItem("accountNonExpired", accountNonExpired);
+      localStorage.setItem("accountNonExpired", String(accountNonExpired));
 
-      // 显示成功提示
       ElMessage.success("登录成功，正在跳转...");
-
-      // 短暂延迟让用户看到提示
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       checkIfUnmounted();
 
-      // 根据 bizItemCode 跳转不同页面
-      // let targetPath = BIZ_CODE_ROUTE_MAP[bizItemCode] || "/home";
-      let targetPath = `/channel-analysis/visiting-record`; // 来访记录地址
-      // 如果有 billId 和 bizId，可以拼接到URL中
-      if (billId || bizId) {
-        const params = new URLSearchParams();
-        if (bizId) params.append("bizId", bizId);
-        if (billId) params.append("billId", billId);
-        targetPath += `?${params.toString()}`;
-      }
-      // 跳转页面
+      // 核心：根据 bizItemCode -> subBizCode -> mode 三级路由解析
+      const targetPath = await resolveBizRoute(
+        bizItemCode,
+        billId,
+        bizId,
+        subBizCode,
+        mode,
+      );
       await router.replace(targetPath);
     } else {
-      // 接口返回错误
       const errMsg = res.message || "OA鉴权失败，请重新登录";
       ElMessage.error(errMsg);
       throw new Error(errMsg);
     }
   } catch (err) {
-    // 如果是组件卸载的错误，直接返回
     if (err instanceof Error && err.message === "COMPONENT_UNMOUNTED") {
       return;
     }
-
-    // 重置处理标志
     isProcessing = false;
-
-    // 显示错误消息
     if (!isUnmounted) {
       const msg = err instanceof Error ? err.message : "OA鉴权失败，请重新登录";
       errorMessage.value = msg;
@@ -134,30 +409,42 @@ const handleOALogin = async (
 
 // 主处理逻辑
 const handleRouteParams = async () => {
-  // 防止重复处理
   if (isProcessing) return;
   isProcessing = true;
 
   try {
     checkIfUnmounted();
-
     loading.value = true;
     errorMessage.value = "";
 
     const query = route.query;
+    const isMock = getQueryParam(query.isMock) === "true";
     const requestId = getQueryParam(query.requestId);
     const oaUserId = getQueryParam(query.oaUserId);
     const timestamp = getQueryParam(query.timestamp);
     const signature = getQueryParam(query.signature);
+    // 获取新增参数
+    const subBizCode = getQueryParam(query.subBizCode);
+    const mode = getQueryParam(query.mode);
 
     console.log("OA鉴权参数:", {
       requestId,
       oaUserId,
       timestamp,
       signature,
+      isMock,
+      bizItemCode: getQueryParam(query.bizItemCode),
+      billId: getQueryParam(query.billId),
+      bizId: getQueryParam(query.bizId),
+      subBizCode,
+      mode,
     });
 
-    // 验证必要参数是否存在
+    if (isMock) {
+      await handleMockLogin();
+      return;
+    }
+
     if (!requestId || !oaUserId || !timestamp || !signature) {
       const missingParams = [];
       if (!requestId) missingParams.push("requestId");
@@ -172,14 +459,18 @@ const handleRouteParams = async () => {
       return;
     }
 
-    // 执行OA鉴权
-    await handleOALogin(requestId, oaUserId, timestamp, signature);
+    await handleOALogin(
+      requestId,
+      oaUserId,
+      timestamp,
+      signature,
+      subBizCode,
+      mode,
+    );
   } catch (err) {
-    // 如果是"组件已卸载"错误，不处理
     if (err instanceof Error && err.message === "COMPONENT_UNMOUNTED") {
       return;
     }
-
     console.error("登录处理失败:", err);
     if (!isUnmounted) {
       errorMessage.value = err instanceof Error ? err.message : "登录处理失败";
@@ -192,10 +483,8 @@ const handleRouteParams = async () => {
   }
 };
 
-// 重试
 const handleRetry = () => {
   if (isUnmounted) return;
-  // 清除错误信息并重新处理
   errorMessage.value = "";
   handleRouteParams();
 };
@@ -205,10 +494,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  // 标记组件已卸载
   isUnmounted = true;
-
-  // 清理状态
   errorMessage.value = "";
   isProcessing = false;
 });
@@ -239,21 +525,18 @@ onUnmounted(() => {
   }
 
   .loading-container {
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #e0e0e0;
+      border-top-color: #3498db;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
     span {
       font-size: 16px;
       color: #333;
-      margin-bottom: 1rem;
-    }
-
-    &::after {
-      content: "";
-      display: block;
-      width: 24px;
-      height: 24px;
-      border: 3px solid #e0e0e0;
-      border-top-color: #3498db;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
     }
   }
 
@@ -279,10 +562,6 @@ onUnmounted(() => {
       &:hover {
         background: #2980b9;
         transform: translateY(-1px);
-      }
-
-      &:active {
-        transform: translateY(0);
       }
     }
   }

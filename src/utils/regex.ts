@@ -32,7 +32,7 @@ export const postalCodeRegex = /^[1-9]\d{5}$/;
 export const faxRegex = /^(\d{3,4}-)?\d{7,8}$/;
 
 // 银行卡号正则（10-24位数字）
-export const bankCardRegex = /^[1-9]{1}[0-9]{9,24}$/;
+export const bankCardRegex = /^[1-9]{1}[0-9]{5,24}$/;
 
 // 增值税号正则
 export const taxNoRegex =

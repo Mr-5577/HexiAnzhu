@@ -3,6 +3,7 @@ import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
 import "./assets/styles/variables.scss";  // CSS变量定义（必须最先导入）
 import "./assets/styles/element-override.scss"; // Element Plus样式覆盖
+import "./assets/styles/global.css"; 
 import zhCn from "element-plus/es/locale/lang/zh-cn";
 
 import App from "./App.vue";
@@ -10,6 +11,7 @@ import App from "./App.vue";
 import BaseTable from "@/components/base/base-table.vue";
 // 项目树组件
 import ProjectTreeSelector from "@/components/business/project-tree-selector.vue";
+import SelectWithAll from "@/components/base/base-select-with-all.vue"; //下拉多选框
 // 路由
 import router from "./router";
 // 引入状态管理
@@ -35,4 +37,5 @@ setupPermission(app);
 // 全局注册 BaseTable 组件
 app.component("BaseTable", BaseTable);
 app.component("ProjectTreeSelector", ProjectTreeSelector);
+app.component("SelectWithAll", SelectWithAll);
 app.mount("#app");

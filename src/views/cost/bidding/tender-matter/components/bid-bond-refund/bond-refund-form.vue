@@ -771,7 +771,10 @@ const getBillDetail = async () => {
   if (!props.billId) return;
 
   try {
-    const res = await biddingManageApi.getBillInfo({ billId: props.billId });
+    const res = await biddingManageApi.getBillInfo({
+      billId: props.billId,
+      isWithFlow: true,
+    });
     if (res.code === 200 && res.data) {
       const { annexList, bill, flowBase, bondRefunds, tenderId, flowList } =
         res.data;
@@ -783,8 +786,8 @@ const getBillDetail = async () => {
       flowListData.value = { ...flowListData.value, ...flowList };
 
       formData.value.bizTitle = bill.bizTitle || "";
-      formData.value.deptName = flowBase.deptName || "";
-      formData.value.mguName = flowBase.mguName || "";
+      formData.value.deptName = flowBase?.deptName || "";
+      formData.value.mguName = flowBase?.mguName || "";
       formData.value.userName = bill.createName || "";
       formData.value.createDate = bill.createDate || "";
 

@@ -179,6 +179,7 @@ const handleBack = () => {
 
 // 加载数据
 const getTableData = async () => {
+  if (!queryParams.value.bldId) return;
   try {
     tableLoading.value = true;
     tableList.value = [];
@@ -205,7 +206,6 @@ const getTableData = async () => {
               !item.houseNum &&
               !item.elvNum,
           );
-
         if (isEmpty && prevListData.value.length > 0) {
           // 获取当前楼栋的上一版数据
           const historyData = prevListData.value.filter(
@@ -239,7 +239,7 @@ const getTableData = async () => {
                 uuid: uuidv4(),
               };
             });
-            tableList.value = newData;
+            tableList.value = filterListByBuilding(newData);
             return;
           }
         }
@@ -251,7 +251,8 @@ const getTableData = async () => {
           uuid: uuidv4(),
         };
       });
-      tableList.value = newData;
+      tableList.value = filterListByBuilding(newData);
+      console.log("tableList", filterListByBuilding(newData));
     }
   } catch (error) {
     ElMessage.error("加载数据失败");
@@ -259,11 +260,51 @@ const getTableData = async () => {
     tableLoading.value = false;
   }
 };
+/**
+ * 根据楼栋ID过滤列表数据
+ * @param dataList - 需要过滤的数据列表（包含prodId字段）
+ * @returns 过滤后的数据列表
+ */
+const filterListByBuilding = (dataList: any[]): any[] => {
+  // 如果没有选中楼栋，返回全部数据
+  if (!queryParams.value.bldId) {
+    return dataList;
+  }
+
+  // 查找选中的楼栋
+  const selectedBuilding = buildingList.value.find(
+    (item) => item.id === queryParams.value.bldId,
+  );
+
+  // 如果没找到楼栋或楼栋没有prodIds，返回空数组
+  if (!selectedBuilding || !selectedBuilding.prodIds) {
+    return [];
+  }
+
+  // 将楼栋的prodIds字符串转换为数组（支持逗号分隔）
+  const buildingProdIds = selectedBuilding.prodIds
+    .split(",")
+    .map((id: string) => Number(id.trim()))
+    .filter((id: number) => !isNaN(id));
+
+  // 如果没有关联业态，返回空数组
+  if (buildingProdIds.length === 0) {
+    return [];
+  }
+
+  // 过滤数据列表，只保留prodId在楼栋关联业态中的项
+  return dataList.filter((item) => {
+    // 如果数据项没有prodId字段，跳过
+    if (!item.prodId) return false;
+    // 判断当前数据项的prodId是否在楼栋关联的业态列表中
+    return buildingProdIds.includes(Number(item.prodId));
+  });
+};
 
 // 批量保存
 const handleBatchSave = async () => {
   if (!tableList.value.length) {
-    ElMessage.warning("请先填写数据");
+    ElMessage.warning("暂无保存的数据");
     return;
   }
 
@@ -335,7 +376,7 @@ const getBuildingList = async () => {
       buildingList.value = res.data || [];
       if (buildingList.value.length > 0) {
         queryParams.value.bldId = buildingList.value[0].id; // 默认选中第一个楼栋
-        // await getTableData(); // 获取默认选中楼栋的数据
+        await getTableData(); // 获取默认选中楼栋的数据
       } else {
         ElMessage.warning("该项目下没有楼栋数据");
       }
@@ -367,7 +408,7 @@ onMounted(async () => {
     await getPrevVersionDetail(); // 获取上一版面积版本明细
   }
   await getBuildingList(); // 先获取楼栋列表
-  await getTableData(); // 默认查询选中的第一个楼栋下的数据
+  // await getTableData(); // 默认查询选中的第一个楼栋下的数据
 });
 </script>
 

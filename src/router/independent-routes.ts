@@ -1,3 +1,4 @@
+// 独立路由
 export const independentRoutes = [
   {
     path: "/cost-allocation",

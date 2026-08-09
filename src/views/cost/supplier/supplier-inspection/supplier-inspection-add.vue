@@ -1,56 +1,26 @@
 <!-- 供应商入库审批 -->
 <template>
   <div class="basic-form-content">
-    <div class="form-header">
-      <div class="header-title">供应商入库审批</div>
-      <div class="header-btn">
-        <el-button
-          type="primary"
-          icon="DocumentAdd"
-          :loading="saveLoading"
-          @click="handleSave"
-        >
-          保存
-        </el-button>
-        <!-- 提交是保存并提交 -->
-        <el-button
-          type="success"
-          plain
-          icon="Promotion"
-          :loading="submitLoading"
-          @click="handleSubmit"
-        >
-          提交
-        </el-button>
-        <el-button
-          type="danger"
-          plain
-          icon="Delete"
-          @click="handleDelete"
-          disabled
-        >
-          删除
-        </el-button>
-        <el-button
-          type="warning"
-          plain
-          icon="Remove"
-          @click="handleCancel"
-          disabled
-        >
-          作废
-        </el-button>
-        <el-button
-          type="info"
-          plain
-          icon="View"
-          @click="handleViewProcess"
-          disabled
-        >
-          查看流程
-        </el-button>
-      </div>
-    </div>
+    <BillHeader
+      :title="'供应商入库审批'"
+      :contract-no="''"
+      :submitter="formData.submitter || ''"
+      :submit-time="formData.submiterTime || ''"
+      :status="0"
+      :show-status="true"
+      :button-loading="submitLoading"
+      :save-disabled="false"
+      :submit-disabled="false"
+      :delete-disabled="true"
+      :void-disabled="true"
+      :view-disabled="true"
+      @save="handleSave"
+      @submit="handleSubmit"
+      @delete="handleDelete"
+      @void="handleCancel"
+      @viewFlow="handleViewProcess"
+    >
+    </BillHeader>
     <div class="form-scroll-area">
       <el-form
         ref="formRef"
@@ -79,7 +49,7 @@
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="业务板块" prop="segId" required>
-                <el-select
+                <!-- <el-select
                   v-model="formData.segId"
                   placeholder="请选择业务板块"
                   style="width: 100%"
@@ -91,7 +61,12 @@
                     :label="item.segName"
                     :value="item.id"
                   />
-                </el-select>
+                </el-select> -->
+                <el-input
+                  v-model="formData.segName"
+                  disabled
+                  placeholder="业务板块"
+                />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
@@ -285,6 +260,7 @@ import { useTagsStore } from "@/stores/tags-store";
 import { supTypeApi } from "@/api/cost/master-data/supplier-category-api";
 import { buildTree } from "@/utils/tree";
 import { buildFileUrl } from "@/utils/file-path-util";
+import BillHeader from "@/components/business/bill-components/bill-header.vue";
 
 defineOptions({ name: "supplier-inspection-add" });
 
@@ -336,7 +312,6 @@ const initFormData = () => ({
 });
 // 表单数据
 const formData = ref(initFormData());
-const saveLoading = ref(false);
 const submitLoading = ref(false);
 const formRef = ref<FormInstance>();
 const segOptions = ref([]);
@@ -482,7 +457,8 @@ const getSegOptions = async () => {
 // 获取项目列表
 const getProjectOptions = async () => {
   try {
-    const res = await projectAreaApi.getMguProjList();
+    // const res = await projectAreaApi.getMguProjList();
+    const res = await projectAreaApi.getSegMguProjList(); // 板块-公司-项目树形结构数据
     if (res.code === 200) {
       projectOptions.value = res.data || [];
     }
@@ -492,25 +468,35 @@ const getProjectOptions = async () => {
 };
 
 // 选择项目
-const changeProject = (value: number) => {
+const changeProject = async (value: number) => {
   if (value) {
     // 通过模板引用获取节点数据
     const checkedNodes = projCascaderRef.value?.getCheckedNodes();
     if (checkedNodes && checkedNodes.length > 0) {
       console.log("选中的项目数据:", checkedNodes);
-      const selectedNode = checkedNodes[0]; // 获取选中的项目ID
-      // 获取父级信息
-      const pathNodes = selectedNode.pathNodes || [];
-      if (pathNodes.length > 1) {
-        console.log("直接父节点：", pathNodes[pathNodes.length - 2]?.data);
-        console.log("根节点：", pathNodes[0]?.data);
-        console.log(
-          "所有父级：",
-          pathNodes.slice(0, -1).map((n) => n.data),
-        );
-        const parent = pathNodes[pathNodes.length - 2]?.data;
-        formData.value.compName = parent?.orgName || "";
-        formData.value.compId = parent?.orgId || "";
+      // const selectedNode = checkedNodes[0]; // 获取选中的项目ID
+      // // 获取父级信息
+      // const pathNodes = selectedNode.pathNodes || [];
+      // if (pathNodes.length > 1) {
+      //   console.log("直接父节点：", pathNodes[pathNodes.length - 2]?.data);
+      //   console.log("根节点：", pathNodes[0]?.data);
+      //   console.log(
+      //     "所有父级：",
+      //     pathNodes.slice(0, -1).map((n) => n.data),
+      //   );
+      //   const parent = pathNodes[pathNodes.length - 2]?.data;
+      //   formData.value.compName = parent?.orgName || "";
+      //   formData.value.compId = parent?.orgId || "";
+      // }
+
+      // 通过项目获取项目所属信息
+      const res = await projectAreaApi.getInfoByProjId({ id: value });
+      if (res.code === 200 && res.data) {
+        const { compName, compId, segId, segName } = res.data;
+        formData.value.compId = compId || "";
+        formData.value.compName = compName || "";
+        formData.value.segId = segId || "";
+        formData.value.segName = segName || "";
       }
     }
   }
@@ -571,7 +557,7 @@ const handleSave = async () => {
   try {
     await formRef.value.validate();
     if (!validateSupplierData()) return;
-    saveLoading.value = true;
+    submitLoading.value = true;
     // 保存单据
     const params = {
       bill: {
@@ -591,7 +577,7 @@ const handleSave = async () => {
     ElMessage.success("保存成功！");
   } catch (error) {
   } finally {
-    saveLoading.value = false;
+    submitLoading.value = false;
   }
 };
 // 提交表单
@@ -757,52 +743,6 @@ onMounted(async () => {
   border-radius: 8px;
   overflow: hidden;
   padding: 0;
-}
-
-.form-header {
-  width: 100%;
-  background: #ffffff;
-  padding: 16px 24px 12px 24px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  flex-shrink: 0;
-  border-bottom: 1px solid #e4e7ed;
-
-  .header-title {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 8px 0;
-    box-sizing: border-box;
-    font-size: 20px;
-    font-weight: 700;
-    color: #1d2129;
-    letter-spacing: 0.5px;
-  }
-
-  .header-btn {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-    flex-wrap: wrap;
-
-    .el-button {
-      border-radius: 6px;
-      font-weight: 500;
-      transition: all 0.25s ease;
-
-      &:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-      }
-
-      &:active {
-        transform: translateY(0px);
-      }
-    }
-  }
 }
 
 .form-scroll-area {

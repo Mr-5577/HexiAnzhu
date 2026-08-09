@@ -183,7 +183,7 @@ const columns: TableColumnItem[] = [
     width: 90,
     formatter: (row: BidTender) => `￥${row.planAmount}`,
   },
-  { prop: "createName", label: "招采责任人", width: 100 },
+  { prop: "dutyManName", label: "招采责任人", width: 100 },
   { prop: "bidStartDate", label: "招采开始日期", width: 120 },
   { prop: "bidEndDate", label: "招采结束日期", width: 120 },
   { prop: "demandDate", label: "需求时间", width: 100 },

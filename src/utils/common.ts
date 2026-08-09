@@ -8,7 +8,7 @@
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number = 500,
-  immediate: boolean = false
+  immediate: boolean = false,
 ): (...args: Parameters<T>) => void {
   let timeout: ReturnType<typeof setTimeout> | null = null;
   let result: any;
@@ -42,7 +42,7 @@ export function debounce<T extends (...args: any[]) => any>(
  */
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
-  limit: number = 300
+  limit: number = 300,
 ): (...args: Parameters<T>) => void {
   let inThrottle: boolean = false;
   let lastResult: any;
@@ -83,7 +83,7 @@ export function deepClone<T>(obj: T, cache = new WeakMap()): T {
   // 处理数组
   if (obj instanceof Array) {
     const clonedArray = obj.map((item) =>
-      deepClone(item, cache)
+      deepClone(item, cache),
     ) as unknown as T;
     cache.set(obj as object, clonedArray);
     return clonedArray;
@@ -113,7 +113,7 @@ export function deepClone<T>(obj: T, cache = new WeakMap()): T {
  */
 export function objectToParams(
   obj: Record<string, any>,
-  encode: boolean = true
+  encode: boolean = true,
 ): string {
   const params = new URLSearchParams();
 
@@ -122,7 +122,7 @@ export function objectToParams(
       const stringValue = String(value);
       params.append(
         key,
-        encode ? encodeURIComponent(stringValue) : stringValue
+        encode ? encodeURIComponent(stringValue) : stringValue,
       );
     }
   }
@@ -223,7 +223,7 @@ export function unique<T>(array: T[], key?: string): T[] {
 export const formatNumber = (
   value: any,
   decimals: number = 2,
-  rounding: "round" | "floor" | "ceil" = "round"
+  rounding: "round" | "floor" | "ceil" = "round",
 ): number => {
   // 处理空值
   if (value === null || value === undefined || value === "") {
@@ -265,7 +265,7 @@ export const formatNumber = (
 export const formatNumberDisplay = (
   value: any,
   decimals: number = 2,
-  nullText: string = ""
+  nullText: string = "",
 ): string => {
   // 转成number类型
   const num = formatNumber(value, decimals);
@@ -299,4 +299,37 @@ const fallbackFormatDisplay = (num: number, decimals: number): string => {
   const [integerPart, decimalPart] = fixedNum.split(".");
   const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   return decimals > 0 ? `${formattedInteger}.${decimalPart}` : formattedInteger;
+};
+
+/**
+ * 修复浮点数精度问题
+ * @param num 需要修复的数字
+ * @param decimals 保留的小数位数，默认2位
+ * @returns 修复后的数字
+ */
+export const fixFloat = (num: number, decimals: number = 2): number => {
+  return Number(num.toFixed(decimals));
+};
+
+/**
+ * 安全加法：避免浮点数精度问题
+ */
+export const safeAdd = (numbers: number[], decimals: number = 2): number => {
+  const factor = Math.pow(10, decimals);
+  const total = numbers.reduce((sum, num) => {
+    return sum + Math.round((num || 0) * factor);
+  }, 0);
+  return total / factor;
+};
+
+/**
+ * 安全减法
+ */
+export const safeSubtract = (
+  a: number,
+  b: number,
+  decimals: number = 2,
+): number => {
+  const factor = Math.pow(10, decimals);
+  return (Math.round(a * factor) - Math.round(b * factor)) / factor;
 };

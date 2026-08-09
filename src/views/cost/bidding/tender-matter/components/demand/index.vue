@@ -40,6 +40,7 @@
     <!-- 招标需求选择弹窗 -->
     <association-demand-dialog
       v-model="dialogVisible"
+      :proj-id="props.projId"
       @success="handleDemandSelect"
     />
   </div>
@@ -63,9 +64,11 @@ defineOptions({ name: "demand" });
 
 interface Props {
   tenderId?: number; // 事项ID
+  projId?: number; // 当前事项所属项目ID
 }
 const props = withDefaults(defineProps<Props>(), {
   tenderId: null, // 事项ID
+  projId: undefined,
 });
 
 const router = useRouter();
@@ -133,12 +136,13 @@ const getDemandList = async () => {
     const res = await biddingManageApi.getBillList({
       tenderId: props.tenderId,
       bizItemCode: "ZB_XQ",
+      projId: props.projId,
     });
     if (res.code === 200) {
       const dataList = res.data || [];
       let list = [];
       dataList.map((item) => {
-        list = list.concat(item.demandList || []);
+        list = list.concat(item.demands || []);
       });
       tableData.value = list;
     }

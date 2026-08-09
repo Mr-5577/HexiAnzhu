@@ -16,20 +16,30 @@ export const supplementContractApi = {
     return http.formPost("/con/add/list", data);
   },
   /** 查询单个补充合同 */
-  getSupplementContractById: (data: { id: number }) => {
-    return http.formPost("/con/add/get", data);
+  getSupplementContractById: (id: number) => {
+    debugger
+    return http.post("/con/add/get?isWithFlow=true&id="+id);
   },
   /** 新增补充合同 */
   addSupplementContract: (data: SupplementContractRequest) => {
-    return http.post("/con/add/add", data);
+    return http.post("/con/add/save", data);
   },
   /** 修改补充合同 */
   editSupplementContract: (data: SupplementContractRequest) => {
-    return http.post("/con/add/edit", data);
+    return http.post("/con/add/save", data);
   },
   /** 删除补充合同 */
-  delSupplementContract: (data: { id: number }) => {
-    return http.formPost("/con/add/del", data);
+  delSupplementContract: (id: number ) => {
+    return http.post("/con/add/del?id="+ id);
+  },
+  /** 提交补充合同 */
+  submitSupplementContract: (data: SupplementContractRequest) => {
+    return http.post("/con/add/submit", data);
+  },
+
+  /** 作废合同 */
+  voidSupplementContract: (id: number ) => {
+    return http.post("/con/add/void?id="+ id);
   },
 
   /** 查询补充合同明细事项列表 */

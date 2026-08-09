@@ -97,10 +97,10 @@ export const projectAreaApi = {
    * @param data.projId - 项目ID
    * @param data.verTypeId - 版本类型ID
    * @param data.verTitle - 版本标题（模糊查询）
-   * @param data.isEnabled - 是否当前生效版本：false-否，true-是
+   * @param data.isOnlyEnable - 是否当前生效版本：false-否，true-是
    * @returns Promise 面积版本主表列表
    */
-  getAreaVerMList: (data: ProjectAreaVersionQueryParams) => {
+  getAreaVerMList: (data: any) => {
     return http.formPost("/mainData/areaVerM/getList", data);
   },
 
@@ -188,10 +188,15 @@ export const projectAreaApi = {
    * 查询面积版本明细列表
    * @param data - 查询参数
    * @param data.verMid - 版本ID（必填）
-   * @returns Promise 面积版本明细列表
+   * @param data.bldId - 楼栋ID
+   * @param data.prodId - 业态ID
    * @description 查询指定版本下的所有面积明细数据
    */
-  getAreaVerDList: (data: { verMid: number | string }) => {
+  getAreaVerDList: (data: {
+    verMid: number;
+    bldId?: number;
+    prodId?: number;
+  }) => {
     return http.formPost("/mainData/areaVerD/getList", data);
   },
   /**
@@ -199,7 +204,7 @@ export const projectAreaApi = {
    * @param data - 查询参数
    * @param data.verMid - 版本ID（必填）
    */
-  getPrevListByVerMid: (data: { verMid: number | string }) => {
+  getPrevListByVerMid: (data: { verMid: number }) => {
     return http.formPost("/mainData/areaVerD/getPrevList", data);
   },
 };

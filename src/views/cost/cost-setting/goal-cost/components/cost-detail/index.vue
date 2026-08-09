@@ -14,6 +14,7 @@
           :mode="mode"
           :projId="projId"
           :costMid="costMid"
+          :areaVerMid="areaVerMid"
         />
       </keep-alive>
     </div>
@@ -43,8 +44,9 @@ const tabComponents: Record<string, any> = {
 const currentComponent = computed(() => tabComponents[activeTab.value]);
 
 const mode = route.query.mode as "add" | "edit" | "detail";
-const projId = route.query.projId ? Number(route.query.projId) : null;
-const costMid = route.query.costMid ? Number(route.query.costMid) : null;
+const projId = route.query.projId ? Number(route.query.projId) : null; // 项目ID
+const costMid = route.query.costMid ? Number(route.query.costMid) : null; // 成本版本ID
+const areaVerMid = route.query.areaVerMid ? Number(route.query.areaVerMid) : null; // 面积版本ID
 
 onMounted(() => {});
 </script>

@@ -180,3 +180,37 @@ export interface SaveCostAllocationDTO {
   /** 明细 */
   detailList: CostAllocationDetailDTO[];
 }
+
+/**
+ * 非合同成本分摊-自动分摊 参数
+ */
+export interface NconAutoAllocDTO {
+  /** 项目ID */
+  projId: number;
+  subList: {
+    /** 科目ID */
+    subId: number;
+    /** 分摊金额（含税） */
+    allocAmt: number;
+    /** 分摊金额（不含税） */
+    allocExclAmt: number;
+  }[];
+  /** 产品数据 */
+  prodList: {
+    /** 产品ID */
+    id?: number;
+    pid?: number;
+    /** 产品编码 */
+    prodCode: string;
+    /** 产品名称 */
+    prodName: string;
+    /** 产品类型 */
+    prodType: number;
+    /** 产品层级 */
+    prodLevel: number;
+    /** 产品描述 */
+    prodDesc: string;
+    /** 是否启用 */
+    isEnabled: boolean;
+  }[];
+}

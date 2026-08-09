@@ -8,7 +8,12 @@ interface UserInfo {
   empName: string; // 员工姓名（包含工号）
   empStatus: number; // 员工状态
   empNo: string; // 员工工号
+  segId:number;//板块ID
+  segName:string;//板块名称
   deptId: number; // 部门ID
+  deptName:string;//部门
+  mguId: number;//所属分部
+  mguName: string;//所属分部
   managerId: number; // 上级ID
   gender: boolean; // 性别（true: 男, false: 女）
   birthday: string; // 生日（字符串格式）

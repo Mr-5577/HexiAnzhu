@@ -1,5 +1,7 @@
 // ==================== 补充合同类型定义 ====================
 
+import { HConBillPrice } from "./contract-ledger-type";
+
 /**
  * 补充合同信息（主表） 对应数据库表: h_con_add
  */
@@ -27,7 +29,7 @@ export interface SupplementContract {
   /** 主合同计价方式：1-总价包干 2-暂定总价 3-单价合同 */
   priceType: number;
   /** 主合同生产专业ID */
-  proProf: number;
+  proProf?: number;
   /** 主合同楼栋ID（多个用逗号分隔） */
   bldIds: string;
   /** 主合同楼栋名称（多个用逗号分隔） */
@@ -128,15 +130,34 @@ export interface SupplementContractProcess {
 }
 
 /**
+ * 补充合同所属主合同信息
+ */
+export interface SupplementConMain {
+  id: number;
+  segId: number;
+  projId: number;
+  companyId: number;
+  conName: string;
+  supId: number;
+  bldIds: string;      
+  bldNames: string;    
+  manageType: number;
+  payMethod: number;
+}
+
+/**
  * 补充合同完整请求参数
  */
 export interface SupplementContractRequest {
+  conMain: SupplementConMain;
   /** 补充合同主表信息 */
   conAdd: SupplementContract;
   /** 补充合同扩展信息 */
   conAddExt: SupplementContractExt;
   /** 补充合同明细事项列表 */
   addProcesses: SupplementContractProcess[];
+  /** 补充合同价税明细 */
+  billPrices: HConBillPrice[];
 }
 
 /**

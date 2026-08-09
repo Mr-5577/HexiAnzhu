@@ -534,7 +534,10 @@ const initAddTableData = async () => {
 const getBillDetail = async () => {
   if (!props.billId) return;
   try {
-    const res = await biddingManageApi.getBillInfo({ billId: props.billId });
+    const res = await biddingManageApi.getBillInfo({
+      billId: props.billId,
+      isWithFlow: true,
+    });
     if (res.code === 200 && res.data) {
       console.log("获取单据详情", res.data);
       const { annexList, bill, flowBase, awards, tenderId, flowList } =
@@ -546,8 +549,8 @@ const getBillDetail = async () => {
       flowListData.value = { ...flowListData.value, ...flowList };
 
       formData.value.bizTitle = bill.bizTitle || "";
-      formData.value.deptName = flowBase.deptName || "";
-      formData.value.mguName = flowBase.mguName || "";
+      formData.value.deptName = flowBase?.deptName || "";
+      formData.value.mguName = flowBase?.mguName || "";
       formData.value.userName = bill.createName || "";
       formData.value.createDate = bill.createDate || "";
       formData.value.remark = bill.remark || "";

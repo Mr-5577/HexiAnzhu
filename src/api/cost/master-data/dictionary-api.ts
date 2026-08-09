@@ -170,4 +170,32 @@ export const dictionaryApi = {
   getDataTypeList: () => {
     return http.formPost("/mainData/getDataTypeList");
   },
+  /**
+   * 查询费用组织列表
+   * @param data - 查询参数
+   * @param data.orgCode - 组织编码
+   * @param data.orgName - 组织名称
+   * @param data.segId - 业务板块ID
+   */
+  getFinaOrgList: (data: {
+    orgCode?: string;
+    orgName?: string;
+    segId?: number;
+  }) => {
+    return http.formPost("/mainData/finaOrg/getList", data);
+  },
+  /**
+   * 查询费用科目列表
+   * @param data - 查询参数
+   * @param data.subCode - 科目编码
+   * @param data.subName - 科目名称
+   * @param data.segId - 业务板块ID
+   */
+  getFinaSubjectList: (data: {
+    subCode?: string;
+    subName?: string;
+    segId?: number;
+  }) => {
+    return http.formPost("/mainData/finaSubject/getList", data);
+  },
 };

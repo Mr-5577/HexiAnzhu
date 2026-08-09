@@ -2,7 +2,7 @@
 <template>
   <div class="basic-form-content">
     <div class="form-header">
-      <div class="header-title">招标参考价</div>
+      <div class="header-title">定标参考价</div>
       <div class="header-btn">
         <el-button
           type="primary"
@@ -460,7 +460,10 @@ const initAddTableData = async () => {
 const getBillDetail = async () => {
   if (!props.billId) return;
   try {
-    const res = await biddingManageApi.getBillInfo({ billId: props.billId });
+    const res = await biddingManageApi.getBillInfo({
+      billId: props.billId,
+      isWithFlow: true,
+    });
     if (res.code === 200 && res.data) {
       const {
         annexList,
@@ -479,8 +482,8 @@ const getBillDetail = async () => {
       flowListData.value = { ...flowListData.value, ...flowList };
 
       formData.value.bizTitle = bill.bizTitle || "";
-      formData.value.deptName = flowBase.deptName || "";
-      formData.value.mguName = flowBase.mguName || "";
+      formData.value.deptName = flowBase?.deptName || "";
+      formData.value.mguName = flowBase?.mguName || "";
       formData.value.userName = bill.createName || "";
       formData.value.createDate = bill.createDate || "";
 
@@ -514,12 +517,12 @@ const handleSave = async () => {
     ElMessage.error("不含税参考价不能为0");
     return;
   }
-  // if (
-  //   tableData.value.some((item) => !item.amounts || item.amounts.length === 0)
-  // ) {
-  //   ElMessage.error("请为列表中的每一项添加组价明细");
-  //   return;
-  // }
+  if (
+    tableData.value.some((item) => !item.amounts || item.amounts.length === 0)
+  ) {
+    ElMessage.error("请为列表中的每一项添加组价明细");
+    return;
+  }
 
   try {
     submitLoading.value = true;
@@ -575,12 +578,12 @@ const handleSubmit = async () => {
     ElMessage.error("不含税参考价不能为0");
     return;
   }
-  // if (
-  //   tableData.value.some((item) => !item.amounts || item.amounts.length === 0)
-  // ) {
-  //   ElMessage.error("请为列表中的每一项添加组价明细");
-  //   return;
-  // }
+  if (
+    tableData.value.some((item) => !item.amounts || item.amounts.length === 0)
+  ) {
+    ElMessage.error("请为列表中的每一项添加组价明细");
+    return;
+  }
   try {
     submitLoading.value = true;
     const dataList = tableData.value.map((item) => {

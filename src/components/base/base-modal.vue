@@ -66,7 +66,7 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   title: "提示",
   width: "600px",
-  top: "15vh",
+  top: "8vh",
   closeOnClickModal: false,
   closeOnPressEscape: false,
   confirmText: "确定",
@@ -152,7 +152,7 @@ defineExpose({
 <style lang="scss">
 // 不加 scoped，专门写 dialog 的样式
 .base-modal-dialog .el-dialog__body {
-  max-height: 60vh;
+  max-height: 70vh;
   overflow-y: auto;
 }
 .base-modal-dialog .el-dialog__footer {

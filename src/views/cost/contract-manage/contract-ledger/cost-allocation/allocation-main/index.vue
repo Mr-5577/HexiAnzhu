@@ -178,11 +178,11 @@ const getDataList = async () => {
       ...queryParams.value,
       projId: props.projId,
     };
-    const res = await costAllocationApi.getProjectAllocMList(params);
-    if (res.code === 200) {
-      // 处理数据，添加名称字段
-      tableData.value = processTableData(res.data || []);
-    }
+    // const res = await costAllocationApi.getProjectAllocMList(params);
+    // if (res.code === 200) {
+    //   // 处理数据，添加名称字段
+    //   tableData.value = processTableData(res.data || []);
+    // }
   } catch (error) {
   } finally {
     tableLoading.value = false;
@@ -213,15 +213,15 @@ const handleEdit = (row: CostAllocationMain) => {
 const handleDelete = async (row: CostAllocationMain) => {
   ElMessageBox.confirm("确定删除该数据吗？", "提示", { type: "warning" })
     .then(async () => {
-      try {
-        const res = await costAllocationApi.delProjectAllocM({ id: row.id });
-        if (res.code === 200) {
-          ElMessage.success("删除成功");
-          getDataList();
-        }
-      } catch (error) {
-        console.error("删除失败:", error);
-      }
+      // try {
+      //   const res = await costAllocationApi.delProjectAllocM({ id: row.id });
+      //   if (res.code === 200) {
+      //     ElMessage.success("删除成功");
+      //     getDataList();
+      //   }
+      // } catch (error) {
+      //   console.error("删除失败:", error);
+      // }
     })
     .catch(() => {});
 };

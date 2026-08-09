@@ -10,19 +10,27 @@ export const paymentRequestApi = {
     return http.formPost("/con/pay/list", data);
   },
   /** 查询单个合同支付 */
-  getPayDetail: (data: { id: number }) => {
+  getPayDetail: (data: { id: number ,isWithFlow? : boolean}) => {
     return http.formPost("/con/pay/get", data);
   },
-  /** 新增合同支付 */
-  addPay: (data: ConPaySaveParam) => {
-    return http.post("/con/pay/add", data);
+  /** 新增合同支付 ConPaySaveParam*/
+  addPay: (data: any) => {
+    return http.post("/con/pay/save", data);
   },
   /** 编辑合同支付 */
-  editPay: (data: ConPaySaveParam) => {
-    return http.post("/con/pay/edit", data);
+  editPay: (data: any) => {
+    return http.post("/con/pay/save", data);
   },
   /** 删除合同支付 */
   delPay: (data: { id: number }) => {
     return http.formPost("/con/pay/del", data);
+  },
+  /** 提交合同支付 */
+  submitPay: (data: any) => {
+    return http.post("/con/pay/submit", data);
+  },
+  /** 作废合同支付 */
+  voidPay: (data: { id: number }) => {
+    return http.formPost("/con/pay/void", data);
   },
 };

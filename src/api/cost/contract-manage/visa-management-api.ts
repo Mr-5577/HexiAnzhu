@@ -9,23 +9,31 @@ import {
  */
 export const visaManagementApi = {
   /** 查询签证管理列表 */
-  getVisaList: (data: { conId: number }) => {
+  getVisaList: (data: { visaName?:string,conId: number ,isNoUsed?: boolean}) => {
     return http.formPost("/con/visa/list", data);
   },
   /** 查询单个签证管理 */
-  getVisaDetail: (data: { id: number }) => {
+  getVisaDetail: (data: { id: number ,isWithFlow?:boolean}) => {
     return http.formPost("/con/visa/get", data);
   },
   /** 新增签证管理 */
   addVisa: (data: ContractVisaFormData) => {
-    return http.post("/con/visa/add", data);
+    return http.post("/con/visa/save", data);
   },
   /** 编辑签证管理 */
-  editVisa: (data: ContractVisaFormEdit) => {
-    return http.post("/con/visa/edit", data);
+  editVisa: (data: any) => {
+    return http.post("/con/visa/save", data);
   },
   /** 删除签证管理 */
   delVisa: (data: { id: number }) => {
     return http.formPost("/con/visa/del", data);
+  },
+  /** 提交签证单 */
+  submitVisa: (data: any) => {
+    return http.post("/con/visa/submit", data);
+  },
+  /** 作废签证单 */
+  voidVisa: (data: { id: number }) => {
+    return http.formPost("/con/change/void", data);
   },
 };

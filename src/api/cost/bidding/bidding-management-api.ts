@@ -23,6 +23,22 @@ interface FlowCallbackChangeParams {
   segId: number;
 }
 
+/** 查询定标明细列表参数 */
+interface AwardItemListQueryParams {
+  /** 招标事项编号 */
+  tenderNo?: string;
+  /** 招标事项名称 */
+  tenderName?: string;
+  /** 合同分类 */
+  conTypeId?: string;
+  /** 项目ID */
+  projId: number;
+  /** 供应商名称 */
+  supName?: string;
+  /** 招标明细事项 */
+  tenderItemName?: string;
+}
+
 /**
  * 招标管理 API
  * @description 提供招标事项、招标需求、招标单据的完整生命周期管理
@@ -282,7 +298,7 @@ export const biddingManageApi = {
    * @param data - 删除参数
    * @param data.billId - 单据ID（必填）
    */
-  getBillInfo: (data: { billId: number }) => {
+  getBillInfo: (data: { billId: number; isWithFlow?: boolean }) => {
     return http.formPost("/bid/bill/getInfo", data);
   },
   /**
@@ -319,5 +335,14 @@ export const biddingManageApi = {
    */
   billFlowCallback: (data: FlowCallbackChangeParams) => {
     return http.post("/bid/bill/flowCallback", data);
+  },
+
+  /**
+   * 查询定标明细
+   * @param data - 回调数据
+   * @returns Promise
+   */
+  getAwardItemList: (data: AwardItemListQueryParams) => {
+    return http.formPost("/bid/tender/getDetail", data);
   },
 };

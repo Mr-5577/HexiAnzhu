@@ -9,6 +9,7 @@
     :row-key="rowKey"
     :tree-props="treeProps"
     :default-expand-all="defaultExpandAll"
+    :expand-row-keys="computedExpandRowKeys"
     :lazy="lazy"
     :load="load"
     @cell-event="handleCellEvent"
@@ -86,6 +87,14 @@
               :clearable="column.clearable !== false"
               :show-all-levels="column.showAllLevels !== false"
               :collapse-tags="column.collapseTags || false"
+              :filterable="
+                column.filterable !== undefined
+                  ? column.filterable
+                  : column.cascaderProps?.filterable || false
+              "
+              :filter-method="
+                column.filterMethod || column.cascaderProps?.filterMethod
+              "
               @change="handleSave(row, column, $index)"
             />
 
@@ -199,7 +208,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, nextTick } from "vue";
 import { ElMessage } from "element-plus";
 import BaseTable from "./base-table.vue";
 import type { TableColumnItem, DictData } from "./base-table.vue";
@@ -214,43 +223,6 @@ import type { TableColumnItem, DictData } from "./base-table.vue";
  * <!-- 方式三：用 v-model:table-data（等价于方式二） -->
  * <editable-table v-model:table-data="tableData" />
  */
-
-// Props - 支持 v-model 和传统方式
-interface Props {
-  /** 表格数据（v-model 方式） */
-  modelValue?: any[];
-  /** 表格数据（传统方式，兼容旧代码） */
-  tableData?: any[];
-  /** 列配置 */
-  columns: EditableColumn[];
-  /** 行数据的唯一标识字段 */
-  rowKey?: string;
-  /** 数据字典对象 */
-  dictData?: DictData;
-  /** 全局选项标签字段名，默认 'label' */
-  globalOptionLabelField?: string;
-  /** 全局选项值字段名，默认 'value' */
-  globalOptionValueField?: string;
-  /** 保存回调 */
-  onSave?: (data: {
-    row: any;
-    column: string;
-    newValue: any;
-    oldValue: any;
-    rowIndex: number;
-  }) => Promise<void> | void;
-  /** 树形配置 */
-  treeProps?: {
-    children?: string;
-    hasChildren?: string;
-  };
-  /** 是否默认展开所有节点 */
-  defaultExpandAll?: boolean;
-  /** 是否懒加载 */
-  lazy?: boolean;
-  /** 懒加载方法 */
-  load?: (row: any, treeNode: any, resolve: (data: any[]) => void) => void;
-}
 
 // 扩展列配置
 export interface EditableColumn extends TableColumnItem {
@@ -324,12 +296,60 @@ export interface EditableColumn extends TableColumnItem {
   getMin?: (row: any) => number;
   /** 动态获取最大值（优先级高于 max） */
   getMax?: (row: any) => number;
+  /** 默认值 */
+  defaultValue?: any;
+  /** 千分位格式化 */
+  thousandSeparator?: boolean;
+  /** 前缀 */
+  prefix?: string;
+}
+
+// Props
+interface Props {
+  /** 表格数据（v-model 方式） */
+  modelValue?: any[];
+  /** 表格数据（传统方式，兼容旧代码） */
+  tableData?: any[];
+  /** 列配置 */
+  columns: EditableColumn[];
+  /** 行数据的唯一标识字段 */
+  rowKey?: string;
+  /** 数据字典对象 */
+  dictData?: DictData;
+  /** 全局选项标签字段名，默认 'label' */
+  globalOptionLabelField?: string;
+  /** 全局选项值字段名，默认 'value' */
+  globalOptionValueField?: string;
+  /** 保存回调 */
+  onSave?: (data: {
+    row: any;
+    column: string;
+    newValue: any;
+    oldValue: any;
+    rowIndex: number;
+  }) => Promise<void> | void;
+  /** 树形配置 */
+  treeProps?: {
+    children?: string;
+    hasChildren?: string;
+  };
+  /** 是否默认展开所有节点 */
+  defaultExpandAll?: boolean;
+  /** 展开的行 keys（外部控制） */
+  expandRowKeys?: string[];
+  /** 是否懒加载 */
+  lazy?: boolean;
+  /** 懒加载方法 */
+  load?: (row: any, treeNode: any, resolve: (data: any[]) => void) => void;
+  /** 默认展开的层级（0: 不展开, 1: 仅第一层, 2: 第一层和第二层） */
+  defaultExpandLevel?: number;
 }
 
 // Emits
 interface Emits {
   (e: "update:modelValue", data: any[]): void;
-  (e: "update:tableData", data: any[]): void; // 保留兼容
+  (e: "update:tableData", data: any[]): void;
+  (e: "update:expandRowKeys", keys: string[]): void;
   (
     e: "data-change",
     data: {
@@ -352,7 +372,9 @@ const props = withDefaults(defineProps<Props>(), {
   globalOptionValueField: "value",
   treeProps: () => ({ children: "children" }),
   defaultExpandAll: false,
+  expandRowKeys: () => [],
   lazy: false,
+  defaultExpandLevel: 0,
 });
 
 const emit = defineEmits<Emits>();
@@ -360,14 +382,29 @@ const emit = defineEmits<Emits>();
 const baseTableRef = ref<InstanceType<typeof BaseTable>>();
 const editableData = ref<any[]>([]);
 
-// ★★★ 核心修改：获取实际数据源 ★★★
+// ★★★ 核心：获取实际数据源 ★★★
 const actualData = computed(() => {
-  // 优先使用 modelValue（v-model 方式）
   if (props.modelValue !== undefined && props.modelValue.length >= 0) {
     return props.modelValue;
   }
-  // 兼容传统的 tableData
   return props.tableData;
+});
+
+// 内部展开行 keys
+const internalExpandRowKeys = ref<string[]>([]);
+
+// 计算最终的展开行 keys（合并外部传入和内部计算）
+const computedExpandRowKeys = computed(() => {
+  const externalKeys = props.expandRowKeys || [];
+  const internalKeys = internalExpandRowKeys.value || [];
+
+  // 如果外部传入了 expandRowKeys，优先使用外部
+  if (externalKeys.length > 0) {
+    return externalKeys;
+  }
+
+  // 否则使用内部计算的
+  return internalKeys;
 });
 
 // 千分位格式化
@@ -387,6 +424,7 @@ const parseThousand = (value: string): string => {
   if (!value) return "";
   return value.replace(/,/g, "");
 };
+
 /**
  * 获取列的 disabled 状态（支持布尔值或函数）
  */
@@ -465,17 +503,13 @@ const getOptionValue = (column: EditableColumn, option: any): any => {
  */
 const getColumnOptions = (column: EditableColumn, row?: any): any[] => {
   let options: any[] = [];
-  // 优先使用 getOptions 动态函数
   if (column.getOptions && row) {
     options = column.getOptions(row);
-  }
-  // 其次使用 options
-  else if (typeof column.options === "function") {
+  } else if (typeof column.options === "function") {
     options = column.options(row);
   } else if (Array.isArray(column.options)) {
     options = column.options;
   }
-
   return options;
 };
 
@@ -487,7 +521,7 @@ const getCascaderProps = (column: EditableColumn): any => {
     children: "children",
     label: "label",
     value: "value",
-    emitPath: false, // 默认只返回叶子节点值
+    emitPath: false,
   };
 
   if (column.cascaderProps) {
@@ -499,15 +533,11 @@ const getCascaderProps = (column: EditableColumn): any => {
 
 /**
  * 获取数字输入框的精度
- * 如果设置了 precision 且大于 0，则使用该值作为小数位数
- * 如果未设置或设置为 0，则返回 undefined（表示整数）
  */
 const getNumberPrecision = (column: EditableColumn): number | undefined => {
   if (column.precision !== undefined) {
-    // precision 为 0 或负数时，返回 undefined 表示整数
     return column.precision > 0 ? column.precision : undefined;
   }
-  // 默认返回 2 位小数
   return 2;
 };
 
@@ -516,11 +546,9 @@ const getNumberPrecision = (column: EditableColumn): number | undefined => {
  */
 const processColumns = (columns: EditableColumn[]): EditableColumn[] => {
   return columns.map((col) => {
-    // 如果有子列，递归处理
     if (col.children && col.children.length > 0) {
       return { ...col, children: processColumns(col.children) };
     }
-    // 叶子节点：可编辑且没有自定义插槽时，使用 editable-cell 插槽
     if (col.prop && col.editable !== false && !col.slot) {
       return { ...col, slot: "editable-cell" };
     }
@@ -572,7 +600,6 @@ const deepCloneTree = (data: any[]): any[] => {
 
   return data.map((item) => {
     const cloned: any = { ...item };
-    // 如果有 children，递归深拷贝
     if (
       item.children &&
       Array.isArray(item.children) &&
@@ -588,13 +615,11 @@ const deepCloneTree = (data: any[]): any[] => {
  * 初始化所有旧值（递归处理树形数据）
  */
 const initOldValues = () => {
-  // 清空所有旧值
   clearAllOldValues();
 
   const editableColumns = getCachedEditableColumns();
   if (editableColumns.length === 0) return;
 
-  // 递归遍历树形数据
   const traverse = (data: any[]) => {
     data.forEach((row) => {
       editableColumns.forEach((col) => {
@@ -602,7 +627,6 @@ const initOldValues = () => {
           setOldValue(row, col.prop, row[col.prop]);
         }
       });
-      // 递归处理子节点
       if (
         row.children &&
         Array.isArray(row.children) &&
@@ -617,14 +641,12 @@ const initOldValues = () => {
 };
 
 /**
- * ★★★ 核心修改：触发数据更新 ★★★
+ * ★★★ 核心：触发数据更新 ★★★
  */
 const emitDataUpdate = () => {
-  // 优先使用 v-model 方式
   if (props.modelValue !== undefined) {
     emit("update:modelValue", editableData.value);
   }
-  // 同时兼容传统方式
   emit("update:tableData", editableData.value);
 };
 
@@ -640,10 +662,8 @@ const updateCell = async (
   const prop = column.prop!;
   const oldValue = getOldValue(row, prop);
 
-  // 对于级联选择器，需要特殊处理值的比较
   let isValueChanged = true;
   if (column.editType === "cascader") {
-    // 如果是路径数组，需要比较数组内容
     if (Array.isArray(newValue) && Array.isArray(oldValue)) {
       isValueChanged = JSON.stringify(newValue) !== JSON.stringify(oldValue);
     } else {
@@ -658,7 +678,6 @@ const updateCell = async (
     return;
   }
 
-  // 调用外部保存方法
   if (props.onSave) {
     try {
       await props.onSave({
@@ -670,14 +689,12 @@ const updateCell = async (
       });
     } catch (error: any) {
       ElMessage.error(error.message || "保存失败");
-      // 保存失败，恢复原值
       row[prop] = oldValue;
       clearOldValue(row, prop);
       return;
     }
   }
 
-  // 触发事件
   emit("data-change", {
     row,
     column: prop,
@@ -686,10 +703,7 @@ const updateCell = async (
     rowIndex,
   });
 
-  // ★★★ 关键：触发数据更新 ★★★
   emitDataUpdate();
-
-  // 更新旧值为新值，以便下次编辑时比较
   setOldValue(row, prop, newValue);
 };
 
@@ -697,17 +711,14 @@ const updateCell = async (
  * 保存单元格（内置组件使用）
  */
 const handleSave = (row: any, column: EditableColumn, rowIndex: number) => {
-  // updateCell(row, column, rowIndex, row[column.prop!]);
   const prop = column.prop!;
   let value = row[prop];
 
-  // 如果是数字类型且值为空，转为 0
   if (column.editType === "number") {
     if (value === null || value === undefined || value === "") {
       value = column.defaultValue ?? 0;
       row[prop] = value;
     }
-    // 确保是数字类型
     if (typeof value !== "number") {
       value = Number(value) || 0;
       row[prop] = value;
@@ -719,7 +730,7 @@ const handleSave = (row: any, column: EditableColumn, rowIndex: number) => {
 
 // 处理单元格事件（透传给父组件）
 const handleCellEvent = (payload: any) => {
-  console.log("cell-event:", payload);
+  // 透传事件
 };
 
 /**
@@ -733,18 +744,78 @@ const handleCellClick = (
   emit("editable-cell-click", { row, column, rowIndex });
 };
 
-// ★★★ 核心修改：监听实际数据源 ★★★
+/**
+ * ★★★ 新增：获取树形数据中指定层级的所有节点ID ★★★
+ */
+const getExpandKeysByLevel = (
+  treeData: any[],
+  maxLevel: number = 2,
+  childrenKey: string = "children",
+): string[] => {
+  const keys: string[] = [];
+
+  const traverse = (nodes: any[], level: number = 1) => {
+    if (level > maxLevel || !nodes?.length) return;
+
+    for (const node of nodes) {
+      const hasChildren = node[childrenKey] && node[childrenKey].length > 0;
+
+      // 只有非叶子节点（有子节点）才需要展开
+      if (hasChildren) {
+        const id = node[props.rowKey] || node.id;
+        if (id !== undefined && id !== null) {
+          keys.push(String(id));
+        }
+        // 继续遍历下一层
+        if (level < maxLevel) {
+          traverse(node[childrenKey], level + 1);
+        }
+      }
+    }
+  };
+
+  traverse(treeData);
+  return keys;
+};
+
+/**
+ * ★★★ 新增：初始化展开状态（根据 defaultExpandLevel） ★★★
+ */
+const initExpandState = () => {
+  // ★★★ 关键：如果已经初始化过，直接返回 ★★★
+  if (isExpandInitialized.value) {
+    return;
+  }
+
+  const level = props.defaultExpandLevel || 0;
+  if (level > 0 && editableData.value?.length) {
+    const childrenKey = props.treeProps?.children || "children";
+    const keys = getExpandKeysByLevel(editableData.value, level, childrenKey);
+    internalExpandRowKeys.value = keys;
+
+    // 如果外部需要同步，发出事件
+    emit("update:expandRowKeys", keys);
+
+    // 标记为已初始化
+    isExpandInitialized.value = true;
+  }
+};
+const isExpandInitialized = ref(false);
+// ★★★ 监听实际数据源 ★★★
 watch(
   () => actualData.value,
   (newData) => {
     if (newData && newData.length) {
-      // ★★★ 使用深拷贝保持树形结构 ★★★
       editableData.value = deepCloneTree(newData);
-      // 重新初始化旧值
       initOldValues();
+      // 数据加载完成后初始化展开状态
+      nextTick(() => {
+        initExpandState();
+      });
     } else {
       editableData.value = [];
       clearAllOldValues();
+      internalExpandRowKeys.value = [];
     }
   },
   { immediate: true, deep: true },
@@ -754,14 +825,29 @@ watch(
 watch(
   () => props.columns,
   () => {
-    // 清空缓存
     cachedColumnsHash = "";
-    // 重新初始化旧值
     if (editableData.value.length) {
       initOldValues();
     }
   },
   { deep: false },
+);
+
+// 监听 defaultExpandLevel 变化
+watch(
+  () => props.defaultExpandLevel,
+  () => {
+    if (props.defaultExpandLevel > 0) {
+      nextTick(() => {
+        // initExpandState();
+        if (props.defaultExpandLevel > 0 && !isExpandInitialized.value) {
+          nextTick(() => {
+            initExpandState();
+          });
+        }
+      });
+    }
+  },
 );
 
 // 暴露方法给父组件
@@ -771,9 +857,11 @@ defineExpose({
   /** 刷新数据 */
   refresh: () => {
     if (actualData.value) {
-      // ★★★ 使用深拷贝 ★★★
       editableData.value = deepCloneTree(actualData.value);
       initOldValues();
+      nextTick(() => {
+        initExpandState();
+      });
     }
   },
   /** 获取 BaseTable 实例 */
@@ -784,6 +872,22 @@ defineExpose({
   clearChanges: () => {
     clearAllOldValues();
     initOldValues();
+  },
+  /** ★★★ 新增：展开指定层级的节点 ★★★ */
+  expandToLevel: (level: number) => {
+    if (editableData.value?.length) {
+      const childrenKey = props.treeProps?.children || "children";
+      const keys = getExpandKeysByLevel(editableData.value, level, childrenKey);
+      internalExpandRowKeys.value = keys;
+      emit("update:expandRowKeys", keys);
+    }
+  },
+  /** ★★★ 新增：获取当前展开的 keys ★★★ */
+  getExpandKeys: () => computedExpandRowKeys.value,
+  /** ★★★ 新增：设置展开的 keys ★★★ */
+  setExpandKeys: (keys: string[]) => {
+    internalExpandRowKeys.value = keys;
+    emit("update:expandRowKeys", keys);
   },
 });
 </script>
@@ -804,13 +908,11 @@ defineExpose({
     height: 28px;
   }
 
-  // 输入框基础样式
   :deep(.el-input__inner) {
     height: 28px;
     line-height: 28px;
   }
 
-  // 数字输入框样式
   :deep(.el-input-number) {
     width: 100%;
 
@@ -826,7 +928,6 @@ defineExpose({
     }
   }
 
-  // 选择器样式
   :deep(.el-select) {
     width: 100%;
 
@@ -841,7 +942,6 @@ defineExpose({
     }
   }
 
-  // 级联选择器样式
   :deep(.el-cascader) {
     width: 100%;
 
@@ -857,7 +957,6 @@ defineExpose({
     }
   }
 
-  // 日期选择器样式
   :deep(.el-date-editor) {
     width: 100%;
     height: 28px;
@@ -878,7 +977,6 @@ defineExpose({
     }
   }
 
-  // 日期范围选择器样式
   :deep(.el-date-editor--daterange),
   :deep(.el-date-editor--timerange),
   :deep(.el-date-editor--datetimerange) {
@@ -905,7 +1003,6 @@ defineExpose({
     }
   }
 
-  // 文本域样式
   :deep(.el-textarea) {
     .el-textarea__inner {
       border-radius: 0;
@@ -915,14 +1012,12 @@ defineExpose({
     }
   }
 
-  // 开关样式调整
   :deep(.el-switch) {
     display: inline-flex;
     align-items: center;
     height: 28px;
   }
 
-  // 单选组样式
   :deep(.el-radio-group) {
     display: inline-flex;
     flex-wrap: wrap;
@@ -939,23 +1034,19 @@ defineExpose({
     }
   }
 
-  // 可点击输入框样式
   .clickable-input-wrapper {
     :deep(.el-input__wrapper) {
       cursor: pointer;
-
-      &:hover {
-        // background-color: var(--el-fill-color);
-      }
     }
   }
 }
+
 .input-prefix-inner {
   color: var(--el-text-color-regular);
   font-weight: 500;
   font-size: 12px;
 }
-// 表格单元格样式
+
 :deep(.el-table) {
   .cell {
     padding: 0;

@@ -18,7 +18,7 @@ export const feePaymentApi = {
    * @param params.id 费用支付id
    * @returns
    */
-  geFeePaymentDetail: (params: { id: number; isWithBill?: boolean }) => {
+  geFeePaymentDetail: (params: { id: number; isWithFlow?: boolean }) => {
     return http.get("/ncon/feePayment/get", params);
   },
   // 新增非合同费用支付
@@ -56,5 +56,13 @@ export const feePaymentApi = {
    */
   createNconFeePaymentFlow: (data: { id: number }) => {
     return http.formPost("/ncon/flow/createNconFeePaymentFlow", data);
+  },
+
+  /**
+   * @name 通过非合同单据ID获取业务主表信息-轻量级
+   * @param params.nconBillId - 非合同单据ID
+   */
+  getNconInfoLite: (params: { nconBillId: number }) => {
+    return http.get("/ncon/getNconInfoLite", params);
   },
 };
