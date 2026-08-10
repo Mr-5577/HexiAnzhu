@@ -56,63 +56,6 @@
           </el-col>
         </el-row>
 
-        <!-- <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item prop="costAmt" label="目标成本总额(含税)" required>
-              <el-input-number
-                v-model="formData.costAmt"
-                :precision="2"
-                :min="0"
-                placeholder="请输入目标成本总额(含税)"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item
-              prop="costExclAmt"
-              label="目标成本总额(不含税)"
-              required
-            >
-              <el-input-number
-                v-model="formData.costExclAmt"
-                :precision="2"
-                :min="0"
-                placeholder="请输入目标成本总额(不含税)"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item prop="costDynAmt" label="动态成本总额(含税)" required>
-              <el-input-number
-                v-model="formData.costDynAmt"
-                :precision="2"
-                :min="0"
-                placeholder="请输入动态成本总额(含税)"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item
-              prop="costDynExclAmt"
-              label="动态成本总额(不含税)"
-              required
-            >
-              <el-input-number
-                v-model="formData.costDynExclAmt"
-                :precision="2"
-                :min="0"
-                placeholder="请输入动态成本总额(不含税)"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row> -->
-
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item prop="versionType" label="版本类型" required>
@@ -330,11 +273,6 @@ const initForm = () => {
 const changeProject = (value: number) => {
   if (value) {
     getAreaVersion(value);
-    // 通过模板引用获取节点数据
-    const checkedNodes = projCascaderRef.value?.getCheckedNodes();
-    if (checkedNodes && checkedNodes.length > 0) {
-      console.log("选中的项目数据:", checkedNodes);
-    }
   }
 };
 // 获取项目列表
@@ -365,6 +303,7 @@ const getAreaVersion = async (projId?: number) => {
   try {
     const res = await projectAreaApi.getAreaVerMList({
       projId: projId,
+      isOnlyEnable: true,
     });
     if (res.code === 200) {
       const list = res.data || [];

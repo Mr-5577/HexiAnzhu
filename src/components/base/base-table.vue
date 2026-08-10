@@ -157,7 +157,7 @@ export interface TableColumnItem<T = any> {
   /** 表头显示的文本内容 */
   label?: string;
   /** 列类型：selection（多选列）、index（序号列）、expand（可展开列）、action（操作列） */
-  type?: "selection" | "index" | "expand" | "action";
+  type?: "selection" | "index" | "expand" | "action" | 'string';
   /** 列宽度，支持像素(px)或百分比(%) */
   width?: string | number;
   /** 列最小宽度，支持像素(px)或百分比(%) */
@@ -227,7 +227,7 @@ export interface DictData {
 // 定义组件属性
 interface Props<T = any> {
   /** 列配置数组，定义表格的列结构、表头、属性和行为 */
-  columns: TableColumnItem<T>[];
+  columns: TableColumnItem<T>[] | any[];
   /** 表格数据数组，每行数据对应一个对象 */
   tableData: T[];
   /** 行数据的唯一标识字段，用于行选择和展开状态跟踪，默认为 'id' */

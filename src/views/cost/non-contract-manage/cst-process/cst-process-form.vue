@@ -111,6 +111,8 @@
           :warning-status="cstMData.allocWarn"
           :bizType="'NCON_PROC'"
           :projId="formData.projId"
+          :projName="formData.projName"
+          :displayName="formData.processName"
           :allocAmt="formData.processAmt"
           :bizBillId="processData.nconBillId"
           :cstMData="cstMData"
@@ -354,7 +356,8 @@ const changeProject = async (value: number) => {
     // 通过项目获取项目所属信息
     const res = await projectAreaApi.getInfoByProjId({ id: value });
     if (res.code === 200 && res.data) {
-      const { compName, compId, segId, segName } = res.data;
+      const { compName, compId, segId, segName, projName } = res.data;
+      formData.value.projName = projName || "";
       formData.value.compId = compId || "";
       formData.value.compName = compName || "";
       formData.value.segId = segId || "";
