@@ -44,27 +44,17 @@ export const payRegisterApi = {
     return http.get("/pay/confirm/list", params);
   },
   /**
-   * @name 按来源查询单个实付确认
-   * @param params.srcType 来源类型：   CON   建安支付：NCON_CST   费用支付：NCON_FEE
-   * @param params.paymentId 单据ID
-   */
-  getConfirmListBySrc: (params: { srcType: string; paymentId?: number }) => {
-    return http.get("/pay/confirm/getBySrc", params);
-  },
-  /**
    * @name 查询单个实付确认
-   * @param params.id 确认ID
+   * @param params.id 确认ID（优先）
+   * @param params.bizType 业务类型（当 id 为空时必填）：CON_PAY / NCON_CST / NCON_FEE
+   * @param params.bizBillId 业务单据ID（当 id 为空时必填）
    */
-  getConfirmDetail: (params: { id: number }) => {
+  getConfirmDetail: (params: { id?: number; bizType?: string; bizBillId?: number }) => {
     return http.get("/pay/confirm/get", params);
   },
-  /** 新增实付确认 */
-  addPayConfirm: (data: any) => {
-    return http.post("/pay/confirm/add", data);
-  },
-  /** 编辑实付确认 */
-  editPayConfirm: (data: any) => {
-    return http.post("/pay/confirm/edit", data);
+  /** 保存实付确认（id 为空新增，id 非空修改） */
+  savePayConfirm: (data: any) => {
+    return http.post("/pay/confirm/save", data);
   },
   /**
    * @name 删除实付确认
