@@ -19,7 +19,7 @@ export const cstPaymentApi = {
    * @param params.id 非合同建安支付id
    * @param params.isWithFlow 是否关联查询单据
    */
-  getCstPaymentDetail: (params: { id: number,isWithFlow?:boolean }) => {
+  getCstPaymentDetail: (params: { id: number; isWithFlow?: boolean }) => {
     return http.get("/ncon/cstPayment/get", params);
   },
   // 新增非合同建安支付
@@ -46,7 +46,7 @@ export const cstPaymentApi = {
   delCstPayment: (data: { id: number }) => {
     return http.formPost("/ncon/cstPayment/del", data);
   },
-    /**
+  /**
    * @name 作废非合同建安支付
    * @param data.id 非合同建安支付id
    */
@@ -68,5 +68,12 @@ export const cstPaymentApi = {
    */
   getAccumByProcessId: (params: { processId: number }) => {
     return http.get("/ncon/cstPayment/getAccum", params);
+  },
+  /**
+   * @name 发起/更新非合同建安支付审批流程
+   * @param data.id 非合同建安支付id
+   */
+  saveNconCstPaymentFlow: (data: { id: number; allowEdit?: boolean }) => {
+    return http.formPost("/ncon/flow/saveNconCstPaymentFlow", data);
   },
 };

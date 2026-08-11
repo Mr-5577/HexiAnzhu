@@ -152,7 +152,6 @@ const resolveBizRoute = async (
     case "CON_QZ":
     case "CON_PRE_SETTLE":
     case "CON_SETTLE":
-    case "NCON_CST":
     case "NCON_PROC": {
       if (subBizCode === "COST") {
         switch (mode) {
@@ -172,7 +171,7 @@ const resolveBizRoute = async (
         }
       }
       // 这里走单据详情页
-      const pageMode = `${bizItemCode}_${mode}`
+      const pageMode = `${bizItemCode}_${mode}`;
       return buildRoutePath(DEFAULT_ROUTE[pageMode], {
         billId,
       });
@@ -201,8 +200,25 @@ const resolveBizRoute = async (
             });
         }
       }
+      if (subBizCode === "COST") {
+        switch (mode) {
+          case "edit":
+            return buildRoutePath(COST_ROUTE[bizItemCode], {
+              billId, // 单据ID
+              bizType: bizItemCode, // 业务类型
+              mode: "edit",
+            });
+          case "view":
+          default:
+            return buildRoutePath(COST_ROUTE[bizItemCode], {
+              billId, // 单据ID
+              bizType: bizItemCode, // 业务类型
+              mode: "view",
+            });
+        }
+      }
       // 这里走单据详情页
-      const pageMode = `${bizItemCode}_${mode}`
+      const pageMode = `${bizItemCode}_${mode}`;
       return buildRoutePath(DEFAULT_ROUTE[pageMode], {
         billId,
       });

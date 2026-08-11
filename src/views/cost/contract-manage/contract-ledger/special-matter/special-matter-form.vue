@@ -466,12 +466,6 @@ const initOptions = async () => {
 // 选择项目
 const changeProject = (value: number) => {
   console.log(value);
-  if (value) {
-    const checkedNodes = projCascaderRef.value?.getCheckedNodes();
-    if (checkedNodes && checkedNodes.length > 0) {
-      console.log("选中的项目数据:", checkedNodes);
-    }
-  }
 };
 // 附件上传成功
 const handleUploadSuccess = (fileList: any) => {

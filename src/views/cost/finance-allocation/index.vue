@@ -15,7 +15,7 @@
           <el-button
             type="primary"
             :loading="submitLoading"
-            v-if="!props.isDialogMode && !isDetail"
+            v-if="!props.isDialogMode && !isView"
             @click="handleSubmit"
           >
             确认分摊
@@ -39,7 +39,7 @@
         <template #expand="{ row }">
           <div class="expand-table-wrapper">
             <div class="expand-title">拆分明细</div>
-            <template v-if="!isDetail">
+            <template v-if="!isView">
               <editable-table
                 ref="getDedTableRef(row)"
                 :row-key="'uuid'"
@@ -119,6 +119,7 @@ import { buildTree } from "@/utils/tree";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import { financeAllocationApi } from "@/api/cost/contract-manage/finance-allocation-api";
 import { feePaymentApi } from "@/api/cost/non-contract-manage/fee-payment-api";
+import { cstProcessApi } from "@/api/cost/non-contract-manage/cst-process-api";
 
 defineOptions({ name: "finance-allocation" });
 
@@ -144,27 +145,23 @@ const route = useRoute();
 // 合同单据ID
 const billId = route.query?.billId ? Number(route.query.billId) : undefined;
 // 业务类型，例：NCON_FEE
-const bizType = route.query?.bizType ? route.query.bizType : undefined;
+const bizType = route.query?.bizType ? route.query.bizType : "";
 
 const isEdit = computed(() => {
   return route.query.mode == "edit";
 });
-const isDetail = computed(() => {
+const isView = computed(() => {
   return route.query.mode == "view" || props.dialogMode == "view";
 });
 
 const lightweightDetail = ref({
   nconBillId: undefined,
+  bizId: undefined,
   bizItemCode: "",
   bizItemName: "",
   bizNo: "",
   bizTitle: "",
-  fee: {
-    id: undefined,
-    nconBillId: undefined,
-    segId: undefined,
-    projId: undefined,
-  },
+  status: 0,
 });
 
 const submitLoading = ref(false);
@@ -417,25 +414,47 @@ const validateData = () => {
 // 提交确认支付
 const handleSubmit = async () => {
   console.log("提交数据:", mainTableData.value);
-  debugger;
   const allValid = validateData();
   if (allValid) {
     submitLoading.value = true;
-    const detailList = mainTableData.value.flatMap((item) => item.finaDs || []);
+
+    const detailList =
+      mainTableData.value?.flatMap((item) => item.finaDs ?? []) ?? [];
+    const newData = detailList.map((item) => ({
+      ...item,
+      allocStatus: 1, // 分摊状态,0-未分摊 1-已分摊 2-部分分摊
+    }));
 
     try {
       let res;
-      // 根据业务类型选择接口
       if (bizType === "CON_PAY") {
-        // 合同费用分摊保存
-        res = await financeAllocationApi.saveConAlloc(detailList);
-      } else if (bizType === "NCON_CST" || bizType === "NCON_FEE") {
-        // 非合同费用分摊
-        res = await financeAllocationApi.saveNconAlloc(detailList);
+        // 合同财务分摊
+        res = await financeAllocationApi.saveConAlloc(newData);
+      } else if (bizType === "NCON_CST") {
+        // 非合同建安支付财务分摊
+        res = await financeAllocationApi.saveNconAlloc(newData);
+        if (res.code === 200) {
+          // 分摊成功后更新流程
+          res = await cstProcessApi.saveNconCstProcessFlow({
+            id: lightweightDetail.value.bizId,
+            allowEdit: true,
+          });
+        }
+      } else if (bizType === "NCON_FEE") {
+        // 非合同费用支付财务分摊
+        res = await financeAllocationApi.saveNconAlloc(newData);
+        if (res.code === 200) {
+          // 分摊成功后更新流程
+          res = await feePaymentApi.saveNconFeePaymentFlow({
+            id: lightweightDetail.value.bizId,
+            allowEdit: true,
+          });
+        }
       } else {
         throw new Error(`未知的业务类型: ${bizType}`);
       }
-      if (res.code === 200) {
+
+      if (res?.code === 200) {
         ElMessage.success("保存成功");
       }
     } catch (error) {
@@ -488,7 +507,7 @@ const processData = (list) => {
         }));
       } else {
         // 没有数据：添加一行默认数据
-        if(!isDetail.value) {
+        if (!isView.value) {
           finaDs = [
             {
               uuid: uuidv4(),
@@ -512,6 +531,7 @@ const processData = (list) => {
     mainTableData.value = data; // 将处理后的数据赋值给 tableData
   }
 };
+
 // 获取轻量级的合同/非合同财务分摊详情
 const getNconDetail = async () => {
   if (!billId) return;
@@ -519,10 +539,20 @@ const getNconDetail = async () => {
     const res = await feePaymentApi.getNconInfoLite({ nconBillId: billId });
     console.log("详情", res);
     if (res.code == 200 && res.data) {
-      const { fee } = res.data;
+      // 定义字段映射,非合同查看详情返回的字段名映射
+      const fieldMapping = {
+        NCON_CST: "payment", // 非合同建安支付
+        NCON_FEE: "fee", // 费用报销
+        CON_PAY: "payment", // 合同支付
+      };
       lightweightDetail.value = { ...lightweightDetail.value, ...res.data };
-      await getFinaOrgListBySegId(fee?.segId); // 获取业务板块下的费用组织
-      await getFinaSubjectListBySegId(fee?.segId); // 获取业务板块下的费用科目
+      // 获取对应的字段名
+      const dataKey = fieldMapping[bizType as string] || "";
+      const detailData = dataKey ? res.data[dataKey] || null : null;
+      if (detailData) {
+        await getFinaOrgListBySegId(detailData?.segId); // 获取业务板块下的费用组织
+        await getFinaSubjectListBySegId(detailData?.segId); // 获取业务板块下的费用科目
+      }
       // 根据业务类型获取对应详情
       switch (bizType) {
         case "NCON_CST": // 非合同建安支付

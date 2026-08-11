@@ -56,7 +56,7 @@ export const costAllocationApi = {
     return http.post("/con/main/autoAlloc", data);
   },
   /** 保存项目成本分摊（主从表） */
-  saveProjectAlloc: (data: SaveCostAllocationDTO) => {
+  saveProjectAlloc: (data: any) => {
     return http.post("/cost/projectAlloc/save", data);
   },
   /**

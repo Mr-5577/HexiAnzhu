@@ -226,6 +226,7 @@ const handleAdd = () => {
  * 删除
  */
 const handleDelete = async (row) => {
+  console.log(row);
   await ElMessageBox.confirm(`确定删除"${row.subName}"吗？`, "提示", {
     confirmButtonText: "确认",
     cancelButtonText: "取消",

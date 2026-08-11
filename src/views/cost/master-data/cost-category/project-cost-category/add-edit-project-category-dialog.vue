@@ -169,7 +169,6 @@ const flatAndUnique = (paths) => {
 
 // 提交
 const handleSubmit = async () => {
-  console.log("handleSubmit", cascaderRef.value?.getCheckedNodes());
   if (!formRef.value) return;
   try {
     await formRef.value.validate();

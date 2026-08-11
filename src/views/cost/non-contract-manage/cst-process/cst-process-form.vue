@@ -116,6 +116,7 @@
           :allocAmt="formData.processAmt"
           :bizBillId="processData.nconBillId"
           :cstMData="cstMData"
+          :dialogMode="isDetail ? 'view' : 'edit'"
           @selectData="getSelectCostAllocation"
         />
 

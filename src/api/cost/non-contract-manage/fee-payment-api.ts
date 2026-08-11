@@ -44,7 +44,6 @@ export const feePaymentApi = {
   /**
    * @name 删除非合同费用支付
    * @param data.id 非合同费用支付id
-   * @returns
    */
   delFeePayment: (data: { id: number }) => {
     return http.formPost("/ncon/feePayment/del", data);
@@ -52,7 +51,6 @@ export const feePaymentApi = {
   /**
    * @name 发起非合同费用支付审批流程
    * @param data.id 非合同费用支付id
-   * @returns
    */
   createNconFeePaymentFlow: (data: { id: number }) => {
     return http.formPost("/ncon/flow/createNconFeePaymentFlow", data);
@@ -64,5 +62,12 @@ export const feePaymentApi = {
    */
   getNconInfoLite: (params: { nconBillId: number }) => {
     return http.get("/ncon/getNconInfoLite", params);
+  },
+  /**
+   * @name 发起/更新非合同费用报销审批流程
+   * @param data.id 费用报销ID
+   */
+  saveNconFeePaymentFlow: (data: { id: number; allowEdit?: boolean }) => {
+    return http.formPost("/ncon/flow/saveNconFeePaymentFlow", data);
   },
 };

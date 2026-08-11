@@ -319,6 +319,7 @@
               size="small"
               :disabled="payWayTable.length == 0"
               @click="handleFinanceAlloc"
+              v-if="!isAdd"
             >
               财务分摊
             </el-button>
@@ -485,11 +486,17 @@
         <!-- 成本分摊 费用类型所属大类为建安类并且请款类型为正常请款0时显示  -->
         <CostAllocationCard
           :visible="isShowCostAllocation && formData.reqType == 0"
-          :allocation-status="0"
-          :warning-status="0"
+          :allocation-status="cstMData.allocStatus"
+          :warning-status="cstMData.allocStatus"
           :bizType="'NCON_CST'"
-          :projId="paymentData.projId"
+          :projId="formData.projId"
+          :projName="formData.projName"
+          :displayName="cstProcessData.processName"
+          :allocAmt="actualReqAmt"
           :bizBillId="paymentData.nconBillId"
+          :cstMData="cstMData"
+          :dialogMode="isDetail ? 'view' : 'edit'"
+          @selectData="getSelectCostAllocation"
         />
 
         <!-- 相关附件 -->
@@ -540,14 +547,14 @@
       @success="handleInvoiceDetailSuccess"
     />
 
-    <!-- 财务分摊 -->
+    <!-- 财务分摊 :dialogMode="isDetail ? 'view' : 'edit'" -->
     <FinanceAllocationDialog
       ref="financeAllocationDialogRef"
       v-model="financeAllocVisible"
       :payWayTable="payWayTable"
       :segId="formData.segId"
       :projId="formData.projId"
-      :dialogMode="isDetail ? 'view' : 'edit'"
+      :dialogMode="'view'"
       @select="getFinaList"
     ></FinanceAllocationDialog>
   </div>
@@ -627,6 +634,19 @@ const feeTypeFlatOptions = ref([]);
 const annexFileList = ref([]);
 const uploadVisibleDialog = ref(false);
 const financeAllocVisible = ref(false); // 财务分摊弹窗
+// 成本分摊明细数据
+const cstMData = ref({
+  id: undefined,
+  projId: undefined,
+  bizType: "",
+  bizBillId: undefined,
+  bizKeyId: 0,
+  allocAmt: "",
+  allocExclAmt: "",
+  allocStatus: undefined,
+  allocWarn: undefined,
+  allocDs: [], // 分摊明细
+});
 
 const cstProcessData = ref({
   id: undefined,
@@ -707,7 +727,14 @@ const isShowCostAllocation = computed(() => {
   // 如果大类存在且 finaTypeCode === '03'（建安类），则显示成本分摊
   return !!(largeData && largeData.finaTypeCode === "03");
 });
-
+const getSelectCostAllocation = (data: any) => {
+  console.log("选中的成本分摊数据:", data);
+  cstMData.value.allocAmt = data.allocAmt;
+  cstMData.value.allocExclAmt = data.allocExclAmt;
+  cstMData.value.allocStatus = data.allocStatus;
+  cstMData.value.allocWarn = data.allocWarn;
+  cstMData.value.allocDs = data?.allocDs || [];
+};
 const { getDictList, getDictTree, loadDicts } = useDict(
   [dictMapping.payType, dictMapping.dedType],
   {
@@ -1570,16 +1597,6 @@ const getSegOptions = async () => {
   }
 };
 
-// 加载成本分摊数据
-const loadCostAllocation = async () => {
-  if (!paymentData.value.id) return;
-  try {
-    // 获取成本分摊数据的接口
-  } catch (error) {
-    console.error("获取成本分摊数据失败:", error);
-  }
-};
-
 const loadDetail = async () => {
   if (!props.cstPaymentId) return;
   const res = await cstPaymentApi.getCstPaymentDetail({
@@ -1598,7 +1615,7 @@ const backfillData = async (data) => {
     invoiceMs,
     deds,
     costAllocs,
-    finaDs,
+    cstM,
     annexList,
     flowBase,
     bill,
@@ -1636,6 +1653,7 @@ const backfillData = async (data) => {
   paymentData.value = { ...paymentData.value, ...payment };
   flowBaseData.value = { ...flowBaseData.value, ...flowBase };
   flowListData.value = { ...flowListData.value, ...flowList };
+  cstMData.value = { ...cstMData.value, ...cstM };
 
   if (payment.segId) {
     getpayTypeOptions(payment.segId);
@@ -1679,7 +1697,7 @@ const backfillData = async (data) => {
 };
 
 const buildSaveParams = () => {
-  const bill = {
+  let bill = {
     ...billData.value,
     id: billData.value.id || undefined,
     bizTitle: formData.value.bizTitle,
@@ -1774,6 +1792,15 @@ const buildSaveParams = () => {
         bankAccount: item.bankAccount || "",
       }));
 
+  let cstM = null;
+  if (cstMData.value?.allocDs && cstMData.value.allocDs?.length > 0) {
+    cstM = {
+      ...cstMData.value,
+      projId: formData.value.projId,
+      bizType: "NCON_CST",
+    };
+  }
+
   return {
     bill: bill,
     payment: payment,
@@ -1781,8 +1808,8 @@ const buildSaveParams = () => {
     invoiceMs: invoiceMs.length > 0 ? invoiceMs : [],
     payWays: payWays.length > 0 ? payWays : [],
     finaDs: [], // 财务分摊
-    costAllocs: [], // 成本分摊
     annexList: annexFileList.value || [],
+    cstM: cstM, // 成本分摊
   };
 };
 
@@ -1921,8 +1948,6 @@ const handleSave = async () => {
       const res = await cstPaymentApi.saveCstPayment(params);
       if (res.code === 200 && res.data) {
         paymentData.value.id = res.data;
-        // 保存成功后加载成本分摊数据
-        await loadCostAllocation();
         ElMessage.success("保存成功");
       }
     } catch (error) {
@@ -2156,8 +2181,6 @@ onMounted(async () => {
     });
   } else {
     await loadDetail();
-    // 加载成本分摊数据
-    await loadCostAllocation();
   }
 });
 </script>

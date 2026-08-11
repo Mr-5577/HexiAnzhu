@@ -164,7 +164,8 @@ const extractQueryParams = (tag: TagView) => {
 
 // 关闭选中的标签
 const closeSelectedTag = (tag: TagView) => {
-  // 删除标签（缓存会自动由 layout 中的 computed 清理）
+  const isActiveTag = isActive(tag);
+  
   tagsStore.delView(tag);
 
   if (isActive(tag)) {

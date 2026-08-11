@@ -191,6 +191,7 @@
               size="small"
               :disabled="payWayTable.length == 0"
               @click="handleFinanceAlloc"
+              v-if="!isAdd"
             >
               财务分摊
             </el-button>
@@ -392,14 +393,14 @@
       @success="handleInvoiceDetailSuccess"
     />
 
-    <!-- 财务分摊 -->
+    <!-- 财务分摊  :dialogMode="isDetail ? 'view' : 'edit'" -->
     <FinanceAllocationDialog
       ref="financeAllocationDialogRef"
       v-model="financeAllocVisible"
       :payWayTable="payWayTable"
       :segId="formData.segId"
       :projId="formData.projId"
-      :dialogMode="isDetail ? 'view' : 'edit'"
+      :dialogMode="'view'"
       @select="getFinaList"
     ></FinanceAllocationDialog>
   </div>
