@@ -166,7 +166,7 @@ const resolveBizRoute = async (
             return buildRoutePath(COST_ROUTE[bizItemCode], {
               billId, // 单据ID
               bizType: bizItemCode, // 业务类型
-              mode: "view",
+              mode: "edit",
             });
         }
       }
@@ -196,7 +196,7 @@ const resolveBizRoute = async (
             return buildRoutePath(`${FINA_ROUTE[bizItemCode]}`, {
               billId, // 单据ID
               bizType: bizItemCode, // 业务类型
-              mode: "view",
+              mode: "edit",
             });
         }
       }
@@ -213,7 +213,7 @@ const resolveBizRoute = async (
             return buildRoutePath(COST_ROUTE[bizItemCode], {
               billId, // 单据ID
               bizType: bizItemCode, // 业务类型
-              mode: "view",
+              mode: "edit",
             });
         }
       }

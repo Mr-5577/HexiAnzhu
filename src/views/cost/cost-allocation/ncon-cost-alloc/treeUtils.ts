@@ -47,7 +47,7 @@ export function removeNodeFromTree<T extends { id: number; children?: T[] }>(
  * 遍历树形数据
  */
 export function traverseTree<T>(
-  tree: T[],
+  tree: any[],
   callback: (node: T, path: T[]) => boolean | void,
   path: T[] = [],
 ): boolean {

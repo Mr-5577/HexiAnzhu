@@ -118,14 +118,6 @@ export function useAllocationActions(
 
     const { row, column, newValue, oldValue, rowIndex } = data;
 
-    console.log('========== handleSave 调试 ==========');
-  console.log('column 类型:', typeof column);
-  console.log('column 值:', column);
-  console.log('column 字符串:', String(column));
-  console.log('row:', row);
-  console.log('newValue:', newValue);
-  console.log('=====================================');
-
     // column 可能是字符串，也可能是对象，需要兼容处理
     const columnName =
       typeof column === "string" ? column : column?.prop || column?.key || "";
@@ -372,7 +364,7 @@ export function useAllocationActions(
       return false;
     }
 
-    const leaves = getLeafNodes(treeData.value);
+    const leaves: any = getLeafNodes(treeData.value);
 
     // 检查是否所有叶子都有金额
     const hasZero = leaves.some(
