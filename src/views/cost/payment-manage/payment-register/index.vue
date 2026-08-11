@@ -176,6 +176,7 @@
       v-model="viewDialog"
       :currentRow="currentRow"
       :queryParams="queryParams"
+      @success="handleSearch"
     />
   </div>
 </template>

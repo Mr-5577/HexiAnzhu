@@ -1924,6 +1924,7 @@ const getProcessData = async () => {
 };
 
 const handleSave = async () => {
+  if(submitLoading.value) return
   paymentFormRef.value.validate(async (valid: boolean) => {
     if (!valid) {
       ElMessage.error("请检查表单！");

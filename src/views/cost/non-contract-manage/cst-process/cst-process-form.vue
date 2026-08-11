@@ -507,6 +507,7 @@ const buildSaveParams = () => {
 // 保存
 const handleSave = async () => {
   console.log("保存表单", formData.value);
+  if(submitLoading.value) return
   if (!formRef.value) return;
   try {
     await formRef.value.validate();
