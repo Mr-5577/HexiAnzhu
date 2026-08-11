@@ -57,7 +57,7 @@ export const createProcessColumns = (): ComputedRef<EditableColumn[]> =>
       min: -Infinity,
     },
     {
-      prop: "visaApplyDate",
+      prop: "srcApplyDate",
       label: "业务日期",
       editable: true,
       editType: "date",

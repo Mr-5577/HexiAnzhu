@@ -55,14 +55,14 @@ const tableData = ref([]);
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "itemName", label: "项目名称" },
+  { prop: "itemName", label: "项目名称" ,width : 200},
   { prop: "size", label: "规格" },
   { prop: "unit", label: "单位" },
   { prop: "num", label: "数量" },
-  { prop: "price", label: "单价" },
-  { prop: "totalAmt", label: "金额" },
-  { prop: "taxRate", label: "税率" },
-  { prop: "taxAmt", label: "税额" },
+  { prop: "price", label: "单价" ,formatType:"#,##0.00"},
+  { prop: "totalAmt", label: "金额" ,formatType:"#,##0.00"},
+  { prop: "taxRate", label: "税率" ,formatType:"100*d%"},
+  { prop: "taxAmt", label: "税额" ,formatType:"#,##0.00"},
 ];
 
 const dynamicColumns = computed<EditableColumn[]>(() => [

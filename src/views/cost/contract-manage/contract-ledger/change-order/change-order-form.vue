@@ -278,7 +278,7 @@ import { v4 as uuidv4 } from "uuid";
 // —— 组件 ——
 import BaseUpload from "@/components/base/base-upload.vue";
 import FormCard from "@/components/base/base-form-card.vue";
-import ChooseConDialog from "./choose-con-dialog.vue";
+import ChooseConDialog from "@/components/business/choose-contract-dialog.vue";
 import DetailTableCard from "@/components/base/detail-table-card.vue";
 
 // —— 常量 / 枚举 ——

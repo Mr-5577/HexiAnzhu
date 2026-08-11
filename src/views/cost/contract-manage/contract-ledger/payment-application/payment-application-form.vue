@@ -728,7 +728,7 @@
                   <el-button
                     link
                     type="primary"
-                    :disabled="!row.annexId || row.isValid === true"
+                    :disabled="!row.annexId "
                     @click="handleInspect(row)"
                   >
                     查验
@@ -918,7 +918,7 @@ import { isJianAnByFeeType } from "@/composables/use-fee";
 import { getOptionsLabelById } from "@/utils/enum";
 import { moneyRule, requiredInputRule, requiredRule } from "@/utils/form-rule-validate";
 import { buildTree } from "@/utils/tree";
-import { useInvoiceRecognition } from "@/composables/use-Invc-verif";
+import { invcRecognitionRefresh, useInvoiceRecognition } from "@/composables/use-Invc-verif";
 
 // ============================================================
 // 路由 / 状态仓库 实例化
@@ -1348,7 +1348,7 @@ const getRecogStatusText = (status: number) => {
 };
 
 // 通用：按 uuid 更新子表某一行
-const updateRow = (rowIndex: number, data: any) => {
+const updateInvcMRow = (rowIndex: number, data: any) => {
   Object.assign(invoiceMTable.value[rowIndex], data);
   invoiceMTable.value = [...invoiceMTable.value];
 };
@@ -1543,152 +1543,152 @@ const getInvcData = async (fileList: any) => {
   if (uniqueRows.length > 0) invoiceMTable.value.push(...uniqueRows);
 }
 
-// 获取上传的发票
-const getAnnexFileList = async (fileList: any) => {
-  console.log("上传的发票", fileList);
-  if (fileList && fileList.length > 0) {
-    const notify = ElNotification({
-      title: "发票识别中",
-      message: `正在识别 ${fileList.length} 张发票，请稍候...`,
-      type: "info",
-      duration: 0, // 不自动关闭
-      position: "top-right",
-    });
-    try {
-      await batchInvoiceRecognition(fileList);
-      notify.close();
-      ElNotification({
-        title: "识别完成",
-        message: `成功识别 ${fileList.length} 张发票！`,
-        type: "success",
-        duration: 3000,
-        position: "top-right",
-      });
-    } catch (error) {
-      ElMessage.error("发票识别失败");
-    } finally {
-      notify.close();
-    }
-  }
-};
+// // 获取上传的发票
+// const getAnnexFileList = async (fileList: any) => {
+//   console.log("上传的发票", fileList);
+//   if (fileList && fileList.length > 0) {
+//     const notify = ElNotification({
+//       title: "发票识别中",
+//       message: `正在识别 ${fileList.length} 张发票，请稍候...`,
+//       type: "info",
+//       duration: 0, // 不自动关闭
+//       position: "top-right",
+//     });
+//     try {
+//       await batchInvoiceRecognition(fileList);
+//       notify.close();
+//       ElNotification({
+//         title: "识别完成",
+//         message: `成功识别 ${fileList.length} 张发票！`,
+//         type: "success",
+//         duration: 3000,
+//         position: "top-right",
+//       });
+//     } catch (error) {
+//       ElMessage.error("发票识别失败");
+//     } finally {
+//       notify.close();
+//     }
+//   }
+// };
 
-// 批量识别发票
-const batchInvoiceRecognition = async (invoiceDataList: any[]) => {
-  const recognitionPromises = invoiceDataList.map(async (item) => {
-    return await invoiceRecognition(item.id, item.annexName);
-  });
+// // 批量识别发票
+// const batchInvoiceRecognition = async (invoiceDataList: any[]) => {
+//   const recognitionPromises = invoiceDataList.map(async (item) => {
+//     return await invoiceRecognition(item.id, item.annexName);
+//   });
 
-  try {
-    const results: any = await Promise.allSettled(recognitionPromises);
-    console.log("识别结果List", results);
+//   try {
+//     const results: any = await Promise.allSettled(recognitionPromises);
+//     console.log("识别结果List", results);
 
-    if (results && results.length > 0) {
-      const newData = results.map((result, index) => {
-        if (result.status === "fulfilled") {
-          return {
-            ...result.value,
-            uuid: uuidv4(),
-            id: undefined,
-            srcType: formType.CON_PAY,
-            conBillId: formData.value.conBillId,
-          };
-        } else {
-          const originalItem = invoiceDataList[index];
-          return {
-            annexId: originalItem.id,
-            annexName: originalItem.annexName,
-            uuid: uuidv4(),
-            id: undefined,
-            srcType: formType.CON_PAY,
-            conBillId: formData.value.conBillId,
-            invNo: undefined,
-            invDate: undefined,
-            totalAmt: 0,
-            notTaxAmt: 0,
-            taxAmt: 0,
-            invType: "",
-            invoiceDs: [],
-          };
-        }
-      });
-      invoiceMTable.value = [...invoiceMTable.value, ...newData];
-    }
-  } catch (error) {
-    console.error("批量识别发票失败:", error);
-  }
-};
+//     if (results && results.length > 0) {
+//       const newData = results.map((result, index) => {
+//         if (result.status === "fulfilled") {
+//           return {
+//             ...result.value,
+//             uuid: uuidv4(),
+//             id: undefined,
+//             srcType: formType.CON_PAY,
+//             conBillId: formData.value.conBillId,
+//           };
+//         } else {
+//           const originalItem = invoiceDataList[index];
+//           return {
+//             annexId: originalItem.id,
+//             annexName: originalItem.annexName,
+//             uuid: uuidv4(),
+//             id: undefined,
+//             srcType: formType.CON_PAY,
+//             conBillId: formData.value.conBillId,
+//             invNo: undefined,
+//             invDate: undefined,
+//             totalAmt: 0,
+//             notTaxAmt: 0,
+//             taxAmt: 0,
+//             invType: "",
+//             invoiceDs: [],
+//           };
+//         }
+//       });
+//       invoiceMTable.value = [...invoiceMTable.value, ...newData];
+//     }
+//   } catch (error) {
+//     console.error("批量识别发票失败:", error);
+//   }
+// };
 
-// 发票识别
-const invoiceRecognition = async (annexId: number, annexName: string) => {
-  try {
-    const res = await commonApi.recognizeAndCheckInvoice({ annexId: annexId });
-    console.log("识别结果", res);
-    if (res.code === 200 && res.data) {
-      const { finalData } = res.data;
-      if (finalData) {
-        let detailListData = [];
-        if (finalData.InvoiceProducts && finalData.InvoiceProducts.length > 0) {
-          finalData.InvoiceProducts.forEach((item: any) => {
-            detailListData.push({
-              itemName: item.Name,
-              size: item.SpecModel,
-              unit: item.MeasureUnit,
-              num: item.Qty,
-              price: item.Price,
-              totalAmt: item.Amount,
-              taxRate: item.TaxRate,
-              taxAmt: item.TaxPrice,
-            });
-          });
-        }
-        const newData = {
-          annexId: annexId,
-          annexName: annexName,
-          invNo: finalData.InvoiceNumber,
-          invDate: finalData.InvoiceDate,
-          totalAmt: finalData.Amount,
-          notTaxAmt: finalData.TotalPrice,
-          taxAmt: finalData.TotalTaxPrice,
-          invType: finalData.InvoiceCategoryName,
-          buyerCompany: finalData.BuyerCompany,
-          buyerTaxCode: finalData.BuyerTaxCode,
-          sellerCompany: finalData.InvoiceCompany,
-          sellerTaxCode: finalData.TaxpayerCode,
-          isValid: finalData.InvoiceValidate == 1 ? true : false,
-          validateMsg: finalData.ValidateMsg,
-          ocrRes: finalData.OCRRes || "",
-          validateRes: finalData.ValidateRes || "",
-          status:
-            finalData.InvoiceValidate == 1
-              ? 1
-              : finalData.InvoiceValidate == 0
-                ? 2
-                : 0,
-          invoiceDs: detailListData,
-        };
-        return newData;
-      } else {
-        return {
-          annexId: annexId,
-          annexName: annexName,
-          invoiceDs: [],
-        };
-      }
-    } else {
-      return {
-        annexId: annexId,
-        annexName: annexName,
-        invoiceDs: [],
-      };
-    }
-  } catch (error) {
-    return {
-      annexId: annexId,
-      annexName: annexName,
-      invoiceDs: [],
-    };
-  }
-};
+// // 发票识别
+// const invoiceRecognition = async (annexId: number, annexName: string) => {
+//   try {
+//     const res = await commonApi.recognizeAndCheckInvoice({ annexId: annexId });
+//     console.log("识别结果", res);
+//     if (res.code === 200 && res.data) {
+//       const { finalData } = res.data;
+//       if (finalData) {
+//         let detailListData = [];
+//         if (finalData.InvoiceProducts && finalData.InvoiceProducts.length > 0) {
+//           finalData.InvoiceProducts.forEach((item: any) => {
+//             detailListData.push({
+//               itemName: item.Name,
+//               size: item.SpecModel,
+//               unit: item.MeasureUnit,
+//               num: item.Qty,
+//               price: item.Price,
+//               totalAmt: item.Amount,
+//               taxRate: item.TaxRate,
+//               taxAmt: item.TaxPrice,
+//             });
+//           });
+//         }
+//         const newData = {
+//           annexId: annexId,
+//           annexName: annexName,
+//           invNo: finalData.InvoiceNumber,
+//           invDate: finalData.InvoiceDate,
+//           totalAmt: finalData.Amount,
+//           notTaxAmt: finalData.TotalPrice,
+//           taxAmt: finalData.TotalTaxPrice,
+//           invType: finalData.InvoiceCategoryName,
+//           buyerCompany: finalData.BuyerCompany,
+//           buyerTaxCode: finalData.BuyerTaxCode,
+//           sellerCompany: finalData.InvoiceCompany,
+//           sellerTaxCode: finalData.TaxpayerCode,
+//           isValid: finalData.InvoiceValidate == 1 ? true : false,
+//           validateMsg: finalData.ValidateMsg,
+//           ocrRes: finalData.OCRRes || "",
+//           validateRes: finalData.ValidateRes || "",
+//           status:
+//             finalData.InvoiceValidate == 1
+//               ? 1
+//               : finalData.InvoiceValidate == 0
+//                 ? 2
+//                 : 0,
+//           invoiceDs: detailListData,
+//         };
+//         return newData;
+//       } else {
+//         return {
+//           annexId: annexId,
+//           annexName: annexName,
+//           invoiceDs: [],
+//         };
+//       }
+//     } else {
+//       return {
+//         annexId: annexId,
+//         annexName: annexName,
+//         invoiceDs: [],
+//       };
+//     }
+//   } catch (error) {
+//     return {
+//       annexId: annexId,
+//       annexName: annexName,
+//       invoiceDs: [],
+//     };
+//   }
+// };
 
 // 查验
 const handleInspect = async (row: any) => {
@@ -1696,79 +1696,13 @@ const handleInspect = async (row: any) => {
     ElMessage.warning("暂无发票！");
     return;
   }
-  const notify = ElNotification({
-    title: "发票查验中",
-    message: "正在查验发票，请稍候...",
-    type: "info",
-    duration: 0,
-    position: "top-right",
-  });
-  try {
-    const res = await commonApi.recognizeAndCheckInvoice({
-      annexId: row.annexId,
-    });
-    notify.close();
-    console.log("识别查验结果", res);
-    if (res.code === 200 && res.data) {
-      const { checkData, finalData, recognizeData } = res.data;
-      if (finalData) {
-        const recogniRowIndex = invoiceMTable.value.findIndex(
+
+  const invcData = await invcRecognitionRefresh(row);  
+  
+  const recogniRowIndex = invoiceMTable.value.findIndex(
           (item) => item.uuid == row.uuid,
         );
-        let detailListData = [];
-        if (finalData.InvoiceProducts && finalData.InvoiceProducts.length > 0) {
-          finalData.InvoiceProducts.forEach((item: any) => {
-            detailListData.push({
-              itemName: item.Name,
-              size: item.SpecModel,
-              unit: item.MeasureUnit,
-              num: item.Qty,
-              price: item.Price,
-              totalAmt: item.Amount,
-              taxRate: item.TaxRate,
-              taxAmt: item.TaxPrice,
-            });
-          });
-        }
-        const newData = {
-          annexId: row.annexId,
-          annexName: row.annexName,
-          invNo: finalData.InvoiceNumber,
-          invDate: finalData.InvoiceDate,
-          totalAmt: finalData.Amount,
-          notTaxAmt: finalData.TotalPrice,
-          taxAmt: finalData.TotalTaxPrice,
-          invType: finalData.InvoiceCategoryName,
-          buyerCompany: finalData.BuyerCompany,
-          buyerTaxCode: finalData.BuyerTaxCode,
-          sellerCompany: finalData.InvoiceCompany,
-          sellerTaxCode: finalData.TaxpayerCode,
-          isValid: finalData.InvoiceValidate == 1 ? true : false,
-          validateMsg: finalData.ValidateMsg,
-          ocrRes: recognizeData ? JSON.stringify(recognizeData) : "",
-          validateRes: checkData ? JSON.stringify(checkData) : "",
-          status:
-            finalData.InvoiceValidate == 1
-              ? 1
-              : finalData.InvoiceValidate == 0
-                ? 2
-                : 0,
-          invoiceDs: detailListData,
-        };
-        updateRow(recogniRowIndex, newData);
-        ElNotification({
-          title: "查验成功",
-          message: "已查验到发票相关信息",
-          type: "success",
-          duration: 3000,
-          position: "top-right",
-        });
-      }
-    }
-  } catch (error) {
-  } finally {
-    notify.close();
-  }
+  updateInvcMRow(recogniRowIndex, invcData);
 };
 
 const detailInvoiceM = (row) => {
@@ -1783,7 +1717,7 @@ const handleInvoiceDetailSuccess = (data) => {
       (item) => item.id == currInvoiceD.invMid,
     );
     if (recogniRowIndex !== -1) {
-      updateRow(recogniRowIndex, { invoiceDs: data });
+      updateInvcMRow(recogniRowIndex, { invoiceDs: data });
     }
   }
 };
@@ -1831,12 +1765,12 @@ const recognizeInvoiceAsync = async (currUuid: string, annexId: number) => {
           recogStatus: 1,
           detailList: detailList,
         };
-        updateRow(recogniRowIndex, newData);
+        updateInvcMRow(recogniRowIndex, newData);
       }
     } else {
       const failIndex = invoiceMTable.value.findIndex((item) => item.uuid === currUuid);
       if (failIndex !== -1) {
-        updateRow(failIndex, { recogStatus: 2 });
+        updateInvcMRow(failIndex, { recogStatus: 2 });
       }
     }
   } catch (error) {}
@@ -2579,7 +2513,7 @@ const buildSubmitParams = () => {
     },
     billDeds: !isOffsetByInvoice.value ? dedTable.value : [],
     invoiceMs: invoiceMTable.value,
-    invoiceDs: detailList.value,
+    // invoiceDs: detailList.value,
     payWays: !isOffsetByInvoice.value ? payWayTable.value : [],
     paySubs: !isOffsetByInvoice.value ? financeTable.value : [],
     annexList: baseFileList.value || [],
@@ -2594,7 +2528,7 @@ const handleFormDataSave = async () => {
       ElMessage.error("该合同尚未结算，不可请结算款和质保金！");
       return;
     }
-
+    debugger;
     const params = buildSubmitParams();
     debugger;
     const res = await paymentRequestApi.editPay(params);

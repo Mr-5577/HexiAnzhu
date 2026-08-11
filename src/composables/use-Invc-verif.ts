@@ -20,9 +20,10 @@
 import { ElNotification, ElMessage } from "element-plus";
 import {
   batchRecognizeInvoices,
+  recognizeInvoice,
   toInvoiceTableRows,
   type RecognizedInvoice,
-} from "@/utils/Invc-verif";
+} from "@/utils/invc-verif";
 
 export interface UseInvoiceRecognitionResult {
   /** 返回表格行数组；若整体失败返回 null */
@@ -83,3 +84,52 @@ export function useInvoiceRecognition(): UseInvoiceRecognitionResult {
     }
   };
 }
+
+
+
+/**
+ * 重新查验某张发票，并把结果「就地写回」当前行。
+ * 封装了 recognizeInvoice + applyRecognizedToRow + 通知提示，
+ * 业务页面直接调用即可，无需再 import utils / invoice-recognition。
+ *
+ * @param row 表格中的行（需含 annexId / annexName；通常来自 v-for 的响应式元素）
+ * @returns 是否查验成功
+ */
+export async function invcRecognitionRefresh(
+  row: Record<string, any>
+) {
+  if (!row.annexId) {
+    ElMessage.warning("未上传发票！");
+    return null;
+  }
+
+  const notify = ElNotification({
+      title: "发票识别中",
+      message: `正在识别发票，请稍候...`,
+      type: "info",
+      duration: 0,
+      position: "top-right",
+    });
+  try {  
+    const recognized = await recognizeInvoice(row.annexId, row.annexName);
+
+    if (!recognized.success) {
+      ElNotification({
+        title: "识别完成",
+        message: `发票查验完成！`,
+        type: "success",
+        duration: 3000,
+        position: "top-right",
+      });
+    };
+    notify.close();
+
+    ElMessage.success("查验完成");
+    return recognized;    
+  } catch (error) {
+    notify.close();
+    ElMessage.error("发票识别失败");
+    return null;
+  }
+}
+
