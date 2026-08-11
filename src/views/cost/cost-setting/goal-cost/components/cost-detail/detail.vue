@@ -153,7 +153,7 @@ const generateColumns = (): EditableColumn[] => {
       optionValueField: "id",
       options: busiSegOptions.value,
       showOverflowTooltip: false,
-      disabled: (row: any) => !row.isLeaf,
+      disabled: (row: any) => row._cellDisabled,
       placeholder: " ",
     },
     {
@@ -165,7 +165,7 @@ const generateColumns = (): EditableColumn[] => {
       optionLabelField: "label",
       optionValueField: "value",
       showOverflowTooltip: false,
-      disabled: (row: any) => !row.isLeaf,
+      disabled: (row: any) => row._cellDisabled,
       placeholder: " ",
       options: allocRuleEnum as any,
     },
@@ -205,7 +205,7 @@ const generateColumns = (): EditableColumn[] => {
           editType: "number",
           showOverflowTooltip: false,
           // 只有叶子节点可编辑
-          disabled: (row: any) => !row.isLeaf,
+          disabled: (row: any) => row._cellDisabled,
           placeholder: " ",
         },
         {
@@ -215,7 +215,7 @@ const generateColumns = (): EditableColumn[] => {
           editable: isDetail.value ? false : true,
           editType: "number",
           showOverflowTooltip: false,
-          disabled: (row: any) => !row.isLeaf,
+          disabled: (row: any) => row._cellDisabled,
           placeholder: " ",
         },
       ],
@@ -370,6 +370,74 @@ const updateTreeNode = (
 };
 
 /**
+ * 查找目标节点并返回从根到该节点的完整路径（用于向上回溯汇总）
+ * 返回 { list: 节点数组（含自身，根在前）， found }
+ */
+const updateTreeNodeAndGetPath = (
+  nodes: any[],
+  targetUuid: string,
+  updater: (node: any) => any,
+): { list: any[]; found: boolean } => {
+  for (let i = 0; i < nodes.length; i++) {
+    const node = nodes[i];
+    if (node.uuid === targetUuid) {
+      const updated = updater(node);
+      return { list: [updated], found: true };
+    }
+    if (node.children && node.children.length > 0) {
+      const res = updateTreeNodeAndGetPath(
+        node.children,
+        targetUuid,
+        updater,
+      );
+      if (res.found) {
+        res.list.unshift(node);
+        return res;
+      }
+    }
+  }
+  return { list: [], found: false };
+};
+
+/**
+ * 沿路径向上回溯计算父节点汇总（O(深度)，替代全树递归）
+ * path: 从根到被修改叶子节点的节点数组
+ */
+const calcUpwardTotal = (path: any[]) => {
+  for (let i = path.length - 2; i >= 0; i--) {
+    const parent = path[i];
+    if (!parent.children || parent.children.length === 0) continue;
+
+    const productTotals: Record<string, number> = {};
+    productOptions.value.forEach((product) => {
+      productTotals[`costAmt_${product.id}`] = 0;
+      productTotals[`costExclAmt_${product.id}`] = 0;
+    });
+
+    let totalCostAmt = 0;
+    let totalCostExclAmt = 0;
+    for (const child of parent.children) {
+      productOptions.value.forEach((prod) => {
+        productTotals[`costAmt_${prod.id}`] +=
+          child[`costAmt_${prod.id}`] ?? 0;
+        productTotals[`costExclAmt_${prod.id}`] +=
+          child[`costExclAmt_${prod.id}`] ?? 0;
+      });
+      totalCostAmt += child.totalCostAmt ?? 0;
+      totalCostExclAmt += child.totalCostExclAmt ?? 0;
+    }
+
+    productOptions.value.forEach((p) => {
+      parent[`costAmt_${p.id}`] = Math.round(productTotals[`costAmt_${p.id}`] * 100) / 100;
+      parent[`costExclAmt_${p.id}`] =
+        Math.round(productTotals[`costExclAmt_${p.id}`] * 100) / 100;
+    });
+    parent.totalCostAmt = Math.round(totalCostAmt * 100) / 100;
+    parent.totalCostExclAmt = Math.round(totalCostExclAmt * 100) / 100;
+  }
+};
+
+/**
  * 递归获取所有叶子节点
  */
 const getAllLeafNodes = (nodes: any[]): any[] => {
@@ -394,11 +462,10 @@ const getAllLeafNodes = (nodes: any[]): any[] => {
  * 获取缓存的叶子节点
  */
 const getCachedLeafNodes = (nodes: any[]): any[] => {
-  // 使用版本号判断是否需要重新计算
-  const currentVersion = nodes.length;
-  if (leafNodesVersion !== currentVersion) {
+  // 使用布尔版本号：每次数据变更（编辑/回填）时置 0 失效，下次访问重建缓存
+  if (leafNodesVersion === 0) {
     leafNodesCache.value = getAllLeafNodes(nodes);
-    leafNodesVersion = currentVersion;
+    leafNodesVersion = 1;
   }
   return leafNodesCache.value;
 };
@@ -467,18 +534,21 @@ const buildTreeWithProducts = (nodes: any[]): any[] => {
       subCode: node.subCode,
       subLevel: node.subLevel || 0,
       isLeaf: isLeaf,
+      _cellDisabled: !isLeaf,
       busiSegId: isLeaf ? node.busiSegId : null,
       segName: isLeaf ? node.segName : "",
       allocRule: isLeaf ? node.allocRule : null,
       allocRuleName: isLeaf ? node.allocRuleName : "",
       totalCostAmt: 0,
       totalCostExclAmt: 0,
+      costMid: props.costMid,
       children: node.children ? buildTreeWithProducts(node.children) : [],
     };
 
     productOptions.value.forEach((product) => {
       rowData[`costAmt_${product.id}`] = isLeaf ? null : 0;
       rowData[`costExclAmt_${product.id}`] = isLeaf ? null : 0;
+      rowData[`detailId_${product.id}`] = undefined;
     });
 
     return rowData;
@@ -513,17 +583,21 @@ const handleSave = async (data: any) => {
         return;
       }
 
-      // 更新叶子节点的金额
-      tableData.value = updateTreeNode(tableData.value, row.uuid, (node) => {
-        return { ...node, [column]: newValue };
-      });
+      // 更新叶子节点的金额，并获取从根到该叶子的路径（O(深度)，不再全树递归）
+      const { list: path, found } = updateTreeNodeAndGetPath(
+        tableData.value,
+        row.uuid,
+        (node) => ({ ...node, [column]: newValue }),
+      );
 
-      // 【关键】重新计算所有节点的汇总（包括各业态汇总）
-      // calculateAllTotals 会递归计算所有节点，父级节点的业态金额也会被正确汇总
-      tableData.value = calculateAllTotals(tableData.value);
-
-      // 重置叶子节点缓存版本
-      leafNodesVersion = 0;
+      if (found) {
+        // 仅向上回溯计算受影响的父节点汇总
+        calcUpwardTotal(path);
+        // 替换顶层引用，确保视图刷新
+        tableData.value = [...tableData.value];
+        // 重置叶子节点缓存版本
+        leafNodesVersion = 0;
+      }
       return;
     }
   }
@@ -638,9 +712,12 @@ const transformDataForSave = () => {
     productOptions.value.forEach((product) => {
       const costAmt = row[`costAmt_${product.id}`];
       const costExclAmt = row[`costExclAmt_${product.id}`];
+      const detailId = row[`detailId_${product.id}`];
       // 只保存有金额的行
       // if (costAmt && costAmt > 0 && costExclAmt && costExclAmt > 0) {
       saveData.push({
+        id: detailId,
+        costMid: row.costMid || props.costMid,
         subId: row.subId,
         subName: row.subName,
         prodId: product.id,
@@ -743,43 +820,48 @@ const fillDetailDataToTable = (detailData: any[]) => {
   // 递归遍历 tableData，匹配并填充数据
   const fillTree = (nodes: any[]): any[] => {
     return nodes.map((node) => {
+      // 复制节点，避免原地修改（保证引用替换能被 watch 感知）
+      const newNode: any = { ...node };
+
       // 如果是叶子节点，匹配详情数据
-      if (node.isLeaf) {
+      if (newNode.isLeaf) {
         let hasData = false;
         // 遍历所有业态，查找对应的详情
         productOptions.value.forEach((prod) => {
-          const key = `${node.subId}_${prod.id}`;
+          const key = `${newNode.subId}_${prod.id}`;
           const detail = detailMap.get(key);
           if (detail) {
             hasData = true;
-            node[`costAmt_${prod.id}`] = detail.costAmt || 0;
-            node[`costExclAmt_${prod.id}`] = detail.costExclAmt || 0;
+            newNode[`costAmt_${prod.id}`] = detail.costAmt || 0;
+            newNode[`costExclAmt_${prod.id}`] = detail.costExclAmt || 0;
+            newNode[`detailId_${prod.id}`] = detail.id;
+            newNode.costMid = detail.costMid || props.costMid;
           }
         });
         // 如果有数据，设置公共字段（取第一条）
         if (hasData) {
-          const firstDetail = detailData.find((d) => d.subId === node.subId);
+          const firstDetail = detailData.find((d) => d.subId === newNode.subId);
           if (firstDetail) {
-            node.busiSegId = firstDetail.busiSegId;
-            node.segName = firstDetail.segName || "";
-            node.allocRule = firstDetail.allocRule;
+            newNode.busiSegId = firstDetail.busiSegId;
+            newNode.segName = firstDetail.segName || "";
+            newNode.allocRule = firstDetail.allocRule;
             const rule = allocRuleEnum.find(
               (r) => r.value === firstDetail.allocRule,
             );
-            node.allocRuleName = rule?.label || "";
+            newNode.allocRuleName = rule?.label || "";
           }
         }
       }
       // 递归子节点
-      if (node.children?.length) {
-        node.children = fillTree(node.children);
+      if (newNode.children?.length) {
+        newNode.children = fillTree(newNode.children);
       }
-      return node;
+      return newNode;
     });
   };
 
-  // 直接在 tableData 上修改（引用传递）
-  fillTree(tableData.value);
+  // 返回新树结构，重新赋值以触发响应式更新
+  tableData.value = fillTree(tableData.value);
   // 重新计算汇总
   tableData.value = calculateAllTotals(tableData.value);
   leafNodesVersion = 0;

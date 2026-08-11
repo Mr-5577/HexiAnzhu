@@ -45,9 +45,11 @@ export const payRegisterApi = {
   },
   /**
    * @name 查询单个实付确认
-   * @param params.id 确认ID
+   * @param params.id 确认ID（优先）
+   * @param params.bizType 业务类型（当 id 为空时必填）：CON_PAY / NCON_CST / NCON_FEE
+   * @param params.bizBillId 业务单据ID（当 id 为空时必填）
    */
-  getConfirmDetail: (params: { id: number }) => {
+  getConfirmDetail: (params: { id?: number; bizType?: string; bizBillId?: number }) => {
     return http.get("/pay/confirm/get", params);
   },
   /** 
