@@ -132,7 +132,7 @@
           type="primary"
           link
           @click="batchRegister(row)"
-          :disabled="row.isLocked"
+          :disabled="row.isLocked || row.payStatus == '全部支付'"
         >
           批量登记
         </el-button>
@@ -140,12 +140,12 @@
           type="primary"
           link
           @click="singleRegister(row)"
-          :disabled="row.isLocked"
+          :disabled="row.isLocked || row.payStatus == '全部支付'"
         >
           单项登记
         </el-button>
         <el-button type="primary" link @click="handleView(row)">
-          查看
+          明细
         </el-button>
         <el-button
           type="primary"
