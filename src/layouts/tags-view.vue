@@ -165,19 +165,41 @@ const extractQueryParams = (tag: TagView) => {
 // 关闭选中的标签
 const closeSelectedTag = (tag: TagView) => {
   const isActiveTag = isActive(tag);
-  
-  tagsStore.delView(tag);
 
-  if (isActive(tag)) {
-    const lastView = visitedViews.value[visitedViews.value.length - 1];
-    if (lastView) {
-      router.push({
-        path: lastView.path,
-        query: extractQueryParams(lastView),
-      });
+  if (isActiveTag) {
+    // 获取上一个访问的路径
+    const previousPath = tagsStore.getPreviousPath(route.fullPath);
+
+    // 删除标签
+    tagsStore.delView(tag);
+
+    if (previousPath) {
+      // 跳转到上一个访问的路径
+      // 需要处理查询参数
+      const [path, queryString] = previousPath.split("?");
+      const query: Record<string, string> = {};
+      if (queryString) {
+        const params = new URLSearchParams(queryString);
+        params.forEach((value, key) => {
+          query[key] = value;
+        });
+      }
+      router.push({ path, query });
     } else {
-      router.push("/");
+      // 没有历史记录，跳转到最后一个标签或首页
+      const lastView = visitedViews.value[visitedViews.value.length - 1];
+      if (lastView) {
+        router.push({
+          path: lastView.path,
+          query: extractQueryParams(lastView),
+        });
+      } else {
+        router.push("/");
+      }
     }
+  } else {
+    // 关闭的不是当前激活的标签，直接删除
+    tagsStore.delView(tag);
   }
 };
 

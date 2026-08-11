@@ -81,7 +81,7 @@ const COST_ROUTE: Record<string, string> = {
   CON_PRE_SETTLE: "/cost-allocation",
   CON_SETTLE: "/cost-allocation",
   NCON_CST: "/cost-allocation",
-  NCON_PROC: "/cost-allocation",
+  NCON_PROC: "/oa/ncon/cost-allocation",
 };
 
 // FINA 子业务路径映射（subBizCode = FINA 时生效），财务分摊页面
