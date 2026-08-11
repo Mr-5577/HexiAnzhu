@@ -29,4 +29,8 @@ export const contractLedgerApi = {
   voidContractLedger: (id: number ) => {
     return http.post("/con/main/void?id="+ id);
   },
+  /** 取合同支付比例信息 */
+  getContractPayRateList: (data: { conId: number,payTypeId?:number }) => {
+    return http.formPost("/con/payrate/list", data);
+  },
 };

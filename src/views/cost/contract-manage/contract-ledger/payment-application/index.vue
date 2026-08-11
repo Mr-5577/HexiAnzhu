@@ -18,7 +18,7 @@
         <el-form :model="queryParams" ref="queryRef" :inline="true">
           <el-form-item label="请款说明" prop="paymentName">
             <el-input
-              v-model="queryParams.paymentName"
+              v-model="queryParams.bizTitle"
               placeholder="请输入名称"
               clearable
               style="width: 300px"
@@ -83,6 +83,15 @@
             {{ getEnumLabel(ReqTypeEnum, row?.reqType || 0) }}
           </el-tag>
         </template>
+        <template #payTypeId="{ row }">
+          <el-tag
+            size="small"
+            :type="getOptionsTypeById(paymentTypeOptions, row?.payTypeId || 0)"
+          >
+            {{ getOptionsLabelById(paymentTypeOptions, row?.payTypeId || 0) }}
+          </el-tag>
+        </template>
+        
         <template #actions="{ row }">
           <el-button type="primary" link class="row-link" @click="handleEdit(row)" :disabled="row.status !== 0 || row.createId !== userStore.userInfo.id">
             编辑
@@ -104,15 +113,17 @@
 
 <script setup lang="ts">
 import { onMounted, ref, watch } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { dayjs, ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { useRouter } from "vue-router";
 import { paymentRequestApi } from "@/api/cost/contract-manage/payment-application-api";
 import { HConPayment } from "@/types/cost/contract-manage/payment-application-type";
 import { approvalStatusEnum } from "@/constants/bidding/enums";
-import { getEnumLabel, getEnumType } from "@/utils/enum";
+import { getEnumLabel, getEnumType, getOptionsTypeById ,getOptionsLabelById} from "@/utils/enum";
 import { useUserStore } from "@/stores/user-store";
 import { ReqTypeEnum } from "@/constants/contract-manage/enums";
+import { useDict } from "@/composables/use-dict";
+import { dictMapping } from "@/utils/dict-mapping";
 
 defineOptions({ name: "payment-application" });
 
@@ -126,16 +137,17 @@ const tableLoading = ref(false);
 const refreshing = ref(false); // 驱动刷新按钮旋转动画
 const tableData = ref([]);
 const userStore = useUserStore();
+const paymentTypeOptions = ref<any[]>([]);
 
 
 const queryParams = ref({
   conId:props.conId,
-  paymentName:"",
+  bizTitle:"",
   status : null,
 });
 
 const handleReset = () => {
-  queryParams.value.paymentName = "";
+  queryParams.value.bizTitle = "";
   queryParams.value.status = null;
   getDataList();
 };
@@ -145,171 +157,185 @@ const tableColumns: TableColumnItem[] = [
   {
     prop: "bizTitle",
     label: "付款申请说明",
-    minWidth: 150,
+    minWidth: 200,
     showOverflowTooltip: true,
   },
   {
     slot: "reqType",
-    label: "付款类型",
-    width: 120,
-    formatter: (row: HConPayment) => (row.reqType === 0 ? "请款" : "来票冲账"),
+    label: "请款类型",
+    width: 100,
   },
   {
-    prop: "payRule",
-    label: "付款规则",
-    width: 140,
-    formatter: (row: HConPayment) =>
-      row.payRule === 0 ? "正常请款" : "来票冲账",
+    prop: "belongMonth",
+    label: "归属月份",
+    width: 90,
+    align: "center",
+    formatter: (row) => row.belongMonth?.substring(0, 7) || '-'
   },
   {
     prop: "reqAmt",
-    label: "请款总金额",
+    label: "申请请款金额",
     width: 140,
-    formatter: (row: HConPayment) => row.reqAmt?.toFixed(2) || "0.00",
+    formatType:"#,##0.00",
+  },
+  {
+    prop: "changeAmt",
+    label: "扣款总金额",
+    width: 140,
+    formatType:"#,##0.00",
   },
   {
     prop: "factReqAmt",
     label: "实际请款金额",
     width: 140,
-    formatter: (row: HConPayment) => row.factReqAmt?.toFixed(2) || "0.00",
+    formatType:"#,##0.00",
   },
   {
-    prop: "signAmt",
-    label: "合同签约金额",
-    width: 140,
-    formatter: (row: HConPayment) => row.signAmt?.toFixed(2) || "0.00",
+    slot: "payTypeId",
+    label: "款项类型",
+    width: 90,
+    align: "center",
   },
-  {
-    prop: "addAmt",
-    label: "补充合同金额",
-    width: 140,
-    formatter: (row: HConPayment) => row.addAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "sumChangeAmt",
-    label: "累计变更签证",
-    width: 140,
-    formatter: (row: HConPayment) => row.sumChangeAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "preSettleAmt",
-    label: "预结算合同金额",
-    width: 150,
-    formatter: (row: HConPayment) => row.preSettleAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "sumProdVal",
-    label: "累计产值",
-    width: 140,
-    formatter: (row: HConPayment) => row.sumProdVal?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "sumPayAmt",
-    label: "累计应付",
-    width: 140,
-    formatter: (row: HConPayment) => row.sumPayAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "sumAppyAmt",
-    label: "累计请款",
-    width: 140,
-    formatter: (row: HConPayment) => row.sumAppyAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "sumPaidAmt",
-    label: "累计实付",
-    width: 140,
-    formatter: (row: HConPayment) => row.sumPaidAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "sumOwedAmt",
-    label: "累计欠款",
-    width: 140,
-    formatter: (row: HConPayment) => row.sumOwedAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "leavePayAmt",
-    label: "剩余应付金额",
-    width: 140,
-    formatter: (row: HConPayment) => row.leavePayAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "payOutRate",
-    label: "应付占产值比(%)",
-    width: 150,
-    formatter: (row: HConPayment) => row.payOutRate?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "paidPayRate",
-    label: "实付占应付比(%)",
-    width: 150,
-    formatter: (row: HConPayment) => row.paidPayRate?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "paidOutRate",
-    label: "实付占产值比(%)",
-    width: 150,
-    formatter: (row: HConPayment) => row.paidOutRate?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "pbAmount",
-    label: "转履约保证金",
-    width: 140,
-    formatter: (row: HConPayment) => row.pbAmount?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "changeAmt",
-    label: "奖罚总金额(扣款)",
-    width: 160,
-    formatter: (row: HConPayment) => row.changeAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "invRecAmt",
-    label: "应收发票金额",
-    width: 140,
-    formatter: (row: HConPayment) => row.invRecAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "invRcvdAmt",
-    label: "已收发票",
-    width: 140,
-    formatter: (row: HConPayment) => row.invRcvdAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "invOweAmt",
-    label: "欠票金额",
-    width: 140,
-    formatter: (row: HConPayment) => row.invOweAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "isModifyAcc",
-    label: "修改收款账号",
-    width: 130,
-    formatter: (row: HConPayment) => (row.isModifyAcc === 1 ? "是" : "否"),
-  },
-  {
-    prop: "bankName",
-    label: "收款开户行",
-    width: 150,
-    showOverflowTooltip: true,
-  },
-  {
-    prop: "accountName",
-    label: "收款账户名",
-    width: 150,
-    showOverflowTooltip: true,
-  },
-  {
-    prop: "bankAccount",
-    label: "收款账号",
-    width: 160,
-    showOverflowTooltip: true,
-  },
-  {
-    prop: "modifyAccAnnex",
-    label: "修改凭证附件",
-    width: 130,
-  },
+  // {
+  //   prop: "signAmt",
+  //   label: "合同签约金额",
+  //   width: 140,
+  //   formatter: (row: HConPayment) => row.signAmt?.toFixed(2) || "0.00",
+  // },
+  // {
+  //   prop: "addAmt",
+  //   label: "补充合同金额",
+  //   width: 140,
+  //   formatter: (row: HConPayment) => row.addAmt?.toFixed(2) || "0.00",
+  // },
+  // {
+  //   prop: "sumChangeAmt",
+  //   label: "累计变更签证",
+  //   width: 140,
+  //   formatter: (row: HConPayment) => row.sumChangeAmt?.toFixed(2) || "0.00",
+  // },
+  // {
+  //   prop: "preSettleAmt",
+  //   label: "预结算合同金额",
+  //   width: 150,
+  //   formatter: (row: HConPayment) => row.preSettleAmt?.toFixed(2) || "0.00",
+  // },
+  // {
+  //   prop: "sumProdVal",
+  //   label: "累计产值",
+  //   width: 140,
+  //   formatter: (row: HConPayment) => row.sumProdVal?.toFixed(2) || "0.00",
+  // },
+  // {
+  //   prop: "sumPayAmt",
+  //   label: "累计应付",
+  //   width: 140,
+  //   formatter: (row: HConPayment) => row.sumPayAmt?.toFixed(2) || "0.00",
+  // },
+  // {
+  //   prop: "sumAppyAmt",
+  //   label: "累计请款",
+  //   width: 140,
+  //   formatter: (row: HConPayment) => row.sumAppyAmt?.toFixed(2) || "0.00",
+  // },
+  // {
+  //   prop: "sumPaidAmt",
+  //   label: "累计实付",
+  //   width: 140,
+  //   formatter: (row: HConPayment) => row.sumPaidAmt?.toFixed(2) || "0.00",
+  // },
+  // {
+  //   prop: "sumOwedAmt",
+  //   label: "累计欠款",
+  //   width: 140,
+  //   formatter: (row: HConPayment) => row.sumOwedAmt?.toFixed(2) || "0.00",
+  // },
+  // {
+  //   prop: "leavePayAmt",
+  //   label: "剩余应付金额",
+  //   width: 140,
+  //   formatter: (row: HConPayment) => row.leavePayAmt?.toFixed(2) || "0.00",
+  // },
+  // {
+  //   prop: "payOutRate",
+  //   label: "应付占产值比(%)",
+  //   width: 150,
+  //   formatter: (row: HConPayment) => row.payOutRate?.toFixed(2) || "0.00",
+  // },
+  // {
+  //   prop: "paidPayRate",
+  //   label: "实付占应付比(%)",
+  //   width: 150,
+  //   formatter: (row: HConPayment) => row.paidPayRate?.toFixed(2) || "0.00",
+  // },
+  // {
+  //   prop: "paidOutRate",
+  //   label: "实付占产值比(%)",
+  //   width: 150,
+  //   formatter: (row: HConPayment) => row.paidOutRate?.toFixed(2) || "0.00",
+  // },
+  // {
+  //   prop: "pbAmount",
+  //   label: "转履约保证金",
+  //   width: 140,
+  //   formatter: (row: HConPayment) => row.pbAmount?.toFixed(2) || "0.00",
+  // },
+  // {
+  //   prop: "changeAmt",
+  //   label: "奖罚总金额(扣款)",
+  //   width: 160,
+  //   formatter: (row: HConPayment) => row.changeAmt?.toFixed(2) || "0.00",
+  // },
+  // {
+  //   prop: "invRecAmt",
+  //   label: "应收发票金额",
+  //   width: 140,
+  //   formatter: (row: HConPayment) => row.invRecAmt?.toFixed(2) || "0.00",
+  // },
+  // {
+  //   prop: "invRcvdAmt",
+  //   label: "已收发票",
+  //   width: 140,
+  //   formatter: (row: HConPayment) => row.invRcvdAmt?.toFixed(2) || "0.00",
+  // },
+  // {
+  //   prop: "invOweAmt",
+  //   label: "欠票金额",
+  //   width: 140,
+  //   formatter: (row: HConPayment) => row.invOweAmt?.toFixed(2) || "0.00",
+  // },
+  // {
+  //   prop: "isModifyAcc",
+  //   label: "修改收款账号",
+  //   width: 130,
+  //   formatter: (row: HConPayment) => (row.isModifyAcc === 1 ? "是" : "否"),
+  // },
+  // {
+  //   prop: "bankName",
+  //   label: "收款开户行",
+  //   width: 150,
+  //   showOverflowTooltip: true,
+  // },
+  // {
+  //   prop: "accountName",
+  //   label: "收款账户名",
+  //   width: 150,
+  //   showOverflowTooltip: true,
+  // },
+  // {
+  //   prop: "bankAccount",
+  //   label: "收款账号",
+  //   width: 160,
+  //   showOverflowTooltip: true,
+  // },
+  // {
+  //   prop: "modifyAccAnnex",
+  //   label: "修改凭证附件",
+  //   width: 130,
+  // },
+  { slot: "status", label: "审批状态", minWidth: 90 },
+  { prop: "createName", label: "创建人", minWidth: 90 },
+  { prop: "createDate", label: "创建时间", minWidth: 150 },
   {
     label: "操作",
     width: 140,
@@ -317,6 +343,19 @@ const tableColumns: TableColumnItem[] = [
     fixed: "right",
   },
 ];
+
+// 初始化数据字典
+const { getDictList, loadDicts } = useDict(
+  [dictMapping.paymentType],
+  {
+  treeDictCodes: [],
+});
+
+const initDictData = async () => {
+  await loadDicts();
+  paymentTypeOptions.value = getDictList(dictMapping.paymentType);//款项类型
+};
+
 // 获取列表数据
 const getDataList = async () => {
   if (!props.conId) {
@@ -324,7 +363,7 @@ const getDataList = async () => {
   }
   try {
     tableLoading.value = true;
-    const res = await paymentRequestApi.getPayList({ conId: props.conId });
+    const res = await paymentRequestApi.getPayList({ conId: props.conId, ...queryParams.value,});
     if (res.code === 200) {
       tableData.value = res.data || [];
     }
@@ -404,6 +443,7 @@ const handleDelete = ({ id }) => {
 //   { immediate: true },
 // );
 onMounted(() => {
+  initDictData();
   getDataList();
 });
 </script>

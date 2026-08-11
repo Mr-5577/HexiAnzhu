@@ -728,7 +728,7 @@
                   <el-button
                     link
                     type="primary"
-                    :disabled="!row.annexId || row.isValid === true"
+                    :disabled="!row.annexId"
                     @click="handleInspect(row)"
                   >
                     查验
@@ -813,7 +813,7 @@
   <!-- 上传发票弹窗 -->
   <UploadInvoiceDialog
     v-model="uploadVisibleDialog"
-    @success="getInvcData"
+    @success="getAnnexFileList"
   />
   <!-- 发票明细 弹窗 -->
     <invoice-detail-dialog
@@ -826,9 +826,52 @@
 </template>
 
 <script setup lang="ts">
-// ============================================================
-// 编译器宏
-// ============================================================
+import {
+  ElMessageBox,ElNotification,
+} from "element-plus";
+import { ref, watch, onMounted, computed, nextTick } from "vue";
+import { ElMessage } from "element-plus";
+import FormCard from "@/components/base/base-form-card.vue";
+import FloatNav from "@/components/base/base-float-nav.vue";
+import EditableTable from "@/components/base/editable-table.vue";
+import { v4 as uuidv4 } from "uuid";
+import ChooseContractDialog from "@/components/business/choose-contract-dialog.vue";
+import { ReqTypeEnum } from "@/constants/contract-manage/enums";
+import { costCategoryApi } from "@/api/cost/master-data/cost-category-api";
+import BaseUpload from "@/components/base/base-upload.vue";
+import { commonApi } from "@/api/cost/common-api";
+import InvoiceDetailDialog from "@/components/business/invoice-detail-dialog.vue";
+import {
+  HConBillInvoiceD,
+  HConBillInvoiceM,
+} from "@/types/cost/contract-manage/payment-application-type.ts";
+import { paymentRequestApi } from "@/api/cost/contract-manage/payment-application-api.ts";
+import { NAV_CARDS ,createInvcColumns ,invoiceMColumns,dedDetailColumns,createPayWayColumns, createFinanceColumns, createDedColumns, payWayDetailColumns} from "./payment-application-config";
+import { formType } from "@/types/form/form-types";
+import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
+import { useUserStore } from "@/stores/user-store";
+import { useMDStore } from "@/stores/md-store.ts";
+import { useTagsStore } from "@/stores/tags-store";
+import { useRouter } from "vue-router";
+import { dateUtil } from "@/utils/date-util";
+import { useFormLayout } from "@/composables/use-form-layout.ts";
+import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api";
+const { collapsedCards, toggleCard, formatMoney } = useFormLayout(NAV_CARDS);
+import { buildFileUrl } from "@/utils/file-path-util";
+import { useDict } from "@/composables/use-dict";
+import { dictMapping } from "@/utils/dict-mapping";
+import PickInput from "@/components/base/base-pick-input.vue";
+import { YesOrNoStatusEnum } from "@/constants/master-data/enums";
+import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
+import { buildTree } from "@/utils/tree";
+import { moneyRule, requiredInputRule, requiredRule } from "@/utils/form-rule-validate";
+import { paymentAccountApi } from "@/api/cost/contract-manage/payment-account-api";
+import { conTypeApi } from "@/api/cost/master-data/contract-category-api";
+import { isJianAnByConType } from "@/composables/use-contract";
+import { cumulativeDataApi } from "@/api/cost/contract-manage/cumulative-data-api";
+import { isJianAnByFeeType } from "@/composables/use-fee";
+import { getOptionsLabelById } from "@/utils/enum";
+
 defineOptions({ name: "payment-application-form" });
 
 interface Props {
@@ -849,108 +892,62 @@ const emit = defineEmits<{
   (e: "success", data: any): void;
 }>();
 
-// ============================================================
-// 第三方 / UI 框架
-// ============================================================
-import { ElMessage, ElMessageBox, ElNotification } from "element-plus";
-import { ref, watch, onMounted, computed, nextTick } from "vue";
-import { v4 as uuidv4 } from "uuid";
-
-// ============================================================
-// 业务组件
-// ============================================================
-import FormCard from "@/components/base/base-form-card.vue";
-import FloatNav from "@/components/base/base-float-nav.vue";
-import EditableTable from "@/components/base/editable-table.vue";
-import PickInput from "@/components/base/base-pick-input.vue";
-import BaseUpload from "@/components/base/base-upload.vue";
-import ChooseContractDialog from "@/components/business/choose-contract-dialog.vue";
-import InvoiceDetailDialog from "@/components/business/invoice-detail-dialog.vue";
-
-// ============================================================
-// API
-// ============================================================
-import { costCategoryApi } from "@/api/cost/master-data/cost-category-api";
-import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
-import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
-import { conTypeApi } from "@/api/cost/master-data/contract-category-api";
-import { commonApi } from "@/api/cost/common-api";
-import { paymentRequestApi } from "@/api/cost/contract-manage/payment-application-api.ts";
-import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api";
-import { paymentAccountApi } from "@/api/cost/contract-manage/payment-account-api";
-import { cumulativeDataApi } from "@/api/cost/contract-manage/cumulative-data-api";
-
-// ============================================================
-// 常量 / 枚举 / 类型
-// ============================================================
-import { ReqTypeEnum } from "@/constants/contract-manage/enums";
-import { YesOrNoStatusEnum } from "@/constants/master-data/enums";
-import { formType } from "@/types/form/form-types";
-import {
-  HConBillInvoiceD,
-  HConBillInvoiceM,
-} from "@/types/cost/contract-manage/payment-application-type.ts";
-import {
-  NAV_CARDS,
-  createInvcColumns,
-  invoiceMColumns,
-  dedDetailColumns,
-  createPayWayColumns,
-  createFinanceColumns,
-  createDedColumns,
-  payWayDetailColumns,
-} from "./payment-application-config";
-
-// ============================================================
-// 工具函数 / 组合式
-// ============================================================
-import { useUserStore } from "@/stores/user-store";
-import { useMDStore } from "@/stores/md-store.ts";
-import { useTagsStore } from "@/stores/tags-store";
-import { useRouter } from "vue-router";
-import { dateUtil } from "@/utils/date-util";
-import { useFormLayout } from "@/composables/use-form-layout.ts";
-import { buildFileUrl } from "@/utils/file-path-util";
-import { useDict } from "@/composables/use-dict";
-import { dictMapping } from "@/utils/dict-mapping";
-import { isJianAnByConType } from "@/composables/use-contract";
-import { isJianAnByFeeType } from "@/composables/use-fee";
-import { getOptionsLabelById } from "@/utils/enum";
-import { moneyRule, requiredInputRule, requiredRule } from "@/utils/form-rule-validate";
-import { buildTree } from "@/utils/tree";
-import { useInvoiceRecognition } from "@/composables/use-Invc-verif";
-
-// ============================================================
-// 路由 / 状态仓库 实例化
-// ============================================================
-const router = useRouter();
-const userStore = useUserStore();
-const mdStore = useMDStore();
-const tagsStore = useTagsStore();
-
-// ============================================================
-// 组合式实例化
-// ============================================================
-const { collapsedCards, toggleCard, formatMoney } = useFormLayout(NAV_CARDS);
-
-// ============================================================
-// 页面状态：加载 / 模式
-// ============================================================
 const formRef = ref();
 const submitLoading = ref(false);
-const loadingForm = ref(false); // 表单加载态
+const loadingForm = ref(false); // 
 const isDetail = computed(() => props.mode === "detail");
 const isEdit = computed(() => props.mode === "edit");
 const isAdd = computed(() => props.mode === "add");
-const isReadonly = computed(() => isDetail.value || !!billData.value.status);
+const isReadonly = computed(
+  () => isDetail.value || !!billData.value.status,
+);
 
 const conId = ref<number | undefined>(props.conId);
 const paymentId = ref<number | undefined>(props.paymentId);
+
 const uploadVisibleDialog = ref(false);
 
-// ============================================================
-// 单据 / 流程状态
-// ============================================================
+const visibleNavCards = computed(() => {
+  let cards = !isOffsetByInvoice.value ? NAV_CARDS : NAV_CARDS.filter(card => card.id !== "card-account"
+    && card.id !== "card-ded"
+    && card.id !== "card-payway"
+    && card.id !== "card-finance"
+  );
+  // 财务明细仅在详情查看，导航也随之隐藏
+  if (!isDetail.value) {
+    cards = cards.filter(card => card.id !== "card-finance");
+  }
+
+  return cards;
+});
+
+const showMaterial = computed(() => {
+  //const item = AddTypeEnum.find(item => item.value === formData.value.addType);
+  //return !item || item.value === 1;
+  return true;
+});
+
+const showBankAnnex = computed(() => {
+  return formData.value.isModifyAcc === true;
+});
+
+const showLastPay = computed(() => {
+  return !formData.value.needSettle;
+});
+
+// 归属月份只能选择当月及以前（禁止未来月份）
+const disabledBelongMonth = (date: Date) => {
+  const now = new Date();
+  const curYear = now.getFullYear();
+  const curMonth = now.getMonth(); // 0-based
+  const year = date.getFullYear();
+  const month = date.getMonth();
+  if (year > curYear) return true;
+  if (year === curYear && month > curMonth) return true;
+  return false;
+};
+
+// ===================== 单据 / 流程状态 =====================
 const billData = ref({
   id: undefined,
   bizTitle: "",
@@ -958,14 +955,22 @@ const billData = ref({
   status: 0,
   bizItemCode: formType.CON_PAY,
   flowId: null,
-  createDate: null,
+  createDate:null,
 });
+
 const flowListData = ref<any>(null);
 const flowBaseData = ref<any>(null);
 
-// ============================================================
-// 下拉选项
-// ============================================================
+// ===================== 路由 / 状态仓库 =====================
+const router = useRouter();
+const userStore = useUserStore();
+const mdStore = useMDStore();
+const tagsStore = useTagsStore();
+
+// ==================== 数据定义 ====================
+const dedTable = ref([]);
+const invoiceMTable = ref([]);
+const payWayTable = ref([]);
 const projectOptions = ref([]);
 const subjectOptions = ref([]);
 const conTypeOptions = ref<any[]>([]);
@@ -977,70 +982,87 @@ const feeTypeOptions = ref([]);
 const finaOrgOptions = ref<any[]>([]);
 const finaSubOptions = ref<any[]>([]);
 
-// 合同分类是否属于建安
-const conTypeIsJianAn = ref(false);
-// 建安类：需报产值合同；非建安类：直接请款，不可超款项比例/合同金额
+const conTypeIsJianAn = ref(false); 
+//合同分类是否属于建安：
+//   建安类：建安类需报产值合同（预付款-付款金额不可大于限定金额；进度、验收款-按产值申报计算应收，不可超额；结算款-如需结算则必须先结算，无需计算则可支付）； 
+//   非建安类：不需要报产值，直接请款，不可超款项比例限制，不可超合同金额
+const financeColumns = createFinanceColumns({
+  projectOptions,
+  subjectOptions
+});
 
-// ============================================================
-// 子表数据
-// ============================================================
-const dedTable = ref([]);
-const invoiceMTable = ref([]);
-const payWayTable = ref([]);
-const financeTable = ref([]);
+const payWayColumns = createPayWayColumns({
+  payWayOptions,
+});
 
-// 附件列表
-const baseFileList = ref([]);
-const bankFileList = ref([]);
-const tempFileList = ref([]);
-const currentUploadRow = ref(null);
-const hiddenUploadRef = ref();
-const dialogVisible = ref(false);
-const detailList = ref([]);
+const dedColumns = createDedColumns({
+  dedTypeOptions,
+});
 
-// ============================================================
-// 主表单数据
-// ============================================================
+const invcColumns = createInvcColumns();
+
+/**
+ * 建安类合同 → 费用类型只保留顶级 code=03 的分类；
+ * 非建安类合同 → 费用类型剔除顶级 code=03 的分类
+ */
+const filteredFeeTypeOptions = computed(() => {
+  const tree: any[] = feeTypeOptions.value || [];
+  if (!tree.length) return [];
+  return conTypeIsJianAn.value
+    ? tree.filter((n) => isJianAnByFeeType(feeTypeOptions,n.id))
+    : tree.filter((n) => !isJianAnByFeeType(feeTypeOptions,n.id));
+});
+
+/** 收集一棵费用类型树里所有可选 id，用于校验当前选中值是否仍合法 */
+const collectFeeTypeIds = (nodes: any[], acc: any[] = []) => {
+  nodes.forEach((n) => {
+    acc.push(n.id);
+    if (n.children && n.children.length) collectFeeTypeIds(n.children, acc);
+  });
+  return acc;
+};
+
+// 仅 付款申请主表 字段
 const formData = ref({
   id: undefined as number | undefined,
   conBillId: undefined as number | undefined,
-  flowId: null,
+  flowId:null,
   bizTitle: "",
-  bizNo: "",
+  bizNo:"",
   segId: undefined,
   segCode: "",
-  segNo: "",
+  segNo : "",
   segName: "",
   projId: undefined,
   userName: userStore.userInfo?.empName,
   createDate: dateUtil().format("YYYY-MM-DD"),
   deptName: userStore.userInfo?.deptName,
   mguName: userStore.userInfo?.mguName,
-  compId: null,
-  compName: "",
+  compId : null,
+  compName:"",
   status: 0, // 状态 0 草稿，5 审批中，10 已审批，30 已作废
 
-  conId: null,
-  conName: "",
-  supId: null,
-  supName: "",
-  conTypeId: null,
-  conTypeName: "",
-  conSysNo: "",
-  conPhyNo: "",
-  conStatus: null,
+  conId:null,
+  conName:"",
+  supId:null,
+  supName:"",
+  conTypeId:null,
+  conTypeName:"",
+  conSysNo:"",
+  conPhyNo:"",
+  conStatus:null,
 
-  payTypeId: null, // 款项类型
-  payTypeIsCtrl: null, // 款项类型请款是否强控
-  finaTypeId: null,
-  belongMonth: null,
-  needSettle: true,
-  isLastPay: false, // 是否最后一次支付，需结算时，才显示该项
+  payTypeId:null,//款项类型
+  payTypeIsCtrl:null,//款项类型请款是否强控
+  finaTypeId:null,
+  belongMonth:null,
+  needSettle:true,
+  isLastPay:false,//是否最后一次支付，需结算时，才显示该项
   signAmt: 0, // 合同签约金额
   addAmt: 0, // 补充合同金额
   sumChangeAmt: 0, // 累计变更签证
   preSettleAmt: 0, // 预结算合同金额
-  settledAmt: null, // 结算金额
+  settledAmt:null,//结算金额
   sumProdVal: 0, // 累计产值
   sumPayAmt: 0, // 累计应付
   sumAppyAmt: 0, // 累计请款
@@ -1051,11 +1073,11 @@ const formData = ref({
   paidOutRate: 0, // 实付占产值比率
   reqType: 0, // 请款类型 0=请款、1=来票冲账
   payRule: 0, // 付款规则：0-正常请款 1-来票冲账
-  isRise: false, // 是否提高支付比例
-  isNeedOutValue: true, // 是否需要产值
-  conProperty: null, // 合同属性
+  isRise:false,//是否提高支付比例
+  isNeedOutValue:true,//是否需要产值
+  conProperty:null, //合同属性
   leavePayAmt: 0, // 剩余应付金额
-  sysCanPayAmt: 0, // 系统计算可请款金额
+  sysCanPayAmt:0,//系统计算可请款金额
   reqAmt: 0, // 请款总金额
   pbAmount: 0, // 转履约保证金金额
   changeAmt: 0, // 奖罚总金额（扣款）
@@ -1071,80 +1093,11 @@ const formData = ref({
   bankAccount: "", // 收款账号
   modifyAccAnnex: undefined, // 修改凭证附件
 
-  unlockAmt: null, // 解锁金额
+  unlockAmt:null,//解锁金额
 });
 
-// ============================================================
-// 列定义（工厂函数，依赖选项 ref）
-// ============================================================
-const financeColumns = createFinanceColumns({
-  projectOptions,
-  subjectOptions,
-});
-const payWayColumns = createPayWayColumns({
-  payWayOptions,
-});
-const dedColumns = createDedColumns({
-  dedTypeOptions,
-});
-const invcColumns = createInvcColumns();
 
-// ============================================================
-// 计算属性：导航 / 显隐
-// ============================================================
-const visibleNavCards = computed(() => {
-  let cards = !isOffsetByInvoice.value
-    ? NAV_CARDS
-    : NAV_CARDS.filter(
-        (card) =>
-          card.id !== "card-account" &&
-          card.id !== "card-ded" &&
-          card.id !== "card-payway" &&
-          card.id !== "card-finance",
-      );
-  // 财务明细仅在详情查看，导航也随之隐藏
-  if (!isDetail.value) {
-    cards = cards.filter((card) => card.id !== "card-finance");
-  }
-  return cards;
-});
-
-const showMaterial = computed(() => {
-  return true;
-});
-
-const showBankAnnex = computed(() => {
-  return formData.value.isModifyAcc === true;
-});
-
-const showLastPay = computed(() => {
-  return !formData.value.needSettle;
-});
-
-// ============================================================
-// 计算属性：结算金额标签
-// ============================================================
-/** 合同已结算（conStatus = 60） */
-const isConSettled = computed(
-  () => Number(formData.value.conStatus) === 60 || conTypeIsJianAn.value === false,
-);
-/** 标签跟着切 */
-const settleAmtLabel = computed(() => (isConSettled.value ? "结算金额" : "预结算金额"));
-const settleAmtProp = computed(() => (isConSettled.value ? "settledAmt" : "preSettleAmt"));
-const settleAmtValue = computed(() =>
-  isConSettled.value
-    ? Number(formData.value.settledAmt || 0)
-    : Number(formData.value.preSettleAmt || 0),
-);
-
-// 已解锁应付余额 = 已解锁应付总额 - 累计请款金额
-const unlockLastAmt = computed(() => {
-  return (formData.value.unlockAmt ?? 0) - (formData.value.sumAppyAmt ?? 0);
-});
-
-// ============================================================
-// 计算属性：扣款 / 发票 汇总
-// ============================================================
+// ---- 扣款汇总----
 const dedSumData = computed(() => calculateDedData());
 
 function calculateDedData() {
@@ -1161,12 +1114,12 @@ function calculateDedData() {
 
   const round = (n: number) => Math.round(n * 100) / 100;
 
-  dedTable.value.forEach((item) => {
+  dedTable.value.forEach(item => {
     const amt = Number(item.dedThisAmt) || 0;
     const isLvType = item.dedTypeId === 2102;
 
     result.totalAmt = round(result.totalAmt + amt);
-
+    
     if (amt > 0) {
       result.addAmt = round(result.addAmt + amt);
     } else if (isLvType) {
@@ -1179,6 +1132,7 @@ function calculateDedData() {
   return result;
 }
 
+// ---- 发票汇总----
 const invcSumData = computed(() => calculateInvcData());
 
 function calculateInvcData() {
@@ -1192,7 +1146,7 @@ function calculateInvcData() {
         totalAmt: acc.totalAmt + amt,
       };
     },
-    { totalAmt: 0 },
+    { totalAmt: 0},
   );
 
   return {
@@ -1203,13 +1157,9 @@ function calculateInvcData() {
 // 扣款汇总条数据
 const summaryDedItems = computed(() => [
   { label: "奖罚总金额", value: `¥ ${formatMoney(dedSumData.value.totalAmt)}` },
-  { label: "扣款合计", value: `¥ ${formatMoney(dedSumData.value.minAmt)}`, type: "tax" as const },
+  { label: "扣款合计", value: `¥ ${formatMoney(dedSumData.value.minAmt)}` , type: "tax" as const},
   { label: "奖励合计", value: `¥ ${formatMoney(dedSumData.value.addAmt)}` },
-  {
-    label: "转履约保证金合计",
-    value: `¥ ${formatMoney(dedSumData.value.toLvAmt)}`,
-    type: "tax" as const,
-  },
+  { label: "转履约保证金合计", value: `¥ ${formatMoney(dedSumData.value.toLvAmt)}`, type: "tax" as const },
 ]);
 
 // 发票汇总条数据
@@ -1223,9 +1173,18 @@ const summaryItems = computed(() => {
   const owedAmt = shouldReceive - invRcvdAmt - totalAmt;
 
   return [
-    { label: "应收发票金额", value: `¥ ${formatMoney(shouldReceive)}` },
-    { label: "已收发票金额", value: `¥ ${formatMoney(invRcvdAmt)}` },
-    { label: "本次收票金额", value: `¥ ${formatMoney(totalAmt)}` },
+    {
+      label: "应收发票金额",
+      value: `¥ ${formatMoney(shouldReceive)}`,
+    },
+    {
+      label: "已收发票金额",
+      value: `¥ ${formatMoney(invRcvdAmt)}`,
+    },
+    {
+      label: "本次收票金额",
+      value: `¥ ${formatMoney(totalAmt)}`,
+    },
     {
       label: "欠票金额",
       value: `¥ ${formatMoney(owedAmt)}`,
@@ -1234,136 +1193,31 @@ const summaryItems = computed(() => {
   ];
 });
 
-// ============================================================
-// 计算属性：派生金额
-// ============================================================
-// 1. 实际请款金额 = 请款总金额 + 扣款明细金额之和
-const actualReqAmt = computed(() => {
-  const reqAmt = formData.value.reqAmt || 0;
-  const totalDedAmt = dedTable.value.reduce((sum, item) => {
-    return sum + (Number(item.dedThisAmt) || 0);
-  }, 0);
-  return reqAmt + totalDedAmt;
-});
+/** 合同已结算（conStatus = 60） */
+const isConSettled = computed(() => (Number(formData.value.conStatus) === 60) || conTypeIsJianAn.value === false);
+/** 标签跟着切 */
+const settleAmtLabel = computed(() =>
+  isConSettled.value ? "结算金额" : "预结算金额",
+);
+const settleAmtProp = computed(() =>
+  isConSettled.value ? "settledAmt" : "preSettleAmt",
+);
+const settleAmtValue = computed(() =>
+  isConSettled.value
+    ? Number(formData.value.settledAmt || 0)
+    : Number(formData.value.preSettleAmt || 0),
+);
 
-// 2. 已收发票金额 = 发票列表发票总金额汇总
-const receivedInvoiceAmt = computed(() => {
-  return invoiceMTable.value.reduce((sum, item) => {
-    return sum + (Number(item.totalAmt) || 0);
-  }, 0);
-});
 
-// 3. 应收发票金额 = 实际请款金额
-const receivableInvoiceAmt = computed(() => {
-  return actualReqAmt.value;
-});
+const unlockLastAmt = computed(() => {
+    return (formData.value.unlockAmt ?? 0) - (formData.value.sumAppyAmt ?? 0)
+  } 
+);
 
-// 4. 欠票金额 = 应收发票金额 - 已收发票金额
-const oweInvoiceAmt = computed(() => {
-  return receivableInvoiceAmt.value - receivedInvoiceAmt.value;
-});
 
-// 5. 付款方式付款金额合计
-const totalPayAmt = computed(() => {
-  return payWayTable.value.reduce((sum, item) => {
-    return sum + (Number(item.payAmt) || 0);
-  }, 0);
-});
-
-// ============================================================
-// 计算属性：费用类型过滤 / 强制提高比例 / 来票冲账
-// ============================================================
-/** 建安类合同 → 仅保留顶级 code=03 的费用类型；非建安类 → 剔除 */
-const filteredFeeTypeOptions = computed(() => {
-  const tree: any[] = feeTypeOptions.value || [];
-  if (!tree.length) return [];
-  return conTypeIsJianAn.value
-    ? tree.filter((n) => isJianAnByFeeType(feeTypeOptions, n.id))
-    : tree.filter((n) => !isJianAnByFeeType(feeTypeOptions, n.id));
-});
-
-/** 收集一棵费用类型树里所有可选 id，用于校验当前选中值是否仍合法 */
-function collectFeeTypeIds(nodes: any[], acc: any[] = []) {
-  nodes.forEach((n) => {
-    acc.push(n.id);
-    if (n.children && n.children.length) collectFeeTypeIds(n.children, acc);
-  });
-  return acc;
-}
-
-const needForceRise = computed(() => {
-  if (!conTypeIsJianAn.value) return false;
-  const req = Number(formData.value.reqAmt) || 0;
-  const payable = Number(formData.value.sumAppyAmt) || 0;
-  const unlock = Number(formData.value.unlockAmt) || 0;
-  return req + payable > unlock; // 建安类 且 请款总额+累计已请款 > 已解锁
-});
-
-/** 是否「来票冲账」：此时仅保留发票登记，其余明细/收款账号全部隐藏，校验一并放开 */
-const isOffsetByInvoice = computed(() => formData.value.reqType != 0);
-
-// ============================================================
-// 工具函数
-// ============================================================
-// 归属月份只能选择当月及以前（禁止未来月份）
-const disabledBelongMonth = (date: Date) => {
-  const now = new Date();
-  const curYear = now.getFullYear();
-  const curMonth = now.getMonth(); // 0-based
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  if (year > curYear) return true;
-  if (year === curYear && month > curMonth) return true;
-  return false;
-};
-
-const getRecogStatusType = (status: number) => {
-  switch (status) {
-    case 0: // 未识别
-      return "info";
-    case 1: // 识别成功
-      return "success";
-    case 2: // 识别失败
-      return "danger";
-    case 3: // 识别中
-      return "warning";
-    default:
-      return "info";
-  }
-};
-
-const getRecogStatusText = (status: number) => {
-  switch (status) {
-    case 0:
-      return "未识别";
-    case 1:
-      return "识别成功";
-    case 2:
-      return "识别失败";
-    case 3:
-      return "识别中";
-    default:
-      return "未知";
-  }
-};
-
-// 通用：按 uuid 更新子表某一行
-const updateRow = (rowIndex: number, data: any) => {
-  Object.assign(invoiceMTable.value[rowIndex], data);
-  invoiceMTable.value = [...invoiceMTable.value];
-};
-
-const updateDedRow = (rowIndex: number, data: any) => {
-  const newData = [...dedTable.value];
-  newData[rowIndex] = { ...dedTable.value[rowIndex], ...data };
-  dedTable.value = newData;
-};
-
-// ============================================================
-// 计算逻辑（只读态不计算）
-// ============================================================
+// 计算字段
 const calcFields = () => {
-  if (isReadonly.value) return; // 详情只读不计算
+  if (isReadonly.value) return;        // 详情只读不计算
   const d = formData.value;
   // 实际请款金额由 actualReqAmt 计算属性统一驱动（不在此处覆盖）
   // 剩余应付金额 = 累计应付 - 累计实付
@@ -1372,42 +1226,21 @@ const calcFields = () => {
   d.invOweAmt = (d.invRecAmt || 0) - (d.invRcvdAmt || 0);
   // 应付占产值比 = 累计应付 / 累计产值 × 100%
   d.payOutRate =
-    d.sumProdVal > 0 ? Number(((d.sumPayAmt / d.sumProdVal) * 100).toFixed(2)) : 0;
+    d.sumProdVal > 0
+      ? Number(((d.sumPayAmt / d.sumProdVal) * 100).toFixed(2))
+      : 0;
   // 实付占应付比 = 累计实付 / 累计应付 × 100%
   d.paidPayRate =
-    d.sumPayAmt > 0 ? Number(((d.sumPaidAmt / d.sumPayAmt) * 100).toFixed(2)) : 0;
+    d.sumPayAmt > 0
+      ? Number(((d.sumPaidAmt / d.sumPayAmt) * 100).toFixed(2))
+      : 0;
   // 实付占产值比 = 累计实付 / 累计产值 × 100%
   d.paidOutRate =
-    d.sumProdVal > 0 ? Number(((d.sumPaidAmt / d.sumProdVal) * 100).toFixed(2)) : 0;
+    d.sumProdVal > 0
+      ? Number(((d.sumPaidAmt / d.sumProdVal) * 100).toFixed(2))
+      : 0;
 };
 
-// ============================================================
-// 事件处理：主合同选择
-// ============================================================
-const mainConDialogVisible = ref(false);
-const openMainConDialog = () => {
-  if (isDetail.value) return;
-  if (!formData.value.projId) {
-    ElMessage.warning(`请先选择项目！`);
-    return;
-  }
-  mainConDialogVisible.value = true;
-};
-const handleMainConSelect = async (data) => {
-  if (data && data.length > 0) {
-    let newData = data || [];
-    if (formData.value.conId != newData[0].id) {
-      conId.value = newData[0].id;
-      await getConMainData(newData[0].id);
-      await getConSumData(newData[0].id);
-      await getConDefaultBank();
-    }
-  }
-};
-
-// ============================================================
-// 事件处理：扣款明细（奖罚调整）
-// ============================================================
 const handleAddDed = () => {
   const newRowData = {
     uuid: uuidv4(),
@@ -1428,49 +1261,190 @@ const handleDeleteDed = (row) => {
   dedTable.value = dedTable.value.filter((item) => item.uuid !== row.uuid);
 };
 
-const handleDedSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
-  debugger;
-  if (column === "dedTypeId") {
-    const targetData = dedTypeOptions.value?.find((item) => item.id == newValue);
-    if (targetData) {
-      let amt = row.dedThisAmt;
-      if (targetData.dicValue == "1") {
-        if (amt < 0) {
-          amt = -amt;
-          updateDedRow(rowIndex, { dedTypeId: newValue, dedThisAmt: amt });
-        }
-      } else {
-        if (amt > 0) {
-          amt = -amt;
-          updateDedRow(rowIndex, { dedTypeId: newValue, dedThisAmt: amt });
-        }
-      }
-    } else updateDedRow(rowIndex, { dedTypeId: newValue, dedThisAmt: 0 });
+// ---- 主合同选择 ----
+const mainConDialogVisible = ref(false);
+const openMainConDialog = () => {
+  if (isDetail.value) return;
+  if (!formData.value.projId) {
+    ElMessage.warning(`请先选择项目！`);
     return;
   }
-  if (column === "dedThisAmt") {
-    const targetData = dedTypeOptions.value?.find((item) => item.id == row.dedTypeId);
-    if (targetData) {
-      if (targetData.dicValue == "1") {
-        if (newValue <= 0) {
-          ElMessage.error("调增金额必须为正数");
-          updateDedRow(rowIndex, { dedThisAmt: -newValue });
-          return;
-        }
-      } else {
-        if (newValue >= 0) {
-          ElMessage.error("扣款金额必须为负数");
-          updateDedRow(rowIndex, { dedThisAmt: -newValue });
-          return;
-        }
-      }
+  mainConDialogVisible.value = true;
+};
+const handleMainConSelect =async (data) => {
+  if (data && data.length > 0) {
+    let newData = data || [];
+    if (formData.value.conId != newData[0].id) {
+      conId.value = newData[0].id;
+      await getConMainData(newData[0].id);
+      await getConSumData(newData[0].id);
+      await getConDefaultBank();
     }
   }
 };
 
-// ============================================================
-// 事件处理：发票
-// ============================================================
+// 获取合同分类列表
+const getConTypeList = async () => {
+  try {
+    const res = await conTypeApi.getConTypeList();
+    if (res.code === 200) {
+      conTypeOptions.value = res.data || [];
+    }
+  } catch (error) {
+    console.error("获取合同分类失败:", error);
+  }
+};
+
+/**
+ * 获取目标成本科目列表
+ */
+const getCostSubjectProjList = async () => {
+  if (!props.projId) {
+    ElMessage.warning("请先选择项目");
+    return;
+  }
+  try {
+    const res = await costCategoryApi.getCostSubjectProjList({
+      projId: props.projId,
+      withDetail: true,
+    });
+    if (res.code === 200) {
+      subjectOptions.value = res.data || [];
+    } else {
+      ElMessage.error(res.msg || "getData失败");
+    }
+  } catch (error) {
+    console.error("getData失败:", error);
+  }
+};
+
+/**
+ * 查询合同默认收款账号
+ */
+const getConDefaultBank = async () => {
+  if (!formData.value.conId) {
+    return;
+  }
+  try {
+    const res = await paymentAccountApi.getSupBankList({
+      conId: formData.value.conId,
+      isDefault: true,
+    });
+    debugger
+    if (res.code === 200) {
+      const bank = (res.data && res.data[0]) || null;
+      formData.value.bankName = bank?.bankName || ""; // 收款开户行
+      formData.value.accountName = bank?.accountName || ""; // 收款账户名
+      formData.value.bankAccount = bank?.bankAccount || ""; // 收款账号
+    } else {
+      ElMessage.error(res.msg || "查询合同默认账号失败");
+    }
+  } catch (error) {
+    console.error("查询合同默认账号失败:", error);
+  }
+};
+
+
+/**
+ * 查询合同款项类型信息
+ */
+const getConPayType = async () => {
+  const { conId, payTypeId } = formData.value;
+  
+  if (!conId || !payTypeId) {
+    return;
+  }
+  
+  try {
+    const res = await contractLedgerApi.getContractPayRateList({
+      conId,
+      payTypeId,
+    });
+  
+    if (res.code === 200) {
+      const data = (res.data && res.data[0]) || null;
+      formData.value.payTypeIsCtrl = data?.isCtrl ?? null;
+    } else {
+      ElMessage.error(res.msg || "查询合同款项信息失败！");
+    }
+  } catch (error) {
+    console.error("查询合同款项信息失败:", error);
+  }
+};
+
+//监听conId、payTypeId值
+watch(
+  () => [formData.value.conId, formData.value.payTypeId],
+  ([newConId, newPayTypeId], [oldConId, oldPayTypeId]) => {
+    if (isReadonly.value) return;        // 详情只读态不执行
+    // 初始化跳过
+    if (oldConId == null && oldPayTypeId == null) return;
+
+    // 值变化 + 非空校验
+    if (
+      newConId != null &&
+      newPayTypeId != null &&
+      (newConId !== oldConId || newPayTypeId !== oldPayTypeId)
+    ) {
+      getConPayType();
+    }
+  }
+);
+
+const needForceRise = computed(() => {
+  if (!conTypeIsJianAn.value) return false;
+  const req = Number(formData.value.reqAmt) || 0;
+  const payable = Number(formData.value.sumAppyAmt) || 0;
+  const unlock = Number(formData.value.unlockAmt) || 0;
+  return req + payable > unlock;   // 建安类 且 请款总额+累计已请款 > 已解锁
+});
+
+watch(needForceRise, (newValue, oldValue)=> {
+  if (isReadonly.value) return;        // 详情只读态不覆盖
+  if (needForceRise.value && !formData.value.isRise) {
+    formData.value.isRise = true;
+  }
+});
+
+// 查询费用类型
+const getPayTypeOptions = async (segId: number) => {
+  try {
+    const res = await dictionaryApi.getCostTypeListBySegId({ segId: segId });
+    if (res.code === 200) {
+      feeTypeOptions.value = buildTree(res.data || []);
+    }
+  } catch (error) {}
+};
+
+// 获取项目列表
+const getProjectOptions = async () => {
+  try {
+    const res = await projectAreaApi.getSegMguProjList();
+    if (res.code === 200) {
+      projectOptions.value = res.data || [];
+    }
+  } catch (error) {
+    console.error("获取项目列表失败:", error);
+  }
+};
+
+// 初始化数据字典
+const { getDictList, loadDicts } = useDict(
+  [dictMapping.paymentType,dictMapping.dedType,dictMapping.payType],
+  {
+  treeDictCodes: [],
+});
+
+const initDictData = async () => {
+  await loadDicts();
+  paymentTypeOptions.value = getDictList(dictMapping.paymentType);//款项类型
+  dedTypeOptions.value = getDictList(dictMapping.dedType);
+  payWayOptions.value = getDictList(dictMapping.payType); //支付方式
+};
+
+
+//////////////////////////////
+
 // 查看附件
 const handleViewAnnex = async (row: any) => {
   if (!row.annexId) {
@@ -1501,52 +1475,11 @@ const handleUploadInvoice = async () => {
   uploadVisibleDialog.value = true;
 };
 
- 
-const invcRecognition = useInvoiceRecognition();
-const getInvcData = async (fileList: any) => {
-  // ① 识别前：按文件名粗筛（同文件重复上传通常同名），减少无效识别调用
-  const existNames = new Set(
-    invoiceMTable.value.filter((r) => r.success).map((r) => r.annexName)
-  );
-  const preFiltered = fileList.filter((f) => !existNames.has(f.annexName));
-  if (preFiltered.length < fileList.length) {
-    ElMessage.warning(`已按文件名跳过 ${fileList.length - preFiltered.length} 张重复文件`);
-  }
-
-  // ② 识别（只传未重复的）
-  const rows = await invcRecognition(fileList, {
-    conBillId: formData.value.conBillId,
-    srcType: formType.CON_PAY,
-    generateUuid: uuidv4,
-  });
-
-  if (!rows) return;
-
-  // ③ 识别后：按发票号 invNo 精确去重（历史 + 本次批次内都拦）
-  const norm = (v: any) => (v == null ? "" : String(v).trim());
-
-  const seen = new Set(
-    invoiceMTable.value.map((r) => norm(r.invNo)).filter(Boolean)
-  );
-
-  const uniqueRows = rows.filter((r) => {
-    const no = norm(r.invNo);
-    if (!no) return true;        // 无发票号（识别失败/未知）保留，便于重试
-    if (seen.has(no)) return false;
-    seen.add(no);                // 同时拦「历史重复」和「本次批次内重复」
-    return true;
-  });
-
-  if (uniqueRows.length < rows.length) {
-    ElMessage.warning(`已按发票号跳过 ${rows.length - uniqueRows.length} 张重复发票`);
-  }
-  if (uniqueRows.length > 0) invoiceMTable.value.push(...uniqueRows);
-}
-
 // 获取上传的发票
 const getAnnexFileList = async (fileList: any) => {
   console.log("上传的发票", fileList);
   if (fileList && fileList.length > 0) {
+    // 使用通知提示
     const notify = ElNotification({
       title: "发票识别中",
       message: `正在识别 ${fileList.length} 张发票，请稍候...`,
@@ -1556,6 +1489,7 @@ const getAnnexFileList = async (fileList: any) => {
     });
     try {
       await batchInvoiceRecognition(fileList);
+      // 关闭通知并显示成功
       notify.close();
       ElNotification({
         title: "识别完成",
@@ -1589,8 +1523,8 @@ const batchInvoiceRecognition = async (invoiceDataList: any[]) => {
             ...result.value,
             uuid: uuidv4(),
             id: undefined,
-            srcType: formType.CON_PAY,
-            conBillId: formData.value.conBillId,
+            srcType: "NCON_FEE",
+            nconBillId: undefined,
           };
         } else {
           const originalItem = invoiceDataList[index];
@@ -1599,8 +1533,8 @@ const batchInvoiceRecognition = async (invoiceDataList: any[]) => {
             annexName: originalItem.annexName,
             uuid: uuidv4(),
             id: undefined,
-            srcType: formType.CON_PAY,
-            conBillId: formData.value.conBillId,
+            srcType: "NCON_FEE",
+            nconBillId: undefined,
             invNo: undefined,
             invDate: undefined,
             totalAmt: 0,
@@ -1771,6 +1705,11 @@ const handleInspect = async (row: any) => {
   }
 };
 
+const updateRow = (rowIndex: number, data: any) => {
+  Object.assign(invoiceMTable.value[rowIndex], data);
+  invoiceMTable.value = [...invoiceMTable.value];
+};
+
 const detailInvoiceM = (row) => {
   detailList.value = row.invoiceDs || [];
   dialogVisible.value = true;
@@ -1789,285 +1728,19 @@ const handleInvoiceDetailSuccess = (data) => {
 };
 
 const deleteInvoiceM = ({ uuid }) => {
-  invoiceMTable.value = invoiceMTable.value.filter((item) => item.uuid !== uuid);
+  invoiceMTable.value = invoiceMTable.value.filter(
+    (item) => item.uuid !== uuid,
+  );
 };
 
-// 为某行打开上传
-const openUploadForRow = (row: any) => {
-  if (row.recogStatus === 3) {
-    ElMessage.warning("发票正在识别中，请稍后再操作");
-    return;
-  }
-  currentUploadRow.value = row;
-  tempFileList.value = [];
+/////////////////////////
 
-  nextTick(() => {
-    hiddenUploadRef.value?.triggerFileSelect();
-  });
-};
-
-// 发票识别（uuid 用作识别成功后的数据匹配回填）
-const recognizeInvoiceAsync = async (currUuid: string, annexId: number) => {
-  console.log("发票识别", annexId, currUuid);
-  try {
-    const conBillId = formData.value.id || props.conId;
-    const params = {
-      annexId: annexId,
-    };
-    const res = await commonApi.recognizeInvoice(params);
-    if (res.code === 200 && res.data) {
-      const { mainInfo, detailList = [] } = res.data;
-      const recogniRowIndex = invoiceMTable.value.findIndex(
-        (item) => item.uuid == currUuid,
-      );
-      if (recogniRowIndex !== -1 && mainInfo) {
-        const newData = {
-          invNo: mainInfo.invNo,
-          invDate: mainInfo.invDate,
-          totalAmt: mainInfo.totalAmt,
-          notTaxAmt: mainInfo.notTaxAmt,
-          taxAmt: mainInfo.taxAmt,
-          invType: mainInfo.invType,
-          recogStatus: 1,
-          detailList: detailList,
-        };
-        updateRow(recogniRowIndex, newData);
-      }
-    } else {
-      const failIndex = invoiceMTable.value.findIndex((item) => item.uuid === currUuid);
-      if (failIndex !== -1) {
-        updateRow(failIndex, { recogStatus: 2 });
-      }
-    }
-  } catch (error) {}
-};
-
-const addInvoiceM = () => {
-  const newRowData = {
-    uuid: uuidv4(),
-    id: undefined,
-    conBillId: undefined,
-    invNo: undefined,
-    invDate: undefined,
-    totalAmt: 0,
-    notTaxAmt: 0,
-    taxAmt: 0,
-    invType: "",
-    annexId: undefined,
-    recogStatus: undefined,
-    detailList: [],
-  };
-  invoiceMTable.value = [...invoiceMTable.value, newRowData];
-};
-
-// 上传账号修改附件
-const handleBankUploadSuccess = (file: any) => {
-  bankFileList.value.push(file);
-};
-
-// 上传相关附件
-const handleUploadSuccess = (file: any) => {
-  baseFileList.value.push(file);
-};
-
-// ============================================================
-// 事件处理：付款方式 / 财务分摊
-// ============================================================
-const addPayWay = () => {
-  const newRowData = {
-    uuid: uuidv4(),
-    id: undefined,
-    conBillId: undefined,
-    payWayId: undefined, // 付款方式
-    payAmt: 0, // 付款金额
-    dedRoomAmt: 0, // 其中抵房金额
-  };
-  payWayTable.value = [...payWayTable.value, newRowData];
-};
-const deletePayWay = (row) => {
-  payWayTable.value = payWayTable.value.filter((item) => item.uuid !== row.uuid);
-};
-
-// 付款方式编辑保存回调：付款方式非“转账”时清空抵房金额
-const handlePayWaySave = ({ row, column }: { row: any; column: string }) => {
-  if (column === "payWayId" && row.payWayId !== 2066) {
-    row.dedRoomAmt = 0;
-  }
-};
-
-const addFinance = () => {
-  const newRowData = {
-    uuid: uuidv4(),
-    id: undefined,
-    conBillId: undefined,
-    projId: undefined,
-    acctProjId: undefined,
-    subId: undefined,
-    subAmt: 0,
-  };
-  financeTable.value = [...financeTable.value, newRowData];
-};
-const deleteFinance = (row) => {
-  financeTable.value = financeTable.value.filter((item) => item.uuid !== row.uuid);
-};
-
-// ============================================================
-// 数据加载 / 字典
-// ============================================================
-// 初始化数据字典
-const { getDictList, loadDicts } = useDict(
-  [dictMapping.paymentType, dictMapping.dedType, dictMapping.payType],
-  { treeDictCodes: [] },
-);
-
-const initDictData = async () => {
-  await loadDicts();
-  paymentTypeOptions.value = getDictList(dictMapping.paymentType); // 款项类型
-  dedTypeOptions.value = getDictList(dictMapping.dedType);
-  payWayOptions.value = getDictList(dictMapping.payType); // 支付方式
-};
-
-// 获取项目列表
-const getProjectOptions = async () => {
-  try {
-    const res = await projectAreaApi.getSegMguProjList();
-    if (res.code === 200) {
-      projectOptions.value = res.data || [];
-    }
-  } catch (error) {
-    console.error("获取项目列表失败:", error);
-  }
-};
-
-// 获取合同分类列表
-const getConTypeList = async () => {
-  try {
-    const res = await conTypeApi.getConTypeList();
-    if (res.code === 200) {
-      conTypeOptions.value = res.data || [];
-    }
-  } catch (error) {
-    console.error("获取合同分类失败:", error);
-  }
-};
-
-/**
- * 获取目标成本科目列表
- */
-const getCostSubjectProjList = async () => {
-  if (!props.projId) {
-    ElMessage.warning("请先选择项目");
-    return;
-  }
-  try {
-    const res = await costCategoryApi.getCostSubjectProjList({
-      projId: props.projId,
-      withDetail: true,
-    });
-    if (res.code === 200) {
-      subjectOptions.value = res.data || [];
-    } else {
-      ElMessage.error(res.msg || "getData失败");
-    }
-  } catch (error) {
-    console.error("getData失败:", error);
-  }
-};
-
-// 查询费用类型
-const getPayTypeOptions = async (segId: number) => {
-  try {
-    const res = await dictionaryApi.getCostTypeListBySegId({ segId: segId });
-    if (res.code === 200) {
-      feeTypeOptions.value = buildTree(res.data || []);
-    }
-  } catch (error) {}
-};
-
-// 费用科目（依赖项目）
-const getFinaSubOptions = async (projId: number, segId?: any) => {
-  try {
-    const res = await costCategoryApi.getCostSubjectProjList({ projId, withDetail: true });
-    if (res.code === 200) {
-      finaSubOptions.value = res.data || [];
-      subjectOptions.value = res.data || []; // 同步财务明细表所用选项
-    }
-  } catch (error) {
-    console.error("获取费用科目失败:", error);
-  }
-};
-
-// 费用组织（依赖项目/组织）；接口待接入，先做存在性保护避免报错
-const getFinaOrgOptions = async (projId: number, segId?: any) => {
-  try {
-    const api = costCategoryApi as any;
-    if (typeof api.getCostOrgList !== "function") return;
-    const res = await api.getCostOrgList({ projId, segId });
-    if (res && res.code === 200) {
-      finaOrgOptions.value = res.data || [];
-    }
-  } catch (error) {
-    console.error("获取费用组织失败:", error);
-  }
-};
-
-/**
- * 查询合同默认收款账号
- */
-const getConDefaultBank = async () => {
-  if (!formData.value.conId) {
-    return;
-  }
-  try {
-    const res = await paymentAccountApi.getSupBankList({
-      conId: formData.value.conId,
-      isDefault: true,
-    });
-    debugger;
-    if (res.code === 200) {
-      const bank = (res.data && res.data[0]) || null;
-      formData.value.bankName = bank?.bankName || "";
-      formData.value.accountName = bank?.accountName || "";
-      formData.value.bankAccount = bank?.bankAccount || "";
-    } else {
-      ElMessage.error(res.msg || "查询合同默认账号失败");
-    }
-  } catch (error) {
-    console.error("查询合同默认账号失败:", error);
-  }
-};
-
-/**
- * 查询合同款项类型信息
- */
-const getConPayType = async () => {
-  const { conId, payTypeId } = formData.value;
-  if (!conId || !payTypeId) {
-    return;
-  }
-  try {
-    const res = await contractLedgerApi.getContractPayRateList({
-      conId,
-      payTypeId,
-    });
-    if (res.code === 200) {
-      const data = (res.data && res.data[0]) || null;
-      formData.value.payTypeIsCtrl = data?.isCtrl ?? null;
-    } else {
-      ElMessage.error(res.msg || "查询合同款项信息失败！");
-    }
-  } catch (error) {
-    console.error("查询合同款项信息失败:", error);
-  }
-};
-
-// 切换项目
 const changeProject = async (value: number) => {
   if (value) {
-    debugger;
+    debugger
     const res = await projectAreaApi.getInfoByProjId({ id: value });
     if (res.code === 200 && res.data) {
-      const { compName, compId, segId, segName, segNo } = res.data;
+      const { compName, compId, segId, segName,segNo } = res.data;
       formData.value.segId = segId || "";
       formData.value.segName = segName || "";
       formData.value.segNo = segNo || "";
@@ -2125,135 +1798,240 @@ const clearContractInfo = () => {
   f.isLastPay = null;
 };
 
-// 获取合同累计金额信息 0=产值,1=应付,2=请款,3=已付,4=欠款,7=变更,8=签证,9=解锁应付,10=补充合同
-const getConSumData = async (conId) => {
+// 费用科目（依赖项目）
+const getFinaSubOptions = async (projId: number, segId?: any) => {
   try {
-    const res = await cumulativeDataApi.getAccumData({
-      conId: conId,
-      typeList: [0, 1, 2, 3, 4, 7, 8, 9, 10],
-    });
-
-    if (res.code !== 200 || !res.data) {
-      console.warn("获取合同累计金额信息失败:", res.message);
-      return;
+    const res = await costCategoryApi.getCostSubjectProjList({ projId, withDetail: true });
+    if (res.code === 200) {
+      finaSubOptions.value = res.data || [];
+      subjectOptions.value = res.data || []; // 同步财务明细表所用选项
     }
-
-    const dataMap = new Map();
-    res.data.forEach((item) => {
-      dataMap.set(item.type, item.archAmt || 0);
-    });
-
-    const [
-      sumProdVal, // 0
-      sumPayAmt, // 1
-      sumAppyAmt, // 2
-      sumPaidAmt, // 3
-      sumOwedAmt, // 4
-      changeAmt, // 7 变更
-      visaAmt, // 8 签证
-      unlockAmt, // 9 解锁应付
-      addAmt, // 10 补充合同金额
-    ] = [0, 1, 2, 3, 4, 7, 8, 9, 10].map((type) => dataMap.get(type) || 0);
-
-    const sumChangeAmt = changeAmt + visaAmt;
-
-    const calcRate = (numerator, denominator) => {
-      return denominator > 0 ? Number(((numerator / denominator) * 100).toFixed(2)) : 0;
-    };
-
-    formData.value.addAmt = addAmt;
-    formData.value.sumChangeAmt = sumChangeAmt;
-    formData.value.sumProdVal = sumProdVal;
-    formData.value.sumPayAmt = sumPayAmt;
-    formData.value.sumAppyAmt = sumAppyAmt;
-    formData.value.sumPaidAmt = sumPaidAmt;
-    formData.value.sumOwedAmt = sumOwedAmt;
-    formData.value.unlockAmt = unlockAmt;
-    formData.value.payOutRate = calcRate(sumPayAmt, sumProdVal);
-    formData.value.paidPayRate = calcRate(sumPaidAmt, sumPayAmt);
-    formData.value.paidOutRate = calcRate(sumPaidAmt, sumProdVal);
   } catch (error) {
-    console.error("获取合同信息失败:", error);
-  }
-
-  // 取结算金额
-  try {
-    const res = await cumulativeDataApi.getSettleData({
-      conId: conId,
-      typeList: [0, 1],
-    });
-
-    if (res.code !== 200 || !res.data) {
-      console.warn("获取合同计算信息失败:", res.message);
-      return;
-    }
-
-    const stMap = new Map();
-    res.data.forEach((item) => {
-      stMap.set(item.type, item.archAmt || 0);
-    });
-
-    const [preSettleAmt, settledAmt] = [0, 1].map((type) => stMap.get(type) || 0);
-
-    formData.value.preSettleAmt = preSettleAmt;
-    formData.value.settledAmt = settledAmt;
-  } catch (error) {
-    console.error("获取合同结算信息失败:", error);
+    console.error("获取费用科目失败:", error);
   }
 };
 
-// 获取合同信息
-const getConMainData = async (conId) => {
-  if (!conId) return;
-  if (conId === formData.value.conId) return;
+// 费用组织（依赖项目/组织）；接口待接入，先做存在性保护避免报错
+const getFinaOrgOptions = async (projId: number, segId?: any) => {
   try {
-    const res = await contractLedgerApi.getContractLedgerById({
-      id: conId,
-    });
-    if (res.code === 200 && res.data) {
-      const { conMain } = res.data;
-      debugger;
-      if (formData.value.projId != conMain.projId) {
-        await changeProject(conMain.projId);
-        debugger;
-        formData.value.projId = conMain.projId;
-      }
-
-      formData.value.conId = conMain.id;
-      formData.value.conName = conMain.conName;
-      formData.value.supId = conMain.supID;
-      formData.value.supName = conMain.supName;
-      formData.value.conTypeId = conMain.conTypeId;
-      formData.value.conTypeName = conMain.conTypeName;
-      formData.value.conStatus = conMain.conStatus;
-      formData.value.compName = conMain.companyName;
-      formData.value.projId = conMain.projId;
-      formData.value.compId = conMain.companyId;
-      formData.value.conSysNo = conMain.conSysNo;
-      formData.value.conPhyNo = conMain.conPhyNo;
-      formData.value.needSettle = conMain.needSettle;
-
-      formData.value.signAmt = conMain.signAmt;
-      formData.value.addAmt = conMain.addAmt;
-      formData.value.sumChangeAmt = conMain.sumChangeAmt;
-      formData.value.preSettleAmt = conMain.preSettleAmt;
-      formData.value.settledAmt = conMain.settledAmt;
-      formData.value.sumProdVal = conMain.sumProdVal;
-      formData.value.sumPayAmt = conMain.sumPayAmt;
-      formData.value.sumAppyAmt = conMain.sumAppyAmt;
-      formData.value.sumPaidAmt = conMain.sumPaidAmt;
-      formData.value.sumOwedAmt = conMain.sumOwedAmt;
-      formData.value.payOutRate = conMain.payOutRate;
-      formData.value.paidPayRate = conMain.paidPayRate;
-      formData.value.paidOutRate = conMain.paidOutRate;
-      formData.value.leavePayAmt = conMain.leavePayAmt;
-
-      conTypeIsJianAn.value = isJianAnByConType(conTypeOptions, formData.value.conTypeId);
-      debugger;
+    const api = costCategoryApi as any;
+    if (typeof api.getCostOrgList !== "function") return;
+    const res = await api.getCostOrgList({ projId, segId });
+    if (res && res.code === 200) {
+      finaOrgOptions.value = res.data || [];
     }
   } catch (error) {
-    console.error("获取合同信息失败:", error);
+    console.error("获取费用组织失败:", error);
   }
+};
+
+const getRecogStatusType = (status: number) => {
+  switch (status) {
+    case 0: // 未识别
+      return "info";
+    case 1: // 识别成功
+      return "success";
+    case 2: // 识别失败
+      return "danger";
+    case 3: // 识别中
+      return "warning";
+    default:
+      return "info";
+  }
+};
+
+const getRecogStatusText = (status: number) => {
+  switch (status) {
+    case 0:
+      return "未识别";
+    case 1:
+      return "识别成功";
+    case 2:
+      return "识别失败";
+    case 3:
+      return "识别中";
+    default:
+      return "未知";
+  }
+};
+const addInvoiceM = () => {
+  const newRowData = {
+    uuid: uuidv4(),
+    id: undefined,
+    conBillId: undefined,
+    invNo: undefined, // 发票号
+    invDate: undefined, // 开票日期
+    totalAmt: 0, // 发票总金额
+    notTaxAmt: 0, // 不含税金额
+    taxAmt: 0, // 税额
+    invType: "", // 发票类型
+    annexId: undefined, // 附件ID
+    recogStatus: undefined, // 识别状态 0=未识别 1=识别成功 2=识别失败 3=识别中
+    detailList: [], // 明细数据
+  };
+  invoiceMTable.value = [...invoiceMTable.value, newRowData];
+};
+const hiddenUploadRef = ref();
+const baseFileList = ref([]);
+const tempFileList = ref([]);
+const bankFileList = ref([]);
+const currentUploadRow = ref(null);
+const dialogVisible = ref(false);
+const detailList = ref([]);
+// 为某行打开上传
+const openUploadForRow = (row: any) => {
+  if (row.recogStatus === 3) {
+    ElMessage.warning("发票正在识别中，请稍后再操作");
+    return;
+  }
+  currentUploadRow.value = row;
+  tempFileList.value = [];
+
+  // 触发上传组件的文件选择
+  nextTick(() => {
+    hiddenUploadRef.value?.triggerFileSelect();
+  });
+  // handleUploadSuccess({
+  //   id: 11,
+  //   annexName: "发票94996751.pdf",
+  //   annexSize: 42535,
+  //   annexMd5: "fd5ce710e9c20d54299f9e3f29554939",
+  //   annexPath: "temporary\\20260709\\fd5ce710e9c20d54299f9e3f29554939.pdf",
+  //   annexExt: "pdf",
+  //   uploadStatus: 0,
+  //   expireTime: "2026-07-24T13:48:22.2228291",
+  //   createDate: "2026-07-09T13:48:22.225",
+  //   createId: 15,
+  // });
+};
+
+// 上传账号修改附件
+const handleBankUploadSuccess = (file: any) => {
+  bankFileList.value.push(file);
+};
+
+// 上传相关附件
+const handleUploadSuccess = (file: any) => {
+  baseFileList.value.push(file);
+};
+// 发票识别,uuid用作识别成功后的数据匹配回填
+const recognizeInvoiceAsync = async (currUuid: string, annexId: number) => {
+  console.log("发票识别", annexId, currUuid);
+  try {
+    // 编辑时，优先使用申请单ID；新增时则取合同ID
+    const conBillId = formData.value.id || props.conId;
+    const params = {
+      annexId: annexId,
+      // conBillId: conBillId,
+    };
+    const res = await commonApi.recognizeInvoice(params);
+    // const res = {
+    //   code: 200,
+    //   message: "success",
+    //   data: {
+    //     mainInfo: {
+    //       isDel: false,
+    //       invNo: "94996751",
+    //       invDate: "2021-10-16",
+    //       totalAmt: 10.53,
+    //       notTaxAmt: 9.66,
+    //       taxAmt: 0.87,
+    //       invType: "",
+    //     },
+    //     detailList: [
+    //       {
+    //         isDel: false,
+    //         createId: 15,
+    //         createDate: "2026-07-09 13:48:23",
+    //         operId: 15,
+    //         operDate: "2026-07-09 13:48:23",
+    //         id: 3,
+    //         invMid: 2,
+    //         itemName: "*经营租赁*通行费",
+    //         size: "渝A653PF",
+    //         unit: "客车",
+    //         num: 998,
+    //         price: 38.8,
+    //         totalAmt: 9.66,
+    //         taxRate: 0.09,
+    //         taxAmt: 0.87,
+    //       },
+    //     ],
+    //   },
+    // };
+    if (res.code === 200 && res.data) {
+      const { mainInfo, detailList = [] } = res.data;
+      const recogniRowIndex = invoiceMTable.value.findIndex(
+        (item) => item.uuid == currUuid,
+      );
+      // 有匹配的数据并且识别成功
+      if (recogniRowIndex !== -1 && mainInfo) {
+        const newData = {
+          invNo: mainInfo.invNo, // 发票号
+          invDate: mainInfo.invDate, // 开票日期
+          totalAmt: mainInfo.totalAmt, // 发票总金额
+          notTaxAmt: mainInfo.notTaxAmt, // 不含税金额
+          taxAmt: mainInfo.taxAmt, // 税额
+          invType: mainInfo.invType, // 发票类型
+          recogStatus: 1, // 识别状态,0=未识别 1=识别成功 2=识别失败
+          detailList: detailList, // 明细数据
+        };
+        updateRow(recogniRowIndex, newData);
+      }
+    } else {
+      // 识别失败
+      const failIndex = invoiceMTable.value.findIndex(
+        (item) => item.uuid === currUuid,
+      );
+      if (failIndex !== -1) {
+        updateRow(failIndex, { recogStatus: 2 }); // 识别失败
+      }
+    }
+  } catch (error) {}
+};
+
+const addPayWay = () => {
+  const newRowData = {
+    uuid: uuidv4(),
+    id: undefined,
+    conBillId: undefined,
+    payWayId: undefined, // 付款方式
+    payAmt: 0, // 付款金额
+    dedRoomAmt: 0, // 其中抵房金额
+  };
+  payWayTable.value = [...payWayTable.value, newRowData];
+};
+const deletePayWay = (row) => {
+  payWayTable.value = payWayTable.value.filter(
+    (item) => item.uuid !== row.uuid,
+  );
+};
+
+// 付款方式编辑保存回调：付款方式非“转账”时清空抵房金额
+const handlePayWaySave = ({ row, column }: { row: any; column: string }) => {
+  if (column === "payWayId" && row.payWayId !== 2066) {
+    row.dedRoomAmt = 0;
+  }
+};
+
+const financeTable = ref([]);
+
+const addFinance = () => {
+  const newRowData = {
+    uuid: uuidv4(),
+    id: undefined,
+    conBillId: undefined,
+    projId: undefined, // 项目ID
+    acctProjId: undefined, // 建筑核算项目ID
+    subId: undefined, // 科目ID
+    subAmt: 0, // 金额
+  };
+  financeTable.value = [...financeTable.value, newRowData];
+};
+const deleteFinance = (row) => {
+  financeTable.value = financeTable.value.filter(
+    (item) => item.uuid !== row.uuid,
+  );
 };
 
 // 加载付款申请详情
@@ -2267,32 +2045,33 @@ const loadDetail = async () => {
     backfillData(res.data);
   }
 };
-
 // 数据回填
 const backfillData = async (data) => {
-  debugger;
-  const { flowList, flowBase, bill, payment, payWays, paySubs, invoiceMs, invoiceDs, billDeds, annexList, bankAnnexList } = data;
+  debugger
+  const { flowList, flowBase,bill,payment, payWays, paySubs, invoiceMs, invoiceDs, billDeds,annexList,bankAnnexList } = data;
+  // 回填主表单
   billData.value = { ...billData.value, ...bill };
   flowListData.value = { ...flowListData.value, ...flowList };
   flowBaseData.value = { ...flowBaseData.value, ...flowBase };
 
   Object.assign(formData.value, payment || {});
+  // 确保 conBillId 被正确赋值
   if (payment?.conBillId) {
-    formData.value.projId = flowBase.projId;
+    formData.value.projId= flowBase.projId;
     await changeProject(formData.value.projId);
     formData.value.conBillId = payment.conBillId;
-    formData.value.flowId = billData.value.flowId;
-    formData.value.segId = flowBaseData.value.segId;
-    formData.value.segNo = flowBaseData.value.segNo;
-    formData.value.segName = flowBaseData.value.segName;
-    formData.value.deptName = flowBaseData.value.deptName;
-    formData.value.mguName = flowBaseData.value.mguName;
+    formData.value.flowId=billData.value.flowId;
+    formData.value.segId= flowBaseData.value.segId;
+    formData.value.segNo= flowBaseData.value.segNo;
+    formData.value.segName=flowBaseData.value.segName;
+    formData.value.deptName= flowBaseData.value.deptName;
+    formData.value.mguName= flowBaseData.value.mguName;
     formData.value.compId = flowBaseData.value.compId;
-    formData.value.compName = flowBaseData.value.compName;
-    formData.value.userName = flowBaseData.value.userName || "";
-    formData.value.createDate = billData.value.createDate || "";
-    formData.value.bizNo = billData.value.bizNo || "";
-    formData.value.bizTitle = billData.value.bizTitle || "";
+    formData.value.compName= flowBaseData.value.compName;
+    formData.value.userName=flowBaseData.value.userName || "";
+    formData.value.createDate=billData.value.createDate || "";
+    formData.value.bizNo= billData.value.bizNo || "";
+    formData.value.bizTitle= billData.value.bizTitle || "";
 
     formData.value.id = payment.id;
     formData.value.conId = payment.conId;
@@ -2301,8 +2080,8 @@ const backfillData = async (data) => {
     formData.value.supName = payment.supName;
     formData.value.conTypeId = payment.conTypeId;
     formData.value.conTypeName = payment.conTypeName;
-    formData.value.isNeedOutValue = payment.isNeedOutValue;
-    formData.value.conProperty = payment.conProperty;
+    formData.value.isNeedOutValue =payment.isNeedOutValue;
+    formData.value.conProperty =payment.conProperty;
     formData.value.conStatus = payment.conStatus;
 
     formData.value.signAmt = payment.signAmt;
@@ -2316,54 +2095,72 @@ const backfillData = async (data) => {
     formData.value.settledAmt = payment.settledAmt ?? null;
     formData.value.needSettle = payment.needSettle ?? formData.value.needSettle;
 
-    formData.value.sumProdVal = payment.sumProdVal;
-    formData.value.sumPayAmt = payment.sumPayAmt;
-    formData.value.sumAppyAmt = payment.sumAppyAmt;
-    formData.value.sumPaidAmt = payment.sumPaidAmt;
-    formData.value.sumOwedAmt = payment.sumOwedAmt;
-    formData.value.payOutRate = payment.payOutRate;
-    formData.value.paidPayRate = payment.paidPayRate;
-    formData.value.paidOutRate = payment.paidOutRate;
-    formData.value.reqType = payment.reqType;
-    formData.value.finaTypeId = payment.finaTypeId;
-    formData.value.isRise = payment.isRise;
-    formData.value.leavePayAmt = payment.leavePayAmt;
-    formData.value.reqAmt = payment.reqAmt;
-    formData.value.pbAmount = payment.pbAmount;
-    formData.value.changeAmt = payment.changeAmt;
-    formData.value.factReqAmt = payment.factReqAmt;
-    formData.value.reqDesc = payment.reqDesc;
-    formData.value.invRecAmt = payment.invRecAmt;
-    formData.value.invRcvdAmt = payment.invRcvdAmt;
-    formData.value.invOweAmt = payment.invOweAmt;
-    formData.value.isModifyAcc = payment.isModifyAcc;
-    formData.value.bankName = payment.bankName;
-    formData.value.accountName = payment.accountName;
-    formData.value.bankAccount = payment.bankAccount;
-    formData.value.modifyAccAnnex = payment.modifyAccAnnex;
-    formData.value.status = payment.status;
-    formData.value.payRule = payment.payRule;
-    formData.value.belongMonth = payment.belongMonth;
-    formData.value.payTypeId = payment.payTypeId;
+    formData.value.sumProdVal= payment.sumProdVal;
+    formData.value.sumPayAmt= payment.sumPayAmt;
+    formData.value.sumAppyAmt= payment.sumAppyAmt;
+    formData.value.sumPaidAmt= payment.sumPaidAmt;
+    formData.value.sumOwedAmt= payment.sumOwedAmt;
+    formData.value.payOutRate= payment.payOutRate;
+    formData.value.paidPayRate= payment.paidPayRate;
+    formData.value.paidOutRate= payment.paidOutRate;
+    formData.value.reqType= payment.reqType;
+    formData.value.finaTypeId= payment.finaTypeId;
+    formData.value.isRise= payment.isRise;
+    formData.value.leavePayAmt= payment.leavePayAmt;
+    formData.value.reqAmt= payment.reqAmt;
+    formData.value.pbAmount= payment.pbAmount;
+    formData.value.changeAmt= payment.changeAmt;
+    formData.value.factReqAmt= payment.factReqAmt;
+    formData.value.reqDesc= payment.reqDesc;
+    formData.value.invRecAmt= payment.invRecAmt;
+    formData.value.invRcvdAmt= payment.invRcvdAmt;
+    formData.value.invOweAmt= payment.invOweAmt;
+    formData.value.isModifyAcc= payment.isModifyAcc;
+    formData.value.bankName= payment.bankName;
+    formData.value.accountName= payment.accountName;
+    formData.value.bankAccount=payment.bankAccount;
+    formData.value.modifyAccAnnex= payment.modifyAccAnnex;
+    formData.value.status= payment.status;
+    formData.value.payRule= payment.payRule;
+    formData.value.belongMonth= payment.belongMonth;
+    formData.value.payTypeId=payment.payTypeId;
 
-    conTypeIsJianAn.value = isJianAnByConType(conTypeOptions, formData.value.conTypeId);
+    conTypeIsJianAn.value = isJianAnByConType(conTypeOptions,formData.value.conTypeId,);
+    // normalizeFinaTypeId();
     await nextTick();
     formRef.value?.clearValidate("finaTypeId");
   }
-
-  payWayTable.value = payWays?.map((item) => ({ ...item, uuid: uuidv4() })) || [];
-  financeTable.value = paySubs?.map((item) => ({ ...item, uuid: uuidv4() })) || [];
-  dedTable.value = billDeds?.map((item) => ({ ...item, uuid: uuidv4() })) || [];
+  
+  // 回填付款方式
+  payWayTable.value =
+    payWays?.map((item) => ({
+      ...item,
+      uuid: uuidv4(),
+    })) || [];
+  // 回填财务明细
+  financeTable.value =
+    paySubs?.map((item) => ({
+      ...item,
+      uuid: uuidv4(),
+    })) || [];
+  // 回填发票明细
+  dedTable.value =
+    billDeds?.map((item) => ({
+      ...item,
+      uuid: uuidv4(),
+    })) || [];
+  // 回填发票主表，并将子表数据挂载到对应的主表 detailList 字段
   invoiceMTable.value =
     invoiceMs?.map((item: HConBillInvoiceM) => {
-      const details = invoiceDs?.filter((d: HConBillInvoiceD) => d.invMid === item.id) || [];
+      // 根据 invMid 匹配子表数据
+      const details =
+        invoiceDs?.filter((d: HConBillInvoiceD) => d.invMid === item.id) || [];
       return {
         ...item,
         uuid: uuidv4(),
-        detailList: details,
+        detailList: details, // 子表数据挂载到 detailList
       };
     }) || [];
-
   if (annexList && annexList.length > 0) {
     baseFileList.value = annexList.map((item: any) => ({
       ...item,
@@ -2373,7 +2170,9 @@ const backfillData = async (data) => {
   }
 
   if (formData.value.modifyAccAnnex) {
-    const res = await commonApi.getFileList({ annexId: paymentId.value });
+    const res = await commonApi.getFileList({
+      annexId: paymentId.value,
+    });
     if (res.code === 200 && res.data) {
       if (res.data.length > 0) {
         bankFileList.value = res.data.map((item: any) => ({
@@ -2386,22 +2185,113 @@ const backfillData = async (data) => {
   }
 };
 
-// 生成单据编号
-const createBillNo = async () => {
-  try {
-    const conRes = await commonApi.getBillNo({ bizType: formType.CON_ADD });
-    if (conRes.code === 200) {
-      formData.value.bizNo = conRes.data;
+
+// ==================== 计算逻辑 ====================
+
+// 1. 实际请款金额 = 请款总金额 - 扣款明细表中的金额之和
+//    随 reqAmt 与扣款明细金额变化实时计算
+const actualReqAmt = computed(() => {
+  const reqAmt = formData.value.reqAmt || 0;
+  const totalDedAmt = dedTable.value.reduce((sum, item) => {
+    return sum + (Number(item.dedThisAmt) || 0);
+  }, 0);
+  const val = reqAmt + totalDedAmt;
+  return val;
+});
+
+// 2. 已收发票金额 = 发票列表发票总金额汇总
+const receivedInvoiceAmt = computed(() => {
+  return invoiceMTable.value.reduce((sum, item) => {
+    return sum + (Number(item.totalAmt) || 0);
+  }, 0);
+});
+
+// 3. 应收发票金额 = 实际请款金额
+const receivableInvoiceAmt = computed(() => {
+  return actualReqAmt.value;
+});
+
+// 4. 欠票金额 = 应收发票金额 - 已收发票金额
+const oweInvoiceAmt = computed(() => {
+  return receivableInvoiceAmt.value - receivedInvoiceAmt.value;
+});
+
+// 5. 支付方式付款金额合计
+const totalPayAmt = computed(() => {
+  return payWayTable.value.reduce((sum, item) => {
+    return sum + (Number(item.payAmt) || 0);
+  }, 0);
+});
+
+const updateDedRow = (rowIndex: number, data: any) => {
+  const newData = [...dedTable.value];
+  newData[rowIndex] = { ...dedTable.value[rowIndex], ...data };
+  dedTable.value = newData;
+};
+
+const handleDedSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
+  debugger
+  if (column === "dedTypeId") {
+    const targetData = dedTypeOptions.value?.find(
+      (item) => item.id == newValue,
+    );
+    if (targetData) {
+      let amt = row.dedThisAmt
+      if (targetData.dicValue == "1") {
+        if (amt < 0 ) {
+          amt = -amt;
+          updateDedRow(rowIndex, {dedTypeId:newValue, dedThisAmt:  amt});
+        } 
+      } else {
+        if (amt > 0 ) {
+          amt = -amt;
+          updateDedRow(rowIndex, { dedTypeId:newValue,dedThisAmt: amt });
+        }    
+      }
+    } else updateDedRow(rowIndex, { dedTypeId:newValue,dedThisAmt: 0 });
+    return;
+  }
+  if (column === "dedThisAmt") {
+    
+    const targetData = dedTypeOptions.value?.find(
+      (item) => item.id == row.dedTypeId,
+    );
+    if (targetData) {
+      if (targetData.dicValue == "1") {
+        if (newValue <= 0) {
+          ElMessage.error("调增金额必须为正数");
+          updateDedRow(rowIndex, { dedThisAmt: -newValue });
+          return;
+        }
+      } else {
+        if (newValue >= 0) {
+          ElMessage.error("扣款金额必须为负数");
+          updateDedRow(rowIndex, { dedThisAmt: -newValue });
+          return;
+        }
+      }
     }
-  } catch (error) {
-    console.error("生成合同编号失败:", error);
   }
 };
 
-// ============================================================
-// 保存 / 提交
-// ============================================================
-// 校验规则（动态）：来票冲账时放开“修改收款账号”
+/** 是否「来票冲账」：此时仅保留发票登记，其余明细/收款账号全部隐藏，校验一并放开 */
+const isOffsetByInvoice = computed(() => formData.value.reqType != 0);
+
+
+// ===================== 校验失败辅助 =====================
+// const formRules = {
+//   bizTitle: requiredInputRule("标题"),
+//   projId: requiredRule("项目名称"),
+//   conId: requiredRule("合同名称"),
+//   belongMonth: requiredRule("归属月份"),
+//   finaTypeId: requiredRule("费用类型"),
+//   payTypeId: requiredRule("款项类型"),
+//   reqType : requiredRule("请款类型"),
+//   reqAmt : moneyRule("请款总金额"),
+//   conTyeName: requiredRule("合同分类"),
+//   isRise: requiredRule("是否提高支付比例"),
+//   isModifyAcc: requiredRule("是否修改支付账号"),
+// };
 const formRules = computed(() => {
   const rules: Record<string, any> = {
     bizTitle: requiredInputRule("标题"),
@@ -2421,10 +2311,6 @@ const formRules = computed(() => {
   return rules;
 });
 
-// 是否可请结算款或质保金：如合同需要结算，但是还未计算，则不允许请结算款
-const canApplySettle = computed(() => {
-  return formData.value.needSettle === true && formData.value.conStatus !== 60;
-});
 
 // 提交前校验：扣款明细 / 付款方式 / 收款账号 / 付款合计=实际请款
 const validateDetailTables = (): boolean => {
@@ -2435,6 +2321,7 @@ const validateDetailTables = (): boolean => {
 
   if (isOffsetByInvoice.value) return true;
 
+  // 5. 扣款明细：可以不填；但只要填了（任一字段有值），事项名称、金额、类型必填
   for (const row of dedTable.value) {
     const filled =
       row.dedName ||
@@ -2448,6 +2335,7 @@ const validateDetailTables = (): boolean => {
     }
   }
 
+  // 7. 付款方式必填
   if (payWayTable.value.length === 0) {
     ElMessage.error("请至少添加一种付款方式");
     return false;
@@ -2461,11 +2349,12 @@ const validateDetailTables = (): boolean => {
       ElMessage.error("付款方式：抵房金额不能大于付款金额！");
       return false;
     }
-    row.payDesc = formData.value.conName + formData.value.belongMonth + getOptionsLabelById(payWayOptions.value, formData.value.payTypeId);
+    row.payDesc = formData.value.conName + formData.value.belongMonth + getOptionsLabelById(payWayOptions.value,formData.value.payTypeId);
     row.bankName = formData.value.bankName;
     row.accountName = formData.value.accountName;
     row.bankAccount = formData.value.bankAccount;
   }
+  // 7. 付款方式金额合计必须等于实际请款金额
   if (Math.abs(totalPayAmt.value - actualReqAmt.value) > 0.01) {
     ElMessage.error(
       `付款方式金额合计（${totalPayAmt.value.toFixed(2)}）必须等于实际请款金额（${actualReqAmt.value.toFixed(2)}）`,
@@ -2473,6 +2362,7 @@ const validateDetailTables = (): boolean => {
     return false;
   }
 
+  // 6. 修改收款账号为“是”时，收款信息必填
   if (formData.value.isModifyAcc === true) {
     if (
       !formData.value.bankName ||
@@ -2488,7 +2378,7 @@ const validateDetailTables = (): boolean => {
   return true;
 };
 
-// 校验失败后：滚动到第一个错误项并聚焦对应控件
+// ---- 校验失败后：滚动到第一个错误项并聚焦对应控件 ----
 const focusFirstError = (invalidFields?: Record<string, any>) => {
   const firstProp = Object.keys(invalidFields ?? {})[0];
   if (!firstProp) return;
@@ -2505,12 +2395,67 @@ const focusFirstError = (invalidFields?: Record<string, any>) => {
   });
 };
 
+const handleCancel = async () => {
+  ElMessageBox.confirm("确定要作废吗？", "提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  }).then(async () => {
+    try {
+      const res = await paymentRequestApi.voidPay({id:formData.value.id});
+      if (res.code === 200) {
+        ElMessage.success("作废成功");
+        goBack();
+      }
+    } catch (error) {
+      console.error("作废失败:", error);
+    }
+  });
+};
+
+const handleViewProcess = async () => {
+  if (flowListData.value && flowListData.value?.wfFlowId) {
+    try {
+      const redirectRes = await commonApi.generateRedirectUrl({
+        oaRequestId: flowListData.value.wfFlowId,
+      });
+      if (redirectRes.code === 200 && redirectRes.data) {
+        window.open(redirectRes.data, "_blank");
+      }
+    } catch (error) {
+      console.error("查看流程失败:", error);
+    }
+  } else {
+    ElMessage.warning("暂无流程信息");
+  }
+};
+
+const handleDelete = async () => {
+  ElMessageBox.confirm("确定要删除吗？", "提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  }).then(async () => {
+    try {
+      const res = await paymentRequestApi.delPay({id: formData.value.id});
+      if (res.code === 200) {
+        ElMessage.success("删除成功");
+        goBack();
+      }
+    } catch (error) {
+      console.error("删除失败:", error);
+    }
+  });
+};
+
 const buildSubmitParams = () => {
-  // 非建安类时，隐藏的 5 个字段提交置 0，避免带脏数据入库
+  //非建安类时，隐藏的 5 个字段提交置 0，避免带脏数据入库
+  //（累计变更签证、预结算/结算金额、累计产值、累计应付、应付占产值比、实付占产值比）
   const jianAn = conTypeIsJianAn.value === true;
   const sumChangeAmt = jianAn ? formData.value.sumChangeAmt : 0;
   const preSettleAmt = jianAn ? formData.value.preSettleAmt : 0;
-  const sumProdVal = jianAn ? formData.value.sumProdVal : 0;
+  // const settledAmt = jianAn ? formData.value.settledAmt : 0;
+  const sumProdVal = jianAn ? formData.value.sumProdVal : 0; 
   const sumPayAmt = jianAn ? formData.value.sumPayAmt : 0;
   const payOutRate = jianAn ? formData.value.payOutRate : 0;
   const paidOutRate = jianAn ? formData.value.paidOutRate : 0;
@@ -2526,7 +2471,7 @@ const buildSubmitParams = () => {
       projId: formData.value.projId,
       compId: formData.value.compId,
       compName: formData.value.compName,
-      flowId: formData.value.flowId,
+      flowId:formData.value.flowId,
       conId: formData.value.conId,
       bizNo: formData.value.bizNo,
     },
@@ -2557,46 +2502,48 @@ const buildSubmitParams = () => {
       reqDesc: formData.value.reqDesc,
       invRecAmt: (formData.value.sumAppyAmt ?? 0) + (formData.value.reqAmt ?? 0),
       invRcvdAmt: formData.value.invRcvdAmt ?? 0,
-      invOweAmt:
-        (formData.value.sumAppyAmt ?? 0) +
-        (formData.value.reqAmt ?? 0) -
-        (formData.value.invRcvdAmt ?? 0) -
-        (invcSumData.value.totalAmt ?? 0),
+      invOweAmt: (formData.value.sumAppyAmt ?? 0) + (formData.value.reqAmt ?? 0) - (formData.value.invRcvdAmt ?? 0)-(invcSumData.value.totalAmt ?? 0),
       isModifyAcc: formData.value.isModifyAcc,
       bankName: formData.value.bankName,
       accountName: formData.value.accountName,
       bankAccount: formData.value.bankAccount,
-      modifyAccAnnex: bankFileList.value[0]?.id,
+      modifyAccAnnex :bankFileList.value[0]?.id,
       status: formData.value.status,
       payRule: formData.value.payRule,
       belongMonth: formData.value.belongMonth,
-      payTypeId: formData.value.payTypeId,
-      conStatus: formData.value.conStatus,
+      payTypeId:formData.value.payTypeId,
+      conStatus:formData.value.conStatus,
       isLastRec: formData.value.isLastPay,
       unlockAmt: formData.value.unlockAmt,
       payTypeIsCtrl: formData.value.payTypeIsCtrl,
       settledAmt: formData.value.settledAmt,
     },
     billDeds: !isOffsetByInvoice.value ? dedTable.value : [],
-    invoiceMs: invoiceMTable.value,
-    invoiceDs: detailList.value,
-    payWays: !isOffsetByInvoice.value ? payWayTable.value : [],
-    paySubs: !isOffsetByInvoice.value ? financeTable.value : [],
+    invoiceMs: invoiceMTable.value ,
+    invoiceDs: detailList.value ,
+    payWays:!isOffsetByInvoice.value ? payWayTable.value : [],
+    paySubs:!isOffsetByInvoice.value ? financeTable.value : [],
+  //  addProcesses: formData.value.addType == 1 ? tableList.value : [],
     annexList: baseFileList.value || [],
   };
 };
 
+//是否可请结算款或质保金：如合同需要结算，但是还未计算，则不允许请结算款
+const canApplySettle = computed(() => {
+  return formData.value.needSettle === true && formData.value.conStatus !== 60
+});  
+
 const handleFormDataSave = async () => {
   submitLoading.value = true;
   try {
-    await formRef.value.validateField(["bizTitle", "projId", "conId"]);
-    if (canApplySettle.value === false && (formData.value.payTypeId === 2064 || formData.value.payTypeId === 2065)) {
+    await formRef.value.validateField(["bizTitle","projId","conId"]); 
+    if (canApplySettle.value === false && (formData.value.payTypeId ===2064 || formData.value.payTypeId===2065)){
       ElMessage.error("该合同尚未结算，不可请结算款和质保金！");
       return;
     }
 
-    const params = buildSubmitParams();
-    debugger;
+    const params = buildSubmitParams()
+    debugger
     const res = await paymentRequestApi.editPay(params);
     if (res.code === 200 && res.data) {
       formData.value.id = res.data;
@@ -2611,11 +2558,12 @@ const handleFormDataSave = async () => {
   }
 };
 
+
 const handleFormDataSubmit = async () => {
   submitLoading.value = true;
   try {
     await formRef.value.validate();
-    if (canApplySettle.value === false && (formData.value.payTypeId === 2064 || formData.value.payTypeId === 2065)) {
+    if (canApplySettle.value === false && (formData.value.payTypeId ===2064 || formData.value.payTypeId===2065)){
       ElMessage.error("该合同尚未结算，不可请结算款和质保金！");
       return;
     }
@@ -2624,6 +2572,7 @@ const handleFormDataSubmit = async () => {
       ElMessage.error("建安类合同：请款总金额与累计已请款之和已超过可解锁请款金额，必须将【是否提高支付比例】设为'是'！");
       return;
     }
+    // 明细表提交校验（保存草稿不校验，详见 handleFormDataSave）
     if (!validateDetailTables()) {
       submitLoading.value = false;
       return;
@@ -2631,19 +2580,23 @@ const handleFormDataSubmit = async () => {
     if (!isOffsetByInvoice.value && formData.value.isModifyAcc && bankFileList.value.length === 0) {
       ElMessage.error("请上传修改收款银行账号的相关凭证附件！");
       return;
-    }
+    } 
 
-    const params = buildSubmitParams();
-    const res = await paymentRequestApi.submitPay(params);
+    const params = buildSubmitParams()
+    let res;
+    res = await paymentRequestApi.submitPay(params);
 
     if (res.code === 200) {
       ElMessage.success("提交成功,已发起审批！");
+      // 生成OA审批页面重定向地址
       const redirectRes = await commonApi.generateRedirectUrl({
         oaRequestId: res.data,
       });
+      // 提交成功后，关闭当前页面，跳转到单据列表页面
       goBack();
 
       if (redirectRes.code === 200 && redirectRes.data) {
+        // 打开OA审批页面
         setTimeout(() => {
           window.open(redirectRes.data, "_blank");
         }, 800);
@@ -2656,59 +2609,6 @@ const handleFormDataSubmit = async () => {
   }
 };
 
-const handleCancel = async () => {
-  ElMessageBox.confirm("确定要作废吗？", "提示", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
-    type: "warning",
-  }).then(async () => {
-    try {
-      const res = await paymentRequestApi.voidPay({ id: formData.value.id });
-      if (res.code === 200) {
-        ElMessage.success("作废成功");
-        goBack();
-      }
-    } catch (error) {
-      console.error("作废失败:", error);
-    }
-  });
-};
-
-const handleDelete = async () => {
-  ElMessageBox.confirm("确定要删除吗？", "提示", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
-    type: "warning",
-  }).then(async () => {
-    try {
-      const res = await paymentRequestApi.delPay({ id: formData.value.id });
-      if (res.code === 200) {
-        ElMessage.success("删除成功");
-        goBack();
-      }
-    } catch (error) {
-      console.error("删除失败:", error);
-    }
-  });
-};
-
-const handleViewProcess = async () => {
-  if (flowListData.value && flowListData.value?.wfFlowId) {
-    try {
-      const redirectRes = await commonApi.generateRedirectUrl({
-        oaRequestId: flowListData.value.wfFlowId,
-      });
-      if (redirectRes.code === 200 && redirectRes.data) {
-        window.open(redirectRes.data, "_blank");
-      }
-    } catch (error) {
-      console.error("查看流程失败:", error);
-    }
-  } else {
-    ElMessage.warning("暂无流程信息");
-  }
-};
-
 // 返回操作
 const goBack = () => {
   if (isAdd.value) {
@@ -2717,37 +2617,198 @@ const goBack = () => {
   if (isEdit.value) {
     tagsStore.closeTagByPath("/con/supplement-contract/edit");
   }
-  router.go(-1);
+  router.go(-1); // 返回上个页面
 };
 
-// ============================================================
-// 监听器
-// ============================================================
-// 监听 conId、payTypeId 变化 → 查合同款项信息
-watch(
-  () => [formData.value.conId, formData.value.payTypeId],
-  ([newConId, newPayTypeId], [oldConId, oldPayTypeId]) => {
-    if (isReadonly.value) return;
-    if (oldConId == null && oldPayTypeId == null) return;
-    if (
-      newConId != null &&
-      newPayTypeId != null &&
-      (newConId !== oldConId || newPayTypeId !== oldPayTypeId)
-    ) {
-      getConPayType();
+// 提交
+// const handleSubmit = async () => {
+//   console.log("表单", formData.value);
+//   console.log("扣款明细", dedTable.value);
+//   console.log("发票登记", invoiceMTable.value);
+//   console.log("付款方式", payWayTable.value);
+//   console.log("财务明细", financeTable.value);
+//   if (isDetail.value) return;
+//   await formRef.value?.validate();
+//   if (!validateDetailTables()) return;
+//   submitLoading.value = true;
+//   // 构建参数
+//   const params = buildSaveParams();
+//   console.log("提交参数", params);
+//   try {
+//     let res;
+//     if (props.mode === "edit") {
+//       res = await paymentRequestApi.editPay(params);
+//     } else {
+//       res = await paymentRequestApi.addPay(params);
+//     }
+//     if (res.code === 200) {
+//       ElMessage.success("保存成功");
+//       emit("success", res.data);
+//     }
+//   } finally {
+//     submitLoading.value = false;
+//   }
+// };
+
+const createBillNo = async () => {
+  try {
+    // BCBH:补充合同编号前缀
+    const conRes = await commonApi.getBillNo({ bizType: formType.CON_ADD });
+    if (conRes.code === 200) {
+      formData.value.bizNo = conRes.data;
     }
-  },
-);
-
-// 强制提高支付比例
-watch(needForceRise, () => {
-  if (isReadonly.value) return;
-  if (needForceRise.value && !formData.value.isRise) {
-    formData.value.isRise = true;
+  } catch (error) {
+    console.error("生成合同编号失败:", error);
   }
-});
+};
 
-// 监听变化自动计算（已锁/欠款/比率等）
+// 获取合同累计金额信息 0=产值,1=应付,2=请款,3=已付,4=欠款,5=扣款,6=已扣,7=变更,8=签证,9=解锁应付,10-补充合同
+const getConSumData = async (conId) => {
+  try {
+    const res = await cumulativeDataApi.getAccumData({
+      conId: conId,
+      typeList: [0, 1, 2, 3, 4, 7, 8, 9, 10],
+    });
+    
+    if (res.code !== 200 || !res.data) {
+      console.warn('获取合同累计金额信息失败:', res.message);
+      return;
+    }
+
+    // 创建 type 到数据的映射
+    const dataMap = new Map();
+    res.data.forEach(item => {
+      dataMap.set(item.type, item.archAmt || 0);
+    });
+
+    // 解构赋值，便于计算
+    const [
+      sumProdVal,   // 0
+      sumPayAmt,    // 1
+      sumAppyAmt,   // 2
+      sumPaidAmt,   // 3
+      sumOwedAmt,   // 4
+      changeAmt,    // 7 变更
+      visaAmt,      // 8 签证
+      unlockAmt,       // 9 解锁应付
+      addAmt        // 10 补充合同金额
+    ] = [0, 1, 2, 3, 4, 7, 8, 9, 10].map(type => dataMap.get(type) || 0);
+
+    // 计算累计变更签证
+    const sumChangeAmt = changeAmt + visaAmt;
+
+    // 计算比率函数（防止除零）
+    const calcRate = (numerator, denominator) => {
+      return denominator > 0 ? Number(((numerator / denominator) * 100).toFixed(2)) : 0;
+    };
+
+    formData.value.addAmt = addAmt;
+    formData.value.sumChangeAmt = sumChangeAmt;
+    formData.value.sumProdVal = sumProdVal;
+    formData.value.sumPayAmt = sumPayAmt;
+    formData.value.sumAppyAmt = sumAppyAmt;
+    formData.value.sumPaidAmt = sumPaidAmt;
+    formData.value.sumOwedAmt = sumOwedAmt;
+    formData.value.unlockAmt = unlockAmt;
+    formData.value.payOutRate = calcRate(sumPayAmt, sumProdVal);
+    formData.value.paidPayRate = calcRate(sumPaidAmt, sumPayAmt);
+    formData.value.paidOutRate = calcRate(sumPaidAmt, sumProdVal);
+  } catch (error) {
+    console.error("获取合同信息失败:", error);
+  }
+
+  //取结算金额
+  try {
+    const res = await cumulativeDataApi.getSettleData({
+      conId: conId,
+      typeList: [0, 1],
+    });
+    
+    if (res.code !== 200 || !res.data) {
+      console.warn('获取合同计算信息失败:', res.message);
+      return;
+    }
+
+    // 创建 type 到数据的映射
+    const stMap = new Map();
+    res.data.forEach(item => {
+      stMap.set(item.type, item.archAmt || 0);
+    });
+
+    // 解构赋值，便于计算
+    const [
+      preSettleAmt,   // 0预结算金额
+      settledAmt,    // 1结算金额
+    ] = [0, 1].map(type => stMap.get(type) || 0);
+
+    formData.value.preSettleAmt = preSettleAmt;
+    formData.value.settledAmt = settledAmt;    
+  } catch (error) {
+    console.error("获取合同结算信息失败:", error);
+  }
+};
+
+// 获取合同信息
+const getConMainData = async (conId) => {
+  if (!conId) return;
+  if (conId === formData.value.conId) return
+  try {
+    const res = await contractLedgerApi.getContractLedgerById({
+      id: conId,
+    });
+    if (res.code === 200 && res.data) {
+      const {
+        conMain,
+      } = res.data;
+      debugger
+      if (formData.value.projId != conMain.projId) {
+        await changeProject(conMain.projId);
+        debugger
+        formData.value.projId = conMain.projId;
+        //getBuildingListByProjId(conMain.projId);
+      }
+
+      // formData.value.segId = conMain.segId;
+      // formData.value.segName = conMain.segName;
+      // formData.value.segNo = conMain.segNo;     
+      formData.value.conId = conMain.id;
+      formData.value.conName = conMain.conName;
+      formData.value.supId = conMain.supID;
+      formData.value.supName = conMain.supName;
+      formData.value.conTypeId = conMain.conTypeId;
+      formData.value.conTypeName = conMain.conTypeName;
+      formData.value.conStatus = conMain.conStatus;
+      formData.value.compName = conMain.companyName;
+      formData.value.projId = conMain.projId;
+      formData.value.compId = conMain.companyId;
+      formData.value.conSysNo = conMain.conSysNo;
+      formData.value.conPhyNo = conMain.conPhyNo;
+      formData.value.needSettle = conMain.needSettle;
+
+      formData.value.signAmt= conMain.signAmt; // 合同签约金额
+      formData.value.addAmt= conMain.addAmt; // 补充合同金额
+      formData.value.sumChangeAmt= conMain.sumChangeAmt; // 累计变更签证
+      formData.value.preSettleAmt= conMain.preSettleAmt; // 预结算合同金额
+      formData.value.settledAmt= conMain.settledAmt; //结算金额
+      formData.value.sumProdVal= conMain.sumProdVal; // 累计产值
+      formData.value.sumPayAmt= conMain.sumPayAmt;// 累计应付
+      formData.value.sumAppyAmt= conMain.sumAppyAmt; // 累计请款
+      formData.value.sumPaidAmt= conMain.sumPaidAmt; // 累计实付
+      formData.value.sumOwedAmt= conMain.sumOwedAmt; // 累计欠款
+      formData.value.payOutRate= conMain.payOutRate; // 应付占产值比率
+      formData.value.paidPayRate= conMain.paidPayRate; // 实付占应付比率
+      formData.value.paidOutRate= conMain.paidOutRate; // 实付占产值比率
+      formData.value.leavePayAmt= conMain.leavePayAmt; // 剩余应付金额 
+
+      conTypeIsJianAn.value = isJianAnByConType(conTypeOptions,formData.value.conTypeId,);
+      debugger
+    }
+  } catch (error) {
+    console.error("获取合同信息失败:", error);
+  }
+};
+
+// 监听变化自动计算
 watch(
   () => [
     formData.value.reqAmt,
@@ -2769,10 +2830,11 @@ watch(
 
 // 实际请款金额变化：同步展示字段；付款方式仅一行时联动其付款金额
 watch(actualReqAmt, (val) => {
-  if (isReadonly.value) return;
+  if (isReadonly.value) return;        // 详情只读态不执行
   if (!isDetail.value) {
     formData.value.factReqAmt = val;
   }
+  // 仅一行付款方式时，该行付款金额自动等于实际请款金额；多行不联动
   if (payWayTable.value.length === 1) {
     payWayTable.value[0].payAmt = val;
   }
@@ -2781,8 +2843,8 @@ watch(actualReqAmt, (val) => {
 // 修改收款账号切换为“否”时，回填合同收款信息
 watch(
   () => formData.value.isModifyAcc,
-  (val) => {
-    if (isReadonly.value) return;
+  (val) => {    
+    if (isReadonly.value) return;        // 详情只读态不执行
     if (val !== true) {
       getConDefaultBank();
       formData.value.modifyAccAnnex = undefined;
@@ -2790,30 +2852,33 @@ watch(
   },
 );
 
-// 建安标记 / 费用类型选项变化后，若当前已选费用类型不在允许范围内则清空
-watch([() => conTypeIsJianAn.value, filteredFeeTypeOptions], () => {
-  if (isReadonly.value) return;
-  const id = formData.value.finaTypeId;
-  if (id == null) return;
-  const allowIds = collectFeeTypeIds(filteredFeeTypeOptions.value || []);
-  if (allowIds && allowIds.length > 0 && !allowIds.includes(id)) {
-    formData.value.finaTypeId = null;
-  }
-});
+//建安标记 / 费用类型选项变化后，若当前已选费用类型不在允许范围内则清空
+watch(
+  [() => conTypeIsJianAn.value, filteredFeeTypeOptions],
+  () => {
+    if (isReadonly.value) return;        // 详情只读态不执行
+  
+    const id = formData.value.finaTypeId;
+    if (id == null) return;
+    const allowIds = collectFeeTypeIds(filteredFeeTypeOptions.value || []);
+    if (!allowIds && allowIds.length > 0 && !allowIds.includes(id)) {
+      formData.value.finaTypeId = null;
+    }
+  },
+);
 
-// 切换请款类型时，清除残留的校验红字
+//切换请款类型时，隐藏卡片上的校验状态一并清掉，避免残留红字挡住提交
 watch(
   () => formData.value.reqType,
   async () => {
-    if (isReadonly.value) return;
+    if (isReadonly.value) return;        // 详情只读态不执行
     await nextTick();
     formRef.value?.clearValidate();
   },
 );
 
-// ============================================================
-// 初始化 / 生命周期
-// ============================================================
+// ===================== 初始化 / 生命周期 =====================
+// 初始化
 const initData = async () => {
   loadingForm.value = true;
   try {
@@ -2826,22 +2891,25 @@ const initData = async () => {
       await getConMainData(conId.value);
       await getConSumData(conId.value);
       await getConDefaultBank();
+      // 新建时默认新增一行付款方式
       if (payWayTable.value.length === 0) {
         addPayWay();
       }
     } else if ((props.mode === "edit" || props.mode === "detail") && props.paymentId) {
-      debugger;
-      await loadDetail();
+      debugger
+      await loadDetail();    
     }
-  } finally {
+  }
+  finally {
     loadingForm.value = false;
   }
-};
+}
 
 onMounted(() => {
-  debugger;
+  debugger
   initData();
 });
+
 </script>
 
 <style scoped lang="scss">
@@ -2964,6 +3032,19 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.actionBar-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+.actions-btn {
+  height: 28px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
 }
 
 /* 滚动条美化 */

@@ -26,11 +26,11 @@ const conId = Number(route.query.conId); // 合同ID
 const paymentId = Number(route.query.paymentId); // 付款申请ID
 
 const handleSuccess = () => {
-  router.back();
+ // router.back();
 };
 
 const handleCancel = () => {
-  router.back();
+ // router.back();
 };
 </script>
 

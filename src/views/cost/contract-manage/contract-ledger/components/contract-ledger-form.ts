@@ -45,6 +45,7 @@ import {
 } from "@/utils/form-rule-validate.ts";
 // 重新导出类型，保持外部 import 路径不变
 import { formType } from '@/types/form/form-types.ts'
+import { normalizeCode } from "@/utils/common.ts";
 export type { ContractFormProps, ContractFormEmits, ContractFormData };
 
 // ============ Composable ============
@@ -274,8 +275,6 @@ export function useContractForm(props: ContractFormProps, emit: ContractFormEmit
   );
 
   const JIAN_AN_CODE = "2";
-  const normalizeCode = (c: any) =>
-    c == null ? "" : String(c).replace(/^0+(?=\d)/, "");
 
   // 从分类树反查 targetId 所属顶级节点的 code
   const getRootCodeOf = (targetId: any): string | undefined => {
@@ -335,6 +334,26 @@ export function useContractForm(props: ContractFormProps, emit: ContractFormEmit
       }
     },
   );
+
+const validatePayRate = (): boolean => {
+  if (!showPayrate || !isJianAn) {
+    return true;
+  }
+
+  // 应付比例之和
+  const rateTotal = payrateTable.value.reduce(
+    (sum, item) => sum + (Number(item.payRate) || 0),
+    0,
+  );
+
+  if (rateTotal !== 100) {
+    ElMessage.warning(
+      `支付方式表应付比例合计应等于100%，请核对后再提交！`,
+    );
+    return false;
+  }
+  return true;
+};
 
   // ---- 表单校验规则 ----
   //const formRules = ref(createContractFormRules());
@@ -398,14 +417,14 @@ export function useContractForm(props: ContractFormProps, emit: ContractFormEmit
   const handleSupplierSelect = (data) => {
     if (data && data.length > 0) {
       let newData = data || [];
-      if (formData.value.supId != newData[0].id) {
+      if (formData.value.supId != newData[0].id) {        
+        // ...带出电话/身份证/职务/银行信息
+        debugger
+        if (formData.value.supId != newData[0].id) {
+          getSupplierContactAndBank(newData[0].id)  
+        }
         formData.value.supId = newData[0].id;
         formData.value.supName = newData[0].supName || "";
-        
-        // ...带出电话/身份证/职务/银行信息
-        if (formData.value.supId != newData[0].supId) {
-          getSupplierContactAndBank(formData.value.supId)
-        }
       }
     }
   };
@@ -877,36 +896,66 @@ export function useContractForm(props: ContractFormProps, emit: ContractFormEmit
   };
 
  // 需求8：支付明细所有列均为必填
-  const validatePayrateTable = () => {
-    if (!showPayrate.value) {
-      payrateTable.value = [];
-      return true; // 不显示支付比例时不校验
-    }
-    if (payrateTable.value.length === 0) {
-      ElMessage.error("支付比例明细列表不能为空");
+const validatePayrateTable = () => {
+  if (!showPayrate.value) {
+    payrateTable.value = [];
+    return true;
+  }
+  
+  if (payrateTable.value.length === 0) {
+    ElMessage.error("支付比例明细列表不能为空");
+    return false;
+  }
+
+  // 记录每个 payTypeId 出现的行号
+  const payTypeMap = new Map<number | string, number[]>();
+
+  for (let i = 0; i < payrateTable.value.length; i++) {
+    const item = payrateTable.value[i];
+    const rowNum = i + 1;
+
+    if (!item.payTypeId) {
+      ElMessage.error(`支付比例明细列表第${rowNum}行：请选择款项类型`);
       return false;
     }
-    for (let i = 0; i < payrateTable.value.length; i++) {
-      const item = payrateTable.value[i];
-      if (!item.payTypeId) {
-        ElMessage.error(`支付比例明细列表第${i + 1}行：请选择款项类型`);
-        return false;
-      }
-      if (!item.payRate || item.payRate <= 0) {
-        ElMessage.error(`支付比例明细列表第${i + 1}行：应付比例必须大于0`);
-        return false;
-      }
-      if (item.isCtrl === null || item.isCtrl === undefined) {
-        ElMessage.error(`支付比例明细列表第${i + 1}行：请选择是否强控`);
-        return false;
-      }
-      if (!item.payIntvl || item.payIntvl <= 0) {
-        ElMessage.error(`支付比例明细列表第${i + 1}行：支付周期必须大于0`);
-        return false;
-      }
+
+    // 记录 payTypeId 出现的行号
+    if (!payTypeMap.has(item.payTypeId)) {
+      payTypeMap.set(item.payTypeId, []);
     }
-    return true;
-  };
+    payTypeMap.get(item.payTypeId)!.push(rowNum);
+
+    if (!item.payRate || item.payRate <= 0) {
+      ElMessage.error(`支付比例明细列表第${rowNum}行：应付比例必须大于0`);
+      return false;
+    }
+
+    if (item.isCtrl === null || item.isCtrl === undefined) {
+      ElMessage.error(`支付比例明细列表第${rowNum}行：请选择是否强控`);
+      return false;
+    }
+
+    if (!item.payIntvl || item.payIntvl <= 0) {
+      ElMessage.error(`支付比例明细列表第${rowNum}行：支付周期必须大于0`);
+      return false;
+    }
+  }
+
+  // 检查重复的款项类型
+  const duplicateMessages: string[] = [];
+  for (const [payTypeId, rows] of payTypeMap.entries()) {
+    if (rows.length > 1) {
+      duplicateMessages.push(`款项类型"${payTypeId}"在第${rows.join('、')}行重复`);
+    }
+  }
+
+  if (duplicateMessages.length > 0) {
+    ElMessage.error(`支付比例明细列表：${duplicateMessages.join('；')}`);
+    return false;
+  }
+
+  return true;
+};
 
   // ---- 校验失败后：滚动到第一个错误项并聚焦对应控件 ----
   const focusFirstError = (invalidFields?: Record<string, any>) => {
@@ -935,15 +984,12 @@ export function useContractForm(props: ContractFormProps, emit: ContractFormEmit
       if (!validatePriceTable()) return;
       //await submitContractFormRules();
       if (!validatePayrateTable()) return;
+      if (!validatePayRate()) return;
 
       submitLoading.value = true;
       const params = buildSubmitParams();
       let res;
-      if (formData.value.id) {
-        res = await contractLedgerApi.submitContractLedger(params);
-      } else {
-        res = await contractLedgerApi.saveContractLedger(params);
-      }
+      res = await contractLedgerApi.submitContractLedger(params);
       if (res.code === 200) {
         ElMessage.success("提交成功,已发起审批！");
         // 生成OA审批页面重定向地址

@@ -37,8 +37,8 @@ export const versionStatusEnum = [
  * 是否 枚举
  */
 export const YesOrNoStatusEnum = [
-  { value: 0, label: "否", type: "warning" },
-  { value: 1, label: "是", type: "success" },
+  { value: false, label: "否", type: "warning" },
+  { value: true, label: "是", type: "success" },
 ]
 
 

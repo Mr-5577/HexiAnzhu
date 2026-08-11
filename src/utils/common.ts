@@ -333,3 +333,13 @@ export const safeSubtract = (
   const factor = Math.pow(10, decimals);
   return (Math.round(a * factor) - Math.round(b * factor)) / factor;
 };
+
+/**
+ * 标准化编码：去除前导零
+ * @param code 原始编码
+ * @returns 标准化后的编码字符串
+ */
+export const normalizeCode = (code: any): string => {
+  if (code == null) return '';
+  return String(code).replace(/^0+(?=\d)/, '');
+};

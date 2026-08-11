@@ -13,7 +13,7 @@
 interface SummaryItem {
   label: string;
   value: string;
-  type?: "primary" | "tax";
+  type?: "primary" | "tax" | "error";
 }
 defineProps<{
   items: SummaryItem[];
@@ -50,6 +50,10 @@ defineProps<{
 
     &.tax {
       color: #e6a23c;
+    }
+
+    &.error {
+      color: #e63c45;
     }
   }
 }

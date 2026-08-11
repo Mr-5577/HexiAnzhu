@@ -110,14 +110,14 @@
         type="primary"
         link
         @click="handleEdit(row)"
-        :disabled="row.conStatus !== 0 || row.createId === userStore.userInfo.id"
+        :disabled="row.conStatus !== 0 || row.createId !== userStore.userInfo.id"
       >
         编辑
       </el-button>
       <el-button type="primary" link @click="handleDetail(row)">
         合同详情
       </el-button>
-      <el-button type="primary" link @click="handleBookDetail(row)" :disabled="row.conStatus === 0 || row.conStatus === 10 || !row.conStatus">
+      <el-button type="primary" link @click="handleBookDetail(row)" :disabled="row.conStatus === 0 || row.conStatus === 10 || row.conStatus === null">
         台账详情
       </el-button>
       <el-button

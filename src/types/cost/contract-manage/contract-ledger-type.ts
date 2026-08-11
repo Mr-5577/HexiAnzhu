@@ -273,7 +273,7 @@ export interface HConMainQuery {
   /** 合同名称 */
   conName?: string;
   /** 合同状态 */
-  conStatus?: number;
+  conStatus?: number[];
   /** 供应商名称 */
   supName?: string;
   /** 合同分类 */

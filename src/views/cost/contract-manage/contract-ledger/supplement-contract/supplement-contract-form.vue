@@ -571,6 +571,7 @@ import ChooseVisaDialog from "@/components/business/choose-cost-visa-dialog.vue"
 import ChooseChangeDialog from "@/components/business/choose-cost-change-dialog.vue";
 import { NAV_CARDS, createPriceColumns, createProcessColumns } from "./supplement-contract-config.ts";
 import { bankCardRule, moneyRule, optionalInputRule, phoneRule, requiredInputRule, requiredRule } from "@/utils/form-rule-validate.ts";
+import { normalizeCode } from "@/utils/common.ts";
 
 // ===================== Props / Emits =====================
 const props = defineProps<{
@@ -631,8 +632,6 @@ const { getDictList, loadDicts } = useDict([dictMapping.proProf], {
 
 // ===================== 工具 computed：建安类判断 =====================
 const JIAN_AN_CODE = "2";
-const normalizeCode = (c: any) =>
-  c == null ? "" : String(c).replace(/^0+(?=\d)/, "");
 
 // 从分类树反查 targetId 所属顶级节点的 code
 const getRootCodeOf = (targetId: any): string | undefined => {

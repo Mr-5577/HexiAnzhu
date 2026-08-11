@@ -52,7 +52,7 @@
           filterable
         />
       </el-form-item>
-      <el-form-item label="合同状态" prop="conStatus">
+      <!-- <el-form-item label="合同状态" prop="conStatus">
         <el-select
           v-model="queryParams.conStatus"
           placeholder="请选择合同状态"
@@ -66,7 +66,7 @@
             :value="item.value"
           />
         </el-select>
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item label="经办人" prop="agentId">
         <ChooseEmployee
           v-model="queryParams.agentId"
@@ -185,8 +185,8 @@ const tableRef = ref();
 const queryParams = ref({
   projSegId: undefined,
   projMguId: undefined,
-  conStatus: undefined,
-  projId: undefined,
+  conStatus: [40,60],
+  projId: props.projId,
   conName: "",
   supName: "",
   conTypeId: undefined,
@@ -228,8 +228,8 @@ const resetState = () => {
   queryParams.value = {
     projSegId: undefined,
     projMguId: undefined,
-    conStatus: undefined,
-    projId: undefined,
+    conStatus: [40,60],
+    projId: props.projId,
     conName: "",
     supName: "",
     conTypeId: undefined,
@@ -274,7 +274,7 @@ const handleReset = () => {
   queryParams.value = {
     projSegId: undefined,
     projMguId: undefined,
-    conStatus: undefined,
+    conStatus: [40,60],
     projId: undefined,
     conName: "",
     supName: "",

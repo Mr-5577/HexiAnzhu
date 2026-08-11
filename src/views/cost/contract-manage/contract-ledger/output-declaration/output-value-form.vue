@@ -4,9 +4,9 @@
     <BillHeader
       :title="'产值申报'"
       :contract-no="billData.bizNo || ''"
-      :submitter="''"
-      :submit-time="''"
-      :status="billData.status"
+      :submitter="formData.userName || ''"
+      :submit-time="formData.createDate || ''"
+      :status="billData.status || 0"
       :show-status="true"
       :button-loading="submitLoading"
       :save-disabled="isDetail || !!billData.status"
@@ -26,6 +26,8 @@
         ref="formRef"
         :model="formData"
         :rules="formRules"
+        :disabled="isReadonly || loadingForm"
+        :validate-on-rule-change="false"
         label-width="130px"
         class="adapt-form"
       >
@@ -38,29 +40,24 @@
         />
 
         <!-- 合同信息 -->
-        <div class="item-card">
-          <div class="section-title">合同信息</div>
+        <FormCard
+          id="card-base"
+          icon="📋"
+          title="合同信息"
+          v-model:collapsed="collapsedCards.base"
+        >
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
-              <el-form-item label="合同名称" prop="conName">
-                <el-input
+              <el-form-item label="合同名称" prop="conId" required>
+                <PickInput
                   v-model="formData.conName"
-                  disabled
-                  placeholder="合同名称"
+                  placeholder="请选择付款合同"
+                  :readonly="isReadonly || !formData.projId"
+                  v-model:model-value-id="formData.conId"
+                  @pick="openMainConDialog"
                 />
               </el-form-item>
             </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="合同编号" prop="conPhyNo">
-                <el-input
-                  v-model="formData.conPhyNo"
-                  disabled
-                  placeholder=" "
-                />
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="供应商名称" prop="supName">
                 <el-input
@@ -81,16 +78,8 @@
                 />
               </el-form-item>
             </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="生产专业" prop="productionMajor">
-                <el-input
-                  v-model="formData.productionMajor"
-                  placeholder=" "
-                  style="width: 100%"
-                  disabled
-                />
-              </el-form-item>
-            </el-col>
+          </el-row>
+          <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="签约合同金额" prop="signAmt">
                 <el-input-number
@@ -103,24 +92,10 @@
                 />
               </el-form-item>
             </el-col>
-          </el-row>
-          <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="补充合同金额" prop="addAmt">
                 <el-input-number
                   v-model="formData.addAmt"
-                  :precision="2"
-                  :controls="false"
-                  placeholder="0.00"
-                  style="width: 100%"
-                  disabled
-                />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="预结算合同金额" prop="preSettleAmt">
-                <el-input-number
-                  v-model="formData.preSettleAmt"
                   :precision="2"
                   :controls="false"
                   placeholder="0.00"
@@ -142,6 +117,20 @@
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="预结算合同金额" prop="preSettleAmt">
+                <el-input-number
+                  v-model="formData.preSettleAmt"
+                  :precision="2"
+                  :controls="false"
+                  placeholder="0.00"
+                  style="width: 100%"
+                  disabled
+                />
+              </el-form-item>
+            </el-col>
+          </el-row>  
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="累计产值" prop="sumProdVal">
                 <el-input-number
                   v-model="formData.sumProdVal"
@@ -153,8 +142,6 @@
                 />
               </el-form-item>
             </el-col>
-          </el-row>
-          <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="累计应付" prop="sumPayAmt">
                 <el-input-number
@@ -167,6 +154,35 @@
                 />
               </el-form-item>
             </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="是否甲供材" prop="isSelfSupply">
+                <el-select
+                  v-model="formData.isSelfSupply"
+                  placeholder="是否甲供材"
+                  style="width: 100%"
+                  :disabled="isDetail"
+                >
+                  <el-option label="否" :value="0" />
+                  <el-option label="是" :value="1" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="甲供材类型" prop="selfSupplyType">
+                <!-- 是否甲供材为是时，可编辑选择，否则清空不可编辑 -->
+                <el-select
+                  v-model="formData.selfSupplyType"
+                  placeholder="甲供材类型"
+                  style="width: 100%"
+                  :disabled="formData.isSelfSupply === 0"
+                >
+                  <el-option label="甲供材-主材" :value="1" />
+                  <el-option label="甲供材-零星" :value="2" />
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <!-- <el-row :gutter="24">    
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="累计请款" prop="sumAppyAmt">
                 <el-input-number
@@ -203,41 +219,16 @@
                 />
               </el-form-item>
             </el-col>
-          </el-row>
-          <el-row :gutter="24">
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="是否甲供材" prop="isSelfSupply">
-                <el-select
-                  v-model="formData.isSelfSupply"
-                  placeholder="是否甲供材"
-                  style="width: 100%"
-                  :disabled="isDetail"
-                >
-                  <el-option label="否" :value="0" />
-                  <el-option label="是" :value="1" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="甲供材类型" prop="selfSupplyType">
-                <!-- 是否甲供材为是时，可编辑选择，否则清空不可编辑 -->
-                <el-select
-                  v-model="formData.selfSupplyType"
-                  placeholder="甲供材类型"
-                  style="width: 100%"
-                  :disabled="formData.isSelfSupply === 0"
-                >
-                  <el-option label="甲供材-主材" :value="1" />
-                  <el-option label="甲供材-零星" :value="2" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </div>
+          </el-row> -->
+        </FormCard>
 
         <!-- 产值信息 -->
-        <div class="item-card">
-          <div class="section-title">产值信息</div>
+        <FormCard
+          id="card-prod"
+          icon="📋"
+          title="产值信息"
+          v-model:collapsed="collapsedCards.base"
+        >
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="产值申报方式">
@@ -245,6 +236,7 @@
                   v-model="formData.payMethod"
                   placeholder="请选择"
                   style="width: 100%"
+                  
                 >
                   <el-option
                     v-for="item in PayTypeEnum"
@@ -341,11 +333,15 @@
               </el-form-item>
             </el-col>
           </el-row>
-        </div>
+        </FormCard>
 
         <!-- 材料合同产值 -->
-        <div class="item-card">
-          <div class="section-title">合同产值</div>
+        <FormCard
+          id="card-con"
+          icon="📋"
+          title="合同产值"
+          v-model:collapsed="collapsedCards.base"
+        >
 
           <!-- 非甲供材  产值申报方式：按进度确认 -> 显示非甲供材  -->
           <div class="detail-table" v-if="formData.payMethod == 1">
@@ -499,11 +495,15 @@
               </template>
             </editable-table>
           </div>
-        </div>
+        </FormCard>
 
         <!-- 本次申报后累计情况 -->
-        <div class="item-card">
-          <div class="section-title">本次申报后累计情况</div>
+        <FormCard
+          id="card-sum"
+          icon="📋"
+          title="累计产值"
+          v-model:collapsed="collapsedCards.base"
+        >
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item
@@ -549,11 +549,15 @@
               </el-form-item>
             </el-col>
           </el-row>
-        </div>
+        </FormCard>
 
         <!-- 相关附件 -->
-        <div class="item-card">
-          <div class="section-title">相关附件</div>
+        <FormCard
+          id="card-annex"
+          icon="📋"
+          title="相关附件"
+          v-model:collapsed="collapsedCards.base"
+        >
           <el-form-item label="上传附件">
             <base-upload
               v-model:file-list="annexFileList"
@@ -570,7 +574,7 @@
               @success="handleFileSuccess"
             />
           </el-form-item>
-        </div>
+        </FormCard>
       </el-form>
     </div>
 
@@ -594,6 +598,14 @@
       </div>
     </Teleport>
   </div>
+  <!-- ============ 选择主合同弹窗 ============ -->
+  <choose-contract-dialog
+    ref="contractDialogRef"
+    v-model="mainConDialogVisible"
+    :selectionMode="'single'"
+    :projId = formData.projId
+    @select="handleMainConSelect"
+  />
 </template>
 
 <script setup lang="ts">
@@ -613,17 +625,28 @@ import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-ap
 import { PayTypeEnum } from "@/constants/contract-manage/enums";
 import { buildFileUrl } from "@/utils/file-path-util";
 import { cumulativeDataApi } from "@/api/cost/contract-manage/cumulative-data-api";
+import { formType } from "@/types/form/form-types";
+import { dateUtil } from "@/utils/date-util";
+import { outputDeclarationApi } from "@/api/cost/contract-manage/output-declaration-api";
+import ChooseContractDialog from "@/components/business/choose-contract-dialog.vue";
+import { NAV_CARDS } from "./output-value-config";
+import { useFormLayout } from "@/composables/use-form-layout";
+const { collapsedCards, toggleCard, formatMoney } = useFormLayout(NAV_CARDS);
+import FormCard from "@/components/base/base-form-card.vue";
+import PickInput from "@/components/base/base-pick-input.vue";
+import FloatNav from "@/components/base/base-float-nav.vue";
+import { moneyRule, requiredInputRule, requiredRule } from "@/utils/form-rule-validate";
 
 defineOptions({ name: "output-value-approval-form" });
 
 interface Props {
   mode?: "add" | "edit" | "detail";
-  paymentId?: number;
+  prodId?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   mode: "add",
-  paymentId: undefined,
+  prodId: undefined,
 });
 
 const emit = defineEmits<{
@@ -639,13 +662,17 @@ const conId = Number(route.query.conId); // 合同ID
 
 const formRef = ref<FormInstance>();
 const submitLoading = ref(false);
+const loadingForm = ref(false); 
 
 const mode = ref<"add" | "edit" | "detail">(props.mode);
-const paymentId = ref<number | undefined>(props.paymentId);
+const prodId = ref<number | undefined>(props.prodId);
 
 const isDetail = computed(() => mode.value === "detail");
 const isEdit = computed(() => mode.value === "edit");
 const isAdd = computed(() => mode.value === "add");
+const isReadonly = computed(
+  () => isDetail.value || !!billData.value.status,
+);
 
 const projectOptions = ref([]);
 const declaraFileList = ref([]);
@@ -671,18 +698,22 @@ const initFormData = () => ({
   segId: undefined,
   segName: "",
   segNo: "",
-  deptName: "",
-  mguName: "",
   projId: undefined,
   projName: "",
   compId: "",
   compName: "",
-  userName: "",
-  createDate: "",
+  conBillId: undefined as number | undefined,
+  flowId:null,
+  bizNo:"",
+  userName: userStore.userInfo?.empName,
+  createDate: dateUtil().format("YYYY-MM-DD"),
+  deptName: userStore.userInfo?.deptName,
+  mguName: userStore.userInfo?.mguName,
 
   // 合同信息
   conId: undefined,
   conName: "", // 合同名称
+  conSysNo: "", // 合同编号
   conPhyNo: "", // 合同编号
   supId: undefined,
   supName: "", // 供应商名称
@@ -717,15 +748,23 @@ const initFormData = () => ({
 
 const formData = ref(initFormData());
 
-const formRules: FormRules = {
-  bizTitle: [{ required: true, message: "请输入标题", trigger: "change" }],
-  // segId: [{ required: true, message: "请选择业务板块", trigger: "change" }],
-  projId: [{ required: true, message: "请选择项目", trigger: "change" }],
-  applyPayAmt: [
-    { required: true, message: "请输入本次申报应付", trigger: "blur" },
-    { type: "number", min: 0, message: "申报应付不能小于0", trigger: "blur" },
-  ],
-};
+const formRules = computed(() => {
+  const rules: Record<string, any> = {
+    bizTitle: requiredInputRule("标题"),
+    projId: requiredRule("项目名称"),
+    conId: requiredRule("合同名称"),
+    applyPayAmt: moneyRule("申请产值金额"),
+    // finaTypeId: requiredRule("费用类型"),
+    // payTypeId: requiredRule("款项类型"),
+    // reqType: requiredRule("请款类型"),
+    // reqAmt: moneyRule("请款总金额"),
+    // conTyeName: requiredRule("合同分类"),
+    // isRise: requiredRule("是否提高支付比例"),
+  };
+
+  return rules;
+});
+
 
 // ==================== 材料合同产值明细 - 甲供材-主材 ====================
 const materialTable = ref([]);
@@ -1130,6 +1169,26 @@ const handleViewAnnex = async (row: any) => {
   }
 };
 
+// ---- 主合同选择 ----
+const mainConDialogVisible = ref(false);
+const openMainConDialog = () => {
+  if (isDetail.value) return;
+  if (!formData.value.projId) {
+    ElMessage.warning(`请先选择项目！`);
+    return;
+  }
+  mainConDialogVisible.value = true;
+};
+const handleMainConSelect =async (data) => {
+  if (data && data.length > 0) {
+    let newData = data || [];
+    if (formData.value.conId != newData[0].id) {
+      await getConDetail(newData[0].id);
+      await getConTotal(newData[0].id);
+    }
+  }
+};
+
 // ==================== 非甲供材 ====================
 const nonSelfSupplyTable = ref([]);
 const billPayratesList = ref([]);
@@ -1301,8 +1360,9 @@ const getProjectOptions = async () => {
 // 生成业务流水号
 const generateApplyNo = async () => {
   try {
-    const res = await commonApi.getBillNo({ bizType: "QK" });
+    const res = await commonApi.getBillNo({ bizType: formType.CON_PROD });
     if (res.code === 200 && res.data) {
+      billData.value.bizNo = res.data;
     }
   } catch (error) {
     console.error("生成请款单号失败:", error);
@@ -1314,13 +1374,119 @@ const changeProject = async (value: number) => {
   if (value) {
     const res = await projectAreaApi.getInfoByProjId({ id: value });
     if (res.code === 200 && res.data) {
-      const { compName, compId, segId, segName } = res.data;
+      const { compName, compId, segId, segName,segNo } = res.data;
       formData.value.compId = compId || "";
       formData.value.compName = compName || "";
       formData.value.segId = segId || "";
       formData.value.segName = segName || "";
+      formData.value.segNo = segNo || "";
+      // 清空原合同相关信息
+      clearContractInfo();
     }
   }
+};
+
+
+// 清空与合同相关的回填字段（切换项目时调用）
+const clearContractInfo = () => {
+  const f = formData.value;
+  f.conId = null;
+  f.conName = "";
+  f.supId = null;
+  f.supName = "";
+  f.conTypeId = null;
+  f.conTypeName = "";
+  f.conSysNo = "";
+  f.conPhyNo = "";
+  f.signAmt = 0;
+  f.addAmt = 0;
+  f.sumChangeAmt = 0;
+  f.preSettleAmt = 0;
+  f.sumProdVal = 0;
+  f.sumPayAmt = 0;
+  f.sumAppyAmt = 0;
+  f.sumPaidAmt = 0;
+  f.sumOwedAmt = 0;
+};
+
+const buildSubmitParams = () => {
+  // //非建安类时，隐藏的 5 个字段提交置 0，避免带脏数据入库
+  // //（累计变更签证、预结算/结算金额、累计产值、累计应付、应付占产值比、实付占产值比）
+  // const jianAn = conTypeIsJianAn.value === true;
+  // const sumChangeAmt = jianAn ? formData.value.sumChangeAmt : 0;
+  // const preSettleAmt = jianAn ? formData.value.preSettleAmt : 0;
+  // // const settledAmt = jianAn ? formData.value.settledAmt : 0;
+  // const sumProdVal = jianAn ? formData.value.sumProdVal : 0; 
+  // const sumPayAmt = jianAn ? formData.value.sumPayAmt : 0;
+  // const payOutRate = jianAn ? formData.value.payOutRate : 0;
+  // const paidOutRate = jianAn ? formData.value.paidOutRate : 0;
+  // return {
+  //   bill: {
+  //     ...billData.value,
+  //     id: billData.value.id || undefined,
+  //     bizTitle: formData.value.bizTitle,
+  //     bizItemCode: formType.CON_PAY,
+  //     segId: formData.value.segId,
+  //     segName: formData.value.segName,
+  //     segNo: formData.value.segNo,
+  //     projId: formData.value.projId,
+  //     compId: formData.value.compId,
+  //     compName: formData.value.compName,
+  //     flowId:formData.value.flowId,
+  //     conId: formData.value.conId,
+  //     bizNo: formData.value.bizNo,
+  //   },
+  //   payment: {
+  //     id: formData.value.id,
+  //     conBillId: formData.value.conBillId,
+  //     conId: formData.value.conId,
+  //     signAmt: formData.value.signAmt,
+  //     addAmt: formData.value.addAmt,
+  //     sumChangeAmt: sumChangeAmt,
+  //     preSettleAmt: preSettleAmt,
+  //     sumProdVal: sumProdVal,
+  //     sumPayAmt: sumPayAmt,
+  //     sumAppyAmt: formData.value.sumAppyAmt,
+  //     sumPaidAmt: formData.value.sumPaidAmt,
+  //     sumOwedAmt: formData.value.sumOwedAmt,
+  //     payOutRate: payOutRate,
+  //     paidPayRate: formData.value.paidPayRate,
+  //     paidOutRate: paidOutRate,
+  //     reqType: formData.value.reqType,
+  //     finaTypeId: formData.value.finaTypeId,
+  //     isRise: formData.value.isRise,
+  //     leavePayAmt: formData.value.leavePayAmt,
+  //     reqAmt: formData.value.reqAmt,
+  //     pbAmount: formData.value.pbAmount,
+  //     changeAmt: dedSumData.value.totalAmt,
+  //     factReqAmt: actualReqAmt.value,
+  //     reqDesc: formData.value.reqDesc,
+  //     invRecAmt: (formData.value.sumAppyAmt ?? 0) + (formData.value.reqAmt ?? 0),
+  //     invRcvdAmt: formData.value.invRcvdAmt ?? 0,
+  //     invOweAmt: (formData.value.sumAppyAmt ?? 0) + (formData.value.reqAmt ?? 0) - (formData.value.invRcvdAmt ?? 0)-(invcSumData.value.totalAmt ?? 0),
+  //     isModifyAcc: formData.value.isModifyAcc,
+  //     bankName: formData.value.bankName,
+  //     accountName: formData.value.accountName,
+  //     bankAccount: formData.value.bankAccount,
+  //     modifyAccAnnex :bankFileList.value[0]?.id,
+  //     status: formData.value.status,
+  //     payRule: formData.value.payRule,
+  //     belongMonth: formData.value.belongMonth,
+  //     payTypeId:formData.value.payTypeId,
+  //     conStatus:formData.value.conStatus,
+  //     isLastRec: formData.value.isLastPay,
+  //     unlockAmt: formData.value.unlockAmt,
+  //     payTypeIsCtrl: formData.value.payTypeIsCtrl,
+  //     settledAmt: formData.value.settledAmt,
+  //   },
+  //   billDeds: !isOffsetByInvoice.value ? dedTable.value : [],
+  //   invoiceMs: invoiceMTable.value ,
+  //   invoiceDs: detailList.value ,
+  //   payWays:!isOffsetByInvoice.value ? payWayTable.value : [],
+  //   paySubs:!isOffsetByInvoice.value ? financeTable.value : [],
+  // //  addProcesses: formData.value.addType == 1 ? tableList.value : [],
+  //   annexList: baseFileList.value || [],
+  // };
 };
 
 // 保存
@@ -1331,10 +1497,16 @@ const handleSave = async () => {
   try {
     await formRef.value.validate();
     submitLoading.value = true;
-
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    ElMessage.success("保存成功");
-    emit("success", formData);
+    const params = buildSubmitParams()
+    const res = await outputDeclarationApi.saveProdVal(params);
+    if (res.code === 200 && res.data) {
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      ElMessage.success("保存成功");
+      emit("success", formData);
+      formData.value.id = res.data;
+      prodId.value = formData.value.id;
+      await loadDetail();
+    }
   } catch (error) {
     console.error("保存失败:", error);
   } finally {
@@ -1384,7 +1556,7 @@ const handleFileSuccess = (file: any) => {
 
 // 加载付款申请详情
 const loadDetail = async () => {
-  if (!paymentId.value) return;
+  if (!prodId.value) return;
   try {
     // TODO: 调用详情接口
   } catch (error) {
@@ -1392,18 +1564,26 @@ const loadDetail = async () => {
   }
 };
 // 查询合同详情
-const getConDetail = async () => {
-  if (!conId) return;
+const getConDetail = async (inputConId) => {
+  if (!inputConId) return;
   try {
     const res = await contractLedgerApi.getContractLedgerById({
-      id: conId,
+      id: inputConId,
     });
     console.log("合同详情", res);
     if (res.code === 200 && res.data) {
       const { conMain, conMainExt, billPayrates } = res.data;
+      debugger
+      if (formData.value.projId != conMain.projId) {
+        await changeProject(conMain.projId);
+        formData.value.projId = conMain.projId;
+        //getBuildingListByProjId(conMain.projId);
+      }
       billPayratesList.value = billPayrates || []; // 产值明细（非甲供材）的款项类型
+      formData.value.conId = conMain?.id;
       formData.value.conName = conMain?.conName || "";
       formData.value.conPhyNo = conMain?.conPhyNo || "";
+      formData.value.conSysNo = conMain?.conSysNo || "";
       formData.value.supId = conMain?.supId || "";
       formData.value.supName = conMain?.supName || "";
       formData.value.conTypeId = conMain?.conTypeId || "";
@@ -1414,12 +1594,12 @@ const getConDetail = async () => {
   } catch (error) {}
 };
 // 查询合同累计数据
-const getConTotal = async () => {
-  if (!conId) return;
+const getConTotal = async (inputConId) => {
+  if (!inputConId) return;
   try {
     // 0=产值,1=应付,2=请款,3=已付,4=欠款,5=扣款,6=已扣,7=变更,8=签证
     const res = await cumulativeDataApi.getAccumData({
-      conId: conId,
+      conId: inputConId,
       typeList: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
     });
     console.log("合同累计数据", res);
@@ -1463,16 +1643,20 @@ const getConTotal = async () => {
 };
 
 const initData = async () => {
-  await getProjectOptions(); // 获取项目数据
-  await getConDetail(); // 查询合同详情
-  await getConTotal(); // 查询合同累计数据
-  formData.value.userName = userStore.userInfo?.empName || "";
-  formData.value.createDate = new Date().toLocaleString();
+  loadingForm.value = true;
+  try {
+    await getProjectOptions(); // 获取项目数据
 
-  if (isAdd.value) {
-    // await generateApplyNo();
-  } else if (paymentId.value) {
-    await loadDetail();
+    if (isAdd.value) {
+      await generateApplyNo();
+      await getConDetail(conId); // 查询合同详情
+      await getConTotal(conId); // 查询合同累计数据
+    } else if (prodId.value) {
+      await loadDetail();
+    }
+  }
+  finally {
+    loadingForm.value = false;
   }
 };
 
