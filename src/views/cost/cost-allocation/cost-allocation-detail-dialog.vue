@@ -7,6 +7,8 @@
     :top="'8vh'"
     :confirm-loading="confirmLoading"
     :confirm-text="'确定'"
+    :showConfirmButton="props.dialogMode != 'view'"
+    :showCancelButton="props.dialogMode != 'view'"
     @confirm="handleConfirm"
     @close="handleClose"
   >
@@ -19,6 +21,7 @@
       :allocAmt="props.allocAmt"
       :cstMData="props.cstMData"
       :isDialogMode="true"
+      :dialogMode="props.dialogMode"
     ></CostAllocationDetail>
   </base-modal>
 </template>
@@ -36,16 +39,18 @@ interface Props {
   bizType?: string;
   allocAmt?: number;
   cstMData?: any;
+  dialogMode?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
   projId: undefined,
-  projName: '',
-  displayName: '',
+  projName: "",
+  displayName: "",
   bizType: undefined,
   allocAmt: 0,
   cstMData: null,
+  dialogMode: "view", // 弹窗模式，默认为查看模式 view  edit
 });
 
 // Emits

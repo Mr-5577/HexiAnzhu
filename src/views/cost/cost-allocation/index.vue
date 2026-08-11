@@ -44,7 +44,7 @@
         <span>
           <el-icon><List /></el-icon>成本分摊明细
         </span>
-        <div>
+        <div v-if="!isView">
           <el-button plain type="primary" @click="handleChoose">
             选择分摊科目
           </el-button>
@@ -83,6 +83,7 @@
               collapse-tags-tooltip
               :max-collapse-tags="2"
               @change="handleBuilding"
+              :disabled="isView"
             >
               <el-option
                 v-for="item in buildingOptions"
@@ -115,7 +116,7 @@
         :on-save="handleSave"
         :key="tableKey"
       >
-        <template #actions="{ row }">
+        <template #actions="{ row }" v-if="!isView">
           <el-button
             v-if="row.isLeaf"
             type="danger"
@@ -163,6 +164,7 @@
             :stripe="false"
             height="300px"
             :compact-empty="true"
+            :default-expand-level="1"
           >
             <template #allocWarn="{ row }">
               <span class="dot" :class="`dot${row.allocWarn}`"></span>
@@ -176,8 +178,13 @@
     </el-card>
 
     <!-- OA打开该页面时显示该按钮 -->
-    <div class="footer-actions" v-if="!isDialogMode">
-      <el-button type="primary" @click="handleConfirm">
+    <div class="footer-actions">
+      <el-button
+        type="primary"
+        :loading="submitLoading"
+        v-if="!isDialogMode && !isView"
+        @click="handleConfirm"
+      >
         确认分摊提交
       </el-button>
     </div>
@@ -220,6 +227,7 @@ interface Props {
   allocExclAmt?: number; // 分摊金额(不含税)
   isDialogMode?: boolean; // 是否为弹窗模式
   cstMData?: any; // 弹窗传参
+  dialogMode?: string;
 }
 const props = withDefaults(defineProps<Props>(), {
   projId: undefined,
@@ -230,6 +238,7 @@ const props = withDefaults(defineProps<Props>(), {
   allocExclAmt: 0,
   isDialogMode: false, // 页面模式，默认非弹窗模式
   cstMData: null,
+  dialogMode: "", // 弹窗模式， view  edit
 });
 
 const emit = defineEmits<{
@@ -246,18 +255,16 @@ const isDialogMode = computed(() => {
   return props.isDialogMode;
 });
 
-// OA打开判断详情还是编辑
-const isEdit = computed(() => {
-  return route.query.mode == "edit";
-});
-const isDetail = computed(() => {
-  return route.query.mode == "view";
+// 判断查看还是编辑
+const isView = computed(() => {
+  return route.query.mode == "view" || props.dialogMode == "view";
 });
 
 const warningVisible = ref(false); // 预警面板展开状态
 const confirmLoading = ref(false); // 自动分摊加载状态
 const dialogVisible = ref(false); // 选择科目弹窗
 const selectedSubIds = ref([]); // 已选中的科目ID列表
+const submitLoading = ref(false); // 提交按钮加载状态
 
 // 下拉选项数据
 const subjectOptions = ref([]); // 科目选项
@@ -271,7 +278,6 @@ const editableSubjectData = ref([]); // 可编辑科目表格数据（树形）
 const warningData = ref([]); // 预警表格数据
 const subjectColumns = ref<EditableColumn[]>([]); // 动态生成的列配置
 
-const baseRawTreeData = ref([]); // 原始树形数据
 const editableTableRef = ref(null);
 const tableKey = ref(0);
 
@@ -288,6 +294,24 @@ const apportionInfo = ref({
   allocStatus: 0,
   allocWarn: 0,
 });
+
+// ---------- 楼栋选项 ----------
+const buildingOptions = ref([]);
+// 已选中的楼栋 (存储 value 数组)
+const selectedBuildings = ref([]);
+
+// 页面参数
+const pageParams = ref({
+  projId: undefined,
+  projName: "",
+  displayName: "",
+  bizType: "",
+  billId: undefined,
+  bizKeyId: 0,
+  allocAmt: 0,
+  allocExclAmt: 0,
+});
+
 // 业态name信息
 const businessTypeNames = computed(() => {
   if (!selectedBuildings.value.length || !buildingOptions.value.length) {
@@ -331,7 +355,7 @@ const getBusinessType = () => {
     );
   return prodList;
 };
-// ==================== 新增：过滤树形数据，只保留指定业态的字段 ====================
+// 过滤树形数据，只保留指定业态的字段
 const filterTreeDataByProducts = (treeData: any[], products: any[]) => {
   if (!treeData || treeData.length === 0) return treeData;
   if (!products || products.length === 0) {
@@ -392,7 +416,7 @@ const clearAllProductFields = (treeData: any[]) => {
   };
   return traverse(treeData);
 };
-// ==================== 修改：处理楼栋选择变化 ====================
+// 处理楼栋选择变化
 const handleBuilding = async (selectedIds: any[]) => {
   if (!selectedIds || selectedIds.length === 0) {
     // 取消所有楼栋：保存备份，清空显示
@@ -480,22 +504,6 @@ const handleBuilding = async (selectedIds: any[]) => {
   editableTableRef.value?.refresh();
   tableKey.value++;
 };
-// ---------- 楼栋选项 ----------
-const buildingOptions = ref([]);
-// 已选中的楼栋 (存储 value 数组)
-const selectedBuildings = ref([]);
-
-// 页面参数
-const pageParams = ref({
-  projId: undefined,
-  projName: "",
-  displayName: "",
-  bizType: "",
-  billId: undefined,
-  bizKeyId: 0,
-  allocAmt: 0,
-  allocExclAmt: 0,
-});
 
 /**
  * 本次已分摊金额计算（科目金额含税）
@@ -603,15 +611,40 @@ const groupBy = <T,>(arr: T[], key: keyof T): Map<any, T[]> => {
   }
   return map;
 };
-const handleConfirm = () => {
+const handleConfirm = async () => {
   if (!editableSubjectData.value?.length) {
     ElMessage.warning("没有可分摊的数据，请先选择科目并填写分摊金额");
     return;
   }
-  console.log(
-    "确认提交分摊明细",
-    convertTreeDataToRows(editableSubjectData.value, currentProducts.value),
-  );
+  const result = validateTable();
+  if (!result) return;
+  // console.log(
+  //   "确认提交分摊明细",
+  //   convertTreeDataToRows(editableSubjectData.value, currentProducts.value),
+  // );
+  const data = await getSubmitData();
+  console.log("提交分摊明细", data);
+  try {
+    submitLoading.value = true;
+    const params = {
+      projId: pageParams.value.projId,
+      bizType: pageParams.value.bizType,
+      bizBillId: pageParams.value.billId,
+      bizKeyId: 0,
+      allocAmt: data.allocAmt,
+      allocExclAmt: data.allocExclAmt,
+      allocWarn: data.allocWarn,
+      allocStatus: data.allocStatus,
+      detailList: data.allocDs || [],
+    };
+    const res = await costAllocationApi.saveProjectAlloc(params);
+    if (res.code === 200) {
+      ElMessage.success("保存成功");
+    }
+  } catch (error) {
+  } finally {
+    submitLoading.value = false;
+  }
 };
 // 查看分摊预警明细
 const handleViewAlloc = async () => {
@@ -1255,7 +1288,7 @@ const checkHasData = (treeData: any[]): boolean => {
   return hasData;
 };
 
-// ==================== 修改：生成动态表头 ====================
+// 生成动态表头
 const generateColumns = (
   products: any[],
   busiSegOptions: any[],
@@ -1318,7 +1351,7 @@ const generateColumns = (
       disabled: (row: any) => !isLeafNode(row),
     },
   ];
-    console.log("products", products);
+  console.log("products", products);
   // 只有 products 有数据时才添加业态列
   if (products && products.length > 0) {
     const productColumns: EditableColumn[] = products.map((product) => ({
@@ -1621,7 +1654,7 @@ const getWarnSubAlloc = async (params: any) => {
           (Number(item.allocAmt) || 0) + (Number(item.allocExclAmt) || 0),
       }));
 
-      // ====== 关键修改：增量更新，只更新返回的科目 ======
+      // 增量更新，只更新返回的科目
       // 如果 warningData 为空，先初始化
       if (!warningData.value || !warningData.value.length) {
         // 使用 editableSubjectData 作为基础结构
@@ -1672,7 +1705,7 @@ const initPage = async () => {
     processPopupData(detaiList);
   }
 };
-// ==================== 新增：自动匹配楼栋 ====================
+// 自动匹配楼栋
 const autoMatchBuildings = (prodIds: number[]) => {
   if (!prodIds || prodIds.length === 0 || !buildingOptions.value.length) return;
 
@@ -1687,7 +1720,7 @@ const autoMatchBuildings = (prodIds: number[]) => {
     selectedBuildings.value = matchedBuildings;
   }
 };
-// ==================== 修改：处理弹窗打开数据回显 ====================
+// 处理数据回显
 const processPopupData = async (cstList: any) => {
   if (cstList && cstList?.length > 0) {
     const detaiList = cstList || [];
@@ -1745,22 +1778,22 @@ const processPopupData = async (cstList: any) => {
  */
 const loadAllocationData = async () => {
   try {
-    console.log("OA加载分摊数据:", route.query);
+    console.log("OA加载分摊数据:", route.query, isView.value);
     // 从路由获取参数
     const billId = route.query.billId as string; // 单据ID
-    const bizType = route.query.bizItemCode as string; // 业务类型编码，例：NCON_PROC
+    const bizType = route.query.bizType as string; // 业务类型编码，例：NCON_PROC
 
     // console.log("billId:", billId);
     const res = await costAllocationApi.getProjectAlloc({
       bizBillId: billId,
       bizType: bizType,
     });
-    if (res.code === 200) {
+    if (res.code === 200 && res.data) {
       pageParams.value.projId = res.data?.projId;
       pageParams.value.bizType = res.data?.bizType;
       pageParams.value.billId = billId;
-      pageParams.value.allocAmt = res.data?.cstM?.costAmt || 0;
-      pageParams.value.allocExclAmt = res.data?.cstM?.costExclAmt || 0;
+      pageParams.value.allocAmt = res.data?.allocAmt || 0;
+      pageParams.value.allocExclAmt = res.data?.costExclAmt || 0;
       await getBuildingListByProjId();
       await Promise.all([getBusiSegList(), getProductList()]);
       // 处理查询到的分摊数据，回显到页面
@@ -1797,7 +1830,7 @@ const handleChoose = () => {
   dialogVisible.value = true;
 };
 
-// ==================== 修改：接收选择的科目数据 ====================
+// 接收选择的科目数据
 const getSelectData = (treeData: any, goalCostDetailList: any) => {
   console.log("接收选择的科目数据:", treeData, goalCostDetailList);
   warningVisible.value = false;
@@ -2105,6 +2138,7 @@ const validateTable = () => {
   }
   return true;
 };
+
 const getSubmitData = async () => {
   const leafSubjects = getLeafSubjects(editableSubjectData.value);
   const subList = leafSubjects.map((item) => {

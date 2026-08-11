@@ -559,7 +559,7 @@ const getInfo = async () => {
       tenderRemark: tender.tenderRemark,
       tenderStatus: tender.tenderStatus,
     };
-     projListBySegIdList.value = projectOptions.value.filter((item) => {
+    projListBySegIdList.value = projectOptions.value.filter((item) => {
       return tender.segId === item.segId;
     });
     // 设置明细数据
@@ -687,6 +687,11 @@ const handleClose = () => {
 };
 
 const handleSubmit = async () => {
+  if (submitLoading.value) {
+    console.warn("提交中，请勿重复操作");
+    return;
+  }
+
   if (!formRef.value) return;
   try {
     await formRef.value.validate();

@@ -3,7 +3,7 @@
   <base-modal
     v-model="dialogVisible"
     :title="'付款登记'"
-    width="1000px"
+    width="1400px"
     :confirmText="'提交登记'"
     :confirm-loading="submitLoading"
     @confirm="handleSubmit"
@@ -14,14 +14,14 @@
         ref="formRef"
         :model="formData"
         :rules="formRules"
-        label-width="100px"
+        label-width="120px"
         label-position="right"
       >
         <el-row>
           <el-col :span="8">
-            <el-form-item prop="paymentDate" label="支付日期" required>
+            <el-form-item prop="payDate" label="支付日期" required>
               <el-date-picker
-                v-model="formData.paymentDate"
+                v-model="formData.payDate"
                 type="date"
                 placeholder="请选择支付日期"
                 value-format="YYYY-MM-DD"
@@ -30,75 +30,57 @@
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item prop="paymentMethod" label="支付方式" required>
+            <el-form-item prop="payWayId" label="支付方式" required>
               <el-select
-                v-model="formData.paymentMethod"
+                v-model="formData.payWayId"
                 placeholder="请选择支付方式"
                 style="width: 100%"
               >
-                <el-option label="银行转账" value="bank_transfer" />
-                <el-option label="支票" value="check" />
-                <el-option label="现金" value="cash" />
-                <el-option label="电汇" value="telegraphic_transfer" />
+                <el-option
+                  v-for="item in payTypeOptions"
+                  :key="item.id"
+                  :label="item.dicLabel"
+                  :value="item.id"
+                />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item prop="paymentAmount" label="支付金额" required>
+            <el-form-item prop="payAmt" label="支付金额">
               <el-input-number
-                v-model="formData.paymentAmount"
+                v-model="formData.payAmt"
                 placeholder="请输入支付金额"
                 :precision="2"
                 :min="0"
+                :controls="false"
                 style="width: 100%"
+                disabled
               />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row>
           <el-col :span="8">
-            <el-form-item prop="paymentAccount" label="支付账号">
+            <el-form-item prop="payCompId" label="支付公司" required>
+              <el-select
+                v-model="formData.payCompId"
+                placeholder="请选择支付公司"
+                style="width: 100%"
+              >
+                <el-option
+                  v-for="item in payComOptions"
+                  :key="item.id"
+                  :label="item.compName"
+                  :value="item.id"
+                />
+              </el-select>
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item prop="payAccount" label="支付账号">
               <el-input
-                v-model="formData.paymentAccount"
+                v-model="formData.payAccount"
                 placeholder="请输入支付账号"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item prop="paymentCompany" label="支付公司">
-              <el-input
-                v-model="formData.paymentCompany"
-                placeholder="请输入支付公司"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item prop="payeeName" label="收款方" required>
-              <el-input
-                v-model="formData.payeeName"
-                placeholder="请输入收款方名称"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="8">
-            <el-form-item prop="payeeBank" label="收款银行" required>
-              <el-input
-                v-model="formData.payeeBank"
-                placeholder="请输入收款银行"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item prop="payeeAccount" label="收款账号" required>
-              <el-input
-                v-model="formData.payeeAccount"
-                placeholder="请输入收款账号"
                 style="width: 100%"
               />
             </el-form-item>
@@ -115,64 +97,65 @@
         </el-row>
         <el-row>
           <el-col :span="24">
-            <el-form-item prop="receiptPhotos" label="回单照片">
-              <base-upload
-                v-model:file-list="tempFileList"
-                :limit="9"
-                :multiple="false"
-                :showIcon="true"
-                :showTip="true"
-                button-text="选择文件"
-                size="default"
-                @success="handleUploadSuccess"
-              ></base-upload>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="24">
-            <el-form-item prop="remark" label="备注">
+            <el-form-item prop="payDesc" label="备注">
               <el-input
-                v-model="formData.remark"
+                v-model="formData.payDesc"
                 type="textarea"
                 placeholder="请输入备注信息"
-                :rows="2"
+                :rows="3"
                 maxlength="500"
                 show-word-limit
                 style="width: 100%"
               />
             </el-form-item>
           </el-col>
+          <el-col :span="24">
+            <el-form-item label="回单照片">
+              <base-upload
+                v-model:file-list="tempFileList"
+                :limit="1"
+                :multiple="true"
+                :showIcon="true"
+                :showTip="true"
+                :maxSize="20"
+                :accept="'.pdf,.jpg,.jpeg,.png'"
+                :tipText="'支持上传pdf、jpg、jpeg、png格式文件，单个文件不超过20M'"
+                button-text="选择图片"
+                size="default"
+                @success="handleFileSuccess"
+              ></base-upload>
+            </el-form-item>
+          </el-col>
         </el-row>
         <el-row>
           <el-col :span="6">
             <el-form-item label-width="80px" label="登记人:">
-              {{ formData.registrar || "张三" }}
+              {{ formData.registrar || "-" }}
             </el-form-item>
           </el-col>
           <el-col :span="6">
             <el-form-item label-width="80px" label="登记日期:">
-              {{ formData.registrarDate || "2026-07-20" }}
+              {{ formData.registrarDate || "-" }}
             </el-form-item>
           </el-col>
-          <el-col :span="6">
+          <!-- <el-col :span="6">
             <el-form-item label-width="80px" label="修改人:">
-              {{ formData.modifier || "李思" }}
+              {{ formData.modifier || "-" }}
             </el-form-item>
           </el-col>
           <el-col :span="6">
             <el-form-item label-width="80px" label="修改日期:">
-              {{ formData.modifyDate || "2026-08-21" }}
+              {{ formData.modifyDate || "-" }}
             </el-form-item>
-          </el-col>
+          </el-col> -->
         </el-row>
       </el-form>
       <div>
         <div class="title">款项明细</div>
         <editable-table
           ref="tableRef"
-          :row-key="'id'"
-          :height="'200px'"
+          :row-key="'uuid'"
+          :height="'240px'"
           v-model="tableData"
           :columns="tableColumns"
           :pagination="false"
@@ -181,6 +164,7 @@
           :compactEmpty="true"
           :editable="true"
           @selection-change="handleSelectionChange"
+          :on-save="handleTableSave"
         >
         </editable-table>
       </div>
@@ -189,20 +173,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, reactive } from "vue";
+import { ref, computed, watch, reactive, nextTick } from "vue";
 import { ElMessage, type FormInstance, type FormRules } from "element-plus";
 import EditableTable from "@/components/base/editable-table.vue";
 import { EditableColumn } from "@/components/base/editable-table.vue";
 import BaseUpload from "@/components/base/base-upload.vue";
+import { useDict } from "@/composables/use-dict";
+import { dictMapping } from "@/utils/dict-mapping";
+import { dateUtil } from "@/utils/date-util";
+import { useUserStore } from "@/stores/user-store";
+import { useMDStore } from "@/stores/md-store.ts";
+import { v4 as uuidv4 } from "uuid";
+import { payRegisterApi } from "@/api/cost/payment-manage/payment-register-api";
 
 interface Props {
   modelValue: boolean;
-  editData?: any;
+  currentRow?: any;
+  queryParams?: any;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
-  editData: null,
+  currentRow: null,
+  queryParams: null,
 });
 
 const emit = defineEmits<{
@@ -210,108 +203,57 @@ const emit = defineEmits<{
   success: [];
 }>();
 
+const userStore = useUserStore();
+const mdStore = useMDStore();
+
 const dialogVisible = ref(props.modelValue);
 const formRef = ref<FormInstance>();
 const submitLoading = ref(false);
 const tempFileList = ref([]);
 const selectedRows = ref([]);
-// 表单数据
-const formData = ref({
+const payComOptions = ref([]);
+
+const initFormData = () => ({
   id: undefined,
   segId: undefined,
   projId: undefined,
   // 支付信息
-  paymentDate: "", // 支付日期
-  paymentMethod: "", // 支付方式
-  paymentAmount: 0, // 支付金额
-  paymentAccount: "", // 支付账号
-  paymentCompany: "", // 支付公司
-  // 收款信息
-  payeeName: "", // 收款方
-  payeeBank: "", // 收款银行
-  payeeAccount: "", // 收款账号
-  // 附件
+  payDate: dateUtil().format("YYYY-MM-DD"), // 支付日期
+  payWayId: "", // 支付方式
+  payAmt: 0, // 支付金额
+  payAccount: "", // 支付账号
+  payCompId: "", // 支付公司
   bankReceipt: "", // 银行回单
-  receiptPhotos: [], // 回单照片
-  // 其他
-  remark: "", // 备注
+  payDesc: "", // 备注
   // 登记信息
   registrar: "", // 登记人
   registrarDate: "", // 登记日期
   modifier: "", // 修改人
   modifyDate: "", // 修改日期
-  // 流程相关
-  nconBillId: undefined, // 本事项对应流程ID
-  settledPaymentId: undefined, // 结算单据ID
-  status: 0, // 状态 0-草稿 5-审批中 10-已审批 20-已结算 30-已作废
 });
+// 表单数据
+const formData = ref(initFormData());
 
 // 表格数据
-const tableData = ref([
-  {
-    id: 1,
-    itemType: "办公费",
-    orgName: "财务部",
-    expenseType: "办公用品",
-    payeeBank: "中国银行",
-    payeeAccountName: "XX公司",
-    payeeAccount: "6222****1234",
-    paymentMethod: "银行转账",
-    subjectName: "管理费用",
-    requestAmount: 10000,
-    unpaidAmount: 10000,
-    currentPaymentAmount: 0,
-  },
-  {
-    id: 2,
-    itemType: "办公费",
-    orgName: "财务部",
-    expenseType: "办公用品",
-    payeeBank: "中国银行",
-    payeeAccountName: "XX公司",
-    payeeAccount: "6222****1234",
-    paymentMethod: "银行转账",
-    subjectName: "管理费用",
-    requestAmount: 10000,
-    unpaidAmount: 10000,
-    currentPaymentAmount: 0,
-  },
-  {
-    id: 3,
-    itemType: "办公费",
-    orgName: "财务部",
-    expenseType: "办公用品",
-    payeeBank: "中国银行",
-    payeeAccountName: "XX公司",
-    payeeAccount: "6222****1234",
-    paymentMethod: "银行转账",
-    subjectName: "管理费用",
-    requestAmount: 10000,
-    unpaidAmount: 10000,
-    currentPaymentAmount: 0,
-  },
-]);
+const tableData = ref([]);
 
 // 表格列配置
 const tableColumns = computed<EditableColumn[]>(() => [
   { type: "selection", width: 50, fixed: "left" },
-  { prop: "itemType", label: "款项类型/事项", editable: false, width: 120 },
-  { prop: "orgName", label: "所属组织", editable: false, width: 100 },
-  { prop: "expenseType", label: "费用类型", editable: false, width: 100 },
-  { prop: "payeeBank", label: "收款方开户行", editable: false, width: 120 },
+  { prop: "finaSubDesc", label: "款项类型/事项", editable: false },
+  { prop: "finaOrgName", label: "所属组织", editable: false },
   {
-    prop: "payeeAccountName",
+    prop: "pmBankName",
     label: "收款方开户名",
     editable: false,
-    width: 120,
   },
-  { prop: "payeeAccount", label: "收款方账号", editable: false, width: 100 },
-  { prop: "paymentMethod", label: "支付方式", editable: false, width: 100 },
-  { prop: "subjectName", label: "科目名称", editable: false, width: 100 },
-  { prop: "requestAmount", label: "请款金额", editable: false, width: 100 },
-  { prop: "unpaidAmount", label: "未付金额", editable: false, width: 100 },
+  { prop: "pmAccountName", label: "收款方账号", editable: false },
+  { prop: "payWayName", label: "支付方式", editable: false, width: 100 },
+  { prop: "finaSubName", label: "科目名称", editable: false },
+  { prop: "finaSubAmt", label: "请款金额", editable: false, width: 90 },
+  { prop: "unpaidAmt", label: "未付金额", editable: false, width: 90 },
   {
-    prop: "currentPaymentAmount",
+    prop: "currPayAmt",
     label: "本次支付金额",
     editable: true,
     editType: "number",
@@ -322,41 +264,47 @@ const tableColumns = computed<EditableColumn[]>(() => [
 
 // 表单校验规则
 const formRules: FormRules = {
-  paymentDate: [
-    { required: true, message: "请选择支付日期", trigger: "change" },
-  ],
-  paymentMethod: [
-    { required: true, message: "请选择支付方式", trigger: "change" },
-  ],
-  paymentAmount: [
-    { required: true, message: "请输入支付金额", trigger: "blur" },
-    {
-      type: "number",
-      min: 0.01,
-      message: "支付金额必须大于0",
-      trigger: "blur",
-    },
-  ],
-  payeeName: [{ required: true, message: "请输入收款方名称", trigger: "blur" }],
-  payeeBank: [{ required: true, message: "请输入收款银行", trigger: "blur" }],
-  payeeAccount: [
-    { required: true, message: "请输入收款账号", trigger: "blur" },
-  ],
-  bankReceipt: [{ type: "array", max: 5, message: "最多上传5个文件" }],
-  receiptPhotos: [{ type: "array", max: 9, message: "最多上传9张照片" }],
-  remark: [{ max: 500, message: "备注不能超过500个字符", trigger: "blur" }],
+  payDate: [{ required: true, message: "请选择支付日期", trigger: "change" }],
+  payWayId: [{ required: true, message: "请选择支付方式", trigger: "change" }],
+  payAmt: [{ required: true, message: "请输入支付金额", trigger: "change" }],
+  payCompId: [{ required: true, message: "请选择支付公司", trigger: "change" }],
+};
+// 数据字典
+const { getDictList, loadDicts } = useDict([dictMapping.payType], {
+  treeDictCodes: [],
+});
+// 付款方式
+const payTypeOptions = computed(() => getDictList(dictMapping.payType));
+
+// 计算支付金额（所有行的本次支付金额累加）
+const calcTotalPayAmt = () => {
+  const total = tableData.value.reduce((sum, row) => {
+    const amt = Number(row.currPayAmt) || 0;
+    return sum + amt;
+  }, 0);
+  formData.value.payAmt = total;
+  return total;
 };
 
 // 处理选择变更
 const handleSelectionChange = (rows: any[]) => {
   selectedRows.value = rows;
-  console.log(rows);
 };
 
-// 附件上传成功
-const handleUploadSuccess = (file: any) => {
-  console.log("当前上传成功文件", file);
-  tempFileList.value.push(file);
+// 处理单元格编辑（当本次支付金额变化时重新计算总金额）
+const handleTableSave = ({ row, column, newValue, oldValue, rowIndex }) => {
+  // 如果编辑的是本次支付金额字段
+  if (column === "currPayAmt") {
+    // 使用nextTick确保值已更新
+    nextTick(() => {
+      calcTotalPayAmt();
+    });
+  }
+};
+
+const handleFileSuccess = (file: any) => {
+  // tempFileList.value.push(file);
+  tempFileList.value = [file];
   console.log("文件列表", tempFileList.value);
 };
 
@@ -366,37 +314,19 @@ const buildParams = () => {
   const submitList = selectedRows.value.map((row) => ({
     // 明细数据
     id: row.id,
-    itemType: row.itemType, // 款项类型/事项
-    orgName: row.orgName, // 所属组织
-    expenseType: row.expenseType, // 费用类型
-    payeeBank: row.payeeBank, // 收款方开户行
-    payeeAccountName: row.payeeAccountName, // 收款方开户名
-    payeeAccount: row.payeeAccount, // 收款方账号
-    paymentMethod: row.paymentMethod, // 支付方式
-    subjectName: row.subjectName, // 科目名称
-    requestAmount: row.requestAmount, // 请款金额
-    unpaidAmount: row.unpaidAmount, // 未付金额
-    currentPaymentAmount: row.currentPaymentAmount, // 本次支付金额
-    // 表单数据 - 糅合到每条明细中
-    paymentDate: formData.value.paymentDate, // 支付日期
-    paymentMethodGlobal: formData.value.paymentMethod, // 支付方式（全局）
-    paymentAmountGlobal: formData.value.paymentAmount, // 支付金额（全局）
-    paymentAccount: formData.value.paymentAccount, // 支付账号
-    paymentCompany: formData.value.paymentCompany, // 支付公司
-    payeeName: formData.value.payeeName, // 收款方
-    payeeBankGlobal: formData.value.payeeBank, // 收款银行（全局）
-    payeeAccountGlobal: formData.value.payeeAccount, // 收款账号（全局）
-    bankReceipt: formData.value.bankReceipt, // 银行回单
-    receiptPhotos: formData.value.receiptPhotos, // 回单照片
-    remark: formData.value.remark, // 备注
-    // 登记信息
-    registrar: formData.value.registrar || "张三",
-    registrarDate:
-      formData.value.registrarDate || new Date().toISOString().split("T")[0],
-    // 流程信息
-    nconBillId: formData.value.nconBillId,
-    settledPaymentId: formData.value.settledPaymentId,
-    status: formData.value.status,
+    bizType: row.bizType,
+    bizBillId: row.bizBillId,
+    finaAllocId: row.finaAllocId,
+    bankName: "",
+    accountName: "",
+    bankAccount: formData.value.payAccount,
+    payWayId: formData.value.payWayId,
+    payCompId: formData.value.payCompId,
+    bankReceipt: formData.value.bankReceipt,
+    payAmt: row.currPayAmt,
+    payDate: formData.value.payDate,
+    payDesc: formData.value.payDesc,
+    annexId: tempFileList.value.length ? tempFileList.value[0]?.id : undefined,
   }));
   return submitList;
 };
@@ -408,27 +338,46 @@ const handleSubmit = async () => {
     await formRef.value.validate();
     submitLoading.value = true;
 
-    // 验证表格数据
-    const invalidRows = tableData.value.filter(
-      (row) =>
-        row.currentPaymentAmount > 0 &&
-        row.currentPaymentAmount > row.unpaidAmount,
-    );
-    if (invalidRows.length > 0) {
-      ElMessage.warning("本次支付金额不能超过未付金额");
+    if(tableData.value.length === 0) {
+      ElMessage.warning("暂无款项明细数据！");
       submitLoading.value = false;
       return;
     }
 
-    // TODO: 调用提交接口
-    console.log("提交数据:", {
-      ...formData.value,
-      details: buildParams(),
-    });
+    // 1. 验证是否勾选了列表数据
+    if (selectedRows.value.length === 0) {
+      ElMessage.warning("请先勾选款项明细！");
+      submitLoading.value = false;
+      return;
+    }
 
-    // ElMessage.success("提交成功");
-    // emit("success");
-    // handleClose();
+    // 2. 验证勾选的数据的本次支付金额必须大于0
+    const invalidRows = selectedRows.value.filter(
+      (row) => !row.currPayAmt || Number(row.currPayAmt) <= 0,
+    );
+    if (invalidRows.length > 0) {
+      ElMessage.warning("勾选的明细中，本次支付金额必须大于0");
+      submitLoading.value = false;
+      return;
+    }
+
+    // 3. 验证本次支付金额不能超过未付金额
+    const exceedRows = selectedRows.value.filter(
+      (row) => Number(row.currPayAmt) > Number(row.unpaidAmt),
+    );
+    if (exceedRows.length > 0) {
+      ElMessage.warning("本次支付金额不能超过未付金额");
+      submitLoading.value = false;
+      return;
+    }
+    // 构建参数
+    const paramList = buildParams();
+    const res = await payRegisterApi.savePayRegister(paramList);
+    if (res.code === 200) {
+      ElMessage.success("提交成功");
+      emit("success");
+      handleClose();
+    }
   } catch (error) {
     console.error("表单验证失败:", error);
   } finally {
@@ -442,15 +391,74 @@ const handleClose = () => {
   formRef.value?.clearValidate();
   dialogVisible.value = false;
 };
+// 获取公司列表
+const getCompanyListByProjId = async () => {
+  const projId = props?.currentRow?.projId;
+  if (!projId) {
+    payComOptions.value = [];
+    return;
+  }
+  try {
+    payComOptions.value = [];
+    const companies = await mdStore.getProjCompanyList(projId);
+    payComOptions.value = companies || [];
+  } catch (error) {
+    console.error("获取公司列表失败:", error);
+    payComOptions.value = [];
+  }
+};
+// 获取明细数据
+const getDetailList = async () => {
+  console.log("查询参数", props.queryParams);
+  if (!props.queryParams) return;
+  const { applyDate, ...rest } = props.queryParams;
+  try {
+    const params = {
+      ...rest,
+      reqDateStart: rest.applyDate?.[0],
+      reqDateEnd: rest.applyDate?.[1],
+      bizBillId: props.currentRow.bizBillId,
+      bizType: props.currentRow.bizType,
+    };
+    const res = await payRegisterApi.getPayLedgerSub(params);
+    console.log("res", res);
+    if (res.code === 200) {
+      const list = res.data || [];
+      tableData.value = list.map((item) => {
+        // 计算未付金额 = 请款金额 - 已付金额
+        const unpaidAmt =
+          (Number(item.finaSubAmt) || 0) - (Number(item.regPayAmtSum) || 0);
+        return {
+          ...item,
+          uuid: uuidv4(),
+          currPayAmt: 0, // 初始化本次支付金额为0
+          unpaidAmt: unpaidAmt, // 未付金额
+        };
+      });
+    }
+  } catch (error) {}
+};
+const initData = async () => {
+  await loadDicts();
+  await getCompanyListByProjId();
+  await getDetailList();
+  // 清空选中的行
+  selectedRows.value = [];
+  // 重置支付金额
+  formData.value.payAmt = 0;
+};
 
 // 监听外部传入的显示状态
 watch(
   () => props.modelValue,
-  (val) => {
+  async (val) => {
     dialogVisible.value = val;
-    if (val && props.editData) {
-      // 编辑时回填数据
-      Object.assign(formData.value, props.editData);
+    if (val) {
+      formData.value = initFormData();
+      formData.value.registrar = userStore.userInfo?.empName || "";
+      formData.value.registrarDate = dateUtil().format("YYYY-MM-DD");
+      formData.value.payCompId = props?.currentRow?.compId || undefined;
+      await initData();
     }
   },
 );
@@ -458,34 +466,6 @@ watch(
 // 监听内部显示状态变化
 watch(dialogVisible, (val) => {
   emit("update:modelValue", val);
-  if (!val) {
-    // 关闭时重置编辑数据
-    if (!props.modelValue) {
-      formData.value = {
-        id: undefined,
-        segId: undefined,
-        projId: undefined,
-        paymentDate: "",
-        paymentMethod: "",
-        paymentAmount: 0,
-        paymentAccount: "",
-        paymentCompany: "",
-        payeeName: "",
-        payeeBank: "",
-        payeeAccount: "",
-        bankReceipt: "",
-        receiptPhotos: [],
-        remark: "",
-        registrar: "",
-        registrarDate: "",
-        modifier: "",
-        modifyDate: "",
-        nconBillId: undefined,
-        settledPaymentId: undefined,
-        status: 0,
-      };
-    }
-  }
 });
 </script>
 

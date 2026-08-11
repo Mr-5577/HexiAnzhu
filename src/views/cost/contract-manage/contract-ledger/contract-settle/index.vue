@@ -30,7 +30,7 @@
         <el-button type="danger" link @click="handleDelete(row)">
           删除
         </el-button>
-        <el-button type="primary" link> 审批 </el-button>
+        <el-button type="primary" link @click="handleDetail(row)"> 详情 </el-button>
       </template>
     </base-table>
   </div>
@@ -135,6 +135,16 @@ const handleAdd = () => {
 const handleEdit = async ({ id }) => {
   router.push({
     path: "/con/contract-settle/edit",
+    query: {
+      conId: props.conId, // 合同ID
+      settleId: id, // 结算ID
+    },
+  });
+};
+// 编辑
+const handleDetail = async ({ id }) => {
+  router.push({
+    path: "/con/contract-settle/detail",
     query: {
       conId: props.conId, // 合同ID
       settleId: id, // 结算ID

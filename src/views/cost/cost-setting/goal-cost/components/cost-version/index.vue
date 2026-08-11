@@ -52,7 +52,7 @@
       <template #status="{ row }">
         <el-tag
           size="small"
-          :type="getEnumType(costBillStatusEnum, row?.status || 0) as 'primary' | 'success' | 'warning' | 'info' | 'danger'"
+          :type="getEnumType(costBillStatusEnum, row?.status || 0)"
         >
           {{ getEnumLabel(costBillStatusEnum, row?.status || 0) }}
         </el-tag>

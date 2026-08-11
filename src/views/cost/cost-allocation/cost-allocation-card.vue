@@ -41,6 +41,7 @@
       :bizType="props.bizType"
       :allocAmt="props.allocAmt"
       :cstMData="props.cstMData"
+      :dialogMode="props.dialogMode"
       @select="getData"
     />
   </div>
@@ -77,6 +78,7 @@ interface Props {
   allocAmt?: number;
   /** 成本分摊数据 */
   cstMData?: any;
+  dialogMode?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -90,6 +92,7 @@ const props = withDefaults(defineProps<Props>(), {
   bizType: undefined,
   allocAmt: 0,
   cstMData: null,
+  dialogMode: "view", // 弹窗模式，默认为查看模式 view  edit
 });
 
 const emit = defineEmits<{

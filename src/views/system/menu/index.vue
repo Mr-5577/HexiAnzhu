@@ -71,9 +71,9 @@
         </el-tag>
       </template>
       <template #isVisible="scope">
-        <!-- 页面隐藏 -->
+        <!-- 页面是否可见 -->
         <el-tag :type="scope.row.isVisible ? 'info' : 'success'" size="small">
-          {{ scope.row.isVisible ? "否" : "是" }}
+          {{ scope.row.isVisible ? "是" : "否" }}
         </el-tag>
       </template>
       <template #action="scope">

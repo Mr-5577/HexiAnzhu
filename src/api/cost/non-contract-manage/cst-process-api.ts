@@ -101,4 +101,11 @@ export const cstProcessApi = {
   getCstProcessBillInfo: (params: { billId: number }) => {
     return http.get("/ncon/bill/getInfo", params);
   },
+  /**
+   * @name 发起/更新非合同建安立项审批流程
+   * @param data.id 非合同建安立项id
+   */
+  saveNconCstProcessFlow: (data: { id: number; allowEdit?: boolean }) => {
+    return http.formPost("/ncon/flow/saveNconCstProcessFlow", data);
+  },
 };
