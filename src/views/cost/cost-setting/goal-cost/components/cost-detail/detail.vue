@@ -473,12 +473,14 @@ const buildTreeWithProducts = (nodes: any[]): any[] => {
       allocRuleName: isLeaf ? node.allocRuleName : "",
       totalCostAmt: 0,
       totalCostExclAmt: 0,
+      costMid: props.costMid,
       children: node.children ? buildTreeWithProducts(node.children) : [],
     };
 
     productOptions.value.forEach((product) => {
       rowData[`costAmt_${product.id}`] = isLeaf ? null : 0;
       rowData[`costExclAmt_${product.id}`] = isLeaf ? null : 0;
+      rowData[`detailId_${product.id}`] = undefined;
     });
 
     return rowData;
@@ -638,9 +640,12 @@ const transformDataForSave = () => {
     productOptions.value.forEach((product) => {
       const costAmt = row[`costAmt_${product.id}`];
       const costExclAmt = row[`costExclAmt_${product.id}`];
+      const detailId = row[`detailId_${product.id}`];
       // 只保存有金额的行
       // if (costAmt && costAmt > 0 && costExclAmt && costExclAmt > 0) {
       saveData.push({
+        id: detailId,
+        costMid: row.costMid || props.costMid,
         subId: row.subId,
         subName: row.subName,
         prodId: product.id,
@@ -754,6 +759,8 @@ const fillDetailDataToTable = (detailData: any[]) => {
             hasData = true;
             node[`costAmt_${prod.id}`] = detail.costAmt || 0;
             node[`costExclAmt_${prod.id}`] = detail.costExclAmt || 0;
+            node[`detailId_${prod.id}`] = detail.id;
+            node.costMid = detail.costMid || props.costMid;
           }
         });
         // 如果有数据，设置公共字段（取第一条）
