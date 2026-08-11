@@ -404,6 +404,7 @@ const handleOALogin = async (
         subBizCode,
         mode,
       );
+      console.log("OA鉴权跳转路径:", targetPath);
       await router.replace(targetPath);
     } else {
       const errMsg = res.message || "OA鉴权失败，请重新登录";

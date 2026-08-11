@@ -22,7 +22,7 @@ import {
   batchRecognizeInvoices,
   toInvoiceTableRows,
   type RecognizedInvoice,
-} from "@/utils/Invc-verif";
+} from "@/utils/invc-verif";
 
 export interface UseInvoiceRecognitionResult {
   /** 返回表格行数组；若整体失败返回 null */
@@ -37,7 +37,14 @@ export interface UseInvoiceRecognitionResult {
 }
 
 export function useInvoiceRecognition(): UseInvoiceRecognitionResult {
-  return async function getInvcDataList(fileList, ctx) {
+  return async function getInvcDataList(
+    fileList: { id: number; annexName: string }[],
+    ctx: {
+      conBillId?: any;
+      srcType?: any;
+      generateUuid: () => string;
+    }
+  ) {
     if (!fileList || fileList.length === 0) return null;
 
     const notify = ElNotification({
@@ -53,8 +60,10 @@ export function useInvoiceRecognition(): UseInvoiceRecognitionResult {
         fileList,
         concurrency: 5,
         onProgress: (done, total) => {
-          // 新版 Element Plus 可直接修改实例的 message
-          (notify as any).message = `正在识别 ${done}/${total}...`;
+          // 注意：Element Plus 通知实例的 message 为只读渲染，直接赋值不会触发重绘，
+          // 因此不在此处尝试更新文案，仅保留整体「识别中」提示，完成时统一关闭。
+          void done;
+          void total;
         },
       });
 
