@@ -158,6 +158,7 @@ const resolveBizRoute = async (
           case "edit":
             return buildRoutePath(COST_ROUTE[bizItemCode], {
               billId, // 单据ID
+              bizId, // 业务ID
               bizType: bizItemCode, // 业务类型
               mode: "edit",
             });
@@ -165,6 +166,7 @@ const resolveBizRoute = async (
           default:
             return buildRoutePath(COST_ROUTE[bizItemCode], {
               billId, // 单据ID
+              bizId, // 业务ID
               bizType: bizItemCode, // 业务类型
               mode: "edit",
             });
@@ -173,7 +175,8 @@ const resolveBizRoute = async (
       // 这里走单据详情页
       const pageMode = `${bizItemCode}_${mode}`;
       return buildRoutePath(DEFAULT_ROUTE[pageMode], {
-        billId,
+        billId, // 单据ID
+        bizId, // 业务ID
       });
     }
 
@@ -188,6 +191,7 @@ const resolveBizRoute = async (
           case "edit":
             return buildRoutePath(`${FINA_ROUTE[bizItemCode]}`, {
               billId, // 单据ID
+              bizId, // 业务ID
               bizType: bizItemCode, // 业务类型
               mode: "edit",
             });
@@ -195,6 +199,7 @@ const resolveBizRoute = async (
           default:
             return buildRoutePath(`${FINA_ROUTE[bizItemCode]}`, {
               billId, // 单据ID
+              bizId, // 业务ID
               bizType: bizItemCode, // 业务类型
               mode: "edit",
             });
@@ -205,6 +210,7 @@ const resolveBizRoute = async (
           case "edit":
             return buildRoutePath(COST_ROUTE[bizItemCode], {
               billId, // 单据ID
+              bizId, // 业务ID
               bizType: bizItemCode, // 业务类型
               mode: "edit",
             });
@@ -212,6 +218,7 @@ const resolveBizRoute = async (
           default:
             return buildRoutePath(COST_ROUTE[bizItemCode], {
               billId, // 单据ID
+              bizId, // 业务ID
               bizType: bizItemCode, // 业务类型
               mode: "edit",
             });
@@ -220,7 +227,8 @@ const resolveBizRoute = async (
       // 这里走单据详情页
       const pageMode = `${bizItemCode}_${mode}`;
       return buildRoutePath(DEFAULT_ROUTE[pageMode], {
-        billId,
+        billId, // 单据ID
+        bizId, // 业务ID
       });
     }
 

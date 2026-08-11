@@ -586,6 +586,22 @@
           title="付款方式"
           v-model:collapsed="collapsedCards.payway"
         >
+          <div
+            style="display: flex; justify-content: flex-end; margin-bottom: 8px"
+          >
+            <el-button
+              type="primary"
+              size="small"
+              :disabled="payWayTable.length == 0"
+              @click="handleFinanceAlloc"
+              v-if="!isAdd"
+            >
+              财务分摊
+            </el-button>
+            <el-button type="primary" size="small" @click="addPayWay" v-if="!(isDetail || !!billData.status)">
+              新增支付方式
+            </el-button>
+          </div>
           <template v-if="isDetail || !!billData.status">
               <base-table
                 ref="payWayTableRef"
@@ -613,13 +629,6 @@
                 :editable="true"
                 :on-save="handlePayWaySave"
               >
-                <template #actionBar>
-                  <div class="actionBar-buttons">
-                    <el-button type="primary" size="small" @click="addPayWay">
-                      新增支付方式
-                    </el-button>
-                  </div>
-                </template>
                 <template #actions="{ row }">
                   <el-button link type="danger" @click="deletePayWay(row)">
                     删除
@@ -823,6 +832,17 @@
       :disabled="isDetail || !!billData.status"
       @success="handleInvoiceDetailSuccess"
     />
+
+    <!-- 财务分摊  :dialogMode="isDetail ? 'view' : 'edit'" -->
+    <FinanceAllocationDialog
+      ref="financeAllocationDialogRef"
+      v-model="financeAllocVisible"
+      :payWayTable="payWayTable"
+      :segId="formData.segId"
+      :projId="formData.projId"
+      :dialogMode="'view'"
+      @select="getFinaList"
+    ></FinanceAllocationDialog>
 </template>
 
 <script setup lang="ts">
@@ -919,6 +939,7 @@ import { getOptionsLabelById } from "@/utils/enum";
 import { moneyRule, requiredInputRule, requiredRule } from "@/utils/form-rule-validate";
 import { buildTree } from "@/utils/tree";
 import { useInvoiceRecognition } from "@/composables/use-Invc-verif";
+import FinanceAllocationDialog from "@/views/cost/finance-allocation/finance-allocation-dialog.vue";
 
 // ============================================================
 // 路由 / 状态仓库 实例化
@@ -947,6 +968,7 @@ const isReadonly = computed(() => isDetail.value || !!billData.value.status);
 const conId = ref<number | undefined>(props.conId);
 const paymentId = ref<number | undefined>(props.paymentId);
 const uploadVisibleDialog = ref(false);
+const financeAllocVisible = ref(false);
 
 // ============================================================
 // 单据 / 流程状态
@@ -1873,6 +1895,20 @@ const handleUploadSuccess = (file: any) => {
 // ============================================================
 // 事件处理：付款方式 / 财务分摊
 // ============================================================
+const getFinaList = (data) => {
+  console.log("获取的财务分摊数据", data);
+};
+const handleFinanceAlloc = () => {
+  if (!formData.value.segId) {
+    ElMessage.error("请先选择项目");
+    return;
+  }
+  if (payWayTable.value.length > 0) {
+    financeAllocVisible.value = true;
+  } else {
+    ElMessage.error("请先添加付款方式");
+  }
+};
 const addPayWay = () => {
   const newRowData = {
     uuid: uuidv4(),
