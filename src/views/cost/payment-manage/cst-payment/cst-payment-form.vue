@@ -547,14 +547,14 @@
       @success="handleInvoiceDetailSuccess"
     />
 
-    <!-- 财务分摊 :dialogMode="isDetail ? 'view' : 'edit'" -->
+    <!-- 财务分摊 erp页面纯查看 -->
     <FinanceAllocationDialog
       ref="financeAllocationDialogRef"
       v-model="financeAllocVisible"
       :payWayTable="payWayTable"
       :segId="formData.segId"
       :projId="formData.projId"
-      :dialogMode="'view'"
+      :bizType="'NCON_CST'"
       @select="getFinaList"
     ></FinanceAllocationDialog>
   </div>

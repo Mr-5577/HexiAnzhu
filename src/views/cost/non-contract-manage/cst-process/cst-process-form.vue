@@ -2,7 +2,7 @@
 <template>
   <div class="basic-form-content">
     <BillHeader
-      :title="'无合同事项审批'"
+      :title="'无合同立项审批'"
       :contract-no="billData.bizNo || ''"
       :submitter="formData.userName || ''"
       :submit-time="formData.createDate || ''"

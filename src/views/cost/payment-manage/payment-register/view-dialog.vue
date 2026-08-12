@@ -153,20 +153,21 @@ const tableData = ref([]);
 const tableColumns = computed(() => {
   const baseColumns = [
     { type: "index", label: "序号", width: 60 },
+    { prop: "finaSubDesc", label: "摘要", width: 150 },
     { prop: "payWayName", label: "支付方式", width: 100 },
     { prop: "payAmt", label: "支付金额", width: 100 },
     { prop: "payDate", label: "支付日期", width: 100 },
-    { prop: "payDesc", label: "备注", width: 200 },
-    { prop: "bankAccount", label: "支付账号" },
+    { prop: "payDesc", label: "备注", width: 150 },
     { prop: "payCompName", label: "支付公司" },
+    { prop: "bankAccount", label: "支付账号" },
     { prop: "bankReceipt", label: "银行回单号" },
-    { slot: "receiptPhotos", label: "回单照片", width: 160 },
+    { slot: "receiptPhotos", label: "回单照片", width: 120 },
   ];
   // 入库锁定状态下不可操作
   if (props?.currentRow?.isLocked) {
     return baseColumns;
   } else {
-    return [...baseColumns, { slot: "actions", label: "操作", width: 150 }];
+    return [...baseColumns, { slot: "actions", label: "操作", width: 120 }];
   }
 });
 

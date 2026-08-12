@@ -1,25 +1,10 @@
 <!-- 财务分摊 组件 -->
 <template>
-  <base-modal
-    v-model="dialogVisible"
-    title="财务分摊"
-    width="1400px"
-    :top="'8vh'"
-    :confirm-loading="confirmLoading"
-    :confirm-text="'确定'"
-    :showConfirmButton="props.dialogMode == 'edit'"
-    :showCancelButton="props.dialogMode == 'edit'"
-    @confirm="handleConfirm"
-    @close="handleClose"
-  >
-    <FinanceAllocationDetail
-      ref="financeAllocationRef"
-      :projId="props.projId"
-      :segId="props.segId"
-      :dialogMode="props.dialogMode"
-      :isDialogMode="true"
-      :payWayTable="payWayTable"
-    ></FinanceAllocationDetail>
+  <base-modal v-model="dialogVisible" title="财务分摊" width="1400px" :top="'8vh'" :confirm-loading="confirmLoading"
+    :confirm-text="'确定'" :showConfirmButton="false" :showCancelButton="false" @confirm="handleConfirm"
+    @close="handleClose">
+    <FinanceAllocationDetail ref="financeAllocationRef" :projId="props.projId" :segId="props.segId" :isDialogMode="true"
+      :payWayTable="payWayTable"></FinanceAllocationDetail>
   </base-modal>
 </template>
 
@@ -33,7 +18,7 @@ interface Props {
   projId?: number | undefined;
   segId?: number | undefined;
   payWayTable?: any[];
-  dialogMode?: string;
+  bizType?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -41,7 +26,7 @@ const props = withDefaults(defineProps<Props>(), {
   projId: undefined,
   segId: undefined,
   payWayTable: () => [],
-  dialogMode: "edit", // edit:编辑模式，view:查看模式
+  bizType: "NCON_CST", // 业务类型，NCON_CST:非合同请款  NCON_FEE:非合同费用报销  CON_PAY:合同支付
 });
 
 // Emits

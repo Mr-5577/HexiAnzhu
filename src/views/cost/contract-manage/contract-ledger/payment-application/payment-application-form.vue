@@ -833,14 +833,14 @@
       @success="handleInvoiceDetailSuccess"
     />
 
-    <!-- 财务分摊  :dialogMode="isDetail ? 'view' : 'edit'" -->
+    <!-- 财务分摊  -->
     <FinanceAllocationDialog
       ref="financeAllocationDialogRef"
       v-model="financeAllocVisible"
       :payWayTable="payWayTable"
       :segId="formData.segId"
       :projId="formData.projId"
-      :dialogMode="'view'"
+      :bizType="'CON_PAY'"
       @select="getFinaList"
     ></FinanceAllocationDialog>
 </template>
