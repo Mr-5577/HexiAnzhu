@@ -196,6 +196,7 @@
     <choose-supplier-dialog
       ref="supplierDialogRef"
       v-model="supplierDialogVisible"
+      :supStatus="1"
       @select="handleSupplierSelect"
     />
   </div>
