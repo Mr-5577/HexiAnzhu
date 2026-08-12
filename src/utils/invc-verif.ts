@@ -133,11 +133,10 @@ export function normalizeInvoiceResult(
         num: 1,
         price: finalData.Amount, // 与发票总额一致
         totalAmt: finalData.Amount, // 与发票总额一致
-        taxRate: item.TaxRate ?? 0,
-        taxAmt: finalData.Amount, // 与发票总额一致
+        taxRate: item.TaxRate ?? null,
+        taxAmt: finalData.TotalTaxPrice, // 与发票总额一致
       };
     }
-    debugger
     // 普通发票：若存在车辆信息则拼到品名
     const hasCarInfo = item.CarType != null || item.BrankNumber != null;
     return {
@@ -292,3 +291,35 @@ export function toInvoiceTableRows(
     invoiceDs: r.invoiceDs,
   }));
 }
+
+
+// /**
+//  * 将单张识别结果「原地写回」已存在的表格行。
+//  * 只覆盖识别类字段，保留原行的 uuid / id / srcType / conBillId 等业务字段。
+//  * 用于「重新查验 / 修改当前行」场景，区别于 toInvoiceTableRows（生成新行）。
+//  *
+//  * @returns 是否写入成功（识别失败 success=false 时返回 false，不改动原行）
+//  */
+// export function applyRecognizedToRow(
+//   row: Record<string, any>,
+//   r: RecognizedInvoice
+// ): boolean {
+//   if (!r.success) return false;
+//   row.invNo = r.invNo;
+//   row.invDate = r.invDate;
+//   row.totalAmt = r.totalAmt;
+//   row.notTaxAmt = r.notTaxAmt;
+//   row.taxAmt = r.taxAmt;
+//   row.invType = r.invType;
+//   row.buyerCompany = r.buyerCompany;
+//   row.buyerTaxCode = r.buyerTaxCode;
+//   row.sellerCompany = r.sellerCompany;
+//   row.sellerTaxCode = r.sellerTaxCode;
+//   row.isValid = r.isValid;
+//   row.validateMsg = r.validateMsg;
+//   row.ocrRes = r.ocrRes;
+//   row.validateRes = r.validateRes;
+//   row.status = r.status;
+//   row.invoiceDs = r.invoiceDs;
+//   return true;
+// }

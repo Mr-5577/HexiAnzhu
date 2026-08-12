@@ -985,6 +985,11 @@ const validatePayrateTable = () => {
       //await submitContractFormRules();
       if (!validatePayrateTable()) return;
       if (!validatePayRate()) return;
+      if (annexContractFileList.value.length === 0) {
+         ElMessage.warning(`未上传合同正文及附件，请上传后再提交！`,
+        );
+        return;
+      } 
 
       submitLoading.value = true;
       const params = buildSubmitParams();
