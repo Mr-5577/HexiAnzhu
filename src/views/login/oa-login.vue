@@ -80,7 +80,7 @@ const COST_ROUTE: Record<string, string> = {
   CON_QZ: "/cost-allocation",
   CON_PRE_SETTLE: "/cost-allocation",
   CON_SETTLE: "/cost-allocation",
-  NCON_CST: "/cost-allocation",
+  NCON_CST: "/oa/ncon/cost-allocation",
   NCON_PROC: "/oa/ncon/cost-allocation",
 };
 

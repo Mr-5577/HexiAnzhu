@@ -487,7 +487,7 @@
         <CostAllocationCard
           :visible="isShowCostAllocation && formData.reqType == 0"
           :allocation-status="cstMData.allocStatus"
-          :warning-status="cstMData.allocStatus"
+          :warning-status="cstMData.allocWarn"
           :bizType="'NCON_CST'"
           :projId="formData.projId"
           :projName="formData.projName"

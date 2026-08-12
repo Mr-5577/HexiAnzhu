@@ -10,6 +10,7 @@ export const independentRoutes = [
     },
   },
   {
+    // 非合同成本分摊
     path: "/oa/ncon/cost-allocation",
     name: "oa-ncon-costAllocation",
     component: () => import("@/views/cost/cost-allocation/ncon-cost-alloc/index.vue"),

@@ -161,7 +161,7 @@ import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
 interface Props {
   projId?: number; // 项目ID
   projName?: string; // 项目名称
-  displayName?: string; // 事项名称
+  displayName?: string;
   bizType?: string; // 业务类型
   allocAmt?: number; // 分摊金额(含税)
   allocExclAmt?: number; // 分摊金额(不含税)
@@ -547,9 +547,8 @@ const getBuildingListByProjId = async () => {
 const processPopupData = async (cstList: any) => {
   if (cstList && cstList?.length > 0) {
     const detaiList = cstList || [];
-    // 获取科目ID集合
     const subIds: any = new Set(detaiList.map((item: any) => item.subId));
-    // 查询基础科目树数据
+
     const costSubjectsRes = await costCategoryApi.getCostSubjectBase({
       isWithParent: true,
     });
@@ -557,7 +556,7 @@ const processPopupData = async (cstList: any) => {
     if (costSubjectsRes.code === 200) {
       const rawTreeData = costSubjectsRes.data || [];
       const subTreeData: any = buildTree(rawTreeData); // 构建基础科目树数据
-      const treeData = filterTreeByIds(subTreeData, Array.from(subIds)); // 通过科目ID集合过滤树数据
+      const treeData = filterTreeByIds(subTreeData, Array.from(subIds));
       // 缓存原始科目树，便于用户切换楼栋时动态渲染业态列
       cachedSubjectTree = treeData;
 
