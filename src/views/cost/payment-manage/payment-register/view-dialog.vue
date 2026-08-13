@@ -71,6 +71,15 @@
         @close="closePreview"
         @switch="handleSwitch"
       />
+
+      <!-- 编辑登记明细弹窗 -->
+      <edit-register-dialog
+        v-model="editDialogVisible"
+        :unpaidAmt="unpaidAmt"
+        :projId="props.currentRow?.projId"
+        :row-data="editRowData"
+        @success="handleSuccess"
+      />
     </div>
   </base-modal>
 </template>
@@ -86,6 +95,7 @@ import { useMDStore } from "@/stores/md-store.ts";
 import { payRegisterApi } from "@/api/cost/payment-manage/payment-register-api";
 import { commonApi } from "@/api/cost/common-api";
 import { buildFileUrl } from "@/utils/file-path-util";
+import EditRegisterDialog from "./edit-register-dialog.vue";
 
 interface Props {
   modelValue: boolean;
@@ -110,6 +120,8 @@ const mdStore = useMDStore();
 const dialogVisible = ref(props.modelValue);
 const formRef = ref<FormInstance>();
 const payComOptions = ref([]);
+const editDialogVisible = ref(false);
+const editRowData = ref(null);
 
 // 预览相关
 const showViewer = ref(false);
@@ -123,6 +135,16 @@ const formData = ref({
   registrarDate: "",
   modifier: "",
   modifyDate: "",
+});
+
+// 计算未付金额 = 请款金额 - 已支付金额合计
+const unpaidAmt = computed(() => {
+  if (!props.currentRow) return 0;
+  const payableAmt = Number(props.currentRow?.payableAmt || 0) || 0;
+  const paidAmt = tableData.value.reduce((sum, item) => {
+    return sum + (Number(item.payAmt || 0) || 0);
+  }, 0);
+  return payableAmt - paidAmt;
 });
 
 // 表格数据
@@ -148,36 +170,38 @@ const tableColumns = computed(() => {
   }
 });
 
-// 监听父组件传来的值
-watch(
-  () => props.modelValue,
-  (val) => {
-    dialogVisible.value = val;
-    if (val) {
-    }
-  },
-);
 // 编辑
-const handleEdit = (row) => {
-  if (!row.id) return;
+const handleEdit = async (row) => {
+  console.log("主表数据", props.currentRow);
+  editRowData.value = row;
+  editDialogVisible.value = true;
 };
 // 删除
 const handleDelete = (row) => {
   if (!row.id) return;
-  ElMessageBox.confirm(`确定删除这条数据吗？`, "提示", {
+  ElMessageBox.confirm(`确定删除这条登记明细吗？`, "提示", {
     type: "warning",
   })
     .then(async () => {
       const res = await payRegisterApi.delPayRegister({ id: row.id });
       if (res.code === 200) {
         ElMessage.success("删除成功");
-        // 重新更新数据
+        // 更新当前登记列表数据
         getDetailList();
+        // 更新主列表数据
+        emit("success");
+        // 关闭弹窗
+        // handleClose();
       }
     })
     .catch(() => {});
 };
-
+const handleSuccess = () => {
+  // 更新当前登记列表数据
+  getDetailList();
+  // 更新主列表数据
+  emit("success");
+};
 // 获取显示的照片（最多显示3张）
 const getDisplayPhotos = (photos: any[]) => {
   if (!photos || photos.length === 0) return [];

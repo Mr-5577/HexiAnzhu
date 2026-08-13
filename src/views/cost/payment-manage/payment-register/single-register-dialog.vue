@@ -1,23 +1,14 @@
 <!-- 付款登记 弹窗 -->
 <template>
-  <base-modal
-    v-model="dialogVisible"
-    :title="'付款登记'"
-    width="1400px"
-    :confirmText="'提交登记'"
-    :confirm-loading="submitLoading"
-    @confirm="handleSubmit"
-    @close="handleClose"
-  >
+  <base-modal v-model="dialogVisible" :title="'付款登记'" width="1400px" :confirmText="'提交登记'"
+    :confirm-loading="submitLoading" @confirm="handleSubmit" @close="handleClose">
     <div style="padding-right: 8px; box-sizing: border-box">
-      <div
-        style="
+      <div style="
           width: 100%;
           display: flex;
           flex-wrap: nowrap;
           margin-bottom: 10px;
-        "
-      >
+        ">
         <div class="info-item">
           <span class="info-label">登记人：</span>
           <span class="info-value">{{ formData.registrar || "-" }}</span>
@@ -41,49 +32,20 @@
       </div>
 
       <div class="title">款项明细</div>
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="formRules"
-        label-width="0"
-      >
-        <editable-table
-          ref="tableRef"
-          :row-key="'uuid'"
-          :height="'400px'"
-          v-model="tableData"
-          :columns="tableColumns"
-          :pagination="false"
-          :highlight-current-row="false"
-          :show-summary="false"
-          :compactEmpty="true"
-          :editable="true"
-          @selection-change="handleSelectionChange"
-        >
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="0">
+        <editable-table ref="tableRef" :row-key="'uuid'" :height="'400px'" v-model="tableData" :columns="tableColumns"
+          :pagination="false" :highlight-current-row="false" :show-summary="false" :compactEmpty="true" :editable="true"
+          @selection-change="handleSelectionChange">
           <!-- 回单照片列自定义渲染 -->
           <template #receiptPhotos="{ row }">
             <div class="photo-list">
-              <template
-                v-if="row.receiptPhotos && row.receiptPhotos.length > 0"
-              >
-                <div
-                  v-for="(photo, index) in getDisplayPhotos(row.receiptPhotos)"
-                  :key="photo.id || index"
-                  class="photo-item-wrapper"
-                  @click.stop="handlePreview(row.receiptPhotos, index)"
-                >
-                  <el-image
-                    :src="photo.url || photo"
-                    fit="cover"
-                    class="photo-item"
-                    :preview-teleported="true"
-                  />
+              <template v-if="row.receiptPhotos && row.receiptPhotos.length > 0">
+                <div v-for="(photo, index) in getDisplayPhotos(row.receiptPhotos)" :key="photo.id || index"
+                  class="photo-item-wrapper" @click.stop="handlePreview(row.receiptPhotos, index)">
+                  <el-image :src="photo.url || photo" fit="cover" class="photo-item" :preview-teleported="true" />
                 </div>
-                <span
-                  v-if="row.receiptPhotos.length > 3"
-                  class="photo-more"
-                  @click.stop="handlePreview(row.receiptPhotos, 3)"
-                >
+                <span v-if="row.receiptPhotos.length > 3" class="photo-more"
+                  @click.stop="handlePreview(row.receiptPhotos, 3)">
                   +{{ row.receiptPhotos.length - 3 }}
                 </span>
               </template>
@@ -95,19 +57,11 @@
 
           <template #actions="{ row }">
             <div class="actions-btn">
-              <el-button
-                link
-                type="primary"
-                @click.stop="openUploadForRow(row)"
-              >
+              <el-button link type="primary" @click.stop="openUploadForRow(row)">
                 上传照片
               </el-button>
-              <el-button
-                v-if="row.receiptPhotos && row.receiptPhotos.length > 0"
-                link
-                type="danger"
-                @click.stop="clearPhotos(row)"
-              >
+              <el-button v-if="row.receiptPhotos && row.receiptPhotos.length > 0" link type="danger"
+                @click.stop="clearPhotos(row)">
                 清空照片
               </el-button>
             </div>
@@ -117,32 +71,15 @@
       <!-- 放在表格外面的上传组件（隐藏） -->
       <Teleport to="body">
         <div style="display: none" @click.stop @mousedown.stop>
-          <base-upload
-            ref="hiddenUploadRef"
-            key="receipt-photo"
-            v-model:file-list="tempFileList"
-            :limit="1"
-            :multiple="true"
-            :showIcon="true"
-            :showTip="false"
-            :accept="'.jpg,.jpeg,.png'"
-            button-text="选择文件"
-            size="default"
-            button-type="primary"
-            @success="handleUploadSuccess"
-          />
+          <base-upload ref="hiddenUploadRef" key="receipt-photo" v-model:file-list="tempFileList" :limit="1"
+            :multiple="true" :showIcon="true" :showTip="false" :accept="'.jpg,.jpeg,.png'" button-text="选择文件"
+            size="default" button-type="primary" @success="handleUploadSuccess" />
         </div>
       </Teleport>
 
       <!-- 图片预览组件 -->
-      <el-image-viewer
-        v-if="showViewer"
-        :url-list="previewList"
-        :initial-index="previewIndex"
-        :teleported="true"
-        @close="closePreview"
-        @switch="handleSwitch"
-      />
+      <el-image-viewer v-if="showViewer" :url-list="previewList" :initial-index="previewIndex" :teleported="true"
+        @close="closePreview" @switch="handleSwitch" />
     </div>
   </base-modal>
 </template>
@@ -549,7 +486,7 @@ const getDetailList = async () => {
         return {
           ...item,
           uuid: uuidv4(),
-          payAmt: 0, // 初始化本次支付金额为0
+          payAmt: unpaidAmt, // 初始化本次支付金额为未付金额
           unpaidAmt: unpaidAmt, // 未付金额
           payWayId: item.pmPayWayId ? Number(item.pmPayWayId) : null, // 支付方式
           payDate: dateUtil().format("YYYY-MM-DD"), // 支付日期
@@ -557,7 +494,7 @@ const getDetailList = async () => {
         };
       });
     }
-  } catch (error) {}
+  } catch (error) { }
 };
 
 const initData = async () => {
@@ -594,6 +531,7 @@ watch(dialogVisible, (val) => {
   padding-left: 12px;
   box-sizing: border-box;
   position: relative;
+
   &::before {
     content: "";
     width: 4px;
@@ -610,6 +548,7 @@ watch(dialogVisible, (val) => {
   width: 25%;
   display: flex;
   align-items: center;
+
   .info-label {
     color: #909399;
     font-size: 14px;

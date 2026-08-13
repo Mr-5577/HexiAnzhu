@@ -487,7 +487,7 @@
         <CostAllocationCard
           :visible="isShowCostAllocation && formData.reqType == 0"
           :allocation-status="cstMData.allocStatus"
-          :warning-status="cstMData.allocStatus"
+          :warning-status="cstMData.allocWarn"
           :bizType="'NCON_CST'"
           :projId="formData.projId"
           :projName="formData.projName"
@@ -1924,6 +1924,7 @@ const getProcessData = async () => {
 };
 
 const handleSave = async () => {
+  if(submitLoading.value) return
   paymentFormRef.value.validate(async (valid: boolean) => {
     if (!valid) {
       ElMessage.error("请检查表单！");

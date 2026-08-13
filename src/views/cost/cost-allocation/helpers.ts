@@ -68,3 +68,39 @@ export const filterTreeByIds = (treeData, targetIds: number[]) => {
 
   return filterNodes(treeData);
 };
+
+/**
+ * 从数据中提取并去重产品业态
+ * @param {Array} data - 原始数据数组
+ * @returns {Array} - 去重后的 { prodId, prodName } 对象数组
+ */
+export const extractDistinctProducts = (data) => {
+  if (!data || data.length === 0) {
+    return [];
+  }
+  // 使用 Map 去重，键为 prodId（数值类型查找更快）
+  const map = new Map();
+  let item, prodId, prodName;
+
+  // 使用 for 循环（比 forEach 性能更好，尤其是大数据量时）
+  for (let i = 0, len = data.length; i < len; i++) {
+    item = data[i];
+    // 快速过滤无效数据
+    if (!item) continue;
+
+    prodId = item.prodId;
+    // 如果 prodId 已存在则跳过（Map.has 比 Map.get 更快）
+    if (map.has(prodId)) continue;
+
+    prodName = item.prodName;
+    // 只有在 prodName 有效时才存入
+    if (prodName && typeof prodName === "string" && prodName.trim() !== "") {
+      map.set(prodId, {
+        prodId: prodId,
+        prodName: prodName.trim(),
+      });
+    }
+  }
+  // 直接返回 values 数组（避免额外遍历）
+  return Array.from(map.values());
+};

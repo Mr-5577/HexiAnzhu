@@ -1,12 +1,7 @@
 <!-- 编辑 费用支付 -->
 <template>
   <div class="fee-payment-edit-page">
-    <FeePaymentForm
-      mode="edit"
-      :feePaymentId="feePaymentId"
-      @success="handleSuccess"
-      @cancel="handleCancel"
-    />
+    <FeePaymentForm mode="edit" :feePaymentId="feePaymentId" @success="handleSuccess" @cancel="handleCancel" />
   </div>
 </template>
 
@@ -19,7 +14,13 @@ const router = useRouter();
 
 defineOptions({ name: "fee-payment-edit" });
 
-const feePaymentId = Number(route.query.feePaymentId); // 费用支付ID
+const parseId = (val) => {
+  if (val === undefined || val === null || val === '') return null;
+  const num = Number(val);
+  return !isNaN(num) ? num : null;
+};
+
+const feePaymentId = parseId(route.query.feePaymentId) ?? parseId(route.query.bizId) ?? 0; // 费用支付ID
 
 const handleSuccess = () => {
   // router.back();

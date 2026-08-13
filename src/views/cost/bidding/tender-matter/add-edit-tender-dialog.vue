@@ -6,7 +6,6 @@
     width="1300px"
     :confirm-loading="submitLoading"
     @confirm="handleSubmit"
-    @cancel="handleClose"
     @close="handleClose"
   >
     <div style="padding-right: 8px; box-sizing: border-box">

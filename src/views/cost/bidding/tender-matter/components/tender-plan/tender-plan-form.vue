@@ -854,6 +854,8 @@ const getInforData = async () => {
 const initData = async () => {
   await getProjectOptions();
   formData.value.userName = userStore.userInfo?.empName ?? "";
+  formData.value.deptName = userStore.userInfo?.deptName ?? "";
+  formData.value.mguName = userStore.userInfo?.mguName ?? "";
   formData.value.createDate = dateUtil().format("YYYY-MM-DD");
   if (isAdd.value) {
     // 1.先获取详情信息
