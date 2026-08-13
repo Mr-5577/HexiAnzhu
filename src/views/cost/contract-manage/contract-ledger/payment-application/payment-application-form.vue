@@ -1112,7 +1112,7 @@ import { cumulativeDataApi } from "@/api/cost/contract-manage/cumulative-data-ap
 // ============================================================
 // 常量 / 枚举 / 类型
 // ============================================================
-import { ReqTypeEnum } from "@/constants/contract-manage/enums";
+import { ADVANCE_PAY_TYPE, ReqTypeEnum } from "@/constants/contract-manage/enums";
 import { YesOrNoStatusEnum } from "@/constants/master-data/enums";
 import { formType } from "@/types/form/form-types";
 import {
@@ -1528,7 +1528,7 @@ const needForceRise = computed(() => {
   const req = Number(formData.value.reqAmt) || 0;
   const payable = Number(formData.value.sumAppyAmt) || 0;
   const unlock = Number(formData.value.unlockAmt) || 0;
-  return (req + payable > unlock) && formData.value.payTypeId !== 2061; // 建安类 且 请款总额+累计已请款 > 已解锁
+  return (req + payable > unlock) && formData.value.payTypeId !== ADVANCE_PAY_TYPE; // 建安类 且 请款总额+累计已请款 > 已解锁
 });
 
 /** 是否「来票冲账」：此时仅保留发票登记，其余明细/收款账号全部隐藏，校验一并放开 */

@@ -71,9 +71,9 @@
         <template #status="{ row }">
           <el-tag
             size="small"
-            :type="getEnumType(approvalStatusEnum, row?.conStatus || 0)"
+            :type="getEnumType(approvalStatusEnum, row?.status || 0)"
           >
-            {{ getEnumLabel(approvalStatusEnum, row?.conStatus || 0) }}
+            {{ getEnumLabel(approvalStatusEnum, row?.status || 0) }}
           </el-tag>
         </template>
 
