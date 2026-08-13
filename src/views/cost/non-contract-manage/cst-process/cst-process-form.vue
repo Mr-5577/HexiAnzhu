@@ -58,7 +58,7 @@
           :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'NCON_PROC'"
           :projId="formData.projId" :projName="formData.projName" :displayName="formData.processName"
           :allocAmt="formData.processAmt" :bizBillId="processData.nconBillId" :cstMData="cstMData"
-          :dialogMode="isDetail ? 'view' : 'edit'" @selectData="getSelectCostAllocation" />
+          :dialogMode="isDetail || !!billData.status ? 'view' : 'edit'" @selectData="getSelectCostAllocation" />
 
         <!-- 相关附件 -->
         <div class="item-card">
@@ -94,8 +94,7 @@ import { dateUtil } from "@/utils/date-util";
 import { buildTree } from "@/utils/tree";
 import BillHeader from "@/components/business/bill-components/bill-header.vue";
 import BillInfo from "@/components/business/bill-components/bill-info.vue";
-import CostAllocationCard from "@/views/cost/cost-allocation/cost-allocation-card.vue";
-import { formType } from "@/types/form/form-types";
+import CostAllocationCard from "@/views/cost/cost-allocation/ncon-cost-alloc/cost-allocation-card.vue";
 
 defineOptions({ name: "cst-process-form" });
 

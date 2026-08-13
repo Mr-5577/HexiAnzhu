@@ -573,7 +573,7 @@
     ref="supplierDialogRef"
     v-model="supplierDialogVisible"
     :selectionMode="'single'"
-    :supStatus="1"
+    :supStatus="2"
     @select="handleSupplierSelect"
   />
 

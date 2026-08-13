@@ -159,10 +159,10 @@ service.interceptors.request.use(
     // 检查并取消重复请求
     const requestKey = generateRequestKey(config);
     // 若已存在相同 key 的未完成请求，先取消旧的再发起新的，避免内存泄漏与并发覆盖
-    if (pendingRequests.has(requestKey)) {
-      pendingRequests.get(requestKey)!("取消重复请求");
-      pendingRequests.delete(requestKey);
-    }
+    // if (pendingRequests.has(requestKey)) {
+    //   pendingRequests.get(requestKey)!("取消重复请求");
+    //   pendingRequests.delete(requestKey);
+    // }
 
     config.cancelToken = new axios.CancelToken((cancel) => {
       pendingRequests.set(requestKey, cancel);

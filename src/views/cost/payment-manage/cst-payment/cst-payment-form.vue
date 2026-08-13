@@ -276,7 +276,7 @@
           :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'NCON_CST'"
           :projId="formData.projId" :projName="formData.projName" :displayName="cstProcessData.processName"
           :allocAmt="actualReqAmt" :bizBillId="paymentData.nconBillId" :cstMData="cstMData"
-          :dialogMode="isDetail ? 'view' : 'edit'" @selectData="getSelectCostAllocation" />
+          :dialogMode="isDetail || !!billData.status ? 'view' : 'edit'" @selectData="getSelectCostAllocation" />
 
         <!-- 相关附件 -->
         <div class="item-card">
@@ -346,7 +346,7 @@ import UploadInvoiceDialog from "@/components/business/upload-invoice-dialog.vue
 import { buildTree } from "@/utils/tree.ts";
 import BillHeader from "@/components/business/bill-components/bill-header.vue";
 import BillInfo from "@/components/business/bill-components/bill-info.vue";
-import CostAllocationCard from "@/views/cost/cost-allocation/cost-allocation-card.vue";
+import CostAllocationCard from "@/views/cost/cost-allocation/ncon-cost-alloc/cost-allocation-card.vue";
 import FinanceAllocationDialog from "@/views/cost/finance-allocation/finance-allocation-dialog.vue";
 
 defineOptions({ name: "cst-payment-form" });

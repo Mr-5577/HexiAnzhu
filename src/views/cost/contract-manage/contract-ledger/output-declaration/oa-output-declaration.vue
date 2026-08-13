@@ -10,7 +10,7 @@
         </div>
 
         <!-- 单据内容 -->
-        <OutputValueForm v-else mode="edit" :prod-id="bizId" />
+        <OutputValueForm v-if="!loading && businessId" mode="edit" :conId="bizId" :prod-id="businessId" />
     </div>
 </template>
 
@@ -19,6 +19,8 @@ import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
 import { Loading } from "@element-plus/icons-vue";
 import OutputValueForm from "./output-value-form.vue";
+import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api.ts";
+import { ElMessage } from "element-plus";
 
 defineOptions({ name: "oa-change-order-page" });
 
@@ -28,12 +30,35 @@ const mode = ref<'detail' | 'edit'>("edit");
 
 // 单据ID
 const billId = route.query?.billId ? Number(route.query.billId) : undefined;
-// 业务ID
+// 合同ID
 const bizId = route.query?.bizId ? Number(route.query.bizId) : undefined;
+// 业务ID
+const businessId = ref(undefined)
 
+// 获取基础信息
+const getSubId = async () => {
+    if (!billId) {
+        loading.value = false;
+        return
+    }
+    try {
+        loading.value = true;
+        // 合同查询轻量级详情信息
+        const res = await contractLedgerApi.getSubConLiteInfo({ billId: billId });
+        console.log('轻量级信息1', res);
+        if (res.code === 200 && res.data) {
+            businessId.value = res.data
+        }
+    } catch (err: any) {
+        ElMessage.error("加载数据失败，请稍后重试");
+    } finally {
+        loading.value = false;
+    }
+};
 onMounted(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    loading.value = false;
+    getSubId();
+    // await new Promise((resolve) => setTimeout(resolve, 1000));
+    // loading.value = false;
 });
 </script>
 

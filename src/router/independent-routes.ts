@@ -193,7 +193,7 @@ export const independentRoutes = [
     path: "/oa/payment-application",
     name: "oa-payment-application",
     component: () =>
-      import("@/views/cost/contract-manage/contract-ledger/output-declaration/oa-output-declaration.vue"),
+      import("@/views/cost/contract-manage/contract-ledger/payment-application/oa-payment-application.vue"),
     meta: {
       title: "合同支付",
       isKeepAlive: false,
