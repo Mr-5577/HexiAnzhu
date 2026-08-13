@@ -735,7 +735,7 @@ import type { EditableColumn } from "@/components/base/editable-table.vue";
 import BillHeader from "@/components/business/bill-components/bill-header.vue";
 import BillInfo from "@/components/business/bill-components/bill-info.vue";
 import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api";
-import { PayTypeEnum } from "@/constants/contract-manage/enums";
+import { ACCEPT_PAY_TYPE, PayTypeEnum, PROGRESS_PAY_TYPE } from "@/constants/contract-manage/enums";
 import { buildFileUrl } from "@/utils/file-path-util";
 import { cumulativeDataApi } from "@/api/cost/contract-manage/cumulative-data-api";
 import { formType } from "@/types/form/form-types";
@@ -752,12 +752,6 @@ import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";
 
 defineOptions({ name: "output-value-approval-form" });
-
-// ============================================================
-// 2. 业务常量（款项类型，需与合同台账 payTypeId 保持一致）
-// ============================================================
-const PROGRESS_PAY_TYPE = 2062; // 进度款
-const ACCEPT_PAY_TYPE = 2063; // 验收款
 
 // ============================================================
 // 3. Props / Emits

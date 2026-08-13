@@ -775,7 +775,7 @@ const formRules = ref({
   mainConId: requiredRule("主合同"),
   addName: requiredInputRule("补充合同名称"),
   addType: requiredRule("补充合同类型"),
-  addSysNo: requiredInputRule("补充合同编号"),
+  //addSysNo: requiredInputRule("补充合同编号"),
   companyId: requiredRule("签约公司"),
   supId: requiredRule("供应商"),
   bldNames: requiredInputRule("楼栋范围"),

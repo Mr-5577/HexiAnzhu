@@ -388,7 +388,6 @@ const handleOALogin = async (
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       checkIfUnmounted();
-      debugger
       // 核心：根据 bizItemCode -> subBizCode -> mode 三级路由解析
       const targetPath = await resolveBizRoute(
         bizItemCode,
