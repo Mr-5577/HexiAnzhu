@@ -93,17 +93,17 @@ const FINA_ROUTE: Record<string, string> = {
 
 // 默認路徑映射，对应业务的单据详情页
 const DEFAULT_ROUTE: Record<string, string> = {
-  CON_MAIN: "/con/contract-ledger/detail",
-  CON_ADD: "/con/supplement-contract/detail",
-  CON_BG: "/con/change-order/detail",
-  CON_QZ: "/con/visa-manage/detail",
-
-  CON_PRE_SETTLE: "/home",
-  CON_SETTLE: "/home",
-  NCON_PROC: "/oa/ncon/cst-process",
-  NCON_CST: "/oa/ncon/cst-payment",
-  NCON_FEE: "/oa/ncon/fee-payment",
-  CON_PAY: "/home",
+  CON_MAIN: "/oa/con/contract-ledger", // 主合同
+  CON_ADD: "/oa/supplement-contract", // 补充合同
+  CON_BG: "/oa/change-order", // 变更合同
+  CON_QZ: "/oa/visa-manage", // 签证合同
+  CON_PROD: "/oa/output-declaration", // 合同产值
+  CON_PRE_SETTLE: "/home", // 合同预结算
+  CON_SETTLE: "/home", // 合同结算
+  NCON_PROC: "/oa/ncon/cst-process", // 非合同立项
+  NCON_CST: "/oa/ncon/cst-payment", // 非合同请款
+  NCON_FEE: "/oa/ncon/fee-payment", // 费用报销
+  CON_PAY: "/home", // 合同支付
 };
 
 // 安全获取查询参数

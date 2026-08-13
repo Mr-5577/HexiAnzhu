@@ -102,16 +102,15 @@ export const dedTypeEnum = [
 export const bizTypeEnum = [
   { label: "合同", value: "CON_MAIN" },
   { label: "补充合同", value: "CON_ADD" },
-  { label: "订单合同", value: "CON_ORD" },
-  { label: "采购订单", value: "CON_BILL" },
   { label: "合同变更", value: "CON_BG" },
   { label: "合同签证", value: "CON_QZ" },
   { label: "合同产值", value: "CON_PROD" },
   { label: "合同预结算", value: "CON_PRE_SETTLE" },
   { label: "合同结算", value: "CON_SETTLE" },
-  { label: "非合同", value: "NCON" },
+  { label: "合同支付", value: "CON_PAY" },
   { label: "非合同立项", value: "NCON_PROC" },
   { label: "非合同请款", value: "NCON_CST" },
+  { label: "费用报销", value: "NCON_FEE" },
 ];
 
 /** 分摊状态选项 */
@@ -127,22 +126,6 @@ export const allocWarnEnum = [
   { label: "黄色预警", value: 1, type: "warning" }, // 超95%
   { label: "绿色预警", value: 2, type: "success" },
 ]
-
-/**
- * @name 成本合同相关类型枚举
- */
-export const costTypeEnum = [
-  { label: "合同审批", value: "CST_CON_MAIN" },
-  { label: "补充合同审批", value: "CST_CON_ADD" },
-  { label: "订单合同", value: "CST_CON_ORD" },
-  { label: "采购订单", value: "CST_CON_BILL" },
-  { label: "合同变更", value: "CST_CON_BG" },
-  { label: "合同签证", value: "CST_CON_QZ" },
-  { label: "合同产值", value: "CST_CON_PROD" },
-  { label: "合同预结算", value: "CST_CON_PRE_SETTLE" },
-  { label: "合同结算", value: "CST_CON_SETTLE" },
-  { label: "非合同", value: "CST_NCON" },
-];
 
 /**
  * 合同管理 单据审批状态 枚举

@@ -853,8 +853,8 @@ defineOptions({ name: "payment-application-form" });
 
 interface Props {
   mode: "add" | "edit" | "detail";
-  projId: number;
-  conId: number;
+  projId?: number;
+  conId?: number;
   paymentId?: number;
 }
 
@@ -2683,10 +2683,10 @@ const handleViewProcess = async () => {
 // 返回操作
 const goBack = () => {
   if (isAdd.value) {
-    tagsStore.closeTagByPath("/con/supplement-contract/add");
+    tagsStore.closeTagByPath("/con/payment-application/add");
   }
   if (isEdit.value) {
-    tagsStore.closeTagByPath("/con/supplement-contract/edit");
+    tagsStore.closeTagByPath("/con/payment-application/edit");
   }
   router.go(-1);
 };
@@ -2801,7 +2801,6 @@ const initData = async () => {
         addPayWay();
       }
     } else if ((props.mode === "edit" || props.mode === "detail") && props.paymentId) {
-      ;
       await loadDetail();
     }
   } finally {

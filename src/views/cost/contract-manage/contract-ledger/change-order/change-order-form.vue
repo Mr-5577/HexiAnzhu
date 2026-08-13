@@ -313,8 +313,8 @@ defineOptions({ name: "change-order-form" });
 // ==================== Props & Emits ====================
 interface Props {
   mode?: "add" | "edit" | "detail";
-  projId: number;
-  conId: number;
+  projId?: number;
+  conId?: number;
   conName?: string;
   changeId?: number;
 }
@@ -819,9 +819,9 @@ const handleDelete = async () => {
 };
 
 const handleFormDataSave = async () => {
+  if(submitLoading.value) return
   submitLoading.value = true;
   try {
-    ;
     await formRef.value.validateField(["bizTitle", "changeName"]);
     // 校验各个明细表
     if (!validateConListable(false)) return;
@@ -842,6 +842,7 @@ const handleFormDataSave = async () => {
 };
 
 const handleFormDataSubmit = async () => {
+  if(submitLoading.value) return
   submitLoading.value = true;
   try {
     await formRef.value.validate();

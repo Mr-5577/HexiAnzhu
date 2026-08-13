@@ -447,6 +447,7 @@ const handleUploadSuccess = (file: any) => {
 
 // 保存
 const handleSave = async () => {
+  if(submitLoading.value) return;
   if (!formRef.value) return;
   try {
     await formRef.value.validate();
@@ -493,6 +494,7 @@ const handleSave = async () => {
 
 // 提交
 const handleSubmit = async () => {
+  if(submitLoading.value) return;
   if (!formRef.value) return;
   try {
     await formRef.value.validate();

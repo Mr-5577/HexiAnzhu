@@ -88,10 +88,7 @@
           </el-button>
           <el-button type="primary" link class="row-link" @click="handleDetail(row)">
             详情
-          </el-button> 
-          <!-- <el-button type="primary" link class="row-link" @click="handleApprove(row)">
-            审批
-          </el-button> -->
+          </el-button>
           <el-button type="danger" link class="row-link" @click="handleDelete(row)" :disabled="row.conStatus !== 0 || row.createId !== userStore.userInfo.id">
             删除
           </el-button>
@@ -210,7 +207,7 @@ const handleEdit = (row: SupplementContract) => {
     path: "/con/supplement-contract/edit",
     query: {
       addId: row.id, // 补充合同ID
-      conId: props.conId, // 合同台账ID（合同单据ID）
+      conId: props.conId, // 合同台账ID
       projId: props.projId,
       conName:props.conName,
     },
@@ -238,29 +235,10 @@ const handleDetail = (row: SupplementContract) => {
     path: "/con/supplement-contract/detail",
     query: {
       addId: row.id, // 补充合同ID
-      conId: props.conId, // 合同台账ID（合同单据ID）
+      conId: props.conId, // 合同台账ID
       projId: props.projId,
     },
   });
-};
-// 审批
-const handleApprove = (row: SupplementContract) => {
-  return;
-  ElMessageBox.confirm(`确定审批"${row.addName}"数据吗？`, "提示", {
-    type: "warning",
-  })
-    .then(async () => {
-      try {
-        const res = await contractApprovalApi.createConAddFlow({
-          conAddId: row.id,
-        });
-        if (res.code === 200) {
-          ElMessage.success("审批成功");
-          getDataList();
-        }
-      } catch (error) {}
-    })
-    .catch(() => {});
 };
 
 onMounted(() => {

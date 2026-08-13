@@ -548,6 +548,7 @@ const validateForm = () => {
 };
 // 保存
 const handleSave = async () => {
+  if(submitLoading.value) return
   // 调用验证
   if (!validateForm()) return;
   try {
@@ -592,6 +593,7 @@ const handleSave = async () => {
 };
 // 提交
 const handleSubmit = async () => {
+  if(submitLoading.value) return
   // 调用验证
   if (!validateForm()) return;
   try {

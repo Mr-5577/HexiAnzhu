@@ -1907,10 +1907,10 @@ const validateProdTables = async() => {
 // 返回操作
 const goBack = () => {
   if (isAdd.value) {
-    tagsStore.closeTagByPath("/con/supplement-contract/add");
+    tagsStore.closeTagByPath("/con/output-declaration/add");
   }
   if (isEdit.value) {
-    tagsStore.closeTagByPath("/con/supplement-contract/edit");
+    tagsStore.closeTagByPath("/con/output-declaration/edit");
   }
   router.go(-1);
 };

@@ -577,7 +577,7 @@ import { normalizeCode } from "@/utils/common.ts";
 const props = defineProps<{
   mode: "add" | "edit" | "detail";
   projId?: number; // 项目ID
-  conId: number; // 合同ID
+  conId?: number; // 合同ID
   addId?: number; // 补充合同ID
 }>();
 const emit = defineEmits<{
@@ -1217,7 +1217,6 @@ const handleFormDataSave = async () => {
 };
 
 const handleFormDataSubmit = async () => {
-  
   submitLoading.value = true;
   try {
     await formRef.value.validate();

@@ -4,7 +4,8 @@
     <div class="table-header">
       <div class="header-title">
         <span class="title">楼栋业态面积详情</span>
-        <span class="subtitle"> 查看楼栋业态面积指标汇总 </span>
+        <!-- <span class="subtitle"> 查看楼栋业态面积指标汇总 </span> -->
+        <span class="subtitle"> 当前生效版本标题：{{ currentVersionData.verTitle || '-' }} </span>
       </div>
       <!-- <div class="header-actions">
         <el-button type="primary" @click="modalVisible = true">
@@ -17,15 +18,8 @@
         </el-button>
       </div> -->
     </div>
-    <base-table
-      ref="tableRef"
-      :columns="tableColumns"
-      :tableData="tableList"
-      rowKey="id"
-      :loading="tableLoading"
-      :showSummary="true"
-      :pagination="false"
-    >
+    <base-table ref="tableRef" :columns="tableColumns" :tableData="tableList" rowKey="id" :loading="tableLoading"
+      :showSummary="true" :pagination="false">
     </base-table>
 
     <!-- 导入 -->
@@ -51,6 +45,15 @@ const props = defineProps<{
 const tableLoading = ref(false);
 const tableList = ref([]);
 const modalVisible = ref(false);
+const currentVersionData = ref({
+  id: undefined,
+  projId: undefined,
+  verTypeId: undefined,
+  verTitle: "",
+  status: undefined,
+  remark: "",
+  verTypeName: ""
+});
 
 // 表格列配置
 const tableColumns: TableColumnItem[] = [
@@ -104,6 +107,8 @@ const getCurrentVersionId = async () => {
       // 获取当前生效版本的版本
       const currentVersion = list.find((item) => item.status == 1);
       if (currentVersion) {
+        console.log("当前生效版本", currentVersion);
+        currentVersionData.value = currentVersion;
         const verMid = currentVersion.id;
         getDataList(verMid); // 获取数据列表
       }
@@ -123,7 +128,7 @@ watch(
   { immediate: true },
 );
 
-onMounted(() => {});
+onMounted(() => { });
 </script>
 
 <style lang="scss" scoped>
@@ -139,23 +144,26 @@ onMounted(() => {});
   box-sizing: border-box;
   border: 1px solid #e6e6e6;
   border-radius: 10px;
+
   .table-header {
     display: flex;
     align-items: flex-end;
     justify-content: space-between;
     margin-bottom: 20px;
+
     .header-title {
       display: flex;
       flex-direction: column;
       gap: 4px;
+
       .title {
-        font-size: 20px;
+        font-size: 18px;
         font-weight: 600;
         color: #303133;
       }
 
       .subtitle {
-        font-size: 14px;
+        font-size: 16px;
         color: #909399;
       }
     }

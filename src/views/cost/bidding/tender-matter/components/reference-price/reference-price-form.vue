@@ -503,6 +503,7 @@ const getBillDetail = async () => {
 };
 
 const handleSave = async () => {
+  if(submitLoading.value) return
   if (!formData.value.bizTitle) {
     ElMessage.error("请填写标题！");
     return false;
@@ -564,6 +565,7 @@ const handleSave = async () => {
 };
 
 const handleSubmit = async () => {
+  if(submitLoading.value) return
   if (!formData.value.bizTitle) {
     ElMessage.error("请填写标题！");
     return false;

@@ -802,10 +802,10 @@ const validatePayRate = (): boolean => {
   // 返回操作
   const goBack = () => {
     if (isAddMode.value) {
-      tagsStore.closeTagByPath("/con/contract-ledger");
+      tagsStore.closeTagByPath("/con/contract-ledger/add");
     }
     if (isEditMode.value) {
-      tagsStore.closeTagByPath("/con/contract-ledger");
+      tagsStore.closeTagByPath("/con/contract-ledger/edit");
     }
     router.go(-1); // 返回上个页面
   };
@@ -983,6 +983,7 @@ const validatePayrateTable = () => {
 
   // ---- 提交 ----
   const handleSubmit = async () => {
+    if(submitLoading.value) return
     if (isDetailMode.value) return;
     if (!formRef.value) return;
     try {
@@ -1029,6 +1030,7 @@ const validatePayrateTable = () => {
 
   const SAVE_FIELDS = Object.keys(saveContractFormRules());
   const handleSave = async () => {
+    if(submitLoading.value) return
     if (isDetailMode.value) return;
     if (!formRef.value) return;
     try {
