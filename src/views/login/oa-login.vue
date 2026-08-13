@@ -98,12 +98,12 @@ const DEFAULT_ROUTE: Record<string, string> = {
   CON_BG: "/oa/change-order", // 变更合同
   CON_QZ: "/oa/visa-manage", // 签证合同
   CON_PROD: "/oa/output-declaration", // 合同产值
+  CON_PAY: "/oa/payment-application", // 合同支付
   CON_PRE_SETTLE: "/home", // 合同预结算
   CON_SETTLE: "/home", // 合同结算
   NCON_PROC: "/oa/ncon/cst-process", // 非合同立项
   NCON_CST: "/oa/ncon/cst-payment", // 非合同请款
   NCON_FEE: "/oa/ncon/fee-payment", // 费用报销
-  CON_PAY: "/home", // 合同支付
 };
 
 // 安全获取查询参数
@@ -224,10 +224,6 @@ const resolveBizRoute = async (
     // ---------- 合同产值（单路径，无 subBizCode/mode） ----------
     case "CON_PROD":
       return buildRoutePath("/cost/contract/production", { billId });
-
-    // ---------- 非合同立项（单路径） ----------
-    case "NCON_PROC":
-      return buildRoutePath("/home", { billId });
 
     // ---------- 招投标相关（单路径） ----------
     case "ZB_TND":

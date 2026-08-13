@@ -30,10 +30,10 @@ const mode = ref<'detail' | 'edit'>("edit");
 
 // 单据ID
 const billId = route.query?.billId ? Number(route.query.billId) : undefined;
-// 业务ID
+// 合同ID
 const bizId = route.query?.bizId ? Number(route.query.bizId) : undefined;
 
-// 获取基础信息
+// 获取合同基础信息
 const getBaseInfo = async () => {
     if (!billId || !bizId) {
         loading.value = false;

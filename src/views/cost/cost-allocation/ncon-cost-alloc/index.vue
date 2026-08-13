@@ -148,7 +148,7 @@ import { List, WarningFilled } from "@element-plus/icons-vue";
 import EditableTable from "@/components/base/editable-table.vue";
 import { costCategoryApi } from "@/api/cost/master-data/cost-category-api";
 import { productTypeApi } from "@/api/cost/master-data/product-type-api";
-import CostAlocationDialog from "./choose-sub-dialog.vue";
+import CostAlocationDialog from "../choose-sub-dialog.vue";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api.ts";
 import { allocRuleEnum } from "@/constants/master-data/enums.ts";
 import { costAllocationApi } from "@/api/cost/contract-manage/cost-allocation-api.ts";
