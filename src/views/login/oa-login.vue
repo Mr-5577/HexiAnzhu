@@ -220,11 +220,6 @@ const resolveBizRoute = async (
         bizId, // 业务ID
       });
     }
-
-    // ---------- 合同产值（单路径，无 subBizCode/mode） ----------
-    case "CON_PROD":
-      return buildRoutePath("/cost/contract/production", { billId });
-
     // ---------- 招投标相关（单路径） ----------
     case "ZB_TND":
       return buildRoutePath("/bidding/bidding-detail", {
