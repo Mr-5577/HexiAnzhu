@@ -707,7 +707,7 @@
     @select="handleMainConSelect"
   />
   <choose-material-val-dialog
-    ref="contractDialogRef"
+    ref="materialDialogRef"
     v-model="mtDialogVisible"
     :selectionMode="'multiple'"
     :conNo="formData.conSysNo"
@@ -1716,10 +1716,10 @@ const validateProdTables = async () => {
 
     if (acceptRows.length > 0) {
       // 无进度款：产值必须填在验收款行
-      if (acceptRows.length === 0 && progressRows.length === 0) {
-        ElMessage.error("无进度款时，必须存在验收款明细并填写产值！");
-        return false;
-      }
+      // if (acceptRows.length === 0 && progressRows.length === 0) {
+      //   ElMessage.error("无进度款时，必须存在验收款明细并填写产值！");
+      //   return false;
+      // }
       for (const row of acceptRows) {
         if (
           (!row.buildPeriod || !row.prodValPeriod || !row.payDate) &&
