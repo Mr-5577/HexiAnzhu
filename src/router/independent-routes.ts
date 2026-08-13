@@ -1,15 +1,6 @@
 // 独立路由
 export const independentRoutes = [
   {
-    path: "/cost-allocation",
-    name: "costAllocation",
-    component: () => import("@/views/cost/cost-allocation/index.vue"),
-    meta: {
-      title: "成本分摊",
-      isKeepAlive: false,
-    },
-  },
-  {
     // 非合同成本分摊
     path: "/oa/ncon/cost-allocation",
     name: "oa-ncon-costAllocation",
