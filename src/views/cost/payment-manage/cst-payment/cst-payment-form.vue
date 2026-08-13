@@ -294,9 +294,6 @@
     <CstProcessDialog v-model="processDialogVisible" :projId="formData.projId" :segId="formData.segId"
       @success="handleDemandSelect" />
 
-    <!-- 成本分摊 弹窗 -->
-    <CostAllocationDetailDialog v-model="costAllocationDialogVisible" />
-
     <!-- 上传发票弹窗 -->
     <UploadInvoiceDialog v-model="uploadVisibleDialog" @success="getAnnexFileList" />
 
@@ -458,8 +455,6 @@ const initFormData = () => ({
 });
 const formData = ref(initFormData());
 
-// 成本分摊相关
-const costAllocationDialogVisible = ref(false);
 const costAllocationData = ref(null);
 
 // 费用类型所属大类是不是建安类
@@ -1429,11 +1424,6 @@ const backfillData = async (data) => {
 
   payWayTable.value = mapWithUuid(payWays);
   dedTable.value = mapWithUuid(deds);
-
-  // 回填成本分摊数据
-  if (costAllocs && costAllocs.length > 0) {
-    costAllocationData.value = costAllocs[0];
-  }
 
   if (invoiceMs?.length) {
     invoiceMTable.value = invoiceMs.map((item: NconBillInvoiceM) => {
