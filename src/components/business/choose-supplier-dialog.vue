@@ -185,7 +185,7 @@ const initState = () => {
     supCode: "",
     supName: "",
     supTypeId: null,
-    supStatus: props.supStatus, // 状态 0:草稿 1:已审批 2:黑名单 3:作废
+    supStatus: props.supStatus, // 状态 0=草稿；1=审批中；2=已审批；3=黑名单
   };
   // 清除表格高亮
   setTimeout(() => {

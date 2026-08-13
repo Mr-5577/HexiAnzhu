@@ -1,14 +1,7 @@
 <!-- 选择科目弹窗组件 -->
 <template>
-  <base-modal
-    v-model="dialogVisible"
-    title="选择分摊科目"
-    width="1000px"
-    :confirm-loading="confirmLoading"
-    :confirm-text="'确定'"
-    @confirm="handleConfirm"
-    @close="handleClose"
-  >
+  <base-modal v-model="dialogVisible" title="选择分摊科目" width="1000px" :confirm-loading="confirmLoading"
+    :confirm-text="'确定'" @confirm="handleConfirm" @close="handleClose">
     <div class="subject-select-wrapper">
       <div class="content-area">
         <!-- 左侧：树形结构 -->
@@ -16,34 +9,17 @@
           <div class="tree-header">
             <span class="tree-title">成本科目</span>
             <div class="tree-actions">
-              <el-button
-                size="small"
-                type="primary"
-                link
-                @click="handleExpandAll"
-              >
+              <el-button size="small" type="primary" link @click="handleExpandAll">
                 展开全部
               </el-button>
-              <el-button
-                size="small"
-                type="primary"
-                link
-                @click="handleCollapseAll"
-              >
+              <el-button size="small" type="primary" link @click="handleCollapseAll">
                 收起全部
               </el-button>
             </div>
           </div>
           <div class="tree-wrapper" v-loading="treeLoading">
-            <el-tree
-              ref="treeRef"
-              :data="treeData"
-              :props="treeProps"
-              node-key="id"
-              show-checkbox
-              :default-expanded-keys="defaultExpandedKeys"
-              @check="handleTreeCheck"
-            >
+            <el-tree ref="treeRef" :data="treeData" :props="treeProps" node-key="id" show-checkbox
+              :default-expanded-keys="defaultExpandedKeys" @check="handleTreeCheck">
               <template #default="{ data }">
                 <span class="tree-node">
                   <span class="node-label">{{ data.subName }}</span>
@@ -65,18 +41,10 @@
             <span class="table-title">已选科目</span>
           </div>
           <div class="table-wrapper">
-            <base-table
-              ref="tableRef"
-              :row-key="'id'"
-              :columns="tableColumns"
-              :table-data="selectedTreeTableData"
-              :loading="tableLoading"
-              :height="'450px'"
-              :pagination="false"
-              :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
-              :default-expand-all="false"
-              :default-expanded-keys="defaultExpandedTableKeys"
-            >
+            <base-table ref="tableRef" :row-key="'id'" :columns="tableColumns" :table-data="selectedTreeTableData"
+              :loading="tableLoading" :height="'450px'" :pagination="false"
+              :tree-props="{ children: 'children', hasChildren: 'hasChildren' }" :default-expand-all="false"
+              :default-expanded-keys="defaultExpandedTableKeys">
               <!-- <template #default="{ row }">
                 <el-button
                   v-if="row.isSelected"

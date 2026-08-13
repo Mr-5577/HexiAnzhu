@@ -276,7 +276,7 @@
           :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'NCON_CST'"
           :projId="formData.projId" :projName="formData.projName" :displayName="cstProcessData.processName"
           :allocAmt="actualReqAmt" :bizBillId="paymentData.nconBillId" :cstMData="cstMData"
-          :dialogMode="isDetail ? 'view' : 'edit'" @selectData="getSelectCostAllocation" />
+          :dialogMode="isDetail || !!billData.status ? 'view' : 'edit'" @selectData="getSelectCostAllocation" />
 
         <!-- 相关附件 -->
         <div class="item-card">
@@ -293,9 +293,6 @@
     <!-- 关联立项 弹窗 -->
     <CstProcessDialog v-model="processDialogVisible" :projId="formData.projId" :segId="formData.segId"
       @success="handleDemandSelect" />
-
-    <!-- 成本分摊 弹窗 -->
-    <CostAllocationDetailDialog v-model="costAllocationDialogVisible" />
 
     <!-- 上传发票弹窗 -->
     <UploadInvoiceDialog v-model="uploadVisibleDialog" @success="getAnnexFileList" />
@@ -346,7 +343,7 @@ import UploadInvoiceDialog from "@/components/business/upload-invoice-dialog.vue
 import { buildTree } from "@/utils/tree.ts";
 import BillHeader from "@/components/business/bill-components/bill-header.vue";
 import BillInfo from "@/components/business/bill-components/bill-info.vue";
-import CostAllocationCard from "@/views/cost/cost-allocation/cost-allocation-card.vue";
+import CostAllocationCard from "@/views/cost/cost-allocation/ncon-cost-alloc/cost-allocation-card.vue";
 import FinanceAllocationDialog from "@/views/cost/finance-allocation/finance-allocation-dialog.vue";
 
 defineOptions({ name: "cst-payment-form" });
@@ -458,8 +455,6 @@ const initFormData = () => ({
 });
 const formData = ref(initFormData());
 
-// 成本分摊相关
-const costAllocationDialogVisible = ref(false);
 const costAllocationData = ref(null);
 
 // 费用类型所属大类是不是建安类
@@ -1429,11 +1424,6 @@ const backfillData = async (data) => {
 
   payWayTable.value = mapWithUuid(payWays);
   dedTable.value = mapWithUuid(deds);
-
-  // 回填成本分摊数据
-  if (costAllocs && costAllocs.length > 0) {
-    costAllocationData.value = costAllocs[0];
-  }
 
   if (invoiceMs?.length) {
     invoiceMTable.value = invoiceMs.map((item: NconBillInvoiceM) => {

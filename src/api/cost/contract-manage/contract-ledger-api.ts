@@ -55,5 +55,8 @@ export const contractLedgerApi = {
   getConInfoLite: (data: { conId?: number; conBillId?: number }) => {
     return http.formPost("/con/main/getLite", data);
   },
-  
+  /** 查询主合同下的子项合同信息（轻量级） */
+  getSubConLiteInfo: (data: { billId: number }) => {
+    return http.formPost("/con/bill/subBizId", data);
+  },
 };
