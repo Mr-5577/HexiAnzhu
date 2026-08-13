@@ -1496,7 +1496,7 @@ const getConTotal = async (inputConId) => {
     if (res.code !== 200 || !res.data) {
       console.warn("获取合同结算信息失败:", res.message);
       return;
-    }
+    } 
 
     const stMap = new Map();
     res.data.forEach((item) => {

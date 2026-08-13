@@ -138,7 +138,7 @@ const handleReset = () => {
   queryParams.value.bizTitle = "";
   queryParams.value.status = null;
   getDataList();
-};
+}; 
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
