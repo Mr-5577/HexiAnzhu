@@ -164,7 +164,7 @@
               <el-form-item label="系统编号" prop="conSysNo">
                 <el-input
                   v-model="formData.conSysNo"
-                  placeholder="请输入合同系统编号"
+                  placeholder=""
                   disabled
                 />
               </el-form-item>
