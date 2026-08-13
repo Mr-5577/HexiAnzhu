@@ -32,7 +32,8 @@
                 :pagination="false" :highlight-current-row="false" :show-summary="false" :compactEmpty="true"
                 :editable="true" :on-save="handleSave" :max-height="'150px'">
                 <template #actions="{ row: detailRow, $index }">
-                  <el-button type="primary" link @click="handleSplitDetail(row, detailRow, $index)">
+                  <el-button type="primary" link :disabled="detailRow?._disableSplit"
+                    @click="handleSplitDetail(row, detailRow, $index)">
                     拆分
                   </el-button>
                   <!-- 必须保留一条数据并且regPayAmtSum已付金额大于0就不能删除 -->
@@ -193,7 +194,7 @@ const detailColumns = computed<EditableColumn[]>(() => [
     editType: "input",
     showOverflowTooltip: false,
     // 有regPayAmtSum字段并且值大于0表示已支付，不可编辑
-    disabled: (row: any) =>  row.regPayAmtSum,
+    disabled: (row: any) => row.regPayAmtSum,
   },
   {
     prop: "finaOrgId",
@@ -217,7 +218,7 @@ const detailColumns = computed<EditableColumn[]>(() => [
       checkStrictly: false,
     },
     // 有regPayAmtSum字段并且值大于0表示已支付，不可编辑
-    disabled: (row: any) =>  row.regPayAmtSum,
+    disabled: (row: any) => row.regPayAmtSum,
   },
   {
     prop: "finaSubId",
@@ -241,7 +242,7 @@ const detailColumns = computed<EditableColumn[]>(() => [
       filterable: true, // 启用过滤
     },
     // 有regPayAmtSum字段并且值大于0表示已支付，不可编辑
-    disabled: (row: any) =>  row.regPayAmtSum,
+    disabled: (row: any) => row.regPayAmtSum,
   },
   {
     prop: "finaSubAmt",
@@ -250,6 +251,7 @@ const detailColumns = computed<EditableColumn[]>(() => [
     editable: true,
     editType: "number",
     showOverflowTooltip: false,
+    disabled: (row: any) => row._disableSplit
   },
   {
     label: "操作",
@@ -531,10 +533,18 @@ const processNconData = (list) => {
       let finaDs;
       if (hasFinaDs) {
         // 有数据：使用原有数据，记录补充 uuid
-        finaDs = item.finaDs.map((fd: any) => ({
-          ...fd,
-          uuid: uuidv4(),
-        }));
+        finaDs = item.finaDs.map((fd: any) => {
+          // 使用当前行自己的 regPayAmtSum 和 finaSubAmt 判断
+          const regAmt = Number(fd.regPayAmtSum) || 0; // 已付金额
+          const finaAmt = Number(fd.finaSubAmt) || 0;
+          // 判断是否可拆分： 分摊金额 == 已付金额  不可拆分
+          const canSplit = finaAmt == regAmt;
+          return {
+            ...fd,
+            uuid: uuidv4(),
+            _disableSplit: canSplit,
+          };
+        });
       } else {
         // 没有数据：添加一行默认数据
         if (!isView.value) {
@@ -549,6 +559,8 @@ const processNconData = (list) => {
               finaOrgId: undefined,
               finaSubId: undefined,
               finaSubAmt: item.payAmt || 0,
+              regPayAmtSum: 0,
+              _disableSplit: false, // 没有已付金额，可拆分
             },
           ];
         }

@@ -577,7 +577,7 @@ import { normalizeCode } from "@/utils/common.ts";
 const props = defineProps<{
   mode: "add" | "edit" | "detail";
   projId?: number; // 项目ID
-  conId: number; // 合同ID
+  conId?: number; // 合同ID
   addId?: number; // 补充合同ID
 }>();
 const emit = defineEmits<{
@@ -775,7 +775,7 @@ const formRules = ref({
   mainConId: requiredRule("主合同"),
   addName: requiredInputRule("补充合同名称"),
   addType: requiredRule("补充合同类型"),
-  addSysNo: requiredInputRule("补充合同编号"),
+  //addSysNo: requiredInputRule("补充合同编号"),
   companyId: requiredRule("签约公司"),
   supId: requiredRule("供应商"),
   bldNames: requiredInputRule("楼栋范围"),
@@ -1217,7 +1217,6 @@ const handleFormDataSave = async () => {
 };
 
 const handleFormDataSubmit = async () => {
-  
   submitLoading.value = true;
   try {
     await formRef.value.validate();

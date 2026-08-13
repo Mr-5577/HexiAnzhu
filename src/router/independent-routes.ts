@@ -135,7 +135,67 @@ export const independentRoutes = [
     component: () =>
       import("@/views/cost/payment-manage/fee-payment/oa-fee-payment.vue"),
     meta: {
-      title: "费用报销审批审批",
+      title: "费用报销审批",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/con/contract-ledger",
+    name: "oa-con-contract-ledger",
+    component: () =>
+      import("@/views/cost/contract-manage/contract-ledger/components/oa-contract-ledger.vue"),
+    meta: {
+      title: "合同审批",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/supplement-contract",
+    name: "oa-supplement-contract",
+    component: () =>
+      import("@/views/cost/contract-manage/contract-ledger/supplement-contract/oa-supplement-contract.vue"),
+    meta: {
+      title: "补充合同审批",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/change-order",
+    name: "oa-change-order",
+    component: () =>
+      import("@/views/cost/contract-manage/contract-ledger/change-order/oa-change-order.vue"),
+    meta: {
+      title: "变更申请",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/visa-manage",
+    name: "oa-visa-manage",
+    component: () =>
+      import("@/views/cost/contract-manage/contract-ledger/visa-manage/oa-visa-manage.vue"),
+    meta: {
+      title: "签证审批",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/output-declaration",
+    name: "oa-output-declaration",
+    component: () =>
+      import("@/views/cost/contract-manage/contract-ledger/output-declaration/oa-output-declaration.vue"),
+    meta: {
+      title: "产值申报",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/payment-application",
+    name: "oa-payment-application",
+    component: () =>
+      import("@/views/cost/contract-manage/contract-ledger/output-declaration/oa-output-declaration.vue"),
+    meta: {
+      title: "合同支付",
       isKeepAlive: false,
     },
   },

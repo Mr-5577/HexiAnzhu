@@ -3,7 +3,7 @@
   <base-modal
     v-model="visible"
     :title="dialogTitle"
-    width="860px"
+    width="700px"
     :confirm-loading="submitLoading"
     @confirm="handleSubmit"
     @cancel="handleClose"
@@ -13,7 +13,7 @@
         ref="formRef"
         :model="formData"
         :rules="formRules"
-        label-width="160px"
+        label-width="130px"
       >
         <el-row :gutter="20">
           <el-col :span="12">
@@ -90,7 +90,7 @@
             </el-form-item>
           </el-col>
         </el-row>
-        <el-row :gutter="20">
+        <!-- <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item prop="isEnabled" label="是否当前使用版本" required>
               <el-radio-group v-model="formData.isEnabled">
@@ -99,7 +99,7 @@
               </el-radio-group>
             </el-form-item>
           </el-col>
-        </el-row>
+        </el-row> -->
         <el-row :gutter="20">
           <el-col :span="24">
             <el-form-item prop="remark" label="备注">

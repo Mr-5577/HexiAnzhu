@@ -90,7 +90,21 @@
                   :controls="false"
                   style="width: 100%"
                   disabled
-                />
+                >
+                  <template #suffix>
+                    <span style="pointer-events: auto; cursor: help;">
+                      <el-tooltip
+                        effect="dark"
+                        content="合同首次签约时的合同金额"
+                        placement="top"
+                      >
+                        <el-icon style="color: #909399;">
+                          <QuestionFilled />
+                        </el-icon>
+                      </el-tooltip>
+                    </span>
+                  </template>
+                </el-input-number>
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
@@ -101,7 +115,21 @@
                   :controls="false"
                   style="width: 100%"
                   disabled
-                />
+                >
+                  <template #suffix>
+                    <span style="pointer-events: auto; cursor: help;">
+                      <el-tooltip
+                        effect="dark"
+                        content="所有生效和在途的补充合同金额之和"
+                        placement="top"
+                      >
+                        <el-icon style="color: #909399;">
+                          <QuestionFilled />
+                        </el-icon>
+                      </el-tooltip>
+                    </span>
+                  </template>
+                </el-input-number>
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6" v-if="conTypeIsJianAn">
@@ -112,7 +140,21 @@
                   :controls="false"
                   style="width: 100%"
                   disabled
-                />
+                >
+                  <template #suffix>
+                    <span style="pointer-events: auto; cursor: help;">
+                      <el-tooltip
+                        effect="dark"
+                        content="所有生效和在途的变更（不含已转签证或补充合同）、签证（不含已转补充合同）金额之和"
+                        placement="top"
+                      >
+                        <el-icon style="color: #909399;">
+                          <QuestionFilled />
+                        </el-icon>
+                      </el-tooltip>
+                    </span>
+                  </template>
+                </el-input-number>
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
@@ -123,7 +165,21 @@
                   :controls="false"
                   style="width: 100%"
                   disabled
-                />
+                >
+                  <template #suffix>
+                    <span style="pointer-events: auto; cursor: help;">
+                      <el-tooltip
+                        effect="dark"
+                        content="已结算则为合同结算金额，未结算则为最近一次生效的预结算金额"
+                        placement="top"
+                      >
+                        <el-icon style="color: #909399;">
+                          <QuestionFilled />
+                        </el-icon>
+                      </el-tooltip>
+                    </span>
+                  </template>
+                </el-input-number>
               </el-form-item>
             </el-col>
           <!-- </el-row> -->
@@ -137,7 +193,21 @@
                   :controls="false"
                   style="width: 100%"
                   disabled
-                />
+                >
+                  <template #suffix>
+                    <span style="pointer-events: auto; cursor: help;">
+                      <el-tooltip
+                        effect="dark"
+                        content="所有生效和在途的产值确认金额（成本复核金额或产值申报金额）"
+                        placement="top"
+                      >
+                        <el-icon style="color: #909399;">
+                          <QuestionFilled />
+                        </el-icon>
+                      </el-tooltip>
+                    </span>
+                  </template>
+                </el-input-number>
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6" v-if="conTypeIsJianAn">
@@ -148,7 +218,21 @@
                   :controls="false"
                   style="width: 100%"
                   disabled
-                />
+                >
+                  <template #suffix>
+                    <span style="pointer-events: auto; cursor: help;">
+                      <el-tooltip
+                        effect="dark"
+                        content="所有生效和在途的应付确认金额（成本复核金额或产值申报金额）"
+                        placement="top"
+                      >
+                        <el-icon style="color: #909399;">
+                          <QuestionFilled />
+                        </el-icon>
+                      </el-tooltip>
+                    </span>
+                  </template>
+                </el-input-number>
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
@@ -159,7 +243,46 @@
                   :controls="false"
                   style="width: 100%"
                   disabled
-                />
+                >
+                  <template #suffix>
+                    <span style="pointer-events: auto; cursor: help;">
+                      <el-tooltip
+                        effect="dark"
+                        content="所有生效和在途的请款流程中的计划请款金额之和"
+                        placement="top"
+                      >
+                        <el-icon style="color: #909399;">
+                          <QuestionFilled />
+                        </el-icon>
+                      </el-tooltip>
+                    </span>
+                  </template>
+                </el-input-number>
+              </el-form-item>
+            </el-col>
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+              <el-form-item label="累计奖罚" prop="sumDedAmt">
+                <el-input-number
+                  v-model="formData.sumDedAmt"
+                  :precision="2"
+                  :controls="false"
+                  style="width: 100%"
+                  disabled
+                >
+                  <template #suffix>
+                    <span style="pointer-events: auto; cursor: help;">
+                      <el-tooltip
+                        effect="dark"
+                        content="所有生效和在途的请款流程中的奖罚金额之和"
+                        placement="top"
+                      >
+                        <el-icon style="color: #909399;">
+                          <QuestionFilled />
+                        </el-icon>
+                      </el-tooltip>
+                    </span>
+                  </template>
+                </el-input-number>
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
@@ -170,7 +293,21 @@
                   :controls="false"
                   style="width: 100%"
                   disabled
-                />
+                >
+                  <template #suffix>
+                    <span style="pointer-events: auto; cursor: help;">
+                      <el-tooltip
+                        effect="dark"
+                        content="所有付款登记金额之和"
+                        placement="top"
+                      >
+                        <el-icon style="color: #909399;">
+                          <QuestionFilled />
+                        </el-icon>
+                      </el-tooltip>
+                    </span>
+                  </template>
+                </el-input-number>
               </el-form-item>
             </el-col>
           <!-- </el-row> -->
@@ -184,7 +321,21 @@
                   :precision="2"
                   :controls="false"
                   style="width: 100%"
-                />
+                >
+                  <template #suffix>
+                    <span style="pointer-events: auto; cursor: help;">
+                      <el-tooltip
+                        effect="dark"
+                        content="请款 + 奖罚 - 实付"
+                        placement="top"
+                      >
+                        <el-icon style="color: #909399;">
+                          <QuestionFilled />
+                        </el-icon>
+                      </el-tooltip>
+                    </span>
+                  </template>
+                </el-input-number>
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6" v-if="conTypeIsJianAn">
@@ -195,7 +346,21 @@
                   :precision="2"
                   :controls="false"
                   style="width: 100%"
-                />
+                >
+                  <template #suffix>
+                    <span style="pointer-events: auto; cursor: help;">
+                      <el-tooltip
+                        effect="dark"
+                        content="累计应付 / 累计产值"
+                        placement="top"
+                      >
+                        <el-icon style="color: #909399;">
+                          <QuestionFilled />
+                        </el-icon>
+                      </el-tooltip>
+                    </span>
+                  </template>
+                </el-input-number>
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6" v-if="conTypeIsJianAn">
@@ -206,7 +371,21 @@
                   :precision="2"
                   :controls="false"
                   style="width: 100%"
-                />
+                >
+                  <template #suffix>
+                    <span style="pointer-events: auto; cursor: help;">
+                      <el-tooltip
+                        effect="dark"
+                        content="累计实付 / 累计应付"
+                        placement="top"
+                      >
+                        <el-icon style="color: #909399;">
+                          <QuestionFilled />
+                        </el-icon>
+                      </el-tooltip>
+                    </span>
+                  </template>
+                </el-input-number>
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6" v-if="conTypeIsJianAn">
@@ -217,7 +396,21 @@
                   :precision="2"
                   :controls="false"
                   style="width: 100%"
-                />
+                >
+                  <template #suffix>
+                    <span style="pointer-events: auto; cursor: help;">
+                      <el-tooltip
+                        effect="dark"
+                        content="累计实付 / 累计产值"
+                        placement="top"
+                      >
+                        <el-icon style="color: #909399;">
+                          <QuestionFilled />
+                        </el-icon>
+                      </el-tooltip>
+                    </span>
+                  </template>
+                </el-input-number>
               </el-form-item>
             </el-col>
           </el-row>
@@ -299,7 +492,7 @@
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="请款总金额" prop="reqAmt" required>
+              <el-form-item label="计划请款金额" prop="reqAmt" required>
                 <el-input-number
                   v-model="formData.reqAmt"
                   :min="0"
@@ -311,18 +504,34 @@
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="是否提高支付比例" prop="isRise" required>
-                <el-select
-                  v-model="formData.isRise"
-                  placeholder="请选择"
-                  style="width: 100%"
-                >
-                  <el-option
-                    v-for="item in YesOrNoStatusEnum"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                  />
-                </el-select>
+                <div style="width: 100%;display: flex;align-items: center;">
+                  <el-select
+                    v-model="formData.isRise"
+                    placeholder="请选择"
+                    style="width: 100%"
+                  >
+                    <el-option
+                      v-for="item in YesOrNoStatusEnum"
+                      :key="item.value"
+                      :label="item.label"
+                      :value="item.value"
+                    /> 
+                  </el-select>
+      
+                  <span style="pointer-events: auto; cursor: help;">
+                    <el-tooltip
+                      effect="dark"
+                      content="当计划请款金额+累计已请款>已解锁应付总额时，系统将自动标记为'是'"
+                      placement="top"
+                      :append-to-body="true"
+                    >
+                      <el-icon style="color: #909399;">
+                        <QuestionFilled />
+                      </el-icon>
+                    </el-tooltip>
+                  </span>
+                </div>
+                
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6" v-if="showLastPay" >
@@ -853,8 +1062,8 @@ defineOptions({ name: "payment-application-form" });
 
 interface Props {
   mode: "add" | "edit" | "detail";
-  projId: number;
-  conId: number;
+  projId?: number;
+  conId?: number;
   paymentId?: number;
 }
 
@@ -1066,6 +1275,7 @@ const formData = ref({
   sumProdVal: 0, // 累计产值
   sumPayAmt: 0, // 累计应付
   sumAppyAmt: 0, // 累计请款
+  sumDedAmt : 0, //累计奖罚
   sumPaidAmt: 0, // 累计实付
   sumOwedAmt: 0, // 累计欠款
   payOutRate: 0, // 应付占产值比率
@@ -2083,6 +2293,7 @@ const clearContractInfo = () => {
   f.sumProdVal = 0;
   f.sumPayAmt = 0;
   f.sumAppyAmt = 0;
+  f.sumDedAmt = 0;
   f.sumPaidAmt = 0;
   f.sumOwedAmt = 0;
   f.payOutRate = 0;
@@ -2100,7 +2311,7 @@ const getConSumData = async (conId) => {
   try {
     const res = await cumulativeDataApi.getAccumData({
       conId: conId,
-      typeList: [0, 1, 2, 3, 4, 7, 8, 9, 10],
+      typeList: [0, 1, 2, 3, 6, 7, 8, 9, 10,11],
     });
 
     if (res.code !== 200 || !res.data) {
@@ -2118,12 +2329,13 @@ const getConSumData = async (conId) => {
       sumPayAmt, // 1
       sumAppyAmt, // 2
       sumPaidAmt, // 3
-      sumOwedAmt, // 4
+      sumDedAmt, // 6 奖罚
       changeAmt, // 7 变更
       visaAmt, // 8 签证
       unlockAmt, // 9 解锁应付
       addAmt, // 10 补充合同金额
-    ] = [0, 1, 2, 3, 4, 7, 8, 9, 10].map((type) => dataMap.get(type) || 0);
+      sumOwedAmt, // 11 请款金额
+    ] = [0, 1, 2, 3, 6,7, 8, 9, 10,11].map((type) => dataMap.get(type) || 0);
 
     const sumChangeAmt = changeAmt + visaAmt;
 
@@ -2136,6 +2348,7 @@ const getConSumData = async (conId) => {
     formData.value.sumProdVal = sumProdVal;
     formData.value.sumPayAmt = sumPayAmt;
     formData.value.sumAppyAmt = sumAppyAmt;
+    formData.value.sumDedAmt = sumDedAmt;
     formData.value.sumPaidAmt = sumPaidAmt;
     formData.value.sumOwedAmt = sumOwedAmt;
     formData.value.unlockAmt = unlockAmt;
@@ -2160,7 +2373,7 @@ const getConSumData = async (conId) => {
 
     const stMap = new Map();
     res.data.forEach((item) => {
-      stMap.set(item.type, item.archAmt || 0);
+      stMap.set(item.type, item.archivedAmt || 0);
     });
 
     const [preSettleAmt, settledAmt] = [0, 1].map((type) => stMap.get(type) || 0);
@@ -2204,19 +2417,20 @@ const getConMainData = async (conId) => {
       formData.value.needSettle = conMain.needSettle;
 
       formData.value.signAmt = conMain.signAmt;
-      formData.value.addAmt = conMain.addAmt;
-      formData.value.sumChangeAmt = conMain.sumChangeAmt;
-      formData.value.preSettleAmt = conMain.preSettleAmt;
-      formData.value.settledAmt = conMain.settledAmt;
-      formData.value.sumProdVal = conMain.sumProdVal;
-      formData.value.sumPayAmt = conMain.sumPayAmt;
-      formData.value.sumAppyAmt = conMain.sumAppyAmt;
-      formData.value.sumPaidAmt = conMain.sumPaidAmt;
-      formData.value.sumOwedAmt = conMain.sumOwedAmt;
-      formData.value.payOutRate = conMain.payOutRate;
-      formData.value.paidPayRate = conMain.paidPayRate;
-      formData.value.paidOutRate = conMain.paidOutRate;
-      formData.value.leavePayAmt = conMain.leavePayAmt;
+      // formData.value.settledAmt = conMain.settledAmt;
+      // formData.value.preSettleAmt = conMain.preSettleAmt;
+      // formData.value.addAmt = conMain.addAmt;
+      // formData.value.sumChangeAmt = conMain.sumChangeAmt;
+      // formData.value.sumProdVal = conMain.sumProdVal;
+      // formData.value.sumPayAmt = conMain.sumPayAmt;
+      // formData.value.sumAppyAmt = conMain.sumAppyAmt;
+      // formData.value.sumDedAmt = conMain.sumDedAmt;
+      // formData.value.sumPaidAmt = conMain.sumPaidAmt;
+      // formData.value.sumOwedAmt = conMain.sumOwedAmt;
+      // formData.value.payOutRate = conMain.payOutRate;
+      // formData.value.paidPayRate = conMain.paidPayRate;
+      // formData.value.paidOutRate = conMain.paidOutRate;
+      // formData.value.leavePayAmt = conMain.leavePayAmt;
 
       conTypeIsJianAn.value = isJianAnByConType(conTypeOptions, formData.value.conTypeId);
       ;
@@ -2289,6 +2503,7 @@ const backfillData = async (data) => {
     formData.value.sumProdVal = payment.sumProdVal;
     formData.value.sumPayAmt = payment.sumPayAmt;
     formData.value.sumAppyAmt = payment.sumAppyAmt;
+    formData.value.sumDedAmt = payment.sumDedAmt;
     formData.value.sumPaidAmt = payment.sumPaidAmt;
     formData.value.sumOwedAmt = payment.sumOwedAmt;
     formData.value.payOutRate = payment.payOutRate;
@@ -2512,6 +2727,7 @@ const buildSubmitParams = () => {
       sumProdVal: sumProdVal,
       sumPayAmt: sumPayAmt,
       sumAppyAmt: formData.value.sumAppyAmt,
+      sumDedAmt: formData.value.sumDedAmt,
       sumPaidAmt: formData.value.sumPaidAmt,
       sumOwedAmt: formData.value.sumOwedAmt,
       payOutRate: payOutRate,
@@ -2586,6 +2802,7 @@ const handleFormDataSubmit = async () => {
   submitLoading.value = true;
   try {
     await formRef.value.validate();
+    await getConSumData(conId.value);
     if (canApplySettle.value === false && (formData.value.payTypeId === 2064 || formData.value.payTypeId === 2065)) {
       ElMessage.error("该合同尚未结算，不可请结算款和质保金！");
       return;
@@ -2683,10 +2900,10 @@ const handleViewProcess = async () => {
 // 返回操作
 const goBack = () => {
   if (isAdd.value) {
-    tagsStore.closeTagByPath("/con/supplement-contract/add");
+    tagsStore.closeTagByPath("/con/payment-application/add");
   }
   if (isEdit.value) {
-    tagsStore.closeTagByPath("/con/supplement-contract/edit");
+    tagsStore.closeTagByPath("/con/payment-application/edit");
   }
   router.go(-1);
 };
@@ -2801,7 +3018,6 @@ const initData = async () => {
         addPayWay();
       }
     } else if ((props.mode === "edit" || props.mode === "detail") && props.paymentId) {
-      ;
       await loadDetail();
     }
   } finally {

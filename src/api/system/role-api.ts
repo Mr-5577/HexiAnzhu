@@ -69,7 +69,12 @@ export const roleApi = {
   getRoleDataPowerProjList: (data: { roleId: number | string }) => {
     return http.post("/auth/getRoleDataPowerProjList", data);
   },
-  // 保存角色对应的项目权限
+  /**
+   * @name 保存角色对应的项目权限
+   * @param data.roleId 角色id
+   * @param data.isSuper 是否是超级管理员
+   * @param data.listProj 项目数据权限列表
+   */
   editRoleDataPowerProjList: (data: any) => {
     return http.post("/auth/editRoleDataPowerProjList", data);
   },
@@ -96,5 +101,18 @@ export const roleApi = {
   getDataTypeList: () => {
     // return http.post("/emp/getDataTypeList");
     return http.post("/mainData/getDataTypeList");
+  },
+  // 获取角色项目查看权限列表
+  getRoleDataPowerProjViewList: (data: { roleId: number }) => {
+    return http.post("/auth/getRoleDataPowerProjViewList", data);
+  },
+  /**
+   * @name 修改角色项目查看权限列表
+   * @param data.roleId 角色id
+   * @param data.isSuper 是否是超级管理员
+   * @param data.listProjView 项目查看列表
+   */
+  editRoleDataPowerProjViewList: (data: any) => {
+    return http.post("/auth/editRoleDataPowerProjViewList", data);
   },
 };

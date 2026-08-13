@@ -509,7 +509,7 @@ defineOptions({ name: "visa-management-form" });
 // ==================== Props & Emits ====================
 interface Props {
   mode: "add" | "edit" | "detail";
-  conId: number;
+  conId?: number;
   visaId?: number;
   projId?: number;
 }
@@ -1115,10 +1115,10 @@ const handleAllocationDetail = () => {};
 // ==================== 页面导航 ====================
 const goBack = () => {
   if (isAdd.value) {
-    tagsStore.closeTagByPath("/con/change-order/add");
+    tagsStore.closeTagByPath("/con/visa-manage/add");
   }
   if (isEdit.value) {
-    tagsStore.closeTagByPath("/con/change-order/edit");
+    tagsStore.closeTagByPath("/con/visa-manage/edit");
   }
   router.go(-1); // 返回上个页面
 };

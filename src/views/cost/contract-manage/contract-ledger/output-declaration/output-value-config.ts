@@ -85,7 +85,7 @@ export const materialColumns = computed<EditableColumn[]>(() => [
     width: 120,
   },
   {
-    prop: "prodVal",
+    prop: "recvProdAmt",
     label: "接收产值",
     editable: false,
     editType: "number",
@@ -203,7 +203,7 @@ export const materialMinorColumns = computed<EditableColumn[]>(() => [
     width: 250,
   },
   {
-    prop: "prodVal",
+    prop: "recvProdAmt",
     label: "接收产值",
     editable: false,
     editType: "number",

@@ -2,8 +2,8 @@
 <template>
   <div class="payment-register-wrapper">
     <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="105px">
-      <el-form-item label="标题" prop="title">
-        <el-input v-model="queryParams.title" placeholder="请输入标题" clearable style="width: 220px" />
+      <el-form-item label="标题" prop="wfTitle">
+        <el-input v-model="queryParams.wfTitle" placeholder="请输入标题" clearable style="width: 220px" />
       </el-form-item>
       <el-form-item label="项目" prop="projId">
         <el-cascader v-model="queryParams.projId" :options="projectOptions" :show-all-levels="false" :props="{
@@ -133,7 +133,7 @@ const queryParams = ref({
   wfStatus: 40, // 0=草稿, 10=审批中, 40=已审批, 80=作废, 99=其他
   payStatus: "未支付", // 未支付  部分支付  全部支付
   isLocked: undefined,
-  title: undefined,
+  wfTitle: undefined,
 });
 const projectOptions = ref([]); // 项目列表
 const segOptions = ref([]); // 业务板块列表

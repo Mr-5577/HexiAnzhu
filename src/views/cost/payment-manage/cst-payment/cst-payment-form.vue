@@ -1,62 +1,27 @@
 <!-- 建安支付 表单 -->
 <template>
   <div class="basic-form-content">
-    <BillHeader
-      :title="'非合同请款审批'"
-      :contract-no="billData.bizNo || ''"
-      :submitter="formData.userName || ''"
-      :submit-time="formData.createDate || ''"
-      :status="billData.status"
-      :show-status="true"
-      :button-loading="submitLoading"
-      :save-disabled="isDetail || !!billData.status"
-      :submit-disabled="isDetail || !!billData.status"
-      :delete-disabled="isDetail || isAdd || !!billData.status"
-      :void-disabled="isDetail || isAdd || !!billData.status"
-      :view-disabled="isAdd"
-      @save="handleSave"
-      @submit="handleSubmit"
-      @delete="handleDelete"
-      @void="handleCancel"
-      @viewFlow="handleViewProcess"
-    >
+    <BillHeader :title="'非合同请款审批'" :contract-no="billData.bizNo || ''" :submitter="formData.userName || ''"
+      :submit-time="formData.createDate || ''" :status="billData.status" :show-status="true"
+      :button-loading="submitLoading" :save-disabled="isDetail || !!billData.status"
+      :submit-disabled="isDetail || !!billData.status" :delete-disabled="isDetail || isAdd || !!billData.status"
+      :void-disabled="isDetail || isAdd || !!billData.status" :view-disabled="isAdd" @save="handleSave"
+      @submit="handleSubmit" @delete="handleDelete" @void="handleCancel" @viewFlow="handleViewProcess">
     </BillHeader>
 
     <div class="form-scroll-area">
-      <el-form
-        ref="paymentFormRef"
-        :model="formData"
-        :rules="formRules"
-        label-width="120px"
-        class="adapt-form"
-      >
-        <BillInfo
-          v-model="formData"
-          :status="billData?.status || 0"
-          :disabled="isDetail || !!billData.status"
-          :project-options="projectOptions"
-          @project-change="changeProject"
-        />
+      <el-form ref="paymentFormRef" :model="formData" :rules="formRules" label-width="120px" class="adapt-form">
+        <BillInfo v-model="formData" :status="billData?.status || 0" :disabled="isDetail || !!billData.status"
+          :project-options="projectOptions" @project-change="changeProject" />
 
         <div class="item-card">
           <div class="section-title">立项信息</div>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
               <el-form-item label="事项名称" required>
-                <el-input
-                  v-model="cstProcessData.processName"
-                  placeholder=""
-                  style="width: 100%"
-                  readonly
-                  disabled
-                >
+                <el-input v-model="cstProcessData.processName" placeholder="" style="width: 100%" readonly disabled>
                   <template #append>
-                    <el-button
-                      @click="changeProcess"
-                      plain
-                      type="primary"
-                      :disabled="isDetail || !!billData.status"
-                    >
+                    <el-button @click="changeProcess" plain type="primary" :disabled="isDetail || !!billData.status">
                       关联立项
                     </el-button>
                   </template>
@@ -67,49 +32,24 @@
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="事项计划金额">
-                <el-input
-                  v-model="cstProcessData.processAmt"
-                  placeholder=""
-                  style="width: 100%"
-                  readonly
-                  disabled
-                />
+                <el-input v-model="cstProcessData.processAmt" placeholder="" style="width: 100%" readonly disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="已请款金额">
-                <el-input
-                  v-model="cstProcessData.sumAppyAmt"
-                  placeholder=""
-                  style="width: 100%"
-                  readonly
-                  disabled
-                />
+                <el-input v-model="cstProcessData.sumAppyAmt" placeholder="" style="width: 100%" readonly disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="剩余金额">
-                <el-input
-                  v-model="cstProcessData.sumOwedAmt"
-                  placeholder=""
-                  style="width: 100%"
-                  readonly
-                  disabled
-                />
+                <el-input v-model="cstProcessData.sumOwedAmt" placeholder="" style="width: 100%" readonly disabled />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
               <el-form-item label="事项说明">
-                <el-input
-                  v-model="cstProcessData.remark"
-                  type="textarea"
-                  :rows="1"
-                  placeholder=""
-                  readonly
-                  disabled
-                />
+                <el-input v-model="cstProcessData.remark" type="textarea" :rows="1" placeholder="" readonly disabled />
               </el-form-item>
             </el-col>
           </el-row>
@@ -119,45 +59,26 @@
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="归属月份" prop="belongMonth" required>
-                <el-date-picker
-                  v-model="formData.belongMonth"
-                  type="month"
-                  value-format="YYYY-MM-DD"
-                  placeholder="请选择归属月份"
-                  style="width: 100%"
-                  :disabled="isDetail || !!billData.status"
-                />
+                <el-date-picker v-model="formData.belongMonth" type="month" value-format="YYYY-MM-DD"
+                  placeholder="请选择归属月份" style="width: 100%" :disabled="isDetail || !!billData.status" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="费用类型" prop="finaTypeId" required>
-                <el-cascader
-                  v-model="formData.finaTypeId"
-                  :options="feeTypeOptions"
-                  :show-all-levels="false"
-                  :props="{
-                    expandTrigger: 'hover',
-                    emitPath: false,
-                    checkStrictly: false,
-                    value: 'id',
-                    label: 'finaTypeName',
-                    children: 'children',
-                  }"
-                  placeholder="请选择费用类型"
-                  style="width: 100%"
-                  filterable
-                  disabled
-                />
+                <el-cascader v-model="formData.finaTypeId" :options="feeTypeOptions" :show-all-levels="false" :props="{
+                  expandTrigger: 'hover',
+                  emitPath: false,
+                  checkStrictly: false,
+                  value: 'id',
+                  label: 'finaTypeName',
+                  children: 'children',
+                }" placeholder="请选择费用类型" style="width: 100%" filterable disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="请款类型" prop="reqType" required>
-                <el-select
-                  v-model="formData.reqType"
-                  placeholder="请选择"
-                  style="width: 100%"
-                  :disabled="isDetail || !!billData.status"
-                >
+                <el-select v-model="formData.reqType" placeholder="请选择" style="width: 100%"
+                  :disabled="isDetail || !!billData.status">
                   <el-option label="正常请款" :value="0" />
                   <el-option label="来票冲账" :value="1" />
                 </el-select>
@@ -166,14 +87,8 @@
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <!-- 请款类型为来票冲账时 置灰不可编辑 -->
               <el-form-item label="是否最后一笔" prop="isLastRec" required>
-                <el-select
-                  v-model="formData.isLastRec"
-                  placeholder="请选择"
-                  style="width: 100%"
-                  :disabled="
-                    isDetail || !!billData.status || formData.reqType == 1
-                  "
-                >
+                <el-select v-model="formData.isLastRec" placeholder="请选择" style="width: 100%" :disabled="isDetail || !!billData.status || formData.reqType == 1
+                  ">
                   <el-option label="是" :value="1" />
                   <el-option label="否" :value="0" />
                 </el-select>
@@ -184,46 +99,26 @@
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="本次请款金额" prop="reqAmt" required>
-                <el-input-number
-                  v-model="formData.reqAmt"
-                  :precision="2"
-                  :controls="false"
-                  style="width: 100%"
-                  :disabled="isDetail || !!billData.status"
-                />
+                <el-input-number v-model="formData.reqAmt" :precision="2" :controls="false" style="width: 100%"
+                  :disabled="isDetail || !!billData.status" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="实际请款金额" prop="factReqAmt" required>
-                <el-input-number
-                  v-model="formData.factReqAmt"
-                  :precision="2"
-                  :controls="false"
-                  style="width: 100%"
-                  disabled
-                />
+                <el-input-number v-model="formData.factReqAmt" :precision="2" :controls="false" style="width: 100%"
+                  disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="应收发票金额" prop="invRecAmt" required>
-                <el-input-number
-                  v-model="formData.invRecAmt"
-                  :precision="2"
-                  :controls="false"
-                  style="width: 100%"
-                  disabled
-                />
+                <el-input-number v-model="formData.invRecAmt" :precision="2" :controls="false" style="width: 100%"
+                  disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="已收发票金额" prop="invRcvdAmt" required>
-                <el-input-number
-                  v-model="formData.invRcvdAmt"
-                  :precision="2"
-                  :controls="false"
-                  style="width: 100%"
-                  disabled
-                />
+                <el-input-number v-model="formData.invRcvdAmt" :precision="2" :controls="false" style="width: 100%"
+                  disabled />
               </el-form-item>
             </el-col>
           </el-row>
@@ -231,13 +126,8 @@
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="欠票金额" prop="invOweAmt" required>
-                <el-input-number
-                  v-model="formData.invOweAmt"
-                  :precision="2"
-                  :controls="false"
-                  style="width: 100%"
-                  disabled
-                />
+                <el-input-number v-model="formData.invOweAmt" :precision="2" :controls="false" style="width: 100%"
+                  disabled />
               </el-form-item>
             </el-col>
           </el-row>
@@ -245,15 +135,8 @@
           <el-row :gutter="24">
             <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
               <el-form-item label="请款说明" prop="reqDesc">
-                <el-input
-                  v-model="formData.reqDesc"
-                  type="textarea"
-                  :rows="3"
-                  maxlength="500"
-                  show-word-limit
-                  placeholder="请输入"
-                  :disabled="isDetail || !!billData.status"
-                />
+                <el-input v-model="formData.reqDesc" type="textarea" :rows="3" maxlength="500" show-word-limit
+                  placeholder="请输入" :disabled="isDetail || !!billData.status" />
               </el-form-item>
             </el-col>
           </el-row>
@@ -263,32 +146,14 @@
         <div class="item-card" v-if="showDeductionAndPayWay">
           <div class="section-title">款项调整</div>
           <template v-if="isDetail || !!billData.status">
-            <base-table
-              ref="dedTableRef"
-              :columns="dedDetailColumns"
-              :table-data="dedTable"
-              :row-key="'uuid'"
-              :pagination="false"
-              :show-toolbar="false"
-              :show-action-bar="false"
-              :height="'200px'"
-            >
+            <base-table ref="dedTableRef" :columns="dedDetailColumns" :table-data="dedTable" :row-key="'uuid'"
+              :pagination="false" :show-toolbar="false" :show-action-bar="false" :height="'200px'">
             </base-table>
           </template>
           <template v-else>
-            <editable-table
-              ref="dedTableRef"
-              :row-key="'uuid'"
-              :height="'200px'"
-              v-model="dedTable"
-              :columns="dedColumns"
-              :pagination="false"
-              :highlight-current-row="false"
-              :show-summary="true"
-              :compactEmpty="true"
-              :editable="true"
-              :on-save="handleDedSave"
-            >
+            <editable-table ref="dedTableRef" :row-key="'uuid'" :height="'200px'" v-model="dedTable"
+              :columns="dedColumns" :pagination="false" :highlight-current-row="false" :show-summary="true"
+              :compactEmpty="true" :editable="true" :on-save="handleDedSave">
               <template #actionBar>
                 <div class="actionBar-buttons">
                   <el-button type="primary" size="small" @click="handleAddDed">
@@ -311,54 +176,24 @@
         <!-- 付款方式 -->
         <div class="item-card" v-if="showDeductionAndPayWay">
           <div class="section-title">支付方式</div>
-          <div
-            style="display: flex; justify-content: flex-end; margin-bottom: 8px"
-          >
-            <el-button
-              type="primary"
-              size="small"
-              :disabled="payWayTable.length == 0"
-              @click="handleFinanceAlloc"
-              v-if="!isAdd"
-            >
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 8px">
+            <el-button type="primary" size="small" :disabled="payWayTable.length == 0" @click="handleFinanceAlloc"
+              v-if="!isAdd">
               财务分摊
             </el-button>
-            <el-button
-              type="primary"
-              size="small"
-              @click="addPayWay"
-              v-if="!isDetail"
-            >
+            <el-button type="primary" size="small" @click="addPayWay" v-if="!isDetail">
               新增支付方式
             </el-button>
           </div>
           <template v-if="isDetail || !!billData.status">
-            <base-table
-              ref="tableRef"
-              :columns="payWayDetailColumns"
-              :table-data="payWayTable"
-              :row-key="'uuid'"
-              :pagination="false"
-              :show-toolbar="false"
-              :show-action-bar="false"
-              :height="'200px'"
-            >
+            <base-table ref="tableRef" :columns="payWayDetailColumns" :table-data="payWayTable" :row-key="'uuid'"
+              :pagination="false" :show-toolbar="false" :show-action-bar="false" :height="'200px'">
             </base-table>
           </template>
           <template v-else>
-            <editable-table
-              ref="payWayTableRef"
-              :row-key="'uuid'"
-              :height="'200px'"
-              v-model="payWayTable"
-              :columns="payWayColumns"
-              :pagination="false"
-              :highlight-current-row="false"
-              :show-summary="false"
-              :compactEmpty="true"
-              :editable="true"
-              :on-save="handlePayWaySave"
-            >
+            <editable-table ref="payWayTableRef" :row-key="'uuid'" :height="'200px'" v-model="payWayTable"
+              :columns="payWayColumns" :pagination="false" :highlight-current-row="false" :show-summary="false"
+              :compactEmpty="true" :editable="true" :on-save="handlePayWaySave">
               <template #actions="{ row }">
                 <el-button link type="danger" @click="deletePayWay(row)">
                   删除
@@ -368,10 +203,7 @@
           </template>
           <div class="pay-summary">
             付款合计：<span>{{ totalPayAmt.toFixed(2) }}</span>
-            <span
-              v-if="Math.abs(totalPayAmt - actualReqAmt) > 0.01"
-              class="pay-error"
-            >
+            <span v-if="Math.abs(totalPayAmt - actualReqAmt) > 0.01" class="pay-error">
               （必须等于实际请款金额 {{ actualReqAmt.toFixed(2) }}）
             </span>
             <span v-else class="pay-success">（等于实际请款金额）</span>
@@ -382,36 +214,19 @@
         <div class="item-card">
           <div class="section-title">发票登记</div>
           <template v-if="isDetail || !!billData.status">
-            <base-table
-              ref="tableRef"
-              :columns="invoiceMDetailColumns"
-              :table-data="invoiceMTable"
-              :row-key="'uuid'"
-              :pagination="false"
-              :show-toolbar="false"
-              :show-action-bar="false"
-              :height="'200px'"
-            >
+            <base-table ref="tableRef" :columns="invoiceMDetailColumns" :table-data="invoiceMTable" :row-key="'uuid'"
+              :pagination="false" :show-toolbar="false" :show-action-bar="false" :height="'200px'">
               <template #annexName="{ row }">
                 <div class="annex-cell">
-                  <el-link
-                    v-if="row.annexId"
-                    type="primary"
-                    :underline="'hover'"
-                    @click="handleViewAnnex(row)"
-                  >
+                  <el-link v-if="row.annexId" type="primary" :underline="'hover'" @click="handleViewAnnex(row)">
                     {{ row.annexName || "查看附件" }}
                   </el-link>
                 </div>
               </template>
               <template #actions="{ row }">
                 <div class="actions-btn">
-                  <el-button
-                    link
-                    type="primary"
-                    :disabled="!(row.annexId && row.invoiceDs?.length)"
-                    @click="detailInvoiceM(row)"
-                  >
+                  <el-button link type="primary" :disabled="!(row.annexId && row.invoiceDs?.length)"
+                    @click="detailInvoiceM(row)">
                     发票明细
                   </el-button>
                 </div>
@@ -419,25 +234,12 @@
             </base-table>
           </template>
           <template v-else>
-            <editable-table
-              ref="invoiceMTableRef"
-              :row-key="'uuid'"
-              :height="'200px'"
-              v-model="invoiceMTable"
-              :columns="invoiceMColumns"
-              :pagination="false"
-              :highlight-current-row="false"
-              :show-summary="false"
-              :compactEmpty="true"
-              :editable="true"
-            >
+            <editable-table ref="invoiceMTableRef" :row-key="'uuid'" :height="'200px'" v-model="invoiceMTable"
+              :columns="invoiceMColumns" :pagination="false" :highlight-current-row="false" :show-summary="false"
+              :compactEmpty="true" :editable="true">
               <template #actionBar>
                 <div class="actionBar-buttons">
-                  <el-button
-                    type="primary"
-                    size="small"
-                    @click="handleUploadInvoice"
-                  >
+                  <el-button type="primary" size="small" @click="handleUploadInvoice">
                     上传发票
                   </el-button>
                 </div>
@@ -445,12 +247,7 @@
 
               <template #annexName="{ row }">
                 <div class="annex-cell">
-                  <el-link
-                    v-if="row.annexId"
-                    type="primary"
-                    :underline="'hover'"
-                    @click="handleViewAnnex(row)"
-                  >
+                  <el-link v-if="row.annexId" type="primary" :underline="'hover'" @click="handleViewAnnex(row)">
                     {{ row.annexName || "查看附件" }}
                   </el-link>
                 </div>
@@ -458,20 +255,11 @@
 
               <template #actions="{ row }">
                 <div class="actions-btn">
-                  <el-button
-                    link
-                    type="primary"
-                    :disabled="!row.annexId"
-                    @click="handleInspect(row)"
-                  >
+                  <el-button link type="primary" :disabled="!row.annexId" @click="handleInspect(row)">
                     查验
                   </el-button>
-                  <el-button
-                    link
-                    type="primary"
-                    :disabled="!(row.annexId && row.invoiceDs?.length)"
-                    @click="detailInvoiceM(row)"
-                  >
+                  <el-button link type="primary" :disabled="!(row.annexId && row.invoiceDs?.length)"
+                    @click="detailInvoiceM(row)">
                     发票明细
                   </el-button>
                   <el-button link type="danger" @click="deleteInvoiceM(row)">
@@ -484,79 +272,42 @@
         </div>
 
         <!-- 成本分摊 费用类型所属大类为建安类并且请款类型为正常请款0时显示  -->
-        <CostAllocationCard
-          :visible="isShowCostAllocation && formData.reqType == 0"
-          :allocation-status="cstMData.allocStatus"
-          :warning-status="cstMData.allocWarn"
-          :bizType="'NCON_CST'"
-          :projId="formData.projId"
-          :projName="formData.projName"
-          :displayName="cstProcessData.processName"
-          :allocAmt="actualReqAmt"
-          :bizBillId="paymentData.nconBillId"
-          :cstMData="cstMData"
-          :dialogMode="isDetail ? 'view' : 'edit'"
-          @selectData="getSelectCostAllocation"
-        />
+        <CostAllocationCard :visible="isShowCostAllocation && formData.reqType == 0"
+          :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'NCON_CST'"
+          :projId="formData.projId" :projName="formData.projName" :displayName="cstProcessData.processName"
+          :allocAmt="actualReqAmt" :bizBillId="paymentData.nconBillId" :cstMData="cstMData"
+          :dialogMode="isDetail ? 'view' : 'edit'" @selectData="getSelectCostAllocation" />
 
         <!-- 相关附件 -->
         <div class="item-card">
           <div class="section-title">相关附件</div>
           <el-form-item label="上传附件">
-            <base-upload
-              v-model:file-list="annexFileList"
-              :limit="9"
-              :multiple="false"
-              :showIcon="true"
-              :showTip="true"
-              :maxSize="20"
-              :unrestricted="true"
-              :accept="''"
-              button-text="选择文件"
-              size="default"
-              :disabled="isDetail || !!billData.status"
-              @success="handleFileSuccess"
-            ></base-upload>
+            <base-upload v-model:file-list="annexFileList" :limit="9" :multiple="false" :showIcon="true" :showTip="true"
+              :maxSize="20" :unrestricted="true" :accept="''" button-text="选择文件" size="default"
+              :disabled="isDetail || !!billData.status" @success="handleFileSuccess"></base-upload>
           </el-form-item>
         </div>
       </el-form>
     </div>
 
     <!-- 关联立项 弹窗 -->
-    <CstProcessDialog
-      v-model="processDialogVisible"
-      :projId="formData.projId"
-      :segId="formData.segId"
-      @success="handleDemandSelect"
-    />
+    <CstProcessDialog v-model="processDialogVisible" :projId="formData.projId" :segId="formData.segId"
+      @success="handleDemandSelect" />
 
     <!-- 成本分摊 弹窗 -->
     <CostAllocationDetailDialog v-model="costAllocationDialogVisible" />
 
     <!-- 上传发票弹窗 -->
-    <UploadInvoiceDialog
-      v-model="uploadVisibleDialog"
-      @success="getAnnexFileList"
-    />
+    <UploadInvoiceDialog v-model="uploadVisibleDialog" @success="getAnnexFileList" />
 
     <!-- 发票明细 弹窗 -->
-    <invoice-detail-dialog
-      ref="invoiceDetailDialogRef"
-      v-model="dialogVisible"
-      :detailList="detailList"
-      @success="handleInvoiceDetailSuccess"
-    />
+    <invoice-detail-dialog ref="invoiceDetailDialogRef" v-model="dialogVisible" :detailList="detailList"
+      @success="handleInvoiceDetailSuccess" />
 
     <!-- 财务分摊 erp页面纯查看 -->
-    <FinanceAllocationDialog
-      ref="financeAllocationDialogRef"
-      v-model="financeAllocVisible"
-      :payWayTable="payWayTable"
-      :segId="formData.segId"
-      :projId="formData.projId"
-      :bizType="'NCON_CST'"
-      @select="getFinaList"
-    ></FinanceAllocationDialog>
+    <FinanceAllocationDialog ref="financeAllocationDialogRef" v-model="financeAllocVisible" :payWayTable="payWayTable"
+      :segId="formData.segId" :projId="formData.projId" :bizType="'NCON_CST'" @select="getFinaList">
+    </FinanceAllocationDialog>
   </div>
 </template>
 
@@ -791,7 +542,7 @@ const getpayTypeOptions = async (segId: number) => {
       feeTypeFlatOptions.value = res.data || [];
       feeTypeOptions.value = buildTree(res.data || []);
     }
-  } catch (error) {}
+  } catch (error) { }
 };
 
 const formRules = {
@@ -846,7 +597,7 @@ const handleDemandSelect = async (data) => {
         cstProcessData.value.sumAppyAmt = res.data.sumAppyAmt;
         cstProcessData.value.sumOwedAmt = res.data.sumOwedAmt;
       }
-    } catch (error) {}
+    } catch (error) { }
     // 清空相关表格
     dedTable.value = [];
     payWayTable.value = [];
@@ -1738,14 +1489,14 @@ const buildSaveParams = () => {
   const deds = isCreditInvoice
     ? []
     : dedTable.value.map((item) => ({
-        id: item.id,
-        srcType: item.srcType,
-        nconBillId: item.nconBillId,
-        dedName: item.dedName || "",
-        dedAmt: item.dedAmt || 0,
-        dedTypeId: item.dedTypeId,
-        dedDesc: item.dedDesc || "",
-      }));
+      id: item.id,
+      srcType: item.srcType,
+      nconBillId: item.nconBillId,
+      dedName: item.dedName || "",
+      dedAmt: item.dedAmt || 0,
+      dedTypeId: item.dedTypeId,
+      dedDesc: item.dedDesc || "",
+    }));
 
   const invoiceMs: NconBillInvoiceM[] = [];
   invoiceMTable.value.forEach((item) => {
@@ -1780,17 +1531,17 @@ const buildSaveParams = () => {
   const payWays = isCreditInvoice
     ? []
     : payWayTable.value.map((item) => ({
-        id: item.id,
-        srcType: item.srcType,
-        nconBillId: item.nconBillId,
-        payWayId: item.payWayId || "",
-        payAmt: item.payAmt || 0,
-        dedRoomAmt: item.dedRoomAmt || 0,
-        payDesc: item.payDesc || "",
-        bankName: item.bankName || "",
-        accountName: item.accountName || "",
-        bankAccount: item.bankAccount || "",
-      }));
+      id: item.id,
+      srcType: item.srcType,
+      nconBillId: item.nconBillId,
+      payWayId: item.payWayId || "",
+      payAmt: item.payAmt || 0,
+      dedRoomAmt: item.dedRoomAmt || 0,
+      payDesc: item.payDesc || "",
+      bankName: item.bankName || "",
+      accountName: item.accountName || "",
+      bankAccount: item.bankAccount || "",
+    }));
 
   let cstM = null;
   if (cstMData.value?.allocDs && cstMData.value.allocDs?.length > 0) {
@@ -1924,7 +1675,7 @@ const getProcessData = async () => {
 };
 
 const handleSave = async () => {
-  if(submitLoading.value) return
+  if (submitLoading.value) return
   paymentFormRef.value.validate(async (valid: boolean) => {
     if (!valid) {
       ElMessage.error("请检查表单！");
@@ -2061,7 +1812,7 @@ const getCstProcessList = async () => {
     if (res.code === 200) {
       cstProcessList.value = res.data || [];
     }
-  } catch (error) {}
+  } catch (error) { }
 };
 
 const handleFileSuccess = (file: any) => {
@@ -2203,10 +1954,12 @@ onMounted(async () => {
   overflow-y: auto;
   padding: 15px 15px 30px;
   box-sizing: border-box;
+
   .adapt-form {
     width: 100%;
     margin: 0 auto;
   }
+
   .item-card {
     background: #ffffff;
     border-radius: 8px;
@@ -2267,6 +2020,7 @@ onMounted(async () => {
   color: #303133;
   background: #f5f7fa;
   border-radius: 4px;
+
   span {
     color: #f56c6c;
     font-size: 18px;
@@ -2281,15 +2035,18 @@ onMounted(async () => {
   background: #f5f7fa;
   border-radius: 4px;
   margin-top: 10px;
+
   span {
     color: #f56c6c;
     font-size: 18px;
   }
+
   .pay-error {
     color: #f56c6c;
     font-size: 14px;
     font-weight: normal;
   }
+
   .pay-success {
     color: #67c23a;
     font-size: 14px;

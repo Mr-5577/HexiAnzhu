@@ -26,7 +26,7 @@
             :disabled = "!onlyNo"
           />
         </el-form-item>
-        <el-form-item label="申请日期" prop="recvDate">
+        <el-form-item label="到货日期" prop="recvDate">
         <el-date-picker
           v-model="queryParams.recvDate"
           type="daterange"
@@ -46,7 +46,7 @@
       <base-table
         ref="tableRef"
         :row-key="'keyid'"
-        :columns="tableColumns"
+        :columns="props.cgType !==2 ? tableColumns :tableColumns_misc"
         :table-data="tableData"
         :loading="tableLoading"
         :total="total"
@@ -66,7 +66,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { dayjs, ElMessage } from "element-plus";
+import { ElMessage } from "element-plus";
 import { outputDeclarationApi } from "@/api/cost/contract-manage/output-declaration-api";
 
 // Props
@@ -142,12 +142,8 @@ const tableColumns = [
     width: 100,
     editType:"date",
     showOverflowTooltip: true,
-    formatter: (row, column, cellValue) => {
-        if (!cellValue) return '';
-        // 使用 dayjs
-        return dayjs(cellValue).format('YYYY-MM-DD');
-        // 或使用 moment
-        // return moment(cellValue).format('YYYY-MM-DD');
+    formatter: (row) => {
+      return row.recvDate ? String(row.recvDate).substring(0, 10) : '';
     }
   },
   {
@@ -260,6 +256,83 @@ const tableColumns = [
   },
 ];
 
+// 表格列配置
+const tableColumns_misc = [
+  { type: "selection", width: 50, fixed: "left" },
+  { type: "index", label: "序号", width: 60, fixed: "left" },
+  {
+    label: "接收单号",
+    prop: "requestmark",
+    width: 160,
+    showOverflowTooltip: true,
+  },
+  {
+    label: "到货日期",
+    prop: "recvDate",
+    width: 100,
+    editType:"date",
+    showOverflowTooltip: true,
+    formatter: (row) => {
+      return row.recvDate ? String(row.recvDate).substring(0, 10) : '';
+    }
+  },
+  {
+    label: "合同编号",
+    prop: "conNo",
+    width: 120,
+    showOverflowTooltip: true,
+  },
+  {
+    label: "合同名称",
+    prop: "conName",
+    width: 250,
+    showOverflowTooltip: true,
+  },
+
+  // 2. 供应商信息
+  {
+    label: "供应商名称",
+    prop: "supName",
+    width: 200,
+    showOverflowTooltip: true,
+  },
+
+  // 3. 材料分类与名称
+  {
+    label: "材料类型",
+    prop: "mtTypeName",
+    width: 120,
+    showOverflowTooltip: true,
+  },
+  {
+    label: "收货金额(元)",
+    prop: "recvVal",
+    width: 120,
+    align: "right",
+    thousandSeparator: true,
+    formatType: "#,##0.00",
+    showOverflowTooltip: false,
+  },
+
+  // 6. 状态及其他字段
+  {
+    label: "材料类别",
+    prop: "cllb",
+    width: 100,
+    align: "center",
+    formatter: (row) => (row.cllb === 1 ? "主材" : "零星"), // 字典转换示例
+    showOverflowTooltip: false,
+  },
+  {
+    label: "是否使用",
+    prop: "isUesd",
+    width: 90,
+    align: "center",
+    formatter: (row) => (row.isUesd ? "是" : "否"), // 布尔值转文字
+    showOverflowTooltip: false,
+  },
+];
+
 // 监听modelValue
 watch(
   () => props.modelValue,
@@ -304,10 +377,16 @@ const getDataList = async () => {
     const { recvDate, ...rest } = queryParams.value;
     const params = {
       ...rest,
-      recvDateStart: queryParams.value.recvDate?.[0],
-      recvDateEnd: queryParams.value.recvDate?.[1],
+      conId: queryParams.value.conId,
+      conNo: queryParams.value.conNo,
+      ...(queryParams.value.recvDate?.[0] && {
+        recvDateStart: queryParams.value.recvDate[0]
+      }),
+      ...(queryParams.value.recvDate?.[1] && {
+        recvDateEnd: queryParams.value.recvDate[1]
+      }),
     };
-    const res = await outputDeclarationApi.getMaterialProdVal({ ...queryParams.value });
+    const res = await outputDeclarationApi.getMaterialProdVal({ ...params });
     if (res.code === 200) {
       tableData.value = res.data || [];
       total.value = tableData.value.length;

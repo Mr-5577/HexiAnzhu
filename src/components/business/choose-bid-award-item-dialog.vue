@@ -91,7 +91,7 @@ import type {
 interface Props {
   modelValue: boolean;
   selectionMode?: "single" | "multiple"; // 选择模式，单选或多选
-  projId: number;
+  projId: number | null;
   status? :number,
 }
 

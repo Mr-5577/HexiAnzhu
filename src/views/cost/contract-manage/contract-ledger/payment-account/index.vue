@@ -169,6 +169,8 @@ onMounted(() => {
 
 /* 卡片容器 */
 .pa-card {
+  width: 100%;
+  height: 100%;
   background: #fff;
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);

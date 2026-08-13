@@ -21,9 +21,8 @@ import { v4 as uuidv4 } from "uuid";
 import { dateUtil, getDaysDiff } from "@/utils/date-util";
 import { roleApi } from "@/api/system/role-api.ts";
 import { useMDStore } from "@/stores/md-store.ts";
-import { ManageTypeEnum ,PayTypeEnum} from "@/constants/contract-manage/enums";
+import { ManageTypeEnum ,PayTypeEnum,} from "@/constants/contract-manage/enums";
 import { useTagsStore } from "@/stores/tags-store";
-import { cstProcessApi } from "@/api/cost/non-contract-manage/cst-process-api";
 
 // 拆分模块
 import type {
@@ -802,10 +801,10 @@ const validatePayRate = (): boolean => {
   // 返回操作
   const goBack = () => {
     if (isAddMode.value) {
-      tagsStore.closeTagByPath("/con/contract-ledger");
+      tagsStore.closeTagByPath("/con/contract-ledger/add");
     }
     if (isEditMode.value) {
-      tagsStore.closeTagByPath("/con/contract-ledger");
+      tagsStore.closeTagByPath("/con/contract-ledger/edit");
     }
     router.go(-1); // 返回上个页面
   };
@@ -942,8 +941,8 @@ const validatePayrateTable = () => {
       return false;
     }
 
-    if (!item.payIntvl || item.payIntvl <= 0) {
-      ElMessage.error(`支付比例明细列表第${rowNum}行：支付周期必须大于0`);
+    if (!item.payIntvl || item.payIntvl < 0){
+      ElMessage.error(`支付比例明细列表第${rowNum}行：支付周期必须填写`); 
       return false;
     }
   }
@@ -983,6 +982,7 @@ const validatePayrateTable = () => {
 
   // ---- 提交 ----
   const handleSubmit = async () => {
+    if(submitLoading.value) return
     if (isDetailMode.value) return;
     if (!formRef.value) return;
     try {
@@ -1001,6 +1001,7 @@ const validatePayrateTable = () => {
       submitLoading.value = true;
       const params = buildSubmitParams();
       let res;
+      debugger
       if (formData.value.conSysNo === "")
         await createConNo();
       res = await contractLedgerApi.submitContractLedger(params);
@@ -1029,6 +1030,7 @@ const validatePayrateTable = () => {
 
   const SAVE_FIELDS = Object.keys(saveContractFormRules());
   const handleSave = async () => {
+    if(submitLoading.value) return
     if (isDetailMode.value) return;
     if (!formRef.value) return;
     try {
@@ -1124,6 +1126,7 @@ const validatePayrateTable = () => {
   // ---- 初始化 ----
   const initData = async () => {
     await initOptions();
+    
     if (isAddMode.value) {
       formData.value.agentId = userStore.userInfo.id;
       formData.value.pbAmount = 0;
@@ -1145,6 +1148,7 @@ const validatePayrateTable = () => {
   };
 
   onMounted(() => {
+    debugger
     initData();
   });
 
