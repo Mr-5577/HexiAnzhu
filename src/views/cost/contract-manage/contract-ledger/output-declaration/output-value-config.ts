@@ -387,7 +387,7 @@ export const createProdColumns = (options: ProdColumnOptions) => {
       showOverflowTooltip: false,
       width: 120,
       formatType:"#,##0.00",
-      disabled: (row: any) => !!row.isCtrl,
+      disabled: (row: any) => row.hasVal && !!row.isCtrl,
     },
     {
       prop: "buildPeriod",
