@@ -1849,6 +1849,7 @@ const buildSubmitParams = () => {
       totalPayVal: formData.value.totalPayVal ?? "",
       isMaterial: formData.value.isSelfSupply,
       materialType: formData.value.selfSupplyType,
+      prodValPeriod:formData.value.prodValPeriod,
     },
     billPayrates: formData.value.payMethod === 1 ? nonSelfSupplyTable.value : [],
     billMaterials:
