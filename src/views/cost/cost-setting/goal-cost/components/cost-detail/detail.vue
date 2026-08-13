@@ -1,33 +1,87 @@
-<!-- 目标成本明细列表 -->
+﻿<!-- 目标成本明细列表 -->
 <template>
   <div class="cost-detail-page">
-    <div>
-      <div class="toolbar">
-        <el-button
-          type="primary"
-          :loading="saveLoading"
-          @click="handleBatchSave"
-          v-if="!isDetail"
+    <div class="toolbar">
+      <el-button type="primary" :loading="saveLoading" @click="handleBatchSave" v-if="!isDetail">批量保存</el-button>
+    </div>
+
+    <div class="virtual-table-outer">
+      <div class="virtual-table">
+        <div
+          class="vt-header"
+          :style="{
+            gridTemplateColumns: gridTemplateColumns,
+            gridTemplateRows: `repeat(${headerDepth}, 32px)`,
+          }"
         >
-          批量保存
-        </el-button>
+          <!-- 多级表头水平分割线：贯穿整个表头宽度，不受单元格跨行合并影响 -->
+          <div
+            v-for="line in headerDepth - 1"
+            :key="'divider-' + line"
+            class="header-divider"
+            :style="{ top: `${line * 32}px` }"
+          ></div>
+          <div
+            v-for="cell in headerCells"
+            :key="cell.key"
+            class="vt-header-cell"
+            :class="[cell.sticky ? 'sticky-left' : '', cell.sticky ? cell.stickyCls : '']"
+            :style="{
+              gridColumn: `${cell.colStart} / ${cell.colEnd}`,
+              gridRow: `${cell.rowStart} / ${cell.rowEnd}`,
+              justifyContent: cell.align || 'center',
+              textAlign: cell.align || 'center',
+            }"
+          >
+            {{ cell.label }}
+          </div>
+        </div>
+
+        <DynamicScroller :items="flatRows" :min-item-size="rowHeight" class="vt-scroller" key-field="uuid">
+          <template #default="{ item, index }">
+            <div class="vt-row" :style="{ gridTemplateColumns: gridTemplateColumns }">
+              <div class="vt-cell index-col">{{ getDisplayIndex(item, index) }}</div>
+              <div class="vt-cell name-col">
+                <span class="expand-icon" v-if="item.hasChildren" @click.stop="toggleExpand(item.uuid)">
+                  {{ item.expanded ? '▾' : '▸' }}
+                </span>
+                <span :style="{ paddingLeft: item.level * 16 + 'px' }">{{ item._raw ? item._raw.subName : item.subName }}</span>
+              </div>
+
+              <template v-for="col in headerLeafColumns" :key="col.prop">
+                <div class="vt-cell" :style="{ width: col.width ? col.width + 'px' : 'auto' }">
+                  <template v-if="col.prop && (col.prop.startsWith('costAmt_') || col.prop.startsWith('costExclAmt_'))">
+                    <el-input-number v-if="(item._raw ? item._raw.isLeaf : item.isLeaf) && !isDetail" :model-value="(item._raw ? item._raw[col.prop] : item[col.prop])" :controls="false"
+                      :step="0.01" :precision="2" @change="(val) => onCellEdit(item, col.prop, val, index)"
+                      size="small" />
+                    <span v-else class="readonly-cell">{{ formatNumber(item._raw ? item._raw[col.prop] : item[col.prop]) }}</span>
+                  </template>
+
+                  <template v-else-if="col.prop === 'busiSegId'">
+                    <el-select v-if="(item._raw ? item._raw.isLeaf : item.isLeaf) && !isDetail" :model-value="(item._raw ? item._raw.busiSegId : item.busiSegId)" placeholder="" size="small"
+                      @change="(val) => onCellEdit(item, 'busiSegId', val, index)">
+                      <el-option v-for="opt in busiSegOptions" :key="opt.id" :label="opt.segName" :value="opt.id" />
+                    </el-select>
+                    <span v-else class="readonly-cell">{{ item._raw ? item._raw.segName : item.segName }}</span>
+                  </template>
+
+                  <template v-else-if="col.prop === 'allocRule'">
+                    <el-select v-if="(item._raw ? item._raw.isLeaf : item.isLeaf) && !isDetail" :model-value="(item._raw ? item._raw.allocRule : item.allocRule)" placeholder="" size="small"
+                      @change="(val) => onCellEdit(item, 'allocRule', val, index)">
+                      <el-option v-for="opt in allocRuleEnum" :key="opt.value" :label="opt.label" :value="opt.value" />
+                    </el-select>
+                    <span v-else class="readonly-cell">{{ item._raw ? item._raw.allocRuleName : item.allocRuleName }}</span>
+                  </template>
+
+                  <template v-else>
+                    <span class="readonly-cell">{{ item._raw ? item._raw[col.prop] : item[col.prop] }}</span>
+                  </template>
+                </div>
+              </template>
+            </div>
+          </template>
+        </DynamicScroller>
       </div>
-      <editable-table
-        ref="detailtableRef"
-        :row-key="'uuid'"
-        v-model="tableData"
-        :columns="dynamicColumns"
-        :loading="tableLoading"
-        :pagination="false"
-        :highlight-current-row="false"
-        :show-summary="false"
-        :compactEmpty="true"
-        :on-save="handleSave"
-        :tree-props="{ children: 'children' }"
-        :default-expand-all="false"
-        :height="'500px'"
-      >
-      </editable-table>
     </div>
 
     <!-- 附件上传 -->
@@ -38,20 +92,9 @@
         <el-row :gutter="24">
           <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
             <el-form-item label="上传附件" label-width="90px">
-              <base-upload
-                v-model:file-list="annexFileList"
-                :limit="9"
-                :multiple="false"
-                :showIcon="true"
-                :showTip="true"
-                :maxSize="20"
-                :unrestricted="true"
-                :accept="''"
-                button-text="选择文件"
-                size="default"
-                :disabled="isDetail"
-                @success="handleAnnexSuccess"
-              ></base-upload>
+              <base-upload v-model:file-list="annexFileList" :limit="9" :multiple="false" :showIcon="true"
+                :showTip="true" :maxSize="20" :unrestricted="true" :accept="''" button-text="选择文件" size="default"
+                :disabled="isDetail" @success="handleAnnexSuccess"></base-upload>
             </el-form-item>
           </el-col>
         </el-row>
@@ -71,7 +114,8 @@ import {
   nextTick,
 } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import EditableTable from "@/components/base/editable-table.vue";
+import { DynamicScroller } from "vue-virtual-scroller";
+import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
 import type { EditableColumn } from "@/components/base/editable-table.vue";
 import { costCategoryApi } from "@/api/cost/master-data/cost-category-api.ts";
 import { productTypeApi } from "@/api/cost/master-data/product-type-api.ts";
@@ -110,7 +154,7 @@ const isAdd = computed(() => mode.value === "add");
 const saveLoading = ref(false);
 // 表格相关
 const tableLoading = ref(false);
-const tableData = ref([]);
+const tableData = shallowRef<any[]>([]);
 const annexFileList = ref([]);
 const detailTableList = ref([]); // 目标成本明细列表
 
@@ -147,6 +191,7 @@ const generateColumns = (): EditableColumn[] => {
       prop: "busiSegId",
       label: "业务归属",
       width: 120,
+      align: "center",
       editable: true,
       editType: "select",
       optionLabelField: "segName",
@@ -160,6 +205,7 @@ const generateColumns = (): EditableColumn[] => {
       prop: "allocRule",
       label: "分摊规则",
       width: 160,
+      align: "center",
       editable: true,
       editType: "select",
       optionLabelField: "label",
@@ -170,22 +216,36 @@ const generateColumns = (): EditableColumn[] => {
       options: allocRuleEnum as any,
     },
     // 添加成本小计列
+    // 【对齐修复】成本小计改成双层嵌套，和业态结构保持一致（统一 3 层）：
+    //   成本小计(row1) -> 含税小计/不含税小计(row2) -> 数值单元格(row3)
+    //   这样所有最终数据单元格统一落在第 3 行，纵向对齐
     {
       label: "成本小计",
       children: [
         {
-          prop: "totalCostAmt",
           label: "含税小计",
-          width: 120,
-          editable: false,
-          showOverflowTooltip: false,
+          children: [
+            {
+              prop: "totalCostAmt",
+              // 第三行只放数值，不留文字，和业态金额单元格对齐
+              label: "",
+              width: 120,
+              editable: false,
+              showOverflowTooltip: false,
+            },
+          ],
         },
         {
-          prop: "totalCostExclAmt",
           label: "不含税小计",
-          width: 120,
-          editable: false,
-          showOverflowTooltip: false,
+          children: [
+            {
+              prop: "totalCostExclAmt",
+              label: "",
+              width: 120,
+              editable: false,
+              showOverflowTooltip: false,
+            },
+          ],
         },
       ],
     },
@@ -243,6 +303,200 @@ const dynamicColumns = computed(() => {
   }
   return cachedColumns;
 });
+
+// ---- Virtual scroll / tree flattening helpers ----
+const rowHeight = 32;
+
+// expanded keys set (mutate in-place to avoid recreating Set)
+const expandedKeys = ref(new Set<string>());
+
+const expandedKeysHas = (uuid: string) => {
+  return expandedKeys.value.has(uuid);
+};
+
+const toggleExpand = (uuid: string) => {
+  if (expandedKeys.value.has(uuid)) expandedKeys.value.delete(uuid);
+  else expandedKeys.value.add(uuid);
+  // mutate in place — do not reassign a new Set (avoids full recompute)
+};
+
+// flatten tree to visible rows based on expandedKeys
+const getVisibleFlatRows = (nodes: any[], expanded: Set<string>) => {
+  const res: any[] = [];
+  const walk = (items: any[], level = 0, parentExpanded = true) => {
+    if (!items || items.length === 0) return;
+    for (const node of items) {
+      const hasChildren = node.children && node.children.length > 0;
+      const uuid = node.uuid;
+      const visible = parentExpanded;
+      if (visible) {
+        // push a lightweight wrapper that references the original node to avoid cloning
+        res.push({ _raw: node, level, hasChildren, uuid, expanded: expanded.has(uuid) });
+      }
+      if (hasChildren && expanded.has(uuid)) {
+        walk(node.children, level + 1, visible && true);
+      }
+    }
+  };
+  walk(nodes, 0, true);
+  return res;
+};
+
+const flatRows = computed(() => {
+  return getVisibleFlatRows(tableData.value || [], expandedKeys.value);
+});
+
+// initialize expandedKeys to top-level nodes when tableData first loads
+// initialize top-level expanded keys when needed (call after tableData is populated)
+const initExpandTopLevel = () => {
+  if (!tableData.value || tableData.value.length === 0) return;
+  if (expandedKeys.value.size > 0) return;
+  tableData.value.forEach((node: any) => expandedKeys.value.add(node.uuid));
+};
+
+// 产生表头叶子列：仅保留实际数据列（不含 index/subName，这两列在模板里手动渲染），以便 gridTemplateColumns 和 行 内单元格个数一致
+const headerLeafColumns = computed(() => {
+  const leaves: any[] = [];
+  const walk = (cols: any[]) => {
+    cols.forEach((c) => {
+      // 跳过 index/subName（模板里手动渲染为序号、成本科目）
+      if (c.type === "index" || c.prop === "subName") return;
+      if (c.children && c.children.length > 0) {
+        walk(c.children);
+      } else {
+        leaves.push(c);
+      }
+    });
+  };
+  walk(dynamicColumns.value || []);
+  return leaves;
+});
+
+const gridTemplateColumns = computed(() => {
+  const parts: string[] = [];
+  // index and name fixed
+  parts.push('60px');
+  parts.push('180px');
+  headerLeafColumns.value.forEach((c: any) => {
+    if (c.width) parts.push(c.width + 'px');
+    else parts.push('minmax(120px, 1fr)');
+  });
+  return parts.join(' ');
+});
+
+// ---- Multi-level header (grouped: 成本小计 / 业态) ----
+// 递归获取表头最大层级深度（根节点为第 1 层）
+const headerDepth = computed(() => {
+  const getMaxLevel = (cols: any[], level = 1): number => {
+    let maxL = level;
+    cols.forEach((c) => {
+      if (c.children?.length) {
+        maxL = Math.max(maxL, getMaxLevel(c.children, level + 1));
+      }
+    });
+    return maxL;
+  };
+  return getMaxLevel(dynamicColumns.value || []);
+});
+
+// Build header cells with explicit CSS grid placement (colStart/colEnd, rowStart/rowEnd)
+// 核心策略：所有单元格（含分组）只占当前一行，纵向层级由递归 currentLevel 推进，
+// 不再让分组单元格纵向跨多行（旧逻辑 rowEnd: rowStart + depth 会与单行叶子冲突，
+// 触发 CSS Grid 生成额外隐式轨道，视觉上多出一行空白）
+const headerCells = computed(() => {
+  const cells: any[] = [];
+  const baseCols: any[] = dynamicColumns.value || [];
+  const maxLevel = headerDepth.value;
+
+  // 前两固定列：序号、成本科目，贯穿全部表头行
+  cells.push({
+    key: 'idx',
+    label: '序号',
+    align: 'center',
+    colStart: 1,
+    colEnd: 2,
+    rowStart: 1,
+    rowEnd: maxLevel + 1,
+  });
+  cells.push({
+    key: 'name',
+    label: '成本科目',
+    align: 'left',
+    colStart: 2,
+    colEnd: 3,
+    rowStart: 1,
+    rowEnd: maxLevel + 1,
+  });
+
+  // 已占用前 2 列
+  let colPos = 2;
+
+  // 递归构建多级表头单元格
+  // 采用"先递归子列推进 colPos，再据最终 colPos 反算分组 colEnd"的方案，
+  // 避免分组单元格与子列在 forEach 多分组场景下重叠/空隙（旧逻辑 colPos 双重推进导致列错位）
+  const buildHeaders = (cols: any[], currentLevel: number) => {
+    cols.forEach((col) => {
+      const isLeaf = !col.children || !col.children.length;
+      if (isLeaf) {
+        // 叶子单元格：只占当前一行，一列
+        colPos += 1;
+        cells.push({
+          key: `h_${col.prop}`,
+          label: col.label ?? "",
+          align: col.align || "center",
+          colStart: colPos,
+          colEnd: colPos + 1,
+          // 顶层叶子列（业务归属、分摊规则）纵向贯穿全部表头行，与成本科目、分组列对齐
+          rowStart: currentLevel,
+          rowEnd: currentLevel === 1 ? maxLevel + 1 : currentLevel + 1,
+        });
+        return;
+      }
+      // 分组列：记录起始列，先递归子列推进 colPos，再据最终 colPos 算分组横向跨度
+      const groupStart = colPos + 1;
+      buildHeaders(col.children, currentLevel + 1);
+      const groupEnd = colPos + 1;
+      cells.push({
+        key: `g_${col.label}_${groupStart}_${currentLevel}`,
+        label: col.label ?? "",
+        align: col.align || "center",
+        colStart: groupStart,
+        colEnd: groupEnd,
+        rowStart: currentLevel,
+        rowEnd: currentLevel + 1,
+      });
+    });
+  };
+
+  // 跳过 index、subName 固定列，遍历剩余表头
+  baseCols.forEach((c) => {
+    if (c.type === "index" || c.prop === "subName") return;
+    buildHeaders([c], 1);
+  });
+
+  return cells;
+});
+
+
+const onCellEdit = (row: any, prop: string, val: any, index?: number) => {
+  let rowIndex = typeof index === "number" && !isNaN(index) ? index : flatRows.value.findIndex((r: any) => r.uuid === row.uuid);
+  if (rowIndex === -1) rowIndex = undefined;
+  handleSave({ row, column: prop, newValue: val, rowIndex });
+};
+
+// Safe index display for rows — fall back to finding item position when slot index is missing
+const getDisplayIndex = (item: any, idx: any) => {
+  if (typeof idx === "number" && !isNaN(idx)) return idx + 1;
+  const pos = flatRows.value.findIndex((r: any) => r.uuid === item.uuid);
+  return pos >= 0 ? pos + 1 : "";
+};
+
+const formatNumber = (v: any) => {
+  if (v === null || v === undefined || v === "") return "";
+  const n = Number(v);
+  if (isNaN(n)) return String(v);
+  return (Math.round(n * 100) / 100).toFixed(2);
+};
 
 // 附件上传成功
 const handleAnnexSuccess = (file: any) => {
@@ -370,71 +624,33 @@ const updateTreeNode = (
 };
 
 /**
- * 查找目标节点并返回从根到该节点的完整路径（用于向上回溯汇总）
- * 返回 { list: 节点数组（含自身，根在前）， found }
+ * 不可变更新叶子节点金额并沿路径向上重算父级汇总。
+ * 整条路径上的节点都生成全新对象（不原地 mutate），最后返回全新顶层数组，
+ * 由调用方赋值给 tableData.value 以触发 flatRows computed 重新计算与视图刷新。
  */
-const updateTreeNodeAndGetPath = (
+const updateLeafAndRecalcUpward = (
   nodes: any[],
   targetUuid: string,
-  updater: (node: any) => any,
-): { list: any[]; found: boolean } => {
-  for (let i = 0; i < nodes.length; i++) {
-    const node = nodes[i];
+  column: string,
+  newValue: any,
+): any[] => {
+  return nodes.map((node) => {
+    // 找到目标叶子节点：直接写入新值
     if (node.uuid === targetUuid) {
-      const updated = updater(node);
-      return { list: [updated], found: true };
+      return { ...node, [column]: newValue };
     }
+    // 有子节点：递归更新子树，再根据新子节点重算本节点汇总（全新对象）
     if (node.children && node.children.length > 0) {
-      const res = updateTreeNodeAndGetPath(
+      const newChildren = updateLeafAndRecalcUpward(
         node.children,
         targetUuid,
-        updater,
+        column,
+        newValue,
       );
-      if (res.found) {
-        res.list.unshift(node);
-        return res;
-      }
+      return calculateNodeTotal({ ...node, children: newChildren });
     }
-  }
-  return { list: [], found: false };
-};
-
-/**
- * 沿路径向上回溯计算父节点汇总（O(深度)，替代全树递归）
- * path: 从根到被修改叶子节点的节点数组
- */
-const calcUpwardTotal = (path: any[]) => {
-  for (let i = path.length - 2; i >= 0; i--) {
-    const parent = path[i];
-    if (!parent.children || parent.children.length === 0) continue;
-
-    const productTotals: Record<string, number> = {};
-    productOptions.value.forEach((product) => {
-      productTotals[`costAmt_${product.id}`] = 0;
-      productTotals[`costExclAmt_${product.id}`] = 0;
-    });
-
-    let totalCostAmt = 0;
-    let totalCostExclAmt = 0;
-    for (const child of parent.children) {
-      productOptions.value.forEach((prod) => {
-        productTotals[`costAmt_${prod.id}`] +=
-          child[`costAmt_${prod.id}`] ?? 0;
-        productTotals[`costExclAmt_${prod.id}`] +=
-          child[`costExclAmt_${prod.id}`] ?? 0;
-      });
-      totalCostAmt += child.totalCostAmt ?? 0;
-      totalCostExclAmt += child.totalCostExclAmt ?? 0;
-    }
-
-    productOptions.value.forEach((p) => {
-      parent[`costAmt_${p.id}`] = Math.round(productTotals[`costAmt_${p.id}`] * 100) / 100;
-      parent[`costExclAmt_${p.id}`] =
-        Math.round(productTotals[`costExclAmt_${p.id}`] * 100) / 100;
-    });
-    parent.totalCostAmt = Math.round(totalCostAmt * 100) / 100;
-    parent.totalCostExclAmt = Math.round(totalCostExclAmt * 100) / 100;
-  }
+    return node;
+  });
 };
 
 /**
@@ -566,6 +782,8 @@ const generateCombinations = async () => {
   tableData.value = calculateAllTotals(treeData);
   // 重置叶子节点缓存版本
   leafNodesVersion = 0;
+  // 初始化展开一级节点（仅在生成组合后自动展开）
+  initExpandTopLevel();
 };
 
 /**
@@ -573,31 +791,27 @@ const generateCombinations = async () => {
  */
 const handleSave = async (data: any) => {
   const { row, column, newValue, oldValue, rowIndex } = data;
+  const actualRow = row && row._raw ? row._raw : row;
 
   // 判断是否是动态业态列
   if (column && typeof column === "string") {
     // 处理业态金额列
     if (column.startsWith("costAmt_") || column.startsWith("costExclAmt_")) {
       // 只允许编辑叶子节点
-      if (!row.isLeaf) {
+      if (!actualRow.isLeaf) {
         return;
       }
 
-      // 更新叶子节点的金额，并获取从根到该叶子的路径（O(深度)，不再全树递归）
-      const { list: path, found } = updateTreeNodeAndGetPath(
+      // 不可变更新：替换叶子节点金额，并沿路径向上重新计算父级汇总，
+      // 全程生成全新节点对象，最后整体替换 tableData 引用，确保 flatRows/视图刷新
+      tableData.value = updateLeafAndRecalcUpward(
         tableData.value,
-        row.uuid,
-        (node) => ({ ...node, [column]: newValue }),
+        actualRow.uuid,
+        column,
+        newValue,
       );
-
-      if (found) {
-        // 仅向上回溯计算受影响的父节点汇总
-        calcUpwardTotal(path);
-        // 替换顶层引用，确保视图刷新
-        tableData.value = [...tableData.value];
-        // 重置叶子节点缓存版本
-        leafNodesVersion = 0;
-      }
+      // 重置叶子节点缓存版本
+      leafNodesVersion = 0;
       return;
     }
   }
@@ -609,14 +823,14 @@ const handleSave = async (data: any) => {
         (item) => item.id == newValue,
       );
       if (targetData) {
-        tableData.value = updateTreeNode(tableData.value, row.uuid, (node) => ({
+        tableData.value = updateTreeNode(tableData.value, actualRow.uuid, (node) => ({
           ...node,
           busiSegId: newValue,
           segName: targetData.segName,
         }));
       }
     } else {
-      tableData.value = updateTreeNode(tableData.value, row.uuid, (node) => ({
+      tableData.value = updateTreeNode(tableData.value, actualRow.uuid, (node) => ({
         ...node,
         busiSegId: null,
         segName: "",
@@ -632,14 +846,14 @@ const handleSave = async (data: any) => {
     if (newValue) {
       const targetData = allocRuleEnum.find((item) => item.value == newValue);
       if (targetData) {
-        tableData.value = updateTreeNode(tableData.value, row.uuid, (node) => ({
+        tableData.value = updateTreeNode(tableData.value, actualRow.uuid, (node) => ({
           ...node,
           allocRule: newValue,
           allocRuleName: targetData.label,
         }));
       }
     } else {
-      tableData.value = updateTreeNode(tableData.value, row.uuid, (node) => ({
+      tableData.value = updateTreeNode(tableData.value, actualRow.uuid, (node) => ({
         ...node,
         allocRule: null,
         allocRuleName: "",
@@ -670,32 +884,32 @@ const validateTable = () => {
   //   const item = leafNodes[i];
   //   let hasValidAmount = false;
 
-    // 检查业务归属是否已选择
-    // if (!item.busiSegId) {
-    //   ElMessage.error(`科目 "${item.subName}"：请选择业务归属`);
-    //   return false;
-    // }
+  // 检查业务归属是否已选择
+  // if (!item.busiSegId) {
+  //   ElMessage.error(`科目 "${item.subName}"：请选择业务归属`);
+  //   return false;
+  // }
 
-    // // 检查分摊规则是否已选择
-    // if (!item.allocRule) {
-    //   ElMessage.error(`科目 "${item.subName}"：请选择分摊规则`);
-    //   return false;
-    // }
+  // // 检查分摊规则是否已选择
+  // if (!item.allocRule) {
+  //   ElMessage.error(`科目 "${item.subName}"：请选择分摊规则`);
+  //   return false;
+  // }
 
-    // 检查所有业态的金额
-    // productOptions.value.forEach((product) => {
-    //   const costAmt = item[`costAmt_${product.id}`];
-    //   const costExclAmt = item[`costExclAmt_${product.id}`];
+  // 检查所有业态的金额
+  // productOptions.value.forEach((product) => {
+  //   const costAmt = item[`costAmt_${product.id}`];
+  //   const costExclAmt = item[`costExclAmt_${product.id}`];
 
-    //   if (costAmt && costAmt > 0 && costExclAmt && costExclAmt > 0) {
-    //     hasValidAmount = true;
-    //   }
-    // });
+  //   if (costAmt && costAmt > 0 && costExclAmt && costExclAmt > 0) {
+  //     hasValidAmount = true;
+  //   }
+  // });
 
-    // if (!hasValidAmount) {
-    //   ElMessage.error(`科目 "${item.subName}"：至少需要填写一个业态的金额`);
-    //   return false;
-    // }
+  // if (!hasValidAmount) {
+  //   ElMessage.error(`科目 "${item.subName}"：至少需要填写一个业态的金额`);
+  //   return false;
+  // }
   // }
   return true;
 };
@@ -788,7 +1002,7 @@ const getDetailData = async () => {
         };
       });
     }
-  } catch (error) {}
+  } catch (error) { }
 };
 
 // 获取上一版面积版本明细
@@ -932,30 +1146,53 @@ onBeforeUnmount(() => {
 </script>
 
 <style lang="scss" scoped>
+/* 统一表格视觉规范（对齐系统标准表格） */
+$table-header-bg: #f5f7fa;
+$table-border-color: #e5e6eb;
+$table-font-size: 13px;
+$table-row-height: 32px;
+$table-row-hover-bg: #f2f3f5;
+$table-header-color: #1d2129;
+$table-readonly-color: rgba(0, 0, 0, 0.65);
+
 .cost-detail-page {
-  height: 100%;
-  // min-height: 0;
   width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  // flex: 1;
-  // padding: 15px;
-  // box-sizing: border-box;
   background: #fff;
+  min-height: 0;
+  box-sizing: border-box;
 
   .toolbar {
-    margin-bottom: 16px;
+    flex-shrink: 0;
+    margin-bottom: 12px;
     display: flex;
     gap: 10px;
     align-items: center;
     justify-content: flex-end;
   }
+
+  .virtual-table-outer {
+    /* 自动填满剩余高度，与 .tab-content 无缝贴合，底部不留白 */
+    flex: 1;
+    width: 100%;
+    min-height: 320px;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .item-card {
+    flex-shrink: 0;
+    margin-top: 8px;
+  }
 }
+
 .section-title {
   font-size: 16px;
   font-weight: 600;
   color: #1d2129;
-  padding: 0 0 12px 14px;
+  padding: 0 0 8px 12px;
   position: relative;
 
   &::before {
@@ -968,5 +1205,153 @@ onBeforeUnmount(() => {
     left: 0;
     top: 4px;
   }
+}
+
+/* Virtual table styles - 外层统一包围边框，消除单元格边框重叠产生的灰色虚影 */
+.virtual-table {
+  width: max-content;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border: 1px solid $table-border-color;
+}
+
+.vt-header {
+  /* 关键：绝对定位横线的参照物 */
+  position: relative;
+  flex-shrink: 0;
+  display: grid;
+  height: auto;
+  align-items: stretch;
+  background: $table-header-bg;
+  border-bottom: 1px solid $table-border-color;
+  font-weight: 500;
+  font-size: $table-font-size;
+  color: $table-header-color;
+
+  /* 多级表头横向分割线：贯穿整个表头宽度，不受单元格跨行合并影响 */
+  .header-divider {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background-color: $table-border-color;
+    z-index: 1;
+  }
+}
+
+.vt-header-cell {
+  padding: 0 8px;
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: safe center;
+  /* 只保留右边框，第一列不写左边框，依靠外层 .virtual-table 边框 */
+  border-right: 1px solid $table-border-color;
+  line-height: 32px;
+  background-clip: padding-box;
+  /* 让文字/单元格内容盖在横线之上 */
+  z-index: 2;
+}
+
+/* 最后一列表头单元格移除右侧边框，避免和外层边框叠加变灰 */
+.vt-header-cell:last-child {
+  border-right: none;
+}
+
+.vt-scroller {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto !important;
+  overflow-x: visible;
+}
+
+.vt-row {
+  display: grid;
+  height: 32px;
+  border-bottom: 1px solid $table-border-color;
+  font-size: $table-font-size;
+
+  &:hover {
+    background-color: $table-row-hover-bg;
+  }
+}
+
+.vt-cell {
+  padding: 0 8px;
+  box-sizing: border-box;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-right: 1px solid $table-border-color;
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-clip: padding-box;
+}
+
+/* 每行最后一列取消右边框 */
+.vt-cell:last-child {
+  border-right: none;
+}
+
+.vt-header,
+.vt-row {
+  width: max-content;
+}
+
+/* ========== 重点修复：select、input-number 单元格居中样式 ========== */
+.vt-cell .el-select {
+  width: 96% !important;
+  margin: 0 auto !important;
+}
+.vt-cell .el-input-number {
+  width: 96% !important;
+  margin: 0 auto !important;
+}
+
+.vt-cell .el-input-number__input,
+.vt-cell .el-select .el-input__inner,
+.vt-cell .el-input__inner {
+  height: 28px;
+  padding: 2px 6px;
+  box-sizing: border-box;
+  font-size: 13px;
+}
+
+.vt-cell .el-input-number__decrease,
+.vt-cell .el-input-number__increase {
+  display: none;
+}
+
+.readonly-cell {
+  color: $table-readonly-color;
+}
+
+.index-col {
+  width: 60px;
+}
+
+.name-col {
+  width: 180px;
+  justify-content: flex-start !important;
+}
+
+.expand-icon {
+  cursor: pointer;
+  margin-right: 6px;
+  padding: 2px 6px;
+  color: #409eff;
+  /* 放大展开/收起图标，增强可点区域与可读性 */
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
 }
 </style>
