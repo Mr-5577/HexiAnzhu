@@ -35,9 +35,25 @@ export const contractLedgerApi = {
   /** 取合同支付比例信息 */
   getContractPayRateList: (data: { conId: number; payTypeId?: number }) => {
     return http.formPost("/con/payrate/list", data);
-  },
+  },  
+  /** 取合同验收款信息0-累计验收 1-最大验收金额 */
+  getContractYskAmt: (data: { conId: number;
+    typeList: number[];}) => {
+    return http.formPost("/con/yskAmt",data);
+  }, 
+
+  /** 取合同编号 */
+  getContractNo: (data: { bizType: string;
+    mainConId:number,
+    projId:number,
+    conTypeId:number,
+    compId: number}) => {
+    return http.formPost("/system/getConBillNo",data);
+  }, 
+
   /** 查询合同台账主表（轻量级） */
   getConInfoLite: (data: { conId?: number; conBillId?: number }) => {
     return http.formPost("/con/main/getLite", data);
   },
+  
 };

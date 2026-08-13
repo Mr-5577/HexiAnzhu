@@ -9,7 +9,7 @@ export const outputDeclarationApi = {
     return http.formPost("/con/prodVal/list", data);
   },
   /** 查询单个合同产值 */
-  getProdValById: (data: { id: number }) => {
+  getProdValById: (data: { id: number ,isWithFlow? : boolean}) => {
     return http.formPost("/con/prodVal/get", data);
   },
   /** 保存合同产值（新增/修改） */
@@ -27,5 +27,9 @@ export const outputDeclarationApi = {
   /** 作废合同产值 */
   voidProdVal: (data: { id: number }) => {
     return http.formPost("/con/prodVal/void", data);
+  },
+  /** 查询材料到货信息 */
+  getMaterialProdVal: (data: { conId?: number,conNo:string,cllb:number;isUesd?:boolean}) => {
+    return http.formPost("/con/prodVal/oaMaterialList", data);
   },
 };

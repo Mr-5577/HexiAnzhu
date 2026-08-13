@@ -198,7 +198,7 @@
                 />
               </el-form-item>
             </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6" v-if="conTypeIsJianAn">
               <el-form-item label="实付占应付比" prop="paidPayRate">
                 <el-input-number
                   v-model="formData.paidPayRate"
@@ -342,7 +342,7 @@
                 </el-select>
               </el-form-item>
             </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6" v-if="conTypeIsJianAn">
               <el-form-item label="已解锁应付总额" prop="unlockAmt">
                 <el-input-number
                   v-model="formData.unlockAmt"
@@ -367,7 +367,7 @@
                 </el-input-number>
               </el-form-item>
             </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6" v-if="conTypeIsJianAn">
               <el-form-item label="已解锁应付余额" prop="">
                 <el-input-number
                   :model-value="unlockLastAmt"
@@ -491,7 +491,7 @@
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="收款账号" prop="bankAccount">
+              <el-form-item label="收款账号" prop="bankAccount" required>
                 <el-input v-model="formData.bankAccount" placeholder="" :disabled="isReadonly || formData.isModifyAcc !== true" />
               </el-form-item>
             </el-col>
@@ -1318,7 +1318,7 @@ const needForceRise = computed(() => {
   const req = Number(formData.value.reqAmt) || 0;
   const payable = Number(formData.value.sumAppyAmt) || 0;
   const unlock = Number(formData.value.unlockAmt) || 0;
-  return req + payable > unlock; // 建安类 且 请款总额+累计已请款 > 已解锁
+  return (req + payable > unlock) && formData.value.payTypeId !== 2061; // 建安类 且 请款总额+累计已请款 > 已解锁
 });
 
 /** 是否「来票冲账」：此时仅保留发票登记，其余明细/收款账号全部隐藏，校验一并放开 */
@@ -2110,7 +2110,7 @@ const getConSumData = async (conId) => {
 
     const dataMap = new Map();
     res.data.forEach((item) => {
-      dataMap.set(item.type, item.archAmt || 0);
+      dataMap.set(item.type, (item.archAmt || 0  + item.inTransAmt || 0));
     });
 
     const [
@@ -2359,7 +2359,7 @@ const backfillData = async (data) => {
 // 生成单据编号
 const createBillNo = async () => {
   try {
-    const conRes = await commonApi.getBillNo({ bizType: formType.CON_ADD });
+    const conRes = await commonApi.getBillNo({ bizType: formType.CON_PAY });
     if (conRes.code === 200) {
       formData.value.bizNo = conRes.data;
     }
@@ -2384,6 +2384,7 @@ const formRules = computed(() => {
     reqAmt: moneyRule("请款总金额"),
     conTyeName: requiredRule("合同分类"),
     isRise: requiredRule("是否提高支付比例"),
+    bankAccount:requiredInputRule("银行账号"),
   };
   if (!isOffsetByInvoice.value) {
     rules.isModifyAcc = requiredRule("是否修改支付账号");
@@ -2448,7 +2449,7 @@ const validateDetailTables = (): boolean => {
       !formData.value.bankName ||
       !formData.value.accountName ||
       !formData.value.bankAccount ||
-      !formData.value.modifyAccAnnex
+      bankFileList.value.length === 0
     ) {
       ElMessage.error("修改收款账号为“是”时，收款开户行、账户名、收款账号、修改凭证附件均为必填");
       return false;
