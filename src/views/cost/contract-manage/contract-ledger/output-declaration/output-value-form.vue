@@ -1445,7 +1445,7 @@ const openMaterialDialog = () => {
 const handleMaterialSelect = async (data) => {
   if (data && data.length > 0) {
     const list =data || [];
-    debugger
+    
     if (formData.value.selfSupplyType === 1) {
       list.forEach((item) => {
         const exists = materialTable.value.some((recd) => (recd.srcKeyId === item.keyid));
@@ -1614,7 +1614,7 @@ watch(
 watch(
   notMaterial,
   () => {
-    debugger
+    
     if (notMaterial.value === true) {
       formData.value.isSelfSupply = false
     } else formData.value.isSelfSupply = true;
@@ -1776,7 +1776,7 @@ const getContractYskAmt = async (inputConId) => {
 
 // 提交前校验
 const validateProdTables = async() => {
-  debugger
+  
   const f = formData.value;
 
   if (f.payMethod == 1) {
@@ -1856,7 +1856,7 @@ const validateProdTables = async() => {
       }
 
       if (progressRows.length > 0) {
-        debugger
+        
         const yskAmt =await getContractYskAmt(formData.value.conId)
 
         const safeYskAmt = Number(yskAmt ?? 0);
@@ -2253,7 +2253,7 @@ const getConPayTypeData = async (inputConId) => {
 };
 
 const initData = async () => {
-  debugger
+  
   loadingForm.value = true;
   try {
     await getProjectOptions(); // 获取项目数据
@@ -2264,7 +2264,7 @@ const initData = async () => {
       await getConTotal(conId); // 查询合同累计数据
       await getConPayTypeData(conId); // 查询合同款项类型并自动新增明细行
     } else if (prodId.value) {
-      debugger
+      
       await loadDetail();
       if (isEdit.value)
         formData.value.prodValPeriod = dateUtil().format("YYYY-MM-DD");

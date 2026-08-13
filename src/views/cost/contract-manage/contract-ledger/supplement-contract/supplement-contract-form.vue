@@ -994,7 +994,7 @@ const handleVisaSelect = (data) => {
     }
     addProcess()
     if (tableList.value.length>0) {
-      debugger
+      
       tableList.value[tableList.value.length-1].srcType = 0;//签证
       tableList.value[tableList.value.length-1].srcId = selected.id;
       tableList.value[tableList.value.length-1].srcApplyId = selected.createId;
@@ -1023,7 +1023,7 @@ const handleChangeSelect = (data) => {
       ElMessage.warning(`变更「${selected.changeName}」已在事项明细中，不可重复关联`);
       return;
     }
-    debugger
+    
     addProcess()
     if (tableList.value.length>0) {
       tableList.value[tableList.value.length-1].srcType = 1;//变更
@@ -1217,7 +1217,7 @@ const handleFormDataSave = async () => {
 };
 
 const handleFormDataSubmit = async () => {
-  debugger
+  
   submitLoading.value = true;
   try {
     await formRef.value.validate();
@@ -1284,7 +1284,7 @@ const getEmpTreeData = async () => {
 
 // 获取主合同信息
 const getConMainData = async (inConId) => {
-  debugger
+  
   if (!inConId) return;
   if (inConId === formData.value.mainConId) return;
   try {
@@ -1298,7 +1298,7 @@ const getConMainData = async (inConId) => {
 
       if (formData.value.projId != conMain.projId)
         await getBuildingListByProjId(conMain.projId);
-      debugger
+      
       formData.value.segId = conMain.segId;
       formData.value.segName = conMain.segName;
       formData.value.segNo = conMain.segNo;

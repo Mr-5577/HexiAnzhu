@@ -224,7 +224,7 @@ const columns: TableColumnItem[] = [
 ];
 // 获取列表数据
 const getDataList = async () => {
-  debugger
+  
   if (!props.selectedData) {
     return;
   }

@@ -336,7 +336,7 @@ export function useContractForm(props: ContractFormProps, emit: ContractFormEmit
   );
 
 const validatePayRate = (): boolean => {
-  debugger
+  
   if (!showPayrate.value || !isJianAn.value) {
     return true;
   }
@@ -420,7 +420,7 @@ const validatePayRate = (): boolean => {
       let newData = data || [];
       if (formData.value.supId != newData[0].id) {        
         // ...带出电话/身份证/职务/银行信息
-        debugger
+        
         if (formData.value.supId != newData[0].id) {
           getSupplierContactAndBank(newData[0].id)  
         }
@@ -1139,7 +1139,7 @@ const validatePayrateTable = () => {
     } else if (isEditMode.value || isDetailMode.value) {
       if (conId.value) {
         await loadContractDetail();
-        debugger
+        
       }
     }
   };

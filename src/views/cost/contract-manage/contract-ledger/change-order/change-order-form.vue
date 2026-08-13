@@ -612,7 +612,7 @@ const loadDetail = async () => {
       flowListData.value = { ...flowListData.value, ...flowList };
       flowBaseData.value = { ...flowBaseData.value, ...flowBase };
       // 映射变更信息
-      debugger
+      
       formData.value = {
         ...formData.value,
         id: change.id,
@@ -821,7 +821,7 @@ const handleDelete = async () => {
 const handleFormDataSave = async () => {
   submitLoading.value = true;
   try {
-    debugger;
+    ;
     await formRef.value.validateField(["bizTitle", "changeName"]);
     // 校验各个明细表
     if (!validateConListable(false)) return;
@@ -881,7 +881,7 @@ const handleFormDataSubmit = async () => {
 // ==================== 初始化与生命周期 ====================
 const initData = async () => {
   await initOptions();
-  debugger
+  
   if (isAdd.value) {
     formData.value = initFormData();
     await generateChangeNo();

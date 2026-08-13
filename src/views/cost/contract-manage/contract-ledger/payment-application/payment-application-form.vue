@@ -1451,7 +1451,7 @@ const handleDeleteDed = (row) => {
 };
 
 const handleDedSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
-  debugger;
+  ;
   if (column === "dedTypeId") {
     const targetData = dedTypeOptions.value?.find((item) => item.id == newValue);
     if (targetData) {
@@ -1993,7 +1993,7 @@ const getConDefaultBank = async () => {
       conId: formData.value.conId,
       isDefault: true,
     });
-    debugger;
+    ;
     if (res.code === 200) {
       const bank = (res.data && res.data[0]) || null;
       formData.value.bankName = bank?.bankName || "";
@@ -2034,7 +2034,7 @@ const getConPayType = async () => {
 // 切换项目
 const changeProject = async (value: number) => {
   if (value) {
-    debugger;
+    ;
     const res = await projectAreaApi.getInfoByProjId({ id: value });
     if (res.code === 200 && res.data) {
       const { compName, compId, segId, segName, segNo } = res.data;
@@ -2182,10 +2182,10 @@ const getConMainData = async (conId) => {
     });
     if (res.code === 200 && res.data) {
       const { conMain } = res.data;
-      debugger;
+      ;
       if (formData.value.projId != conMain.projId) {
         await changeProject(conMain.projId);
-        debugger;
+        ;
         formData.value.projId = conMain.projId;
       }
 
@@ -2219,7 +2219,7 @@ const getConMainData = async (conId) => {
       formData.value.leavePayAmt = conMain.leavePayAmt;
 
       conTypeIsJianAn.value = isJianAnByConType(conTypeOptions, formData.value.conTypeId);
-      debugger;
+      ;
     }
   } catch (error) {
     console.error("获取合同信息失败:", error);
@@ -2240,7 +2240,7 @@ const loadDetail = async () => {
 
 // 数据回填
 const backfillData = async (data) => {
-  debugger;
+  ;
   const { flowList, flowBase, bill, payment, payWays, paySubs, invoiceMs, invoiceDs, billDeds, annexList, bankAnnexList } = data;
   billData.value = { ...billData.value, ...bill };
   flowListData.value = { ...flowListData.value, ...flowList };
@@ -2565,9 +2565,9 @@ const handleFormDataSave = async () => {
       ElMessage.error("该合同尚未结算，不可请结算款和质保金！");
       return;
     }
-    debugger;
+    ;
     const params = buildSubmitParams();
-    debugger;
+    ;
     const res = await paymentRequestApi.editPay(params);
     if (res.code === 200 && res.data) {
       formData.value.id = res.data;
@@ -2801,7 +2801,7 @@ const initData = async () => {
         addPayWay();
       }
     } else if ((props.mode === "edit" || props.mode === "detail") && props.paymentId) {
-      debugger;
+      ;
       await loadDetail();
     }
   } finally {
@@ -2810,7 +2810,7 @@ const initData = async () => {
 };
 
 onMounted(() => {
-  debugger;
+  ;
   initData();
 });
 </script>
