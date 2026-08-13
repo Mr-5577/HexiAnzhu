@@ -2311,7 +2311,7 @@ const getConSumData = async (conId) => {
   try {
     const res = await cumulativeDataApi.getAccumData({
       conId: conId,
-      typeList: [0, 1, 2, 3, 6, 7, 8, 9, 10,11],
+      typeList: [0, 1, 2, 3, 6, 7, 8, 9, 10,11,13],
     });
 
     if (res.code !== 200 || !res.data) {
@@ -2335,7 +2335,8 @@ const getConSumData = async (conId) => {
       unlockAmt, // 9 解锁应付
       addAmt, // 10 补充合同金额
       sumOwedAmt, // 11 请款金额
-    ] = [0, 1, 2, 3, 6,7, 8, 9, 10,11].map((type) => dataMap.get(type) || 0);
+      invRcvdAmt, // 12 已收发票
+    ] = [0, 1, 2, 3, 6,7, 8, 9, 10,11,13].map((type) => dataMap.get(type) || 0);
 
     const sumChangeAmt = changeAmt + visaAmt;
 
@@ -2352,6 +2353,7 @@ const getConSumData = async (conId) => {
     formData.value.sumPaidAmt = sumPaidAmt;
     formData.value.sumOwedAmt = sumOwedAmt;
     formData.value.unlockAmt = unlockAmt;
+    formData.value.invRcvdAmt = invRcvdAmt;
     formData.value.payOutRate = calcRate(sumPayAmt, sumProdVal);
     formData.value.paidPayRate = calcRate(sumPaidAmt, sumPayAmt);
     formData.value.paidOutRate = calcRate(sumPaidAmt, sumProdVal);
