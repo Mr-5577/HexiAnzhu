@@ -93,10 +93,10 @@
       </template>
 
       <template #actions="{ row }">
-        <el-button type="primary" link @click="handleEdit(row)">
+        <el-button type="primary" link @click="handleEdit(row)" :disabled="row.tenderStatus != 0">
           编辑
         </el-button>
-        <el-button type="danger" link @click="handleDelete(row)">
+        <el-button type="danger" link @click="handleDelete(row)" :disabled="row.tenderStatus != 0">
           删除
         </el-button>
         <el-button type="primary" link @click="handleDetail(row)">

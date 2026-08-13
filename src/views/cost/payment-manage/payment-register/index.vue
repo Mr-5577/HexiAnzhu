@@ -1,97 +1,50 @@
 <!-- 实付登记 列表 -->
 <template>
   <div class="payment-register-wrapper">
-    <el-form
-      :model="queryParams"
-      ref="queryRef"
-      :inline="true"
-      label-width="105px"
-    >
+    <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="105px">
+      <el-form-item label="标题" prop="title">
+        <el-input v-model="queryParams.title" placeholder="请输入标题" clearable style="width: 220px" />
+      </el-form-item>
       <el-form-item label="项目" prop="projId">
-        <el-cascader
-          v-model="queryParams.projId"
-          :options="projectOptions"
-          :show-all-levels="false"
-          :props="{
-            expandTrigger: 'hover',
-            emitPath: false,
-            checkStrictly: false,
-            value: 'orgId',
-            label: 'orgName',
-            children: 'children',
-          }"
-          placeholder="请选择项目"
-          style="width: 220px"
-          clearable
-          filterable
-        />
+        <el-cascader v-model="queryParams.projId" :options="projectOptions" :show-all-levels="false" :props="{
+          expandTrigger: 'hover',
+          emitPath: false,
+          checkStrictly: false,
+          value: 'orgId',
+          label: 'orgName',
+          children: 'children',
+        }" placeholder="请选择项目" style="width: 220px" clearable filterable />
       </el-form-item>
       <el-form-item label="业务板块" prop="segId">
-        <el-select
-          v-model="queryParams.segId"
-          placeholder="请选择业务板块"
-          style="width: 220px"
-          clearable
-        >
-          <el-option
-            v-for="item in segOptions"
-            :key="item.id"
-            :label="item.segName"
-            :value="item.id"
-          />
+        <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px" clearable>
+          <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
         </el-select>
       </el-form-item>
       <el-form-item label="合同/立项单号" prop="itemNo">
-        <el-input
-          v-model="queryParams.itemNo"
-          placeholder="请输入合同/立项单号"
-          clearable
-          style="width: 220px"
-        />
+        <el-input v-model="queryParams.itemNo" placeholder="请输入合同/立项单号" clearable style="width: 220px" />
       </el-form-item>
       <el-form-item label="合同/立项名称" prop="itemName">
-        <el-input
-          v-model="queryParams.itemName"
-          placeholder="请输入合同/立项名称"
-          clearable
-          style="width: 220px"
-        />
+        <el-input v-model="queryParams.itemName" placeholder="请输入合同/立项名称" clearable style="width: 220px" />
       </el-form-item>
       <el-form-item label="供应商" prop="supName">
-        <el-input
-          v-model="queryParams.supName"
-          placeholder="请输入供应商名称"
-          clearable
-          style="width: 220px"
-        />
+        <el-input v-model="queryParams.supName" placeholder="请输入供应商名称" clearable style="width: 220px" />
       </el-form-item>
       <el-form-item label="付款单号" prop="reqNo">
-        <el-input
-          v-model="queryParams.reqNo"
-          placeholder="请输入付款单号"
-          clearable
-          style="width: 220px"
-        />
+        <el-input v-model="queryParams.reqNo" placeholder="请输入付款单号" clearable style="width: 220px" />
       </el-form-item>
       <el-form-item label="费用归属期间" prop="belongMonth">
-        <el-date-picker
-          v-model="queryParams.belongMonth"
-          type="month"
-          value-format="YYYY-MM"
-          placeholder="费用归属期间"
-          style="width: 220px"
-        />
+        <el-date-picker v-model="queryParams.belongMonth" type="month" value-format="YYYY-MM" placeholder="费用归属期间"
+          style="width: 220px" />
       </el-form-item>
       <el-form-item label="申请日期" prop="applyDate">
-        <el-date-picker
-          v-model="queryParams.applyDate"
-          type="daterange"
-          range-separator="至"
-          value-format="YYYY-MM-DD"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          style="width: 220px"
-        />
+        <el-date-picker v-model="queryParams.applyDate" type="daterange" range-separator="至" value-format="YYYY-MM-DD"
+          start-placeholder="开始日期" end-placeholder="结束日期" style="width: 220px" />
+      </el-form-item>
+      <el-form-item label="入账状态" prop="isLocked">
+        <el-select v-model="queryParams.isLocked" placeholder="请选择" style="width: 220px" clearable>
+          <el-option label="已入账" :value="true" />
+          <el-option label="未入账" :value="false" />
+        </el-select>
       </el-form-item>
 
       <el-form-item>
@@ -109,75 +62,44 @@
       </el-tabs>
     </div>
 
-    <base-table
-      :columns="columns"
-      :tableData="tableData"
-      :loading="tableLoading"
-      :rowKey="'id'"
-      :pagination="false"
-    >
+    <base-table :columns="columns" :tableData="tableData" :loading="tableLoading" :rowKey="'id'" :pagination="false">
       <!-- 审批流程 0=草稿，10=审批中，40=已审批，80=作废，99=其他 -->
       <template #flowStatus="{ row }">
-        <el-tag
-          size="small"
-          :type="getEnumType(costBillStatusEnum, row?.flowStatus || 0)"
-        >
+        <el-tag size="small" :type="getEnumType(costBillStatusEnum, row?.flowStatus || 0)">
           {{ getEnumLabel(costBillStatusEnum, row?.flowStatus || 0) }}
+        </el-tag>
+      </template>
+      <!-- 是否入账 -->
+      <template #isLocked="{ row }">
+        <el-tag size="small" :type="row.isLocked ? 'success' : 'info'">
+          {{ row.isLocked ? "已入账" : "未入账" }}
         </el-tag>
       </template>
 
       <!-- 只有已审批并且未锁定才能登记 -->
       <template #actions="{ row }">
-        <el-button
-          type="primary"
-          link
-          @click="batchRegister(row)"
-          :disabled="row.isLocked || row.payStatus == '全部支付'"
-        >
+        <el-button type="primary" link @click="batchRegister(row)" :disabled="row.isLocked || row.payStatus == '全部支付'">
           批量登记
         </el-button>
-        <el-button
-          type="primary"
-          link
-          @click="singleRegister(row)"
-          :disabled="row.isLocked || row.payStatus == '全部支付'"
-        >
+        <el-button type="primary" link @click="singleRegister(row)" :disabled="row.isLocked || row.payStatus == '全部支付'">
           单项登记
         </el-button>
         <el-button type="primary" link @click="handleView(row)">
           明细
         </el-button>
-        <el-button
-          type="primary"
-          link
-          @click="handleEntry(row)"
-          :disabled="row.isLocked || row.payStatus !== '全部支付'"
-        >
+        <el-button type="primary" link @click="handleEntry(row)" :disabled="row.isLocked || row.payStatus !== '全部支付'">
           入账
         </el-button>
       </template>
     </base-table>
     <!-- 批量付款登记 弹窗 -->
-    <BatchRegisterDialog
-      v-model="batchDialog"
-      :currentRow="currentRow"
-      :queryParams="queryParams"
-      @success="handleSearch"
-    />
+    <BatchRegisterDialog v-model="batchDialog" :currentRow="currentRow" :queryParams="queryParams"
+      @success="handleSearch" />
     <!-- 单项登记 弹窗 -->
-    <SingleRegisterDialog
-      v-model="singleDialog"
-      :currentRow="currentRow"
-      :queryParams="queryParams"
-      @success="handleSearch"
-    />
+    <SingleRegisterDialog v-model="singleDialog" :currentRow="currentRow" :queryParams="queryParams"
+      @success="handleSearch" />
     <!-- 查看弹窗 -->
-    <ViewDialog
-      v-model="viewDialog"
-      :currentRow="currentRow"
-      :queryParams="queryParams"
-      @success="handleSearch"
-    />
+    <ViewDialog v-model="viewDialog" :currentRow="currentRow" :queryParams="queryParams" @success="handleSearch" />
   </div>
 </template>
 
@@ -210,6 +132,8 @@ const queryParams = ref({
   applyDate: [],
   wfStatus: 40, // 0=草稿, 10=审批中, 40=已审批, 80=作废, 99=其他
   payStatus: "未支付", // 未支付  部分支付  全部支付
+  isLocked: undefined,
+  title: undefined,
 });
 const projectOptions = ref([]); // 项目列表
 const segOptions = ref([]); // 业务板块列表
@@ -239,6 +163,7 @@ const columns: TableColumnItem[] = [
   { prop: "applyUserName", label: "申请人", width: 90 },
   { prop: "applyDate", label: "申请日期", width: 100 },
   { slot: "flowStatus", label: "审批流程", width: 100 },
+  { slot: "isLocked", label: "是否入账", width: 90 },
   {
     label: "操作",
     prop: "actions",
@@ -332,7 +257,7 @@ const handleEntry = async (row) => {
         console.error("操作失败", error);
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 
 // 获取项目列表

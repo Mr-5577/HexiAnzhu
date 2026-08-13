@@ -1,53 +1,24 @@
 <!-- 建安立项数据 -->
 <template>
-  <base-modal
-    v-model="dialogVisible"
-    :title="'关联立项'"
-    width="1200px"
-    @close="handleClose"
-    @confirm="handleConfirm"
-  >
-    <el-form
-      :model="queryParams"
-      ref="queryRef"
-      :inline="true"
-      label-width="90px"
-    >
+  <base-modal v-model="dialogVisible" :title="'关联立项'" width="1200px" @close="handleClose" @confirm="handleConfirm">
+    <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px">
       <el-form-item label="项目名称" prop="projId">
-        <el-cascader
-          v-model="queryParams.projId"
-          :options="projectOptions"
-          :show-all-levels="false"
-          :props="{
-            expandTrigger: 'hover',
-            emitPath: false,
-            checkStrictly: false,
-            value: 'orgId',
-            label: 'orgName',
-            children: 'children',
-          }"
-          placeholder="请选择项目"
-          style="width: 220px"
-          clearable
-          disabled
-        />
+        <el-cascader v-model="queryParams.projId" :options="projectOptions" :show-all-levels="false" :props="{
+          expandTrigger: 'hover',
+          emitPath: false,
+          checkStrictly: false,
+          value: 'orgId',
+          label: 'orgName',
+          children: 'children',
+        }" placeholder="请选择项目" style="width: 220px" clearable disabled />
       </el-form-item>
       <el-form-item label="事项名称" prop="processName">
-        <el-input
-          v-model="queryParams.processName"
-          placeholder="请输入事项名称"
-          clearable
-          style="width: 220px"
-        />
+        <el-input v-model="queryParams.processName" placeholder="请输入事项名称" clearable style="width: 220px" />
       </el-form-item>
 
       <el-form-item label="创建人" prop="createId">
-        <el-cascader
-          ref="projCascaderRef"
-          v-model="queryParams.createId"
-          :options="empTreeData"
-          :show-all-levels="false"
-          :props="{
+        <el-cascader ref="projCascaderRef" v-model="queryParams.createId" :options="empTreeData"
+          :show-all-levels="false" :props="{
             expandTrigger: 'click',
             emitPath: false,
             checkStrictly: false,
@@ -59,23 +30,11 @@
               // dataType: 0 表示人员，即叶子节点
               return data.dataType === 0;
             },
-          }"
-          placeholder="请选择"
-          style="width: 220px"
-          clearable
-          filterable
-        />
+          }" placeholder="请选择" style="width: 220px" clearable filterable />
       </el-form-item>
       <el-form-item label="创建日期" prop="time">
-        <el-date-picker
-          v-model="queryParams.time"
-          type="daterange"
-          range-separator="至"
-          value-format="YYYY-MM-DD"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          style="width: 220px"
-        />
+        <el-date-picker v-model="queryParams.time" type="daterange" range-separator="至" value-format="YYYY-MM-DD"
+          start-placeholder="开始日期" end-placeholder="结束日期" style="width: 220px" />
       </el-form-item>
 
       <el-form-item>
@@ -83,23 +42,11 @@
         <el-button @click="handleReset">重置</el-button>
       </el-form-item>
     </el-form>
-    <base-table
-      ref="tableRef"
-      :columns="tableColumns"
-      :table-data="tableData"
-      :row-key="'id'"
-      :pagination="false"
-      :show-toolbar="false"
-      :show-action-bar="false"
-      :selectionMode="'single'"
-      :height="'500px'"
-      @selection-change="handleSelectionChange"
-    >
+    <base-table ref="tableRef" :columns="tableColumns" :table-data="tableData" :row-key="'id'" :pagination="false"
+      :show-toolbar="false" :show-action-bar="false" :selectionMode="'single'" :height="'500px'"
+      @selection-change="handleSelectionChange">
       <template #status="{ row }">
-        <el-tag
-          size="small"
-          :type="getEnumType(conBillStatusEnum, row?.status || 0)"
-        >
+        <el-tag size="small" :type="getEnumType(conBillStatusEnum, row?.status || 0)">
           {{ getEnumLabel(conBillStatusEnum, row?.status || 0) }}
         </el-tag>
       </template>
@@ -152,7 +99,7 @@ const tableColumns: TableColumnItem[] = [
   { prop: "processNo", label: "事项编号", width: 140 },
   { prop: "processName", label: "事项名称", width: 150 },
   { prop: "processAmt", label: "事项计划金额", width: 120 },
-  { prop: "ww", label: "剩余金额", width: 120 },
+  { prop: "sumOwedAmt", label: "剩余金额", width: 120 },
   { prop: "createName", label: "创建人", width: 100 },
   { prop: "createDate", label: "创建日期", width: 120 },
   {
@@ -172,12 +119,13 @@ const getCstProcessList = async () => {
       createId: queryParams.value.createId,
       createDateStart: queryParams.value.time?.[0] || "",
       createDateEnd: queryParams.value.time?.[1] || "",
+      isAvailable: true, // 可请款的数据
     };
     const res = await cstProcessApi.getCstProcessList(params);
     if (res.code === 200) {
       tableData.value = res.data || [];
     }
-  } catch (error) {}
+  } catch (error) { }
 };
 const handleSearch = () => {
   getCstProcessList();

@@ -492,7 +492,7 @@ const getDetailList = async () => {
           payDate: dateUtil().format("YYYY-MM-DD"), // 支付日期
           payCompId: props?.currentRow?.compId || undefined, // 支付公司
         };
-      });
+      }).filter((vi) => vi.unpaidAmt !== 0); // 过滤掉未付金额为0的项
     }
   } catch (error) { }
 };

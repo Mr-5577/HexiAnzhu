@@ -52,7 +52,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from "vue";
+import { ref, watch, computed, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import AddEditWayDialog from "./add-edit-way-dialog.vue";
 import { supplierApi } from "@/api/cost/supplier/supplier-ledger-api.ts";
@@ -182,17 +182,22 @@ const getDataList = async () => {
     tableLoading.value = false;
   }
 };
-watch(
-  () => props.supplierId,
-  (newVal) => {
-    if (newVal) {
-      getDataList();
-    } else {
-      tableData.value = [];
-    }
-  },
-  { immediate: true },
-);
+// watch(
+//   () => props.supplierId,
+//   (newVal) => {
+//     if (newVal) {
+//       getDataList();
+//     } else {
+//       tableData.value = [];
+//     }
+//   },
+//   { immediate: true },
+// );
+onMounted(() => {
+  if(props.supplierId) {
+    getDataList();
+  }
+})
 </script>
 
 <style lang="scss" scoped>

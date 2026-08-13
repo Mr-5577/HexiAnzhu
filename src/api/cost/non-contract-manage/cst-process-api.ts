@@ -6,9 +6,27 @@ import { CstProcessSaveParam } from "@/types/cost/non-contract-manage/cst-proces
  */
 export const cstProcessApi = {
   /**
+   * const params = {
+      projId: queryParams.value.projId,
+      segId: queryParams.value.segId,
+      processName: queryParams.value.processName,
+      status: 40, // 查询已审批的数据
+      createId: queryParams.value.createId,
+      createDateStart: queryParams.value.time?.[0] || "",
+      createDateEnd: queryParams.value.time?.[1] || "",
+      isAvailable: true, // 可请款的数据
+    };
+   */
+  /**
    * @name 获取非合同建安立项列表
    * @param params.projId 项目id
-   * @returns
+   * @param params.segId 业务板块id
+   * @param params.processName 事项名称
+   * @param params.status 状态
+   * @param params.createDateStart 创建时间开始
+   * @param params.createDateEnd 创建时间结束
+   * @param params.createId 创建人id
+   * @param params.isAvailable 是否可请款
    */
   getCstProcessList: (params?: any) => {
     return http.get("/ncon/cstProcess/list", params);

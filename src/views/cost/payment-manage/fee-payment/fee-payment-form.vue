@@ -400,7 +400,7 @@
       :payWayTable="payWayTable"
       :segId="formData.segId"
       :projId="formData.projId"
-      :dialogMode="'view'"
+      :bizType="'NCON_FEE'"
       @select="getFinaList"
     ></FinanceAllocationDialog>
   </div>

@@ -125,6 +125,7 @@
                     label: 'orgName',
                     children: 'children',
                   }"
+                  filterable
                   placeholder="请选择项目"
                   style="width: 100%"
                   @change="changeProject"

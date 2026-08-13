@@ -92,7 +92,7 @@ export function normalizeInvoiceResult(
   finalData: any | null | undefined,
   meta: { annexId: number; annexName: string }
 ): RecognizedInvoice {
-  debugger
+  
   if (!finalData) {
     return {
       annexId: meta.annexId,

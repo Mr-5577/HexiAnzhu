@@ -17,7 +17,7 @@ export const supplementContractApi = {
   },
   /** 查询单个补充合同 */
   getSupplementContractById: (id: number) => {
-    debugger
+    
     return http.post("/con/add/get?isWithFlow=true&id="+id);
   },
   /** 新增补充合同 */

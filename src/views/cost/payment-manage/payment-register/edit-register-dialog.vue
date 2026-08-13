@@ -1,70 +1,36 @@
 <!-- payment-edit-dialog.vue -->
 <template>
-  <base-modal
-    v-model="dialogVisible"
-    :title="'编辑付款明细'"
-    width="800px"
-    :confirmText="'保存'"
-    :confirm-loading="submitLoading"
-    @confirm="handleSubmit"
-    @close="handleClose"
-  >
+  <base-modal v-model="dialogVisible" :title="'编辑付款明细'" width="900px" :confirmText="'保存'"
+    :confirm-loading="submitLoading" @confirm="handleSubmit" @close="handleClose">
     <div style="padding: 0 20px">
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="formRules"
-        label-width="100px"
-        label-position="right"
-      >
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" label-position="right">
         <el-row :gutter="20">
           <el-col :span="12">
+            <el-form-item label="摘要">
+              <el-input v-model="formData.finaSubDesc" placeholder=" " style="width: 100%" disabled />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
             <el-form-item label="未付金额">
-              <el-input-number
-                v-model="totalAmount"
-                :precision="2"
-                :min="0"
-                :controls="false"
-                placeholder=" "
-                style="width: 100%"
-                controls-position="right"
-                disabled
-              />
+              <el-input-number v-model="totalAmount" :precision="2" :min="0" :controls="false" placeholder=" "
+                style="width: 100%" controls-position="right" disabled />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="支付方式" prop="payWayId">
-              <el-select
-                v-model="formData.payWayId"
-                placeholder="请选择支付方式"
-                style="width: 100%"
-                @change="handlePayWayChange"
-              >
-                <el-option
-                  v-for="item in payTypeOptions"
-                  :key="item.id"
-                  :label="item.dicLabel"
-                  :value="item.id"
-                />
+              <el-select v-model="formData.payWayId" placeholder="请选择支付方式" style="width: 100%"
+                @change="handlePayWayChange">
+                <el-option v-for="item in payTypeOptions" :key="item.id" :label="item.dicLabel" :value="item.id" />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="支付公司" prop="payCompId">
-              <el-select
-                v-model="formData.payCompId"
-                placeholder="请选择支付公司"
-                style="width: 100%"
-                @change="handlePayCompChange"
-              >
-                <el-option
-                  v-for="item in payComOptions"
-                  :key="item.id"
-                  :label="item.compName"
-                  :value="item.id"
-                />
+              <el-select v-model="formData.payCompId" placeholder="请选择支付公司" style="width: 100%"
+                @change="handlePayCompChange">
+                <el-option v-for="item in payComOptions" :key="item.id" :label="item.compName" :value="item.id" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -72,77 +38,43 @@
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="支付金额" prop="payAmt">
-              <el-input-number
-                v-model="formData.payAmt"
-                :precision="2"
-                :min="0"
-                :controls="false"
-                placeholder="请输入支付金额"
-                style="width: 100%"
-                controls-position="right"
-              />
+              <el-input-number v-model="formData.payAmt" :precision="2" :min="0" :controls="false" placeholder="请输入支付金额"
+                style="width: 100%" controls-position="right" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="支付日期" prop="payDate">
-              <el-date-picker
-                v-model="formData.payDate"
-                type="date"
-                placeholder="请选择支付日期"
-                value-format="YYYY-MM-DD"
-                style="width: 100%"
-              />
+              <el-date-picker v-model="formData.payDate" type="date" placeholder="请选择支付日期" value-format="YYYY-MM-DD"
+                style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="支付账号">
-              <el-input
-                v-model="formData.bankAccount"
-                placeholder="请输入支付账号"
-              />
+              <el-input v-model="formData.bankAccount" placeholder="请输入支付账号" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="银行回单号">
-              <el-input
-                v-model="formData.bankReceipt"
-                placeholder="请输入银行回单号"
-              />
+              <el-input v-model="formData.bankReceipt" placeholder="请输入银行回单号" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="20">
           <el-col :span="24">
             <el-form-item label="备注">
-              <el-input
-                v-model="formData.payDesc"
-                type="textarea"
-                :rows="3"
-                placeholder="请输入备注"
-                maxlength="500"
-                show-word-limit
-              />
+              <el-input v-model="formData.payDesc" type="textarea" :rows="3" placeholder="请输入备注" maxlength="500"
+                show-word-limit />
             </el-form-item>
           </el-col>
         </el-row>
 
         <el-form-item label="照片">
           <div class="photo-upload-area">
-            <base-upload
-              v-model:file-list="annexFileList"
-              :limit="1"
-              :multiple="true"
-              :showIcon="true"
-              :showTip="true"
-              :maxSize="20"
-              :accept="'.pdf,.jpg,.jpeg,.png'"
-              :tipText="'支持上传pdf、jpg、jpeg、png格式文件，单个文件不超过20M'"
-              button-text="选择图片"
-              size="default"
-              @success="handleUploadSuccess"
-            />
+            <base-upload v-model:file-list="annexFileList" :limit="1" :multiple="true" :showIcon="true" :showTip="true"
+              :maxSize="20" :accept="'.pdf,.jpg,.jpeg,.png'" :tipText="'支持上传pdf、jpg、jpeg、png格式文件，单个文件不超过20M'"
+              button-text="选择图片" size="default" @success="handleUploadSuccess" />
           </div>
         </el-form-item>
       </el-form>
@@ -204,6 +136,7 @@ const payComOptions = ref([]); // 支付公司下拉选项
 
 // 表单数据
 const formData = ref({
+  finaSubDesc: '',
   annexId: null,
   payWayId: null,
   payWayName: "",
@@ -324,7 +257,7 @@ const initFormData = async () => {
         // 拼接完整路径
         //   const fullUrl = buildFileUrl(file.annexPath);
       }
-    } catch (error) {}
+    } catch (error) { }
   }
 };
 

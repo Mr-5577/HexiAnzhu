@@ -355,8 +355,11 @@ const getDetailList = async () => {
           currPayAmt: unpaidAmt, // 初始化本次支付金额为未付金额
           unpaidAmt: unpaidAmt, // 未付金额
         };
-      });
+      }).filter((vi) => vi.unpaidAmt !== 0); // 过滤掉未付金额为0的项
       if (tableData.value.length > 0) {
+        nextTick(() => {
+          calcTotalPayAmt();
+        });
         const firstData = tableData.value[0];
         formData.value.payWayId = firstData?.pmPayWayId ? Number(firstData?.pmPayWayId) : undefined;
       }

@@ -54,6 +54,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRoute } from "vue-router";
+import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import BasicInfo from "./basic-infor/index.vue";
 import SupplierServe from "./supplier-serve/index.vue";
@@ -63,6 +64,7 @@ import RelateQualification from "./relate-qualification/index.vue";
 import ProjectPerformance from "./project-performance/index.vue";
 
 const route = useRoute();
+const router = useRouter();
 const activeTab = ref("basic");
 const supplierId = ref<number | null>(null);
 const mode = ref<"add" | "edit" | "view">("add");
@@ -89,12 +91,16 @@ const handleTabChange = (tab: string) => {
 // 新增供应商保存成功后的回调，只有先保存了供应商才能操作其他信息
 const handleSaveSuccess = (id) => {
   supplierId.value = id;
-  // 保存成功后跳转到下一个菜单
-  activeTab.value = "serve";
+  // 保存成功后进入编辑模式
+  router.replace({
+    path: "/supplier/supplier-register/edit",
+    query: { mode: "edit", supplierId: id }
+  });
 };
 
 const syncRouteState = () => {
   const queryMode = route.query.mode as string;
+  console.log('route.query', queryMode);
   mode.value = queryMode === "edit" || queryMode === "view" ? queryMode : "add";
   const idValue = route.query.supplierId
     ? Number(route.query.supplierId)

@@ -13,7 +13,8 @@ export const independentRoutes = [
     // 非合同成本分摊
     path: "/oa/ncon/cost-allocation",
     name: "oa-ncon-costAllocation",
-    component: () => import("@/views/cost/cost-allocation/ncon-cost-alloc/index.vue"),
+    component: () =>
+      import("@/views/cost/cost-allocation/ncon-cost-alloc/index.vue"),
     meta: {
       title: "成本分摊",
       isKeepAlive: false,
@@ -95,6 +96,46 @@ export const independentRoutes = [
       import("@/views/cost/bidding/tender-matter/components/bid-bond-refund/bid-bond-refund-detail.vue"),
     meta: {
       title: "保证金退还详情",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/supplier/inspection/edit",
+    name: "oa-supplier-inspection-edit",
+    component: () =>
+      import("@/views/cost/supplier/supplier-inspection/supplier-inspection-edit.vue"),
+    meta: {
+      title: "供应商入库审批",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/ncon/cst-process",
+    name: "oa-ncon-cst-process",
+    component: () =>
+      import("@/views/cost/non-contract-manage/cst-process/oa-cst-process.vue"),
+    meta: {
+      title: "非合同立项审批",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/ncon/cst-payment",
+    name: "oa-ncon-cst-payment",
+    component: () =>
+      import("@/views/cost/payment-manage/cst-payment/oa-cst-payment.vue"),
+    meta: {
+      title: "非合同请款审批",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/ncon/fee-payment",
+    name: "oa-ncon-fee-payment",
+    component: () =>
+      import("@/views/cost/payment-manage/fee-payment/oa-fee-payment.vue"),
+    meta: {
+      title: "费用报销审批审批",
       isKeepAlive: false,
     },
   },

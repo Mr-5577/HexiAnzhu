@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from "vue";
+import { ref, watch, computed, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { SupplierPerf } from "@/types/cost/supplier/supplier-ledger-type.ts";
 import AddEditPerformanceDialog from "./add-edit-performance-dialog.vue";
@@ -149,17 +149,22 @@ const handleDelete = (row: SupplierPerf) => {
     .catch(() => {});
 };
 
-watch(
-  () => props.supplierId,
-  (newVal) => {
-    if (newVal) {
-      getPerfList();
-    } else {
-      tableData.value = [];
-    }
-  },
-  { immediate: true },
-);
+// watch(
+//   () => props.supplierId,
+//   (newVal) => {
+//     if (newVal) {
+//       getPerfList();
+//     } else {
+//       tableData.value = [];
+//     }
+//   },
+//   { immediate: true },
+// );
+onMounted(() => {
+  if(props.supplierId) {
+    getPerfList
+  }
+})
 </script>
 
 <style lang="scss" scoped>
