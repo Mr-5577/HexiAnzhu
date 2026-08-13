@@ -66,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from "vue";
+import { ref, watch, computed, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { SupplierSegment } from "@/types/cost/supplier/supplier-ledger-type.ts";
 import AddEditServiceDialog from "./add-edit-service-dialog.vue";
@@ -190,18 +190,24 @@ const getSegList = async () => {
   } catch (error) {}
 };
 
-watch(
-  () => props.supplierId,
-  (newVal) => {
-    if (newVal) {
-      getSegList();
-      getSupplierServeData();
-    } else {
-      tableData.value = [];
-    }
-  },
-  { immediate: true },
-);
+// watch(
+//   () => props.supplierId,
+//   (newVal) => {
+//     if (newVal) {
+//       getSegList();
+//       getSupplierServeData();
+//     } else {
+//       tableData.value = [];
+//     }
+//   },
+//   { immediate: true },
+// );
+onMounted(() => {
+  if(props.supplierId) {
+    getSegList();
+    getSupplierServeData();
+  }
+})
 </script>
 
 <style lang="scss" scoped>

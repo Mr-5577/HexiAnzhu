@@ -93,25 +93,16 @@ const FINA_ROUTE: Record<string, string> = {
 
 // 默認路徑映射，对应业务的单据详情页
 const DEFAULT_ROUTE: Record<string, string> = {
-  CON_MAIN_edit: "/con/contract-ledger/edit",
-  CON_MAIN_view: "/con/contract-ledger/detail",
-  CON_ADD_edit: "/con/supplement-contract/edit",
-  CON_ADD_view: "/con/supplement-contract/detail",
-  CON_BG_edit: "/con/change-order/edit",
-  CON_BG_view: "/con/change-order/detail",
-  CON_QZ_edit: "/con/visa-manage/edit",
-  CON_QZ_view: "/con/visa-manage/detail",
+  CON_MAIN: "/con/contract-ledger/detail",
+  CON_ADD: "/con/supplement-contract/detail",
+  CON_BG: "/con/change-order/detail",
+  CON_QZ: "/con/visa-manage/detail",
 
-  CON_PRE_SETTLE_edit: "/home",
-  CON_PRE_SETTLE_view: "/home",
-  CON_SETTLE_edit: "/home",
-  CON_SETTLE_view: "/home",
-  NCON_CST_edit: "/ncon/cst-payment/edit",
-  NCON_CST_view: "/ncon/cst-payment/detail",
-  NCON_PROC_edit: "/ncon/cst-process/edit",
-  NCON_PROC_view: "/ncon/cst-process/detail",
-  NCON_FEE_edit: "/ncon/fee-payment/edit",
-  NCON_FEE_view: "/ncon/fee-payment/detail",
+  CON_PRE_SETTLE: "/home",
+  CON_SETTLE: "/home",
+  NCON_PROC: "/oa/ncon/cst-process",
+  NCON_CST: "/oa/ncon/cst-payment",
+  NCON_FEE: "/oa/ncon/fee-payment",
   CON_PAY: "/home",
 };
 
@@ -173,8 +164,7 @@ const resolveBizRoute = async (
         }
       }
       // 这里走单据详情页
-      const pageMode = `${bizItemCode}_${mode}`;
-      return buildRoutePath(DEFAULT_ROUTE[pageMode], {
+      return buildRoutePath(DEFAULT_ROUTE[bizItemCode], {
         billId, // 单据ID
         bizId, // 业务ID
       });
@@ -225,8 +215,7 @@ const resolveBizRoute = async (
         }
       }
       // 这里走单据详情页
-      const pageMode = `${bizItemCode}_${mode}`;
-      return buildRoutePath(DEFAULT_ROUTE[pageMode], {
+      return buildRoutePath(DEFAULT_ROUTE[bizItemCode], {
         billId, // 单据ID
         bizId, // 业务ID
       });
@@ -247,43 +236,43 @@ const resolveBizRoute = async (
       });
 
     case "ZB_XQ":
-      return buildRoutePath("/bidding/bidding-demand/detail", {
+      return buildRoutePath("/oa/bidding/bidding-demand/detail", {
         billId,
       });
 
     case "ZB_JH":
-      return buildRoutePath("/bidding/tender-plan/detail", {
+      return buildRoutePath("/oa/bidding/tender-plan/detail", {
         billId,
         tenderId: bizId,
       });
 
     case "ZB_CK":
-      return buildRoutePath("/bidding/reference-price/detail", {
+      return buildRoutePath("/oa/bidding/reference-price/detail", {
         billId,
         tenderId: bizId,
       });
 
     case "ZB_DB":
-      return buildRoutePath("/bidding/award-approval/detail", {
+      return buildRoutePath("/oa/bidding/award-approval/detail", {
         billId,
         tenderId: bizId,
       });
 
     case "ZB_BZJ":
-      return buildRoutePath("/bidding/bid-bond-pay/detail", {
+      return buildRoutePath("/oa/bidding/bid-bond-pay/detail", {
         billId,
         tenderId: bizId,
       });
 
     case "ZB_BZJTH":
-      return buildRoutePath("/bidding/bid-bond-refund/detail", {
+      return buildRoutePath("/oa/bidding/bid-bond-refund/detail", {
         billId,
         tenderId: bizId,
       });
 
     // ---------- 供应商（单路径） ----------
     case "SUP_RK":
-      return buildRoutePath("/supplier/inspection/edit", {
+      return buildRoutePath("/oa/supplier/inspection/edit", {
         supBillId: billId,
       });
 
@@ -386,7 +375,7 @@ const handleOALogin = async (
       timestamp,
       signature,
     });
-
+    console.log("OA鉴权响应:", res);
     checkIfUnmounted();
 
     if (res.code === 200 && res.data) {
@@ -403,7 +392,7 @@ const handleOALogin = async (
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       checkIfUnmounted();
-
+      debugger
       // 核心：根据 bizItemCode -> subBizCode -> mode 三级路由解析
       const targetPath = await resolveBizRoute(
         bizItemCode,

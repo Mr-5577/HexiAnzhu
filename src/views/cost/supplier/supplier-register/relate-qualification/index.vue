@@ -40,7 +40,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from "vue";
+import { ref, watch, computed, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { SupplierAnnex } from "@/types/cost/supplier/supplier-ledger-type.ts";
 import AddEditAnnexDialog from "./add-edit-annex-dialog.vue";
@@ -154,18 +154,24 @@ const handleDelete = (row: SupplierAnnex) => {
     .catch(() => {});
 };
 
-watch(
-  () => props.supplierId,
-  (newVal) => {
-    if (newVal) {
-      initDictData();
-      getAnnexList();
-    } else {
-      tableData.value = [];
-    }
-  },
-  { immediate: true },
-);
+// watch(
+//   () => props.supplierId,
+//   (newVal) => {
+//     if (newVal) {
+//       initDictData();
+//       getAnnexList();
+//     } else {
+//       tableData.value = [];
+//     }
+//   },
+//   { immediate: true },
+// );
+onMounted(() => {
+  if(props.supplierId) {
+    initDictData();
+    getAnnexList();
+  }
+})
 </script>
 
 <style lang="scss" scoped>

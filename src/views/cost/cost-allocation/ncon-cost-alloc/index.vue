@@ -240,15 +240,29 @@ const businessTypeNames = computed(() => {
   if (!selectedBuildings.value.length || !buildingOptions.value.length) {
     return "";
   }
-
-  const prodNames = buildingOptions.value
+  // 先筛选选中的楼栋，然后提取所有 prodNames 并拆分
+  const allProdNames = buildingOptions.value
     .filter((item) => selectedBuildings.value.includes(item.id))
-    .map((item) => item.prodNames || "")
-    .filter((name) => name);
-
-  // 去重后拼接成字符串
-  return [...new Set(prodNames)].join("、");
+    .flatMap((item) => {
+      if (!item.prodNames) return [];
+      // 按逗号拆分，并去除首尾空格
+      return item.prodNames.split(",").map((name) => name.trim());
+    })
+    .filter((name) => name); // 过滤空字符串
+  // 去重后拼接
+  return [...new Set(allProdNames)].join("、");
 });
+
+// 获取常规楼栋关联的地下室ID映射
+const undergroundMap = computed(() => {
+  const map = {}
+  buildingOptions.value.forEach(item => {
+    if (!item.isUnderGround && item.bindUnderGround) {
+      map[item.id] = item.bindUnderGround
+    }
+  })
+  return map
+})
 
 // 处理得到的选中楼栋关联的业态数据
 const getBusinessType = () => {
@@ -280,10 +294,41 @@ const getBusinessType = () => {
   return prodList;
 };
 
-const handleBuildingChange = (value: any) => {
+const handleBuildingChange = (val: any) => {
+  // 获取最后选中的项
+  const lastId = val[val.length - 1]
+  const lastItem = buildingOptions.value.find(v => v.id === lastId)
+  // 判断最后选中的是地下室还是常规楼栋
+  if (lastItem?.isUnderGround) {
+    // 选了地下室 → 过滤掉所有常规楼栋，只保留地下室
+    selectedBuildings.value = val.filter(id =>
+      buildingOptions.value.find(b => b.id === id)?.isUnderGround
+    )
+  } else {
+    // 选了常规楼栋 → 过滤掉所有地下室
+    selectedBuildings.value = val.filter(id =>
+      !buildingOptions.value.find(b => b.id === id)?.isUnderGround
+    )
+
+    // 自动添加关联的地下室
+    addUndergrounds()
+  }
+
+  // 重新生成动态表头和列表数据
   refreshTableData();
 }
-
+// 自动添加关联地下室
+const addUndergrounds = () => {
+  const result = [...selectedBuildings.value]
+  selectedBuildings.value.forEach(id => {
+    const item = buildingOptions.value.find(b => b.id === id)
+    const undergroundId = item?.bindUnderGround
+    if (undergroundId && !result.includes(undergroundId)) {
+      result.push(undergroundId)
+    }
+  })
+  selectedBuildings.value = result
+}
 /**
  * 本次已分摊金额计算（科目金额含税）
  * 把叶子节点的科目金额(含税)累加起来
@@ -629,8 +674,8 @@ const loadAllocationData = async () => {
       await Promise.all([getBusiSegList(), getProductList()]);
       // 处理查询到的分摊数据，回显到页面
       const allocDs = res.data?.allocDs || [];
-      // const newData = allocDs.filter((item: any) => item.prodId);
-      processPopupData(allocDs);
+      const newData = allocDs.filter((item: any) => item.prodId);
+      processPopupData(newData);
     }
   } catch (error) { }
 };
@@ -829,7 +874,6 @@ const mergeTreeWithDetailApiData = (treeData, prodList) => {
   for (const subject of leafSubjects) {
     const items = groupMap.get(subject.id) || [];
     const first = items[0] || {};
-
     const row = {
       id: subject.id,
       subId: subject.id,
@@ -1412,7 +1456,7 @@ const convertTreeDataToRows = (treeData: any[], products: any[]): any[] => {
             allocWarn: node.allocWarn,
             allocAmt: Number(node[`allocAmt_${pid}`]),
             allocExclAmt: Number(node[`allocExclAmt_${pid}`]),
-            busiSegId: node.busiSegId || 0,
+            busiSegId: node.busiSegId || undefined,
             segName: node.segName || "",
             allocRule: node.allocRule || "",
             level: node.level,

@@ -192,6 +192,8 @@ const detailColumns = computed<EditableColumn[]>(() => [
     editable: true,
     editType: "input",
     showOverflowTooltip: false,
+    // 有regPayAmtSum字段并且值大于0表示已支付，不可编辑
+    disabled: (row: any) =>  row.regPayAmtSum,
   },
   {
     prop: "finaOrgId",
@@ -214,6 +216,8 @@ const detailColumns = computed<EditableColumn[]>(() => [
       showAllLevels: false, // 不显示所有层级
       checkStrictly: false,
     },
+    // 有regPayAmtSum字段并且值大于0表示已支付，不可编辑
+    disabled: (row: any) =>  row.regPayAmtSum,
   },
   {
     prop: "finaSubId",
@@ -236,6 +240,8 @@ const detailColumns = computed<EditableColumn[]>(() => [
       checkStrictly: false,
       filterable: true, // 启用过滤
     },
+    // 有regPayAmtSum字段并且值大于0表示已支付，不可编辑
+    disabled: (row: any) =>  row.regPayAmtSum,
   },
   {
     prop: "finaSubAmt",
@@ -394,7 +400,7 @@ const handleSubmit = async () => {
   }
   const allValid = validateData();
   if (!allValid) return
-  debugger
+
   if (allValid) {
     submitLoading.value = true;
 
@@ -411,10 +417,7 @@ const handleSubmit = async () => {
         // 合同支付财务分摊
         res = await financeAllocationApi.saveConAlloc(newData);
         if (res.code === 200) {
-          res = await paymentRequestApi.flowCallbackConPay({
-            id: bizId,
-            allowEdit: true,
-          })
+          res = await paymentRequestApi.saveConPayFlow({ billId: billId })
         }
       } else if (bizType === "NCON_CST") {
         // 非合同建安支付财务分摊
@@ -636,6 +639,7 @@ const getNconFinanceAllocDetaiByBillId = async () => {
 onMounted(async () => {
   // 判断是不是弹窗模式
   if (props.isDialogMode) {
+    console.log("弹窗模式");
     if (props?.segId) {
       await getFinaOrgListBySegId(props.segId); // 获取业务板块下的费用组织
       await getFinaSubjectListBySegId(props.segId); // 获取业务板块下的费用科目

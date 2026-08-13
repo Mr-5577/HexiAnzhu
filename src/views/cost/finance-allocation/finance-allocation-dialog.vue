@@ -4,7 +4,7 @@
     :confirm-text="'确定'" :showConfirmButton="false" :showCancelButton="false" @confirm="handleConfirm"
     @close="handleClose">
     <FinanceAllocationDetail ref="financeAllocationRef" :projId="props.projId" :segId="props.segId" :isDialogMode="true"
-      :payWayTable="payWayTable"></FinanceAllocationDetail>
+      :bizType="props.bizType" :payWayTable="payWayTable"></FinanceAllocationDetail>
   </base-modal>
 </template>
 

@@ -1,43 +1,19 @@
 <!-- 供应商入库审批 -->
 <template>
   <div class="basic-form-content">
-    <BillHeader
-      :title="'供应商入库审批'"
-      :contract-no="''"
-      :submitter="formData.submitter || ''"
-      :submit-time="formData.submiterTime || ''"
-      :status="0"
-      :show-status="true"
-      :button-loading="submitLoading"
-      :save-disabled="false"
-      :submit-disabled="false"
-      :delete-disabled="true"
-      :void-disabled="true"
-      :view-disabled="true"
-      @save="handleSave"
-      @submit="handleSubmit"
-      @delete="handleDelete"
-      @void="handleCancel"
-      @viewFlow="handleViewProcess"
-    >
+    <BillHeader :title="'供应商入库审批'" :contract-no="''" :submitter="formData.submitter || ''"
+      :submit-time="formData.submiterTime || ''" :status="0" :show-status="true" :button-loading="submitLoading"
+      :save-disabled="false" :submit-disabled="false" :delete-disabled="true" :void-disabled="true"
+      :view-disabled="true" @save="handleSave" @submit="handleSubmit" @delete="handleDelete" @void="handleCancel"
+      @viewFlow="handleViewProcess">
     </BillHeader>
     <div class="form-scroll-area">
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="formRules"
-        label-width="120px"
-        class="adapt-form"
-      >
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="120px" class="adapt-form">
         <div class="item-card">
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="18" :xl="18">
               <el-form-item label="标题" prop="wfTitle" required>
-                <el-input
-                  v-model="formData.wfTitle"
-                  clearable
-                  placeholder="标题"
-                />
+                <el-input v-model="formData.wfTitle" clearable placeholder="标题" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
@@ -62,123 +38,69 @@
                     :value="item.id"
                   />
                 </el-select> -->
-                <el-input
-                  v-model="formData.segName"
-                  disabled
-                  placeholder="业务板块"
-                />
+                <el-input v-model="formData.segName" disabled placeholder="业务板块" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="板块编码" prop="segNo">
-                <el-input
-                  v-model="formData.segNo"
-                  disabled
-                  placeholder="板块编码"
-                />
+                <el-input v-model="formData.segNo" disabled placeholder="板块编码" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="部门" prop="deptName">
-                <el-input
-                  v-model="formData.deptName"
-                  clearable
-                  placeholder="部门"
-                  disabled
-                />
+                <el-input v-model="formData.deptName" clearable placeholder="部门" disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="分部" prop="mguName">
-                <el-input
-                  v-model="formData.mguName"
-                  clearable
-                  placeholder="分部"
-                  disabled
-                />
+                <el-input v-model="formData.mguName" clearable placeholder="分部" disabled />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="所属项目" prop="projId" required>
-                <el-cascader
-                  ref="projCascaderRef"
-                  v-model="formData.projId"
-                  :options="projectOptions"
-                  :show-all-levels="false"
-                  :props="{
+                <el-cascader ref="projCascaderRef" v-model="formData.projId" :options="projectOptions"
+                  :show-all-levels="false" :props="{
                     expandTrigger: 'hover',
                     emitPath: false,
                     checkStrictly: false,
                     value: 'orgId',
                     label: 'orgName',
                     children: 'children',
-                  }"
-                  placeholder="请选择项目"
-                  style="width: 100%"
-                  @change="changeProject"
-                />
+                  }" filterable placeholder="请选择项目" style="width: 100%" @change="changeProject" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="项目所属公司" prop="compName">
-                <el-input
-                  v-model="formData.compName"
-                  placeholder="项目所属公司"
-                  disabled
-                />
+                <el-input v-model="formData.compName" placeholder="项目所属公司" disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="提交人" prop="submitter">
-                <el-input
-                  v-model="formData.submitter"
-                  clearable
-                  placeholder="提交人"
-                  disabled
-                />
+                <el-input v-model="formData.submitter" clearable placeholder="提交人" disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="提交时间" prop="submiterTime">
-                <el-date-picker
-                  v-model="formData.submiterTime"
-                  type="date"
-                  placeholder="提交时间"
-                  style="width: 100%"
-                  clearable
-                  value-format="YYYY-MM-DD"
-                  disabled
-                />
+                <el-date-picker v-model="formData.submiterTime" type="date" placeholder="提交时间" style="width: 100%"
+                  clearable value-format="YYYY-MM-DD" disabled />
               </el-form-item>
             </el-col>
           </el-row>
         </div>
         <div class="item-card">
-          <div
-            class="section-title"
-            @click="
-              () => {
-                console.log(tableList, validateSupplierData());
-              }
-            "
-          >
+          <div class="section-title" @click="
+            () => {
+              console.log(tableList, validateSupplierData());
+            }
+          ">
             准入单位名单
           </div>
           <div class=""></div>
-          <editable-table
-            ref="payWayTableRef"
-            :row-key="'id'"
-            :height="'300px'"
-            v-model="tableList"
-            :columns="tableColumns"
-            :pagination="false"
-            :highlight-current-row="false"
-            :show-summary="false"
-            :compactEmpty="true"
-            :editable="true"
-          >
+          <editable-table ref="payWayTableRef" :row-key="'id'" :height="'300px'" v-model="tableList"
+            :columns="tableColumns" :pagination="false" :highlight-current-row="false" :show-summary="false"
+            :compactEmpty="true" :editable="true">
             <template #actionBar>
               <div class="actionBar-buttons">
                 <el-button type="primary" size="small" @click="chooseSupplier">
@@ -190,12 +112,7 @@
             <template #inspectAnnexName="{ row, column, index, update }">
               <div class="inspect-cell">
                 <!-- 有附件显示链接 -->
-                <el-link
-                  v-if="row.inspectAnnexId"
-                  type="primary"
-                  :underline="'hover'"
-                  @click="handleViewAnnex(row)"
-                >
+                <el-link v-if="row.inspectAnnexId" type="primary" :underline="'hover'" @click="handleViewAnnex(row)">
                   {{ row.inspectAnnexName }}
                 </el-link>
                 <!-- 无附件显示占位 -->
@@ -207,25 +124,18 @@
                 <el-button link type="primary" @click="openUploadForRow(row)">
                   上传考察报告
                 </el-button>
+                <el-button type="danger" link @click="handleRemove(row)">
+                  删除
+                </el-button>
               </div>
             </template>
           </editable-table>
           <!-- 放在表格外面的上传组件（隐藏） -->
           <Teleport to="body">
             <div style="display: none" @click.stop @mousedown.stop>
-              <base-upload
-                ref="reportUploadRef"
-                key="invoice"
-                v-model:file-list="tempFileList"
-                :limit="1"
-                :multiple="false"
-                :showIcon="true"
-                :showTip="false"
-                button-text="选择文件"
-                size="default"
-                button-type="primary"
-                @success="handleUploadSuccess"
-              />
+              <base-upload ref="reportUploadRef" key="invoice" v-model:file-list="tempFileList" :limit="1"
+                :multiple="false" :showIcon="true" :showTip="false" button-text="选择文件" size="default"
+                button-type="primary" @success="handleUploadSuccess" />
             </div>
           </Teleport>
         </div>
@@ -233,12 +143,8 @@
     </div>
 
     <!-- 选择供应商弹窗 -->
-    <choose-supplier-dialog
-      ref="supplierDialogRef"
-      v-model="supplierDialogVisible"
-      :selectionMode="'multiple'"
-      @select="handleSupplierSelect"
-    />
+    <choose-supplier-dialog ref="supplierDialogRef" v-model="supplierDialogVisible" :selectionMode="'multiple'"
+      :supStatus="0" @select="handleSupplierSelect" />
   </div>
 </template>
 
@@ -670,6 +576,10 @@ const handleViewAnnex = async (row: any) => {
     ElMessage.error("查看附件失败，请稍后重试");
   }
 };
+
+const handleRemove = (row: any) => {
+  tableList.value = tableList.value.filter((item) => item.id !== row.id);
+}
 const openUploadForRow = (row: any) => {
   currentUploadRow.value = row;
   tempFileList.value = [];
@@ -794,6 +704,7 @@ onMounted(async () => {
     top: 4px;
   }
 }
+
 .actionBar-buttons {
   display: flex;
   align-items: center;

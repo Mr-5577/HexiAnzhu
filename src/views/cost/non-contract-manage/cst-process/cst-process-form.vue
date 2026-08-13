@@ -1,143 +1,72 @@
 <!-- 无合同事项台账信息 -->
 <template>
   <div class="basic-form-content">
-    <BillHeader
-      :title="'无合同立项审批'"
-      :contract-no="billData.bizNo || ''"
-      :submitter="formData.userName || ''"
-      :submit-time="formData.createDate || ''"
-      :status="billData.status"
-      :show-status="true"
-      :button-loading="submitLoading"
-      :save-disabled="isDetail || !!billData.status"
-      :submit-disabled="isDetail || !!billData.status"
-      :delete-disabled="isDetail || isAdd || !!billData.status"
-      :void-disabled="isDetail || isAdd || !!billData.status"
-      :view-disabled="isAdd"
-      @save="handleSave"
-      @submit="handleSubmit"
-      @delete="handleDelete"
-      @void="handleCancel"
-      @viewFlow="handleViewProcess"
-    >
+    <BillHeader :title="'无合同立项审批'" :contract-no="billData.bizNo || ''" :submitter="formData.userName || ''"
+      :submit-time="formData.createDate || ''" :status="billData.status" :show-status="true"
+      :button-loading="submitLoading" :save-disabled="isDetail || !!billData.status"
+      :submit-disabled="isDetail || !!billData.status" :delete-disabled="isDetail || isAdd || !!billData.status"
+      :void-disabled="isDetail || isAdd || !!billData.status" :view-disabled="isAdd" @save="handleSave"
+      @submit="handleSubmit" @delete="handleDelete" @void="handleCancel" @viewFlow="handleViewProcess">
     </BillHeader>
 
     <div class="form-scroll-area">
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="formRules"
-        label-width="110px"
-        class="adapt-form"
-      >
-        <BillInfo
-          v-model="formData"
-          :status="billData?.status || 0"
-          :disabled="isDetail || !!billData.status"
-          :project-options="projectOptions"
-          @project-change="changeProject"
-        />
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="110px" class="adapt-form">
+        <BillInfo v-model="formData" :status="billData?.status || 0" :disabled="isDetail || !!billData.status"
+          :project-options="projectOptions" @project-change="changeProject" />
 
         <div class="item-card">
           <div class="section-title">立项信息</div>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item prop="processName" label="事项名称" required>
-                <el-input
-                  v-model="formData.processName"
-                  placeholder="请输入事项名称"
-                  style="width: 100%"
-                  :disabled="isDetail || !!billData.status"
-                />
+                <el-input v-model="formData.processName" placeholder="请输入事项名称" style="width: 100%"
+                  :disabled="isDetail || !!billData.status" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item prop="processAmt" label="事项计划金额" required>
-                <el-input-number
-                  v-model="formData.processAmt"
-                  :min="0"
-                  :max="999999999"
-                  :precision="2"
-                  :controls="false"
-                  placeholder="请输入事项计划金额"
-                  style="width: 100%"
-                  :disabled="isDetail || !!billData.status"
-                />
+                <el-input-number v-model="formData.processAmt" :min="0" :max="999999999" :precision="2"
+                  :controls="false" placeholder="请输入事项计划金额" style="width: 100%"
+                  :disabled="isDetail || !!billData.status" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="费用类型" prop="finaTypeId" required>
-                <el-cascader
-                  v-model="formData.finaTypeId"
-                  :options="feeTypeOptions"
-                  :show-all-levels="false"
-                  :props="{
-                    expandTrigger: 'hover',
-                    emitPath: false,
-                    checkStrictly: false,
-                    value: 'id',
-                    label: 'finaTypeName',
-                    children: 'children',
-                  }"
-                  placeholder="请选择费用类型"
-                  style="width: 100%"
-                  filterable
-                  :disabled="isDetail || !!billData.status"
-                />
+                <el-cascader v-model="formData.finaTypeId" :options="feeTypeOptions" :show-all-levels="false" :props="{
+                  expandTrigger: 'hover',
+                  emitPath: false,
+                  checkStrictly: false,
+                  value: 'id',
+                  label: 'finaTypeName',
+                  children: 'children',
+                }" placeholder="请选择费用类型" style="width: 100%" filterable :disabled="isDetail || !!billData.status" />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :span="24">
               <el-form-item label="事项说明" prop="remark">
-                <el-input
-                  v-model="formData.remark"
-                  type="textarea"
-                  :rows="4"
-                  maxlength="500"
-                  show-word-limit
-                  placeholder="请输入事项说明"
-                  :disabled="isDetail || !!billData.status"
-                />
+                <el-input v-model="formData.remark" type="textarea" :rows="4" maxlength="500" show-word-limit
+                  placeholder="请输入事项说明" :disabled="isDetail || !!billData.status" />
               </el-form-item>
             </el-col>
           </el-row>
         </div>
 
         <!-- 成本分摊  费用类型所属大类为建安类，并且是编辑/查看时显示 -->
-        <CostAllocationCard
-          :visible="isShowCostAllocation && formData.processAmt > 0"
-          :allocation-status="cstMData.allocStatus"
-          :warning-status="cstMData.allocWarn"
-          :bizType="'NCON_PROC'"
-          :projId="formData.projId"
-          :projName="formData.projName"
-          :displayName="formData.processName"
-          :allocAmt="formData.processAmt"
-          :bizBillId="processData.nconBillId"
-          :cstMData="cstMData"
-          :dialogMode="isDetail ? 'view' : 'edit'"
-          @selectData="getSelectCostAllocation"
-        />
+        <CostAllocationCard :visible="isShowCostAllocation && formData.processAmt > 0"
+          :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'NCON_PROC'"
+          :projId="formData.projId" :projName="formData.projName" :displayName="formData.processName"
+          :allocAmt="formData.processAmt" :bizBillId="processData.nconBillId" :cstMData="cstMData"
+          :dialogMode="isDetail ? 'view' : 'edit'" @selectData="getSelectCostAllocation" />
 
         <!-- 相关附件 -->
         <div class="item-card">
           <div class="section-title">相关附件</div>
           <el-form-item label="上传附件">
-            <base-upload
-              v-model:file-list="annexFileList"
-              :limit="9"
-              :multiple="false"
-              :showIcon="true"
-              :showTip="true"
-              :maxSize="20"
-              :unrestricted="true"
-              :accept="''"
-              button-text="选择文件"
-              size="default"
-              :disabled="isDetail || !!billData.status"
-              @success="handleUploadSuccess"
-            ></base-upload>
+            <base-upload v-model:file-list="annexFileList" :limit="9" :multiple="false" :showIcon="true" :showTip="true"
+              :maxSize="20" :unrestricted="true" :accept="''" button-text="选择文件" size="default"
+              :disabled="isDetail || !!billData.status" @success="handleUploadSuccess"></base-upload>
           </el-form-item>
         </div>
       </el-form>
@@ -166,6 +95,7 @@ import { buildTree } from "@/utils/tree";
 import BillHeader from "@/components/business/bill-components/bill-header.vue";
 import BillInfo from "@/components/business/bill-components/bill-info.vue";
 import CostAllocationCard from "@/views/cost/cost-allocation/cost-allocation-card.vue";
+import { formType } from "@/types/form/form-types";
 
 defineOptions({ name: "cst-process-form" });
 
@@ -396,7 +326,7 @@ const getpayTypeOptions = async (value: number) => {
       feeTypeFlatOptions.value = res.data || [];
       feeTypeOptions.value = buildTree(res.data || []);
     }
-  } catch (error) {}
+  } catch (error) { }
 };
 // 附件上传成功
 const handleUploadSuccess = (file: any) => {
@@ -429,6 +359,7 @@ const loadDetail = async () => {
       formData.value.bizTitle = bill.bizTitle || "";
       formData.value.segId = process.segId || undefined;
       formData.value.segNo = flowBase?.segNo || undefined;
+      formData.value.segName = flowBase?.segName || undefined;
       formData.value.projId = process?.projId || undefined;
       formData.value.projName = process?.projName || "";
       formData.value.compId = flowBase?.compId || undefined;
@@ -452,7 +383,7 @@ const loadDetail = async () => {
         }));
       }
     }
-  } catch (error) {}
+  } catch (error) { }
 };
 // 返回操作
 const goBack = () => {
@@ -507,7 +438,7 @@ const buildSaveParams = () => {
 // 保存
 const handleSave = async () => {
   console.log("保存表单", formData.value);
-  if(submitLoading.value) return
+  if (submitLoading.value) return
   if (!formRef.value) return;
   try {
     await formRef.value.validate();
@@ -518,7 +449,6 @@ const handleSave = async () => {
     if (res.code === 200 && res.data) {
       // res.data返回的是业务ID
       processData.value.id = res.data;
-      // billData.value.id = res.data;
       ElMessage.success("保存成功");
     }
   } catch (error) {
@@ -611,13 +541,25 @@ const handleViewProcess = async () => {
     ElMessage.warning("暂无流程信息");
   }
 };
-
+// 生成事项编号
+const generateProcessNo = async () => {
+  try {
+    const res = await commonApi.getBillNo({ bizType: 'NCON_PROC' });
+    if (res.code === 200) {
+      formData.value.processNo = res.data;
+      billData.value.bizNo = res.data;
+    }
+  } catch (error) {
+    console.error("生成单号失败:", error);
+  }
+};
 const initData = async () => {
   await initOptions();
   formData.value.userName = userStore.userInfo?.empName || "";
   formData.value.createDate = dateUtil().format("YYYY-MM-DD");
   if (isAdd.value) {
     initFormData();
+    generateProcessNo();
   } else {
     await loadDetail();
   }

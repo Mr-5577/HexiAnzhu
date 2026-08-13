@@ -33,8 +33,8 @@ export const paymentRequestApi = {
   voidPay: (data: { id: number }) => {
     return http.formPost("/con/pay/void", data);
   },
-  /** 合同支付流程回调 */
-  flowCallbackConPay: (data: { id: number; allowEdit?: boolean }) => {
-    return http.formPost("/con/flow/flowCallbackConPay", data);
+  /** 保存合同支付流程（新增/更新） */
+  saveConPayFlow: (data: { billId: number }) => {
+    return http.formPost("/con/flow/saveConPayFlow", data);
   },
 };
