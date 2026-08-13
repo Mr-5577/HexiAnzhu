@@ -42,10 +42,12 @@
             <div class="vt-row" :style="{ gridTemplateColumns: gridTemplateColumns }">
               <div class="vt-cell index-col">{{ getDisplayIndex(item, index) }}</div>
               <div class="vt-cell name-col">
-                <span class="expand-icon" v-if="item.hasChildren" @click.stop="toggleExpand(item.uuid)">
-                  {{ item.expanded ? '▾' : '▸' }}
-                </span>
-                <span :style="{ paddingLeft: item.level * 16 + 'px' }">{{ item._raw ? item._raw.subName : item.subName }}</span>
+                <div class="cell-inner-wrap">
+                  <span class="expand-icon" v-if="item.hasChildren" @click.stop="toggleExpand(item.uuid)">
+                    {{ item.expanded ? '▾' : '▸' }}
+                  </span>
+                  <span :style="{ paddingLeft: item.level * 16 + 'px' }">{{ item._raw ? item._raw.subName : item.subName }}</span>
+                </div>
               </div>
 
               <template v-for="col in headerLeafColumns" :key="col.prop">
@@ -181,7 +183,7 @@ const generateColumns = (): EditableColumn[] => {
     {
       prop: "subName",
       label: "成本科目",
-      align: "left",
+      align: "center",
       width: 180,
       editable: false,
       showOverflowTooltip: true,
@@ -215,32 +217,26 @@ const generateColumns = (): EditableColumn[] => {
       placeholder: " ",
       options: allocRuleEnum as any,
     },
-    // 添加成本小计列
-    // 【对齐修复】成本小计改成双层嵌套，和业态结构保持一致（统一 3 层）：
-    //   成本小计(row1) -> 含税小计/不含税小计(row2) -> 数值单元格(row3)
-    //   这样所有最终数据单元格统一落在第 3 行，纵向对齐
+    // 成本小计列：调整为 3 层结构，让「含税小计/不含税小计」文字落在第 3 行，
+    // 与业态列的「金额(含税)/金额(不含税)」文字纵向对齐
+    //   成本小计(row1) -> 空占位(row2) -> 含税小计/不含税小计 + 数值(row3)
     {
       label: "成本小计",
       children: [
         {
-          label: "含税小计",
+          // row2 空 group 占位，保留纵向 cell 撑住第 2 行
+          label: "",
           children: [
             {
+              label: "含税小计",
               prop: "totalCostAmt",
-              // 第三行只放数值，不留文字，和业态金额单元格对齐
-              label: "",
               width: 120,
               editable: false,
               showOverflowTooltip: false,
             },
-          ],
-        },
-        {
-          label: "不含税小计",
-          children: [
             {
+              label: "不含税小计",
               prop: "totalCostExclAmt",
-              label: "",
               width: 120,
               editable: false,
               showOverflowTooltip: false,
@@ -1336,11 +1332,21 @@ $table-readonly-color: rgba(0, 0, 0, 0.65);
 
 .index-col {
   width: 60px;
+  /* 序号依旧居中 */
+  justify-content: center;
 }
 
 .name-col {
   width: 180px;
-  justify-content: flex-start !important;
+  /* 成本科目列左对齐，保留树形层级缩进 */
+  justify-content: flex-start;
+  padding-left: 8px;
+  .cell-inner-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+  }
 }
 
 .expand-icon {
