@@ -128,7 +128,7 @@
                 />
               </el-form-item>
             </el-col>
-          </el-row>  
+          </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="期初产值金额" prop="sumProdVal">
@@ -173,7 +173,7 @@
                   v-model="formData.selfSupplyType"
                   placeholder=""
                   style="width: 100%"
-                  :disabled="formData.isSelfSupply === 0"
+                  :disabled="formData.isSelfSupply === false"
                 >
                   <el-option label="甲供材-主材" :value="1" />
                   <el-option label="甲供材-零星" :value="2" />
@@ -209,7 +209,7 @@
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="产值期间" prop = "prodValPeriod">
+              <el-form-item label="产值期间" prop="prodValPeriod">
                 <el-date-picker
                   v-model="formData.prodValPeriod"
                   type="month"
@@ -316,7 +316,6 @@
           title="合同产值"
           v-model:collapsed="collapsedCards.con"
         >
-
           <!-- 非甲供材  产值申报方式：按进度确认 -> 显示非甲供材  -->
           <div class="detail-table" v-if="formData.payMethod == 1">
             <!-- <div class="header-content">
@@ -364,7 +363,7 @@
                   format="YYYY-MM"
                   size="small"
                   style="width: 100%"
-                  :disabled="isReadonly || !!billData.status || row.hasVal" 
+                  :disabled="isReadonly || !!billData.status || row.hasVal"
                   @change="row.payDate = toMonthEnd(row.payDate); update(row.payDate)"
                 />
               </template>
@@ -386,7 +385,7 @@
             class="detail-table"
             v-if="
               formData.payMethod == 2 &&
-              formData.isSelfSupply == 1 &&
+              formData.isSelfSupply == true &&
               formData.selfSupplyType == 1
             "
           >
@@ -446,7 +445,7 @@
                   format="YYYY-MM"
                   size="small"
                   style="width: 100%"
-                  :disabled="isReadonly || !!billData.status || row.hasVal" 
+                  :disabled="isReadonly || !!billData.status || row.hasVal"
                   @change="row.payDate = toMonthEnd(row.payDate); update(row.payDate)"
                 />
               </template>
@@ -481,9 +480,9 @@
           <div
             class="detail-table"
             v-if="
-              (formData.payMethod == 2 && formData.isSelfSupply == 0) ||
+              (formData.payMethod == 2 && formData.isSelfSupply === false) ||
               (formData.payMethod == 2 &&
-                formData.isSelfSupply == 1 &&
+                formData.isSelfSupply === true &&
                 formData.selfSupplyType == 2)
             "
           >
@@ -543,7 +542,7 @@
                   format="YYYY-MM"
                   size="small"
                   style="width: 100%"
-                  :disabled="isReadonly || !!billData.status || row.hasVal" 
+                  :disabled="isReadonly || !!billData.status || row.hasVal"
                   @change="row.payDate = toMonthEnd(row.payDate); update(row.payDate)"
                 />
               </template>
@@ -704,20 +703,24 @@
     ref="contractDialogRef"
     v-model="mainConDialogVisible"
     :selectionMode="'single'"
-    :projId = formData.projId
+    :projId="formData.projId"
     @select="handleMainConSelect"
   />
   <choose-material-val-dialog
     ref="contractDialogRef"
     v-model="mtDialogVisible"
     :selectionMode="'multiple'"
-    :conNo = "formData.conSysNo"
-    :cgType = "formData.selfSupplyType"
+    :conNo="formData.conSysNo"
+    :cgType="formData.selfSupplyType"
+    :is-uesd="false"
     @select="handleMaterialSelect"
   />
 </template>
 
 <script setup lang="ts">
+// ============================================================
+// 1. 依赖与类型导入
+// ============================================================
 import { ref, computed, onMounted, watch, nextTick, useTemplateRef } from "vue";
 import { ElMessage, ElMessageBox, type FormInstance } from "element-plus";
 import { v4 as uuidv4 } from "uuid";
@@ -739,9 +742,8 @@ import { formType } from "@/types/form/form-types";
 import { dateUtil } from "@/utils/date-util";
 import { outputDeclarationApi } from "@/api/cost/contract-manage/output-declaration-api";
 import ChooseMaterialValDialog from "./choose-martrial-val-dialog.vue";
-import { createProdColumns, materialColumns,materialMinorColumns, NAV_CARDS } from "./output-value-config";
+import { createProdColumns, materialColumns, materialMinorColumns, NAV_CARDS } from "./output-value-config";
 import { useFormLayout } from "@/composables/use-form-layout";
-const { collapsedCards, toggleCard, formatMoney } = useFormLayout(NAV_CARDS);
 import FormCard from "@/components/base/base-form-card.vue";
 import PickInput from "@/components/base/base-pick-input.vue";
 import FloatNav from "@/components/base/base-float-nav.vue";
@@ -751,58 +753,56 @@ import { dictMapping } from "@/utils/dict-mapping";
 
 defineOptions({ name: "output-value-approval-form" });
 
+// ============================================================
+// 2. 业务常量（款项类型，需与合同台账 payTypeId 保持一致）
+// ============================================================
+const PROGRESS_PAY_TYPE = 2062; // 进度款
+const ACCEPT_PAY_TYPE = 2063; // 验收款
+
+// ============================================================
+// 3. Props / Emits
+// ============================================================
 interface Props {
   mode?: "add" | "edit" | "detail";
   prodId?: number;
 }
-
 const props = withDefaults(defineProps<Props>(), {
   mode: "add",
   prodId: undefined,
 });
-
 const emit = defineEmits<{
   (e: "success", data: any): void;
   (e: "cancel"): void;
 }>();
 
+// ============================================================
+// 4. 全局实例（store / route / router）
+// ============================================================
 const router = useRouter();
-const userStore = useUserStore();
 const route = useRoute();
+const userStore = useUserStore();
 const tagsStore = useTagsStore();
-
 const conId = Number(route.query.conId); // 合同ID
+const { collapsedCards, toggleCard, formatMoney } = useFormLayout(NAV_CARDS);
 
+// ============================================================
+// 5. 业务枚举与字典
+// ============================================================
+const { getDictList, loadDicts } = useDict([dictMapping.paymentType]);
+const paymentTypeOptions = ref<any[]>([]);
+const initDictData = async () => {
+  await loadDicts();
+  paymentTypeOptions.value = getDictList(dictMapping.paymentType);
+};
+
+// ============================================================
+// 6. 基础状态与页面模式
+// ============================================================
 const formRef = ref<FormInstance>();
 const submitLoading = ref(false);
-const loadingForm = ref(false); 
+const loadingForm = ref(false);
 
-const mode = ref<"add" | "edit" | "detail">(props.mode);
-const prodId = ref<number | undefined>(props.prodId);
-
-const isDetail = computed(() => mode.value === "detail");
-const isEdit = computed(() => mode.value === "edit");
-const isAdd = computed(() => mode.value === "add");
-const isReadonly = computed(
-  () => isDetail.value || !!billData.value.status,
-);
-
-const notMaterial = computed(() => formData.value.payMethod ===1); //非材料
-const mainMaterial = computed(() => formData.value.payMethod ===2 && formData.value.selfSupplyType === 1); //主材
-const miscMaterial = computed(() => formData.value.payMethod ===2 && formData.value.selfSupplyType === 2); //零星
-const visibleNavCards = computed(() =>
-  NAV_CARDS
-);
-
-const projectOptions = ref([]);
-const declaraFileList = ref([]);
-const annexFileList = ref([]);
-
-// ==================== 附件上传相关 ====================
-const annexUploadRef = useTemplateRef("annexUploadRef");
-const tempFileList = ref([]);
-const currentUploadRow = ref<any>(null);
-
+// 单据主体
 const billData = ref({
   id: undefined,
   bizTitle: "",
@@ -812,11 +812,35 @@ const billData = ref({
   flowId: null,
   createDate: null,
 });
-
 const flowListData = ref<any>(null);
 const flowBaseData = ref<any>(null);
-const paymentTypeOptions = ref<any[]>([]);
 
+// 页面模式
+const mode = ref<"add" | "edit" | "detail">(props.mode);
+const prodId = ref<number | undefined>(props.prodId);
+
+const isDetail = computed(() => mode.value === "detail");
+const isEdit = computed(() => mode.value === "edit");
+const isAdd = computed(() => mode.value === "add");
+const isReadonly = computed(() => isDetail.value || !!billData.value.status);
+
+// 产值申报方式派生（payMethod：1=按进度确认/非甲供材，2=甲供材）
+const notMaterial = computed(() => formData.value.payMethod === 1); // 非甲供材
+const mainMaterial = computed(() => formData.value.payMethod === 2 && formData.value.selfSupplyType === 1); // 甲供材-主材
+const miscMaterial = computed(() => formData.value.payMethod === 2 && formData.value.selfSupplyType === 2); // 甲供材-零星
+const visibleNavCards = computed(() => NAV_CARDS);
+
+// 选项 / 附件
+const projectOptions = ref([]);
+const declaraFileList = ref([]);
+const annexFileList = ref([]);
+
+// 行附件上传
+const annexUploadRef = useTemplateRef("annexUploadRef");
+const tempFileList = ref([]);
+const currentUploadRow = ref<any>(null);
+
+// 表单初始值
 const initFormData = () => ({
   // 单据信息
   id: undefined as number | undefined,
@@ -844,7 +868,7 @@ const initFormData = () => ({
   supId: undefined,
   supName: "", // 供应商名称
   conTypeId: undefined,
-  status:0,
+  status: 0,
   conTypeName: "", // 合同分类
   productionMajor: "", // 生产专业
   signAmt: 0, // 签约合同金额
@@ -856,7 +880,7 @@ const initFormData = () => ({
   sumAppyAmt: 0, // 累计请款
   sumPaidAmt: 0, // 累计实付
   sumOwedAmt: 0, // 累计欠款
-  isSelfSupply: null, // 是否甲供材，0-否，1-是
+  isSelfSupply: false, // 是否甲供材，0-否，1-是
   selfSupplyType: null, // 甲供材类型，1-主材，2-零星
 
   // 产值信息
@@ -866,19 +890,16 @@ const initFormData = () => ({
   costProdVal: 0, // 本次成本复核产值
   costPayAmt: 0, // 本次成本复核应付
   applyDesc: "", // 申报说明
-  prodValPeriod: dateUtil().format("YYYY-MM-DD"),//产值月份
+  prodValPeriod: dateUtil().format("YYYY-MM-DD"), // 产值月份
+
   // 本次申报后累计情况
   totalProdVal: 0, // 累计产值
   totalPayVal: 0, // 累计应付
   totalOwedVal: 0, // 累计未付
 });
-
-const prodColumns = createProdColumns({
-  paymentTypeOptions,
-});
-
 const formData = ref(initFormData());
 
+// 表单校验规则
 const formRules = computed(() => {
   const rules: Record<string, any> = {
     bizTitle: requiredInputRule("标题"),
@@ -889,16 +910,9 @@ const formRules = computed(() => {
   return rules;
 });
 
-  const { getDictList, loadDicts } = useDict(
-    [dictMapping.paymentType],
-  );
-// 初始化数据字典
-  const initDictData = async () => {
-    await loadDicts();
-    paymentTypeOptions.value = getDictList(dictMapping.paymentType);
-  };
-  
-// ==================== 公共工具：月份 / 格式化 / 合计 ====================
+// ============================================================
+// 7. 公共工具（日期 / 格式化 / 合计）
+// ============================================================
 /** 当前月份（当月月末最后一天 YYYY-MM-DD，与数据库 DATE 类型对齐） */
 const currentMonth = (): string => {
   const now = new Date();
@@ -956,193 +970,99 @@ const formatPercent = (val: any): string => {
 };
 
 /** 通用合计方法：仅对指定金额字段求和 */
-const summaryBuilder = (
-  columns: any[],
-  data: any[],
-  amountProps: string[],
-): string[] =>
+const summaryBuilder = (columns: any[], data: any[], amountProps: string[]): string[] =>
   columns.map((col: any, index: number) => {
     if (index === 0) return "合计";
     const p = col.property || col.prop;
     if (amountProps.includes(p)) {
-      const total = data.reduce(
-        (s: number, r: any) => s + (Number(r[p]) || 0),
-        0,
-      );
+      const total = data.reduce((s: number, r: any) => s + (Number(r[p]) || 0), 0);
       return fmtMoney(total);
     }
     return "";
   });
 
-// ==================== 材料合同产值明细 - 甲供材-主材 ====================
+// ============================================================
+// 8. 明细表 - 非甲供材（按进度确认）
+// ============================================================
+const nonSelfSupplyTable = ref([]);
+const nonSelfSupplyRef = ref();
+const billPayratesList = ref([]);
+
+// 非甲供材明细中是否存在「进度款」行：存在时产值只能填在进度款行，验收款不得填产值
+const hasProgressRow = computed(() => nonSelfSupplyTable.value.some((r) => r.payTypeId === PROGRESS_PAY_TYPE));
+
+const prodColumns = createProdColumns({ paymentTypeOptions });
+
+const nonSelfSupplySummary = (param: any) =>
+  summaryBuilder(param.columns, param.data, ["prodVal", "payAmt", "costProdVal", "costPayAmt"]);
+
+const addNonSelfSupply = () => {
+  const newRow = {
+    uuid: uuidv4(),
+    id: undefined,
+    conBillId: undefined,
+    payTypeId: undefined,
+    payRate: undefined,
+    isCtrl: false,
+    payIntvl: 0,
+    prodVal: 0,
+    payAmt: 0,
+    buildPeriod: "",
+    prodValPeriod: currentMonth(),
+    payDate: "",
+    costProdVal: 0,
+    costPayAmt: 0,
+  };
+  nonSelfSupplyTable.value = [...nonSelfSupplyTable.value, newRow];
+};
+
+const deleteNonSelfSupply = (row: any) => {
+  nonSelfSupplyTable.value = nonSelfSupplyTable.value.filter((item) => item.uuid !== row.uuid);
+};
+
+const recomputeNonSelfSupply = (row: any, column: string) => {
+  // 选择款项类型时回填应付比例、是否强控、支付周期
+  if (column === "payTypeId") {
+    const target = billPayratesList.value.find((i) => i.payTypeId === row.payTypeId);
+    const { payRate, isCtrl, payIntvl } = target || {};
+    row.payRate = payRate;
+    row.isCtrl = isCtrl;
+    row.payIntvl = payIntvl;
+  }
+  const prodVal = Number(row.prodVal) || 0;
+  const payRate = Number(row.payRate) || 0;
+  // 本次应付 = 本次产值 × 应付比例（强控时锁定，不强控也给默认值，仍可手改）
+  if (["prodVal", "payRate", "payTypeId", "isCtrl"].includes(column)) {
+    row.payAmt = Number(((prodVal * payRate) / 100).toFixed(2));
+  }
+  // 付款期间 = 产值期间 + 支付周期(月)
+  const payIntvl = Number(row.payIntvl) || 0;
+  if (
+    (column === "prodValPeriod" || column === "payTypeId" || column === "payIntvl") &&
+    row.prodValPeriod
+  ) {
+    row.payDate = addMonths(row.prodValPeriod, payIntvl);
+  }
+  // 进度款/验收款互斥承载产值：存在进度款时，验收款行的产值强制为 0
+  if (hasProgressRow.value && row.payTypeId === ACCEPT_PAY_TYPE) {
+    row.prodVal = 0;
+  }
+};
+
+const handleNonSelfSupplySave = async (data: any) => {
+  const { row, column } = data;
+  recomputeNonSelfSupply(row, column);
+};
+
+// ============================================================
+// 9. 明细表 - 甲供材-主材
+// ============================================================
 const materialTable = ref([]);
 const materialRef = ref();
 
-// const materialColumns = computed<EditableColumn[]>(() => [
-//   { type: "index", label: "序号", width: 60, editable: false },
-//   {
-//     prop: "recvBillNo",
-//     label: "接收单号",
-//     editable: true,
-//     editType: "input",
-//     showOverflowTooltip: false,
-//     width: 120,
-//   },
-//   {
-//     prop: "mtName",
-//     label: "材料名称",
-//     editable: false,
-//     width: 120,
-//   },
-//   {
-//     prop: "mtModel",
-//     label: "材料规格",
-//     editable: false,
-//     width: 120,
-//   },
-//   {
-//     prop: "mtBrand",
-//     label: "品牌",
-//     editable: false,
-//     width: 120,
-//   },
-//   {
-//     prop: "mtBrand",
-//     label: "材质",
-//     editable: false,
-//     width: 120,
-//   },
-//   {
-//     prop: "recvNum",
-//     label: "接收数量",
-//     editable: true,
-//     editType: "number",
-//     thousandSeparator: true,
-//     showOverflowTooltip: false,
-//     precision: 0,
-//     width: 120,
-//   },
-//   {
-//     prop: "mtUnit",
-//     label: "单位",
-//     editable: true,
-//     editType: "input",
-//     showOverflowTooltip: false,
-//     width: 100,
-//   },
-//   {
-//     prop: "recvPrice",
-//     label: "单价",
-//     editable: true,
-//     editType: "number",
-//     thousandSeparator: true,
-//     showOverflowTooltip: false,
-//     width: 120,
-//   },
-//   {
-//     prop: "prodVal",
-//     label: "接收产值",
-//     editable: true,
-//     editType: "number",
-//     thousandSeparator: true,
-//     showOverflowTooltip: false,
-//     width: 150,
-//   },
-//   {
-//     prop: "fineAmt",
-//     label: "罚款",
-//     editable: true,
-//     editType: "number",
-//     thousandSeparator: true,
-//     showOverflowTooltip: false,
-//     width: 120,
-//   },
-//   {
-//     prop: "applyProdVal",
-//     label: "本次申报产值",
-//     editable: true,
-//     editType: "number",
-//     thousandSeparator: true,
-//     showOverflowTooltip: false,
-//     width: 150,
-//   },
-//   {
-//     prop: "payRate",
-//     label: "应付比例(%)",
-//     editable: true,
-//     editType: "number",
-//     precision: 2,
-//     showOverflowTooltip: false,
-//     width: 120,
-//   },
-//   {
-//     prop: "payAmt",
-//     label: "本次申报应付",
-//     editable: true,
-//     editType: "number",
-//     thousandSeparator: true,
-//     showOverflowTooltip: false,
-//     width: 150,
-//   },
-//   {
-//     prop: "buildPeriod",
-//     label: "施工期间",
-//     editable: true,
-//     editType: "input",
-//     showOverflowTooltip: false,
-//     width: 160,
-//     formatter: (row: any) => formatYM(row.buildPeriod),
-//   },
-//   {
-//     prop: "prodValPeriod",
-//     label: "产值期间",
-//     editable: false,
-//     showOverflowTooltip: false,
-//     width: 150,
-//     formatter: (row: any) => formatYM(row.prodValPeriod),
-//   },
-//   {
-//     prop: "payDate",
-//     label: "计划付款期间",
-//     editable: true,
-//     editType: "input",
-//     showOverflowTooltip: false,
-//     width: 160,
-//     formatter: (row: any) => formatYM(row.payDate),
-//   },
-//   {
-//     prop: "costProdVal",
-//     label: "成本复核产值",
-//     editable: false,
-//     thousandSeparator: true,
-//     width: 150,
-//     formatter: (row: any) => fmtMoney(row.costProdVal),
-//   },
-//   {
-//     prop: "costPayAmt",
-//     label: "成本复核应付",
-//     editable: false,
-//     thousandSeparator: true,
-//     width: 150,
-//     formatter: (row: any) => fmtMoney(row.costPayAmt),
-//   },
-//   {
-//     label: "操作",
-//     width: 100,
-//     slot: "actions",
-//     fixed: "right",
-//   },
-// ]);
-
+// materialColumns 由 ./output-value-config 统一维护
 const materialSummary = (param: any) =>
-  summaryBuilder(param.columns, param.data, [
-    "prodVal",
-    "fineAmt",
-    "prodVal",
-    "payAmt",
-    "costProdVal",
-    "costPayAmt",
-  ]);
+  summaryBuilder(param.columns, param.data, ["prodVal", "fineAmt", "prodVal", "payAmt", "costProdVal", "costPayAmt"]);
 
 const addMaterial = () => {
   const newRow = {
@@ -1171,150 +1091,18 @@ const addMaterial = () => {
 };
 
 const deleteMaterial = (row: any) => {
-  materialTable.value = materialTable.value.filter(
-    (item) => item.uuid !== row.uuid,
-  );
+  materialTable.value = materialTable.value.filter((item) => item.uuid !== row.uuid);
 };
 
-// ==================== 材料合同产值明细 - 甲供材-零星 ====================
+// ============================================================
+// 10. 明细表 - 甲供材-零星
+// ============================================================
 const materialMinorTable = ref([]);
 const materialMinorRef = ref();
 
-// const materialMinorColumns = computed<EditableColumn[]>(() => [
-//   { type: "index", label: "序号", width: 60, editable: false },
-//   {
-//     prop: "recvBillNo",
-//     label: "接收单号",
-//     editable: true,
-//     editType: "input",
-//     showOverflowTooltip: false,
-//     width: 120,
-//   },
-//   {
-//     prop: "mtCategory",
-//     label: "材料类别",
-//     editable: false,
-//     width: 120,
-//   },
-//   {
-//     prop: "prodVal",
-//     label: "接收产值",
-//     editable: true,
-//     editType: "number",
-//     thousandSeparator: true,
-//     showOverflowTooltip: false,
-//     width: 150,
-//   },
-//   {
-//     prop: "fineAmt",
-//     label: "罚款",
-//     editable: true,
-//     editType: "number",
-//     thousandSeparator: true,
-//     showOverflowTooltip: false,
-//     width: 120,
-//   },
-//   {
-//     prop: "applyProdVal",
-//     label: "本次申报产值",
-//     editable: true,
-//     editType: "number",
-//     thousandSeparator: true,
-//     showOverflowTooltip: false,
-//     width: 150,
-//   },
-//   {
-//     prop: "payRate",
-//     label: "合同应付比例(%)",
-//     editable: true,
-//     editType: "number",
-//     precision: 2,
-//     showOverflowTooltip: false,
-//     width: 120,
-//   },
-//   {
-//     prop: "payAmt",
-//     label: "本次申报应付",
-//     editable: true,
-//     editType: "number",
-//     thousandSeparator: true,
-//     showOverflowTooltip: false,
-//     width: 150,
-//   },
-//   {
-//     prop: "buildPeriod",
-//     label: "施工期间",
-//     editable: true,
-//     editType: "input",
-//     showOverflowTooltip: false,
-//     width: 160,
-//     formatter: (row: any) => formatYM(row.buildPeriod),
-//   },
-//   {
-//     prop: "prodValPeriod",
-//     label: "产值期间",
-//     editable: false,
-//     showOverflowTooltip: false,
-//     width: 150,
-//     formatter: (row: any) => formatYM(row.prodValPeriod),
-//   },
-//   {
-//     prop: "payDate",
-//     label: "计划付款期间",
-//     editable: true,
-//     editType: "input",
-//     showOverflowTooltip: false,
-//     width: 160,
-//     formatter: (row: any) => formatYM(row.payDate),
-//   },
-//   {
-//     prop: "costProdVal",
-//     label: "成本复核产值",
-//     editable: true,
-//     editType: "number",
-//     thousandSeparator: true,
-//     showOverflowTooltip: false,
-//     width: 150,
-//   },
-//   {
-//     prop: "costPayAmt",
-//     label: "成本复核应付",
-//     editable: true,
-//     editType: "number",
-//     thousandSeparator: true,
-//     showOverflowTooltip: false,
-//     width: 150,
-//   },
-//   {
-//     prop: "remark",
-//     label: "备注",
-//     editable: true,
-//     editType: "input",
-//     showOverflowTooltip: false,
-//     width: 150,
-//   },
-//   {
-//     slot: "annex",
-//     label: "接收明细附件",
-//     width: 180,
-//   },
-//   {
-//     label: "操作",
-//     width: 140,
-//     slot: "actions",
-//     fixed: "right",
-//   },
-// ]);
-
+// materialMinorColumns 由 ./output-value-config 统一维护
 const materialMinorSummary = (param: any) =>
-  summaryBuilder(param.columns, param.data, [
-    "prodVal",
-    "fineAmt",
-    "prodVal",
-    "payAmt",
-    "costProdVal",
-    "costPayAmt",
-  ]);
+  summaryBuilder(param.columns, param.data, ["prodVal", "fineAmt", "prodVal", "payAmt", "costProdVal", "costPayAmt"]);
 
 const addMaterialMinor = () => {
   const newRow = {
@@ -1322,7 +1110,7 @@ const addMaterialMinor = () => {
     id: undefined,
     conBillId: undefined,
     recvBillNo: "",
-    mtCategory: "",
+    mtName: "",
     prodVal: 0,
     fineAmt: 0,
     payRate: 0,
@@ -1341,14 +1129,10 @@ const addMaterialMinor = () => {
 };
 
 const deleteMaterialMinor = (row: any) => {
-  materialMinorTable.value = materialMinorTable.value.filter(
-    (item) => item.uuid !== row.uuid,
-  );
+  materialMinorTable.value = materialMinorTable.value.filter((item) => item.uuid !== row.uuid);
 };
 
-/**
- * 打开文件上传对话框
- */
+// ---- 行附件上传（功能暂未启用，模板中已注释触发按钮） ----
 const openUploadForRow = (row: any) => {
   if (isDetail.value || !!billData.value.status) return;
   currentUploadRow.value = row;
@@ -1357,35 +1141,20 @@ const openUploadForRow = (row: any) => {
     annexUploadRef.value?.triggerFileSelect();
   });
 };
-
-/**
- * 上传成功回调
- */
 const handleUploadSuccess = (file: any) => {
   tempFileList.value = [file];
   if (currentUploadRow.value) {
     const annexId = file.id;
     const annexName = file.annexName || file.name;
-
-    const rowIndex = materialMinorTable.value.findIndex(
-      (item) => item.uuid === currentUploadRow.value.uuid,
-    );
+    const rowIndex = materialMinorTable.value.findIndex((item) => item.uuid === currentUploadRow.value.uuid);
     if (rowIndex !== -1) {
       const newData = [...materialMinorTable.value];
-      newData[rowIndex] = {
-        ...newData[rowIndex],
-        annexId: annexId,
-        annexName: annexName,
-      };
+      newData[rowIndex] = { ...newData[rowIndex], annexId, annexName };
       materialMinorTable.value = newData;
     }
     currentUploadRow.value = null;
   }
 };
-
-/**
- * 查看附件
- */
 const handleViewAnnex = async (row: any) => {
   if (!row.annexId) {
     ElMessage.warning("该附件不存在");
@@ -1397,8 +1166,7 @@ const handleViewAnnex = async (row: any) => {
       const file = res.data[0];
       const fileUrl = file.annexPath;
       if (fileUrl) {
-        const url = buildFileUrl(fileUrl);
-        window.open(url, "_blank");
+        window.open(buildFileUrl(fileUrl), "_blank");
       } else {
         ElMessage.error("无法获取附件地址");
       }
@@ -1410,6 +1178,9 @@ const handleViewAnnex = async (row: any) => {
   }
 };
 
+// ============================================================
+// 11. 弹窗（合同选择 / 材料收货选择）
+// ============================================================
 // ---- 主合同选择 ----
 const mainConDialogVisible = ref(false);
 const openMainConDialog = () => {
@@ -1422,7 +1193,7 @@ const openMainConDialog = () => {
 };
 const handleMainConSelect = async (data) => {
   if (data && data.length > 0) {
-    let newData = data || [];
+    const newData = data || [];
     if (formData.value.conId != newData[0].id) {
       await getConDetail(newData[0].id);
       await getConTotal(newData[0].id);
@@ -1432,7 +1203,7 @@ const handleMainConSelect = async (data) => {
   }
 };
 
-// ---- 材料到货选择 ----
+// ---- 材料收货选择 ----
 const mtDialogVisible = ref(false);
 const openMaterialDialog = () => {
   if (isDetail.value) return;
@@ -1444,11 +1215,10 @@ const openMaterialDialog = () => {
 };
 const handleMaterialSelect = async (data) => {
   if (data && data.length > 0) {
-    const list =data || [];
-    debugger
+    const list = data || [];
     if (formData.value.selfSupplyType === 1) {
       list.forEach((item) => {
-        const exists = materialTable.value.some((recd) => (recd.srcKeyId === item.keyid));
+        const exists = materialTable.value.some((recd) => recd.srcKeyId === item.keyid);
         if (!exists) {
           addMaterial();
           const dataIndex = materialTable.value.length - 1;
@@ -1461,19 +1231,20 @@ const handleMaterialSelect = async (data) => {
           materialTable.value[dataIndex].mtUnit = item.mtUnit;
           materialTable.value[dataIndex].recvNum = item.recvNum;
           materialTable.value[dataIndex].recvPrice = item.recvPrice;
-          materialTable.value[dataIndex].prodVal = item.recvVal;
+          materialTable.value[dataIndex].recvProdAmt = item.recvVal;
           materialTable.value[dataIndex].fineAmt = item.dedAmt;
-          materialTable.value[dataIndex].prodVal = Number(item.recvVal ?? 0)- Number(item.dedAmt ?? 0);
+          materialTable.value[dataIndex].prodVal = Number(item.recvVal ?? 0) - Number(item.dedAmt ?? 0);
           materialTable.value[dataIndex].payRate = 100;
-          materialTable.value[dataIndex].payAmt = Number(item.recvVal ?? 0)- Number(item.dedAmt ?? 0);
+          materialTable.value[dataIndex].payAmt = Number(item.recvVal ?? 0) - Number(item.dedAmt ?? 0);
           materialTable.value[dataIndex].buildPeriod = item.recvDate;
           materialTable.value[dataIndex].payIntvl = 1;
           materialTable.value[dataIndex].payDate = addMonths(currentMonth(), 1);
+          materialTable.value[dataIndex].srcOaRequestId = item.oaRequestId;
         }
-      })
+      });
     } else {
       list.forEach((item) => {
-        const exists = materialMinorTable.value.some((recd) => (recd.srcKeyId === item.keyid));
+        const exists = materialMinorTable.value.some((recd) => recd.srcKeyId === item.keyid);
         if (!exists) {
           addMaterialMinor();
           const dataIndex = materialMinorTable.value.length - 1;
@@ -1482,125 +1253,88 @@ const handleMaterialSelect = async (data) => {
           materialMinorTable.value[dataIndex].mtName = item.mtTypeName;
           materialMinorTable.value[dataIndex].recvNum = item.recvNum;
           materialMinorTable.value[dataIndex].recvPrice = item.recvPrice;
-          materialMinorTable.value[dataIndex].prodVal = item.recvVal;
+          materialMinorTable.value[dataIndex].recvProdAmt = item.recvVal;
           materialMinorTable.value[dataIndex].fineAmt = item.dedAmt;
-          materialMinorTable.value[dataIndex].prodVal = Number(item.recvVal ?? 0)- Number(item.dedAmt ?? 0);
+          materialMinorTable.value[dataIndex].prodVal = Number(item.recvVal ?? 0) - Number(item.dedAmt ?? 0);
           materialMinorTable.value[dataIndex].payRate = 100;
-          materialMinorTable.value[dataIndex].payAmt = Number(item.recvVal ?? 0)- Number(item.dedAmt ?? 0);
+          materialMinorTable.value[dataIndex].payAmt = Number(item.recvVal ?? 0) - Number(item.dedAmt ?? 0);
           materialMinorTable.value[dataIndex].buildPeriod = item.recvDate;
           materialMinorTable.value[dataIndex].payIntvl = 1;
           materialMinorTable.value[dataIndex].payDate = addMonths(currentMonth(), 1);
+          materialMinorTable.value[dataIndex].srcOaRequestId = item.oaRequestId;
         }
-      })
-    };
+      });
+    }
   }
 };
-
 const clearMaterialTable = async (data) => {
   materialTable.value = [];
-}
-
+};
 const clearMaterialTableMinor = async (data) => {
   materialMinorTable.value = [];
-}
+};
 
-// ==================== 非甲供材 ====================
-const nonSelfSupplyTable = ref([]);
-const billPayratesList = ref([]);
+// ============================================================
+// 12. 主表字段联动（watch）
+// ============================================================
+// 三张明细表互斥显示（由 payMethod / 甲供材类型决定显示哪张），
+// 主表只汇总「当前实际显示的那张表」，不把隐藏表的脏数据也算进来。
+const activeDetailTable = computed(() => {
+  const f = formData.value;
+  if (f.payMethod == 1) return nonSelfSupplyTable.value; // 非甲供材
+  if (f.payMethod == 2 && f.isSelfSupply === true && f.selfSupplyType == 1)
+    return materialTable.value; // 甲供材-主材
+  if (
+    (f.payMethod == 2 && f.isSelfSupply === false) ||
+    (f.payMethod == 2 && f.isSelfSupply === true && f.selfSupplyType == 2)
+  )
+    return materialMinorTable.value; // 甲供材-零星
+  return [];
+});
 
-// 款项类型：进度款 / 验收款（与合同台账 payTypeId 保持一致）
-const PROGRESS_PAY_TYPE = 2062; // 进度款
-const ACCEPT_PAY_TYPE = 2063; // 验收款
-
-// 非甲供材明细中是否存在「进度款」行：存在时产值只能填在进度款行，验收款不得填产值
-const hasProgressRow = computed(() =>
-  nonSelfSupplyTable.value.some((r) => r.payTypeId === PROGRESS_PAY_TYPE),
+/** 主表本次申报产值 = 当前显示明细表的本次产值之和 */
+const detailApplyProdVal = computed(() =>
+  activeDetailTable.value.reduce((s: number, r: any) => s + (Number(r.prodVal) || 0), 0),
 );
 
-const nonSelfSupplySummary = (param: any) =>
-  summaryBuilder(param.columns, param.data, [
-    "prodVal",
-    "payAmt",
-    "costProdVal",
-    "costPayAmt",
-  ]);
+/** 主表本次申报应付 = 当前显示明细表的本次应付之和（甲供材用 payAmt，非甲供材用 applyPayAmt） */
+const detailApplyPayAmt = computed(() =>
+  activeDetailTable.value.reduce((s: number, r: any) => s + (Number(r.payAmt ?? r.applyPayAmt) || 0), 0),
+);
 
-const addNonSelfSupply = () => {
-  const newRow = {
-    uuid: uuidv4(),
-    id: undefined,
-    conBillId: undefined,
-    payTypeId: undefined,
-    payRate: undefined,
-    isCtrl: false,
-    payIntvl: 0,
-    prodVal: 0,
-    payAmt: 0,
-    buildPeriod: "",
-    prodValPeriod: currentMonth(),
-    payDate: "",
-    costProdVal: 0,
-    costPayAmt: 0,
-  };
-  nonSelfSupplyTable.value = [...nonSelfSupplyTable.value, newRow];
-};
+watch(
+  [
+    detailApplyProdVal,
+    detailApplyPayAmt,
+    () => formData.value.costProdVal,
+    () => formData.value.costPayAmt,
+    () => formData.value.sumProdVal,
+    () => formData.value.sumPayAmt,
+  ],
+  () => {
+    const f = formData.value;
+    f.applyProdVal = detailApplyProdVal.value;
+    f.applyPayAmt = detailApplyPayAmt.value;
+    // 含本单累计产值 = 累计产值 + 本次申报产值（有成本复核产值则用成本复核值）
+    f.totalProdVal =
+      (Number(f.sumProdVal) || 0) +
+      ((Number(f.costProdVal) || 0) !== 0 ? Number(f.costProdVal) : detailApplyProdVal.value);
+    // 含本单累计应付 = 累计应付 + 本次申报应付（有成本复核应付则用成本复核值）
+    f.totalPayVal =
+      (Number(f.sumPayAmt) || 0) +
+      ((Number(f.costPayAmt) || 0) !== 0 ? Number(f.costPayAmt) : detailApplyPayAmt.value);
+  },
+  { immediate: true },
+);
 
-const deleteNonSelfSupply = (row: any) => {
-  nonSelfSupplyTable.value = nonSelfSupplyTable.value.filter(
-    (item) => item.uuid !== row.uuid,
-  );
-};
-
-const recomputeNonSelfSupply = (row: any, column: string) => {
-  // 选择款项类型时回填应付比例、是否强控、支付周期
-  if (column === "payTypeId") {
-    const target = billPayratesList.value.find(
-      (i) => i.payTypeId === row.payTypeId,
-    );
-    const { payRate, isCtrl, payIntvl } = target || {};
-    row.payRate = payRate;
-    row.isCtrl = isCtrl;
-    row.payIntvl = payIntvl;
-  }
-  const prodVal = Number(row.prodVal) || 0;
-  const payRate = Number(row.payRate) || 0;
-  // 本次应付 = 本次产值 × 应付比例（强控时锁定，不强控也给默认值，仍可手改）
-  if (["prodVal", "payRate", "payTypeId", "isCtrl"].includes(column)) {
-    row.payAmt = Number(((prodVal * payRate) / 100).toFixed(2));
-  }
-  // 付款期间 = 产值期间 + 支付周期(月)
-  const payIntvl = Number(row.payIntvl) || 0;
-  if (
-    (column === "prodValPeriod" ||
-      column === "payTypeId" ||
-      column === "payIntvl") &&
-    row.prodValPeriod
-  ) {
-    row.payDate = addMonths(row.prodValPeriod, payIntvl);
-  }
-  // 进度款/验收款互斥承载产值：存在进度款时，验收款行的产值强制为 0
-  if (hasProgressRow.value && row.payTypeId === ACCEPT_PAY_TYPE) {
-    row.prodVal = 0;
-    // row.applyPayAmt = 0;
-  }
-};
-
-const handleNonSelfSupplySave = async (data: any) => {
-  const { row, column } = data;
-  recomputeNonSelfSupply(row, column);
-};
-
-// 存在进度款时，自动清空所有验收款行的产值/应付，保证「产值只由进度款承载」
+// 非甲供材：存在进度款行时，自动清空所有验收款行的产值/应付，保证「产值只由进度款承载」
 watch(
   nonSelfSupplyTable,
   () => {
     if (!hasProgressRow.value) return;
     let changed = false;
     const next = nonSelfSupplyTable.value.map((r: any) => {
-      if (
-        r.payTypeId === ACCEPT_PAY_TYPE &&
-        (Number(r.prodVal) || 0) !== 0
-      ) {
+      if (r.payTypeId === ACCEPT_PAY_TYPE && (Number(r.prodVal) || 0) !== 0) {
         changed = true;
         return { ...r, prodVal: 0, payAmt: 0 };
       }
@@ -1611,33 +1345,20 @@ watch(
   { deep: true },
 );
 
+// 产值申报方式切换：非甲供材(payMethod=1)时强制 isSelfSupply=false，否则为甲供材
 watch(
   notMaterial,
   () => {
-    debugger
     if (notMaterial.value === true) {
-      formData.value.isSelfSupply = false
+      formData.value.isSelfSupply = false;
     } else formData.value.isSelfSupply = true;
-  }
+  },
+  { immediate: true },
 );
 
-/** 甲供材两张表：本次应付 = 本次产值 × 应付比例（强控固定否，可手改） */
-const recomputeMaterialPayAmt = (row: any, column: string) => {
-  if (column === "prodVal" || column === "payRate") {
-    const v = Number(row.prodVal) || 0;
-    const r = Number(row.payRate) || 0;
-    row.payAmt = Number(((v * r) / 100).toFixed(2));
-  }
-};
-const handleMaterialSave = async (data: any) => {
-  const { row, column } = data;
-  recomputeMaterialPayAmt(row, column);
-};
-const handleMaterialMinorSave = async (data: any) => {
-  const { row, column } = data;
-  recomputeMaterialPayAmt(row, column);
-};
-
+// ============================================================
+// 13. 数据加载
+// ============================================================
 // 获取项目数据
 const getProjectOptions = async () => {
   try {
@@ -1662,7 +1383,7 @@ const generateApplyNo = async () => {
   }
 };
 
-// 选择项目
+// 选择项目：回填公司/片区信息并清空原合同
 const changeProject = async (value: number) => {
   if (value) {
     const res = await projectAreaApi.getInfoByProjId({ id: value });
@@ -1701,53 +1422,127 @@ const clearContractInfo = () => {
   f.sumOwedAmt = 0;
 };
 
-// 构建提交参数
-const buildSubmitParams = () => {
-  return {
-    bill: {
-      ...billData.value,
-      id: billData.value.id || undefined,
-      bizTitle: formData.value.bizTitle,
-      bizItemCode: formType.CON_PROD,
-      segId: formData.value.segId,
-      segName: formData.value.segName,
-      segNo: formData.value.segNo,
-      projId: formData.value.projId,
-      compId: formData.value.compId,
-      compName: formData.value.compName,
-      flowId: formData.value.flowId,
-      conId: formData.value.conId,
-      bizNo: billData.value.bizNo,
-    },
-    prodVal: {
-      id: formData.value.id,
-      conBillId: formData.value.conBillId,
-      conId: formData.value.conId,
-      status: formData.value.status,
-      signAmt: formData.value.signAmt ?? '',
-      addAmt: formData.value.addAmt ?? '',
-      sumChangeAmt: formData.value.sumChangeAmt ?? '',
-      preSettleAmt: formData.value.preSettleAmt ?? '',
-      sumProdVal: formData.value.sumProdVal ?? '',
-      sumPayAmt: formData.value.sumPayAmt ?? '',
-      sumAppyAmt: formData.value.sumAppyAmt ?? '',
-      sumPaidAmt: formData.value.sumPaidAmt ?? '',
-      sumOwedAmt: formData.value.sumOwedAmt ?? '',
-      conTypeId: formData.value.conTypeId ?? 0,
-      payMethod: formData.value.payMethod ?? '',
-      applyProdVal: formData.value.applyProdVal ?? '',
-      applyPayAmt: formData.value.applyPayAmt ?? '',
-      applyDesc: formData.value.applyDesc ?? '',
-      costProdVal: formData.value.costProdVal ?? '',
-      costPayAmt: formData.value.costPayAmt ?? '',
-      totalProdVal: formData.value.totalProdVal ?? '',
-      totalPayVal: formData.value.totalPayVal ?? '',
-      isMaterial:formData.value.isSelfSupply ,
-      materialType:formData.value.selfSupplyType,
-    },
-    billPayrates: formData.value.payMethod === 1 ? nonSelfSupplyTable.value : [],
-    billMaterials: (formData.value.payMethod == 2 && formData.value.isSelfSupply == 1 && formData.value.selfSupplyType == 1) ? materialTable.value : materialMinorTable.value,
-    annexList: annexFileList.value || [],
+// 查询合同详情
+const getConDetail = async (inputConId) => {
+  if (!inputConId) return;
+  try {
+    const res = await contractLedgerApi.getContractLedgerById({ id: inputConId });
+    if (res.code === 200 && res.data) {
+      const { conMain, billPayrates } = res.data;
+      if (formData.value.projId != conMain.projId) {
+        await changeProject(conMain.projId);
+        formData.value.projId = conMain.projId;
+      }
+      billPayratesList.value = billPayrates || []; // 产值明细（非甲供材）的款项类型
+      formData.value.conId = conMain?.id;
+      formData.value.conName = conMain?.conName || "";
+      formData.value.conPhyNo = conMain?.conPhyNo || "";
+      formData.value.conSysNo = conMain?.conSysNo || "";
+      formData.value.supId = conMain?.supId || "";
+      formData.value.supName = conMain?.supName || "";
+      formData.value.conTypeId = conMain?.conTypeId || "";
+      formData.value.conTypeName = conMain?.conTypeName || "";
+      formData.value.signAmt = conMain?.signAmt || "";
+      formData.value.payMethod = conMain?.payMethod || "";
+    }
+  } catch (error) {
+    console.error("查询合同详情失败:", error);
+  }
+};
+
+// 查询合同累计数据
+const getConTotal = async (inputConId) => {
+  if (!inputConId) return;
+  try {
+    // 0=产值,1=应付,2=请款,3=已付,4=欠款,5=扣款,6=已扣,7=变更,8=签证，10=补充合同
+    const res = await cumulativeDataApi.getAccumData({
+      conId: inputConId,
+      typeList: [0, 1,  7, 8, 10],
+    });
+    if (res.code === 200 && res.data) {
+      const list = res.data || [];
+      list.forEach((item) => {
+        const total = item.archAmt + item.inTransAmt; // 归档 + 在途
+        switch (item.type) {
+          case 0: // 产值
+            formData.value.sumProdVal += total;
+            break;
+          case 1: // 应付
+            formData.value.sumPayAmt += total;
+            break;
+          case 7: // 变更
+            formData.value.sumChangeAmt += total;
+            break;
+          case 8: // 签证
+            formData.value.sumChangeAmt += total;
+            break;
+          case 10: // 补充合同
+            formData.value.addAmt += total;
+            break;
+          default:
+            break;
+        }
+      });
+    }
+  } catch (error) {
+    console.error("查询合同累计数据失败:", error);
+  }
+
+  // 取预结算金额
+  try {
+    const res = await cumulativeDataApi.getSettleData({
+      conId: conId,
+      typeList: [0,1],
+    });
+
+    if (res.code !== 200 || !res.data) {
+      console.warn("获取合同结算信息失败:", res.message);
+      return;
+    }
+
+    const stMap = new Map();
+    res.data.forEach((item) => {
+      stMap.set(item.type, item.archivedAmt || 0);
+    });
+
+    const [preSettleAmt,settledAmt] = [0,1].map((type) => stMap.get(type) || 0);
+
+    if ((settledAmt || 0) > 0) 
+      formData.value.preSettleAmt = settledAmt;
+    else formData.value.preSettleAmt = preSettleAmt;
+  } catch (error) {
+    console.error("获取合同结算信息失败:", error);
+  }
+};
+
+// 查询合同款项类型数据，自动新增非甲供材明细行
+const getConPayTypeData = async (inputConId) => {
+  if (!inputConId) return;
+  try {
+    const res = await contractLedgerApi.getContractPayRateList({ conId: inputConId });
+    if (res.code === 200 && res.data) {
+      nonSelfSupplyTable.value = [];
+      const hasItem = res.data.some((item) => item.payTypeId === PROGRESS_PAY_TYPE);
+      res.data.forEach((item) => {
+        if (item.payTypeId === PROGRESS_PAY_TYPE || item.payTypeId === ACCEPT_PAY_TYPE) {
+          // 2062-进度 2063-验收
+          addNonSelfSupply();
+          const lastIndex = nonSelfSupplyTable.value.length - 1;
+          nonSelfSupplyTable.value[lastIndex].payTypeId = item.payTypeId;
+          nonSelfSupplyTable.value[lastIndex].payRate = item.payRate;
+          nonSelfSupplyTable.value[lastIndex].isCtrl = item.isCtrl;
+          nonSelfSupplyTable.value[lastIndex].payIntvl = item.payIntvl;
+          nonSelfSupplyTable.value[lastIndex].payDate = addMonths(currentMonth(), item.payIntvl);
+          if (item.payTypeId === PROGRESS_PAY_TYPE) {
+            nonSelfSupplyTable.value[lastIndex].hasVal = true;
+          } else if (item.payTypeId === ACCEPT_PAY_TYPE && !hasItem) {
+            nonSelfSupplyTable.value[lastIndex].hasVal = true;
+          }
+        }
+      });
+    }
+  } catch (error) {
+    console.error("加载合同支付比例信息失败:", error);
   }
 };
 
@@ -1757,7 +1552,7 @@ const getContractYskAmt = async (inputConId) => {
     // 1-应收款最大可填金额
     const res = await contractLedgerApi.getContractYskAmt({
       conId: inputConId,
-      typeList: [0,1],
+      typeList: [0, 1],
     });
     let yskAmt = 0;
     let yskTotalAmt = 0;
@@ -1768,310 +1563,16 @@ const getContractYskAmt = async (inputConId) => {
         yskAmt = item.amount ?? 0;
       }
     }
-    return ((yskTotalAmt ?? 0) - (yskAmt ?? 0));
+    return (yskTotalAmt ?? 0) - (yskAmt ?? 0);
   } catch (error) {
     console.error("查询合同验收数据失败:", error);
   }
-}
-
-// 提交前校验
-const validateProdTables = async() => {
-  debugger
-  const f = formData.value;
-
-  if (f.payMethod == 1) {
-    const rows = nonSelfSupplyTable.value || [];
-    if (rows.length === 0) {
-      ElMessage.error("请先添加产值明细！");
-      return false;
-    }
-        // 通用：每行必须有款项类型
-    for (const row of rows) {
-      if (!row.payTypeId) {
-        ElMessage.error("请选择款项类型！");
-        return false;
-      }
-    }
-
-    const progressRows = rows.filter((r) => r.payTypeId === PROGRESS_PAY_TYPE);
-    const acceptRows = rows.filter((r) => r.payTypeId === ACCEPT_PAY_TYPE);
-    
-    let appYskAmt = 0;
-    let yskRate = 0;
-    if (progressRows.length > 0) {
-      // 存在进度款：产值只能填在进度款行，验收款不得有产值
-      for (const row of acceptRows) {
-        if ((Number(row.prodVal) || 0) !== 0) {
-          ElMessage.error("已存在进度款，验收款不得填写产值金额！");
-          return false;
-        }
-      }
-      for (const row of progressRows) {
-        // if ((Number(row.applyProdVal) || 0) === 0) {
-        //   ElMessage.error("进度款必须填写产值金额！");
-        //   return false;
-        // }
-        if ((!row.buildPeriod || !row.prodValPeriod || !row.payDate) 
-             && ((row.prodVal ?? 0) !==0 || (row.payAmt ?? 0) !==0 )) {
-          ElMessage.error("进度款行的施工期间、产值期间、计划付款期间均不能为空！");
-          return false;
-        }
-        if (row.payDate < row.prodValPeriod && ((row.prodVal ?? 0) !==0 || (row.payAmt ?? 0) !==0 )) {
-          ElMessage.error("计划付款期间不能早于产值期间！");
-          return false;
-        }
-        if (row.buildPeriod > row.prodValPeriod && ((row.prodVal ?? 0) !==0 || (row.payAmt ?? 0) !==0 )) {
-          ElMessage.error("产值期间不能早于施工期间！");
-          return false;
-        }
-      }
-    } 
-    
-    if (acceptRows.length > 0) {
-      // 无进度款：产值必须填在验收款行
-      if (acceptRows.length === 0 && progressRows.length === 0) {
-        ElMessage.error("无进度款时，必须存在验收款明细并填写产值！");
-        return false;
-      }
-      for (const row of acceptRows) {
-        // if ((Number(row.prodVal) || 0) === 0) {
-        //   ElMessage.error("无进度款时，验收款必须填写产值金额！");
-        //   return false;
-        // }
-        if ((!row.buildPeriod || !row.prodValPeriod || !row.payDate)
-           && ((row.prodVal ?? 0) !==0 || (row.payAmt ?? 0) !==0 )) {
-          ElMessage.error("验收款行的施工期间、产值期间、计划付款期间均不能为空！");
-          return false;
-        }
-        if (row.payDate < row.prodValPeriod && ((row.prodVal ?? 0) !==0 || (row.payAmt ?? 0) !==0 )) {
-          ElMessage.error("计划付款期间不能早于产值期间！");
-          return false;
-        }
-        if (row.buildPeriod > row.prodValPeriod && ((row.prodVal ?? 0) !==0 || (row.payAmt ?? 0) !==0 )) {
-          ElMessage.error("产值期间不能早于施工期间！");
-          return false;
-        }
-        yskRate = row.payRate;
-        appYskAmt = appYskAmt + row.payAmt;
-      }
-
-      if (progressRows.length > 0) {
-        debugger
-        const yskAmt =await getContractYskAmt(formData.value.conId)
-
-        const safeYskAmt = Number(yskAmt ?? 0);
-        const safeApplyProdVal = Number(formData.value.applyProdVal ?? 0);
-        const safeYskRate = Number(yskRate ?? 0);
-        const safeAppYskAmt = Number(appYskAmt ?? 0);
-
-        const yskOverAmt = safeYskAmt + (safeApplyProdVal * safeYskRate / 100) - safeAppYskAmt;
-        const yskCanAmt = safeYskAmt + (safeApplyProdVal * safeYskRate / 100)
-        if (yskOverAmt  < 0){
-          ElMessage.error("验收款申报应付金额超产值！请大可申报验收款应付额度："+yskCanAmt+"元。");
-          return false;
-        }
-      }
-    } 
-  } else if (f.payMethod == 2) {
-    const matRows = activeDetailTable.value;
-    if (!matRows || matRows.length === 0) {
-      ElMessage.error("请先添加产值明细！");
-      return false;
-    }
-    for (const row of matRows) {
-      if ((Number(row.prodVal) || 0) === 0) {
-        ElMessage.error("明细行产值金额不能为0！");
-        return false;
-      }
-      if ((Number(row.payAmt) || 0) === 0) {
-        ElMessage.error("明细行应付金额不能为0！");
-        return false;
-      }
-      if (!row.buildPeriod || !row.prodValPeriod || !row.payDate)  {
-        ElMessage.error("进度款行的施工期间、产值期间、计划付款期间均不能为空！");
-        return false;
-      }
-      if (row.payDate < row.prodValPeriod) {
-        ElMessage.error("计划付款期间不能早于产值期间！");
-        return false;
-      }
-      if (row.buildPeriod > row.prodValPeriod) {
-        ElMessage.error("产值期间不能早于施工期间！");
-        return false;
-      }
-    }
-  }
-  return true;
 };
 
-// 返回操作
-const goBack = () => {
-  if (isAdd.value) {
-    tagsStore.closeTagByPath("/con/supplement-contract/add");
-  }
-  if (isEdit.value) {
-    tagsStore.closeTagByPath("/con/supplement-contract/edit");
-  }
-  router.go(-1);
-};
-
-// 校验失败后：滚动到第一个错误项并聚焦对应控件
-const focusFirstError = (invalidFields?: Record<string, any>) => {
-  const firstProp = Object.keys(invalidFields ?? {})[0];
-  if (!firstProp) return;
-  const formInst = formRef.value as any;
-  const field = formInst?.fields?.find((f: any) => f.prop === firstProp);
-  const el = field?.$el as HTMLElement | undefined;
-  if (!el) return;
-  el.scrollIntoView({ behavior: "smooth", block: "center" });
-  nextTick(() => {
-    const focusable = el.querySelector<HTMLElement>(
-      'input:not([type="hidden"]), textarea, .el-select__wrapper, .el-date-editor input, [tabindex]',
-    );
-    focusable?.focus({ preventScroll: true });
-  });
-};
-
-// 保存
-const handleSave = async () => {
-  if (isDetail.value) return;
-  if (!formRef.value) return;
-  try {
-    await formRef.value.validateField(["bizTitle", "projId", "conId"]);
-    submitLoading.value = true;
-    const params = buildSubmitParams();
-    const res = await outputDeclarationApi.saveProdVal(params);
-    if (res.code === 200 && res.data) {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      ElMessage.success("保存成功");
-      emit("success", formData);
-      formData.value.id = res.data;
-      prodId.value = formData.value.id;
-      await loadDetail();
-    }
-  } catch (error) {
-    focusFirstError(error as Record<string, any>);
-    console.error("保存失败:", error);
-  } finally {
-    submitLoading.value = false;
-  }
-};
-
-// 提交
-const handleSubmit = async () => {
-  if (isDetail.value) return;
-  if (!formRef.value) return;
-
-  try {
-    await formRef.value.validate();
-    if (formData.value.isSelfSupply === true && formData.value.selfSupplyType === null) {
-      ElMessage.error("请选择甲供材类型！");
-      return false;
-    }
-    if ((formData.value.applyProdVal ?? 0)===0  && (formData.value.applyPayAmt ?? 0) === 0) {
-      ElMessage.error("未填写产值或应付，请核对后提交！");
-      return false;
-    }
-
-    const isSuc = await validateProdTables();
-    if (isSuc === false) {
-      submitLoading.value = false;
-      return;
-    }
-
-    submitLoading.value = true;
-    const params = buildSubmitParams();
-    const res = await outputDeclarationApi.submitProdVal(params);
-    if (res.code === 200) {
-      ElMessage.success("提交成功，已发起审批！");
-      const redirectRes = await commonApi.generateRedirectUrl({
-        oaRequestId: res.data,
-      });
-      goBack();
-
-      if (redirectRes.code === 200 && redirectRes.data) {
-        setTimeout(() => {
-          window.open(redirectRes.data, "_blank");
-        }, 800);
-      }
-    }
-
-    emit("success", formData);
-  } catch (error) {
-    focusFirstError(error as Record<string, any>);
-    console.error("提交失败:", error);
-  } finally {
-    submitLoading.value = false;
-  }
-};
-
-const handleDelete = () => {
-  ElMessageBox.confirm("确定要删除吗？", "提示", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
-    type: "warning",
-  }).then(async () => {
-    try {
-      const res = await outputDeclarationApi.delProdVal({id:formData.value.id});
-      if (res.code === 200) {
-        ElMessage.success("删除成功");
-        goBack();
-      }
-    } catch (error) {
-      console.error("删除失败:", error);
-    }
-  });
-};
-
-const handleCancel = () => {
-  ElMessageBox.confirm("确定要作废吗？", "提示", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
-    type: "warning",
-  }).then(async () => {
-    try {
-      const res = await outputDeclarationApi.voidProdVal({id:formData.value.id});
-      if (res.code === 200) {
-        ElMessage.success("作废成功");
-        goBack();
-      }
-    } catch (error) {
-      console.error("作废失败:", error);
-    }
-  });
-};
-
-const handleViewProcess =async () => {
-  if (flowListData.value && flowListData.value?.wfFlowId) {
-    try {
-      const redirectRes = await commonApi.generateRedirectUrl({
-        oaRequestId: flowListData.value.wfFlowId,
-      });
-      if (redirectRes.code === 200 && redirectRes.data) {
-        window.open(redirectRes.data, "_blank");
-      }
-    } catch (error) {
-      console.error("查看流程失败:", error);
-    }
-  } else {
-    ElMessage.warning("暂无流程信息");
-  }
-};
-
-const declaraFileSuccess = (file: any) => {
-  declaraFileList.value.push(file);
-};
-const handleFileSuccess = (file: any) => {
-  annexFileList.value.push(file);
-};
-
-// 加载付款申请详情
+// 加载产值申报详情
 const loadDetail = async () => {
   if (!prodId.value) return;
-  const res = await outputDeclarationApi.getProdValById({
-    id: prodId.value,
-    isWithFlow: true,
-  });
+  const res = await outputDeclarationApi.getProdValById({ id: prodId.value, isWithFlow: true });
   if (res.code === 200 && res.data) {
     const { flowList, flowBase, bill, prodVal, billPayrates, billMaterials, annexList } = res.data;
     billData.value = { ...billData.value, ...bill };
@@ -2124,7 +1625,7 @@ const loadDetail = async () => {
     formData.value.selfSupplyType = prodVal.materialType;
 
     nonSelfSupplyTable.value = billPayrates?.map((item) => ({ ...item, uuid: uuidv4() })) || [];
-    if (formData.value.payMethod == 2 && formData.value.isSelfSupply == 1 && formData.value.selfSupplyType == 1) {
+    if (formData.value.payMethod == 2 && formData.value.isSelfSupply === true && formData.value.selfSupplyType == 1) {
       materialTable.value = billMaterials?.map((item) => ({ ...item, uuid: uuidv4() })) || [];
     } else {
       materialMinorTable.value = billMaterials?.map((item) => ({ ...item, uuid: uuidv4() })) || [];
@@ -2140,120 +1641,8 @@ const loadDetail = async () => {
   }
 };
 
-// 查询合同详情
-const getConDetail = async (inputConId) => {
-  if (!inputConId) return;
-  try {
-    const res = await contractLedgerApi.getContractLedgerById({
-      id: inputConId,
-    });
-    if (res.code === 200 && res.data) {
-      const { conMain, billPayrates } = res.data;
-      if (formData.value.projId != conMain.projId) {
-        await changeProject(conMain.projId);
-        formData.value.projId = conMain.projId;
-      }
-      billPayratesList.value = billPayrates || []; // 产值明细（非甲供材）的款项类型
-      formData.value.conId = conMain?.id;
-      formData.value.conName = conMain?.conName || "";
-      formData.value.conPhyNo = conMain?.conPhyNo || "";
-      formData.value.conSysNo = conMain?.conSysNo || "";
-      formData.value.supId = conMain?.supId || "";
-      formData.value.supName = conMain?.supName || "";
-      formData.value.conTypeId = conMain?.conTypeId || "";
-      formData.value.conTypeName = conMain?.conTypeName || "";
-      formData.value.signAmt = conMain?.signAmt || "";
-      formData.value.payMethod = conMain?.payMethod || "";
-    }
-  } catch (error) {
-    console.error("查询合同详情失败:", error);
-  }
-};
-
-// 查询合同累计数据
-const getConTotal = async (inputConId) => {
-  if (!inputConId) return;
-  try {
-    // 0=产值,1=应付,2=请款,3=已付,4=欠款,5=扣款,6=已扣,7=变更,8=签证
-    const res = await cumulativeDataApi.getAccumData({
-      conId: inputConId,
-      typeList: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-    });
-    if (res.code === 200 && res.data) {
-      const list = res.data || [];
-      list.forEach((item) => {
-        const total = item.archAmt + item.inTransAmt; // 归档 + 在途
-        switch (item.type) {
-          case 0: // 产值
-            formData.value.sumProdVal += total;
-            break;
-          case 1: // 应付
-            formData.value.sumPayAmt += total;
-            break;
-          case 2: // 请款
-            formData.value.sumAppyAmt += total;
-            break;
-          case 3: // 已付
-            formData.value.sumPaidAmt += total;
-            break;
-          case 4: // 欠款
-            formData.value.sumOwedAmt += total;
-            break;
-          case 5: // 扣款
-            formData.value.addAmt += total;
-            break;
-          case 6: // 已扣
-            formData.value.preSettleAmt += total;
-            break;
-          case 7: // 变更
-          case 8: // 签证
-            formData.value.sumChangeAmt += total;
-            break;
-          default:
-            break;
-        }
-      });
-    }
-  } catch (error) {
-    console.error("查询合同累计数据失败:", error);
-  }
-};
-
-// 查询合同款项类型数据，自动新增非甲供材明细行
-const getConPayTypeData = async (inputConId) => {
-  if (!inputConId) return;
-  try {
-    const res = await contractLedgerApi.getContractPayRateList({
-      conId: inputConId,
-    });
-    if (res.code === 200 && res.data) {
-      nonSelfSupplyTable.value=[];
-      const hasItem = res.data.some(item => item.payTypeId === PROGRESS_PAY_TYPE);
-
-      res.data.forEach((item) => {
-        if (item.payTypeId === PROGRESS_PAY_TYPE || item.payTypeId === ACCEPT_PAY_TYPE) { // 2062-进度 2063-验收
-          addNonSelfSupply();
-          const lastIndex = nonSelfSupplyTable.value.length - 1;
-          nonSelfSupplyTable.value[lastIndex].payTypeId = item.payTypeId;
-          nonSelfSupplyTable.value[lastIndex].payRate = item.payRate;
-          nonSelfSupplyTable.value[lastIndex].isCtrl = item.isCtrl;
-          nonSelfSupplyTable.value[lastIndex].payIntvl = item.payIntvl;
-          nonSelfSupplyTable.value[lastIndex].payDate = addMonths(currentMonth(), item.payIntvl);
-          if (item.payTypeId === PROGRESS_PAY_TYPE) {
-            nonSelfSupplyTable.value[lastIndex].hasVal = true;
-          } else if (item.payTypeId === ACCEPT_PAY_TYPE && !hasItem) {
-            nonSelfSupplyTable.value[lastIndex].hasVal = true;
-          }
-        }
-      });
-    }
-  } catch (error) {
-    console.error("加载合同支付比例信息失败:", error);
-  }
-};
-
+// 初始化（新增/编辑/详情）
 const initData = async () => {
-  debugger
   loadingForm.value = true;
   try {
     await getProjectOptions(); // 获取项目数据
@@ -2264,77 +1653,410 @@ const initData = async () => {
       await getConTotal(conId); // 查询合同累计数据
       await getConPayTypeData(conId); // 查询合同款项类型并自动新增明细行
     } else if (prodId.value) {
-      debugger
       await loadDetail();
-      if (isEdit.value)
-        formData.value.prodValPeriod = dateUtil().format("YYYY-MM-DD");
+      if (isEdit.value) formData.value.prodValPeriod = dateUtil().format("YYYY-MM-DD");
     }
   } finally {
     loadingForm.value = false;
   }
 };
 
-// ==================== 主表字段联动 ====================
-// 三张明细表互斥显示（由 payMethod / 甲供材类型决定显示哪张），
-// 主表只汇总「当前实际显示的那张表」，不把隐藏表的脏数据也算进来。
-const activeDetailTable = computed(() => {
+// ============================================================
+// 14. 校验
+// ============================================================
+// 提交前校验明细表
+const validateProdTables = async () => {
   const f = formData.value;
-  if (f.payMethod == 1) return nonSelfSupplyTable.value; // 非甲供材
-  if (f.payMethod == 2 && f.isSelfSupply == 1 && f.selfSupplyType == 1)
-    return materialTable.value; // 甲供材-主材
-  if (
-    (f.payMethod == 2 && f.isSelfSupply == 0) ||
-    (f.payMethod == 2 && f.isSelfSupply == 1 && f.selfSupplyType == 2)
-  )
-    return materialMinorTable.value; // 甲供材-零星
-  return [];
-});
 
-/** 主表本次申报产值 = 当前显示明细表的本次产值之和 */
-const detailApplyProdVal = computed(() =>
-  activeDetailTable.value.reduce(
-    (s: number, r: any) => s + (Number(r.prodVal) || 0),
-    0,
-  ),
-);
+  if (f.payMethod == 1) {
+    const rows = nonSelfSupplyTable.value || [];
+    if (rows.length === 0) {
+      ElMessage.error("请先添加产值明细！");
+      return false;
+    }
+    // 通用：每行必须有款项类型
+    for (const row of rows) {
+      if (!row.payTypeId) {
+        ElMessage.error("请选择款项类型！");
+        return false;
+      }
+    }
 
-/** 主表本次申报应付 = 当前显示明细表的本次应付之和（甲供材用 payAmt，非甲供材用 applyPayAmt） */
-const detailApplyPayAmt = computed(() =>
-  activeDetailTable.value.reduce(
-    (s: number, r: any) => s + (Number(r.payAmt ?? r.applyPayAmt) || 0),
-    0,
-  ),
-);
+    const progressRows = rows.filter((r) => r.payTypeId === PROGRESS_PAY_TYPE);
+    const acceptRows = rows.filter((r) => r.payTypeId === ACCEPT_PAY_TYPE);
 
-watch(
-  [
-    detailApplyProdVal,
-    detailApplyPayAmt,
-    () => formData.value.costProdVal,
-    () => formData.value.costPayAmt,
-    () => formData.value.sumProdVal,
-    () => formData.value.sumPayAmt,
-  ],
-  () => {
-    const f = formData.value;
-    f.applyProdVal = detailApplyProdVal.value;
-    f.applyPayAmt = detailApplyPayAmt.value;
-    // 含本单累计产值 = 累计产值 + 本次申报产值（有成本复核产值则用成本复核值）
-    f.totalProdVal =
-      (Number(f.sumProdVal) || 0) +
-      ((Number(f.costProdVal) || 0) !== 0
-        ? Number(f.costProdVal)
-        : detailApplyProdVal.value);
-    // 含本单累计应付 = 累计应付 + 本次申报应付（有成本复核应付则用成本复核值）
-    f.totalPayVal =
-      (Number(f.sumPayAmt) || 0) +
-      ((Number(f.costPayAmt) || 0) !== 0
-        ? Number(f.costPayAmt)
-        : detailApplyPayAmt.value);
-  },
-  { immediate: true },
-);
+    let appYskAmt = 0;
+    let yskRate = 0;
+    if (progressRows.length > 0) {
+      // 存在进度款：产值只能填在进度款行，验收款不得有产值
+      for (const row of acceptRows) {
+        if ((Number(row.prodVal) || 0) !== 0) {
+          ElMessage.error("已存在进度款，验收款不得填写产值金额！");
+          return false;
+        }
+      }
+      for (const row of progressRows) {
+        if (
+          (!row.buildPeriod || !row.prodValPeriod || !row.payDate) &&
+          ((row.prodVal ?? 0) !== 0 || (row.payAmt ?? 0) !== 0)
+        ) {
+          ElMessage.error("进度款行的施工期间、产值期间、计划付款期间均不能为空！");
+          return false;
+        }
+        if (row.payDate < row.prodValPeriod && ((row.prodVal ?? 0) !== 0 || (row.payAmt ?? 0) !== 0)) {
+          ElMessage.error("计划付款期间不能早于产值期间！");
+          return false;
+        }
+        if (row.buildPeriod > row.prodValPeriod && ((row.prodVal ?? 0) !== 0 || (row.payAmt ?? 0) !== 0)) {
+          ElMessage.error("产值期间不能早于施工期间！");
+          return false;
+        }
+      }
+    }
 
+    if (acceptRows.length > 0) {
+      // 无进度款：产值必须填在验收款行
+      if (acceptRows.length === 0 && progressRows.length === 0) {
+        ElMessage.error("无进度款时，必须存在验收款明细并填写产值！");
+        return false;
+      }
+      for (const row of acceptRows) {
+        if (
+          (!row.buildPeriod || !row.prodValPeriod || !row.payDate) &&
+          ((row.prodVal ?? 0) !== 0 || (row.payAmt ?? 0) !== 0)
+        ) {
+          ElMessage.error("验收款行的施工期间、产值期间、计划付款期间均不能为空！");
+          return false;
+        }
+        if (row.payDate < row.prodValPeriod && ((row.prodVal ?? 0) !== 0 || (row.payAmt ?? 0) !== 0)) {
+          ElMessage.error("计划付款期间不能早于产值期间！");
+          return false;
+        }
+        if (row.buildPeriod > row.prodValPeriod && ((row.prodVal ?? 0) !== 0 || (row.payAmt ?? 0) !== 0)) {
+          ElMessage.error("产值期间不能早于施工期间！");
+          return false;
+        }
+        yskRate = row.payRate;
+        appYskAmt = appYskAmt + row.payAmt;
+      }
+
+      if (progressRows.length > 0) {
+        const yskAmt = await getContractYskAmt(formData.value.conId);
+
+        const safeYskAmt = Number(yskAmt ?? 0);
+        const safeApplyProdVal = Number(formData.value.applyProdVal ?? 0);
+        const safeYskRate = Number(yskRate ?? 0);
+        const safeAppYskAmt = Number(appYskAmt ?? 0);
+
+        const yskOverAmt = safeYskAmt + (safeApplyProdVal * safeYskRate) / 100 - safeAppYskAmt;
+        const yskCanAmt = safeYskAmt + (safeApplyProdVal * safeYskRate) / 100;
+        if (yskOverAmt < 0) {
+          ElMessage.error("验收款申报应付金额超产值！请大可申报验收款应付额度：" + yskCanAmt + "元。");
+          return false;
+        }
+      }
+    }
+  } else if (f.payMethod == 2) {
+    const matRows = activeDetailTable.value;
+    if (!matRows || matRows.length === 0) {
+      ElMessage.error("请先添加产值明细！");
+      return false;
+    }
+    for (const row of matRows) {
+      if ((Number(row.prodVal) || 0) === 0) {
+        ElMessage.error("明细行产值金额不能为0！");
+        return false;
+      }
+      if ((Number(row.payAmt) || 0) === 0) {
+        ElMessage.error("明细行应付金额不能为0！");
+        return false;
+      }
+      if (!row.buildPeriod || !row.prodValPeriod || !row.payDate) {
+        ElMessage.error("进度款行的施工期间、产值期间、计划付款期间均不能为空！");
+        return false;
+      }
+      if (row.payDate < row.prodValPeriod) {
+        ElMessage.error("计划付款期间不能早于产值期间！");
+        return false;
+      }
+      if (row.buildPeriod > row.prodValPeriod) {
+        ElMessage.error("产值期间不能早于施工期间！");
+        return false;
+      }
+    }
+  }
+  return true;
+};
+
+// 校验失败后：滚动到第一个错误项并聚焦对应控件
+const focusFirstError = (invalidFields?: Record<string, any>) => {
+  const firstProp = Object.keys(invalidFields ?? {})[0];
+  if (!firstProp) return;
+  const formInst = formRef.value as any;
+  const field = formInst?.fields?.find((f: any) => f.prop === firstProp);
+  const el = field?.$el as HTMLElement | undefined;
+  if (!el) return;
+  el.scrollIntoView({ behavior: "smooth", block: "center" });
+  nextTick(() => {
+    const focusable = el.querySelector<HTMLElement>(
+      'input:not([type="hidden"]), textarea, .el-select__wrapper, .el-date-editor input, [tabindex]',
+    );
+    focusable?.focus({ preventScroll: true });
+  });
+};
+
+// ============================================================
+// 15. 提交 / 保存 / 删除 / 作废
+// ============================================================
+// 构建提交参数
+const buildSubmitParams = () => {
+  return {
+    bill: {
+      ...billData.value,
+      id: billData.value.id || undefined,
+      bizTitle: formData.value.bizTitle,
+      bizItemCode: formType.CON_PROD,
+      segId: formData.value.segId,
+      segName: formData.value.segName,
+      segNo: formData.value.segNo,
+      projId: formData.value.projId,
+      compId: formData.value.compId,
+      compName: formData.value.compName,
+      flowId: formData.value.flowId,
+      conId: formData.value.conId,
+      bizNo: billData.value.bizNo,
+    },
+    prodVal: {
+      id: formData.value.id,
+      conBillId: formData.value.conBillId,
+      conId: formData.value.conId,
+      status: formData.value.status,
+      signAmt: formData.value.signAmt ?? "",
+      addAmt: formData.value.addAmt ?? "",
+      sumChangeAmt: formData.value.sumChangeAmt ?? "",
+      preSettleAmt: formData.value.preSettleAmt ?? "",
+      sumProdVal: formData.value.sumProdVal ?? "",
+      sumPayAmt: formData.value.sumPayAmt ?? "",
+      sumAppyAmt: formData.value.sumAppyAmt ?? "",
+      sumPaidAmt: formData.value.sumPaidAmt ?? "",
+      sumOwedAmt: formData.value.sumOwedAmt ?? "",
+      conTypeId: formData.value.conTypeId ?? 0,
+      payMethod: formData.value.payMethod ?? "",
+      applyProdVal: formData.value.applyProdVal ?? "",
+      applyPayAmt: formData.value.applyPayAmt ?? "",
+      applyDesc: formData.value.applyDesc ?? "",
+      costProdVal: formData.value.costProdVal ?? "",
+      costPayAmt: formData.value.costPayAmt ?? "",
+      totalProdVal: formData.value.totalProdVal ?? "",
+      totalPayVal: formData.value.totalPayVal ?? "",
+      isMaterial: formData.value.isSelfSupply,
+      materialType: formData.value.selfSupplyType,
+    },
+    billPayrates: formData.value.payMethod === 1 ? nonSelfSupplyTable.value : [],
+    billMaterials:
+      formData.value.payMethod == 2 && formData.value.isSelfSupply === true && formData.value.selfSupplyType == 1
+        ? materialTable.value
+        : materialMinorTable.value,
+    annexList: annexFileList.value || [],
+  };
+};
+
+// 同步产值期间到当前明细表
+const syncProdValPeriod = async () => {
+  if (notMaterial.value === true) {
+    nonSelfSupplyTable.value.forEach((item) => {
+      item.prodValPeriod = formData.value.prodValPeriod;
+    });
+  } else if (mainMaterial.value === true) {
+    materialTable.value.forEach((item) => {
+      item.prodValPeriod = formData.value.prodValPeriod;
+    });
+  } else if (miscMaterial.value === true) {
+    materialMinorTable.value.forEach((item) => {
+      item.prodValPeriod = formData.value.prodValPeriod;
+    });
+  }
+};
+
+// 返回
+const goBack = () => {
+  if (isAdd.value) {
+    tagsStore.closeTagByPath("/con/supplement-contract/add");
+  }
+  if (isEdit.value) {
+    tagsStore.closeTagByPath("/con/supplement-contract/edit");
+  }
+  router.go(-1);
+};
+
+// 保存
+const handleSave = async () => {
+  if (isDetail.value) return;
+  if (!formRef.value) return;
+  try {
+    await formRef.value.validateField(["bizTitle", "projId", "conId"]);
+    submitLoading.value = true;
+    await syncProdValPeriod();
+    const params = buildSubmitParams();
+    const res = await outputDeclarationApi.saveProdVal(params);
+    if (res.code === 200 && res.data) {
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      ElMessage.success("保存成功");
+      emit("success", formData);
+      formData.value.id = res.data;
+      prodId.value = formData.value.id;
+      await loadDetail();
+    }
+  } catch (error) {
+    focusFirstError(error as Record<string, any>);
+    console.error("保存失败:", error);
+  } finally {
+    submitLoading.value = false;
+  }
+};
+
+// 提交
+const handleSubmit = async () => {
+  if (isDetail.value) return;
+  if (!formRef.value) return;
+  try {
+    await formRef.value.validate();
+    if (formData.value.isSelfSupply === true && (formData.value.selfSupplyType === null || !formData.value.selfSupplyType)) {
+      ElMessage.error("请选择甲供材类型！");
+      return false;
+    }
+    if ((formData.value.applyProdVal ?? 0) === 0 && (formData.value.applyPayAmt ?? 0) === 0) {
+      ElMessage.error("未填写产值或应付，请核对后提交！");
+      return false;
+    }
+
+    await getConTotal(formData.value.conId);
+    const isSuc = await validateProdTables();
+    if (isSuc === false) {
+      return false;
+    }
+
+    let ctrlAmt = 0;
+    if (formData.value.preSettleAmt > 0) {
+      ctrlAmt = formData.value.preSettleAmt;
+    } else {
+      ctrlAmt = (formData.value.signAmt || 0) + (formData.value.addAmt || 0);
+    }
+    if (ctrlAmt < formData.value.totalProdVal) {
+      ElMessage.error("期末累计产值金额已超合同金额！不可提交！");
+      return false;
+    } 
+    if (ctrlAmt < formData.value.totalPayVal) {
+      ElMessage.error("期末累计应付金额已超合同金额！不可提交！");
+      return false;
+    }
+
+    submitLoading.value = true;
+    await syncProdValPeriod();
+    const params = buildSubmitParams();
+    const res = await outputDeclarationApi.submitProdVal(params);
+    if (res.code === 200) {
+      ElMessage.success("提交成功，已发起审批！");
+      const redirectRes = await commonApi.generateRedirectUrl({ oaRequestId: res.data });
+      goBack();
+      if (redirectRes.code === 200 && redirectRes.data) {
+        setTimeout(() => {
+          window.open(redirectRes.data, "_blank");
+        }, 800);
+      }
+    }
+    emit("success", formData);
+  } catch (error) {
+    focusFirstError(error as Record<string, any>);
+    console.error("提交失败:", error);
+  } finally {
+    submitLoading.value = false;
+  }
+};
+
+const handleDelete = () => {
+  ElMessageBox.confirm("确定要删除吗？", "提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  }).then(async () => {
+    try {
+      const res = await outputDeclarationApi.delProdVal({ id: formData.value.id });
+      if (res.code === 200) {
+        ElMessage.success("删除成功");
+        goBack();
+      }
+    } catch (error) {
+      console.error("删除失败:", error);
+    }
+  });
+};
+
+const handleCancel = () => {
+  ElMessageBox.confirm("确定要作废吗？", "提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  }).then(async () => {
+    try {
+      const res = await outputDeclarationApi.voidProdVal({ id: formData.value.id });
+      if (res.code === 200) {
+        ElMessage.success("作废成功");
+        goBack();
+      }
+    } catch (error) {
+      console.error("作废失败:", error);
+    }
+  });
+};
+
+const handleViewProcess = async () => {
+  if (flowListData.value && flowListData.value?.wfFlowId) {
+    try {
+      const redirectRes = await commonApi.generateRedirectUrl({ oaRequestId: flowListData.value.wfFlowId });
+      if (redirectRes.code === 200 && redirectRes.data) {
+        window.open(redirectRes.data, "_blank");
+      }
+    } catch (error) {
+      console.error("查看流程失败:", error);
+    }
+  } else {
+    ElMessage.warning("暂无流程信息");
+  }
+};
+
+// ============================================================
+// 16. 附件上传回调
+// ============================================================
+const declaraFileSuccess = (file: any) => {
+  declaraFileList.value.push(file);
+};
+const handleFileSuccess = (file: any) => {
+  annexFileList.value.push(file);
+};
+
+// ============================================================
+// 17. 甲供材两张表：本次应付 = 本次产值 × 应付比例（可手改）
+// ============================================================
+const recomputeMaterialPayAmt = (row: any, column: string) => {
+  if (column === "prodVal" || column === "payRate") {
+    const v = Number(row.prodVal) || 0;
+    const r = Number(row.payRate) || 0;
+    row.payAmt = Number(((v * r) / 100).toFixed(2));
+  }
+};
+const handleMaterialSave = async (data: any) => {
+  const { row, column } = data;
+  recomputeMaterialPayAmt(row, column);
+};
+const handleMaterialMinorSave = async (data: any) => {
+  const { row, column } = data;
+  recomputeMaterialPayAmt(row, column);
+};
+
+// ============================================================
+// 18. 挂载
+// ============================================================
 onMounted(() => {
   initData();
 });
