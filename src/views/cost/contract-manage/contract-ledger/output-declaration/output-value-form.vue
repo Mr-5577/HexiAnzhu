@@ -363,7 +363,7 @@
                   format="YYYY-MM"
                   size="small"
                   style="width: 100%"
-                  :disabled="isReadonly || !!billData.status || row.hasVal"
+                  :disabled="isReadonly || !!billData.status || row.isCtrl"
                   @change="row.payDate = toMonthEnd(row.payDate); update(row.payDate)"
                 />
               </template>
