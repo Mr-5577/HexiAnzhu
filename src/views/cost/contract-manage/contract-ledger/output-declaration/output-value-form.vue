@@ -1449,6 +1449,10 @@ const getConTotal = async (inputConId) => {
   if (!inputConId) return;
   try {
     // 0=产值,1=应付,2=请款,3=已付,4=欠款,5=扣款,6=已扣,7=变更,8=签证，10=补充合同
+    formData.value.sumProdVal = 0;
+    formData.value.sumPayAmt = 0;
+    formData.value.sumChangeAmt = 0;
+    formData.value.addAmt = 0;
     const res = await cumulativeDataApi.getAccumData({
       conId: inputConId,
       typeList: [0, 1,  7, 8, 10],
