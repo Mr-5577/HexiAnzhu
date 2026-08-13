@@ -142,28 +142,20 @@ const handleReset = () => {
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "signAmt", label: "合同签约金额", width: 140 },
-  { prop: "addAmt", label: "补充合同金额", width: 140 },
-  { prop: "sumChangeAmt", label: "累计变更签证", width: 140 },
-  { prop: "preSettleAmt", label: "预结算合同金额", width: 140 },
-  { prop: "sumProdVal", label: "累计产值", width: 140 },
-  { prop: "sumPayAmt", label: "累计应付", width: 140 },
-  { prop: "sumAppyAmt", label: "累计请款", width: 140 },
-  { prop: "sumPaidAmt", label: "累计实付", width: 140 },
-  { prop: "sumOwedAmt", label: "欠款", width: 140 },
-  // { prop: "conId", label: "合同名称", width: 140 },
-  { prop: "conTypeId", label: "合同分类", width: 140 },
-  { prop: "payMethod", label: "付款方式", width: 140 },
-  { prop: "payTypeId", label: "款项类型", width: 140 },
-  { prop: "payRate", label: "应付比例", width: 140 },
-  { prop: "payIntvl", label: "支付周期(月)", width: 140 },
-  { prop: "applyProdVal", label: "本次申报产值金额", width: 140 },
-  { prop: "applyPayAmt", label: "本次申报应付金额", width: 140 },
-  { prop: "applyDesc", label: "申报说明", width: 220 },
-  { prop: "costProdVal", label: "成本复核产值金额", width: 140 },
-  { prop: "costPayAmt", label: "成本复核应付金额", width: 140 },
-  { prop: "totalProdVal", label: "截止总产值", width: 140 },
-  { prop: "totalPayVal", label: "截止总应付", width: 140 },
+  { prop: "bizTitle", label: "产值申报说明", width: 250 },
+  { prop: "prodValPeriod", label: "产值月份", width: 100 },
+  { prop: "sumProdVal", label: "期初产值", width: 140 },
+  { prop: "sumPayAmt", label: "期初应付", width: 140 },
+  { prop: "applyProdVal", label: "本次申报产值", width: 140 },
+  { prop: "applyPayAmt", label: "本次申报应付", width: 140 },
+  { prop: "costProdVal", label: "成本复核产值", width: 140 },
+  { prop: "costPayAmt", label: "成本复核应付", width: 140 },
+  { prop: "totalProdVal", label: "期末总产值", width: 140 },
+  { prop: "totalPayVal", label: "期末总应付", width: 140 },
+  { slot: "status", label: "审批状态", minWidth: 90 },
+  { prop: "applyDesc", label: "申报说明", width: 250 },
+  { prop: "createName", label: "创建人", minWidth: 90 },
+  { prop: "createDate", label: "创建时间", minWidth: 150 },
   {
     label: "操作",
     width: 150,
@@ -210,13 +202,13 @@ const handleAdd = () => {
   });
 };
 // 编辑
-const handleEdit = async ({ id }) => {
+const handleEdit = async (row: any) => {
   router.push({
     path: "/con/output-declaration/edit",
     query: {
       conId: props.conId, // 合同ID
       projId: props.projId,
-      outputId: id, // 产值ID
+      prodId:  row.id, // 产值ID
     },
   });
 };
@@ -224,9 +216,9 @@ const handleEdit = async ({ id }) => {
 // 详情
 const handleDetail = (row: any) => {
   router.push({
-    path: "/con/supplement-contract/detail",
+    path: "/con/output-declaration/detail",
     query: {
-      addId: row.id, // 补充合同ID
+      prodId: row.id, // 补充合同ID
       conId: props.conId, // 合同台账ID（合同单据ID）
       projId: props.projId,
     },

@@ -262,7 +262,7 @@ export function useContractForm(props: ContractFormProps, emit: ContractFormEmit
   // showPayrate computed
   const showPayrate = computed(() => {
     const item = PayTypeEnum.find(item => item.value === formData.value.payMethod);
-    return !item || item.value !== 2;
+    return ((!item || item.value !== 2) && isJianAn.value===true);
   });
   const visibleNavCards = computed(() =>
     showPayrate.value ? NAV_CARDS : NAV_CARDS.filter(card => card.id !== "card-payrate")
@@ -336,7 +336,8 @@ export function useContractForm(props: ContractFormProps, emit: ContractFormEmit
   );
 
 const validatePayRate = (): boolean => {
-  if (!showPayrate || !isJianAn) {
+  debugger
+  if (!showPayrate.value || !isJianAn.value) {
     return true;
   }
 
@@ -576,7 +577,12 @@ const validatePayRate = (): boolean => {
   // 生成合同编号
   const createConNo = async () => {
     try {
-      const conRes = await commonApi.getBillNo({ bizType: "HTBH" });
+      const conRes = await contractLedgerApi.getContractNo({ bizType: formType.CON_MAIN,
+        mainConId:formData.value.id,
+        projId:formData.value.projId,
+        conTypeId:formData.value.conTypeId,
+        compId: formData.value.companyId,
+      });
       if (conRes.code === 200) {
         formData.value.conSysNo = conRes.data;
         formData.value.conPhyNo = conRes.data;
@@ -606,6 +612,7 @@ const validatePayRate = (): boolean => {
         ...billData.value,
         id: billData.value.id || undefined,
         bizTitle: formData.value.bizTitle,
+        bizNo:formData.value.conSysNo,
         bizItemCode: formType.CON_MAIN,
         segId: formData.value.segId,
         segName: formData.value.segName,
@@ -665,7 +672,7 @@ const validatePayRate = (): boolean => {
         remark: formData.value.remark,
       },
       billPrices: priceTable.value,
-      billPayrates: formData.value.payMethod == 1 ? payrateTable.value : [],
+      billPayrates: (showPayrate.value===true) ? payrateTable.value : [],
       annexContractList: annexContractFileList.value || [],
       annexList: annexFileList.value || [],
     };
@@ -994,6 +1001,8 @@ const validatePayrateTable = () => {
       submitLoading.value = true;
       const params = buildSubmitParams();
       let res;
+      if (formData.value.conSysNo === "")
+        await createConNo();
       res = await contractLedgerApi.submitContractLedger(params);
       if (res.code === 200) {
         ElMessage.success("提交成功,已发起审批！");
@@ -1123,7 +1132,7 @@ const validatePayrateTable = () => {
       formData.value.createDate = dateUtil().format("YYYY-MM-DD");
       formData.value.deptName = userStore.userInfo?.deptName;
       formData.value.mguName = userStore.userInfo?.mguName;
-      await createConNo();
+     // await createConNo();
       // 需求4：新增合同时默认新增一行价税明细
       addPrice();
       priceTable.value[0].itemName="合同价款";

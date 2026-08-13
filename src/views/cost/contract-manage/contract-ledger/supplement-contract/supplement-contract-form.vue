@@ -129,7 +129,7 @@
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="计价方式" prop="priceType" required>
+              <el-form-item label="计价方式" prop="priceType" >
                 <el-select
                   v-model="formData.priceType"
                   :disabled="true"
@@ -146,7 +146,7 @@
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="产值确认方式" prop="payMethod" required>
+              <el-form-item label="产值确认方式" prop="payMethod" >
                 <el-select
                   v-model="formData.payMethod"
                   :disabled="true"
@@ -1217,6 +1217,7 @@ const handleFormDataSave = async () => {
 };
 
 const handleFormDataSubmit = async () => {
+  debugger
   submitLoading.value = true;
   try {
     await formRef.value.validate();
@@ -1231,6 +1232,8 @@ const handleFormDataSubmit = async () => {
     } 
 
     const params = buildSubmitParams()
+    if (formData.value.addSysNo === "")
+        await createConNo();
     let res;
     res = await supplementContractApi.submitSupplementContract(params);
     if (res.code === 200) {
@@ -1452,7 +1455,12 @@ const getBuildingListByProjId = async (projId: number) => {
 const createConNo = async () => {
   try {
     // BCBH:补充合同编号前缀
-    const conRes = await commonApi.getBillNo({ bizType: formType.CON_ADD });
+    const conRes = await contractLedgerApi.getContractNo({ bizType: formType.CON_ADD,
+        mainConId:formData.value.mainConId,
+        projId:formData.value.projId,
+        conTypeId:formData.value.conTypeId,
+        compId: formData.value.companyId,
+      });
     if (conRes.code === 200) {
       formData.value.addSysNo = conRes.data;
       formData.value.addPhyNo = conRes.data;
@@ -1569,7 +1577,7 @@ const initData = async () => {
     formData.value = {
       ...initFormData(),
     }
-    await createConNo();
+    // await createConNo();
     await getConMainData(conMainId.value);
     addPrice();
   }
