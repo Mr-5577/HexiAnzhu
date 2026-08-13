@@ -8,65 +8,36 @@
       </div>
       <div class="card-header">
         <span>
-          <el-icon><List /></el-icon>
+          <el-icon>
+            <List />
+          </el-icon>
           报销明细
         </span>
         <div>
-          <el-button
-            type="primary"
-            :loading="submitLoading"
-            v-if="!props.isDialogMode && !isView"
-            @click="handleSubmit"
-          >
+          <el-button type="primary" :loading="submitLoading" v-if="!props.isDialogMode && !isView"
+            @click="handleSubmit">
             确认分摊
           </el-button>
         </div>
       </div>
 
-      <base-table
-        :columns="mainColumns"
-        :tableData="mainTableData"
-        :rowKey="'uuid'"
-        :pagination="false"
-        :show-toolbar="false"
-        :auto-height="false"
-        :height="'100%'"
-        :border="true"
-        :stripe="true"
-        :isExpandAll="true"
-      >
+      <base-table :columns="mainColumns" :tableData="mainTableData" :rowKey="'uuid'" :pagination="false"
+        :show-toolbar="false" :auto-height="false" :height="'100%'" :border="true" :stripe="true" :isExpandAll="true">
         <!-- 展开行：显示明细子表格 -->
         <template #expand="{ row }">
           <div class="expand-table-wrapper">
             <div class="expand-title">拆分明细</div>
             <template v-if="!isView">
-              <editable-table
-                ref="getDedTableRef(row)"
-                :row-key="'uuid'"
-                v-model="row.finaDs"
-                :columns="detailColumns"
-                :pagination="false"
-                :highlight-current-row="false"
-                :show-summary="false"
-                :compactEmpty="true"
-                :editable="true"
-                :on-save="handleSave"
-                :max-height="'150px'"
-              >
+              <editable-table ref="getDedTableRef(row)" :row-key="'uuid'" v-model="row.finaDs" :columns="detailColumns"
+                :pagination="false" :highlight-current-row="false" :show-summary="false" :compactEmpty="true"
+                :editable="true" :on-save="handleSave" :max-height="'150px'">
                 <template #actions="{ row: detailRow, $index }">
-                  <el-button
-                    type="primary"
-                    link
-                    @click="handleSplitDetail(row, detailRow, $index)"
-                  >
+                  <el-button type="primary" link @click="handleSplitDetail(row, detailRow, $index)">
                     拆分
                   </el-button>
-                  <el-button
-                    type="danger"
-                    link
-                    :disabled="row.finaDs?.length <= 1"
-                    @click="handleDeleteDetail(row, $index)"
-                  >
+                  <!-- 必须保留一条数据并且regPayAmtSum已付金额大于0就不能删除 -->
+                  <el-button type="danger" link :disabled="row.finaDs?.length <= 1 || detailRow?.regPayAmtSum > 0"
+                    @click="handleDeleteDetail(row, $index)">
                     删除
                   </el-button>
                 </template>
@@ -74,19 +45,9 @@
             </template>
 
             <template v-else>
-              <base-table
-                :columns="viewColumns"
-                :tableData="row.finaDs || []"
-                :rowKey="'uuid'"
-                :pagination="false"
-                :show-toolbar="false"
-                :auto-height="false"
-                :max-height="'150px'"
-                :border="true"
-                :stripe="true"
-                :isExpandAll="true"
-                :compactEmpty="true"
-              ></base-table>
+              <base-table :columns="viewColumns" :tableData="row.finaDs || []" :rowKey="'uuid'" :pagination="false"
+                :show-toolbar="false" :auto-height="false" :max-height="'150px'" :border="true" :stripe="true"
+                :isExpandAll="true" :compactEmpty="true"></base-table>
             </template>
           </div>
         </template>
@@ -112,14 +73,13 @@ import { useRoute, useRouter } from "vue-router";
 import { v4 as uuidv4 } from "uuid";
 import EditableTable from "@/components/base/editable-table.vue";
 import { EditableColumn } from "@/components/base/editable-table.vue";
-import { costAllocationApi } from "@/api/cost/contract-manage/cost-allocation-api";
-import { goalCostApi } from "@/api/cost/cost-setting/goal-cost-api";
-import { costCategoryApi } from "@/api/cost/master-data/cost-category-api";
 import { buildTree } from "@/utils/tree";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import { financeAllocationApi } from "@/api/cost/contract-manage/finance-allocation-api";
 import { feePaymentApi } from "@/api/cost/non-contract-manage/fee-payment-api";
-import { cstProcessApi } from "@/api/cost/non-contract-manage/cst-process-api";
+import { cstPaymentApi } from "@/api/cost/non-contract-manage/cst-payment-api";
+import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api";
+import { paymentRequestApi } from "@/api/cost/contract-manage/payment-application-api";
 
 defineOptions({ name: "finance-allocation" });
 
@@ -127,41 +87,31 @@ interface Props {
   projId?: number; // 项目ID
   segId?: number; // 板块ID
   isDialogMode?: boolean; // 是否为弹窗模式
-  dialogMode?: string; // 弹窗模式，edit  view
   payWayTable?: any[]; // 支付方式表格数据
+  bizType?: string; // 业务类型，NCON_CST:非合同请款  NCON_FEE:非合同费用报销  CON_PAY:合同支付
 }
 
 const props = withDefaults(defineProps<Props>(), {
   projId: undefined,
   segId: undefined,
-  isDialogMode: false, // 页面模式，默认非弹窗模式
-  dialogMode: "edit", // 弹窗模式，edit  view
+  isDialogMode: false, // 页面模式，默认非弹窗
   payWayTable: () => [],
+  bizType: "NCON_CST", // 业务类型  NCON_CST:非合同请款  NCON_FEE:非合同费用报销  CON_PAY:合同支付
 });
 
 const router = useRouter();
 const route = useRoute();
 
-// 合同单据ID
+// 单据ID
 const billId = route.query?.billId ? Number(route.query.billId) : undefined;
+// 业务ID
+const bizId = route.query?.bizId ? Number(route.query.bizId) : undefined;
 // 业务类型，例：NCON_FEE
 const bizType = route.query?.bizType ? route.query.bizType : "";
 
-const isEdit = computed(() => {
-  return route.query.mode == "edit";
-});
+// 只要是erp页面弹窗打开就是查看模式，OA调用打开则根据参数mode控制
 const isView = computed(() => {
-  return route.query.mode == "view" || props.dialogMode == "view";
-});
-
-const lightweightDetail = ref({
-  nconBillId: undefined,
-  bizId: undefined,
-  bizItemCode: "",
-  bizItemName: "",
-  bizNo: "",
-  bizTitle: "",
-  status: 0,
+  return route.query.mode == "view" || props.isDialogMode;
 });
 
 const submitLoading = ref(false);
@@ -242,6 +192,8 @@ const detailColumns = computed<EditableColumn[]>(() => [
     editable: true,
     editType: "input",
     showOverflowTooltip: false,
+    // 有regPayAmtSum字段并且值大于0表示已支付，不可编辑
+    disabled: (row: any) =>  row.regPayAmtSum,
   },
   {
     prop: "finaOrgId",
@@ -264,6 +216,8 @@ const detailColumns = computed<EditableColumn[]>(() => [
       showAllLevels: false, // 不显示所有层级
       checkStrictly: false,
     },
+    // 有regPayAmtSum字段并且值大于0表示已支付，不可编辑
+    disabled: (row: any) =>  row.regPayAmtSum,
   },
   {
     prop: "finaSubId",
@@ -286,6 +240,8 @@ const detailColumns = computed<EditableColumn[]>(() => [
       checkStrictly: false,
       filterable: true, // 启用过滤
     },
+    // 有regPayAmtSum字段并且值大于0表示已支付，不可编辑
+    disabled: (row: any) =>  row.regPayAmtSum,
   },
   {
     prop: "finaSubAmt",
@@ -319,17 +275,21 @@ const handleSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
 
 // 拆分明细（新增一行）
 const handleSplitDetail = (parentRow: any, detailRow: any, index: number) => {
-  // 创建新行，复制当前行的数据
+  const isConPay = props.bizType === 'CON_PAY' || bizType === 'CON_PAY';
   const newDetail = {
     uuid: uuidv4(),
     id: undefined,
-    nconBillId: detailRow.nconBillId || undefined,
     payWayId: parentRow.payWayId,
     finaSubDesc: detailRow.finaSubDesc || "",
     finaOrgId: undefined,
     finaSubId: undefined,
-    finaSubAmt: 0, // 金额默认为0
+    finaSubAmt: 0,
     pmWayId: detailRow.pmWayId,
+    // 根据业务类型选择不同的账单ID字段
+    ...(isConPay
+      ? { conBillId: detailRow.conBillId || undefined }
+      : { nconBillId: detailRow.nconBillId || undefined }
+    ),
   };
 
   parentRow.finaDs = [...parentRow.finaDs, newDetail];
@@ -411,10 +371,36 @@ const validateData = () => {
 
   return true;
 };
+// 校验拆分明细是否已支付，有regPayAmtSum字段并且值大于0表示已支付
+const validateDetails = (data: any[]) => {
+  const errors: string[] = [];
+  for (const item of data) {
+    for (const detail of item.finaDs || []) {
+      const { finaSubAmt, regPayAmtSum, finaSubDesc } = detail;
+      // 只校验有 regPayAmtSum 字段且大于 0 的明细
+      if (typeof regPayAmtSum === 'number' && regPayAmtSum > 0) {
+        if (finaSubAmt <= 0) {
+          errors.push(`金额必须大于0`);
+        } else if (finaSubAmt > regPayAmtSum) {
+          errors.push(`拆分明细“${finaSubDesc}”金额不能超过已付 ${regPayAmtSum}`);
+        }
+      }
+    }
+  }
+  return { valid: !errors.length, msg: errors.join('；') };
+};
 // 提交确认支付
 const handleSubmit = async () => {
   console.log("提交数据:", mainTableData.value);
+  // 验拆分明细是否已支付，有regPayAmtSum字段并且值大于0表示已支付
+  const { valid, msg } = validateDetails(mainTableData.value);
+  if (!valid) {
+    ElMessage.error(msg);
+    return;
+  }
   const allValid = validateData();
+  if (!allValid) return
+
   if (allValid) {
     submitLoading.value = true;
 
@@ -428,15 +414,18 @@ const handleSubmit = async () => {
     try {
       let res;
       if (bizType === "CON_PAY") {
-        // 合同财务分摊
+        // 合同支付财务分摊
         res = await financeAllocationApi.saveConAlloc(newData);
+        if (res.code === 200) {
+          res = await paymentRequestApi.saveConPayFlow({ billId: billId })
+        }
       } else if (bizType === "NCON_CST") {
         // 非合同建安支付财务分摊
         res = await financeAllocationApi.saveNconAlloc(newData);
         if (res.code === 200) {
           // 分摊成功后更新流程
-          res = await cstProcessApi.saveNconCstProcessFlow({
-            id: lightweightDetail.value.bizId,
+          res = await cstPaymentApi.saveNconCstPaymentFlow({
+            id: bizId,
             allowEdit: true,
           });
         }
@@ -446,7 +435,7 @@ const handleSubmit = async () => {
         if (res.code === 200) {
           // 分摊成功后更新流程
           res = await feePaymentApi.saveNconFeePaymentFlow({
-            id: lightweightDetail.value.bizId,
+            id: bizId,
             allowEdit: true,
           });
         }
@@ -492,8 +481,49 @@ const getFinaSubjectListBySegId = async (segId: number) => {
     console.error("获取项目列表失败:", error);
   }
 };
-const processData = (list) => {
-  console.log("处理分摊数据", list);
+// 处理合同支付财务分摊数据
+const processConData = (list) => {
+  console.log("处理合同支付分摊数据", list);
+  if (list && list.length > 0) {
+    const data = list.map((item) => {
+      // 判断 finaDs 是否有数据
+      const hasFinaDs = item?.finaDs && item.finaDs.length > 0;
+      let finaDs;
+      if (hasFinaDs) {
+        // 有数据：使用原有数据，记录补充 uuid
+        finaDs = item.finaDs.map((fd: any) => ({
+          ...fd,
+          uuid: uuidv4(),
+        }));
+      } else {
+        // 没有数据：添加一行默认数据
+        if (!isView.value) {
+          finaDs = [
+            {
+              uuid: uuidv4(),
+              id: undefined,
+              conBillId: item.conBillId,
+              payWayId: undefined,
+              pmWayId: props.isDialogMode ? undefined : item.id,
+              finaSubDesc: item.payDesc,
+              finaOrgId: undefined,
+              finaSubId: undefined,
+              finaSubAmt: item.payAmt || 0,
+            },
+          ];
+        }
+      }
+      return {
+        ...item,
+        finaDs: finaDs,
+      };
+    });
+    mainTableData.value = data; // 将处理后的数据赋值给 tableData
+  }
+};
+// 处理非合同请款、费用报销财务分摊数据
+const processNconData = (list) => {
+  console.log("处理非合同财务分摊数据", list);
   if (list && list.length > 0) {
     const data = list.map((item) => {
       // 判断 finaDs 是否有数据
@@ -532,20 +562,44 @@ const processData = (list) => {
   }
 };
 
-// 获取轻量级的合同/非合同财务分摊详情
-const getNconDetail = async () => {
+// 获取轻量级财务分摊详情
+const getAllocDetail = async () => {
+  // 合同支付
+  if (bizType === "CON_PAY") {
+    getConAllocDetail();
+  }
+  // 非合同建安支付、费用报销
+  if (bizType === "NCON_CST" || bizType === "NCON_FEE") {
+    getNconAllocDetail();
+  }
+};
+// 获取合同财务分摊详情
+const getConAllocDetail = async () => {
   if (!billId) return;
   try {
+    // 合同查询轻量级详情信息
+    const res = await contractLedgerApi.getConInfoLite({ conBillId: billId });
+    console.log("合同轻量级详情", res);
+    if (res.code == 200 && res.data) {
+      await getFinaOrgListBySegId(res.data?.segId); // 获取业务板块下的费用组织
+      await getFinaSubjectListBySegId(res.data?.segId); // 获取业务板块下的费用科目
+      getConFinanceAllocDetaiByBillId();
+    }
+  } catch (error) { }
+}
+// 获取非合同财务分摊详情
+const getNconAllocDetail = async () => {
+  if (!billId) return;
+  try {
+    // 非合同查询轻量级详情信息
     const res = await feePaymentApi.getNconInfoLite({ nconBillId: billId });
-    console.log("详情", res);
+    console.log("非合同轻量级详情", res);
     if (res.code == 200 && res.data) {
       // 定义字段映射,非合同查看详情返回的字段名映射
       const fieldMapping = {
         NCON_CST: "payment", // 非合同建安支付
         NCON_FEE: "fee", // 费用报销
-        CON_PAY: "payment", // 合同支付
       };
-      lightweightDetail.value = { ...lightweightDetail.value, ...res.data };
       // 获取对应的字段名
       const dataKey = fieldMapping[bizType as string] || "";
       const detailData = dataKey ? res.data[dataKey] || null : null;
@@ -553,25 +607,10 @@ const getNconDetail = async () => {
         await getFinaOrgListBySegId(detailData?.segId); // 获取业务板块下的费用组织
         await getFinaSubjectListBySegId(detailData?.segId); // 获取业务板块下的费用科目
       }
-      // 根据业务类型获取对应详情
-      switch (bizType) {
-        case "NCON_CST": // 非合同建安支付
-        case "NCON_FEE": // 非合同费用支付
-          getNconFinanceAllocDetaiByBillId();
-          break;
-        case "CON_PAY": // 合同支付
-          getConFinanceAllocDetaiByBillId();
-          break;
-        default:
-          console.warn(`未知的业务类型: ${bizType}，请检查配置`);
-          ElMessage.warning(
-            `未知的业务类型: ${bizType},当前业务类型暂不支持查看详情`,
-          );
-          break;
-      }
+      getNconFinanceAllocDetaiByBillId();
     }
-  } catch (error) {}
-};
+  } catch (error) { }
+}
 // 通过传入的合同单据ID查询财务分摊数据进行分摊，查询分摊详情
 const getConFinanceAllocDetaiByBillId = async () => {
   if (!billId) return;
@@ -580,9 +619,9 @@ const getConFinanceAllocDetaiByBillId = async () => {
     console.log("合同分摊详情", res);
     if (res.code == 200) {
       const list = res.data || [];
-      processData(list);
+      processConData(list);
     }
-  } catch (error) {}
+  } catch (error) { }
 };
 // 通过传入的非合同单据ID查询财务分摊数据进行分摊，查询分摊详情
 const getNconFinanceAllocDetaiByBillId = async () => {
@@ -592,25 +631,30 @@ const getNconFinanceAllocDetaiByBillId = async () => {
     console.log("非合同分摊详情", res);
     if (res.code == 200) {
       const list = res.data || [];
-      processData(list);
+      processNconData(list);
     }
-  } catch (error) {}
+  } catch (error) { }
 };
 
 onMounted(async () => {
   // 判断是不是弹窗模式
   if (props.isDialogMode) {
+    console.log("弹窗模式");
     if (props?.segId) {
       await getFinaOrgListBySegId(props.segId); // 获取业务板块下的费用组织
       await getFinaSubjectListBySegId(props.segId); // 获取业务板块下的费用科目
     }
     if (props?.payWayTable && props?.payWayTable?.length > 0) {
       const list = props?.payWayTable || [];
-      processData(list);
+      if (props.bizType === "CON_PAY") {
+        processConData(list);
+      } else {
+        processNconData(list);
+      }
     }
   } else {
     console.log("OA模式");
-    await getNconDetail();
+    await getAllocDetail();
   }
 });
 
@@ -696,6 +740,7 @@ defineExpose({
     }
   }
 }
+
 // 差额颜色样式
 .diff-zero {
   color: #67c23a; // 绿色

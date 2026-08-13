@@ -13,6 +13,7 @@ import { addDynamicRoutes } from "./dynamic-routes";
 import { userApi } from "@/api/system/user-api";
 import { ElLoading } from "element-plus";
 import { getEnvironmentName } from "@/utils/config";
+import { useTagsStore } from "@/stores/tags-store";
 
 // 静态路由名称定义为常量
 const STATIC_ROUTE_NAMES = new Set([
@@ -237,6 +238,22 @@ router.beforeEach(async (to, from, next) => {
 
   // 菜单已加载，直接放行
   next();
+});
+
+router.afterEach((to) => {
+  const tagsStore = useTagsStore();
+  // 同步历史记录（要避免重复记录）
+  if (to.fullPath && to.fullPath !== "/") {
+    // 检查是否已经存在，避免重复
+    const index = tagsStore.historyStack.indexOf(to.fullPath);
+    if (index === -1) {
+      tagsStore.addHistory(to.fullPath);
+    } else {
+      // 如果已存在，将其移到末尾（表示最近访问）
+      tagsStore.historyStack.splice(index, 1);
+      tagsStore.historyStack.push(to.fullPath);
+    }
+  }
 });
 
 export default router;

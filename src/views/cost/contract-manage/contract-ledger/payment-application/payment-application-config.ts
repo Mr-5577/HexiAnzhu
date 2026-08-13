@@ -289,12 +289,12 @@ export const createPayWayColumns = (options: PayWayColumnOptions) => {
 export const payWayDetailColumns = [
   { type: "index", label: "序号", width: 60 },
   { prop: "payWayName", label: "付款方式", minWidth: 150 },
-  { prop: "bankName", label: "收款开户行", minWidth: 150 },
-  { prop: "accountName", label: "收款账户名", minWidth: 150 },
-  { prop: "bankAccount", label: "收款账号", minWidth: 150 },
+  // { prop: "bankName", label: "收款开户行", minWidth: 150 },
+  // { prop: "accountName", label: "收款账户名", minWidth: 150 },
+  // { prop: "bankAccount", label: "收款账号", minWidth: 150 },
   { prop: "payAmt", label: "付款金额", minWidth: 120 },
   { prop: "dedRoomAmt", label: "其中抵房金额", minWidth: 120 },
-  { prop: "payDesc", label: "事项说明", minWidth: 200 },
+  // { prop: "payDesc", label: "事项说明", minWidth: 200 },
 ];
 
 interface FinanceColumnOptions {

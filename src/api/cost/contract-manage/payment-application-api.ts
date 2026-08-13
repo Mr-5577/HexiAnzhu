@@ -10,7 +10,7 @@ export const paymentRequestApi = {
     return http.formPost("/con/pay/list", data);
   },
   /** 查询单个合同支付 */
-  getPayDetail: (data: { id: number ,isWithFlow? : boolean}) => {
+  getPayDetail: (data: { id: number; isWithFlow?: boolean }) => {
     return http.formPost("/con/pay/get", data);
   },
   /** 新增合同支付 ConPaySaveParam*/
@@ -32,5 +32,9 @@ export const paymentRequestApi = {
   /** 作废合同支付 */
   voidPay: (data: { id: number }) => {
     return http.formPost("/con/pay/void", data);
+  },
+  /** 保存合同支付流程（新增/更新） */
+  saveConPayFlow: (data: { billId: number }) => {
+    return http.formPost("/con/flow/saveConPayFlow", data);
   },
 };

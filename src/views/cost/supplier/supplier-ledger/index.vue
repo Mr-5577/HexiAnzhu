@@ -67,6 +67,21 @@
             >
             </el-input>
           </el-form-item>
+          <el-form-item label="供应商状态" prop="supStatus">
+            <el-select
+              v-model="queryParams.supStatus"
+              placeholder="请选择状态"
+              style="width: 200px"
+              clearable
+            >
+              <el-option
+                v-for="item in supStatusEnum"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              />
+            </el-select>
+          </el-form-item>
           <el-form-item>
             <el-button type="primary" @click="handleQuery">查询</el-button>
             <el-button icon="Refresh" @click="handleReset">重置</el-button>
@@ -110,13 +125,13 @@
           </template>
           <!-- supStatus 0=草稿；1=已审批；2=黑名单；3=作废，草稿状态可以编辑/删除 -->
           <template #actions="{ row }">
-            <el-button link type="primary" @click="handleEdit(row)">
+            <el-button link type="primary" @click="handleEdit(row)" :disabled="row.supStatus !== 0">
               编辑
             </el-button>
             <el-button type="primary" link @click="handleViewDetail(row)">
               详情
             </el-button>
-            <el-button link type="danger" @click="handleDelete(row)">
+            <el-button link type="danger" @click="handleDelete(row)" :disabled="row.supStatus !== 0">
               删除
             </el-button>
             <el-button
@@ -189,6 +204,7 @@ const allType = [
 const queryParams = ref<SupplierQueryParams>({
   supCode: "", // 供应商编码
   supName: "", // 供应商名称
+  supStatus: null, // 供应商状态
 });
 const tableLoading = ref<boolean>(false);
 const currentPage = ref<number>(1);
@@ -320,6 +336,7 @@ const handleQuery = () => {
 const handleReset = () => {
   queryParams.value.supCode = "";
   queryParams.value.supName = "";
+  queryParams.value.supStatus = undefined;
   handleQuery();
 };
 // 分页改变

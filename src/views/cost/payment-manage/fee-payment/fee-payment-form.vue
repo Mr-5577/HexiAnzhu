@@ -400,7 +400,7 @@
       :payWayTable="payWayTable"
       :segId="formData.segId"
       :projId="formData.projId"
-      :dialogMode="'view'"
+      :bizType="'NCON_FEE'"
       @select="getFinaList"
     ></FinanceAllocationDialog>
   </div>
@@ -1548,7 +1548,7 @@ const buildSaveParams = () => {
         bankName: item.bankName || "",
         accountName: item.accountName || "",
         bankAccount: item.bankAccount || "",
-        finaDs: item?.finaDs || [],
+        finaDs: item?.finaDs || [], // 财务分摊
       }));
 
   return {
@@ -1557,8 +1557,6 @@ const buildSaveParams = () => {
     deds: deds.length > 0 ? deds : [],
     invoiceMs: invoiceMs.length > 0 ? invoiceMs : [],
     payWays: payWays.length > 0 ? payWays : [],
-    costAllocs: [],
-    finaDs: [],
     annexList: annexFileList.value || [],
   };
 };
@@ -1674,6 +1672,7 @@ const goBack = () => {
 
 // ==================== 保存 ====================
 const handleSave = async () => {
+  if (submitLoading.value) return;
   feePaymentFormRef.value?.validate(async (valid: boolean) => {
     if (!valid) {
       ElMessage.error("请检查表单！");

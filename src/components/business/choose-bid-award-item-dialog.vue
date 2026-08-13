@@ -92,12 +92,14 @@ interface Props {
   modelValue: boolean;
   selectionMode?: "single" | "multiple"; // 选择模式，单选或多选
   projId: number;
+  status? :number,
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
   selectionMode: "single",
   projId : null,
+  status :null,
 });
 
 // Emits
@@ -130,7 +132,8 @@ const queryParams = ref({
   tenderItemName: "",
   supName: "",
   conTypeId: null,
-  projId:null
+  projId:null,
+  status:props.status,
 });
 
 // 表格列配置
@@ -203,7 +206,8 @@ const resetState = () => {
     tenderItemName: "",
     supName: "",
     conTypeId: null,
-    projId:null,
+    projId:props.projId,
+    status:props.status,
   };
   // 清除表格高亮
   setTimeout(() => {
@@ -244,7 +248,8 @@ const handleReset = () => {
     tenderItemName: "",
     supName: "",
     conTypeId: null,
-    projId:null,
+    projId:props.projId,
+    status:props.status,
   };
   handleQuery();
 };

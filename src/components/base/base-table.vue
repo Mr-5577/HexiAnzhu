@@ -206,7 +206,7 @@ export interface TableColumnItem<T = any> {
   /** 选择列专用：根据行数据的字段名判断是否可选，值为 true 表示不可选 */
   disabledField?: string;
   /** 格式化类型 */
-  formatType?: 'd%' | '0.00%' | '#,##0.00%' | 'fixed2' | 'thousand' | '0.00' | '#,##0.00';
+  formatType?: 'd%' | '100*d%' | '0.00%' | '#,##0.00%' | 'fixed2' | 'thousand' | '0.00' | '#,##0.00';
   /** 操作列配置：按钮列表（仅当 type 为 'action' 时生效） */
   actions?: TableActionItem<T>[];
   /** 其他自定义属性 */
@@ -373,6 +373,9 @@ const formatValueByType = (value: any, formatType: string): string => {
         maximumFractionDigits: 2,
       });
       
+    case '100*d%':
+      // 整数百分比：13 → 13%
+      return `${Math.floor(num*100)}%`;
     default:
       return String(value);
   }

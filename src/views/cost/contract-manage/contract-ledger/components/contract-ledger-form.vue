@@ -488,7 +488,7 @@
 
         <!-- ====== 卡片6：支付比例 ====== -->
         <FormCard
-          v-show="showPayrate || isJianAn"
+          v-show="showPayrate && isJianAn"
           id="card-payrate"
           icon="📊"
           title="支付比例"
@@ -502,6 +502,7 @@
             add-text="新增支付明细"
             v-model="payrateTable"
             :columns="payrateColumns"
+            :height="'200px'"  
             @add="addPayrate"
           >
             <template #actions="{ row }">
@@ -572,6 +573,7 @@
     ref="supplierDialogRef"
     v-model="supplierDialogVisible"
     :selectionMode="'single'"
+    :supStatus="1"
     @select="handleSupplierSelect"
   />
 
@@ -580,6 +582,7 @@
     v-model="awardItemDialogVisible"
     :selectionMode="'single'"
     :projId = formData.projId
+    :status="40"
     @select="handleAwardItemSelect"
   />
 </template>

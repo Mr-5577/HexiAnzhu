@@ -1,129 +1,61 @@
 <!-- 付款登记 弹窗 -->
 <template>
-  <base-modal
-    v-model="dialogVisible"
-    :title="'付款登记'"
-    width="1400px"
-    :confirmText="'提交登记'"
-    :confirm-loading="submitLoading"
-    @confirm="handleSubmit"
-    @close="handleClose"
-  >
+  <base-modal v-model="dialogVisible" :title="'付款登记'" width="1400px" :confirmText="'提交登记'"
+    :confirm-loading="submitLoading" @confirm="handleSubmit" @close="handleClose">
     <div style="padding-right: 8px; box-sizing: border-box">
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="formRules"
-        label-width="120px"
-        label-position="right"
-      >
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="120px" label-position="right">
         <el-row>
           <el-col :span="8">
             <el-form-item prop="payDate" label="支付日期" required>
-              <el-date-picker
-                v-model="formData.payDate"
-                type="date"
-                placeholder="请选择支付日期"
-                value-format="YYYY-MM-DD"
-                style="width: 100%"
-              />
+              <el-date-picker v-model="formData.payDate" type="date" placeholder="请选择支付日期" value-format="YYYY-MM-DD"
+                style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item prop="payWayId" label="支付方式" required>
-              <el-select
-                v-model="formData.payWayId"
-                placeholder="请选择支付方式"
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="item in payTypeOptions"
-                  :key="item.id"
-                  :label="item.dicLabel"
-                  :value="item.id"
-                />
+              <el-select v-model="formData.payWayId" placeholder="请选择支付方式" style="width: 100%">
+                <el-option v-for="item in payTypeOptions" :key="item.id" :label="item.dicLabel" :value="item.id" />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item prop="payAmt" label="支付金额">
-              <el-input-number
-                v-model="formData.payAmt"
-                placeholder="请输入支付金额"
-                :precision="2"
-                :min="0"
-                :controls="false"
-                style="width: 100%"
-                disabled
-              />
+              <el-input-number v-model="formData.payAmt" placeholder="请输入支付金额" :precision="2" :min="0" :controls="false"
+                style="width: 100%" disabled />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row>
           <el-col :span="8">
             <el-form-item prop="payCompId" label="支付公司" required>
-              <el-select
-                v-model="formData.payCompId"
-                placeholder="请选择支付公司"
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="item in payComOptions"
-                  :key="item.id"
-                  :label="item.compName"
-                  :value="item.id"
-                />
+              <el-select v-model="formData.payCompId" placeholder="请选择支付公司" style="width: 100%">
+                <el-option v-for="item in payComOptions" :key="item.id" :label="item.compName" :value="item.id" />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item prop="payAccount" label="支付账号">
-              <el-input
-                v-model="formData.payAccount"
-                placeholder="请输入支付账号"
-                style="width: 100%"
-              />
+              <el-input v-model="formData.payAccount" placeholder="请输入支付账号" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item prop="bankReceipt" label="银行回单号">
-              <el-input
-                v-model="formData.bankReceipt"
-                placeholder="银行回单号"
-                style="width: 100%"
-              />
+              <el-input v-model="formData.bankReceipt" placeholder="银行回单号" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row>
           <el-col :span="24">
             <el-form-item prop="payDesc" label="备注">
-              <el-input
-                v-model="formData.payDesc"
-                type="textarea"
-                placeholder="请输入备注信息"
-                :rows="3"
-                maxlength="500"
-                show-word-limit
-                style="width: 100%"
-              />
+              <el-input v-model="formData.payDesc" type="textarea" placeholder="请输入备注信息" :rows="3" maxlength="500"
+                show-word-limit style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="24">
             <el-form-item label="回单照片">
-              <base-upload
-                v-model:file-list="tempFileList"
-                :limit="1"
-                :multiple="true"
-                :showIcon="true"
-                :showTip="true"
-                :maxSize="20"
-                :accept="'.pdf,.jpg,.jpeg,.png'"
-                :tipText="'支持上传pdf、jpg、jpeg、png格式文件，单个文件不超过20M'"
-                button-text="选择图片"
-                size="default"
-                @success="handleFileSuccess"
-              ></base-upload>
+              <base-upload v-model:file-list="tempFileList" :limit="1" :multiple="true" :showIcon="true" :showTip="true"
+                :maxSize="20" :accept="'.pdf,.jpg,.jpeg,.png'" :tipText="'支持上传pdf、jpg、jpeg、png格式文件，单个文件不超过20M'"
+                button-text="选择图片" size="default" @success="handleFileSuccess"></base-upload>
             </el-form-item>
           </el-col>
         </el-row>
@@ -152,20 +84,9 @@
       </el-form>
       <div>
         <div class="title">款项明细</div>
-        <editable-table
-          ref="tableRef"
-          :row-key="'uuid'"
-          :height="'240px'"
-          v-model="tableData"
-          :columns="tableColumns"
-          :pagination="false"
-          :highlight-current-row="false"
-          :show-summary="false"
-          :compactEmpty="true"
-          :editable="true"
-          @selection-change="handleSelectionChange"
-          :on-save="handleTableSave"
-        >
+        <editable-table ref="tableRef" :row-key="'uuid'" :height="'240px'" v-model="tableData" :columns="tableColumns"
+          :pagination="false" :highlight-current-row="false" :show-summary="false" :compactEmpty="true" :editable="true"
+          @selection-change="handleSelectionChange" :on-save="handleTableSave">
         </editable-table>
       </div>
     </div>
@@ -219,7 +140,7 @@ const initFormData = () => ({
   projId: undefined,
   // 支付信息
   payDate: dateUtil().format("YYYY-MM-DD"), // 支付日期
-  payWayId: "", // 支付方式
+  payWayId: undefined, // 支付方式
   payAmt: 0, // 支付金额
   payAccount: "", // 支付账号
   payCompId: "", // 支付公司
@@ -338,7 +259,7 @@ const handleSubmit = async () => {
     await formRef.value.validate();
     submitLoading.value = true;
 
-    if(tableData.value.length === 0) {
+    if (tableData.value.length === 0) {
       ElMessage.warning("暂无款项明细数据！");
       submitLoading.value = false;
       return;
@@ -431,12 +352,19 @@ const getDetailList = async () => {
         return {
           ...item,
           uuid: uuidv4(),
-          currPayAmt: 0, // 初始化本次支付金额为0
+          currPayAmt: unpaidAmt, // 初始化本次支付金额为未付金额
           unpaidAmt: unpaidAmt, // 未付金额
         };
-      });
+      }).filter((vi) => vi.unpaidAmt !== 0); // 过滤掉未付金额为0的项
+      if (tableData.value.length > 0) {
+        nextTick(() => {
+          calcTotalPayAmt();
+        });
+        const firstData = tableData.value[0];
+        formData.value.payWayId = firstData?.pmPayWayId ? Number(firstData?.pmPayWayId) : undefined;
+      }
     }
-  } catch (error) {}
+  } catch (error) { }
 };
 const initData = async () => {
   await loadDicts();
@@ -477,6 +405,7 @@ watch(dialogVisible, (val) => {
   padding-left: 12px;
   box-sizing: border-box;
   position: relative;
+
   &::before {
     content: "";
     width: 4px;

@@ -487,7 +487,7 @@
         <CostAllocationCard
           :visible="isShowCostAllocation && formData.reqType == 0"
           :allocation-status="cstMData.allocStatus"
-          :warning-status="cstMData.allocStatus"
+          :warning-status="cstMData.allocWarn"
           :bizType="'NCON_CST'"
           :projId="formData.projId"
           :projName="formData.projName"
@@ -547,14 +547,14 @@
       @success="handleInvoiceDetailSuccess"
     />
 
-    <!-- 财务分摊 :dialogMode="isDetail ? 'view' : 'edit'" -->
+    <!-- 财务分摊 erp页面纯查看 -->
     <FinanceAllocationDialog
       ref="financeAllocationDialogRef"
       v-model="financeAllocVisible"
       :payWayTable="payWayTable"
       :segId="formData.segId"
       :projId="formData.projId"
-      :dialogMode="'view'"
+      :bizType="'NCON_CST'"
       @select="getFinaList"
     ></FinanceAllocationDialog>
   </div>
@@ -1924,6 +1924,7 @@ const getProcessData = async () => {
 };
 
 const handleSave = async () => {
+  if(submitLoading.value) return
   paymentFormRef.value.validate(async (valid: boolean) => {
     if (!valid) {
       ElMessage.error("请检查表单！");

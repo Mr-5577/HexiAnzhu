@@ -239,6 +239,7 @@
     <choose-supplier-dialog
       ref="supplierDialogRef"
       v-model="supplierDialogVisible"
+      :supStatus="1"
       @select="handleSupplierSelect"
     />
 
@@ -841,7 +842,7 @@ const handleSave = async () => {
       recvAnnexId: item.recvAnnexId || "",
       recvAnnexName: item.recvAnnexName || "",
     }));
-    debugger;
+    ;
     const params = {
       bizItemCode: "ZB_BZJ", // 招标保证金
       bill: {
@@ -993,6 +994,8 @@ const initData = async () => {
   await initDictData();
   await getProjectOptions();
   formData.value.userName = userStore.userInfo?.empName || "";
+  formData.value.deptName = userStore.userInfo?.deptName ?? "";
+  formData.value.mguName = userStore.userInfo?.mguName ?? "";
   formData.value.createDate = dateUtil().format("YYYY-MM-DD");
 
   if (isAdd.value) {

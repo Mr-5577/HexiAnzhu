@@ -129,7 +129,7 @@
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="计价方式" prop="priceType" required>
+              <el-form-item label="计价方式" prop="priceType" >
                 <el-select
                   v-model="formData.priceType"
                   :disabled="true"
@@ -146,7 +146,7 @@
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="产值确认方式" prop="payMethod" required>
+              <el-form-item label="产值确认方式" prop="payMethod" >
                 <el-select
                   v-model="formData.payMethod"
                   :disabled="true"
@@ -989,20 +989,20 @@ const handleVisaSelect = (data) => {
     // 去重：合同已存在于明细中则提示并跳过
     const exists = tableList.value.some((item) => (item.src_id === selected.id && item.srcType === 0));
     if (exists) {
-      ElMessage.warning(`签证「${selected.visaName}」已在事项明细中，不可重复关联`);
+      ElMessage.warning(`签证「${selected.bizTitle}」已在事项明细中，不可重复关联`);
       return;
     }
     addProcess()
     if (tableList.value.length>0) {
-      debugger
-      tableList.value[tableList.value.length-1].src_id = selected.id;
-      tableList.value[tableList.value.length-1].src_apply_id = selected.createId;
-      tableList.value[tableList.value.length-1].src_apply_date = selected.createDate;
-      tableList.value[tableList.value.length-1].process_name = selected.bizTitle;
-      tableList.value[tableList.value.length-1].process_amt = selected.auditReviewAmt;
-      tableList.value[tableList.value.length-1].process_excl_amt = selected.auditReviewAmt;
-      tableList.value[tableList.value.length-1].remark = selected.visaApplyDesc;
+      
       tableList.value[tableList.value.length-1].srcType = 0;//签证
+      tableList.value[tableList.value.length-1].srcId = selected.id;
+      tableList.value[tableList.value.length-1].srcApplyId = selected.createId;
+      tableList.value[tableList.value.length-1].srcApplyDate = selected.createDate;
+      tableList.value[tableList.value.length-1].processName = selected.bizTitle;
+      tableList.value[tableList.value.length-1].processAmt = selected.auditReviewAmt;
+      tableList.value[tableList.value.length-1].processExclAmt = selected.auditReviewAmt;
+      tableList.value[tableList.value.length-1].remark = selected.visaApplyDesc;
     }
   }
 };
@@ -1020,16 +1020,16 @@ const handleChangeSelect = (data) => {
     // 去重：合同已存在于明细中则提示并跳过
     const exists = tableList.value.some((item) => (item.src_id === selected.changeId && item.srcType === 1));
     if (exists) {
-      ElMessage.warning(`变更「${selected.visaName}」已在事项明细中，不可重复关联`);
+      ElMessage.warning(`变更「${selected.changeName}」已在事项明细中，不可重复关联`);
       return;
     }
-    debugger
+    
     addProcess()
     if (tableList.value.length>0) {
       tableList.value[tableList.value.length-1].srcType = 1;//变更
       tableList.value[tableList.value.length-1].srcId = selected.changeConId;
       tableList.value[tableList.value.length-1].srcApplyId = selected.createId;
-      tableList.value[tableList.value.length-1].visaApplyDate = selected.createDate;
+      tableList.value[tableList.value.length-1].srcApplyDate = selected.createDate;
       tableList.value[tableList.value.length-1].processName = selected.changeName;
       tableList.value[tableList.value.length-1].processAmt = selected.estChangeAmt;
       tableList.value[tableList.value.length-1].processExclAmt = selected.estChangeAmt;
@@ -1217,6 +1217,7 @@ const handleFormDataSave = async () => {
 };
 
 const handleFormDataSubmit = async () => {
+  
   submitLoading.value = true;
   try {
     await formRef.value.validate();
@@ -1224,14 +1225,17 @@ const handleFormDataSubmit = async () => {
     if (!validatePriceTable()) return;
     if (!validateProcessTable()) return;
     if (!validateProcessAmountMatch()) return;   // ← 加这一行
+    if (annexContractFileList.value.length === 0) {
+        ElMessage.warning(`未上传补充合同正文及附件，请上传后再提交！`,
+      );
+      return;
+    } 
 
     const params = buildSubmitParams()
+    if (formData.value.addSysNo === "")
+        await createConNo();
     let res;
-    if (formData.value.id) {
-      res = await supplementContractApi.submitSupplementContract(params);
-    } else {
-      res = await supplementContractApi.editSupplementContract(params);
-    }
+    res = await supplementContractApi.submitSupplementContract(params);
     if (res.code === 200) {
       ElMessage.success("提交成功,已发起审批！");
       // 生成OA审批页面重定向地址
@@ -1280,7 +1284,7 @@ const getEmpTreeData = async () => {
 
 // 获取主合同信息
 const getConMainData = async (inConId) => {
-  debugger
+  
   if (!inConId) return;
   if (inConId === formData.value.mainConId) return;
   try {
@@ -1294,7 +1298,7 @@ const getConMainData = async (inConId) => {
 
       if (formData.value.projId != conMain.projId)
         await getBuildingListByProjId(conMain.projId);
-      debugger
+      
       formData.value.segId = conMain.segId;
       formData.value.segName = conMain.segName;
       formData.value.segNo = conMain.segNo;
@@ -1451,7 +1455,12 @@ const getBuildingListByProjId = async (projId: number) => {
 const createConNo = async () => {
   try {
     // BCBH:补充合同编号前缀
-    const conRes = await commonApi.getBillNo({ bizType: formType.CON_ADD });
+    const conRes = await contractLedgerApi.getContractNo({ bizType: formType.CON_ADD,
+        mainConId:formData.value.mainConId,
+        projId:formData.value.projId,
+        conTypeId:formData.value.conTypeId,
+        compId: formData.value.companyId,
+      });
     if (conRes.code === 200) {
       formData.value.addSysNo = conRes.data;
       formData.value.addPhyNo = conRes.data;
@@ -1568,7 +1577,7 @@ const initData = async () => {
     formData.value = {
       ...initFormData(),
     }
-    await createConNo();
+    // await createConNo();
     await getConMainData(conMainId.value);
     addPrice();
   }

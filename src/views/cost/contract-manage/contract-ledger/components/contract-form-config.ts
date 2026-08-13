@@ -52,6 +52,14 @@ export const createPriceColumns = (isReadonly): ComputedRef<EditableColumn[]> =>
       formatType:"d%",
       showOverflowTooltip: false,
       width:100,
+      min: 0,            // 透传给数字框，原生夹紧
+      max: 100,
+      rules: [{
+        type: 'number', // 注意这里通常是 'number' 类型
+        min: 0,
+        max: 100,
+        message: '应付比例必须在 0 到 100 之间',
+      }],
     },
     {
       prop: "itemExclAmt",
@@ -110,7 +118,15 @@ export const createPayrateColumns = (
       showSummary: true,
       editable: true,
       editType: "number",
+      min: 0,            // 透传给数字框，原生夹紧
+      max: 100,
       showOverflowTooltip: false,
+      rules: [{
+        type: 'number', // 注意这里通常是 'number' 类型
+        min: 0,
+        max: 100,
+        message: '应付比例必须在 0 到 100 之间',
+      }],
     },
     {
       prop: "isCtrl",

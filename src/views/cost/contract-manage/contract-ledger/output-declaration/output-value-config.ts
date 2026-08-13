@@ -2,237 +2,179 @@ import { computed, type ComputedRef, type Ref } from "vue";
 import type { EditableColumn } from "@/components/base/editable-table.vue";
 import type { NavCard } from "@/composables/use-form-layout";
 import { AddProcessSrcEnum, invoiceStatusEnum } from "@/constants/contract-manage/enums";
-import { getEnumLabel } from "@/utils/enum";
+import { getEnumLabel, getOptionsLabelById } from "@/utils/enum";
+
+
 
 /** 悬浮定位栏配置 */
   // —— 悬浮定位栏（仅用于界面风格，不影响逻辑）——
-export const NAV_CARDS :NavCard[]= [
+export const NAV_CARDS: NavCard[] = [
   { id: "card-base", icon: "📋", label: "合同信息" },
-  { id: "card-pay", icon: "💰", label: "付款申请" },
-  { id: "card-account", icon: "💳", label: "收款账号" },
-  { id: "card-ded", icon: "⚖️", label: "奖罚调整" },
-  { id: "card-payway", icon: "📜", label: "付款方式" },
-  { id: "card-invoice", icon: "🧾", label: "发票信息" },
-  { id: "card-finance", icon: "📊", label: "财务分摊" },
+  { id: "card-prod", icon: "📊", label: "产值信息" },
+  { id: "card-con", icon: "🏗️", label: "合同产值" },
+  { id: "card-sum", icon: "📈", label: "累计产值" },
   { id: "card-annex", icon: "📎", label: "相关附件" },
 ];
 
+/** 日期显示：YYYY-MM-DD / YYYY-MM -> YYYY-MM；空值返回 "--" */
+const formatYM = (val: any): string => {
+  if (val === undefined || val === null || val === "") return "--";
+  return String(val).slice(0, 7);
+};
 
-
-// ==================== 发票登记 ====================
-export const invoiceMColumns = [
-//const invoiceMDetailColumns = [
-  { type: "index", label: "序号", width: 60 },
-  {
-    // 发票状态（0=待查验 1=合格发票 2=待人工审核 3=人工通过 4=人工拒绝）
-    prop: "status",
-    label: "发票状态",
-    width: 120,
-    editable: false,
-    formatter: (row) => {
-      const target = getEnumLabel(invoiceStatusEnum, row?.status || 0);
-      return target || "--";
-    },
-  },
-  {
-    prop: "isValid",
-    label: "查验真假",
-    width: 120,
-    editable: false,
-    formatter: (row) => (row.isValid ? "真发票" : "假发票"),
-  },
-  {
-    prop: "isRepeat",
-    label: "是否重复",
-    width: 90,
-    formatter: (row) => (row.isRepeat ? "是" : "否"),
-  },
-  { prop: "validateMsg", label: "查验结果", minWidth: 120 },
-
-  { prop: "invNo", label: "发票号", minWidth: 120 },
-  { prop: "invDate", label: "开票日期", minWidth: 120 },
-  { prop: "totalAmt", label: "发票总金额", minWidth: 120 },
-  { prop: "notTaxAmt", label: "不含税金额", minWidth: 120 },
-  { prop: "taxAmt", label: "税额", minWidth: 120 },
-  { prop: "invType", label: "发票类型", minWidth: 120 },
-  { slot: "annexName", label: "发票附件", minWidth: 200 },
-  { label: "操作", slot: "actions", width: 180, fixed: "right" },
-];
-
-// export const invoiceMColumns = (): ComputedRef<EditableColumn[]> =>
-//   computed<EditableColumn[]>(() => [
-export const createInvcColumns = () => {
-// export const invoiceMDetailColumns = (): ComputedRef<EditableColumn[]> =>
-//   computed<EditableColumn[]>(() => 
-   return computed<EditableColumn[]>(() => [
+export const materialColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {
-    // 发票状态（0=待查验 1=合格发票 2=待人工审核 3=人工通过 4=人工拒绝）
-    prop: "status",
-    label: "发票状态",
-    width: 90,
+    prop: "recvBillNo",
+    label: "接收单号",
     editable: false,
-    formatter: (row) => {
-      const target = getEnumLabel(invoiceStatusEnum, row?.status || 0);
-      return target || "--";
-    },
-  },
-  {
-    prop: "isValid",
-    label: "查验真假",
-    width: 90,
-    editable: false,
-    formatter: (row) => (row.isValid ? "真发票" : "假发票"),
-  },
-  {
-    prop: "isRepeat",
-    label: "是否重复",
-    width: 90,
-    editable: false,
-    formatter: (row) => (row.isRepeat ? "是" : "否"),
-  },
-  {
-    prop: "validateMsg",
-    label: "查验结果",
-    width: 120,
-    editable: false,
-  },
-
-  {
-    prop: "invNo",
-    label: "发票号",
-    editable: false,
-    minWidth: 120,
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "invDate",
-    label: "开票日期",
-    editable: false,
-    minWidth: 100,
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "totalAmt",
-    label: "发票总金额",
-    editable: false,
-    minWidth: 120,
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "notTaxAmt",
-    label: "不含税金额",
-    editable: false,
-    minWidth: 120,
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "taxAmt",
-    label: "税额",
-    editable: false,
-    minWidth: 120,
-    showOverflowTooltip: false,
-  },
-  {
-    prop: "invType",
-    label: "发票类型",
-    editable: false,
-    minWidth: 120,
-    showOverflowTooltip: false,
-  },
-  {
-    slot: "annexName",
-    label: "发票附件",
-    editable: false,
-    minWidth: 200,
-    showOverflowTooltip: false,
-  },
-  {
-    label: "操作",
-    slot: "actions",
-    width: 260,
-    fixed: "right",
-  },
-]);
-}
-
-
-// ==================== 扣款事项 ====================
-export const dedDetailColumns = [
-  { type: "index", label: "序号", width: 60 },
-  { prop: "dedName", label: "事项名称", minWidth: 120 },
-  { prop: "dedTypeName", label: "调整类型", minWidth: 120 },
-  { prop: "dedThisAmt", label: "金额", minWidth: 120 },
-  { prop: "dedDesc", label: "说明", minWidth: 120 },
-];
-
-interface DedColumnOptions {
-  dedTypeOptions: Ref<any[]>;  // 扣款类型
-}
-
-export const createDedColumns = (options: DedColumnOptions) => {
-  const { dedTypeOptions } = options;
-  
-  return computed<EditableColumn[]>(() => [
-  { type: "index", label: "序号", width: 60, editable: false },
-  {
-    prop: "dedName",
-    label: "事项名称",
-    editable: true,
     editType: "input",
     showOverflowTooltip: false,
-    width: 350,
+    width: 120,
   },
   {
-    prop: "dedTypeId",
-    label: "类型",
-    editable: true,
-    editType: "select",
+    prop: "mtName",
+    label: "材料名称",
+    editable: false,
+    width: 120,
+  },
+  {
+    prop: "mtModel",
+    label: "材料规格",
+    editable: false,
+    width: 80,
+  },
+  {
+    prop: "mtBrand",
+    label: "品牌",
+    editable: false,
+    width: 80,
+  },
+  {
+    prop: "mtCz",
+    label: "材质",
+    editable: false,
+    width: 120,
+  },
+  {
+    prop: "recvNum",
+    label: "接收数量",
+    editable: false,
+    editType: "number",
+    thousandSeparator: true,
     showOverflowTooltip: false,
-    // 自定义键名
-    optionLabelField: "dicLabel",
-    optionValueField: "id",
-    options: dedTypeOptions .value || [],
-    width:150,
+    precision: 0,
+    width: 100,
   },
-  // {
-  //   prop: "dedAmt",
-  //   label: "应扣款金额",
-  //   editable: true,
-  //   editType: "number",
-  //   showOverflowTooltip: false,
-  // },
   {
-    prop: "dedThisAmt",
-    label: "金额(元)",
+    prop: "mtUnit",
+    label: "单位",
+    editable: false,
+    editType: "input",
+    showOverflowTooltip: false,
+    width: 60,
+  },
+  {
+    prop: "recvPrice",
+    label: "单价",
+    editable: false,
+    editType: "number",
+    thousandSeparator: true,
+    showOverflowTooltip: false,
+    formatType:"#,##0.00",
+    width: 120,
+  },
+  {
+    prop: "prodVal",
+    label: "接收产值",
+    editable: false,
+    editType: "number",
+    thousandSeparator: true,
+    showOverflowTooltip: false,
+    formatType:"#,##0.00",
+    width: 150,
+  },
+  {
+    prop: "fineAmt",
+    label: "罚款",
+    editable: false,
+    editType: "number",
+    thousandSeparator: true,
+    showOverflowTooltip: false,
+    formatType:"#,##0.00",
+    width: 100,
+  },
+  {
+    prop: "prodVal",
+    label: "本次申报产值",
     editable: true,
     editType: "number",
+   // thousandSeparator: true,
     showOverflowTooltip: false,
-    width:150,
-    showSummary: true,
-    min: -Infinity,
+    formatType:"#,##0.00",
+    width: 140,
   },
   // {
-  //   prop: "dedAlreadyAmt",
-  //   label: "已扣款金额",
+  //   prop: "payRate",
+  //   label: "应付比例(%)",
   //   editable: true,
   //   editType: "number",
+  //   precision: 2,
   //   showOverflowTooltip: false,
-  // },
-  // {
-  //   prop: "dedLeaveAmt",
-  //   label: "未扣金额",
-  //   editable: true,
-  //   editType: "number",
-  //   showOverflowTooltip: false,
+  //   formatType:"d%",
+  //   width: 120,
   // },
   {
-    prop: "dedDesc",
-    label: "事项说明",
+    prop: "payAmt",
+    label: "本次申报应付",
+    editable: false,
+    editType: "number",
+    thousandSeparator: true,
+    showOverflowTooltip: false,
+    formatType:"#,##0.00",
+    width: 140,
+  },
+  {
+    prop: "buildPeriod",
+    label: "施工期间",
+    editable: false,
+    editType: "input",
+    showOverflowTooltip: false,
+    width: 100,
+    formatter: (row: any) => formatYM(row.buildPeriod) || "--",
+  },
+  {
+    prop: "prodValPeriod",
+    label: "产值期间",
+    editable: false,
+    showOverflowTooltip: false,
+    width: 100,
+    formatter: (row: any) => formatYM(row.prodValPeriod) || "--",
+  },
+  {
+    prop: "payDate",
+    label: "计划付款期间",
     editable: true,
     editType: "input",
     showOverflowTooltip: false,
-
+    width: 100,
+    formatter: (row: any) => row.payDate || "--",
+  },
+  {
+    prop: "costProdVal",
+    label: "成本复核产值",
+    editable: false,
+    thousandSeparator: true,
+    width: 150,
+    formatType:"#,##0.00",
+  },
+  {
+    prop: "costPayAmt",
+    label: "成本复核应付",
+    editable: false,
+    thousandSeparator: true,
+    width: 150,
+    formatType:"#,##0.00",
   },
   {
     label: "操作",
@@ -241,291 +183,260 @@ export const createDedColumns = (options: DedColumnOptions) => {
     fixed: "right",
   },
 ]);
+
+
+
+export const materialMinorColumns = computed<EditableColumn[]>(() => [
+  { type: "index", label: "序号", width: 60, editable: false },
+  {
+    prop: "recvBillNo",
+    label: "接收单号",
+    editable: false,
+    editType: "input",
+    showOverflowTooltip: false,
+    width: 120,
+  },
+  {
+    prop: "mtName",
+    label: "材料类别",
+    editable: false,
+    width: 250,
+  },
+  {
+    prop: "prodVal",
+    label: "接收产值",
+    editable: false,
+    editType: "number",
+    thousandSeparator: true,
+    showOverflowTooltip: false,
+    formatType:"#,##0.00",
+    width: 150,
+  },
+  // {
+  //   prop: "fineAmt",
+  //   label: "罚款",
+  //   editable: false,
+  //   editType: "number",
+  //   thousandSeparator: true,
+  //   showOverflowTooltip: false,
+  //   formatType:"#,##0.00",
+  //   width: 120,
+  // },
+  {
+    prop: "prodVal",
+    label: "本次申报产值",
+    editable: true,
+    editType: "number",
+   // thousandSeparator: true,
+    showOverflowTooltip: false,
+    formatType:"#,##0.00",
+    width: 150,
+  },
+  // {
+  //   prop: "payRate",
+  //   label: "合同应付比例(%)",
+  //   editable: false,
+  //   editType: "number",
+  //   precision: 2,
+  //   showOverflowTooltip: false,
+  //   formatType:"d%",
+  //   width: 120,
+  // },
+  {
+    prop: "payAmt",
+    label: "本次申报应付",
+    editable: false,
+    editType: "number",
+    thousandSeparator: true,
+    showOverflowTooltip: false,
+    formatType:"#,##0.00",
+    width: 150,
+  },
+  {
+    prop: "buildPeriod",
+    label: "施工期间",
+    editable: false,
+    editType: "input",
+    showOverflowTooltip: false,
+    width: 90,
+    formatter: (row: any) => formatYM(row.buildPeriod) || "--",
+  },
+  {
+    prop: "prodValPeriod",
+    label: "产值期间",
+    editable: false,
+    showOverflowTooltip: false,
+    width: 90,
+    formatter: (row: any) => formatYM(row.prodValPeriod) || "--",
+  },
+  {
+    prop: "payDate",
+    label: "计划付款期间",
+    editable: true,
+    editType: "input",
+    showOverflowTooltip: false,
+    width: 90,
+    formatter: (row: any) => row.payDate || "--",
+  },
+  {
+    prop: "costProdVal",
+    label: "成本复核产值",
+    editable: false,
+    editType: "number",
+    thousandSeparator: true,
+    showOverflowTooltip: false,
+    formatType:"#,##0.00",
+    width: 150,
+  },
+  {
+    prop: "costPayAmt",
+    label: "成本复核应付",
+    editable: false,
+    editType: "number",
+    thousandSeparator: true,
+    showOverflowTooltip: false,
+    formatType:"#,##0.00",
+    width: 150,
+  },
+  // {
+  //   prop: "remark",
+  //   label: "备注",
+  //   editable: false,
+  //   editType: "input",
+  //   showOverflowTooltip: false,
+  //   width: 150,
+  // },
+  // {
+  //   slot: "annex", // 使用自定义插槽
+  //   label: "接收明细附件",
+  //   width: 180,
+  // },
+  {
+    label: "操作",
+    width: 140,
+    slot: "actions",
+    fixed: "right",
+  },
+]);
+
+
+//非甲供材
+interface ProdColumnOptions {
+  paymentTypeOptions: Ref<any[]>;  // 项目选项（响应式）
 }
 
-// ==================== 付款方式 ====================
-interface PayWayColumnOptions {
-  payWayOptions: Ref<any[]>;  // 项目选项（响应式）
-}
-export const createPayWayColumns = (options: PayWayColumnOptions) => {
-  const { payWayOptions } = options;
+export const createProdColumns = (options: ProdColumnOptions) => {
+  const { paymentTypeOptions } = options;
+
   return computed<EditableColumn[]>(() => [
     { type: "index", label: "序号", width: 60, editable: false },
     {
-      prop: "payWayId",
-      label: "付款方式",
-      editable: true,
+      prop: "payTypeId",
+      label: "款项类型",
+      editable: false,
       editType: "select",
+      clearable: false,
       showOverflowTooltip: false,
-      // 自定义键名
       optionLabelField: "dicLabel",
       optionValueField: "id",
-      options:payWayOptions.value,
+      options: paymentTypeOptions.value || [],
+      width: 100,
+      formatter: (row:any)=> (getOptionsLabelById(paymentTypeOptions.value,row.payTypeId)),
+    },
+    {
+      prop: "payRate",
+      label: "应付比例(%)",
+      editable: false,
+      width: 90,
+      formatType:"d%",
+      // formatter: (row: any) => formatPercent(row.payRate),
+    },
+    {
+      prop: "isCtrl",
+      label: "强控支付",
+      editable: false,
+      width: 80,
+      formatter: (row: any) => (row.isCtrl ? "是" : "否"),
+    },
+    {
+      prop: "payIntvl",
+      label: "支付周期(月)",
+      editable: false,
+      editType: "number",
+      precision: 0, // 整数
+      showOverflowTooltip: false,
+      width: 90,
+    },
+    {
+      prop: "prodVal",
+      label: "本次申请产值",
+      editable: true,
+      editType: "number",
+     // thousandSeparator: true,
+      showOverflowTooltip: false,
+      //formatType:"#,##0.00",
+      width: 120,
+      disabled: (row: any) => !row.hasVal,
     },
     {
       prop: "payAmt",
-      label: "付款金额",
+      label: "本次申报应付",
       editable: true,
       editType: "number",
+      //thousandSeparator: true,
       showOverflowTooltip: false,
+      width: 120,
+      formatType:"#,##0.00",
+      disabled: (row: any) => !!row.isCtrl,
     },
     {
-      prop: "dedRoomAmt",
-      label: "其中抵房金额",
+      prop: "buildPeriod",
+      label: "施工期间",
       editable: true,
-      editType: "number",
+      editType: "input",
       showOverflowTooltip: false,
-      // 仅“转账”付款方式可填写抵房金额，否则禁用并清空
-      disabled: (row: any) => row.payWayId !== 2066,
+      width: 90,
+      formatter: (row: any) => row.buildPeriod || "--",
     },
     {
-      label: "操作",
-      slot: "actions",
-      fixed: "right",
+      prop: "prodValPeriod",
+      label: "产值期间",
+      editable: false,
+      showOverflowTooltip: false,
+      width: 90,
+      formatter: (row: any) => formatYM(row.prodValPeriod) || "--",
     },
+    {
+      prop: "payDate",
+      label: "计划付款期间",
+      editable: true,
+      showOverflowTooltip: false,
+      thousandSeparator: true,
+      width: 90,
+      //formatter: (row: any) => row.payDate || "--",
+      //disabled: (row: any) => !!row.isCtrl,
+    },
+    {
+      prop: "costProdVal",
+      label: "成本复核产值",
+      editable: false,
+      thousandSeparator: true,
+      width: 120,
+      formatType:"#,##0.00",
+    },
+    {
+      prop: "costPayAmt",
+      label: "成本复核应付",
+      editable: false,
+      thousandSeparator: true,
+      width: 120,
+      formatType:"#,##0.00",
+    },
+    // {
+    //   label: "操作",
+    //   width: 120,
+    //   slot: "actions",
+    //   fixed: "right",
+    // },
   ]);
-};
-
-export const payWayDetailColumns = [
-  { type: "index", label: "序号", width: 60 },
-  { prop: "payWayName", label: "付款方式", minWidth: 150 },
-  { prop: "bankName", label: "收款开户行", minWidth: 150 },
-  { prop: "accountName", label: "收款账户名", minWidth: 150 },
-  { prop: "bankAccount", label: "收款账号", minWidth: 150 },
-  { prop: "payAmt", label: "付款金额", minWidth: 120 },
-  { prop: "dedRoomAmt", label: "其中抵房金额", minWidth: 120 },
-  { prop: "payDesc", label: "事项说明", minWidth: 200 },
-];
-
-interface FinanceColumnOptions {
-  projectOptions: Ref<any[]>;  // 项目选项（响应式）
-  subjectOptions: Ref<any[]>;  // 科目选项（响应式）
 }
-
-export const createFinanceColumns = (options: FinanceColumnOptions) => {
-  const { projectOptions, subjectOptions } = options;
-  
-  return computed<EditableColumn[]>(() => [
-    { type: "index", label: "序号", width: 60, editable: false },
-    {
-      prop: "projId",
-      label: "项目",
-      editable: true,
-      editType: "select",
-      showOverflowTooltip: false,
-      optionLabelField: "projName",
-      optionValueField: "id",
-      options: projectOptions.value,  // ✅ 使用传入的响应式数据
-    },
-    {
-      prop: "acctProjId",
-      label: "建筑核算项目",
-      editable: true,
-      editType: "select",
-      showOverflowTooltip: false,
-      optionLabelField: "label",
-      optionValueField: "value",
-      options: [
-        { label: "核算项目1", value: 1 },
-        { label: "核算项目2", value: 2 },
-      ],
-    },
-    {
-      prop: "subId",
-      label: "科目",
-      editable: true,
-      editType: "select",
-      showOverflowTooltip: false,
-      optionLabelField: "subName",
-      optionValueField: "id",
-      options: subjectOptions.value,  // ✅ 使用传入的响应式数据
-    },
-    {
-      prop: "subAmt",
-      label: "金额",
-      editable: true,
-      editType: "number",
-      showOverflowTooltip: false,
-    },
-    {
-      label: "操作",
-      slot: "actions",
-      fixed: "right",
-    },
-  ]);
-};
-
-// const dedColumns = computed<EditableColumn[]>(() => [
-//   { type: "index", label: "序号", width: 60, editable: false },
-//   {
-//     prop: "dedName",
-//     label: "事项名称",
-//     editable: true,
-//     editType: "input",
-//     showOverflowTooltip: false,
-//   },
-//   {
-//     prop: "dedTypeId",
-//     label: "调整类型",
-//     editable: true,
-//     editType: "cascader",
-//     showOverflowTooltip: false,
-//     optionLabelField: "dicLabel",
-//     optionValueField: "id",
-//    // options: dedTypeOptions.value || [],
-//     showAllLevels: false,
-//     cascaderProps: {
-//       children: "children",
-//       label: "dicLabel",
-//       value: "id",
-//       emitPath: false,
-//       showAllLevels: false,
-//       checkStrictly: false,
-//     },
-//   },
-//   {
-//     prop: "dedAmt",
-//     label: "金额",
-//     editable: true,
-//     editType: "number",
-//     showOverflowTooltip: false,
-//     showSummary: true,
-//     min: -999999999,
-//     max: 999999999,
-//   },
-//   {
-//     prop: "dedDesc",
-//     label: "说明",
-//     editable: true,
-//     editType: "input",
-//     showOverflowTooltip: false,
-//   },
-//   {
-//     label: "操作",
-//     width: 150,
-//     slot: "actions",
-//     fixed: "right",
-//   },
-// ]);
-
-/** 创建补充事项明细列定义 */
-export const createProcessColumns = (): ComputedRef<EditableColumn[]> =>
-  computed<EditableColumn[]>(() => [
-    { type: "index", label: "序号", width: 60, editable: false },
-    {     
-      prop: "srcType",
-      label: "事项来源",
-      editable: true,
-      disabled: true,
-      width:120,
-      editType: "select",
-      showOverflowTooltip: false,
-      optionLabelField: "label",
-      optionValueField: "value",
-      options: AddProcessSrcEnum || [],
-    },
-    {
-      prop: "processName",
-      label: "事项名称",
-      editable: true,
-      disabled: (row: any) => row.srcType !== 2,
-      editType: "input",
-      showOverflowTooltip: false,
-      width:350,
-    },
-    {
-      prop: "processAmt",
-      label: "事项金额(含税)",
-      showSummary: true,
-      editable: true,
-      disabled: (row: any) => row.srcType !== 2,
-      editType: "number",
-      showOverflowTooltip: false,
-      width:200,
-    },
-    {
-      prop: "visaApplyDate",
-      label: "业务日期",
-      editable: true,
-      editType: "date",
-      disabled: (row: any) => row.srcType !== 2,
-      showOverflowTooltip: false,
-      width:120,
-    },
-    {
-      prop: "remark",
-      label: "其他说明",
-      editable: true,
-      editType: "input",
-      showOverflowTooltip: false,
-    },
-    {
-      label: "操作",
-      width: 100,
-      slot: "actions",
-      fixed: "right",
-    },
-  ]);
-
-/** 创建价税明细列定义 */
-export const createPriceColumns = (): ComputedRef<EditableColumn[]> =>
-  computed<EditableColumn[]>(() => [
-    { type: "index", label: "序号", width: 60, editable: false },
-    {
-      prop: "itemName",
-      label: "分项名称",
-      editable: true,
-      editType: "input",
-      showOverflowTooltip: false,
-      width:250,
-    },
-    {
-      prop: "itemAmt",
-      label: "分项含税总额",
-      showSummary: true,
-      editable: true,
-      editType: "number",
-      showOverflowTooltip: false,
-      width:200,
-    },
-    {
-      prop: "itemTaxRate",
-      label: "税率(%)",
-      showSummary: true,
-      editable: true,
-      editType: "number",
-      showOverflowTooltip: false,
-      width:100,
-    },
-    {
-      prop: "itemExclAmt",
-      label: "分项不含税额",
-      showSummary: true,
-      editable: false,
-      editType: "number",
-      showOverflowTooltip: false,
-      width:200,
-    },
-    {
-      prop: "itemTaxAmt",
-      label: "分项税额",
-      showSummary: true,
-      editable: false,
-      editType: "number",
-      showOverflowTooltip: false,
-      width:200,
-    },
-    {
-      prop: "remark",
-      label: "备注",
-      editable: true,
-      editType: "input",
-      showOverflowTooltip: false,
-    },
-    {
-      label: "操作",
-      width: 100,
-      slot: "actions",
-      fixed: "right",
-    },
-  ]);

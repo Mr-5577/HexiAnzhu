@@ -1,12 +1,7 @@
 <!-- 详情 建安支付 -->
 <template>
   <div class="cst-payment-detail-page">
-    <CstPaymentForm
-      mode="detail"
-      :cstPaymentId="cstPaymentId"
-      @success="handleSuccess"
-      @cancel="handleCancel"
-    />
+    <CstPaymentForm mode="detail" :cstPaymentId="cstPaymentId" @success="handleSuccess" @cancel="handleCancel" />
   </div>
 </template>
 
@@ -19,14 +14,20 @@ const router = useRouter();
 
 defineOptions({ name: "cst-payment-detail" });
 
-const cstPaymentId = Number(route.query.cstPaymentId); // 建安支付ID
+const parseId = (val) => {
+  if (val === undefined || val === null || val === '') return null;
+  const num = Number(val);
+  return !isNaN(num) ? num : null;
+};
+
+const cstPaymentId = parseId(route.query.cstPaymentId) ?? parseId(route.query.bizId) ?? 0; // 建安支付ID
 
 const handleSuccess = () => {
-//   router.back();
+  //   router.back();
 };
 
 const handleCancel = () => {
-//   router.back();
+  //   router.back();
 };
 </script>
 
