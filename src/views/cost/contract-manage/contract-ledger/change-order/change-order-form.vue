@@ -382,7 +382,7 @@ const flowListData = ref<any>(null);
 const flowBaseData = ref<any>(null);
 
 const mode = ref<"add" | "edit" | "detail">(props.mode);
-const changeId = ref(route.query.changeId);
+const changeId = ref(undefined);
 
 const isAdd = computed(() => mode.value === "add");
 const isEdit = computed(() => mode.value === "edit");
@@ -898,6 +898,7 @@ const initData = async () => {
       await getConMainData(props.conId)
     }
   } else if (isEdit.value || isDetail.value) {
+    changeId.value = props.changeId;
     await loadDetail();
   }
 };
