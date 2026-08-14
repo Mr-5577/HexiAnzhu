@@ -1,35 +1,18 @@
 <!-- 成本分摊 组件 -->
 <template>
-  <base-modal
-    v-model="dialogVisible"
-    title="成本分摊"
-    width="1500px"
-    :top="'8vh'"
-    :confirm-loading="confirmLoading"
-    :confirm-text="'确定'"
-    :showConfirmButton="props.dialogMode != 'view'"
-    :showCancelButton="props.dialogMode != 'view'"
-    @confirm="handleConfirm"
-    @close="handleClose"
-  >
-    <CostAllocationDetail
-      ref="costAllocationRef"
-      :projId="props.projId"
-      :projName="props.projName"
-      :displayName="props.displayName"
-      :bizType="props.bizType"
-      :allocAmt="props.allocAmt"
-      :cstMData="props.cstMData"
-      :isDialogMode="true"
-      :dialogMode="props.dialogMode"
-    ></CostAllocationDetail>
+  <base-modal v-model="dialogVisible" title="成本分摊" width="1500px" :top="'8vh'" :confirm-loading="confirmLoading"
+    :confirm-text="'确定'" :showConfirmButton="props.dialogMode != 'view'" :showCancelButton="props.dialogMode != 'view'"
+    @confirm="handleConfirm" @close="handleClose">
+    <ConCostAlloc ref="costAllocationRef" :projId="props.projId" :projName="props.projName"
+      :displayName="props.displayName" :bizType="props.bizType" :allocAmt="props.allocAmt" :cstMData="props.cstMData"
+      :isDialogMode="true" :dialogMode="props.dialogMode"></ConCostAlloc>
   </base-modal>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import { ElMessage } from "element-plus";
-import CostAllocationDetail from "./index.vue";
+import ConCostAlloc from "./index.vue";
 
 interface Props {
   modelValue: boolean;

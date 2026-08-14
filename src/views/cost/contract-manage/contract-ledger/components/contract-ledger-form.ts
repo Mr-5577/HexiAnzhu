@@ -1,10 +1,7 @@
 // ============ 合同台账表单 Composable（重构版） ============
 // 业务逻辑层，整合拆分后的 useFormLayout / useOptionsLoader / useTableEditor / createContractFormRules
 import { ref, computed, watch, onMounted, nextTick } from "vue";
-import {
-  ElMessage,
-  ElMessageBox,
-} from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user-store";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
@@ -21,7 +18,7 @@ import { v4 as uuidv4 } from "uuid";
 import { dateUtil, getDaysDiff } from "@/utils/date-util";
 import { roleApi } from "@/api/system/role-api.ts";
 import { useMDStore } from "@/stores/md-store.ts";
-import { ManageTypeEnum ,PayTypeEnum,} from "@/constants/contract-manage/enums";
+import { ManageTypeEnum, PayTypeEnum } from "@/constants/contract-manage/enums";
 import { useTagsStore } from "@/stores/tags-store";
 
 // 拆分模块
@@ -30,7 +27,10 @@ import type {
   ContractFormProps,
   ContractFormEmits,
 } from "./contract-form-types.ts";
-import { saveContractFormRules,submitContractFormRules } from "./form-rules.ts";
+import {
+  saveContractFormRules,
+  submitContractFormRules,
+} from "./form-rules.ts";
 import { useFormLayout } from "@/composables/use-form-layout.ts";
 import { loadOptions } from "@/composables/use-options-loader.ts";
 import { useTableEditor } from "@/composables/use-table-editor.ts";
@@ -39,16 +39,17 @@ import {
   createPriceColumns,
   createPayrateColumns,
 } from "./contract-form-config.ts";
-import {
-  requiredRule,
-} from "@/utils/form-rule-validate.ts";
+import { requiredRule } from "@/utils/form-rule-validate.ts";
 // 重新导出类型，保持外部 import 路径不变
-import { formType } from '@/types/form/form-types.ts'
+import { formType } from "@/types/form/form-types.ts";
 import { normalizeCode } from "@/utils/common.ts";
 export type { ContractFormProps, ContractFormEmits, ContractFormData };
 
 // ============ Composable ============
-export function useContractForm(props: ContractFormProps, emit: ContractFormEmits) {
+export function useContractForm(
+  props: ContractFormProps,
+  emit: ContractFormEmits,
+) {
   const router = useRouter();
   const userStore = useUserStore();
   const mdStore = useMDStore();
@@ -69,7 +70,12 @@ export function useContractForm(props: ContractFormProps, emit: ContractFormEmit
     bizNo: "",
     status: 0,
     bizItemCode: formType.CON_MAIN,
-    flowId:null,
+    flowId: null,
+  });
+  const conMain = ref({
+    id: undefined,
+    projId: undefined,
+    projName: "",
   });
   const flowBaseData = ref<any>(null);
   const flowListData = ref<any>(null);
@@ -101,8 +107,8 @@ export function useContractForm(props: ContractFormProps, emit: ContractFormEmit
     acctProjId: null,
     tenderItemId: null,
     tenderItemName: "",
-    awardId:null,
-    bidAmount:null,
+    awardId: null,
+    bidAmount: null,
     companyId: null,
     conName: "",
     conSysNo: "",
@@ -113,7 +119,7 @@ export function useContractForm(props: ContractFormProps, emit: ContractFormEmit
     mainConName: "",
     mainConExpiryDate: null,
     supId: null,
-    supName : "",
+    supName: "",
     priceType: null,
     conStatus: 0,
     signAmt: null,
@@ -151,6 +157,20 @@ export function useContractForm(props: ContractFormProps, emit: ContractFormEmit
   const formRef = ref(null);
   const submitLoading = ref(false);
 
+  // 成本分摊明细数据
+  const cstMData = ref({
+    id: undefined,
+    projId: undefined,
+    bizType: "",
+    bizBillId: undefined,
+    bizKeyId: 0,
+    allocAmt: "",
+    allocExclAmt: "",
+    allocStatus: undefined,
+    allocWarn: undefined,
+    allocDs: [], // 分摊明细
+  });
+
   // ---- 下拉选项 ----
   const companyOptions = ref<any[]>([]);
   const buildingOptions = ref<any[]>([]);
@@ -162,7 +182,7 @@ export function useContractForm(props: ContractFormProps, emit: ContractFormEmit
   const annexContractFileList = ref<any[]>([]);
   const annexFileList = ref<any[]>([]);
   const paymentTypeOptions = ref<any[]>([]);
-  const empTreeOptions = ref<any[]>([]); 
+  const empTreeOptions = ref<any[]>([]);
 
   // ---- 明细表 ----
   const priceTable = ref<any[]>([]);
@@ -237,34 +257,38 @@ export function useContractForm(props: ContractFormProps, emit: ContractFormEmit
   }
   // ---- 价税明细自动计算 ----
   watch(
-    () =>
-      priceTable.value.map((item) => `${item.itemAmt}-${item.itemTaxRate}`),
+    () => priceTable.value.map((item) => `${item.itemAmt}-${item.itemTaxRate}`),
     () => {
       priceTable.value.forEach((item) => {
-        const amt = Number(item.itemAmt) || 0;       // ← 确认这行存在
-        const rate = Number(item.itemTaxRate) || 0;   // ← 确认这行存在
+        const amt = Number(item.itemAmt) || 0; // ← 确认这行存在
+        const rate = Number(item.itemTaxRate) || 0; // ← 确认这行存在
         if (amt > 0 && rate >= 0) {
-          item.itemExclAmt =
-            Math.round((amt / (1 + rate / 100)) * 100) / 100;
-          item.itemTaxAmt =
-            Math.round((amt - item.itemExclAmt) * 100) / 100;
+          item.itemExclAmt = Math.round((amt / (1 + rate / 100)) * 100) / 100;
+          item.itemTaxAmt = Math.round((amt - item.itemExclAmt) * 100) / 100;
         }
       });
     },
   );
 
   // watch needSeal 为否时清空 sealTypes
-  watch(() => formData.value.needSeal, (val) => {
-    if (!val) formData.value.sealTypes = [];
-  });
+  watch(
+    () => formData.value.needSeal,
+    (val) => {
+      if (!val) formData.value.sealTypes = [];
+    },
+  );
 
   // showPayrate computed
   const showPayrate = computed(() => {
-    const item = PayTypeEnum.find(item => item.value === formData.value.payMethod);
-    return ((!item || item.value !== 2) && isJianAn.value===true);
+    const item = PayTypeEnum.find(
+      (item) => item.value === formData.value.payMethod,
+    );
+    return (!item || item.value !== 2) && isJianAn.value === true;
   });
   const visibleNavCards = computed(() =>
-    showPayrate.value ? NAV_CARDS : NAV_CARDS.filter(card => card.id !== "card-payrate")
+    showPayrate.value
+      ? NAV_CARDS
+      : NAV_CARDS.filter((card) => card.id !== "card-payrate"),
   );
 
   // ---- 数据字典 ----
@@ -294,24 +318,28 @@ export function useContractForm(props: ContractFormProps, emit: ContractFormEmit
     // ✅ 从当前节点向上查找顶级节点
     const findTopLevelNode = (startNode: any): any => {
       let current = startNode;
-      
+
       // 递归向上查找，直到找到顶级节点（parentId为0或null）
       while (current) {
         // 判断是否为顶级节点
-        if (current.pid === 0 || current.pid === null || current.pid === undefined) {
+        if (
+          current.pid === 0 ||
+          current.pid === null ||
+          current.pid === undefined
+        ) {
           return current;
         }
-        
+
         // 继续向上查找父节点
         current = findNodeById(list, current.pid);
       }
-      
+
       return startNode; // 如果没找到顶级节点，返回自身
     };
 
     let cur = findNodeById(list, targetId);
     const topLevelNode = cur ? findTopLevelNode(cur) : undefined;
-    return topLevelNode?.conTypeCode;     // 到顶了，取 code
+    return topLevelNode?.conTypeCode; // 到顶了，取 code
   };
 
   const isJianAn = computed(() => {
@@ -334,26 +362,23 @@ export function useContractForm(props: ContractFormProps, emit: ContractFormEmit
     },
   );
 
-const validatePayRate = (): boolean => {
-  
-  if (!showPayrate.value || !isJianAn.value) {
-    return true;
-  }
+  const validatePayRate = (): boolean => {
+    if (!showPayrate.value || !isJianAn.value) {
+      return true;
+    }
 
-  // 应付比例之和
-  const rateTotal = payrateTable.value.reduce(
-    (sum, item) => sum + (Number(item.payRate) || 0),
-    0,
-  );
-
-  if (rateTotal !== 100) {
-    ElMessage.warning(
-      `支付方式表应付比例合计应等于100%，请核对后再提交！`,
+    // 应付比例之和
+    const rateTotal = payrateTable.value.reduce(
+      (sum, item) => sum + (Number(item.payRate) || 0),
+      0,
     );
-    return false;
-  }
-  return true;
-};
+
+    if (rateTotal !== 100) {
+      ElMessage.warning(`支付方式表应付比例合计应等于100%，请核对后再提交！`);
+      return false;
+    }
+    return true;
+  };
 
   // ---- 表单校验规则 ----
   //const formRules = ref(createContractFormRules());
@@ -361,13 +386,17 @@ const validatePayRate = (): boolean => {
     const rules = submitContractFormRules();
     // 需求1：合同类型为2/3时主合同必填
     const needMainCon = formData.value.conProperty == 3;
-    rules.mainConId = needMainCon ? requiredRule("主合同") : [{ required: false }];
+    rules.mainConId = needMainCon
+      ? requiredRule("主合同")
+      : [{ required: false }];
     // 需求2：用印为是时印章类型必填
-    rules.sealTypes = formData.value.needSeal ? requiredRule("印章类型") : [{ required: false }];
+    rules.sealTypes = formData.value.needSeal
+      ? requiredRule("印章类型")
+      : [{ required: false }];
     // 需求3：跨字段校验 —— 生效日期不能晚于到期日期
     const dateOrderValidator = (_rule: any, _value: any, callback: any) => {
-      const start = formData.value.effectiveDate;   // 开始日期
-      const end = formData.value.expiryDate;         // 结束日期
+      const start = formData.value.effectiveDate; // 开始日期
+      const end = formData.value.expiryDate; // 结束日期
       // 任一个未填时交给 requiredRule 去拦，这里只比大小
       if (start && end && getDaysDiff(start, end) < 0) {
         callback(new Error("开始日期不能晚于结束日期"));
@@ -397,31 +426,32 @@ const validatePayRate = (): boolean => {
       if (formData.value.supId != newData[0].id) {
         formData.value.mainConId = newData[0].id;
         formData.value.mainConName = newData[0].conName;
-        formData.value.mainConExpiryDate = newData[0].expiryDate || newData[0].mainConExpiryDate || null;
+        formData.value.mainConExpiryDate =
+          newData[0].expiryDate || newData[0].mainConExpiryDate || null;
         if (formData.value.supId != newData[0].supId) {
           formData.value.supId = newData[0].supId;
           formData.value.supName = newData[0].supName || "";
           formData.value.supCmanName = newData[0].supCmanName;
-          getSupplierContactAndBank(formData.value.supId)
+          getSupplierContactAndBank(formData.value.supId);
         }
       }
     }
   };
 
-  // ---- 供应商选择 ---- 
+  // ---- 供应商选择 ----
   const supplierDialogVisible = ref(false);
-  const openSupplierDialog = () => { 
+  const openSupplierDialog = () => {
     if (isDetailMode.value) return;
     supplierDialogVisible.value = true;
   };
   const handleSupplierSelect = (data) => {
     if (data && data.length > 0) {
       let newData = data || [];
-      if (formData.value.supId != newData[0].id) {        
+      if (formData.value.supId != newData[0].id) {
         // ...带出电话/身份证/职务/银行信息
-        
+
         if (formData.value.supId != newData[0].id) {
-          getSupplierContactAndBank(newData[0].id)  
+          getSupplierContactAndBank(newData[0].id);
         }
         formData.value.supId = newData[0].id;
         formData.value.supName = newData[0].supName || "";
@@ -429,27 +459,26 @@ const validatePayRate = (): boolean => {
     }
   };
 
-  const getSupplierContactAndBank = (supId) =>{
+  const getSupplierContactAndBank = (supId) => {
     //获取供应商联系人
-    supplierApi.getDefContactList(supId).then((res)=>{
-      if (res.code === 200) { 
+    supplierApi.getDefContactList(supId).then((res) => {
+      if (res.code === 200) {
         formData.value.supCmanName = res.data?.contactPerson || "";
         formData.value.supCmanJob = res.data?.jobTitle || "";
         formData.value.supCmanTel = res.data?.contactPhone || "";
         formData.value.supCmanIdno = res.data?.contactCardNo || "";
       }
-    })
+    });
 
     //获取供应商银行账号
-    supplierApi.getDefBankList(supId).then((res)=>{
+    supplierApi.getDefBankList(supId).then((res) => {
       if (res.code === 200) {
         formData.value.accountName = res.data?.accountName || "";
         formData.value.bankAccount = res.data?.bankAccount || "";
         formData.value.bankName = res.data?.bankName || "";
       }
-
-    })
-  }
+    });
+  };
 
   // ---- 招标事项选择 ----
   const awardItemDialogVisible = ref(false);
@@ -458,7 +487,7 @@ const validatePayRate = (): boolean => {
     if (formData.value.projId) {
       awardItemDialogVisible.value = true;
     } else {
-      ElMessage.error("请先选择项目！")
+      ElMessage.error("请先选择项目！");
     }
   };
   const handleAwardItemSelect = (data) => {
@@ -472,7 +501,7 @@ const validatePayRate = (): boolean => {
       if (formData.value.supId != newData[0].supId) {
         formData.value.supId = newData[0].supId;
         formData.value.supName = newData[0].supName || "";
-        getSupplierContactAndBank(formData.value.supId)
+        getSupplierContactAndBank(formData.value.supId);
       }
     }
     awardItemDialogVisible.value = false;
@@ -576,10 +605,11 @@ const validatePayRate = (): boolean => {
   // 生成合同编号
   const createConNo = async () => {
     try {
-      const conRes = await contractLedgerApi.getContractNo({ bizType: formType.CON_MAIN,
-        mainConId:formData.value.id,
-        projId:formData.value.projId,
-        conTypeId:formData.value.conTypeId,
+      const conRes = await contractLedgerApi.getContractNo({
+        bizType: formType.CON_MAIN,
+        mainConId: formData.value.id,
+        projId: formData.value.projId,
+        conTypeId: formData.value.conTypeId,
         compId: formData.value.companyId,
       });
       if (conRes.code === 200) {
@@ -611,7 +641,7 @@ const validatePayRate = (): boolean => {
         ...billData.value,
         id: billData.value.id || undefined,
         bizTitle: formData.value.bizTitle,
-        bizNo:formData.value.conSysNo,
+        bizNo: formData.value.conSysNo,
         bizItemCode: formType.CON_MAIN,
         segId: formData.value.segId,
         segName: formData.value.segName,
@@ -619,7 +649,7 @@ const validatePayRate = (): boolean => {
         projId: formData.value.projId,
         compId: formData.value.companyId,
         compName: formData.value.compName,
-        flowId:formData.value.flowId,
+        flowId: formData.value.flowId,
       },
       conMain: {
         id: formData.value.id,
@@ -671,7 +701,7 @@ const validatePayRate = (): boolean => {
         remark: formData.value.remark,
       },
       billPrices: priceTable.value,
-      billPayrates: (showPayrate.value===true) ? payrateTable.value : [],
+      billPayrates: showPayrate.value === true ? payrateTable.value : [],
       annexContractList: annexContractFileList.value || [],
       annexList: annexFileList.value || [],
     };
@@ -711,7 +741,7 @@ const validatePayRate = (): boolean => {
       mainConName: conMain.mainConName,
       mainConExpiryDate: conMain.mainConExpiryDate,
       supId: conMain.supId,
-      supName : conMain.supName,
+      supName: conMain.supName,
       priceType: conMain.priceType,
       conStatus: conMain.conStatus,
       signAmt: conMain.signAmt,
@@ -750,7 +780,7 @@ const validatePayRate = (): boolean => {
     if (value) {
       const res = await projectAreaApi.getInfoByProjId({ id: value });
       if (res.code === 200 && res.data) {
-        const { compName, compId, segId, segName,segNo } = res.data;
+        const { compName, compId, segId, segName, segNo } = res.data;
         formData.value.segId = segId || "";
         formData.value.segName = segName || "";
         formData.value.segNo = segNo || "";
@@ -814,7 +844,8 @@ const validatePayRate = (): boolean => {
     if (!conId.value) return;
     try {
       const res = await contractLedgerApi.getContractLedgerById({
-        id: conId.value,isWithFlow:true
+        id: conId.value,
+        isWithFlow: true,
       });
       if (res.code === 200 && res.data) {
         const {
@@ -827,7 +858,10 @@ const validatePayRate = (): boolean => {
           billPrices = [],
           annexList,
           annexContractList,
+          cstM,
         } = res.data;
+        cstMData.value = { ...cstMData.value, ...cstM };
+        conMain.value = { ...conMain.value, ...conMain };
         billData.value = { ...billData.value, ...bill };
         flowListData.value = { ...flowListData.value, ...flowList };
         flowBaseData.value = { ...flowBaseData.value, ...flowBase };
@@ -837,6 +871,9 @@ const validatePayRate = (): boolean => {
           billData.value,
           flowBaseData.value,
         );
+        console.log("conMain.value", conMain);
+        console.log("formData.value", formData.value);
+        formData.value.projName = conMain?.projName;
         payrateTable.value = billPayrates.map((item: any) => ({
           ...item,
           uuid: uuidv4(),
@@ -901,67 +938,69 @@ const validatePayRate = (): boolean => {
     return true;
   };
 
- // 需求8：支付明细所有列均为必填
-const validatePayrateTable = () => {
-  if (!showPayrate.value) {
-    payrateTable.value = [];
+  // 需求8：支付明细所有列均为必填
+  const validatePayrateTable = () => {
+    if (!showPayrate.value) {
+      payrateTable.value = [];
+      return true;
+    }
+
+    if (payrateTable.value.length === 0) {
+      ElMessage.error("支付比例明细列表不能为空");
+      return false;
+    }
+
+    // 记录每个 payTypeId 出现的行号
+    const payTypeMap = new Map<number | string, number[]>();
+
+    for (let i = 0; i < payrateTable.value.length; i++) {
+      const item = payrateTable.value[i];
+      const rowNum = i + 1;
+
+      if (!item.payTypeId) {
+        ElMessage.error(`支付比例明细列表第${rowNum}行：请选择款项类型`);
+        return false;
+      }
+
+      // 记录 payTypeId 出现的行号
+      if (!payTypeMap.has(item.payTypeId)) {
+        payTypeMap.set(item.payTypeId, []);
+      }
+      payTypeMap.get(item.payTypeId)!.push(rowNum);
+
+      if (!item.payRate || item.payRate <= 0) {
+        ElMessage.error(`支付比例明细列表第${rowNum}行：应付比例必须大于0`);
+        return false;
+      }
+
+      if (item.isCtrl === null || item.isCtrl === undefined) {
+        ElMessage.error(`支付比例明细列表第${rowNum}行：请选择是否强控`);
+        return false;
+      }
+
+      if (!item.payIntvl || item.payIntvl < 0) {
+        ElMessage.error(`支付比例明细列表第${rowNum}行：支付周期必须填写`);
+        return false;
+      }
+    }
+
+    // 检查重复的款项类型
+    const duplicateMessages: string[] = [];
+    for (const [payTypeId, rows] of payTypeMap.entries()) {
+      if (rows.length > 1) {
+        duplicateMessages.push(
+          `款项类型"${payTypeId}"在第${rows.join("、")}行重复`,
+        );
+      }
+    }
+
+    if (duplicateMessages.length > 0) {
+      ElMessage.error(`支付比例明细列表：${duplicateMessages.join("；")}`);
+      return false;
+    }
+
     return true;
-  }
-  
-  if (payrateTable.value.length === 0) {
-    ElMessage.error("支付比例明细列表不能为空");
-    return false;
-  }
-
-  // 记录每个 payTypeId 出现的行号
-  const payTypeMap = new Map<number | string, number[]>();
-
-  for (let i = 0; i < payrateTable.value.length; i++) {
-    const item = payrateTable.value[i];
-    const rowNum = i + 1;
-
-    if (!item.payTypeId) {
-      ElMessage.error(`支付比例明细列表第${rowNum}行：请选择款项类型`);
-      return false;
-    }
-
-    // 记录 payTypeId 出现的行号
-    if (!payTypeMap.has(item.payTypeId)) {
-      payTypeMap.set(item.payTypeId, []);
-    }
-    payTypeMap.get(item.payTypeId)!.push(rowNum);
-
-    if (!item.payRate || item.payRate <= 0) {
-      ElMessage.error(`支付比例明细列表第${rowNum}行：应付比例必须大于0`);
-      return false;
-    }
-
-    if (item.isCtrl === null || item.isCtrl === undefined) {
-      ElMessage.error(`支付比例明细列表第${rowNum}行：请选择是否强控`);
-      return false;
-    }
-
-    if (!item.payIntvl || item.payIntvl < 0){
-      ElMessage.error(`支付比例明细列表第${rowNum}行：支付周期必须填写`); 
-      return false;
-    }
-  }
-
-  // 检查重复的款项类型
-  const duplicateMessages: string[] = [];
-  for (const [payTypeId, rows] of payTypeMap.entries()) {
-    if (rows.length > 1) {
-      duplicateMessages.push(`款项类型"${payTypeId}"在第${rows.join('、')}行重复`);
-    }
-  }
-
-  if (duplicateMessages.length > 0) {
-    ElMessage.error(`支付比例明细列表：${duplicateMessages.join('；')}`);
-    return false;
-  }
-
-  return true;
-};
+  };
 
   // ---- 校验失败后：滚动到第一个错误项并聚焦对应控件 ----
   const focusFirstError = (invalidFields?: Record<string, any>) => {
@@ -982,7 +1021,7 @@ const validatePayrateTable = () => {
 
   // ---- 提交 ----
   const handleSubmit = async () => {
-    if(submitLoading.value) return
+    if (submitLoading.value) return;
     if (isDetailMode.value) return;
     if (!formRef.value) return;
     try {
@@ -993,17 +1032,14 @@ const validatePayrateTable = () => {
       if (!validatePayrateTable()) return;
       if (!validatePayRate()) return;
       if (annexContractFileList.value.length === 0) {
-         ElMessage.warning(`未上传合同正文及附件，请上传后再提交！`,
-        );
+        ElMessage.warning(`未上传合同正文及附件，请上传后再提交！`);
         return;
-      } 
+      }
 
       submitLoading.value = true;
       const params = buildSubmitParams();
       let res;
-      debugger
-      if (formData.value.conSysNo === "")
-        await createConNo();
+      if (formData.value.conSysNo === "") await createConNo();
       res = await contractLedgerApi.submitContractLedger(params);
       if (res.code === 200) {
         ElMessage.success("提交成功,已发起审批！");
@@ -1030,12 +1066,12 @@ const validatePayrateTable = () => {
 
   const SAVE_FIELDS = Object.keys(saveContractFormRules());
   const handleSave = async () => {
-    if(submitLoading.value) return
+    if (submitLoading.value) return;
     if (isDetailMode.value) return;
     if (!formRef.value) return;
     try {
       //await formRef.value.validateField(['bizTitle', 'projId', 'conProperty','conName','conTypeId','supId','priceType','payMethod']);
-      await formRef.value.validateField(SAVE_FIELDS); 
+      await formRef.value.validateField(SAVE_FIELDS);
       //await saveContractFormRules();
       submitLoading.value = true;
       const params = buildSubmitParams();
@@ -1047,7 +1083,7 @@ const validatePayrateTable = () => {
         await loadContractDetail();
       }
     } catch (error) {
-        focusFirstError(error as Record<string, any>);
+      focusFirstError(error as Record<string, any>);
     } finally {
       submitLoading.value = false;
     }
@@ -1061,7 +1097,9 @@ const validatePayrateTable = () => {
       type: "warning",
     }).then(async () => {
       try {
-        const res = await contractLedgerApi.delContractLedger({ id: formData.value.id });
+        const res = await contractLedgerApi.delContractLedger({
+          id: formData.value.id,
+        });
         if (res.code === 200) {
           ElMessage.success("删除成功");
           goBack();
@@ -1079,7 +1117,9 @@ const validatePayrateTable = () => {
       type: "warning",
     }).then(async () => {
       try {
-        const res = await contractLedgerApi.voidContractLedger(formData.value.id,);
+        const res = await contractLedgerApi.voidContractLedger(
+          formData.value.id,
+        );
         if (res.code === 200) {
           ElMessage.success("作废成功");
           goBack();
@@ -1092,19 +1132,19 @@ const validatePayrateTable = () => {
 
   const handleViewProcess = async () => {
     if (flowListData.value && flowListData.value?.wfFlowId) {
-    try {
-      const redirectRes = await commonApi.generateRedirectUrl({
-        oaRequestId: flowListData.value.wfFlowId,
-      });
-      if (redirectRes.code === 200 && redirectRes.data) {
-        window.open(redirectRes.data, "_blank");
+      try {
+        const redirectRes = await commonApi.generateRedirectUrl({
+          oaRequestId: flowListData.value.wfFlowId,
+        });
+        if (redirectRes.code === 200 && redirectRes.data) {
+          window.open(redirectRes.data, "_blank");
+        }
+      } catch (error) {
+        console.error("查看流程失败:", error);
       }
-    } catch (error) {
-      console.error("查看流程失败:", error);
+    } else {
+      ElMessage.warning("暂无流程信息");
     }
-  } else {
-    ElMessage.warning("暂无流程信息");
-  }
   };
 
   // ---- 重置表单 ----
@@ -1119,14 +1159,17 @@ const validatePayrateTable = () => {
 
   watch(
     () => [props.conId, props.mode],
-    () => { resetForm(); initData(); },
+    () => {
+      resetForm();
+      initData();
+    },
     { flush: "post" },
   );
 
   // ---- 初始化 ----
   const initData = async () => {
     await initOptions();
-    
+
     if (isAddMode.value) {
       formData.value.agentId = userStore.userInfo.id;
       formData.value.pbAmount = 0;
@@ -1135,26 +1178,26 @@ const validatePayrateTable = () => {
       formData.value.createDate = dateUtil().format("YYYY-MM-DD");
       formData.value.deptName = userStore.userInfo?.deptName;
       formData.value.mguName = userStore.userInfo?.mguName;
-     // await createConNo();
+      // await createConNo();
       // 需求4：新增合同时默认新增一行价税明细
       addPrice();
-      priceTable.value[0].itemName="合同价款";
+      priceTable.value[0].itemName = "合同价款";
     } else if (isEditMode.value || isDetailMode.value) {
       if (conId.value) {
         await loadContractDetail();
-        
       }
     }
   };
 
   onMounted(() => {
-    debugger
     initData();
   });
 
   return {
     // 表单核心
     billData,
+    conMain,
+    cstMData,
     formData,
     formRef,
     submitLoading,

@@ -134,4 +134,46 @@ export const costAllocationApi = {
   getCostAllocDetail: (data: { conId: number; isWithCost?: boolean }) => {
     return http.post("/con/main/getAlloc", data);
   },
+  /**
+   * @name 保存普通/战略合同审批流程（新增/更新）
+   * @param data.conId 合同ID
+   */
+  saveConMainFlow: (data: { conId: number; allowEdit?: boolean }) => {
+    return http.formPost("/con/flow/saveConMainFlow", data);
+  },
+  /**
+   * @name 保存补充合同审批流程（新增/更新）
+   * @param data.conAddId 补充合同ID
+   */
+  saveConAddFlow: (data: { conAddId: number; allowEdit?: boolean }) => {
+    return http.formPost("/con/flow/saveConAddFlow", data);
+  },
+  /**
+   * @name 保存合同变更审批流程（新增/更新）
+   * @param data.changeId 变更ID
+   */
+  saveChangeFlow: (data: { changeId: number; allowEdit?: boolean }) => {
+    return http.formPost("/con/flow/saveChangeFlow", data);
+  },
+  /**
+   * @name 保存合同签证审批流程（新增/更新）
+   * @param data.visaId 签证ID
+   */
+  saveVisaFlow: (data: { visaId: number; allowEdit?: boolean }) => {
+    return http.formPost("/con/flow/saveVisaFlow", data);
+  },
+  /**
+   * @name 保存合同产值审批流程（新增/更新）
+   * @param data.prodValId 产值ID
+   */
+  saveProdValFlow: (data: { prodValId: number; allowEdit?: boolean }) => {
+    return http.formPost("/con/flow/saveProdValFlow", data);
+  },
+  /**
+   * @name 保存合同支付流程（新增/更新）
+   * @param data.payReqId 付款申请ID
+   */
+  saveConPayFlow: (data: { payReqId: number; allowEdit?: boolean }) => {
+    return http.formPost("/con/flow/saveConPayFlow", data);
+  },
 };

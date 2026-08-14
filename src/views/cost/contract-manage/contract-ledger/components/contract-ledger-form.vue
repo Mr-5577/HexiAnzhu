@@ -2,268 +2,141 @@
 <template>
   <div class="contract-basic-form">
     <!-- ============ 顶部操作栏 ============ -->
-    <BillHeader
-      :title="'合同审批'"
-      :contract-no="formData.conSysNo || ''"
-      :submitter="formData.userName || ''"
-      :submit-time="formData.createDate || ''"
-      :status="billData.status"
-      :show-status="true"
-      :button-loading="submitLoading"
-      :save-disabled="isReadonly"
-      :submit-disabled="isReadonly"
+    <BillHeader :title="'合同审批'" :contract-no="formData.conSysNo || ''" :submitter="formData.userName || ''"
+      :submit-time="formData.createDate || ''" :status="billData.status" :show-status="true"
+      :button-loading="submitLoading" :save-disabled="isReadonly" :submit-disabled="isReadonly"
       :delete-disabled="isDetailMode || isAddMode || !!billData.status"
-      :void-disabled="isDetailMode || isAddMode || !!billData.status"
-      :view-disabled="isAddMode"
-      @save="handleSave"
-      @submit="handleSubmit"
-      @delete="handleDelete"
-      @void="handleCancel"
-      @viewFlow="handleViewProcess"
-    />
+      :void-disabled="isDetailMode || isAddMode || !!billData.status" :view-disabled="isAddMode" @save="handleSave"
+      @submit="handleSubmit" @delete="handleDelete" @void="handleCancel" @viewFlow="handleViewProcess" />
 
     <!-- ============ 表单滚动区 ============ -->
     <div class="form-scroll-area">
-      <el-form
-        :disabled="isReadonly"
-        ref="formRef"
-        :validate-on-rule-change="false"
-        :model="formData"
-        :rules="formRules"
-        label-position="left"
-        label-width="120px"
-        class="adapt-form"
-      >
+      <el-form :disabled="isReadonly" ref="formRef" :validate-on-rule-change="false" :model="formData"
+        :rules="formRules" label-position="left" label-width="120px" class="adapt-form">
         <!-- ====== 卡片1：单据信息 ====== -->
-        <BillInfo
-          v-model="formData"
-          :status="billData?.status || 0"
-          :disabled="isReadonly"
-          :project-options="projectOptions"
-          @project-change="changeProject"
-        />
+        <BillInfo v-model="formData" :status="billData?.status || 0" :disabled="isReadonly"
+          :project-options="projectOptions" @project-change="changeProject" />
 
         <!-- ====== 卡片2：基本信息 ====== -->
-        <FormCard
-          id="card-basic"
-          icon="📄"
-          title="基本信息"
-          :disabled="isReadonly"
-          v-model:collapsed="collapsedCards.basic"
-        >
+        <FormCard id="card-basic" icon="📄" title="基本信息" :disabled="isReadonly"
+          v-model:collapsed="collapsedCards.basic">
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="合同类型" prop="conProperty" required>
-                <EnumSelect
-                  v-model="formData.conProperty"
-                  :options="ConPropertyEnum"
-                  placeholder="请选择合同类型"
-                />
+                <EnumSelect v-model="formData.conProperty" :options="ConPropertyEnum" placeholder="请选择合同类型" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item label="招标明细事项" prop="tenderItemId">
-                <PickInput
-                  v-model="formData.tenderItemName"
-                  placeholder="请关联招标明细事项"
-                  :readonly="isReadonly"
-                  v-model:model-value-id="formData.tenderItemId"
-                  @pick="openAwardItemDialog"
-                />
+                <PickInput v-model="formData.tenderItemName" placeholder="请关联招标明细事项" :readonly="isReadonly"
+                  v-model:model-value-id="formData.tenderItemId" @pick="openAwardItemDialog" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="定标金额" prop="bidAmount" class="is-money">
-                <el-input-number
-                  v-model="formData.bidAmount"
-                  :min="0"
-                  :precision="2"
-                  :controls="false"
-                  placeholder="定标金额"
-                  style="width: 100%"
-                  disabled
-                />
+                <el-input-number v-model="formData.bidAmount" :min="0" :precision="2" :controls="false"
+                  placeholder="定标金额" style="width: 100%" disabled />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item prop="conTypeId" label="合同分类" required>
-                <ConTypeSelector
-                  v-model="formData.conTypeId"
-                  :show-all-levels="false"
-                  placeholder="请选择合同分类"
-                  style="width: 100%"
-                  :width="'100%'"
-                  :disabled="isReadonly"
-                  clearable
-                  filterable
-                />
+                <ConTypeSelector v-model="formData.conTypeId" :show-all-levels="false" placeholder="请选择合同分类"
+                  style="width: 100%" :width="'100%'" :disabled="isReadonly" clearable filterable />
               </el-form-item>
             </el-col>
           </el-row>
         </FormCard>
 
         <!-- ====== 卡片3：合同信息 ====== -->
-        <FormCard
-          id="card-contract"
-          icon="📑"
-          title="合同信息"
-          :disabled="isReadonly"
-          v-model:collapsed="collapsedCards.contract"
-        >
-          <el-row
-            :gutter="24"
-            v-show="formData.conProperty == 2 || formData.conProperty == 3"
-          >
+        <FormCard id="card-contract" icon="📑" title="合同信息" :disabled="isReadonly"
+          v-model:collapsed="collapsedCards.contract">
+          <el-row :gutter="24" v-show="formData.conProperty == 2 || formData.conProperty == 3">
             <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item label="主合同" prop="mainConId">
-                <PickInput
-                  v-model="formData.mainConName"
-                  placeholder="请选择主合同"
-                  :readonly="isReadonly"
-                  v-model:model-value-id="formData.mainConId"
-                  @pick="openMainConDialog"
-                />
+                <PickInput v-model="formData.mainConName" placeholder="请选择主合同" :readonly="isReadonly"
+                  v-model:model-value-id="formData.mainConId" @pick="openMainConDialog" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="主合同截止日期" prop="mainConExpiryDate">
-                <el-date-picker
-                  v-model="formData.mainConExpiryDate"
-                  type="date"
-                  placeholder="主合同截止日期"
-                  style="width: 100%"
-                  value-format="YYYY-MM-DD"
-                  disabled
-                />
+                <el-date-picker v-model="formData.mainConExpiryDate" type="date" placeholder="主合同截止日期"
+                  style="width: 100%" value-format="YYYY-MM-DD" disabled />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item label="合同名称" prop="conName" required>
-                <el-input
-                  v-model="formData.conName"
-                  clearable
-                  placeholder="请输入合同名称"
-                />
+                <el-input v-model="formData.conName" clearable placeholder="请输入合同名称" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="管理类型" prop="manageType" required>
-                <EnumSelect
-                  v-model="formData.manageType"
-                  :options="ManageTypeEnum"
-                  placeholder="请选择管理类型"     
-                  :disabled="isReadonly"
-                />
+                <EnumSelect v-model="formData.manageType" :options="ManageTypeEnum" placeholder="请选择管理类型"
+                  :disabled="isReadonly" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="系统编号" prop="conSysNo">
-                <el-input
-                  v-model="formData.conSysNo"
-                  placeholder=""
-                  disabled
-                />
+                <el-input v-model="formData.conSysNo" placeholder="" disabled />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col v-if="isJianAn" :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item label="楼栋范围" prop="bldNames" required>
-                <SelectWithAll 
-                  v-model="formData.bldIds"
-                  v-model:labelText="formData.bldNames"
-                  select-all
-                  multiple
-                  :options="buildingOptions.map((i) => ({ value: i.id, label: i.bldName }))"
-                  placeholder="请选择楼栋"
-                  style="width: 100%"
-                >
-                  <el-option
-                    v-for="item in buildingOptions"
-                    :key="item.id"
-                    :label="item.bldName"
-                    :value="item.id"
-                  />
+                <SelectWithAll v-model="formData.bldIds" v-model:labelText="formData.bldNames" select-all multiple
+                  :options="buildingOptions.map((i) => ({ value: i.id, label: i.bldName }))" placeholder="请选择楼栋"
+                  style="width: 100%">
+                  <el-option v-for="item in buildingOptions" :key="item.id" :label="item.bldName" :value="item.id" />
                 </SelectWithAll>
               </el-form-item>
             </el-col>
             <el-col v-if="isJianAn" :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="计价方式" prop="priceType" required>
-                <EnumSelect
-                  v-model="formData.priceType"
-                  :options="PriceTypeEnum"
-                  placeholder="请选择计价方式"
-                  :disabled="isReadonly"
-                />
+                <EnumSelect v-model="formData.priceType" :options="PriceTypeEnum" placeholder="请选择计价方式"
+                  :disabled="isReadonly" />
               </el-form-item>
             </el-col>
             <el-col v-if="isJianAn" :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="产值确认方式" prop="payMethod" required>
-                <EnumSelect
-                  v-model="formData.payMethod"
-                  :options="PayTypeEnum"
-                  placeholder="请选择产值确认方式"
-                  :disabled="isReadonly"
-                />
+                <EnumSelect v-model="formData.payMethod" :options="PayTypeEnum" placeholder="请选择产值确认方式"
+                  :disabled="isReadonly" />
               </el-form-item>
-            </el-col>            
+            </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item label="甲方签约公司" prop="companyId" required>
-                <el-cascader
-                  v-model="formData.companyId"
-                  :options="companyOptions"
-                  :show-all-levels="false"
-                  :props="{
-                    expandTrigger: 'hover',
-                    emitPath: false,
-                    checkStrictly: false,
-                    value: 'id',
-                    label: 'compName',
-                    children: 'children',
-                  }"
-                  placeholder="请选择签约公司"
-                  style="width: 100%"
-                  clearable
-                  @change="changeCompany"
-                />
+                <el-cascader v-model="formData.companyId" :options="companyOptions" :show-all-levels="false" :props="{
+                  expandTrigger: 'hover',
+                  emitPath: false,
+                  checkStrictly: false,
+                  value: 'id',
+                  label: 'compName',
+                  children: 'children',
+                }" placeholder="请选择签约公司" style="width: 100%" clearable @change="changeCompany" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="签订日期" prop="signDate" required>
-                <el-date-picker
-                  v-model="formData.signDate"
-                  type="date"
-                  placeholder="请选择签订日期"
-                  style="width: 100%"
-                  value-format="YYYY-MM-DD"
-                />
+                <el-date-picker v-model="formData.signDate" type="date" placeholder="请选择签订日期" style="width: 100%"
+                  value-format="YYYY-MM-DD" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="签约地点" prop="signAddr">
-                <el-input
-                  v-model="formData.signAddr"
-                  clearable
-                  placeholder="签约地点"
-                />
+                <el-input v-model="formData.signAddr" clearable placeholder="签约地点" />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="甲方经办人" prop="agentId" required>
-                <el-cascader
-                  ref="projCascaderRef"
-                  v-model="formData.agentId"
-                  :options="empTreeOptions"
-                  :show-all-levels="false"
-                  :props="{
+                <el-cascader ref="projCascaderRef" v-model="formData.agentId" :options="empTreeOptions"
+                  :show-all-levels="false" :props="{
                     expandTrigger: 'click',
                     emitPath: false,
                     checkStrictly: false,
@@ -271,133 +144,69 @@
                     label: 'orgName',
                     children: 'children',
                     leaf: (data) => data.dataType === 0,
-                  }"
-                  placeholder="请选择经办人"
-                  style="width: 100%"
-                  clearable
-                  filterable
-                />
+                  }" placeholder="请选择经办人" style="width: 100%" clearable filterable />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="生效日期" prop="effectiveDate" required>
-                <el-date-picker
-                  v-model="formData.effectiveDate"
-                  type="date"
-                  placeholder="请选择生效日期"
-                  style="width: 100%"
-                  value-format="YYYY-MM-DD"
-                  @change="changeConEffectDate"
-                />
+                <el-date-picker v-model="formData.effectiveDate" type="date" placeholder="请选择生效日期" style="width: 100%"
+                  value-format="YYYY-MM-DD" @change="changeConEffectDate" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="到期日期" prop="expiryDate" required>
-                <el-date-picker
-                  v-model="formData.expiryDate"
-                  type="date"
-                  placeholder="请选择到期日期"
-                  style="width: 100%"
-                  value-format="YYYY-MM-DD"
-                  @change="changeConEffectDate"
-                />
+                <el-date-picker v-model="formData.expiryDate" type="date" placeholder="请选择到期日期" style="width: 100%"
+                  value-format="YYYY-MM-DD" @change="changeConEffectDate" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="日历工期(天)" prop="daysNum">
-                <el-input-number
-                  v-model="formData.daysNum"
-                  :controls="false"
-                  placeholder=""
-                  style="width: 100%"
-                  disabled
-                />
+                <el-input-number v-model="formData.daysNum" :controls="false" placeholder="" style="width: 100%"
+                  disabled />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item
-                label="应缴履约保证金"
-                prop="pbAmount"
-                required
-                class="is-money"
-              >
-                <el-input-number
-                  v-model="formData.pbAmount"
-                  :min="0"
-                  :precision="2"
-                  :controls="false"
-                  placeholder="应缴履约保证金额"
-                  style="width: 100%"
-                />
+              <el-form-item label="应缴履约保证金" prop="pbAmount" required class="is-money">
+                <el-input-number v-model="formData.pbAmount" :min="0" :precision="2" :controls="false"
+                  placeholder="应缴履约保证金额" style="width: 100%" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="是否需办理结算" prop="needSettle">
-                <EnumSelect
-                  v-model="formData.needSettle"
-                  :options="BOOL_OPTIONS"
-                  :clearable="false"
-                  placeholder="请选择是否需办理结算"
-                />
+                <EnumSelect v-model="formData.needSettle" :options="BOOL_OPTIONS" :clearable="false"
+                  placeholder="请选择是否需办理结算" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="是否用印" prop="needSeal" required>
-                <EnumSelect
-                  v-model="formData.needSeal"
-                  :options="BOOL_OPTIONS"
-                  :clearable="false"
-                  placeholder="请选择"      
-                />
+                <EnumSelect v-model="formData.needSeal" :options="BOOL_OPTIONS" :clearable="false" placeholder="请选择" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="印章类型" prop="sealTypes">
-                <EnumSelect
-                  v-model="formData.sealTypes"
-                  :options="SealTypesEnum"
-                  multiple
-                  :disabled="!formData.needSeal || isReadonly"
-                  placeholder="请选择印章类型"
-                />
+                <EnumSelect v-model="formData.sealTypes" :options="SealTypesEnum" multiple
+                  :disabled="!formData.needSeal || isReadonly" placeholder="请选择印章类型" />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :span="24">
               <el-form-item label="合同简述" prop="remark">
-                <el-input
-                  v-model="formData.remark"
-                  type="textarea"
-                  :rows="3"
-                  maxlength="500"
-                  show-word-limit
-                  placeholder="其他需要补充说明的信息"
-                />
+                <el-input v-model="formData.remark" type="textarea" :rows="3" maxlength="500" show-word-limit
+                  placeholder="其他需要补充说明的信息" />
               </el-form-item>
             </el-col>
           </el-row>
         </FormCard>
 
         <!-- ====== 卡片4：价款及税率 ====== -->
-        <FormCard
-          id="card-price"
-          icon="💰"
-          title="价款及税率"
-          :disabled="isReadonly"
-          v-model:collapsed="collapsedCards.price"
-        >
+        <FormCard id="card-price" icon="💰" title="价款及税率" :disabled="isReadonly"
+          v-model:collapsed="collapsedCards.price">
           <SummaryBar :items="summaryItems" />
-          <DetailTableCard
-            title="价税明细"
-            :count="priceTable.length"
-            add-text="新增价税明细"
-            v-model="priceTable"
-            :columns="priceColumns"
-            @add="addPrice"
-          >
+          <DetailTableCard title="价税明细" :count="priceTable.length" add-text="新增价税明细" v-model="priceTable"
+            :columns="priceColumns" @add="addPrice">
             <template #actions="{ row }">
               <el-button link type="danger" @click="deletePrice(row)">
                 删除
@@ -407,104 +216,62 @@
         </FormCard>
 
         <!-- ====== 卡片5：供方信息 ====== -->
-        <FormCard
-          id="card-supplier"
-          icon="🏢"
-          title="供方信息"
-          :disabled="isReadonly"
-          v-model:collapsed="collapsedCards.supplier"
-        >
+        <FormCard id="card-supplier" icon="🏢" title="供方信息" :disabled="isReadonly"
+          v-model:collapsed="collapsedCards.supplier">
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item label="供应商名称" prop="supName" required>
-                <PickInput v-model="formData.supName" placeholder="请选择供应商"
-                  :readonly="isReadonly"
-                  v-model:model-value-id="formData.supId"
-                  @pick="openSupplierDialog" />
+                <PickInput v-model="formData.supName" placeholder="请选择供应商" :readonly="isReadonly"
+                  v-model:model-value-id="formData.supId" @pick="openSupplierDialog" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="供应商联系人" prop="supCmanName" required>
-                <el-input
-                  v-model="formData.supCmanName"
-                  placeholder="请输入联系人姓名"
-                />
+                <el-input v-model="formData.supCmanName" placeholder="请输入联系人姓名" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="联系人电话" prop="supCmanTel" required>
-                <el-input
-                  v-model="formData.supCmanTel"
-                  placeholder="请输入联系电话"
-                />
+                <el-input v-model="formData.supCmanTel" placeholder="请输入联系电话" />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="开户银行" prop="bankName" required>
-                <el-input
-                  v-model="formData.bankName"
-                  placeholder="请输入开户银行"
-                />
+                <el-input v-model="formData.bankName" placeholder="请输入开户银行" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="银行户名" prop="accountName" required>
-                <el-input
-                  v-model="formData.accountName"
-                  placeholder="请输入银行户名"
-                />
+                <el-input v-model="formData.accountName" placeholder="请输入银行户名" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="银行账号" prop="bankAccount" required>
-                <el-input
-                  v-model="formData.bankAccount"
-                  placeholder="请输入银行账号"
-                />
+                <el-input v-model="formData.bankAccount" placeholder="请输入银行账号" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="联系人身份证" prop="supCmanIdno">
-                <el-input
-                  v-model="formData.supCmanIdno"
-                  placeholder="请输入身份证号码"
-                />
+                <el-input v-model="formData.supCmanIdno" placeholder="请输入身份证号码" />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="联系人职务" prop="supCmanJob">
-                <el-input
-                  v-model="formData.supCmanJob"
-                  placeholder="请输入职务"
-                />
+                <el-input v-model="formData.supCmanJob" placeholder="请输入职务" />
               </el-form-item>
             </el-col>
           </el-row>
         </FormCard>
 
         <!-- ====== 卡片6：支付比例 ====== -->
-        <FormCard
-          v-show="showPayrate && isJianAn"
-          id="card-payrate"
-          icon="📊"
-          title="支付比例"
-          :disabled="isReadonly"
-          v-model:collapsed="collapsedCards.payrate"
-        >
-          <DetailTableCard
-            title="支付比例明细"
-            :disabled="isReadonly"
-            :count="payrateTable.length"
-            add-text="新增支付明细"
-            v-model="payrateTable"
-            :columns="payrateColumns"
-            :height="'200px'"  
-            @add="addPayrate"
-          >
+        <FormCard v-show="showPayrate && isJianAn" id="card-payrate" icon="📊" title="支付比例" :disabled="isReadonly"
+          v-model:collapsed="collapsedCards.payrate">
+          <DetailTableCard title="支付比例明细" :disabled="isReadonly" :count="payrateTable.length" add-text="新增支付明细"
+            v-model="payrateTable" :columns="payrateColumns" :height="'200px'" @add="addPayrate">
             <template #actions="{ row }">
               <el-button link type="danger" @click="deletePayrate(row)">
                 删除
@@ -513,48 +280,28 @@
           </DetailTableCard>
         </FormCard>
 
+
+
         <!-- ====== 卡片7：合同附件 ====== -->
-        <FormCard
-          id="card-annex"
-          icon="📎"
-          title="合同附件"
-          :disabled="isReadonly"
-          v-model:collapsed="collapsedCards.annex"
-        >
+        <FormCard id="card-annex" icon="📎" title="合同附件" :disabled="isReadonly"
+          v-model:collapsed="collapsedCards.annex">
           <el-form-item label="合同正文及附件" required>
-            <base-upload
-              v-model:file-list="annexContractFileList"
-              :limit="9"
-              :multiple="false"
-              :showIcon="true"
-              :showTip="true"
-              :maxSize="20"
-              :unrestricted="true"
-              :accept="''"
-              button-text="选择文件"
-              size="default"
-              :disabled="isReadonly"
-              @success="handleUploadConSuccess"
-            />
+            <base-upload v-model:file-list="annexContractFileList" :limit="9" :multiple="false" :showIcon="true"
+              :showTip="true" :maxSize="20" :unrestricted="true" :accept="''" button-text="选择文件" size="default"
+              :disabled="isReadonly" @success="handleUploadConSuccess" />
           </el-form-item>
           <el-form-item label="其他附件">
-            <base-upload
-              v-model:file-list="annexFileList"
-              :limit="9"
-              :multiple="false"
-              :showIcon="true"
-              :showTip="true"
-              :maxSize="20"
-              :unrestricted="true"
-              :accept="''"
-              button-text="选择文件"
-              size="default"
-              :disabled="isReadonly"
-              @success="handleUploadOtherSuccess"
-            />
+            <base-upload v-model:file-list="annexFileList" :limit="9" :multiple="false" :showIcon="true" :showTip="true"
+              :maxSize="20" :unrestricted="true" :accept="''" button-text="选择文件" size="default" :disabled="isReadonly"
+              @success="handleUploadOtherSuccess" />
           </el-form-item>
         </FormCard>
       </el-form>
+      <!-- 成本分摊 -->
+      <ConCostAllocCard style="margin-top: 15px;" :visible="!isAddMode" :cstMData="cstMData"
+        :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'CON_MAIN'"
+        :projId="formData.projId" :projName="formData.projName" :displayName="formData.conName"
+        :allocAmt="priceTaxData.totalPriceTax" :bizBillId="billData.id" />
     </div>
 
     <!-- ============ 悬浮定位栏 ============ -->
@@ -562,29 +309,15 @@
   </div>
 
   <!-- 选择合同弹窗 -->
-  <choose-contract-dialog
-    ref="contractDialogRef"
-    v-model="mainConDialogVisible"
-    @select="handleMainConSelect"
-  />
+  <choose-contract-dialog ref="contractDialogRef" v-model="mainConDialogVisible" @select="handleMainConSelect" />
 
   <!-- 选择供应商弹窗 -->
-  <choose-supplier-dialog
-    ref="supplierDialogRef"
-    v-model="supplierDialogVisible"
-    :selectionMode="'single'"
-    :supStatus="2"
-    @select="handleSupplierSelect"
-  />
+  <choose-supplier-dialog ref="supplierDialogRef" v-model="supplierDialogVisible" :selectionMode="'single'"
+    :supStatus="2" @select="handleSupplierSelect" />
 
   <!-- 选择定标事项弹窗 -->
-  <ChooseAwardItemDialog
-    v-model="awardItemDialogVisible"
-    :selectionMode="'single'"
-    :projId = formData.projId
-    :status="40"
-    @select="handleAwardItemSelect"
-  />
+  <ChooseAwardItemDialog v-model="awardItemDialogVisible" :selectionMode="'single'" :projId=formData.projId :status="40"
+    @select="handleAwardItemSelect" />
 </template>
 
 <script setup lang="ts">
@@ -613,6 +346,7 @@ import {
   SealTypesEnum,
 } from "@/constants/contract-manage/enums";
 import { BOOL_OPTIONS } from "./contract-form-config";
+import ConCostAllocCard from "@/views/cost/cost-allocation/con-cost-alloc/con-cost-alloc-card.vue";
 
 defineOptions({ name: "contract-ledger-form" });
 
@@ -625,6 +359,7 @@ const emit = defineEmits<ContractFormEmits>();
 const {
   // 表单核心
   billData,
+  cstMData,
   formData,
   formRef,
   submitLoading,
@@ -769,16 +504,17 @@ defineExpose({
   width: 8px;
   height: 8px;
 }
+
 .form-scroll-area::-webkit-scrollbar-thumb {
   background: #c0c4cc;
   border-radius: 4px;
 }
+
 .form-scroll-area::-webkit-scrollbar-thumb:hover {
   background: #909399;
 }
+
 .form-scroll-area::-webkit-scrollbar-track {
   background: transparent;
 }
-
-
 </style>

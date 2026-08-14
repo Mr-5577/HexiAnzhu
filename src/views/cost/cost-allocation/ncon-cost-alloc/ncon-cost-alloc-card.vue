@@ -6,10 +6,7 @@
       <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
         <!-- 分摊状态(0:未分摊,1:已分摊,2:部分分摊) -->
         <el-form-item label="分摊状态：" label-width="90px">
-          <el-tag
-            size="small"
-            :type="getEnumType(allocStatusEnum, props.allocationStatus || 0)"
-          >
+          <el-tag size="small" :type="getEnumType(allocStatusEnum, props.allocationStatus || 0)">
             {{ getEnumLabel(allocStatusEnum, props.allocationStatus || 0) }}
           </el-tag>
         </el-form-item>
@@ -17,10 +14,7 @@
       <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
         <!-- 预警状态(0:红色预警,1:黄色预警,2:绿色预警) -->
         <el-form-item label="预警状态：" label-width="90px">
-          <el-tag
-            size="small"
-            :type="getEnumType(allocWarnEnum, props.warningStatus || undefined)"
-          >
+          <el-tag size="small" :type="getEnumType(allocWarnEnum, props.warningStatus || undefined)">
             {{ getEnumLabel(allocWarnEnum, props.warningStatus || undefined) }}
           </el-tag>
         </el-form-item>
@@ -33,17 +27,9 @@
     </el-row>
 
     <!-- 分摊详情弹窗 -->
-    <NconCostAllocDialog
-      v-model="dialogVisible"
-      :projId="props.projId"
-      :projName="props.projName"
-      :displayName="props.displayName"
-      :bizType="props.bizType"
-      :allocAmt="props.allocAmt"
-      :cstMData="props.cstMData"
-      :dialogMode="props.dialogMode"
-      @select="getData"
-    />
+    <NconCostAllocDialog v-model="dialogVisible" :projId="props.projId" :projName="props.projName"
+      :displayName="props.displayName" :bizType="props.bizType" :allocAmt="props.allocAmt" :cstMData="props.cstMData"
+      :dialogMode="props.dialogMode" @select="getData" />
   </div>
 </template>
 

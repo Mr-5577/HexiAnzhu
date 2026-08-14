@@ -20,7 +20,7 @@
           </el-col>
           <el-col :span="12">
             <el-form-item prop="segId" label="业务板块" required>
-              <el-select v-model="formData.segId" placeholder="请选择业务板块" style="width: 100%">
+              <el-select v-model="formData.segId" placeholder="请选择业务板块" style="width: 100%" disabled>
                 <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
               </el-select>
             </el-form-item>
@@ -106,7 +106,7 @@ const dialogTitle = computed(() =>
 const projCascaderRef = useTemplateRef("projCascaderRef");
 
 const formData = ref<HCstProjectCostMAddEditParams>({
-  segId: null,
+  segId: 2,
   projId: undefined,
   versionNo: "",
   versionType: "",
@@ -205,7 +205,7 @@ const initForm = () => {
     areaVersionOptions.value = [];
     formData.value = {
       projId: undefined,
-      segId: null,
+      segId: 2,
       versionNo: "",
       versionType: "",
       costAmt: 0,

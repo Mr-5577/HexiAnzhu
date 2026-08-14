@@ -61,7 +61,7 @@
           <span class="info-value">{{ pageParams.projName || "" }}</span>
         </div>
         <div class="info-item">
-          <span class="info-label">事项名称：</span>
+          <span class="info-label">合同名称：</span>
           <span class="info-value">{{ pageParams.displayName || "" }}</span>
         </div>
         <div class="info-row">
@@ -157,8 +157,7 @@ import { bizTypeEnum } from "@/constants/contract-manage/enums.ts";
 import { buildTree } from "@/utils/tree.ts";
 import { filterTreeByIds } from "../helpers.ts";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
-import { cstPaymentApi } from "@/api/cost/non-contract-manage/cst-payment-api.ts";
-import { cstProcessApi } from "@/api/cost/non-contract-manage/cst-process-api.ts";
+import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api.ts";
 
 interface Props {
   projId?: number; // 项目ID
@@ -236,7 +235,14 @@ const pageParams = ref({
   allocAmt: 0,
   allocExclAmt: 0,
 });
-
+// 合同轻量级信息
+const liteData = ref({
+  id: undefined,
+  conStatus: undefined,
+  conSysNo: undefined,
+  projId: undefined,
+  segId: undefined,
+})
 // 分摊信息
 const apportionInfo = ref({
   id: undefined,
@@ -438,11 +444,6 @@ const handleConfirm = async () => {
     ElMessage.warning("没有可分摊的数据，请先选择科目并填写分摊金额");
     return;
   }
-  // const prodList = getBusinessType();
-  // console.log(
-  //   "确认提交分摊明细",
-  //   convertTreeDataToRows(editableSubjectData.value, prodList),
-  // );
   const valida = validateTable();
   if (!valida) return;
   const result = await getSubmitData();
@@ -450,35 +451,32 @@ const handleConfirm = async () => {
   try {
     submitLoading.value = true;
     const params = {
-      ...apportionInfo.value,
-      ...result,
-      detailList: result?.allocDs || []
-    }
-    if (params.allocDs) {
-      delete params.allocDs;
+      id: apportionInfo.value?.id,
+      projId: pageParams.value.projId,
+      bizType: pageParams.value.bizType,
+      bizBillId: billId,
+      allocAmt: result?.allocAmt || 0,
+      allocExclAmt: result?.allocExclAmt || 0,
+      allocStatus: result?.allocStatus,
+      allocWarn: result?.allocWarn,
+      detailList: result?.allocDs || [],
     }
     // 保存分摊
     const res = await costAllocationApi.saveProjectAlloc(params);
     if (res.code === 200) {
 
       // 保存成功后更新流程
-      if (bizType === 'NCON_PROC') {
-        // 非合同立项
-        const procRes = await cstProcessApi.saveNconCstProcessFlow({
-          id: bizId,
-        });
-        if (procRes.code === 200) {
-          ElMessage.success('保存成功')
-        }
-      }
-      if (bizType === "NCON_CST") {
-        // 非合同请款
-        const cstRes = await cstPaymentApi.saveNconCstPaymentFlow({
-          id: bizId,
-          allowEdit: true,
-        });
-        if (cstRes.code === 200) {
-          ElMessage.success('保存成功')
+      const flowMap = {
+        'CON_MAIN': () => costAllocationApi.saveConMainFlow({ conId: liteData.value.id, allowEdit: true }), // 合同
+        'CON_ADD': () => costAllocationApi.saveConAddFlow({ conAddId: liteData.value.id, allowEdit: true }), // 补充合同
+        'CON_BG': () => costAllocationApi.saveChangeFlow({ changeId: liteData.value.id, allowEdit: true }), // 变更
+        'CON_QZ': () => costAllocationApi.saveVisaFlow({ visaId: liteData.value.id, allowEdit: true }), // 签证
+        'CON_PROD': () => costAllocationApi.saveProdValFlow({ prodValId: liteData.value.id, allowEdit: true }), // 产值申报
+      };
+      if (flowMap[bizType]) {
+        const flowRes = await flowMap[bizType]();
+        if (flowRes.code === 200) {
+          ElMessage.success('保存成功');
         }
       }
     }
@@ -705,6 +703,7 @@ const initPage = async () => {
     allocAmt: props.allocAmt || 0,
     allocExclAmt: props.allocExclAmt || 0,
   };
+  console.log("分摊弹窗参数:", pageParams.value);
   // 获取项目产品类型列表
   await Promise.all([
     getBusiSegList(),
@@ -714,7 +713,6 @@ const initPage = async () => {
   // 弹窗模式则是从erp系统打开弹窗操作，否则就是OA单独引用分摊页面
   if (props?.cstMData && props.cstMData?.allocDs?.length > 0) {
     const detaiList = props.cstMData?.allocDs || [];
-    console.log("detaiList", detaiList);
     processPopupData(detaiList);
   }
 };
@@ -725,25 +723,74 @@ const initPage = async () => {
 const loadAllocationData = async () => {
   try {
     console.log("OA打开页面参数:", route.query, isView.value);
-    // console.log("billId:", billId);
+    // 合同查询轻量级详情信息
+    const liteRes = await contractLedgerApi.getConInfoLite({ conBillId: billId });
+    console.log("OA合同轻量级详情:", liteRes);
+    if (liteRes?.code === 200 && liteRes?.data) {
+      liteData.value = { ...liteData.value, ...liteRes?.data };
+    }
+    // 查询合同分摊信息
     const res = await costAllocationApi.getProjectAlloc({
       bizBillId: billId,
       bizType: bizType,
     });
     console.log("OA加载分摊详情:", res);
-    if (res.code === 200 && res.data) {
-      apportionInfo.value = { ...apportionInfo.value, ...res.data };
-      pageParams.value.projId = res.data?.projId;
-      pageParams.value.bizType = res.data?.bizType;
-      pageParams.value.billId = billId;
-      pageParams.value.allocAmt = res.data?.allocAmt || 0;
-      pageParams.value.allocExclAmt = res.data?.costExclAmt || 0;
-      await getBuildingListByProjId();
-      await Promise.all([getBusiSegList(), getProductList()]);
-      // 处理查询到的分摊数据，回显到页面
-      const allocDs = res.data?.allocDs || [];
-      const newData = allocDs.filter((item: any) => item.prodId);
-      processPopupData(newData);
+    if (res.code === 200) {
+      if (res?.data) {
+        apportionInfo.value = { ...apportionInfo.value, ...res.data };
+        pageParams.value.projId = res.data?.projId;
+        pageParams.value.bizType = res.data?.bizType;
+        pageParams.value.billId = billId;
+        pageParams.value.allocAmt = res.data?.allocAmt || 0;
+        pageParams.value.allocExclAmt = res.data?.costExclAmt || 0;
+        await getBuildingListByProjId();
+        await Promise.all([getBusiSegList(), getProductList()]);
+        // 处理查询到的分摊数据，回显到页面
+        const allocDs = res.data?.allocDs || [];
+        const newData = allocDs.filter((item: any) => item.prodId);
+        processPopupData(newData);
+      } else {
+        switch (bizType) {
+          // 合同
+          case "CON_MAIN":
+            pageParams.value.projId = res?.data?.process?.projId || undefined
+            pageParams.value.allocAmt = res.data?.process?.processAmt || 0;
+            pageParams.value.allocExclAmt = 0;
+            break;
+          case "CON_ADD":
+            // 补充合同
+            pageParams.value.projId = res?.data?.process?.projId || undefined
+            pageParams.value.allocAmt = res.data?.process?.processAmt || 0;
+            pageParams.value.allocExclAmt = 0;
+            break;
+          case "CON_BG":
+            // 变更
+            pageParams.value.projId = res?.data?.process?.projId || undefined
+            pageParams.value.allocAmt = res.data?.process?.processAmt || 0;
+            pageParams.value.allocExclAmt = 0;
+            break;
+          case "CON_QZ":
+            // 签证
+            pageParams.value.projId = res?.data?.process?.projId || undefined
+            pageParams.value.allocAmt = res.data?.process?.processAmt || 0;
+            pageParams.value.allocExclAmt = 0;
+            break;
+          case "CON_PROD":
+            // 合同产值
+            pageParams.value.projId = res?.data?.process?.projId || undefined
+            pageParams.value.allocAmt = res.data?.process?.processAmt || 0;
+            pageParams.value.allocExclAmt = 0;
+            break;
+          default:
+            break;
+        }
+        pageParams.value.bizType = bizType;
+        pageParams.value.billId = billId;
+        if (pageParams.value.projId) {
+          await getBuildingListByProjId();
+          await Promise.all([getBusiSegList(), getProductList()]);
+        }
+      }
     }
   } catch (error) { }
 };

@@ -9,17 +9,20 @@
           <div class="tree-header">
             <span class="tree-title">成本科目</span>
             <div class="tree-actions">
+              <!-- 新增搜索框 -->
+              <el-input v-model="searchKeyword" placeholder="搜索科目" clearable prefix-icon="Search"
+                style="width: 180px; margin-right: 8px;" @input="handleSearch" />
               <el-button size="small" type="primary" link @click="handleExpandAll">
-                展开全部
+                展开
               </el-button>
               <el-button size="small" type="primary" link @click="handleCollapseAll">
-                收起全部
+                收起
               </el-button>
             </div>
           </div>
           <div class="tree-wrapper" v-loading="treeLoading">
             <el-tree ref="treeRef" :data="treeData" :props="treeProps" node-key="id" show-checkbox
-              :default-expanded-keys="defaultExpandedKeys" @check="handleTreeCheck">
+              :default-expanded-keys="defaultExpandedKeys" @check="handleTreeCheck" :filter-node-method="filterNode">
               <template #default="{ data }">
                 <span class="tree-node">
                   <span class="node-label">{{ data.subName }}</span>
@@ -130,6 +133,9 @@ const treeLoading = ref(false);
 const dialogVisible = ref(props.modelValue);
 const confirmLoading = ref(false);
 const tableLoading = ref(false);
+const searchKeyword = ref("");
+const filteredTreeData = ref<TreeNode[]>([]);
+
 
 // Tree ref
 const treeRef = ref<InstanceType<typeof ElTree>>();
@@ -168,7 +174,14 @@ const tableColumns = [
   //   slot: "default",
   // },
 ];
-
+const filterNode = (value: string, data: TreeNode) => {
+  if (!value) return true;
+  return data.subName.includes(value) || (data.subCode && data.subCode.includes(value));
+};
+// 搜索方法（使用 el-tree 的 filter 方法）
+const handleSearch = (value: string) => {
+  treeRef.value?.filter(value);
+};
 // 右侧树形表格数据
 const selectedTreeTableData = shallowRef<TableTreeNode[]>([]);
 
@@ -634,6 +647,7 @@ defineExpose({
       overflow: hidden;
 
       .tree-header {
+        height: 50px;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -720,6 +734,7 @@ defineExpose({
       position: relative;
 
       .table-header {
+        height: 50px;
         display: flex;
         justify-content: space-between;
         align-items: center;

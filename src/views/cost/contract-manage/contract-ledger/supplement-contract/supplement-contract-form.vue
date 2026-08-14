@@ -474,6 +474,11 @@
           </el-form-item>
         </FormCard>
       </el-form>
+       <!-- 成本分摊 -->
+      <ConCostAllocCard style="margin-top: 15px;" :visible="!isAdd" :cstMData="cstMData"
+        :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'CON_ADD'"
+        :projId="formData.projId" :projName="conMainData?.projName" :displayName="formData.addName"
+        :allocAmt="priceTaxData.totalPriceTax" :bizBillId="billData.id" />
     </div>
 
     <!-- ============ 悬浮定位栏 ============ -->
@@ -572,6 +577,7 @@ import ChooseChangeDialog from "@/components/business/choose-cost-change-dialog.
 import { NAV_CARDS, createPriceColumns, createProcessColumns } from "./supplement-contract-config.ts";
 import { bankCardRule, moneyRule, optionalInputRule, phoneRule, requiredInputRule, requiredRule } from "@/utils/form-rule-validate.ts";
 import { normalizeCode } from "@/utils/common.ts";
+import ConCostAllocCard from "@/views/cost/cost-allocation/con-cost-alloc/con-cost-alloc-card.vue";
 
 // ===================== Props / Emits =====================
 const props = defineProps<{
@@ -610,6 +616,20 @@ const billData = ref({
 const conMainData = ref<SupplementConMain>(null);
 const flowListData = ref<any>(null);
 const flowBaseData = ref<any>(null);
+
+// 成本分摊明细数据
+const cstMData = ref({
+  id: undefined,
+  projId: undefined,
+  bizType: "",
+  bizBillId: undefined,
+  bizKeyId: 0,
+  allocAmt: "",
+  allocExclAmt: "",
+  allocStatus: undefined,
+  allocWarn: undefined,
+  allocDs: [], // 分摊明细
+});
 
 const isReadonly = computed(
   () => isDetail.value || !!billData.value.status,
@@ -1484,7 +1504,8 @@ const getSupplementContractDetail = async () => {
   try {
     const res = await supplementContractApi.getSupplementContractById(conAddId.value);
     if (res.code === 200 && res.data) {
-      const { conMain,bill,conAdd, conAddExt, addProcesses,billPrices, flowList, flowBase,annexList,annexContractList = [] } = res.data;
+      const { conMain,bill,conAdd, conAddExt, addProcesses,billPrices, flowList, flowBase,annexList,annexContractList = [], cstM } = res.data;
+      cstMData.value = { ...cstMData.value, ...cstM };
       billData.value = { ...billData.value, ...bill };
       conMainData.value = { ...conMainData.value, ...conMain }
       flowListData.value = { ...flowListData.value, ...flowList };
