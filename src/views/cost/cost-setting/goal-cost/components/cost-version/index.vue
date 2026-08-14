@@ -3,26 +3,11 @@
   <div class="version-list-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
       <el-form-item label="版本号" prop="versionNo">
-        <el-input
-          v-model="queryParams.versionNo"
-          placeholder="请输入版本号"
-          clearable
-          style="width: 200px"
-        />
+        <el-input v-model="queryParams.versionNo" placeholder="请输入版本号" clearable style="width: 200px" />
       </el-form-item>
       <el-form-item label="版本类型" prop="versionType">
-        <el-select
-          v-model="queryParams.versionType"
-          placeholder="请选择版本类型"
-          clearable
-          style="width: 200px"
-        >
-          <el-option
-            v-for="item in verTypeOptions"
-            :key="item.dicCode"
-            :label="item.dicLabel"
-            :value="item.dicCode"
-          />
+        <el-select v-model="queryParams.versionType" placeholder="请选择版本类型" clearable style="width: 200px">
+          <el-option v-for="item in verTypeOptions" :key="item.dicCode" :label="item.dicLabel" :value="item.dicCode" />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -30,71 +15,38 @@
           搜索
         </el-button>
         <el-button icon="Refresh" @click="handleReset">重置</el-button>
-        <el-button type="primary" @click="handleAdd">新增版本</el-button>
+        <el-button type="primary" @click="handleAdd" v-if="!isBuildingtype">新增版本</el-button>
       </el-form-item>
     </el-form>
 
-    <base-table
-      :columns="tableColumns"
-      :tableData="tableData"
-      :loading="tableLoading"
-      :rowKey="'id'"
-      :pagination="false"
-    >
+    <base-table :columns="tableColumns" :tableData="tableData" :loading="tableLoading" :rowKey="'id'"
+      :pagination="false">
       <template #isEnabled="{ row }">
-        <el-tag
-          size="small"
-          :type="row.isEnabled ? 'success' : 'info'"
-        >
+        <el-tag size="small" :type="row.isEnabled ? 'success' : 'info'">
           {{ row.isEnabled ? "是" : "否" }}
         </el-tag>
       </template>
       <template #status="{ row }">
-        <el-tag
-          size="small"
-          :type="getEnumType(costBillStatusEnum, row?.status || 0)"
-        >
+        <el-tag size="small" :type="getEnumType(costBillStatusEnum, row?.status || 0)">
           {{ getEnumLabel(costBillStatusEnum, row?.status || 0) }}
         </el-tag>
       </template>
       <template #actions="{ row }">
-        <el-button
-          type="primary"
-          link
-          @click="handleEdit(row)"
-          :disabled="row.status != 0"
-          >编辑</el-button
-        >
-        <el-button
-          type="primary"
-          link
-          @click="handleDetail(row)"
-          :disabled="row.status != 0"
-        >
+        <el-button type="primary" link @click="handleEdit(row)" :disabled="row.status != 0 ||
+          row.isEnabled || isBuildingtype">编辑</el-button>
+        <el-button type="primary" link @click="handleDetail(row)">
           明细
         </el-button>
-        <el-button
-          type="primary"
-          link
-          @click="handleApprove(row)"
-          :disabled="row.status != 0"
-        >
+        <el-button type="primary" link @click="handleApprove(row)"
+          :disabled="row.status != 0 || row.isEnabled || isBuildingtype">
           提交审批
         </el-button>
-        <el-button
-          type="primary"
-          link
-          @click="handleCancel(row)"
-          :disabled="row.status != 0"
-        >
+        <el-button type="primary" link @click="handleCancel(row)"
+          :disabled="row.status != 0 || row.isEnabled || isBuildingtype">
           作废
         </el-button>
-        <el-button
-          type="danger"
-          link
-          @click="handleDelete(row)"
-          :disabled="row.status != 0"
-        >
+        <el-button type="danger" link @click="handleDelete(row)"
+          :disabled="row.status != 0 || row.isEnabled || isBuildingtype">
           删除
         </el-button>
         <el-button type="primary" link @click="handleViewProcess(row)">
@@ -104,17 +56,13 @@
     </base-table>
 
     <!-- 新增/编辑弹窗 -->
-    <add-edit-version-dialog
-      v-model="dialogVisible"
-      :edit-data="currentEditData"
-      :verTypeOptions="verTypeOptions"
-      @success="handleSuccess"
-    />
+    <add-edit-version-dialog v-model="dialogVisible" :edit-data="currentEditData" :verTypeOptions="verTypeOptions"
+      @success="handleSuccess" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref, watch, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import type { HCstProjectCostM } from "@/types/cost/cost-setting/goal-cost-type.ts";
@@ -147,6 +95,11 @@ const { getDictList, loadDicts } = useDict(
   },
 );
 
+// 是否是建筑类型
+const isBuildingtype = computed(() => {
+  return props.selectedData.orgId == 7;
+})
+
 // 查询参数
 const queryParams = ref({
   versionNo: "",
@@ -164,19 +117,20 @@ const currentEditData = ref<HCstProjectCostM | null>(null);
 // 表格列配置
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: "60" },
-  { prop: "areaVerMTitle", label: "标题", width: 200 },
+  { prop: "remark", label: "版本说明", minWidth: 200 },
   { prop: "projName", label: "项目名称", width: 150 },
   { prop: "versionNo", label: "版本号", minWidth: 200 },
   { prop: "versionTypeName", label: "版本类型", width: 120 },
+  { prop: "areaVerMTitle", label: "面积版本", width: 200 },
   { prop: "segName", label: "业务板块", width: 120 },
   { slot: "isEnabled", label: "当前使用", width: 90 },
-  { prop: "remark", label: "备注", minWidth: 200 },
   { slot: "status", label: "审批状态", width: 100 },
   { label: "操作", width: 320, slot: "actions", fixed: "right" },
 ];
 
 // 获取数据列表
 const getDataList = async () => {
+  console.log('props.selectedData', props.selectedData)
   try {
     tableLoading.value = true;
     const { orgId, dataType } = props.selectedData;
@@ -304,11 +258,13 @@ const handleCancel = async (row: HCstProjectCostM) => {
   });
 };
 // 明细
-const handleDetail = (row: HCstProjectCostM) => {
+const handleDetail = (row) => {
+  // 当前使用、草稿状态、建筑类型时不可编辑，只能查看
+  const isDetail = row.status != 0 || row.isEnabled || isBuildingtype.value
   router.push({
     path: "/cost/cost-detail",
     query: {
-      mode: "add",
+      mode: isDetail ? "detail" : "edit",
       projId: row.projId, // 项目ID
       costMid: row.id, // 成本版本ID
       areaVerMid: row.areaVerMid, // 面积版本ID
@@ -361,7 +317,7 @@ watch(
   { immediate: true },
 );
 
-onMounted(() => {});
+onMounted(() => { });
 </script>
 
 <style lang="scss" scoped>

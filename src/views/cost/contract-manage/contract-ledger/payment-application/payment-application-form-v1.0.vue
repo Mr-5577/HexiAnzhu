@@ -2612,10 +2612,10 @@ const handleFormDataSubmit = async () => {
 // 返回操作
 const goBack = () => {
   if (isAdd.value) {
-    tagsStore.closeTagByPath("/con/supplement-contract/add");
+    tagsStore.closeTagByPath("/con/payment-application/add");
   }
   if (isEdit.value) {
-    tagsStore.closeTagByPath("/con/supplement-contract/edit");
+    tagsStore.closeTagByPath("/con/payment-application/edit");
   }
   router.go(-1); // 返回上个页面
 };
