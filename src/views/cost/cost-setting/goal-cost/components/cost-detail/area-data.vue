@@ -1,15 +1,23 @@
 <!-- 面积数据 -->
 <template>
   <div class="area-data-page">
-    <base-table
-      ref="tableRef"
-      :columns="tableColumns"
-      :tableData="tableList"
-      :loading="tableLoading"
-      rowKey="id"
-      :showSummary="true"
-      :pagination="false"
-    >
+    <div class="version-desc">
+      <el-icon>
+        <InfoFilled />
+      </el-icon>
+      <div class="version-info">
+        <span class="version-item">
+          <span class="label">当前版本编号：</span>
+          <span class="value">{{ versionNo || '--' }}</span>
+        </span>
+        <span class="version-item">
+          <span class="label">当前版本说明：</span>
+          <span class="value">{{ versionDesc || '--' }}</span>
+        </span>
+      </div>
+    </div>
+    <base-table ref="tableRef" :columns="tableColumns" :tableData="tableList" :loading="tableLoading" rowKey="id"
+      :showSummary="true" :pagination="false">
     </base-table>
   </div>
 </template>
@@ -45,6 +53,8 @@ const isDetail = computed(() => mode.value === "detail");
 const isEdit = computed(() => mode.value === "edit");
 const isAdd = computed(() => mode.value === "add");
 
+const versionNo = ref("")
+const versionDesc = ref("")
 const tableList = ref([]);
 const tableLoading = ref(false);
 const tableColumns: TableColumnItem[] = [
@@ -95,9 +105,11 @@ const getDetailById = async () => {
     });
     if (res.code == 200 && res.data) {
       const { costM } = res.data;
+      versionNo.value = costM.versionNo;
+      versionDesc.value = costM.remark;
       getDataList(costM.areaVerMid);
     }
-  } catch (error) {}
+  } catch (error) { }
 };
 
 // watch(
@@ -121,5 +133,44 @@ onMounted(() => {
   flex-direction: column;
   flex: 1;
   background: #fff;
+
+  .version-desc {
+    flex-shrink: 0;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px 16px;
+    margin-bottom: 16px;
+    background: #f4f7fc;
+    border-radius: 6px;
+    border-left: 4px solid #409eff;
+    font-size: 14px;
+    color: #1d2129;
+
+    .el-icon {
+      font-size: 18px;
+      color: #409eff;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .version-info {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 24px;
+      line-height: 1.6;
+    }
+
+    .version-item {
+      .label {
+        color: #848586;
+      }
+
+      .value {
+        color: #1d2129;
+        font-weight: 500;
+      }
+    }
+  }
 }
 </style>

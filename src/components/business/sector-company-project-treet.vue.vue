@@ -2,41 +2,31 @@
 <template>
   <div class="sector-company-project-component">
     <div class="search-box">
-      <el-input
-        v-model="searchKeyword"
-        placeholder="搜索项目名称"
-        clearable
-        size="default"
-      >
+      <el-input v-model="searchKeyword" placeholder="搜索项目名称" clearable size="default">
         <template #append>
-          <el-icon @click="handleSearchTree"><Search /></el-icon>
+          <el-icon @click="handleSearchTree">
+            <Search />
+          </el-icon>
         </template>
       </el-input>
     </div>
     <div class="tree-wrapper">
-      <el-tree
-        ref="projectTreeRef"
-        :data="treeData"
-        :props="treeProps"
-        :filter-node-method="filterNode"
-        :current-node-key="selectedId"
-        node-key="treeId"
-        :highlight-current="false"
-        :default-expand-all="false"
-        :accordion="false"
-        :expand-on-click-node="false"
-        @node-click="handleNodeClick"
-      >
+      <el-tree ref="projectTreeRef" :data="treeData" :props="treeProps" :filter-node-method="filterNode"
+        :current-node-key="selectedId" node-key="treeId" :highlight-current="false" :default-expand-all="false"
+        :accordion="false" :expand-on-click-node="false" @node-click="handleNodeClick">
         <template #default="{ node, data }">
-          <span
-            class="tree-node"
-            :class="{
-              'project-active': selectedId === data.treeId,
-            }"
-          >
-            <el-icon v-if="data.dataType === 4"><HomeFilled /></el-icon>
-            <el-icon v-if="data.dataType === 3"><OfficeBuilding /></el-icon>
-            <el-icon v-if="data.dataType === 1"><FolderOpened /></el-icon>
+          <span class="tree-node" :class="{
+            'project-active': selectedId === data.treeId,
+          }">
+            <el-icon v-if="data.dataType === 4">
+              <HomeFilled />
+            </el-icon>
+            <el-icon v-if="data.dataType === 3">
+              <OfficeBuilding />
+            </el-icon>
+            <el-icon v-if="data.dataType === 1">
+              <FolderOpened />
+            </el-icon>
             <span>{{ node.label }}</span>
             <span v-if="data.dataType === 3" class="node-count">
               ({{ data.children?.length || 0 }}个项目)
@@ -59,6 +49,7 @@ defineOptions({ name: "sector-company-project-treet" });
 // 定义事件
 const emit = defineEmits<{
   (e: "select", data: ProjectTreeNode): void;
+  (e: "gainOrgId", data: number[]): void;
   (e: "update:selectedId", value: number | string | null): void;
 }>();
 
@@ -147,12 +138,30 @@ const processTreeData = (
       return true;
     });
 };
+// 获取建筑类型下面的所有orgId
+const getAllOrgIds = (treeData) => {
+  const result = [];
+  function traverse(node) {
+    if (node.orgId !== undefined && node.orgId !== null) {
+      result.push(node.orgId);
+    }
+    if (node.children && node.children.length > 0) {
+      node.children.forEach(child => traverse(child));
+    }
+  }
 
+  traverse(treeData);
+  return result;
+}
 const loadProjectData = async () => {
   try {
     const res = await projectAreaApi.getSegMguProjList();
     if (res.code === 200 && res.data) {
       treeData.value = processTreeData(res.data || []);
+      // 得到建筑类型下的全部orgId
+      const targetData = treeData.value.find((item) => item.orgId === 7);
+      const orgIds = getAllOrgIds(targetData);
+      emit("gainOrgId", orgIds);
     }
   } catch (error) {
     console.error("加载项目数据失败:", error);
@@ -190,12 +199,11 @@ defineExpose({
 
     :deep(.el-input-group__append) {
       padding: 0;
-      background: linear-gradient(
-        135deg,
-        var(--harmony-primary-dark) 0%,
-        var(--harmony-primary-light)
-      );
+      background: linear-gradient(135deg,
+          var(--harmony-primary-dark) 0%,
+          var(--harmony-primary-light));
       border-color: var(--harmony-primary-light);
+
       .el-icon {
         width: 50px;
         height: 100%;
@@ -250,7 +258,7 @@ defineExpose({
         }
       }
 
-      .el-tree-node.is-current > .el-tree-node__content {
+      .el-tree-node.is-current>.el-tree-node__content {
         background-color: #ecf5ff;
         color: #606266;
       }

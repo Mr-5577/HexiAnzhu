@@ -15,6 +15,7 @@
           搜索
         </el-button>
         <el-button icon="Refresh" @click="handleReset">重置</el-button>
+        <!-- 只有地产才可以信息并且业务板块默认地产，不可编辑 -->
         <el-button type="primary" @click="handleAdd" v-if="!isBuildingtype">新增版本</el-button>
       </el-form-item>
     </el-form>
@@ -80,6 +81,7 @@ defineOptions({ name: "cost-version" });
 // Props
 const props = defineProps<{
   selectedData: any;
+  buildOrgIds: number[];
 }>();
 
 const router = useRouter();
@@ -97,7 +99,7 @@ const { getDictList, loadDicts } = useDict(
 
 // 是否是建筑类型
 const isBuildingtype = computed(() => {
-  return props.selectedData.orgId == 7;
+  return props.buildOrgIds.includes(props.selectedData.orgId)
 })
 
 // 查询参数

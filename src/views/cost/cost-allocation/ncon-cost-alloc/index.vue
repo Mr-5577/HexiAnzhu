@@ -464,25 +464,15 @@ const handleConfirm = async () => {
     // 保存分摊
     const res = await costAllocationApi.saveProjectAlloc(params);
     if (res.code === 200) {
-
       // 保存成功后更新流程
-      if (bizType === 'NCON_PROC') {
-        // 非合同立项
-        const procRes = await cstProcessApi.saveNconCstProcessFlow({
-          id: bizId,
-        });
-        if (procRes.code === 200) {
-          ElMessage.success('保存成功')
-        }
-      }
-      if (bizType === "NCON_CST") {
-        // 非合同请款
-        const cstRes = await cstPaymentApi.saveNconCstPaymentFlow({
-          id: bizId,
-          allowEdit: true,
-        });
-        if (cstRes.code === 200) {
-          ElMessage.success('保存成功')
+      const flowMap = {
+        'NCON_PROC': () => cstProcessApi.saveNconCstProcessFlow({ id: bizId, allowEdit: true }), // 非合同立项
+        'NCON_CST': () => cstPaymentApi.saveNconCstPaymentFlow({ id: bizId, allowEdit: true }), // 非合同请款
+      };
+      if (flowMap[bizType]) {
+        const flowRes = await flowMap[bizType]();
+        if (flowRes.code === 200) {
+          ElMessage.success('保存成功');
         }
       }
     }
@@ -709,6 +699,7 @@ const initPage = async () => {
     allocAmt: props.allocAmt || 0,
     allocExclAmt: props.allocExclAmt || 0,
   };
+  console.log("分摊弹窗参数:", pageParams.value);
   // 获取项目产品类型列表
   await Promise.all([
     getBusiSegList(),
@@ -718,7 +709,6 @@ const initPage = async () => {
   // 弹窗模式则是从erp系统打开弹窗操作，否则就是OA单独引用分摊页面
   if (props?.cstMData && props.cstMData?.allocDs?.length > 0) {
     const detaiList = props.cstMData?.allocDs || [];
-    console.log("detaiList", detaiList);
     processPopupData(detaiList);
   }
 };
@@ -760,7 +750,7 @@ const loadAllocationData = async () => {
             pageParams.value.projId = res?.data?.process?.projId || undefined
             pageParams.value.bizType = bizType;
             pageParams.value.billId = billId;
-            pageParams.value.allocAmt = res.data?.processAmt || 0;
+            pageParams.value.allocAmt = res.data?.process?.processAmt || 0;
             pageParams.value.allocExclAmt = 0;
           }
           if (bizType == 'NCON_CST') {

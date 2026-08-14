@@ -674,6 +674,12 @@
           </el-form-item>
         </FormCard>
       </el-form>
+
+      <!-- 成本分摊  合同产值只有甲供材才有成本分摊 -->
+      <ConCostAllocCard style="margin-top: 15px;" :visible="!isAdd && formData.isSelfSupply" :cstMData="cstMData"
+        :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'CON_QZ'"
+        :projId="formData.projId" :projName="formData?.projName" :displayName="formData.conName"
+        :allocAmt="formData.applyProdVal" :bizBillId="billData.id" />
     </div>
 
     <!-- 隐藏的上传组件 -->
@@ -750,6 +756,7 @@ import FloatNav from "@/components/base/base-float-nav.vue";
 import { moneyRule, requiredInputRule, requiredRule } from "@/utils/form-rule-validate";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";
+import ConCostAllocCard from "@/views/cost/cost-allocation/con-cost-alloc/con-cost-alloc-card.vue";
 
 defineOptions({ name: "output-value-approval-form" });
 
@@ -805,6 +812,19 @@ const billData = ref({
   bizItemCode: formType.CON_PROD,
   flowId: null,
   createDate: null,
+});
+// 成本分摊明细数据
+const cstMData = ref({
+  id: undefined,
+  projId: undefined,
+  bizType: "",
+  bizBillId: undefined,
+  bizKeyId: 0,
+  allocAmt: "",
+  allocExclAmt: "",
+  allocStatus: undefined,
+  allocWarn: undefined,
+  allocDs: [], // 分摊明细
 });
 const flowListData = ref<any>(null);
 const flowBaseData = ref<any>(null);
@@ -1572,12 +1592,14 @@ const loadDetail = async () => {
   if (!prodId.value) return;
   const res = await outputDeclarationApi.getProdValById({ id: prodId.value, isWithFlow: true });
   if (res.code === 200 && res.data) {
-    const { flowList, flowBase, bill, prodVal, billPayrates, billMaterials, annexList } = res.data;
+    const { flowList, flowBase, bill, prodVal, billPayrates, billMaterials, annexList,cstM } = res.data;
     billData.value = { ...billData.value, ...bill };
     flowListData.value = { ...flowListData.value, ...flowList };
     flowBaseData.value = { ...flowBaseData.value, ...flowBase };
+    cstMData.value = { ...cstMData.value, ...cstM };
 
     formData.value.projId = flowBase.projId;
+    formData.value.projName = flowBase.projName;
     await changeProject(formData.value.projId);
     formData.value.conBillId = prodVal.conBillId;
     formData.value.flowId = billData.value.flowId;

@@ -37,6 +37,7 @@
                 placeholder="请选择供应商类别"
                 style="width: 100%"
                 clearable
+                filterable
               />
             </el-form-item>
           </el-col>

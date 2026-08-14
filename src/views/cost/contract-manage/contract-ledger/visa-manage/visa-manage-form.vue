@@ -380,46 +380,6 @@
           </el-row>
         </FormCard>
 
-        <!-- ====== 卡片4：成本分摊 ====== -->
-        <!-- 成本分摊：创建时不展示成本分摊模块，编辑时获取成本分摊数据进行展示查看详情 -->
-        <FormCard
-          id="card-alloc"
-          v-show="isReadonly"
-          icon="📄"
-          title="成本分摊"
-          v-model:collapsed="collapsedCards.basic"
-        >
-          <el-row :gutter="24">
-            <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
-              <el-form-item label="分摊状态：" label-width="90px">
-                <el-tag
-                  size="small"
-                  :type="getEnumType(allocStatusEnum, formData.cstAllocStatus || 0)"
-                >
-                  {{ getEnumLabel(allocStatusEnum, formData.cstAllocStatus || 0) }}
-                </el-tag>
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
-              <el-form-item label="预警状态：" label-width="90px">
-                <el-tag
-                  size="small"
-                  :type="getEnumType(allocWarnEnum, formData.cstWarningStatus || 0)"
-                >
-                  {{ getEnumLabel(allocWarnEnum, formData.cstWarningStatus || 0) }}
-                </el-tag>
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
-              <el-form-item label="分摊：" label-width="90px">
-                <el-button type="primary" @click="handleAllocationDetail">
-                  分摊详情
-                </el-button>
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </FormCard>
-
         <!-- ====== 卡片5：相关附件 ====== -->
         <FormCard
           id="card-annex"
@@ -445,6 +405,12 @@
           </el-form-item>
         </FormCard>
       </el-form>
+      
+      <!-- 成本分摊 -->
+      <ConCostAllocCard style="margin-top: 15px;" :visible="!isAdd" :cstMData="cstMData"
+        :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'CON_QZ'"
+        :projId="formData.projId" :projName="formData?.projName" :displayName="formData.changeName"
+        :allocAmt="formData.visaApplyAmt" :bizBillId="billData.id" />
     </div>
   </div>
 
@@ -502,6 +468,7 @@ import PickInput from "@/components/base/base-pick-input.vue";
 import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api.ts";
 import { requiredInputRule, requiredRule } from "@/utils/form-rule-validate.ts";
 import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
+import ConCostAllocCard from "@/views/cost/cost-allocation/con-cost-alloc/con-cost-alloc-card.vue";
 const { collapsedCards, toggleCard, formatMoney } = useFormLayout(NAV_CARDS);
 
 defineOptions({ name: "visa-management-form" });
@@ -573,7 +540,19 @@ const billData = ref({
   createName:"",
   createDate:"",
 });
-
+// 成本分摊明细数据
+const cstMData = ref({
+  id: undefined,
+  projId: undefined,
+  bizType: "",
+  bizBillId: undefined,
+  bizKeyId: 0,
+  allocAmt: "",
+  allocExclAmt: "",
+  allocStatus: undefined,
+  allocWarn: undefined,
+  allocDs: [], // 分摊明细
+});
 // ==================== 数据字典 ====================
 const { getDictList, loadDicts } = useDict(
   [
@@ -595,6 +574,7 @@ const initFormData = () => ({
   segNo : "",
   segName: "",
   projId: undefined,
+  projName: "",
   userName: userStore.userInfo?.empName,
   createDate: dateUtil().format("YYYY-MM-DD"),
   deptName: userStore.userInfo?.deptName,
@@ -869,10 +849,11 @@ const loadDetail = async () => {
       isWithFlow:true,
     });
     if (res.code === 200) {
-      const { change, changeCon,visa, conMain,flowList, flowBase,bill,annexList = [] } = res.data;
+      const { change, changeCon,visa, conMain,flowList, flowBase,bill,annexList = [],cstM } = res.data;
       billData.value = { ...billData.value, ...bill };
       flowListData.value = { ...flowListData.value, ...flowList };
       flowBaseData.value = { ...flowBaseData.value, ...flowBase };
+      cstMData.value = { ...cstMData.value, ...cstM };
 
       formData.value = {
         ...formData.value,
@@ -889,6 +870,7 @@ const loadDetail = async () => {
         userName:flowBaseData.value.userName || "",
         createDate:billData.value.createDate || "",
         projId: flowBaseData.value.projId,
+        projName: flowBaseData.value.projName,
         bizNo: billData.value.bizNo || "",
         bizTitle: billData.value.bizTitle || "",
         status: visa.status ?? 0,

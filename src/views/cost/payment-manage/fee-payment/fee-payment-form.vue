@@ -1035,7 +1035,7 @@ const invoiceRecognition = async (annexId: number, annexName: string) => {
     const res = await commonApi.recognizeAndCheckInvoice({ annexId: annexId });
     console.log("识别结果", res);
     if (res.code === 200 && res.data) {
-      const { finalData } = res.data;
+      const { finalData, isRepeat } = res.data;
       if (finalData) {
         let detailListData = [];
         if (finalData.InvoiceProducts && finalData.InvoiceProducts.length > 0) {
@@ -1066,6 +1066,7 @@ const invoiceRecognition = async (annexId: number, annexName: string) => {
           sellerCompany: finalData.InvoiceCompany,
           sellerTaxCode: finalData.TaxpayerCode,
           isValid: finalData.InvoiceValidate == 1 ? true : false,
+          isRepeat: isRepeat || false,
           validateMsg: finalData.ValidateMsg,
           ocrRes: finalData.OCRRes || "",
           validateRes: finalData.ValidateRes || "",
@@ -1121,7 +1122,7 @@ const handleInspect = async (row: any) => {
     notify.close();
     console.log("识别查验结果", res);
     if (res.code === 200 && res.data) {
-      const { checkData, finalData, recognizeData } = res.data;
+      const { checkData, finalData, recognizeData, isRepeat } = res.data;
       if (finalData) {
         const recogniRowIndex = invoiceMTable.value.findIndex(
           (item) => item.uuid == row.uuid,
@@ -1155,6 +1156,7 @@ const handleInspect = async (row: any) => {
           sellerCompany: finalData.InvoiceCompany,
           sellerTaxCode: finalData.TaxpayerCode,
           isValid: finalData.InvoiceValidate == 1 ? true : false,
+          isRepeat: isRepeat || false,
           validateMsg: finalData.ValidateMsg,
           ocrRes: recognizeData ? JSON.stringify(recognizeData) : "",
           validateRes: checkData ? JSON.stringify(checkData) : "",

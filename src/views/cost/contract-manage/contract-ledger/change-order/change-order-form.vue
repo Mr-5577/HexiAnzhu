@@ -199,34 +199,6 @@
           </DetailTableCard>
         </FormCard>
 
-        <!-- ====== 卡片4：成本分摊（编辑时展示） ====== -->
-        <!-- 成本分摊：创建时不展示成本分摊模块，编辑时获取成本分摊数据进行展示查看详情 -->
-         <FormCard
-          id="card-alloc"
-          icon="📄"
-          title="成本分摊"
-          v-show="isReadonly"
-          v-model:collapsed="collapsedCards.process"
-        >
-          <el-row :gutter="24">
-            <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
-              <el-form-item label="分摊状态：" label-width="90px">
-                已分摊
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
-              <el-form-item label="预警状态：" label-width="90px">
-                已分摊
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
-              <el-form-item label="分摊：" label-width="90px">
-                <el-button type="primary"> 分摊详情 </el-button>
-              </el-form-item>
-            </el-col>
-          </el-row>    
-        </FormCard>
-
         <!-- ====== 卡片5：补充合同附件 ====== -->
         <FormCard
           id="card-annex"
@@ -252,6 +224,12 @@
           </el-form-item>
         </FormCard>
       </el-form>
+
+      <!-- 成本分摊 -->
+      <ConCostAllocCard style="margin-top: 15px;" :visible="!isAdd" :cstMData="cstMData"
+        :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'CON_BG'"
+        :projId="formData.projId" :projName="formData?.projName" :displayName="formData.changeName"
+        :allocAmt="formData.changeAmt" :bizBillId="billData.id" />
     </div>
 
     <!-- ============ 选择合同 弹窗 ============ -->
@@ -307,6 +285,7 @@ import { NAV_CARDS, createLinkConColumns } from "./change-order-config.ts";
 import { requiredInputRule, requiredRule } from "@/utils/form-rule-validate.ts";
 import { dateUtil } from "@/utils/date-util.ts";
 import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api.ts";
+import ConCostAllocCard from "@/views/cost/cost-allocation/con-cost-alloc/con-cost-alloc-card.vue";
 
 defineOptions({ name: "change-order-form" });
 
@@ -377,9 +356,23 @@ const billData = ref({
   createName:"",
   createDate:"",
 });
-
+const changeData = ref(null)
 const flowListData = ref<any>(null);
 const flowBaseData = ref<any>(null);
+
+// 成本分摊明细数据
+const cstMData = ref({
+  id: undefined,
+  projId: undefined,
+  bizType: "",
+  bizBillId: undefined,
+  bizKeyId: 0,
+  allocAmt: "",
+  allocExclAmt: "",
+  allocStatus: undefined,
+  allocWarn: undefined,
+  allocDs: [], // 分摊明细
+});
 
 const mode = ref<"add" | "edit" | "detail">(props.mode);
 const changeId = ref(undefined);
@@ -416,6 +409,7 @@ const initFormData = () => ({
   segName: "",
   branchName: "",
   projId: undefined,
+  projName: undefined,
   compId: null,
   compName:"",
   userName: userStore.userInfo?.empName,
@@ -607,7 +601,9 @@ const loadDetail = async () => {
       isWithFlow:true,
     });
     if (res.code === 200) {
-      const { change, conlist, flowList, flowBase,bill,annexList = [] } = res.data;
+      const { change, conlist, flowList, flowBase,bill,annexList = [],cstM } = res.data;
+      changeData.value = { ...changeData.value, ...change };
+      cstMData.value = { ...cstMData.value, ...cstM };
       billData.value = { ...billData.value, ...bill };
       flowListData.value = { ...flowListData.value, ...flowList };
       flowBaseData.value = { ...flowBaseData.value, ...flowBase };
@@ -622,6 +618,7 @@ const loadDetail = async () => {
         segNo: flowBaseData.value.segNo,
         segName:flowBaseData.value.segName,
         projId: flowBaseData.value.projId,
+        projName: flowBaseData.value.projName,
         conBillId: change.conBillId,
         deptName: flowBaseData.value.deptName,
         mguName: flowBaseData.value.mguName,

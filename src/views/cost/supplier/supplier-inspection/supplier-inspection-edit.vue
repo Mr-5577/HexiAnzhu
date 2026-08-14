@@ -447,34 +447,15 @@ const getProjectOptions = async () => {
 // 选择项目
 const changeProject = async (value: number) => {
   if (value) {
-    // 通过模板引用获取节点数据
-    const checkedNodes = projCascaderRef.value?.getCheckedNodes();
-    if (checkedNodes && checkedNodes.length > 0) {
-      console.log("选中的项目数据:", checkedNodes);
-      // const selectedNode = checkedNodes[0]; // 获取选中的项目ID
-      // // 获取父级信息
-      // const pathNodes = selectedNode.pathNodes || [];
-      // if (pathNodes.length > 1) {
-      //   console.log("直接父节点：", pathNodes[pathNodes.length - 2]?.data);
-      //   console.log("根节点：", pathNodes[0]?.data);
-      //   console.log(
-      //     "所有父级：",
-      //     pathNodes.slice(0, -1).map((n) => n.data),
-      //   );
-      //   const parent = pathNodes[pathNodes.length - 2]?.data;
-      //   formData.value.compName = parent?.orgName || "";
-      //   formData.value.compId = parent?.orgId || "";
-      // }
-
-      // 通过项目获取项目所属信息
-      const res = await projectAreaApi.getInfoByProjId({ id: value });
-      if (res.code === 200 && res.data) {
-        const { compName, compId, segId, segName } = res.data;
-        formData.value.compId = compId || "";
-        formData.value.compName = compName || "";
-        formData.value.segId = segId || "";
-        formData.value.segName = segName || "";
-      }
+    // 通过项目获取项目所属信息
+    const res = await projectAreaApi.getInfoByProjId({ id: value });
+    if (res.code === 200 && res.data) {
+      const { compName, compId, segId, segName, segNo } = res.data;
+      formData.value.compId = compId || "";
+      formData.value.compName = compName || "";
+      formData.value.segId = segId || "";
+      formData.value.segName = segName || "";
+      formData.value.segNo = segNo || "";
     }
   }
 };

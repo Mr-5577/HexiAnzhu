@@ -17,6 +17,7 @@ export interface ContractFormData {
   mguName: string;
   compName: string;
   projId: number | null;
+  projName?: string;
   acctProjId: number | null;
   tenderItemId: number | null;
   tenderItemName: string;

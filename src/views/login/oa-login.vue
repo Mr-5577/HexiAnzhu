@@ -74,21 +74,22 @@ const buildRoutePath = (
 
 // COST 子业务路径映射（subBizCode = COST 时生效），成本分摊页面
 const COST_ROUTE: Record<string, string> = {
-  CON_MAIN: "/cost-allocation",
-  CON_ADD: "/cost-allocation",
-  CON_BG: "/cost-allocation",
-  CON_QZ: "/cost-allocation",
-  CON_PRE_SETTLE: "/cost-allocation",
-  CON_SETTLE: "/cost-allocation",
-  NCON_CST: "/oa/ncon/cost-alloc",
-  NCON_PROC: "/oa/ncon/cost-alloc",
+  CON_MAIN: "/oa/con/cost-alloc", // 合同
+  CON_ADD: "/oa/con/cost-alloc", // 补充合同
+  CON_BG: "/oa/con/cost-alloc", // 变更合同
+  CON_QZ: "/oa/con/cost-alloc", // 签证合同
+  CON_PROD: "/oa/con/cost-alloc", // 签证合同
+  CON_PRE_SETTLE: "/home", // 合同预结算
+  CON_SETTLE: "/home", // 合同结算
+  NCON_CST: "/oa/ncon/cost-alloc", // 非合同请款
+  NCON_PROC: "/oa/ncon/cost-alloc", // 非合同立项
 };
 
 // FINA 子业务路径映射（subBizCode = FINA 时生效），财务分摊页面
 const FINA_ROUTE: Record<string, string> = {
-  NCON_FEE: "/finance-allocation",
-  NCON_CST: "/finance-allocation",
-  CON_PAY: "/finance-allocation",
+  NCON_FEE: "/finance-allocation", // 费用报销
+  NCON_CST: "/finance-allocation", // 非合同请款
+  CON_PAY: "/finance-allocation", // 合同支付
 };
 
 // 默認路徑映射，对应业务的单据详情页
@@ -141,6 +142,7 @@ const resolveBizRoute = async (
     case "CON_ADD":
     case "CON_BG":
     case "CON_QZ":
+    case "CON_PROD":
     case "CON_PRE_SETTLE":
     case "CON_SETTLE":
     case "NCON_PROC": {
@@ -159,7 +161,7 @@ const resolveBizRoute = async (
               billId, // 单据ID
               bizId, // 业务ID
               bizType: bizItemCode, // 业务类型
-              mode: "edit",
+              mode: "view",
             });
         }
       }
@@ -191,7 +193,7 @@ const resolveBizRoute = async (
               billId, // 单据ID
               bizId, // 业务ID
               bizType: bizItemCode, // 业务类型
-              mode: "edit",
+              mode: "view",
             });
         }
       }
@@ -210,7 +212,7 @@ const resolveBizRoute = async (
               billId, // 单据ID
               bizId, // 业务ID
               bizType: bizItemCode, // 业务类型
-              mode: "edit",
+              mode: "view",
             });
         }
       }

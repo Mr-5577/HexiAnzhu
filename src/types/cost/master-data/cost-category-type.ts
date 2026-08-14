@@ -144,4 +144,5 @@ export interface CostCategoryProjQueryParams {
   projId: number;
   /** 是否包含产品类型详情 */
   withDetail?: boolean;
+  buildTree?: boolean;
 }
