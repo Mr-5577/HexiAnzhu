@@ -19,9 +19,9 @@
         <el-form-item label="预警状态：" label-width="90px">
           <el-tag
             size="small"
-            :type="getEnumType(allocWarnEnum, props.warningStatus || 0)"
+            :type="getEnumType(allocWarnEnum, props.warningStatus || undefined)"
           >
-            {{ getEnumLabel(allocWarnEnum, props.warningStatus || 0) }}
+            {{ getEnumLabel(allocWarnEnum, props.warningStatus || undefined) }}
           </el-tag>
         </el-form-item>
       </el-col>
@@ -33,7 +33,7 @@
     </el-row>
 
     <!-- 分摊详情弹窗 -->
-    <CostAllocationDetailDialog
+    <NconCostAllocDialog
       v-model="dialogVisible"
       :projId="props.projId"
       :projName="props.projName"
@@ -49,7 +49,7 @@
 
 <script setup lang="ts">
 import { ref, computed, toRefs } from "vue";
-import CostAllocationDetailDialog from "./cost-allocation-detail-dialog.vue";
+import NconCostAllocDialog from "./ncon-cost-alloc-dialog.vue";
 import { ElMessage } from "element-plus";
 import {
   allocStatusEnum,

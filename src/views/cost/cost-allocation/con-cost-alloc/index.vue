@@ -159,7 +159,6 @@ import { filterTreeByIds } from "../helpers.ts";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
 import { cstPaymentApi } from "@/api/cost/non-contract-manage/cst-payment-api.ts";
 import { cstProcessApi } from "@/api/cost/non-contract-manage/cst-process-api.ts";
-import { feePaymentApi } from "@/api/cost/non-contract-manage/fee-payment-api.ts";
 
 interface Props {
   projId?: number; // 项目ID
@@ -451,15 +450,12 @@ const handleConfirm = async () => {
   try {
     submitLoading.value = true;
     const params = {
-      id: apportionInfo.value?.id,
-      projId: pageParams.value.projId,
-      bizType: pageParams.value.bizType,
-      bizBillId: billId,
-      allocAmt: result?.allocAmt || 0,
-      allocExclAmt: result?.allocExclAmt || 0,
-      allocStatus: result?.allocStatus,
-      allocWarn: result?.allocWarn,
-      detailList: result?.allocDs || [],
+      ...apportionInfo.value,
+      ...result,
+      detailList: result?.allocDs || []
+    }
+    if (params.allocDs) {
+      delete params.allocDs;
     }
     // 保存分摊
     const res = await costAllocationApi.saveProjectAlloc(params);
@@ -735,48 +731,19 @@ const loadAllocationData = async () => {
       bizType: bizType,
     });
     console.log("OA加载分摊详情:", res);
-    if (res.code === 200) {
-      // 当有分摊信息时使用分摊信息
-      if (res?.data) {
-        apportionInfo.value = { ...apportionInfo.value, ...res.data };
-        pageParams.value.projId = res.data?.projId;
-        pageParams.value.bizType = bizType;
-        pageParams.value.billId = billId;
-        pageParams.value.allocAmt = res.data?.allocAmt || 0;
-        pageParams.value.allocExclAmt = res.data?.costExclAmt || 0;
-        await getBuildingListByProjId();
-        await Promise.all([getBusiSegList(), getProductList()]);
-        // 处理查询到的分摊数据，回显到页面
-        const allocDs = res.data?.allocDs || [];
-        const newData = allocDs.filter((item: any) => item.prodId);
-        processPopupData(newData);
-      } else {
-        // 没有分摊信息时查询轻量信息进行基础数据赋值，非合同查询轻量级详情信息
-        const res = await feePaymentApi.getNconInfoLite({ nconBillId: billId });
-        console.log("非合同轻量级详情", res);
-        if (res.code == 200 && res.data) {
-          if (bizType == 'NCON_PROC') {
-            // 非合同立项
-            pageParams.value.projId = res?.data?.process?.projId || undefined
-            pageParams.value.bizType = bizType;
-            pageParams.value.billId = billId;
-            pageParams.value.allocAmt = res.data?.processAmt || 0;
-            pageParams.value.allocExclAmt = 0;
-          }
-          if (bizType == 'NCON_CST') {
-            // 非合同请款
-            pageParams.value.projId = res?.data?.payment?.projId || undefined
-            pageParams.value.bizType = bizType;
-            pageParams.value.billId = billId;
-            pageParams.value.allocAmt = res.data?.payment?.factReqAmt || 0;
-            pageParams.value.allocExclAmt = 0;
-          }
-          if (pageParams.value.projId) {
-            await getBuildingListByProjId();
-            await Promise.all([getBusiSegList(), getProductList()]);
-          }
-        }
-      }
+    if (res.code === 200 && res.data) {
+      apportionInfo.value = { ...apportionInfo.value, ...res.data };
+      pageParams.value.projId = res.data?.projId;
+      pageParams.value.bizType = res.data?.bizType;
+      pageParams.value.billId = billId;
+      pageParams.value.allocAmt = res.data?.allocAmt || 0;
+      pageParams.value.allocExclAmt = res.data?.costExclAmt || 0;
+      await getBuildingListByProjId();
+      await Promise.all([getBusiSegList(), getProductList()]);
+      // 处理查询到的分摊数据，回显到页面
+      const allocDs = res.data?.allocDs || [];
+      const newData = allocDs.filter((item: any) => item.prodId);
+      processPopupData(newData);
     }
   } catch (error) { }
 };

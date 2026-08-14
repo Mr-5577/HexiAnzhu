@@ -62,6 +62,10 @@ export const userApi = {
   getEmpInfo: () => {
     return http.post(`/emp/getEmpInfo`);
   },
+  // 获取子账号登录Token列表
+  getOtherLogin: () => {
+    return http.post(`/auth/getOtherLogin`);
+  },
   // 修改密码
   resetPassword: (data: {
     username: string;

@@ -13,32 +13,20 @@
 
     <div class="virtual-table-outer">
       <div class="virtual-table">
-        <div
-          class="vt-header"
-          :style="{
-            gridTemplateColumns: gridTemplateColumns,
-            gridTemplateRows: `repeat(${headerDepth}, 32px)`,
-          }"
-        >
+        <div class="vt-header" :style="{
+          gridTemplateColumns: gridTemplateColumns,
+          gridTemplateRows: `repeat(${headerDepth}, 32px)`,
+        }">
           <!-- 多级表头水平分割线：贯穿整个表头宽度，不受单元格跨行合并影响 -->
-          <div
-            v-for="line in headerDepth - 1"
-            :key="'divider-' + line"
-            class="header-divider"
-            :style="{ top: `${line * 32}px` }"
-          ></div>
-          <div
-            v-for="cell in headerCells"
-            :key="cell.key"
-            class="vt-header-cell"
-            :class="[cell.sticky ? 'sticky-left' : '', cell.sticky ? cell.stickyCls : '']"
-            :style="{
+          <div v-for="line in headerDepth - 1" :key="'divider-' + line" class="header-divider"
+            :style="{ top: `${line * 32}px` }"></div>
+          <div v-for="cell in headerCells" :key="cell.key" class="vt-header-cell"
+            :class="[cell.sticky ? 'sticky-left' : '', cell.sticky ? cell.stickyCls : '']" :style="{
               gridColumn: `${cell.colStart} / ${cell.colEnd}`,
               gridRow: `${cell.rowStart} / ${cell.rowEnd}`,
               justifyContent: cell.align || 'center',
               textAlign: cell.align || 'center',
-            }"
-          >
+            }">
             {{ cell.label }}
           </div>
         </div>
@@ -52,21 +40,24 @@
                   <span class="expand-icon" v-if="item.hasChildren" @click.stop="toggleExpand(item.uuid)">
                     {{ item.expanded ? '▾' : '▸' }}
                   </span>
-                  <span :style="{ paddingLeft: item.level * 16 + 'px' }">{{ item._raw ? item._raw.subName : item.subName }}</span>
+                  <span :style="{ paddingLeft: item.level * 16 + 'px' }">{{ item._raw ? item._raw.subName : item.subName
+                  }}</span>
                 </div>
               </div>
 
               <template v-for="col in headerLeafColumns" :key="col.prop">
                 <div class="vt-cell" :style="{ width: col.width ? col.width + 'px' : 'auto' }">
                   <template v-if="col.prop && (col.prop.startsWith('costAmt_') || col.prop.startsWith('costExclAmt_'))">
-                    <el-input-number v-if="(item._raw ? item._raw.isLeaf : item.isLeaf) && !isDetail" :model-value="(item._raw ? item._raw[col.prop] : item[col.prop])" :controls="false"
-                      :step="0.01" :precision="2" @change="(val) => onCellEdit(item, col.prop, val, index)"
-                      size="small" />
-                    <span v-else class="readonly-cell">{{ formatNumber(item._raw ? item._raw[col.prop] : item[col.prop]) }}</span>
+                    <el-input-number v-if="(item._raw ? item._raw.isLeaf : item.isLeaf) && !isDetail"
+                      :model-value="(item._raw ? item._raw[col.prop] : item[col.prop])" :controls="false" :step="0.01"
+                      :precision="2" @change="(val) => onCellEdit(item, col.prop, val, index)" size="small" />
+                    <span v-else class="readonly-cell">{{ formatNumber(item._raw ? item._raw[col.prop] : item[col.prop])
+                    }}</span>
                   </template>
 
                   <template v-else-if="col.prop === 'busiSegId'">
-                    <el-select v-if="(item._raw ? item._raw.isLeaf : item.isLeaf) && !isDetail" :model-value="(item._raw ? item._raw.busiSegId : item.busiSegId)" placeholder="" size="small"
+                    <el-select v-if="(item._raw ? item._raw.isLeaf : item.isLeaf) && !isDetail"
+                      :model-value="(item._raw ? item._raw.busiSegId : item.busiSegId)" placeholder="" size="small"
                       @change="(val) => onCellEdit(item, 'busiSegId', val, index)">
                       <el-option v-for="opt in busiSegOptions" :key="opt.id" :label="opt.segName" :value="opt.id" />
                     </el-select>
@@ -74,11 +65,13 @@
                   </template>
 
                   <template v-else-if="col.prop === 'allocRule'">
-                    <el-select v-if="(item._raw ? item._raw.isLeaf : item.isLeaf) && !isDetail" :model-value="(item._raw ? item._raw.allocRule : item.allocRule)" placeholder="" size="small"
+                    <el-select v-if="(item._raw ? item._raw.isLeaf : item.isLeaf) && !isDetail"
+                      :model-value="(item._raw ? item._raw.allocRule : item.allocRule)" placeholder="" size="small"
                       @change="(val) => onCellEdit(item, 'allocRule', val, index)">
                       <el-option v-for="opt in allocRuleEnum" :key="opt.value" :label="opt.label" :value="opt.value" />
                     </el-select>
-                    <span v-else class="readonly-cell">{{ item._raw ? item._raw.allocRuleName : item.allocRuleName }}</span>
+                    <span v-else class="readonly-cell">{{ item._raw ? item._raw.allocRuleName : item.allocRuleName
+                    }}</span>
                   </template>
 
                   <template v-else>
@@ -668,7 +661,9 @@ const updateLeafAndRecalcUpward = (
   return nodes.map((node) => {
     // 找到目标叶子节点：直接写入新值
     if (node.uuid === targetUuid) {
-      return { ...node, [column]: newValue };
+      // 更新后调用 calculateNodeTotal 重新计算汇总
+      const updated = { ...node, [column]: newValue };
+      return calculateNodeTotal(updated);
     }
     // 有子节点：递归更新子树，再根据新子节点重算本节点汇总（全新对象）
     if (node.children && node.children.length > 0) {
@@ -1362,6 +1357,7 @@ $table-readonly-color: rgba(0, 0, 0, 0.65);
   width: 96% !important;
   margin: 0 auto !important;
 }
+
 .vt-cell .el-input-number {
   width: 96% !important;
   margin: 0 auto !important;
@@ -1396,6 +1392,7 @@ $table-readonly-color: rgba(0, 0, 0, 0.65);
   /* 成本科目列左对齐，保留树形层级缩进 */
   justify-content: flex-start;
   padding-left: 8px;
+
   .cell-inner-wrap {
     display: flex;
     align-items: center;

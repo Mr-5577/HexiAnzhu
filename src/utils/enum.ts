@@ -16,7 +16,7 @@ export const getEnumLabel = <T extends EnumItem>(
   list: readonly T[],
   value: T["value"],
 ): string => {
-  return list.find((item) => item.value == value)?.label || "";
+  return list.find((item) => item.value == value)?.label || "-";
 };
 
 /**
