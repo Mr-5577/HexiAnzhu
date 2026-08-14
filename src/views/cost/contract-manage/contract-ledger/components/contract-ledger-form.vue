@@ -316,7 +316,7 @@
     :supStatus="2" @select="handleSupplierSelect" />
 
   <!-- 选择定标事项弹窗 -->
-  <ChooseAwardItemDialog v-model="awardItemDialogVisible" :selectionMode="'single'" :projId=formData.projId :status="40"
+  <ChooseAwardItemDialog v-model="awardItemDialogVisible" :selectionMode="'single'" :projId=formData.projId :wfStatus="40"
     @select="handleAwardItemSelect" />
 </template>
 
