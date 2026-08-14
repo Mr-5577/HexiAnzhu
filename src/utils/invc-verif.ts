@@ -53,7 +53,8 @@ export interface RecognizedInvoice {
   buyerTaxCode?: string;
   sellerCompany?: string;
   sellerTaxCode?: string;
-  isValid?: boolean;
+  isValid?: boolean;//是否有效发票
+  isRepeat?: boolean;//是否重复发票
   validateMsg?: string;
   ocrRes?: string;
   validateRes?: string;
@@ -74,7 +75,7 @@ export interface RecognizeInvoiceParams {
 /** 识别接口返回 */
 export interface RecognizeInvoiceResponse {
   code: number;
-  data?: { finalData?: any } | null;
+  data?: { finalData?: any ,isRepeat? : boolean} | null;
 }
 
 /** 注入的识别 API（业务方自己传，本模块不关心具体请求实现） */
@@ -90,7 +91,8 @@ export type RecognizeInvoiceApi = (
  */
 export function normalizeInvoiceResult(
   finalData: any | null | undefined,
-  meta: { annexId: number; annexName: string }
+  meta: { annexId: number; annexName: string },
+  isRepeat :boolean,
 ): RecognizedInvoice {
   
   if (!finalData) {
@@ -170,6 +172,7 @@ export function normalizeInvoiceResult(
     sellerCompany: finalData.InvoiceCompany,
     sellerTaxCode: finalData.TaxpayerCode,
     isValid: validate === 1,
+    isRepeat: isRepeat,
     validateMsg: finalData.ValidateMsg,
     ocrRes: finalData.OCRRes || "",
     validateRes: finalData.ValidateRes || "",
@@ -194,7 +197,7 @@ export async function recognizeInvoice(
   try {
     const res = await api({ annexId, annexName });
     if (res && res.code === 200 && res.data) {
-      return normalizeInvoiceResult(res.data.finalData, { annexId, annexName });
+      return normalizeInvoiceResult(res.data.finalData, { annexId, annexName },res.data.isRepeat);
     }
     return {
       annexId,
