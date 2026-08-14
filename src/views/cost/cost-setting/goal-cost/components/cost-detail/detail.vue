@@ -2,6 +2,12 @@
 <template>
   <div class="cost-detail-page">
     <div class="toolbar">
+      <!-- ========== 合计行区域（文字靠左，与按钮同一行） ========== -->
+      <div class="total-summary-bar">
+        <span class="summary-item">目标成本总计（含税）：<span class="amount-text">{{ totalCostTax }}</span></span>
+        <span class="summary-item">目标成本总计（不含税）：<span class="amount-text">{{ totalCostNoTax }}</span></span>
+      </div>
+
       <el-button type="primary" :loading="saveLoading" @click="handleBatchSave" v-if="!isDetail">批量保存</el-button>
     </div>
 
@@ -340,6 +346,35 @@ const getVisibleFlatRows = (nodes: any[], expanded: Set<string>) => {
 
 const flatRows = computed(() => {
   return getVisibleFlatRows(tableData.value || [], expandedKeys.value);
+});
+
+/**
+ * 全局汇总：所有叶子节点含税总额、不含税总额
+ */
+const totalCostTax = computed(() => {
+  const leaves = getAllLeafNodes(tableData.value);
+  let sum = 0;
+  productOptions.value.forEach((product) => {
+    const propKey = `costAmt_${product.id}`;
+    leaves.forEach((node) => {
+      const val = Number(node[propKey] || 0);
+      if (!isNaN(val)) sum += val;
+    });
+  });
+  return formatNumber(sum);
+});
+
+const totalCostNoTax = computed(() => {
+  const leaves = getAllLeafNodes(tableData.value);
+  let sum = 0;
+  productOptions.value.forEach((product) => {
+    const propKey = `costExclAmt_${product.id}`;
+    leaves.forEach((node) => {
+      const val = Number(node[propKey] || 0);
+      if (!isNaN(val)) sum += val;
+    });
+  });
+  return formatNumber(sum);
 });
 
 // initialize expandedKeys to top-level nodes when tableData first loads
@@ -1164,9 +1199,29 @@ $table-readonly-color: rgba(0, 0, 0, 0.65);
     flex-shrink: 0;
     margin-bottom: 12px;
     display: flex;
-    gap: 10px;
+    gap: 16px;
     align-items: center;
-    justify-content: flex-end;
+    justify-content: space-between;
+  }
+
+  .total-summary-bar {
+    border: 1px solid $table-border-color;
+    border-radius: 4px;
+    padding: 8px 12px;
+    display: flex;
+    gap: 32px;
+    align-items: center;
+    font-size: 14px;
+    background: $table-header-bg;
+    color: $table-header-color;
+    .summary-item {
+      font-weight: 500;
+    }
+    .amount-text {
+      color: #f5222d;
+      font-weight: 600;
+      margin-left: 4px;
+    }
   }
 
   .virtual-table-outer {
