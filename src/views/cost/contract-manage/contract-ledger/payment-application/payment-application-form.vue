@@ -346,6 +346,8 @@
                   :precision="2"
                   :controls="false"
                   style="width: 100%"
+                  :formatter="value => `${value}%`"
+                  :parser="value => value.replace('%', '')"
                 >
                   <template #suffix>
                     <span style="pointer-events: auto; cursor: help;">
@@ -371,6 +373,8 @@
                   :precision="2"
                   :controls="false"
                   style="width: 100%"
+                  :formatter="value => `${value}%`"
+                  :parser="value => value.replace('%', '')"
                 >
                   <template #suffix>
                     <span style="pointer-events: auto; cursor: help;">
@@ -396,6 +400,8 @@
                   :precision="2"
                   :controls="false"
                   style="width: 100%"
+                  :formatter="value => `${value}%`"
+                  :parser="value => value.replace('%', '')"
                 >
                   <template #suffix>
                     <span style="pointer-events: auto; cursor: help;">
