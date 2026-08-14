@@ -27,17 +27,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import UrbanProjectTree from "@/components/business/urban-project-tree.vue";
 import CostVersion from "./components/cost-version/index.vue";
-import CostDetail from "./components/cost-detail/index.vue";
 import { ProjectTreeNode } from "@/types/cost/master-data/project-area-type.ts";
 import SectorCompanyProjectTreet from "@/components/business/sector-company-project-treet.vue.vue";
 
 defineOptions({ name: "goal-cost" });
 
 // ref
-const urbanProjectTreeRef = ref();
-const selectedProjectId = ref<number | null>(null);
 const activeTab = ref("version");
 const selectedData = ref(null);
 

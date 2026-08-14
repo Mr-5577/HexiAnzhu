@@ -5,12 +5,8 @@
     </div>
     <div class="right-section">
       <div class="main-nav">
-        <div
-          v-for="item in menuList"
-          :key="item.id"
-          :class="['nav-item', { active: activeNav == item.id }]"
-          @click="handleNavClick(item)"
-        >
+        <div v-for="item in menuList" :key="item.id" :class="['nav-item', { active: activeNav == item.id }]"
+          @click="handleNavClick(item)">
           <el-icon class="nav-icon">
             <component :is="item.icon" />
           </el-icon>
@@ -21,24 +17,27 @@
         <div class="user-name">{{ userStore?.userInfo?.empName }}</div>
         <el-popover title="" :teleported="false" placement="bottom-end">
           <template #reference>
-            <el-avatar
-              shape="circle"
-              :size="30"
-              src="https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png"
-            />
+            <el-avatar shape="circle" :size="30"
+              src="https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png" />
           </template>
           <template #default>
             <div class="user-dropdown">
-              <div
-                class="dropdown-item"
-                @click="handleProfile"
-                v-if="hasPersonalCenter"
-              >
-                <el-icon><User /></el-icon>
+              <div class="dropdown-item" @click="handleProfile" v-if="hasPersonalCenter">
+                <el-icon>
+                  <User />
+                </el-icon>
                 <span>个人中心</span>
               </div>
+              <div class="dropdown-item" @click="handleSwitch">
+                <el-icon>
+                  <Switch />
+                </el-icon>
+                <span>切换账号</span>
+              </div>
               <div class="dropdown-item" @click="logout">
-                <el-icon><SwitchButton /></el-icon>
+                <el-icon>
+                  <SwitchButton />
+                </el-icon>
                 <span>退出登录</span>
               </div>
             </div>
@@ -46,11 +45,22 @@
         </el-popover>
       </div>
     </div>
+
+    <!-- 账户列表弹窗 -->
+    <el-dialog v-model="showAccountList" title="选择账号" width="360px">
+      <div class="account-list">
+        <div v-for="(account, index) in accountList" :key="account.id" class="account-item"
+          @click="selectAccount(account)">
+          <span class="account-dot" :style="{ background: colors[index % colors.length] }"></span>
+          <span class="account-name">{{ account.userName }}</span>
+        </div>
+      </div>
+    </el-dialog>
   </header>
 </template>
 
 <script setup lang="ts">
-import { User, SwitchButton } from "@element-plus/icons-vue";
+import { User, SwitchButton, Switch } from "@element-plus/icons-vue";
 import { ref, computed, watch } from "vue";
 import { useRouter } from "vue-router";
 import { extractModules, getFirstRoutePath } from "@/utils/menu-util";
@@ -74,6 +84,9 @@ const props = withDefaults(defineProps<Props>(), {
 
 const router = useRouter();
 const activeNav = ref<number>(0);
+const showAccountList = ref(false)
+const colors = ['#409eff', '#67c23a', '#e6a23c', '#f56c6c']
+const accountList = ref([])
 
 const menuList = computed(() => {
   const menu = menuStore.menuData;
@@ -105,7 +118,37 @@ const hasPersonalCenter = computed(() => {
 
   return findPersonalCenter(menuStore.menuData || []);
 });
+const handleSwitch = async () => {
+  try {
+    const res = await userApi.getOtherLogin();
+    if (res.code === 200 && res.data) {
+      if (res.data && res.data.length > 0) {
+        accountList.value = res.data || [];
+        showAccountList.value = true;
+      } else {
+        ElMessage.warning("暂无其他账号！");
+      }
+    }
+  } catch (error) {
 
+  }
+}
+const selectAccount = async (account: any) => {
+  console.log("选择账号:", account);
+  if (account) {
+    // const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxNTE5NjY1NDMxMCIsIm9hVXNlcklkIjoiMTIyNjEzMjYxMDk2MTI0NDI0NCIsInVzZXJJZCI6MTUsInVzZXJuYW1lIjoiMTUxOTY2NTQzMTAiLCJpYXQiOjE3ODY2Njk3NjYsImV4cCI6MTc4Njc1NjE2Nn0.7tZOfRUYllVwg7gGqVSr1YLUO-RFYIP_Gyy55C0FvEc'
+    ElMessage.success("切换账号成功，即将刷新获取账号数据！");
+    const token = account.token;
+    localStorage.clear();
+    sessionStorage.clear();
+    resetData(); // 重置共享数据
+    localStorage.setItem("token", token);
+    setTimeout(() => {
+      // 跳转到首页并刷新
+      window.location.replace('/home')
+    }, 800);
+  }
+}
 // 监听外部传入的activeModuleId
 watch(
   () => props.activeModuleId,
@@ -198,6 +241,7 @@ const logout = () => {
     flex-shrink: 0;
     display: flex;
     align-items: center;
+
     .logo-img {
       width: 70%;
       height: auto;
@@ -273,20 +317,25 @@ const logout = () => {
         }
       }
     }
+
     .user-info {
       display: flex;
       align-items: center;
+
       .user-name {
         font-size: 14px;
         font-weight: 700;
         margin-right: 5px;
       }
+
       .el-avatar {
         cursor: pointer;
       }
+
       .user-dropdown {
         padding: 4px 0;
         min-width: 120px;
+
         .dropdown-item {
           display: flex;
           align-items: center;
@@ -297,6 +346,7 @@ const logout = () => {
           color: #606266;
           transition: all 0.2s;
           border-radius: 4px;
+
           &:hover {
             background-color: #f5f7fa;
             color: #085381;
@@ -305,22 +355,27 @@ const logout = () => {
               color: #085381;
             }
           }
+
           .el-icon {
             font-size: 16px;
             color: #909399;
           }
+
           &:last-child {
             margin-top: 4px;
             padding-top: 8px;
             border-top: 1px solid #ebeef5;
             color: #f56c6c;
+
             &:hover {
               background-color: #fef0f0;
               color: #f56c6c;
+
               .el-icon {
                 color: #f56c6c;
               }
             }
+
             .el-icon {
               color: #f56c6c;
             }
@@ -329,5 +384,51 @@ const logout = () => {
       }
     }
   }
+}
+
+.account-list {
+  min-height: 150px;
+  max-height: 260px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+.account-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 2px;
+}
+
+.account-item:hover {
+  background: #f0f2f5;
+  transform: scale(1.02);
+}
+
+.account-item:active {
+  transform: scale(0.97);
+}
+
+.account-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.account-item:hover .account-dot {
+  transform: scale(1.3);
+}
+
+.account-name {
+  font-size: 14px;
+  color: #303133;
 }
 </style>
