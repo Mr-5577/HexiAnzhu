@@ -1762,23 +1762,27 @@ const validateProdTables = async () => {
     }
     for (const row of matRows) {
       if ((Number(row.prodVal) || 0) === 0) {
-        ElMessage.error("明细行产值金额不能为0！");
+        ElMessage.error("产值明细表中，本次申报产值金额不能为0！");
         return false;
       }
       if ((Number(row.payAmt) || 0) === 0) {
-        ElMessage.error("明细行应付金额不能为0！");
+        ElMessage.error("产值明细表中，应付金额不能为0！");
+        return false;
+      }
+      if ((Number(row.prodVal) || 0) > (Number(row.recvProdAmt) || 0)) {
+        ElMessage.error("产值明细表中，本次申报产值不能大于接收产值！");
         return false;
       }
       if (!row.buildPeriod || !row.prodValPeriod || !row.payDate) {
-        ElMessage.error("进度款行的施工期间、产值期间、计划付款期间均不能为空！");
+        ElMessage.error("进产值明细表中，施工期间、产值期间、计划付款期间均不能为空！");
         return false;
       }
       if (row.payDate < row.prodValPeriod) {
-        ElMessage.error("计划付款期间不能早于产值期间！");
+        ElMessage.error("产值明细表中，计划付款期间不能早于产值期间！");
         return false;
       }
       if (row.buildPeriod > row.prodValPeriod) {
-        ElMessage.error("产值期间不能早于施工期间！");
+        ElMessage.error("产值明细表中，产值期间不能早于施工期间！");
         return false;
       }
     }
