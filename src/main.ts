@@ -12,6 +12,8 @@ import BaseTable from "@/components/base/base-table.vue";
 // 项目树组件
 import ProjectTreeSelector from "@/components/business/project-tree-selector.vue";
 import SelectWithAll from "@/components/base/base-select-with-all.vue"; //下拉多选框
+// 建设中占位组件
+import BuildingPlaceholder from '@/components/business/building-placeholder.vue';
 // 路由
 import router from "./router";
 // 引入状态管理
@@ -38,4 +40,5 @@ setupPermission(app);
 app.component("BaseTable", BaseTable);
 app.component("ProjectTreeSelector", ProjectTreeSelector);
 app.component("SelectWithAll", SelectWithAll);
+app.component("BuildingPlaceholder", BuildingPlaceholder);
 app.mount("#app");

@@ -136,44 +136,100 @@ export const costAllocationApi = {
   },
   /**
    * @name 保存普通/战略合同审批流程（新增/更新）
-   * @param data.conId 合同ID
+   * @param data.billId 单据ID
    */
-  saveConMainFlow: (data: { conId: number; allowEdit?: boolean }) => {
+  saveConMainFlow: (data: { billId: number; allowEdit?: boolean }) => {
     return http.formPost("/con/flow/saveConMainFlow", data);
   },
   /**
    * @name 保存补充合同审批流程（新增/更新）
-   * @param data.conAddId 补充合同ID
+   * @param data.billId 补充合同单据ID
    */
-  saveConAddFlow: (data: { conAddId: number; allowEdit?: boolean }) => {
+  saveConAddFlow: (data: { billId: number; allowEdit?: boolean }) => {
     return http.formPost("/con/flow/saveConAddFlow", data);
   },
   /**
    * @name 保存合同变更审批流程（新增/更新）
-   * @param data.changeId 变更ID
+   * @param data.billId 变更单据ID
    */
-  saveChangeFlow: (data: { changeId: number; allowEdit?: boolean }) => {
+  saveChangeFlow: (data: { billId: number; allowEdit?: boolean }) => {
     return http.formPost("/con/flow/saveChangeFlow", data);
   },
   /**
    * @name 保存合同签证审批流程（新增/更新）
-   * @param data.visaId 签证ID
+   * @param data.billId 签证单据ID
    */
-  saveVisaFlow: (data: { visaId: number; allowEdit?: boolean }) => {
+  saveVisaFlow: (data: { billId: number; allowEdit?: boolean }) => {
     return http.formPost("/con/flow/saveVisaFlow", data);
   },
   /**
-   * @name 保存合同产值审批流程（新增/更新）
-   * @param data.prodValId 产值ID
+   * @name 保存合同作废审批流程（新增/更新）
+   * @param data.billId 合同作废单据ID
    */
-  saveProdValFlow: (data: { prodValId: number; allowEdit?: boolean }) => {
+  saveVoidFlow: (data: { billId: number; allowEdit?: boolean }) => {
+    return http.formPost("/con/flow/saveVoidFlow", data);
+  },
+  /**
+   * @name 保存合同预结算审批流程（新增/更新）
+   * @param data.billId 合同预结算单据ID
+   */
+  savePreSettleFlow: (data: { billId: number; allowEdit?: boolean }) => {
+    return http.formPost("/con/flow/savePreSettleFlow", data);
+  },
+  /**
+   * @name 保存合同结算审批流程（新增/更新）
+   * @param data.billId 合同结算单据ID
+   */
+  saveSettleFlow: (data: { billId: number; allowEdit?: boolean }) => {
+    return http.formPost("/con/flow/saveSettleFlow", data);
+  },
+  /**
+   * @name 保存合同产值审批流程（新增/更新）
+   * @param data.billId 产值单据ID
+   */
+  saveProdValFlow: (data: { billId: number; allowEdit?: boolean }) => {
     return http.formPost("/con/flow/saveProdValFlow", data);
   },
   /**
    * @name 保存合同支付流程（新增/更新）
-   * @param data.payReqId 付款申请ID
+   * @param data.billId 单据ID
    */
-  saveConPayFlow: (data: { payReqId: number; allowEdit?: boolean }) => {
+  saveConPayFlow: (data: { billId: number }) => {
     return http.formPost("/con/flow/saveConPayFlow", data);
+  },
+  /**
+   * @name 保存合同奖罚审批流程（新增/更新）
+   * @param data.billId 单据ID
+   */
+  saveDedFlow: (data: { billId: number }) => {
+    return http.formPost("/con/flow/saveDedFlow", data);
+  },
+  /**
+   * @name 保存履约保证金收取流程（新增/更新）
+   * @param data.billId 单据ID
+   */
+  saveConLvRecvFlow: (data: { billId: number }) => {
+    return http.formPost("/con/flow/saveConLvRecvFlow", data);
+  },
+  /**
+   * @name 保存履约保证金退还流程（新增/更新
+   * @param data.billId 单据ID
+   */
+  saveConLvRefuFlow: (data: { billId: number }) => {
+    return http.formPost("/con/flow/saveConLvRefuFlow", data);
+  },
+  /**
+   * @name 保存合同特殊事项申请审批流程（新增/更新）
+   * @param data.billId 单据ID
+   */
+  saveSpecialFlow: (data: { billId: number }) => {
+    return http.formPost("/con/flow/saveSpecialFlow", data);
+  },
+  /**
+   * @name 保存合同工程核价审批流程（新增/更新）
+   * @param data.billId 单据ID
+   */
+  saveAuditPriceFlow: (data: { billId: number }) => {
+    return http.formPost("/con/flow/saveAuditPriceFlow", data);
   },
 };

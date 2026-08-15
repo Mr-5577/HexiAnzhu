@@ -116,12 +116,12 @@ const menuItems = [
     label: "款项调整",
     component: () => import("./payment-adjust/index.vue"),
   },
-  {
-    index: "costAllocation",
-    icon: markRaw(Icons.DataAnalysis),
-    label: "成本分摊",
-    component: () => import("./cost-allocation/index.vue"),
-  },
+  // {
+  //   index: "costAllocation",
+  //   icon: markRaw(Icons.DataAnalysis),
+  //   label: "成本分摊",
+  //   component: () => import("./cost-allocation/index.vue"),
+  // },
   // {
   //   index: "disputeApproval",
   //   icon: markRaw(Icons.Warning),

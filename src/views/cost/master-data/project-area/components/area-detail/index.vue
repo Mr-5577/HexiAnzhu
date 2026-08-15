@@ -60,7 +60,7 @@ const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
   { prop: "bldName", label: "楼栋名称" },
   { prop: "prodName", label: "业态名称" },
-  { prop: "isUnderGround", label: "是否地下室", width: 100 },
+  { prop: "isUnderGround", label: "是否地下室", width: 100, formatter: (row) => row.isUnderGround ? '是' : '否' },
   { prop: "bindUnderGroundName", label: "关联地下室" },
   {
     label: "建筑面积(m²)",

@@ -1,58 +1,24 @@
 <!-- 合同选择弹窗组件 -->
 <template>
-  <base-modal
-    v-model="dialogVisible"
-    title="选择合同"
-    width="1400px"
-    :confirm-loading="confirmLoading"
-    :confirm-text="'确定'"
-    @confirm="handleConfirm"
-    @close="handleClose"
-  >
+  <base-modal v-model="dialogVisible" title="选择合同" width="1400px" :confirm-loading="confirmLoading" :confirm-text="'确定'"
+    @confirm="handleConfirm" @close="handleClose">
     <div class="contract-select-wrapper">
       <!-- 筛选区域 -->
-      <el-form
-        :model="queryParams"
-        ref="queryRef"
-        :inline="true"
-        size="default"
-      >
-      <el-form-item label="所属项目" prop="projName">
-        <projectSelector
-          v-model="queryParams.projId"
-          :show-all-levels="false"
-          placeholder="请选择项目"
-          style="width: 100%"
-          filterable
-          :disabled="!onlyProj"
-        />
-      </el-form-item>
-      <el-form-item label="合同名称" prop="conName">
-        <el-input
-          v-model="queryParams.conName"
-          placeholder="请输入合同名称"
-          clearable
-          style="width: 180px"
-        />
-      </el-form-item>
-      <el-form-item label="供应商名称" prop="supName">
-        <el-input
-          v-model="queryParams.supName"
-          placeholder="请输入供应商名称"
-          clearable
-          style="width: 180px"
-        />
-      </el-form-item>
-      <el-form-item label="合同分类" prop="conTypeId">
-        <ConTypeSelector 
-          v-model="queryParams.conTypeId"
-          placeholder="请选择合同分类"
-          style="width: 180px"
-          clearable
-          filterable
-        />
-      </el-form-item>
-      <!-- <el-form-item label="合同状态" prop="conStatus">
+      <el-form :model="queryParams" ref="queryRef" :inline="true" size="default" label-width="85px">
+        <el-form-item label="所属项目" prop="projName">
+          <projectSelector v-model="queryParams.projId" :show-all-levels="false" placeholder="请选择项目" width="220px"
+            filterable :disabled="!onlyProj" />
+        </el-form-item>
+        <el-form-item label="合同名称" prop="conName">
+          <el-input v-model="queryParams.conName" placeholder="请输入合同名称" clearable style="width: 220px" />
+        </el-form-item>
+        <el-form-item label="供应商名称" prop="supName">
+          <el-input v-model="queryParams.supName" placeholder="请输入供应商名称" clearable style="width: 220px" />
+        </el-form-item>
+        <el-form-item label="合同分类" prop="conTypeId">
+          <ConTypeSelector v-model="queryParams.conTypeId" placeholder="请选择合同分类" width="220px" clearable filterable />
+        </el-form-item>
+        <!-- <el-form-item label="合同状态" prop="conStatus">
         <el-select
           v-model="queryParams.conStatus"
           placeholder="请选择合同状态"
@@ -67,73 +33,43 @@
           />
         </el-select>
       </el-form-item> -->
-      <el-form-item label="经办人" prop="agentId">
-        <ChooseEmployee
-          v-model="queryParams.agentId"
-          :show-all-levels="false"
-          placeholder="请选择"
-          style="width: 180px"
-          clearable
-          filterable
-        />
-      </el-form-item>
-      <el-form-item label="创建人" prop="createId">
-        <ChooseEmployee
-          v-model="queryParams.createId"
-          :show-all-levels="false"
-          placeholder="请选择"
-          style="width: 180px"
-          clearable
-          filterable
-        />
-      </el-form-item>
-      <el-form-item label="创建时间" prop="time">
-        <el-date-picker
-          v-model="queryParams.time"
-          type="daterange"
-          range-separator="-"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          format="YYYY-MM-DD"
-          value-format="YYYY-MM-DD"
-          style="width: 220px"
-          clearable
-        />
-      </el-form-item>
+        <el-form-item label="经办人" prop="agentId">
+          <ChooseEmployee v-model="queryParams.agentId" :show-all-levels="false" placeholder="请选择" width="220px"
+            clearable filterable />
+        </el-form-item>
+        <el-form-item label="创建人" prop="createId">
+          <ChooseEmployee v-model="queryParams.createId" :show-all-levels="false" placeholder="请选择" width="220px"
+            clearable filterable />
+        </el-form-item>
+        <el-form-item label="创建时间" prop="time">
+          <el-date-picker v-model="queryParams.time" type="daterange" range-separator="-" start-placeholder="开始日期"
+            end-placeholder="结束日期" format="YYYY-MM-DD" value-format="YYYY-MM-DD" style="width: 220px" clearable />
+        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleQuery">查询</el-button>
           <!-- <el-button @click="handleReset">重置</el-button> -->
         </el-form-item>
       </el-form>
 
-      <base-table
-        ref="tableRef"
-        :row-key="'id'"
-        :columns="tableColumns"
-        :table-data="tableData"
-        :loading="tableLoading"
-        :height="'400px'"
-        :highlight-current-row="true"
-        :pagination="false"
-        :selectionMode="props.selectionMode"
-        @selection-change="handleSelectionChange"
-      >
-      <template #conProperty="{ row }">
-        {{ getLabel(ConPropertyEnum, row.conProperty) }}
-      </template>
-      <template #priceType="{ row }">
-        {{ getLabel(PriceTypeEnum, row.priceType) }}
-      </template>
-      <template #conStatus="{ row }">
-        {{ getLabel(ConStatusEnum, row.conStatus) }}
-      </template>
+      <base-table ref="tableRef" :row-key="'id'" :columns="tableColumns" :table-data="tableData" :loading="tableLoading"
+        :height="'400px'" :highlight-current-row="true" :pagination="false" :selectionMode="props.selectionMode"
+        @selection-change="handleSelectionChange">
+        <template #conProperty="{ row }">
+          {{ getLabel(ConPropertyEnum, row.conProperty) }}
+        </template>
+        <template #priceType="{ row }">
+          {{ getLabel(PriceTypeEnum, row.priceType) }}
+        </template>
+        <template #conStatus="{ row }">
+          {{ getLabel(ConStatusEnum, row.conStatus) }}
+        </template>
       </base-table>
     </div>
   </base-modal>
 </template>
 
 <script setup lang="ts">
-import { ref, watch ,computed} from "vue";
+import { ref, watch, computed } from "vue";
 import { ElMessage } from "element-plus";
 import projectSelector from "@/components/business/project-selector.vue";
 import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api";
@@ -165,9 +101,9 @@ const emit = defineEmits<{
 }>();
 
 const onlyProj = computed(
-    () => !props.projId,
-  );
-  
+  () => !props.projId,
+);
+
 // 弹窗显示状态
 const dialogVisible = ref(props.modelValue);
 // 确认按钮loading
@@ -185,7 +121,7 @@ const tableRef = ref();
 const queryParams = ref({
   projSegId: undefined,
   projMguId: undefined,
-  conStatus: [40,60],
+  conStatus: [40, 60],
   projId: props.projId,
   conName: "",
   supName: "",
@@ -207,10 +143,10 @@ const tableColumns = [
   { slot: "conProperty", label: "合同类型", width: 90 },
   { prop: "companyName", label: "签约公司", minWidth: 200 },
   { prop: "supName", label: "供应商名称", minWidth: 200 },
-  { prop: "signAmt", label: "签约金额(含税)", minWidth: 120 ,formatType:"#,##0.00"},
-  { prop: "signExclAmt", label: "签约金额(不含税)", minWidth: 120 ,formatType:"#,##0.00"},
-  { prop: "taxAmt", label: "税额", minWidth: 100 ,formatType:"#,##0.00"},
-  { prop: "taxRate", label: "税率", minWidth: 90 ,formatType:"d%"},
+  { prop: "signAmt", label: "签约金额(含税)", minWidth: 120, formatType: "#,##0.00" },
+  { prop: "signExclAmt", label: "签约金额(不含税)", minWidth: 120, formatType: "#,##0.00" },
+  { prop: "taxAmt", label: "税额", minWidth: 100, formatType: "#,##0.00" },
+  { prop: "taxRate", label: "税率", minWidth: 90, formatType: "d%" },
   { prop: "bldNames", label: "楼栋范围", minWidth: 90 },
   { slot: "priceType", label: "计价方式", minWidth: 100 },
   { prop: "signDate", label: "签订日期", minWidth: 120 },
@@ -228,7 +164,7 @@ const resetState = () => {
   queryParams.value = {
     projSegId: undefined,
     projMguId: undefined,
-    conStatus: [40,60],
+    conStatus: [40, 60],
     projId: props.projId,
     conName: "",
     supName: "",
@@ -274,7 +210,7 @@ const handleReset = () => {
   queryParams.value = {
     projSegId: undefined,
     projMguId: undefined,
-    conStatus: [40,60],
+    conStatus: [40, 60],
     projId: undefined,
     conName: "",
     supName: "",

@@ -14,9 +14,11 @@
       <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
         <!-- 预警状态(0:红色预警,1:黄色预警,2:绿色预警) -->
         <el-form-item label="预警状态：" label-width="90px">
-          <el-tag size="small" :type="getEnumType(allocWarnEnum, props.warningStatus || undefined)">
-            {{ getEnumLabel(allocWarnEnum, props.warningStatus || undefined) }}
-          </el-tag>
+          <!-- <el-tag size="small" :type="getEnumType(allocWarnEnum, props.warningStatus)">
+            {{ getEnumLabel(allocWarnEnum, props.warningStatus) }}
+          </el-tag> -->
+          <span class="status-dot"
+            :style="{ backgroundColor: getEnumColor(allocWarnEnum, props.warningStatus) }"></span>
         </el-form-item>
       </el-col>
       <el-col :xs="24" :sm="24" :md="12" :lg="6" :xl="6">
@@ -41,7 +43,7 @@ import {
   allocStatusEnum,
   allocWarnEnum,
 } from "@/constants/contract-manage/enums.ts";
-import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
+import { getEnumColor, getEnumLabel, getEnumType } from "@/utils/enum.ts";
 
 defineOptions({ name: "CostAllocationCard" });
 
@@ -141,6 +143,14 @@ const handleDetail = () => {
     left: 0;
     top: 4px;
   }
+}
+
+.status-dot {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 // 覆盖 el-form-item 默认样式，使其在卡片内更紧凑

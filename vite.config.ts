@@ -52,14 +52,10 @@ export default defineConfig(({ mode }) => {
       hmr: true, // 热更新
       proxy: {
         "/api": {
-          target: env.VITE_API_BASE_URL_ACTUAL, // 开发环境
+          // target: env.VITE_API_BASE_URL_ACTUAL, // 开发环境
           // target: "http://sys.hexianzhu.com", // 正式环境
           // target: "http://10.215.215.6:8090", // 测试环境
-<<<<<<< HEAD
-          // target: "http://192.168.20.200:8091",  // 本地测试环境
-=======
           target: "http://192.168.20.200:8091",  // 本地测试环境
->>>>>>> 1fee0fff9dcc8fb8bf363ced0604eec988c1e084
           changeOrigin: true, // 允许跨域
           ws: true,
           // rewrite: (path) => path,  // 保持路径不变

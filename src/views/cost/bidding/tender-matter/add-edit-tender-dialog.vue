@@ -673,6 +673,18 @@ const handleSave = async (data: any) => {
       tableList.value = newTableList;
     }
   }
+  // 当选择楼栋时需要处理要么只能选择地下室，要么只能选择地上楼栋
+  // if (column === "bldIds") {
+  //   const selectedBlds = newValue; // 当前选择的楼栋数据
+  //   const rowBuildingOptions = row.buildingOptions || [] // 当前行的楼栋数据
+  //   const underGroundList = rowBuildingOptions.filter((item: any) => item.isUnderGround).map(v => v.id);//当前行楼栋中地下室列表
+  //   const newTableList = [...tableList.value];
+  //   newTableList[rowIndex] = {
+  //     ...row,
+  //     bldIds: selectedBlds,
+  //   };
+  //   tableList.value = newTableList;
+  // }
 };
 
 const handleDelete = (row: any) => {

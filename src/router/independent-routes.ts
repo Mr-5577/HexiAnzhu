@@ -32,6 +32,15 @@ export const independentRoutes = [
     },
   },
   {
+    path: "/oa/cost-detail",
+    name: "oa-cost-detail",
+    component: () => import("@/views/cost/cost-setting/goal-cost/components/cost-detail/oa-detail.vue"),
+    meta: {
+      title: "目标成本明细",
+      isKeepAlive: false,
+    },
+  },
+  {
     path: "/oa/bidding/bidding-detail",
     name: "oa-bidding-detail",
     component: () =>

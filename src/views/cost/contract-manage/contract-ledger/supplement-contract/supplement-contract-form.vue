@@ -475,7 +475,7 @@
         </FormCard>
       </el-form>
        <!-- 成本分摊 -->
-      <ConCostAllocCard style="margin-top: 15px;" :visible="!isAdd" :cstMData="cstMData"
+      <ConCostAllocCard style="margin-top: 15px;" :visible="!isAdd && isJianAn" :cstMData="cstMData"
         :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'CON_ADD'"
         :projId="formData.projId" :projName="conMainData?.projName" :displayName="formData.addName"
         :allocAmt="priceTaxData.totalPriceTax" :bizBillId="billData.id" />

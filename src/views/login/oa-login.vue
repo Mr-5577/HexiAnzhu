@@ -278,9 +278,9 @@ const resolveBizRoute = async (
           const data = Array.isArray(res?.data) ? res.data[0] : res?.data;
           const projId = data?.projId ?? data?.proj_id;
           const areaVerMid = data?.areaVerMid ?? data?.area_ver_mid;
-
-          return buildRoutePath("/cost/cost-detail", {
-            mode: mode || "add",
+          const modeType = mode == 'edit' ? 'edit' : 'detail';
+          return buildRoutePath("/oa/cost-detail", {
+            mode: modeType,
             projId,
             costMid: bizId,
             areaVerMid,

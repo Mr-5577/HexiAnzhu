@@ -568,51 +568,7 @@ const findLeafIds = (subIds: number[]): number[] => {
   traverse(treeData.value);
   return leafIds;
 };
-/**
- * 获取目标成本科目列表
- */
-const getCostSubjectProjList = async (projectId: number) => {
-  try {
-    const res = await costCategoryApi.getCostSubjectProjList({
-      projId: projectId,
-      withDetail: true,
-      segId: props.segId
-    });
-    console.log("目标成本科目列表：", res);
-    if( res.code === 200) {
-      const list = res.data || [];
-      // 提取所有 subId
-      const subIds: any = new Set(list.map((item: any) => item.id));
-      // 获取基础成本科目列表
-      const costSubjectsRes = await costCategoryApi.getCostSubjectBase({
-        isWithParent: true,
-      });
-      if (costSubjectsRes.code === 200) {
-        // 构建树形数据
-        const rawTreeData = costSubjectsRes.data || [];
-        const subTreeData: any = buildTree(rawTreeData);
-        // console.log("完整树形结构：", subTreeData);
 
-        // 使用 filterTreeByIds 过滤出包含目标 ID 的树
-        const filteredTreeData = filterTreeByIds(
-          subTreeData,
-          Array.from(subIds),
-        );
-        // 过滤掉 土地成本和费用类 以及建安类下的预留费用 得到树形数据
-        treeData.value = filterReservedCost(filteredTreeData);
-
-        // 构建节点映射
-        clearNodeMap();
-        buildNodeMapFromData(treeData.value);
-
-        // 默认展开第一级节点
-        defaultExpandedKeys.value = treeData.value.map((node) => node.id);
-      }
-    }
-  } catch (error) {
-    console.error("获取数据失败:", error);
-  }
-};
 // 初始化页面
 const initPage = async () => {
   resetState();
@@ -620,9 +576,7 @@ const initPage = async () => {
     // ElMessage.warning("项目ID不能为空");
     return;
   }
-  // await getGoalCostDetailList(props.projectId);
-  // 获取目标成本科目列表
-  await getCostSubjectProjList(props.projectId);
+  await getGoalCostDetailList(props.projectId);
 
   // 回显外部已选中的数据
   if (props.selectedSubIds && props.selectedSubIds.length > 0) {

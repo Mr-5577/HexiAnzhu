@@ -1,4 +1,4 @@
-<!-- 供应商选择弹窗组件 -->
+<!-- 选择合同变更 弹窗组件 -->
 <template>
   <base-modal
     v-model="dialogVisible"

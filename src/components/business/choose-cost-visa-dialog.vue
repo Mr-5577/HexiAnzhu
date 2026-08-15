@@ -1,4 +1,4 @@
-<!-- 供应商选择弹窗组件 -->
+<!-- 选择合同签证 弹窗组件 -->
 <template>
   <base-modal
     v-model="dialogVisible"

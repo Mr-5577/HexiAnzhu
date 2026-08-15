@@ -250,10 +250,16 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
   },
   {
     // 0-红灯（超预算），1-绿灯（未超预算）
-    slot: "costAlert",
+    prop: "costAlert",
     label: "成本预警",
     width: 150,
     editable: false,
+    formatter: (row) => {
+      if(row.costAlert === 0) return '🔴'
+      if(row.costAlert === 1) return '🟡'
+      if(row.costAlert === 2) return '🟢'
+      return ''
+    }
   },
   {
     prop: "referRemark",
@@ -298,8 +304,8 @@ const amountConfirm = async (amounts: any) => {
       const amounList = amounts.map((item) => {
         return {
           subId: item.subId,
-          allocAmt: item.subAmount,
-          allocExclAmt: item.costExclAmt,
+          // allocAmt: 0,
+          allocExclAmt: item.subAmount,
         }
       })
       const params = {

@@ -1,13 +1,10 @@
 <!-- 合同结算 列表 -->
 <template>
   <div class="contract-settle-wrapper">
-    <base-table
-      :columns="tableColumns"
-      :tableData="tableData"
-      :loading="tableLoading"
-      :rowKey="'id'"
-      :pagination="false"
-    >
+    <!-- 使用建设占位组件 -->
+    <BuildingPlaceholder v-if="true" />
+    <base-table v-else :columns="tableColumns" :tableData="tableData" :loading="tableLoading" :rowKey="'id'"
+      :pagination="false">
       <!-- 列表外操作栏 -->
       <template #actionBar>
         <div class="actionBar-buttons">
@@ -165,7 +162,7 @@ const handleDelete = ({ id }) => {
         console.error("删除失败:", error);
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 
 // 监听合同ID变化，自动刷新列表
@@ -195,6 +192,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+
   .actionBar-buttons {
     display: flex;
     align-items: center;

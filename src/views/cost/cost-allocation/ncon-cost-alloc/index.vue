@@ -70,7 +70,7 @@
             <el-select v-model="selectedBuildings" placeholder="请选择楼栋" class="building-select" multiple filterable
               clearable collapse-tags collapse-tags-tooltip :max-collapse-tags="3" :disabled="isView"
               @change="handleBuildingChange">
-              <el-option v-for="item in buildingOptions" :key="item.id" :label="item.bldName" :value="item.id" />
+              <el-option v-for="item in projBuildingOptions" :key="item.id" :label="item.bldName" :value="item.id" />
             </el-select>
           </div>
           <div class="info-item half">
@@ -104,7 +104,7 @@
         </el-button>
       </div>
 
-      <div style="height: 330px">
+      <div>
         <template v-if="warningVisible">
           <!-- 预警图例 -->
           <div class="warning-stats">
@@ -135,8 +135,8 @@
     </div>
 
     <!-- 选择分摊科目弹窗   -->
-    <CostAlocationDialog v-model="dialogVisible" :projectId="pageParams.projId" :selectedSubIds="selectedSubIds"
-      @select="getSelectData" />
+    <ChooseSubnDialog v-model="dialogVisible" :projectId="pageParams.projId" :selectedSubIds="selectedSubIds"
+      :segId="segId" @select="getSelectData" />
   </div>
 </template>
 
@@ -148,7 +148,7 @@ import { List, WarningFilled } from "@element-plus/icons-vue";
 import EditableTable from "@/components/base/editable-table.vue";
 import { costCategoryApi } from "@/api/cost/master-data/cost-category-api";
 import { productTypeApi } from "@/api/cost/master-data/product-type-api";
-import CostAlocationDialog from "../choose-sub-dialog.vue";
+import ChooseSubnDialog from "../choose-sub-dialog.vue";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api.ts";
 import { allocRuleEnum } from "@/constants/master-data/enums.ts";
 import { costAllocationApi } from "@/api/cost/contract-manage/cost-allocation-api.ts";
@@ -222,9 +222,10 @@ let cachedSubjectTree: any[] = []; // 缓存科目树数据
 const tableKey = ref(0); // 表格key，用于刷新表格
 
 // ---------- 楼栋选项 ----------
-const buildingOptions = ref([]);
+const projBuildingOptions = ref([]);
 // 已选中的楼栋 (存储 value 数组)
 const selectedBuildings = ref([]);
+const segId = ref(null); // 业务板块ID
 
 // 页面参数
 const pageParams = ref({
@@ -258,41 +259,77 @@ const billId = route.query?.billId ? Number(route.query.billId) : undefined;
 const bizId = route.query?.bizId ? Number(route.query.bizId) : undefined;
 // 业务类型，例 NCON_CST  NCON_PROC
 const bizType: any = route.query?.bizType ? route.query.bizType : "";
-
 // 业态name信息
 const businessTypeNames = computed(() => {
-  if (!selectedBuildings.value.length || !buildingOptions.value.length) {
+  if (!selectedBuildings.value.length) {
     return "";
   }
-  // 先筛选选中的楼栋，然后提取所有 prodNames 并拆分
-  const allProdNames = buildingOptions.value
-    .filter((item) => selectedBuildings.value.includes(item.id))
+
+  // 获取所有楼栋数据的映射，方便通过id查找
+  const buildingMap = new Map();
+  projBuildingOptions.value.forEach(item => {
+    buildingMap.set(item.id, item);
+  });
+
+  // 收集所有需要处理的楼栋id（选中的楼栋 + 关联的地下室id）
+  const buildingIdsToProcess = new Set();
+
+  // 遍历选中的楼栋
+  selectedBuildings.value.forEach(id => {
+    const building = buildingMap.get(id);
+    if (building) {
+      // 添加当前楼栋
+      buildingIdsToProcess.add(id);
+      // 如果有关联的地下室，也添加进去
+      if (building.bindUnderGround) {
+        buildingIdsToProcess.add(building.bindUnderGround);
+      }
+    }
+  });
+
+  // 提取所有 prodNames 并拆分
+  const allProdNames = [...buildingIdsToProcess]
+    .map(id => buildingMap.get(id))
+    .filter(item => item && item.prodNames) // 过滤掉不存在或没有prodNames的项
     .flatMap((item) => {
       if (!item.prodNames) return [];
       // 按逗号拆分，并去除首尾空格
       return item.prodNames.split(",").map((name) => name.trim());
     })
     .filter((name) => name); // 过滤空字符串
+
   // 去重后拼接
   return [...new Set(allProdNames)].join("、");
 });
 
-// 获取常规楼栋关联的地下室ID映射
-const undergroundMap = computed(() => {
-  const map = {}
-  buildingOptions.value.forEach(item => {
-    if (!item.isUnderGround && item.bindUnderGround) {
-      map[item.id] = item.bindUnderGround
-    }
-  })
-  return map
-})
-
 // 处理得到的选中楼栋关联的业态数据
 const getBusinessType = () => {
+  // 获取所有楼栋数据的映射，方便通过id查找
+  const buildingMap = new Map();
+  projBuildingOptions.value.forEach(item => {
+    buildingMap.set(item.id, item);
+  });
+
+  // 收集所有需要处理的楼栋id（选中的楼栋 + 关联的地下室id）
+  const buildingIdsToProcess = new Set();
+
+  // 遍历选中的楼栋
+  selectedBuildings.value.forEach(id => {
+    const building = buildingMap.get(id);
+    if (building) {
+      // 添加当前楼栋
+      buildingIdsToProcess.add(id);
+      // 如果有关联的地下室，也添加进去
+      if (building.bindUnderGround) {
+        buildingIdsToProcess.add(building.bindUnderGround);
+      }
+    }
+  });
+
   // 获取选中楼栋关联的业态类型，一个楼栋可能关联多个业态也可能不关联业态
-  const prodList = buildingOptions.value
-    .filter((item) => selectedBuildings.value.includes(item.id))
+  const prodList = [...buildingIdsToProcess]
+    .map(id => buildingMap.get(id))
+    .filter(item => item) // 过滤掉不存在的项
     .flatMap((item) => {
       const ids = item.prodIds?.split(",") || [];
       const names = item.prodNames?.split(",") || [];
@@ -319,39 +356,8 @@ const getBusinessType = () => {
 };
 
 const handleBuildingChange = (val: any) => {
-  // 获取最后选中的项
-  const lastId = val[val.length - 1]
-  const lastItem = buildingOptions.value.find(v => v.id === lastId)
-  // 判断最后选中的是地下室还是常规楼栋
-  if (lastItem?.isUnderGround) {
-    // 选了地下室 → 过滤掉所有常规楼栋，只保留地下室
-    selectedBuildings.value = val.filter(id =>
-      buildingOptions.value.find(b => b.id === id)?.isUnderGround
-    )
-  } else {
-    // 选了常规楼栋 → 过滤掉所有地下室
-    selectedBuildings.value = val.filter(id =>
-      !buildingOptions.value.find(b => b.id === id)?.isUnderGround
-    )
-
-    // 自动添加关联的地下室
-    addUndergrounds()
-  }
-
   // 重新生成动态表头和列表数据
   refreshTableData();
-}
-// 自动添加关联地下室
-const addUndergrounds = () => {
-  const result = [...selectedBuildings.value]
-  selectedBuildings.value.forEach(id => {
-    const item = buildingOptions.value.find(b => b.id === id)
-    const undergroundId = item?.bindUnderGround
-    if (undergroundId && !result.includes(undergroundId)) {
-      result.push(undergroundId)
-    }
-  })
-  selectedBuildings.value = result
 }
 /**
  * 本次已分摊金额计算（科目金额含税）
@@ -412,24 +418,45 @@ const warningColumns: any = [
   },
   { slot: "allocWarn", label: "预警状态", width: 100, fixed: "left" },
   {
+    label: "总目标成本",
+    children: [
+      { prop: "costExclAmt", label: "金额(不含税)", minWidth: 110 },
+      { prop: "costAmt", label: "金额(含税)", minWidth: 110 },
+    ],
+  },
+  {
+    label: "历史累计已用",
+    children: [
+      { prop: "histExclAmt", label: "金额(不含税)", minWidth: 110 },
+      { prop: "histAmt", label: "金额(含税)", minWidth: 110 },
+    ],
+  },
+  {
+    label: "目标成本可用",
+    children: [
+      { prop: "availExclAmt", label: "金额(不含税)", minWidth: 110 },
+      { prop: "availAmt", label: "金额(含税)", minWidth: 110 },
+    ],
+  },
+  {
+    label: "本次分摊",
+    children: [
+      { prop: "allocExclAmt", label: "金额(不含税)", minWidth: 110 },
+      { prop: "allocAmt", label: "金额(含税)", minWidth: 110 },
+    ],
+  },
+  {
+    label: "本次累计已用",
+    children: [
+      { prop: "cumUsedExclAmt", label: "金额(不含税)", minWidth: 110 },
+      { prop: "cumUsedAmt", label: "金额(含税)", minWidth: 110 },
+    ],
+  },
+  {
     label: "分摊后余额",
     children: [
-      { prop: "balanceExclAmt", label: "金额(不含税)" },
-      { prop: "balanceAmt", label: "金额(含税)" },
-    ],
-  },
-  {
-    label: "目标成本可用额",
-    children: [
-      { prop: "availExclAmt", label: "金额(不含税)" },
-      { prop: "availAmt", label: "金额(含税)" },
-    ],
-  },
-  {
-    label: "当前分摊额",
-    children: [
-      { prop: "allocExclAmt", label: "金额(不含税)" },
-      { prop: "allocAmt", label: "金额(含税)" },
+      { prop: "balanceExclAmt", label: "金额(不含税)", minWidth: 110 },
+      { prop: "balanceAmt", label: "金额(含税)", minWidth: 110 },
     ],
   },
 ];
@@ -459,7 +486,7 @@ const handleConfirm = async () => {
       allocExclAmt: result?.allocExclAmt || 0,
       allocStatus: result?.allocStatus,
       allocWarn: result?.allocWarn,
-      detailList: result?.allocDs || [],
+      allocDs: result?.allocDs || [],
     }
     // 保存分摊
     const res = await costAllocationApi.saveProjectAlloc(params);
@@ -644,7 +671,7 @@ const getBuildingListByProjId = async () => {
     });
     if (res.code === 200) {
       const list = res.data || [];
-      buildingOptions.value = list;
+      projBuildingOptions.value = list;
       // 默认选中全部业态
       selectedBuildings.value = list.map((item: any) => item.id);
       console.log("业态类型:", getBusinessType());
@@ -719,7 +746,33 @@ const initPage = async () => {
 const loadAllocationData = async () => {
   try {
     console.log("OA打开页面参数:", route.query, isView.value);
-    // console.log("billId:", billId);
+    // 非合同轻量级信息
+    const liteRes = await feePaymentApi.getNconInfoLite({ nconBillId: billId });
+    if (liteRes.code == 200 && liteRes.data) {
+      if (bizType == 'NCON_PROC') {
+        // 非合同立项
+        segId.value = liteRes?.data?.process?.segId || undefined
+        pageParams.value.projId = liteRes?.data?.process?.projId || undefined
+        pageParams.value.projName = liteRes?.data?.process?.projName || undefined
+        pageParams.value.displayName = liteRes?.data?.process?.processName || undefined
+        pageParams.value.bizType = bizType;
+        pageParams.value.billId = billId;
+        pageParams.value.allocAmt = liteRes.data?.process?.processAmt || 0;
+        pageParams.value.allocExclAmt = 0;
+      }
+      if (bizType == 'NCON_CST') {
+        // 非合同请款
+        segId.value = liteRes?.data?.payment?.segId || undefined
+        pageParams.value.projId = liteRes?.data?.payment?.projId || undefined
+        pageParams.value.projName = liteRes?.data?.payment?.projName || undefined
+        pageParams.value.displayName = liteRes?.data?.payment?.bizTitle || undefined
+        pageParams.value.bizType = bizType;
+        pageParams.value.billId = billId;
+        pageParams.value.allocAmt = liteRes.data?.payment?.factReqAmt || 0;
+        pageParams.value.allocExclAmt = 0;
+      }
+    }
+    // 分摊信息
     const res = await costAllocationApi.getProjectAlloc({
       bizBillId: billId,
       bizType: bizType,
@@ -729,6 +782,7 @@ const loadAllocationData = async () => {
       // 当有分摊信息时使用分摊信息
       if (res?.data) {
         apportionInfo.value = { ...apportionInfo.value, ...res.data };
+        segId.value = res.data?.segId || undefined;
         pageParams.value.projId = res.data?.projId;
         pageParams.value.bizType = bizType;
         pageParams.value.billId = billId;
@@ -741,34 +795,15 @@ const loadAllocationData = async () => {
         const newData = allocDs.filter((item: any) => item.prodId);
         processPopupData(newData);
       } else {
-        // 没有分摊信息时查询轻量信息进行基础数据赋值，非合同查询轻量级详情信息
-        const res = await feePaymentApi.getNconInfoLite({ nconBillId: billId });
-        console.log("非合同轻量级详情", res);
-        if (res.code == 200 && res.data) {
-          if (bizType == 'NCON_PROC') {
-            // 非合同立项
-            pageParams.value.projId = res?.data?.process?.projId || undefined
-            pageParams.value.bizType = bizType;
-            pageParams.value.billId = billId;
-            pageParams.value.allocAmt = res.data?.process?.processAmt || 0;
-            pageParams.value.allocExclAmt = 0;
-          }
-          if (bizType == 'NCON_CST') {
-            // 非合同请款
-            pageParams.value.projId = res?.data?.payment?.projId || undefined
-            pageParams.value.bizType = bizType;
-            pageParams.value.billId = billId;
-            pageParams.value.allocAmt = res.data?.payment?.factReqAmt || 0;
-            pageParams.value.allocExclAmt = 0;
-          }
-          if (pageParams.value.projId) {
-            await getBuildingListByProjId();
-            await Promise.all([getBusiSegList(), getProductList()]);
-          }
+        if (pageParams.value.projId) {
+          await getBuildingListByProjId();
+          await Promise.all([getBusiSegList(), getProductList()]);
         }
       }
     }
-  } catch (error) { }
+  } catch (error) {
+    console.error("加载分摊数据失败:", error);
+  }
 };
 /**
  * 获取当前已选中的科目ID列表（用于回显）
@@ -878,7 +913,7 @@ const generateColumns = (products) => {
       editType: "number",
       placeholder: " ",
       showOverflowTooltip: false,
-      disabled: (row) => !isLeafNode(row),
+      disabled: (row) => !isLeafNode(row) || isView.value,
     },
     {
       prop: "subjectAmtExcl",
@@ -888,7 +923,7 @@ const generateColumns = (products) => {
       editType: "number",
       placeholder: " ",
       showOverflowTooltip: false,
-      disabled: (row) => !isLeafNode(row),
+      disabled: (row) => !isLeafNode(row) || isView.value,
     },
   ];
 
@@ -906,7 +941,7 @@ const generateColumns = (products) => {
           editType: "number",
           placeholder: " ",
           showOverflowTooltip: false,
-          disabled: (row) => !isLeafNode(row),
+          disabled: (row) => !isLeafNode(row) || isView.value,
         },
         {
           prop: `allocExclAmt_${product.prodId}`,
@@ -916,7 +951,7 @@ const generateColumns = (products) => {
           editType: "number",
           placeholder: " ",
           showOverflowTooltip: false,
-          disabled: (row) => !isLeafNode(row),
+          disabled: (row) => !isLeafNode(row) || isView.value,
         },
       ],
     }));
@@ -1019,7 +1054,7 @@ const mergeTreeWithDetailApiData = (treeData, prodList) => {
         hasChildren,
         isLeaf: !hasChildren,
         // 直接使用节点自身的值，有就显示没有就不显示
-        busiSegId: node.busiSegId ?? node.busiSegId ?? undefined,
+        busiSegId: node.busiSegId || undefined,
         segName: node.busiSegName ?? node.segName ?? undefined,
         allocRule: node.allocRule ?? undefined,
         allocRuleName: node.allocRuleName ?? undefined,
@@ -1317,18 +1352,20 @@ const autoAllocation = async () => {
     const result = await costAllocationApi.getNconAutoAlloc(params);
     if (result.code === 200 && result.data) {
       const { allocList = [] } = result.data;
-      const currProdList = getBusinessType(); // 获取当前业态列表
-      // 回填数据到分摊表格
-      editableSubjectData.value = fillAllocationDataToTable(
-        editableSubjectData.value,
-        allocList,
-        currProdList,
-      );
-      // 更新树形结构数据，累加子级数据到父级
-      editableSubjectData.value = summarizeTree(
-        editableSubjectData.value,
-        currProdList,
-      );
+      if (allocList && allocList.length) {
+        const currProdList = getBusinessType(); // 获取当前业态列表
+        // 回填数据到分摊表格
+        editableSubjectData.value = fillAllocationDataToTable(
+          editableSubjectData.value,
+          allocList,
+          currProdList,
+        );
+        // 更新树形结构数据，累加子级数据到父级
+        editableSubjectData.value = summarizeTree(
+          editableSubjectData.value,
+          currProdList,
+        );
+      }
     }
   } catch (error) {
     console.error("自动分摊失败:", error);
@@ -1406,7 +1443,8 @@ const buildSubmitParams = (treeData: any[]) => {
   return {
     projId: pageParams.value.projId, // 项目ID
     subList: Array.from(subMap.values()), // 科目列表
-    prodList: Array.from(prodMap.values()), // 产品列表
+    // prodList: Array.from(prodMap.values()), // 产品列表
+    bldIds: selectedBuildings.value, // 楼栋ID列表
   };
 };
 // 确认时校验
@@ -1447,8 +1485,8 @@ const validateTable = () => {
     return false;
   }
   // 校验成本金额和分摊金额
-  if (allocatedAmount.value > pageParams.value.allocAmt) {
-    ElMessage.error("分摊金额不能大于成本金额");
+  if (allocatedAmount.value != pageParams.value.allocAmt) {
+    ElMessage.error("分摊金额必须等于成本金额");
     return false;
   }
   return true;

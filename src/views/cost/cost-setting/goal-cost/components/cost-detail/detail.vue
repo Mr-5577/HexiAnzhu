@@ -1149,7 +1149,7 @@ const syncRouteState = async () => {
     if (detailTableList.value && detailTableList.value.length > 0) {
       fillDetailDataToTable(detailTableList.value);
     }
-    console.log("组合列表数据", detailTableList.value);
+    // console.log("组合列表数据", detailTableList.value);
   } catch (error) {
     console.error("初始化数据失败:", error);
   } finally {

@@ -1,22 +1,26 @@
 <!-- 付款申请 -->
 <template>
   <div class="payment-apply-page">
-    <!-- 组织-合同 -->
-    <org-contract-tree ref="orgContractTreeRef" @select="handleSelect" />
-    <!-- 付款申请列表 -->
-    <div class="right-content" v-if="selectedId">
-      <payment-apply-table :project-id="selectedId" />
-    </div>
+    <!-- 功能建设中占位 -->
+    <BuildingPlaceholder v-if="true" />
+    <template v-else>
+      <!-- 组织-合同 -->
+      <org-contract-tree ref="orgContractTreeRef" @select="handleSelect" />
+      <!-- 付款申请列表 -->
+      <div class="right-content" v-if="selectedId">
+        <payment-apply-table :project-id="selectedId" />
+      </div>
 
-    <div class="right-content empty" v-else>
-      <el-empty description="请从左侧选择合同" />
-    </div>
+      <div class="right-content empty" v-else>
+        <el-empty description="请从左侧选择合同" />
+      </div>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import OrgContractTree from "./components/org-contract-tree.vue";
+import OrgContractTree from "@/components/business/org-contract-tree.vue";
 import PaymentApplyTable from "./payment-apply-table.vue";
 import { ProjectTreeNode } from "@/types/cost/master-data/project-area-type.ts";
 
@@ -36,7 +40,7 @@ const handleSelect = (project: ProjectTreeNode) => {
   }
 };
 
-onMounted(() => {});
+onMounted(() => { });
 </script>
 
 <style lang="scss" scoped>

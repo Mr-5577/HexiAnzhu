@@ -1,13 +1,10 @@
 <!-- 款项调整/合同奖罚 列表 -->
 <template>
   <div class="payment-adjust-wrapper">
-    <base-table
-      :columns="tableColumns"
-      :tableData="tableData"
-      :loading="tableLoading"
-      :rowKey="'id'"
-      :pagination="false"
-    >
+    <!-- 使用建设占位组件 -->
+    <BuildingPlaceholder v-if="true" />
+    <base-table v-else :columns="tableColumns" :tableData="tableData" :loading="tableLoading" :rowKey="'id'"
+      :pagination="false">
       <!-- 列表外操作栏 -->
       <template #actionBar>
         <div class="actionBar-buttons">
@@ -37,12 +34,7 @@
     </base-table>
 
     <!-- 新增/编辑 款项调整/合同奖惩弹窗 -->
-    <add-edit-ded-dialog
-      v-model="dialogVisible"
-      :conId="props.conId"
-      :editData="editData"
-      @success="handleRefresh"
-    />
+    <add-edit-ded-dialog v-model="dialogVisible" :conId="props.conId" :editData="editData" @success="handleRefresh" />
   </div>
 </template>
 
@@ -78,7 +70,7 @@ const tableColumns: TableColumnItem[] = [
   // { prop: "dedDesc", label: "说明" },
   { prop: "ww", label: "大类" },
   { prop: "ww", label: "小类" },
-  { prop: "dedDesc", label: "事项说明", width: 200  },
+  { prop: "dedDesc", label: "事项说明", width: 200 },
   { prop: "ww", label: "金额" },
   { prop: "ww", label: "是否兑现" },
   { prop: "ww", label: "兑现金额" },
@@ -167,7 +159,7 @@ const handleDelete = (row: ContractDed) => {
         console.error("删除失败:", error);
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 
 // 监听合同ID变化，自动刷新列表
@@ -197,6 +189,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+
   .actionBar-buttons {
     display: flex;
     align-items: center;

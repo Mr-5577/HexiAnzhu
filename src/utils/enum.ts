@@ -7,6 +7,7 @@ export interface EnumItem<V = number | string> {
   value: V;
   label: string;
   type?: string;
+  color?: string;
 }
 
 /**
@@ -29,6 +30,17 @@ export const getEnumType = <T extends EnumItem>(
   const type = list.find((item) => item.value == value)?.type || "info";
   // 确保返回的类型是有效的
   return type as "primary" | "success" | "warning" | "danger" | "info";
+};
+
+/**
+ * 根据value获取颜色
+ */
+export const getEnumColor = <T extends EnumItem>(
+  list: readonly T[],
+  value: T["value"],
+): string => {
+  const item = list.find((item) => item.value == value);
+  return item?.color || "#909399"; // 默认灰色
 };
 
 /**

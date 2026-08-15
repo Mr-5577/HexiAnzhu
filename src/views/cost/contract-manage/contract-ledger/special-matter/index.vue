@@ -1,13 +1,10 @@
 <!-- 特殊事项 列表 -->
 <template>
   <div class="special-matter-wrapper">
-    <base-table
-      :columns="tableColumns"
-      :tableData="tableData"
-      :loading="tableLoading"
-      :rowKey="'id'"
-      :pagination="false"
-    >
+    <!-- 使用建设占位组件 -->
+    <BuildingPlaceholder v-if="true" />
+    <base-table v-else :columns="tableColumns" :tableData="tableData" :loading="tableLoading" :rowKey="'id'"
+      :pagination="false">
       <!-- 列表外操作栏 -->
       <template #actionBar>
         <div class="actionBar-buttons">
@@ -32,12 +29,8 @@
     </base-table>
 
     <!-- 新增/编辑 特殊事项弹窗 -->
-    <add-edit-special-dialog
-      v-model="dialogVisible"
-      :conId="props.conId"
-      :editData="editData"
-      @success="handleRefresh"
-    />
+    <add-edit-special-dialog v-model="dialogVisible" :conId="props.conId" :editData="editData"
+      @success="handleRefresh" />
   </div>
 </template>
 
@@ -134,7 +127,7 @@ const handleDelete = (row) => {
         console.error("删除失败:", error);
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 // 刷新按钮
 const handleRefresh = () => {
@@ -187,6 +180,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+
   .actionBar-buttons {
     display: flex;
     align-items: center;

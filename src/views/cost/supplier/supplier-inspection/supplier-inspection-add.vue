@@ -266,7 +266,7 @@ const tableColumns = computed<EditableColumn[]>(() => [
   },
   {
     prop: "registeredAmount",
-    label: "注册资金",
+    label: "注册资金(万)",
     editable: false,
     width: 150,
   },

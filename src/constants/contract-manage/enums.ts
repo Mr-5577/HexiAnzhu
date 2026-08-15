@@ -73,7 +73,7 @@ export const AddTypeEnum = [
 export const AddProcessSrcEnum = [
   { value: 0, label: "签证" },
   { value: 1, label: "变更" },
-  { value: 2, label: "手工新增" }
+  { value: 2, label: "手工新增" },
 ];
 
 /** 签证类型 */
@@ -84,8 +84,8 @@ export const VisaTypeEnum = [
 
 /** 变更类型 */
 export const ChangeTypeEnum = [
-  { value: 1, label: "工程指令" ,type: "success" },
-  { value: 2, label: "设计变更" ,type: "info" },
+  { value: 1, label: "工程指令", type: "success" },
+  { value: 2, label: "设计变更", type: "info" },
 ] as const;
 
 /** 扣款类型选项 */
@@ -118,14 +118,14 @@ export const allocStatusEnum = [
   { label: "未分摊", value: 0, type: "info" },
   { label: "已分摊", value: 1, type: "success" },
   { label: "部分分摊", value: 2, type: "warning" },
-]
+];
 
 /** 分摊预警选项 */
 export const allocWarnEnum = [
-  { label: "红色预警", value: 0, type: "danger" },
-  { label: "黄色预警", value: 1, type: "warning" }, // 超95%
-  { label: "绿色预警", value: 2, type: "success" },
-]
+  { label: "红色预警", value: 0, type: "danger", color: "#FF0000" },
+  { label: "黄色预警", value: 1, type: "warning", color: "#E6A23C" },
+  { label: "绿色预警", value: 2, type: "success", color: "#67C23A" },
+];
 
 /**
  * 合同管理 单据审批状态 枚举
