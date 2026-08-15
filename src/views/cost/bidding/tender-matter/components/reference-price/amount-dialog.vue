@@ -1,25 +1,12 @@
 <!-- 组价明细弹窗 -->
 <template>
-  <base-modal
-    v-model="dialogVisible"
-    title="组价明细配置"
-    width="1000px"
-    :close-on-click-modal="false"
-    :confirm-loading="submitLoading"
-    :showConfirmButton="!disabled"
-    :showCancelButton="!disabled"
-    @close="handleClose"
-    @confirm="handleConfirm"
-  >
+  <base-modal v-model="dialogVisible" title="组价明细配置" width="1000px" :close-on-click-modal="false"
+    :confirm-loading="submitLoading" :showConfirmButton="!disabled" :showCancelButton="!disabled" @close="handleClose"
+    @confirm="handleConfirm">
     <div class="amount-table">
       <template v-if="disabled">
-        <base-table
-          :columns="detailColumns"
-          :tableData="tableData"
-          :rowKey="'id'"
-          :height="'400px'"
-          :pagination="false"
-        />
+        <base-table :columns="detailColumns" :tableData="tableData" :rowKey="'id'" :height="'400px'"
+          :pagination="false" />
       </template>
 
       <template v-else>
@@ -29,18 +16,9 @@
           </el-button>
         </div>
 
-        <editable-table
-          ref="detailtableRef"
-          :row-key="'uuid'"
-          :height="'400px'"
-          v-model="tableData"
-          :columns="dynamicColumns"
-          :loading="tableLoading"
-          :pagination="false"
-          :highlight-current-row="false"
-          :show-summary="false"
-          @data-change="handleDataChange"
-        >
+        <editable-table ref="detailtableRef" :row-key="'uuid'" :height="'400px'" v-model="tableData"
+          :columns="dynamicColumns" :loading="tableLoading" :pagination="false" :highlight-current-row="false"
+          :show-summary="false" @data-change="handleDataChange">
           <template #actions="{ row }">
             <el-button link type="danger" @click="handleDelete(row)">
               删除
@@ -63,18 +41,21 @@ import { costCategoryApi } from "@/api/cost/master-data/cost-category-api";
 import { goalCostApi } from "@/api/cost/cost-setting/goal-cost-api";
 import { ElMessage } from "element-plus";
 import { buildTree } from "@/utils/tree";
+import { costAllocationApi } from "@/api/cost/contract-manage/cost-allocation-api";
 
 // Props
 interface Props {
   modelValue: boolean;
   disabled?: boolean;
   currentRowData?: any; // 当前行数据
+  segId?: any
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
   disabled: false,
   currentRowData: null,
+  segId: null,
 });
 
 // Emits
@@ -91,11 +72,13 @@ const tableData = ref<AmountItem[]>([]);
 const flatSubjectOptions = ref([]);
 const subjectOptions = ref([]);
 const costList = ref([]);
+const enabledVersionId = ref(null); // 生效的版本ID
 
 const detailColumns = [
   { type: "index", label: "序号", width: 60 },
   { prop: "subName", label: "目标成本科目", width: 240 },
   { prop: "subAmount", label: "不含税参考价金额", width: 200 },
+  { prop: "costExclAmt", label: "目标成本", width: 200 },
   { prop: "amountRemark", label: "参考价说明" },
 ];
 // 表格列配置
@@ -113,6 +96,7 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
     optionValueField: "id",
     options: subjectOptions.value || [],
     showAllLevels: false,
+    filterable: true,
     cascaderProps: {
       children: "children", // 指定子节点字段名
       label: "subName", // 指定标签字段名
@@ -128,8 +112,14 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
     editable: true,
     editType: "number",
     placeholder: "请输入金额",
-    width: 200,
+    width: 180,
     showOverflowTooltip: false,
+  },
+  {
+    prop: "costExclAmt",
+    label: "目标成本",
+    editable: false,
+    width: 150,
   },
   {
     prop: "amountRemark",
@@ -178,47 +168,43 @@ const handleDataChange = async ({ row, column, newValue }: any) => {
     row.costExclAmt = 0; // 切换科目时重置目标成本总额
 
     // 过滤出与当前 subId 匹配的数据
-    const filteredList = costList.value.filter(
-      (item) => item.subId === row.subId,
-    );
-    const totalCostExclAmt = filteredList.reduce(
-      (sum: number, item: any) => sum + (item.costExclAmt || 0),
-      0,
-    );
-    const totalCostAmt = filteredList.reduce(
-      (sum: number, item: any) => sum + (item.costAmt || 0),
-      0,
-    );
-    row.costExclAmt = totalCostExclAmt || 0;
-    row.subAmount = totalCostAmt || 0;
+    // const filteredList = costList.value.filter(
+    //   (item) => item.subId === row.subId,
+    // );
+    // const totalCostExclAmt = filteredList.reduce(
+    //   (sum: number, item: any) => sum + (item.costExclAmt || 0),
+    //   0,
+    // );
+    // const totalCostAmt = filteredList.reduce(
+    //   (sum: number, item: any) => sum + (item.costAmt || 0),
+    //   0,
+    // );
+    // row.costExclAmt = totalCostExclAmt || 0;
+    // row.subAmount = totalCostAmt || 0;
 
-    // // 通过选中的目标成本科目获取目标成本总额
-    // try {
-    //   const params = {
-    //     projId: props.currentRowData?.projId,
-    //     subId: row.subId,
-    //   };
-    //   const res = await goalCostApi.getProjectCostDList(params);
-    //   if (res.code === 200) {
-    //     const list = res.data || [];
-    //     // 过滤出与当前 subId 匹配的数据
-    //     const filteredList = list.filter(
-    //       (item: any) => item.subId === row.subId,
-    //     );
-    //     const totalCostExclAmt = filteredList.reduce(
-    //       (sum: number, item: any) => sum + (item.costExclAmt || 0),
-    //       0,
-    //     );
-    //     const totalCostAmt = filteredList.reduce(
-    //       (sum: number, item: any) => sum + (item.costAmt || 0),
-    //       0,
-    //     );
-    //     row.costExclAmt = totalCostExclAmt;
-    //     row.subAmount = totalCostAmt;
-    //   }
-    // } catch (error) {
-    //   console.error("获取目标成本总额失败:", error);
-    // }
+    // 通过选中的目标成本科目获取目标成本总额
+    try {
+      const params = {
+        subId: row.subId,
+        costMid: enabledVersionId.value,
+      };
+      const res = await goalCostApi.getProjectCostDList(params);
+      if (res.code === 200) {
+        const list = res.data || [];
+        if (list.length) {
+          let totalCostAmt = 0;
+          let totalCostExclAmt = 0;
+          list.forEach((item) => {
+            totalCostAmt += item.costAmt || 0;
+            totalCostExclAmt += item.costExclAmt || 0;
+          })
+          row.subAmount = totalCostAmt || 0;
+          row.costExclAmt = totalCostExclAmt || 0;
+        }
+      }
+    } catch (error) {
+      console.error("获取目标成本总额失败:", error);
+    }
   }
 };
 
@@ -234,6 +220,7 @@ const getCostSubjectProjList = async () => {
     const res = await costCategoryApi.getCostSubjectProjList({
       projId: props.currentRowData?.projId,
       withDetail: true,
+      segId: props.segId
     });
     if (res.code === 200) {
       flatSubjectOptions.value = res.data || [];
@@ -254,7 +241,7 @@ const getProjectCostDList = async () => {
     if (res.code === 200) {
       costList.value = res.data || [];
     }
-  } catch (error) {}
+  } catch (error) { }
 };
 /**
  * 初始化页面数据
@@ -308,13 +295,27 @@ const handleConfirm = async () => {
 const handleClose = () => {
   dialogVisible.value = false;
 };
-
+// 获取生效的目标成本版本
+const getEffectiveCostVersion = async () => {
+  if (!props.currentRowData?.projId) {
+    return;
+  }
+  try {
+    const res = await costAllocationApi.getProjectCostMEnabled({ projId: props.currentRowData?.projId });
+    if (res.code === 200 && res.data) {
+      enabledVersionId.value = res.data.id
+    }
+  } catch (error) {
+    console.error("获取目标成本版本失败：", error);
+  }
+};
 // 监听弹窗显示
 watch(
   () => props.modelValue,
   async (val) => {
     dialogVisible.value = val;
     if (val) {
+      await getEffectiveCostVersion();
       // 打开弹窗时加载数据
       await getCostSubjectProjList();
       // 通过项目获取目标成本信息

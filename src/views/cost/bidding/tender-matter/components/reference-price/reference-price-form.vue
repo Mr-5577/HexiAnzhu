@@ -4,82 +4,43 @@
     <div class="form-header">
       <div class="header-title">定标参考价</div>
       <div class="header-btn">
-        <el-button
-          type="primary"
-          icon="DocumentAdd"
-          :loading="submitLoading"
-          :disabled="isDetail || !!billData.status"
-          @click="handleSave"
-        >
+        <el-button type="primary" icon="DocumentAdd" :loading="submitLoading" :disabled="isDetail || !!billData.status"
+          @click="handleSave">
           保存
         </el-button>
-        <el-button
-          type="success"
-          plain
-          icon="Promotion"
-          @click="handleSubmit"
-          :disabled="isDetail || !!billData.status"
-        >
+        <el-button type="success" plain icon="Promotion" @click="handleSubmit"
+          :disabled="isDetail || !!billData.status">
           提交
         </el-button>
-        <el-button
-          type="danger"
-          plain
-          icon="Delete"
-          @click="handleDelete"
-          :disabled="isDetail || isAdd || !!billData.status"
-        >
+        <el-button type="danger" plain icon="Delete" @click="handleDelete"
+          :disabled="isDetail || isAdd || !!billData.status">
           删除
         </el-button>
-        <el-button
-          type="warning"
-          plain
-          icon="Remove"
-          @click="handleCancel"
-          :disabled="isDetail || isAdd || !!billData.status"
-        >
+        <el-button type="warning" plain icon="Remove" @click="handleCancel"
+          :disabled="isDetail || isAdd || !!billData.status">
           作废
         </el-button>
-        <el-button
-          type="info"
-          plain
-          icon="View"
-          :disabled="isAdd"
-          @click="handleViewProcess"
-        >
+        <el-button type="info" plain icon="View" :disabled="isAdd" @click="handleViewProcess">
           查看流程
         </el-button>
       </div>
     </div>
 
     <div class="form-scroll-area">
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="formRules"
-        label-width="120px"
-        class="adapt-form"
-      >
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="120px" class="adapt-form">
         <!-- 单据信息 -->
         <div class="item-card">
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="18" :xl="18">
               <el-form-item label="标题" prop="bizTitle" required>
-                <el-input
-                  v-model="formData.bizTitle"
-                  clearable
-                  :disabled="isDetail || !!billData.status"
-                  placeholder="标题"
-                />
+                <el-input v-model="formData.bizTitle" clearable :disabled="isDetail || !!billData.status"
+                  placeholder="标题" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="审批状态" prop="approvalStatus">
-                <el-tag
-                  :type="
-                    getEnumType(purchaseBillStatusEnum, billData?.status || 0)
-                  "
-                >
+                <el-tag :type="getEnumType(purchaseBillStatusEnum, billData?.status || 0)
+                  ">
                   {{
                     getEnumLabel(purchaseBillStatusEnum, billData?.status || 0)
                   }}
@@ -90,38 +51,22 @@
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="部门" prop="deptName">
-                <el-input
-                  v-model="formData.deptName"
-                  disabled
-                  placeholder="部门"
-                />
+                <el-input v-model="formData.deptName" disabled placeholder="部门" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="分部" prop="mguName">
-                <el-input
-                  v-model="formData.mguName"
-                  disabled
-                  placeholder="分部"
-                />
+                <el-input v-model="formData.mguName" disabled placeholder="分部" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="提交人" prop="userName">
-                <el-input
-                  v-model="formData.userName"
-                  disabled
-                  placeholder="提交人"
-                />
+                <el-input v-model="formData.userName" disabled placeholder="提交人" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="提交时间" prop="createDate">
-                <el-input
-                  v-model="formData.createDate"
-                  disabled
-                  placeholder="提交时间"
-                />
+                <el-input v-model="formData.createDate" disabled placeholder="提交时间" />
               </el-form-item>
             </el-col>
           </el-row>
@@ -130,27 +75,20 @@
         <!-- 基本信息 -->
         <div class="item-card">
           <div class="section-title">基本信息</div>
-          <basic-info
-            :data="detailData"
-            :project-options="projectOptions"
-          ></basic-info>
+          <basic-info :data="detailData" :project-options="projectOptions"></basic-info>
         </div>
 
         <!-- 参考价详情 -->
         <div class="item-card">
           <div class="section-title">参考价详情</div>
-          <editable-table
-            ref="detailtableRef"
-            :row-key="'id'"
-            :height="'200px'"
-            v-model="tableData"
-            :columns="dynamicColumns"
-            :pagination="false"
-            :highlight-current-row="false"
-            :show-summary="false"
-            :compactEmpty="true"
-            :on-save="handleTableSave"
-          >
+          <editable-table ref="detailtableRef" :row-key="'id'" :height="'200px'" v-model="tableData"
+            :columns="dynamicColumns" :pagination="false" :highlight-current-row="false" :show-summary="false"
+            :compactEmpty="true" :on-save="handleTableSave">
+            <template #costAlert="{ row }">
+              <el-tag size="small" :type="getEnumType(warnList, row.costAlert || undefined)">
+                {{ getEnumLabel(warnList, row.costAlert || undefined) }}
+              </el-tag>
+            </template>
             <template #actions="{ row }">
               <el-button link type="primary" @click="handleAmount(row)">
                 组价明细
@@ -163,32 +101,17 @@
         <div class="item-card">
           <div class="section-title">相关附件</div>
           <el-form-item label="上传附件" label-width="90px">
-            <base-upload
-              v-model:file-list="annexFileList"
-              :limit="9"
-              :multiple="false"
-              :showIcon="true"
-              :showTip="true"
-              :maxSize="20"
-              :unrestricted="true"
-              :accept="''"
-              button-text="选择文件"
-              size="default"
-              :disabled="isDetail || !!billData.status"
-              @success="handleAnnexSuccess"
-            ></base-upload>
+            <base-upload v-model:file-list="annexFileList" :limit="9" :multiple="false" :showIcon="true" :showTip="true"
+              :maxSize="20" :unrestricted="true" :accept="''" button-text="选择文件" size="default"
+              :disabled="isDetail || !!billData.status" @success="handleAnnexSuccess"></base-upload>
           </el-form-item>
         </div>
       </el-form>
     </div>
 
     <!-- 组价明细弹窗 -->
-    <amount-dialog
-      v-model="amountDialogVisible"
-      :disabled="isDetail || !!billData.status"
-      :currentRowData="currentRowData"
-      @confirm="amountConfirm"
-    />
+    <amount-dialog v-model="amountDialogVisible" :disabled="isDetail || !!billData.status"
+      :currentRowData="currentRowData" @confirm="amountConfirm" :segId="detailData?.tender?.segId" />
   </div>
 </template>
 
@@ -217,6 +140,7 @@ import AmountDialog from "./amount-dialog.vue";
 import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
 import { purchaseBillStatusEnum } from "@/constants/bidding/enums.ts";
 import { commonApi } from "@/api/cost/common-api.ts";
+import { costAllocationApi } from "@/api/cost/contract-manage/cost-allocation-api.ts";
 
 defineOptions({ name: "reference-price-form" });
 
@@ -261,7 +185,13 @@ const formData = ref(initFormData());
 const submitLoading = ref(false);
 const projectOptions = ref([]);
 const annexFileList = ref([]);
-const detailData = ref(null);
+const detailData = ref({
+  items: [],
+  projIds: [],
+  tender: {
+    segId: null
+  }
+});
 const billData = ref({
   id: undefined,
   bizTitle: "",
@@ -275,6 +205,7 @@ const flowListData = ref({
   wfStatus: 0, // 审批状态；0=草稿，10=审批中，40=已审批，80=作废，99=其他
   wfTitle: "", // 流程标题
 }); // 流程数据
+const segId = ref(null)
 
 const tableData = ref([]);
 
@@ -285,7 +216,11 @@ const amountDialogVisible = ref(false);
 const formRules: FormRules = {
   bizTitle: [{ required: true, message: "请输入标题", trigger: "change" }],
 };
-
+const warnList = ref([
+  { label: "红色预警", value: 0, type: "danger" },
+  { label: "黄色预警", value: 1, type: "warning" },
+  { label: "绿色预警", value: 2, type: "success" },
+])
 const dynamicColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60 },
   {
@@ -315,13 +250,10 @@ const dynamicColumns = computed<EditableColumn[]>(() => [
   },
   {
     // 0-红灯（超预算），1-绿灯（未超预算）
-    prop: "costAlert",
+    slot: "costAlert",
     label: "成本预警",
     width: 150,
     editable: false,
-    formatter: (row) => {
-      return row.costAlert == 0 ? "超预算" : "未超预算";
-    },
   },
   {
     prop: "referRemark",
@@ -356,34 +288,39 @@ const handleAmount = (row: any) => {
   amountDialogVisible.value = true;
 };
 
-const amountConfirm = (amounts: any) => {
-  console.log("amounts", amounts);
+const amountConfirm = async (amounts: any) => {
+  console.log("amounts", amounts, currentRowData.value);
   if (currentRowData.value) {
     const rowIndex = tableData.value.findIndex(
       (item) => item.id === currentRowData.value.id,
     );
     if (rowIndex !== -1) {
-      // 组价明细的不含税参考价 合计
-      const totalSubAmount = amounts.reduce(
-        (sum, item) => sum + (item.subAmount || 0),
-        0,
-      );
-      // 组价明细的 目标成本总额(不含税) 合计
-      const totalCostExclAmt = amounts.reduce(
-        (sum, item) => sum + (item.costExclAmt || 0),
-        0,
-      );
-      let costAlert = 0; // 0-红灯（超预算），1-绿灯（未超预算）
-      if (totalSubAmount <= totalCostExclAmt) {
-        costAlert = 1;
-      } else {
-        costAlert = 0;
+      const amounList = amounts.map((item) => {
+        return {
+          subId: item.subId,
+          allocAmt: item.subAmount,
+          allocExclAmt: item.costExclAmt,
+        }
+      })
+      const params = {
+        projId: currentRowData.value.projId,
+        bldIds: currentRowData.value.bldIds,
+        subAllocList: amounList,
       }
-      updateRow(rowIndex, {
-        referAmount: totalSubAmount,
-        costAlert: costAlert,
-        amounts: amounts || [],
-      });
+      const res = await costAllocationApi.getWarnSubAlloc(params);
+      if (res.code === 200) {
+        const { totalAllocWarn } = res.data;
+        // 组价明细的不含税参考价 合计
+        const totalSubAmount = amounts.reduce(
+          (sum, item) => sum + (item.subAmount || 0),
+          0,
+        );
+        updateRow(rowIndex, {
+          referAmount: totalSubAmount,
+          costAlert: totalAllocWarn,
+          amounts: amounts || [],
+        });
+      }
     }
   }
 };
@@ -402,6 +339,7 @@ const getTenderInfo = async (tenderId: number) => {
     });
     if (res.code === 200 && res.data) {
       detailData.value = res.data;
+      console.log("detailData", detailData.value);
     } else {
       ElMessage.error(res.message || "获取详情失败");
     }
@@ -416,7 +354,7 @@ const initAddTableData = async () => {
     tableData.value = [];
     return;
   }
-  const { items } = detailData.value;
+  const { items, tender } = detailData.value;
   if (items && items.length > 0) {
     const initialTableList = items.map((item: any) => ({
       id: item.id,
@@ -499,11 +437,11 @@ const getBillDetail = async () => {
         };
       });
     }
-  } catch (error) {}
+  } catch (error) { }
 };
 
 const handleSave = async () => {
-  if(submitLoading.value) return
+  if (submitLoading.value) return
   if (!formData.value.bizTitle) {
     ElMessage.error("请填写标题！");
     return false;
@@ -565,7 +503,7 @@ const handleSave = async () => {
 };
 
 const handleSubmit = async () => {
-  if(submitLoading.value) return
+  if (submitLoading.value) return
   if (!formData.value.bizTitle) {
     ElMessage.error("请填写标题！");
     return false;
