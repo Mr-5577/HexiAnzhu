@@ -131,7 +131,7 @@ export interface CostCategoryProjSaveParams {
   /** 基础成本科目ID */
   subId: number;
   /** 业务板块ID */
-  segId: number;
+  segId?: number;
   /** 说明 */
   remark?: string;
 }
@@ -145,4 +145,6 @@ export interface CostCategoryProjQueryParams {
   /** 是否包含产品类型详情 */
   withDetail?: boolean;
   buildTree?: boolean;
+   /** 业务板块ID */
+  segId?: number;
 }

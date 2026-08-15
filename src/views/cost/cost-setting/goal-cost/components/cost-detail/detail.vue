@@ -338,7 +338,22 @@ const getVisibleFlatRows = (nodes: any[], expanded: Set<string>) => {
 };
 
 const flatRows = computed(() => {
-  return getVisibleFlatRows(tableData.value || [], expandedKeys.value);
+  // 先获取所有数据
+  const rows = getVisibleFlatRows(tableData.value || [], expandedKeys.value);
+  // 详情模式下，过滤掉数据为0的节点
+  if (isDetail.value) {
+    return rows.filter((item) => {
+      const node = item._raw;
+      // 如果是父节点，保留（因为父节点可能在折叠状态下作为容器）
+      // if (!node.isLeaf) return true;
+      // 叶子节点：检查 totalCostAmt 和 totalCostExclAmt
+      const totalAmt = Number(node.totalCostAmt || 0);
+      const totalExclAmt = Number(node.totalCostExclAmt || 0);
+      return totalAmt !== 0 || totalExclAmt !== 0;
+    });
+  } else {
+    return rows;
+  }
 });
 
 /**
@@ -806,6 +821,7 @@ const generateCombinations = async () => {
   const treeData = buildTreeWithProducts(subjectOptions.value);
   // 计算所有节点的小计（包括各业态汇总）
   tableData.value = calculateAllTotals(treeData);
+  console.log("tableData.value", tableData.value);
   // 重置叶子节点缓存版本
   leafNodesVersion = 0;
   // 初始化展开一级节点（仅在生成组合后自动展开）
@@ -1083,7 +1099,7 @@ const fillDetailDataToTable = (detailData: any[]) => {
           const firstDetail = detailData.find((d) => d.subId === newNode.subId);
           if (firstDetail) {
             newNode.busiSegId = firstDetail.busiSegId;
-            newNode.segName = firstDetail.segName || "";
+            newNode.segName = firstDetail.busiSegName || firstDetail.segName || "";
             newNode.allocRule = firstDetail.allocRule;
             const rule = allocRuleEnum.find(
               (r) => r.value === firstDetail.allocRule,
@@ -1133,7 +1149,7 @@ const syncRouteState = async () => {
     if (detailTableList.value && detailTableList.value.length > 0) {
       fillDetailDataToTable(detailTableList.value);
     }
-    // console.log("组合列表数据", tableData.value);
+    console.log("组合列表数据", detailTableList.value);
   } catch (error) {
     console.error("初始化数据失败:", error);
   } finally {
@@ -1209,9 +1225,11 @@ $table-readonly-color: rgba(0, 0, 0, 0.65);
     font-size: 14px;
     background: $table-header-bg;
     color: $table-header-color;
+
     .summary-item {
       font-weight: 500;
     }
+
     .amount-text {
       color: #f5222d;
       font-weight: 600;

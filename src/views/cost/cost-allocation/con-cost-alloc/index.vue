@@ -135,8 +135,8 @@
     </div>
 
     <!-- 选择分摊科目弹窗   -->
-    <CostAlocationDialog v-model="dialogVisible" :projectId="pageParams.projId" :selectedSubIds="selectedSubIds"
-      @select="getSelectData" />
+    <CostAlocationDialog v-model="dialogVisible" :projectId="pageParams.projId" :segId="liteData.segId"
+      :selectedSubIds="selectedSubIds" @select="getSelectData" />
   </div>
 </template>
 
@@ -753,32 +753,32 @@ const loadAllocationData = async () => {
         switch (bizType) {
           // 合同
           case "CON_MAIN":
-            pageParams.value.projId = res?.data?.process?.projId || undefined
-            pageParams.value.allocAmt = res.data?.process?.processAmt || 0;
+            pageParams.value.projId = liteRes?.data?.projId || undefined
+            pageParams.value.allocAmt = liteRes.data?.signAmt || 0;
             pageParams.value.allocExclAmt = 0;
             break;
           case "CON_ADD":
             // 补充合同
-            pageParams.value.projId = res?.data?.process?.projId || undefined
-            pageParams.value.allocAmt = res.data?.process?.processAmt || 0;
+            pageParams.value.projId = liteRes?.data?.projId || undefined
+            pageParams.value.allocAmt = liteRes.data?.signAmt || 0;
             pageParams.value.allocExclAmt = 0;
             break;
           case "CON_BG":
             // 变更
-            pageParams.value.projId = res?.data?.process?.projId || undefined
-            pageParams.value.allocAmt = res.data?.process?.processAmt || 0;
+            pageParams.value.projId = liteRes?.data?.projId || undefined
+            pageParams.value.allocAmt = liteRes.data?.signAmt || 0;
             pageParams.value.allocExclAmt = 0;
             break;
           case "CON_QZ":
             // 签证
-            pageParams.value.projId = res?.data?.process?.projId || undefined
-            pageParams.value.allocAmt = res.data?.process?.processAmt || 0;
+            pageParams.value.projId = liteRes?.data?.projId || undefined
+            pageParams.value.allocAmt = liteRes.data?.signAmt || 0;
             pageParams.value.allocExclAmt = 0;
             break;
           case "CON_PROD":
             // 合同产值
-            pageParams.value.projId = res?.data?.process?.projId || undefined
-            pageParams.value.allocAmt = res.data?.process?.processAmt || 0;
+            pageParams.value.projId = liteRes?.data?.projId || undefined
+            pageParams.value.allocAmt = liteRes.data?.signAmt || 0;
             pageParams.value.allocExclAmt = 0;
             break;
           default:

@@ -267,7 +267,7 @@ const handleDetail = (row) => {
     path: "/cost/cost-detail",
     query: {
       mode: isDetail ? "detail" : "edit",
-      projId: row.projId, // 项目ID
+      projId: row.areaProjId, // 项目ID
       costMid: row.id, // 成本版本ID
       areaVerMid: row.areaVerMid, // 面积版本ID
     },
