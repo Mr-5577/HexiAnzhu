@@ -1250,9 +1250,9 @@ const handleFormDataSubmit = async () => {
       return;
     } 
 
-    const params = buildSubmitParams()
     if (formData.value.addSysNo === "")
-        await createConNo();
+      await createConNo();
+    const params = buildSubmitParams()
     let res;
     res = await supplementContractApi.submitSupplementContract(params);
     if (res.code === 200) {

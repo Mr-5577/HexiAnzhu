@@ -136,6 +136,7 @@ export interface SupplementConMain {
   id: number;
   segId: number;
   projId: number;
+  projName: string;
   companyId: number;
   conName: string;
   supId: number;

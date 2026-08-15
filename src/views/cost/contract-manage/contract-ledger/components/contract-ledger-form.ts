@@ -1037,9 +1037,9 @@ export function useContractForm(
       }
 
       submitLoading.value = true;
+      if (formData.value.conSysNo === "") await createConNo();
       const params = buildSubmitParams();
       let res;
-      if (formData.value.conSysNo === "") await createConNo();
       res = await contractLedgerApi.submitContractLedger(params);
       if (res.code === 200) {
         ElMessage.success("提交成功,已发起审批！");
