@@ -10,7 +10,7 @@
         class="adapt-form"
       >
         <el-row :gutter="24">
-          <el-col :xs="24" :sm="8" :md="8" :lg="8" :xl="8">
+          <el-col :xs="24" :sm="8" :md="8" :lg="16" :xl="16">
             <el-form-item label="供应商名称" prop="supName" required>
               <el-input
                 v-model="formData.supName"
@@ -41,7 +41,7 @@
               />
             </el-form-item>
           </el-col>
-          <el-col :xs="24" :sm="8" :md="8" :lg="8" :xl="8">
+          <!-- <el-col :xs="24" :sm="8" :md="8" :lg="8" :xl="8">
             <el-form-item label="供应商编码" prop="supCode">
               <el-input
                 v-model="formData.supCode"
@@ -49,7 +49,7 @@
                 :placeholder="isView ? '' : '请输入供应商编码'"
               />
             </el-form-item>
-          </el-col>
+          </el-col> -->
         </el-row>
 
         <el-row :gutter="24">
