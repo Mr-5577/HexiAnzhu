@@ -3,77 +3,31 @@
   <div class="ledger-table-wrapper">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
       <el-form-item label="合同名称" prop="conName">
-        <el-input
-          v-model="queryParams.conName"
-          placeholder="请输入合同名称"
-          clearable
-          style="width: 180px"
-        />
+        <el-input v-model="queryParams.conName" placeholder="请输入合同名称" clearable style="width: 180px" />
       </el-form-item>
       <el-form-item label="供应商名称" prop="supName">
-        <el-input
-          v-model="queryParams.supName"
-          placeholder="请输入供应商名称"
-          clearable
-          style="width: 180px"
-        />
+        <el-input v-model="queryParams.supName" placeholder="请输入供应商名称" clearable style="width: 180px" />
       </el-form-item>
       <el-form-item label="合同分类" prop="conTypeId">
-        <ConTypeSelector 
-          v-model="queryParams.conTypeId"
-          placeholder="请选择合同分类"
-          style="width: 180px"
-          clearable
-          filterable
-        />
+        <ConTypeSelector v-model="queryParams.conTypeId" placeholder="请选择合同分类" style="width: 180px" clearable
+          filterable />
       </el-form-item>
       <el-form-item label="合同状态" prop="conStatus">
-        <el-select
-          v-model="queryParams.conStatus"
-          placeholder="请选择合同状态"
-          clearable
-          style="width: 180px"
-        >
-          <el-option
-            v-for="item in ConStatusEnum"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
+        <el-select v-model="queryParams.conStatus" placeholder="请选择合同状态" clearable style="width: 180px">
+          <el-option v-for="item in ConStatusEnum" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </el-form-item>
       <el-form-item label="经办人" prop="agentId">
-        <ChooseEmployee
-          v-model="queryParams.agentId"
-          :show-all-levels="false"
-          placeholder="请选择"
-          style="width: 180px"
-          clearable
-          filterable
-        />
+        <ChooseEmployee v-model="queryParams.agentId" :show-all-levels="false" placeholder="请选择" style="width: 180px"
+          clearable filterable />
       </el-form-item>
       <el-form-item label="创建人" prop="createId">
-        <ChooseEmployee
-          v-model="queryParams.createId"
-          :show-all-levels="false"
-          placeholder="请选择"
-          style="width: 180px"
-          clearable
-          filterable
-        />
+        <ChooseEmployee v-model="queryParams.createId" :show-all-levels="false" placeholder="请选择" style="width: 180px"
+          clearable filterable />
       </el-form-item>
       <el-form-item label="创建时间" prop="time">
-        <el-date-picker
-          v-model="queryParams.time"
-          type="daterange"
-          range-separator="-"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          format="YYYY-MM-DD"
-          value-format="YYYY-MM-DD"
-          style="width: 220px"
-          clearable
-        />
+        <el-date-picker v-model="queryParams.time" type="daterange" range-separator="-" start-placeholder="开始日期"
+          end-placeholder="结束日期" format="YYYY-MM-DD" value-format="YYYY-MM-DD" style="width: 220px" clearable />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="handleSearch"> 搜索 </el-button>
@@ -82,59 +36,44 @@
       </el-form-item>
     </el-form>
 
-    <base-table
-      :columns="columns"
-      :tableData="tableData"
-      :loading="tableLoading"
-      :rowKey="'id'"
-      :pagination="false"
-    >
+    <base-table :columns="columns" :tableData="paginatedData" :loading="tableLoading" :rowKey="'id'" :total="total"
+      :current-page="currentPage" :page-size="pageSize" @pagination-change="handlePaginationChange">
       <template #conProperty="{ row }">
-        <span>{{getEnumLabel(ConPropertyEnum, row?.conProperty || 0) }}</span>
+        <span>{{ getEnumLabel(ConPropertyEnum, row?.conProperty || 0) }}</span>
       </template>
       <template #priceType="{ row }">
-        <span>{{getEnumLabel(PriceTypeEnum, row?.priceType) }}</span>
+        <span>{{ getEnumLabel(PriceTypeEnum, row?.priceType) }}</span>
       </template>
       <template #conStatus="{ row }">
-        <el-tag
-          size="small"
-          :type="getEnumType(conBillStatusEnum, row?.conStatus || 0)"
-        >
+        <el-tag size="small" :type="getEnumType(conBillStatusEnum, row?.conStatus || 0)">
           {{ getEnumLabel(conBillStatusEnum, row?.conStatus || 0) }}
         </el-tag>
       </template>
 
       <template #actions="{ row }">
-      <!-- 外部常驻按钮 -->
-      <el-button
-        type="primary"
-        link
-        @click="handleEdit(row)"
-        :disabled="row.conStatus !== 0 || row.createId !== userStore.userInfo.id"
-      >
-        编辑
-      </el-button>
-      <el-button type="primary" link @click="handleDetail(row)">
-        合同详情
-      </el-button>
-      <el-button type="primary" link @click="handleBookDetail(row)" :disabled="row.conStatus === 0 || row.conStatus === 10 || row.conStatus === null">
-        台账详情
-      </el-button>
-      <el-button
-        type="danger"
-        link
-        @click="handleDelete(row)"
-        :disabled="row.conStatus !== 0 || row.createId !== userStore.userInfo.id"
-      >
-        删除
-      </el-button>
-    </template>
+        <!-- 外部常驻按钮 -->
+        <el-button type="primary" link @click="handleEdit(row)"
+          :disabled="row.conStatus !== 0 || row.createId !== userStore.userInfo.id">
+          编辑
+        </el-button>
+        <el-button type="primary" link @click="handleDetail(row)">
+          合同详情
+        </el-button>
+        <el-button type="primary" link @click="handleBookDetail(row)"
+          :disabled="row.conStatus === 0 || row.conStatus === 10 || row.conStatus === null">
+          台账详情
+        </el-button>
+        <el-button type="danger" link @click="handleDelete(row)"
+          :disabled="row.conStatus !== 0 || row.createId !== userStore.userInfo.id">
+          删除
+        </el-button>
+      </template>
     </base-table>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { useRouter } from "vue-router";
@@ -171,6 +110,9 @@ const emit = defineEmits<{
 const router = useRouter();
 
 const tableLoading = ref(false);
+const currentPage = ref<number>(1);
+const pageSize = ref<number>(20);
+const total = ref<number>(0);
 const tableData = ref([]);
 const userStore = useUserStore();
 
@@ -201,10 +143,10 @@ const columns: TableColumnItem[] = [
   { slot: "conProperty", label: "合同类型", width: 90 },
   { prop: "companyName", label: "签约公司", minWidth: 200 },
   { prop: "supName", label: "供应商名称", minWidth: 200 },
-  { prop: "signAmt", label: "签约金额(含税)", minWidth: 120 ,formatType:"#,##0.00"},
-  { prop: "signExclAmt", label: "签约金额(不含税)", minWidth: 120 ,formatType:"#,##0.00"},
-  { prop: "taxAmt", label: "税额", minWidth: 100 ,formatType:"#,##0.00"},
-  { prop: "taxRate", label: "税率", minWidth: 90 ,formatType:"d%"},
+  { prop: "signAmt", label: "签约金额(含税)", minWidth: 120, formatType: "#,##0.00" },
+  { prop: "signExclAmt", label: "签约金额(不含税)", minWidth: 120, formatType: "#,##0.00" },
+  { prop: "taxAmt", label: "税额", minWidth: 100, formatType: "#,##0.00" },
+  { prop: "taxRate", label: "税率", minWidth: 90, formatType: "d%" },
   { prop: "bldNames", label: "楼栋范围", minWidth: 90 },
   { slot: "priceType", label: "计价方式", minWidth: 100 },
   { prop: "signDate", label: "签订日期", minWidth: 120 },
@@ -222,9 +164,17 @@ const columns: TableColumnItem[] = [
     fixed: "right",
   },
 ];
+
+// 手动分页
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return tableData.value.slice(start, end)
+});
+
 // 获取列表数据
 const getDataList = async () => {
-  
+
   if (!props.selectedData) {
     return;
   }
@@ -251,9 +201,10 @@ const getDataList = async () => {
     };
 
     const res = await contractLedgerApi.getContractLedgerList(query);
-    
+
     if (res.code === 200) {
       tableData.value = res.data || [];
+      total.value = res.data?.length || 0;
     }
   } catch (error) {
     console.error("查询合同信息失败:", error);
@@ -261,7 +212,10 @@ const getDataList = async () => {
     tableLoading.value = false;
   }
 };
-
+const handlePaginationChange = (params: any) => {
+  currentPage.value = params.currentPage;
+  pageSize.value = params.pageSize;
+};
 const handleSearch = () => {
   getDataList();
 };
@@ -319,7 +273,7 @@ const handleBookDetail = (row: HConMain) => {
     query: {
       conId: row.id,
       projId: row.projId,
-      conName:row.conName,
+      conName: row.conName,
       tab: "basic",
     },
   });
@@ -336,7 +290,7 @@ const handleDelete = (row: HConMain) => {
         getDataList();
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 
 // 获取业务板块列表
@@ -367,6 +321,9 @@ watch(
   () => props.selectedData,
   (val) => {
     if (val) {
+      currentPage.value = 1;
+      pageSize.value = 20;
+      total.value = 0;
       getSegOptions();
       getProjectOptions();
       getDataList();

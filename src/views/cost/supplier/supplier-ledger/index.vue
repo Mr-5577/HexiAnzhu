@@ -47,10 +47,10 @@
     <div class="right-content">
       <template v-if="selectedCategory">
         <el-form :model="queryParams" ref="queryRef" :inline="true">
-          <el-form-item label="供应商编码" prop="supCode">
+          <el-form-item label="统一社会信用代码" prop="uscCardNo">
             <el-input
-              v-model="queryParams.supCode"
-              placeholder="请输入供应商编码"
+              v-model="queryParams.uscCardNo"
+              placeholder="请输入统一社会信用代码"
               clearable
               size="default"
               style="width: 200px"
@@ -202,7 +202,7 @@ const allType = [
 ];
 // 查询参数
 const queryParams = ref<SupplierQueryParams>({
-  supCode: "", // 供应商编码
+  uscCardNo: "", // 统一社会信用代码
   supName: "", // 供应商名称
   supStatus: null, // 供应商状态
 });
@@ -223,7 +223,7 @@ const tableColumns = [
   // },
   { type: "index", label: "序号", width: 60, fixed: "left" },
   { label: "供应商名称", prop: "supName", width: 200, fixed: "left" },
-  { label: "供应商编码", prop: "supCode", width: 150 },
+  // { label: "供应商编码", prop: "supCode", width: 150 },
   { label: "供应商类型", prop: "supTypeName", width: 120 },
   { label: "内外部", prop: "supLinkTypeName", width: 90 },
   { label: "企业性质", prop: "supNatureName", width: 90 },
@@ -334,7 +334,7 @@ const handleQuery = () => {
 };
 // 重置
 const handleReset = () => {
-  queryParams.value.supCode = "";
+  queryParams.value.uscCardNo = "";
   queryParams.value.supName = "";
   queryParams.value.supStatus = undefined;
   handleQuery();

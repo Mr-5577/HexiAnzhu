@@ -1,68 +1,31 @@
 <!-- 费用支付 列表 -->
 <template>
   <div class="fee-payment-wrapper">
-    <el-form
-      :model="queryParams"
-      ref="queryRef"
-      :inline="true"
-      label-width="90px"
-    >
+    <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px">
       <el-form-item label="业务板块" prop="segId">
-        <el-select
-          v-model="queryParams.segId"
-          placeholder="请选择业务板块"
-          style="width: 220px"
-          clearable
-        >
-          <el-option
-            v-for="item in segOptions"
-            :key="item.id"
-            :label="item.segName"
-            :value="item.id"
-          />
+        <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px" clearable>
+          <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
         </el-select>
       </el-form-item>
       <el-form-item label="项目名称" prop="projId">
-        <el-cascader
-          v-model="queryParams.projId"
-          :options="projectOptions"
-          :show-all-levels="false"
-          :props="{
-            expandTrigger: 'hover',
-            emitPath: false,
-            checkStrictly: false,
-            value: 'orgId',
-            label: 'orgName',
-            children: 'children',
-          }"
-          placeholder="请选择项目"
-          style="width: 220px"
-          clearable
-        />
+        <el-cascader v-model="queryParams.projId" :options="projectOptions" :show-all-levels="false" :props="{
+          expandTrigger: 'hover',
+          emitPath: false,
+          checkStrictly: false,
+          value: 'orgId',
+          label: 'orgName',
+          children: 'children',
+        }" placeholder="请选择项目" style="width: 220px" clearable />
       </el-form-item>
 
       <el-form-item label="审批状态" prop="status">
-        <el-select
-          v-model="queryParams.status"
-          placeholder="请选择状态"
-          clearable
-          style="width: 220px"
-        >
-          <el-option
-            v-for="item in conBillStatusEnum"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
+        <el-select v-model="queryParams.status" placeholder="请选择状态" clearable style="width: 220px">
+          <el-option v-for="item in conBillStatusEnum" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </el-form-item>
       <el-form-item label="创建人" prop="createId">
-        <el-cascader
-          ref="projCascaderRef"
-          v-model="queryParams.createId"
-          :options="empTreeData"
-          :show-all-levels="false"
-          :props="{
+        <el-cascader ref="projCascaderRef" v-model="queryParams.createId" :options="empTreeData"
+          :show-all-levels="false" :props="{
             expandTrigger: 'click',
             emitPath: false,
             checkStrictly: false,
@@ -74,23 +37,11 @@
               // dataType: 0 表示人员，即叶子节点
               return data.dataType === 0;
             },
-          }"
-          placeholder="请选择"
-          style="width: 220px"
-          clearable
-          filterable
-        />
+          }" placeholder="请选择" style="width: 220px" clearable filterable />
       </el-form-item>
       <el-form-item label="创建日期" prop="time">
-        <el-date-picker
-          v-model="queryParams.time"
-          type="daterange"
-          range-separator="至"
-          value-format="YYYY-MM-DD"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          style="width: 220px"
-        />
+        <el-date-picker v-model="queryParams.time" type="daterange" range-separator="至" value-format="YYYY-MM-DD"
+          start-placeholder="开始日期" end-placeholder="结束日期" style="width: 220px" />
       </el-form-item>
 
       <el-form-item>
@@ -100,37 +51,19 @@
       </el-form-item>
     </el-form>
 
-    <base-table
-      :columns="columns"
-      :tableData="tableData"
-      :loading="tableLoading"
-      :rowKey="'id'"
-      :pagination="false"
-    >
+    <base-table :columns="columns" :tableData="paginatedData" :loading="tableLoading" :rowKey="'id'" :total="total"
+      :current-page="currentPage" :page-size="pageSize" @pagination-change="handlePaginationChange">
       <template #status="{ row }">
-        <el-tag
-          size="small"
-          :type="getEnumType(conBillStatusEnum, row?.status || 0)"
-        >
+        <el-tag size="small" :type="getEnumType(conBillStatusEnum, row?.status || 0)">
           {{ getEnumLabel(conBillStatusEnum, row?.status || 0) }}
         </el-tag>
       </template>
 
       <template #actions="{ row }">
-        <el-button
-          type="primary"
-          link
-          @click="handleEdit(row)"
-          :disabled="row.status != 0"
-        >
+        <el-button type="primary" link @click="handleEdit(row)" :disabled="row.status != 0">
           编辑
         </el-button>
-        <el-button
-          type="danger"
-          link
-          @click="handleDelete(row)"
-          :disabled="row.status != 0"
-        >
+        <el-button type="danger" link @click="handleDelete(row)" :disabled="row.status != 0">
           删除
         </el-button>
         <el-button type="primary" link @click="handleDetail(row)">
@@ -142,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
@@ -168,6 +101,9 @@ const queryParams = ref({
 // 项目列表
 const projectOptions = ref([]);
 const tableLoading = ref(false);
+const currentPage = ref<number>(1);
+const pageSize = ref<number>(20);
+const total = ref<number>(0);
 const tableData = ref([]);
 // 人员树形结构数据
 const empTreeData = ref([]);
@@ -192,6 +128,12 @@ const columns: TableColumnItem[] = [
     fixed: "right",
   },
 ];
+// 手动分页
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return tableData.value.slice(start, end)
+});
 // 获取列表数据
 const getDataList = async () => {
   try {
@@ -208,6 +150,7 @@ const getDataList = async () => {
     const res = await feePaymentApi.getFeePaymentList(params);
     if (res.code === 200) {
       tableData.value = res.data || [];
+      total.value = res.data?.length || 0;
     }
   } catch (error) {
     console.error("获取费用支付列表失败:", error);
@@ -215,7 +158,10 @@ const getDataList = async () => {
     tableLoading.value = false;
   }
 };
-
+const handlePaginationChange = (params: any) => {
+  currentPage.value = params.currentPage;
+  pageSize.value = params.pageSize;
+};
 const handleSearch = () => {
   getDataList();
 };
@@ -269,7 +215,7 @@ const handleDelete = (row) => {
         getDataList();
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 // 获取项目列表
 const getProjectOptions = async () => {

@@ -35,12 +35,14 @@ interface Props {
   mode: "add" | "edit" | "detail";
   costMid?: undefined | number;
   projId?: undefined | number;
+  areaVerMid?: undefined | number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   mode: "add",
   costMid: undefined,
   projId: undefined,
+  areaVerMid: undefined,
 });
 
 const route = useRoute();

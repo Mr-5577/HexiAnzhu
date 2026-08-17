@@ -66,6 +66,7 @@ interface Props {
   allocAmt?: number;
   /** 成本分摊数据 */
   cstMData?: any;
+  /** 弹窗模式 */
   dialogMode?: string;
 }
 

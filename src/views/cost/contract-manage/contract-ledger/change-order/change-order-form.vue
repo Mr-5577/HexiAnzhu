@@ -173,8 +173,36 @@
           title="相关合同"
           v-model:collapsed="collapsedCards.process"
         >
+          <base-table :columns="linkConViewColumns" :tableData="tableList" :loading="tableLoading" :rowKey="'id'" :total="tableList.length" v-if="isReadonly">
+            <template #cstAllocStatus="{ row }">
+              <el-tag size="small" :type="getEnumType(allocStatusEnum, row?.cstAllocStatus || 0)">
+                {{ getEnumLabel(allocStatusEnum, row?.cstAllocStatus || 0) }}
+              </el-tag>
+            </template>
+            <template #cstAllocWarn="{ row }">
+              <el-tag size="small" :type="getEnumType(allocWarnEnum, row?.cstAllocWarn || null)">
+                {{ getEnumLabel(allocWarnEnum, row?.cstAllocWarn || null) }}
+              </el-tag>
+            </template> 
+            <template #wasteCostReasonId="{ row }">
+              <el-tag size="small" :type="getEnumType(invalidCostReasonOptions, row?.wasteCostReasonId || null)">
+                {{ getEnumLabel(invalidCostReasonOptions, row?.wasteCostReasonId || null) }}
+              </el-tag>
+            </template>
+            <template #actions="{ row }">
+              <el-button link type="primary" @click="handleAllocDetail(row)" v-if="isReadonly" :disabled="!isReadonly">
+                分摊
+              </el-button>
+              <el-button link type="danger" @click="deleteLinkCon(row)" v-if="!isReadonly" :disabled="isReadonly">
+                删除
+              </el-button>
+              <ConCostAllocDialog v-model="dialogVisible" :projId="row.projId" :projName="row.projName"
+                :displayName="row.conName" :bizType="formType.CON_CHANGE" :allocAmt="row.estChangeAmt" :cstMData="row.cstM"/> 
+            </template>
+          </base-table>
           <DetailTableCard
             ref="detailtableRef"
+            v-if="!isReadonly"
             title="变更明细"
             :count="tableList.length"
             add-text=""
@@ -192,7 +220,7 @@
               <el-button type="primary" size="small" @click="handleLinkCon">🔗关联合同</el-button>
             </template>
             <template #actions="{ row }">
-              <el-button link type="danger" @click="deleteLinkCon(row)">
+              <el-button link type="danger" @click="deleteLinkCon(row)" v-if="!isReadonly" :disabled="isReadonly">
                 删除
               </el-button>
             </template>
@@ -226,10 +254,12 @@
       </el-form>
 
       <!-- 成本分摊 -->
-      <ConCostAllocCard style="margin-top: 15px;" :visible="!isAdd" :cstMData="cstMData"
+      <!-- <ConCostAllocCard style="margin-top: 15px;" :visible="!isAdd" :cstMData="cstMData"
         :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'CON_BG'"
         :projId="formData.projId" :projName="formData?.projName" :displayName="formData.changeName"
-        :allocAmt="formData.changeAmt" :bizBillId="billData.id" />
+        :allocAmt="formData.changeAmt" :bizBillId="billData.id" /> -->
+      <!-- 分摊详情弹窗 -->
+      
     </div>
 
     <!-- ============ 选择合同 弹窗 ============ -->
@@ -260,7 +290,7 @@ import ChooseConDialog from "@/components/business/choose-contract-dialog.vue";
 import DetailTableCard from "@/components/base/detail-table-card.vue";
 
 // —— 常量 / 枚举 ——
-import { ChangeTypeEnum } from "@/constants/contract-manage/enums";
+import { allocStatusEnum, allocWarnEnum, ChangeTypeEnum } from "@/constants/contract-manage/enums";
 
 // —— API ——
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
@@ -277,15 +307,15 @@ import { useTableEditor } from "@/composables/use-table-editor.ts";
 // —— Store ——
 import { useUserStore } from "@/stores/user-store";
 import { useTagsStore } from "@/stores/tags-store";
-import { useMDStore } from "@/stores/md-store.ts";
 
 // —— 类型 / 配置 ——
 import { formType } from "@/types/form/form-types.ts";
-import { NAV_CARDS, createLinkConColumns } from "./change-order-config.ts";
+import { BOOL_OPTIONS, NAV_CARDS, createLinkConColumns, linkConViewColumns } from "./change-order-config.ts";
 import { requiredInputRule, requiredRule } from "@/utils/form-rule-validate.ts";
 import { dateUtil } from "@/utils/date-util.ts";
 import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api.ts";
-import ConCostAllocCard from "@/views/cost/cost-allocation/con-cost-alloc/con-cost-alloc-card.vue";
+import ConCostAllocDialog from "@/views/cost/cost-allocation/con-cost-alloc/con-cost-alloc-dialog.vue";
+import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
 
 defineOptions({ name: "change-order-form" });
 
@@ -309,6 +339,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   (e: "success", data?: any): void;
   (e: "cancel"): void;
+  (e: "detail-click"): void;
 }>();
 
   // conId：明细第一行的 conId，没有则回退 props.conId
@@ -447,6 +478,8 @@ const { addRow: addLinkCon, deleteRow: deleteLinkCon } = useTableEditor(
     conName:"",
     conSysNo:"",
     supName:"",
+    projId:0,
+    projName:"",
     estChangeAmt:0,
   }),
 );
@@ -486,6 +519,20 @@ const handleConSelect = (data) => {
   last.conName = selected.conName;
   last.supName = selected.supName;
   last.conSysNo = selected.conSysNo;
+};
+
+const dialogVisible = ref(false);
+
+// 处理分摊详情按钮点击
+const handleAllocDetail = (row : any) => {
+  // 如果有传入项目ID，则打开内部弹窗
+  if (props.projId) {
+    dialogVisible.value = true;
+  } else {
+    ElMessage.warning("请先选择项目");
+  }
+  // 触发外部事件，让父组件自行处理
+  emit("detail-click");
 };
 
 // ==================== 选项初始化方法 ====================

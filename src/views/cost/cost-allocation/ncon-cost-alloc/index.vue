@@ -64,6 +64,11 @@
           <span class="info-label">事项名称：</span>
           <span class="info-value">{{ pageParams.displayName || "" }}</span>
         </div>
+        <div class="info-item tax-rate">
+          <span class="info-label">税率(%)：</span>
+          <el-input-number v-model="compositeTaxRate" :precision="2" :min="0" :max="100" :controls="false"
+            style="width: 100px" :disabled="!isView" />
+        </div>
         <div class="info-row">
           <div class="info-item half">
             <span class="info-label">楼栋：</span>
@@ -226,6 +231,7 @@ const projBuildingOptions = ref([]);
 // 已选中的楼栋 (存储 value 数组)
 const selectedBuildings = ref([]);
 const segId = ref(null); // 业务板块ID
+const compositeTaxRate = ref(0)
 
 // 页面参数
 const pageParams = ref({
@@ -1319,6 +1325,20 @@ const handleSave = async (data: any) => {
   const isSubjectAmt = column === "subjectAmt" || column === "subjectAmtExcl";
   const isAllocAmt = column?.startsWith("allocAmt_") || column?.startsWith("allocExclAmt_");
 
+  // 当编辑 subjectAmt（含税金额）时，通过税率计算不含税金额
+  if (column === "subjectAmt") {
+    if (compositeTaxRate && compositeTaxRate.value > 0) {
+      const taxRate = Number(compositeTaxRate.value) / 100; // 将百分比转为小数
+      const amtIncl = Number(newValue) || 0;
+      // 不含税金额 = 含税金额 / (1 + 税率)
+      const amtExcl = amtIncl / (1 + taxRate);
+      // 保留两位小数
+      row.subjectAmtExcl = Number(amtExcl.toFixed(2));
+    } else {
+      // 没有税率直接等于含税金额
+      row.subjectAmtExcl = row.subjectAmt
+    }
+  }
   // 防抖处理
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
@@ -1859,21 +1879,41 @@ defineExpose({
 .info-item {
   display: flex;
   align-items: center;
-  min-width: 0;
+  flex-shrink: 0;
   gap: 0.3rem;
+  white-space: nowrap;
 }
 
-/* 固定宽度的字段：项目名称、事项名称、业态 */
-.info-item:not(:nth-child(3)) {
-  /* flex: 0 1 20%; */
+/* 项目名称固定宽度 */
+.info-item:first-child {
+  flex: 0 0 180px;
   min-width: 260px;
 }
 
-/* 楼栋字段自适应剩余空间 */
-.info-item:nth-child(3) {
+/* 事项名称固定宽度 */
+.info-item:nth-child(2) {
+  flex: 0 0 160px;
+  min-width: 260px;
+}
+
+/* 税率固定宽度 */
+.info-item.tax-rate {
+  flex: 0 0 180px;
+  min-width: 100px;
+}
+
+/* 楼栋自适应剩余空间 */
+.info-item.building-item {
   flex: 1 1 auto;
-  min-width: 120px;
+  min-width: 100px;
   max-width: 100%;
+  overflow: hidden;
+}
+
+/* 业态固定宽度 */
+.info-item:last-child {
+  flex: 0 0 140px;
+  min-width: 100px;
 }
 
 .info-label {
