@@ -6,9 +6,37 @@
       <div class="total-summary-bar">
         <span class="summary-item">目标成本总计（含税）：<span class="amount-text">{{ totalCostTax }}</span></span>
         <span class="summary-item">目标成本总计（不含税）：<span class="amount-text">{{ totalCostNoTax }}</span></span>
+
+        <el-select
+          v-model="busiSegFilter"
+          placeholder="业务归属"
+          size="small"
+          clearable
+          class="busi-seg-filter"
+        >
+          <el-option
+            v-for="opt in busiSegFilterOptions"
+            :key="opt.value"
+            :label="opt.label"
+            :value="opt.value"
+          />
+        </el-select>
       </div>
 
-      <el-button type="primary" :loading="saveLoading" @click="handleBatchSave" v-if="!isDetail">批量保存</el-button>
+      <div class="toolbar-buttons" v-if="!isDetail">
+        <el-button type="primary" plain :loading="exportTemplateLoading" @click="handleExportTemplate">导出模板</el-button>
+        <el-button type="primary" plain :loading="exportLoading" @click="handleExport">导出</el-button>
+        <el-button type="primary" plain :loading="importLoading" @click="handleImport">导入</el-button>
+        <el-button type="primary" :loading="saveLoading" @click="handleBatchSave">批量保存</el-button>
+        <!-- 隐藏的文件选择器，用于导入 -->
+        <input
+          ref="importFileInputRef"
+          type="file"
+          accept=".xlsx,.xls"
+          style="display: none"
+          @change="onImportFileChange"
+        />
+      </div>
     </div>
 
     <div class="virtual-table-outer">
@@ -51,7 +79,7 @@
                     <el-input-number v-if="(item._raw ? item._raw.isLeaf : item.isLeaf) && !isDetail"
                       :model-value="(item._raw ? item._raw[col.prop] : item[col.prop])" :controls="false" :step="0.01"
                       :precision="2" @change="(val) => onCellEdit(item, col.prop, val, index)" size="small" />
-                    <span v-else class="readonly-cell">{{ formatNumber(item._raw ? item._raw[col.prop] : item[col.prop])
+                    <span v-else class="readonly-cell">{{ formatNumber(item.hasChildren && item.visibleTotal ? item.visibleTotal[col.prop] : (item._raw ? item._raw[col.prop] : item[col.prop]))
                     }}</span>
                   </template>
 
@@ -75,7 +103,7 @@
                   </template>
 
                   <template v-else>
-                    <span class="readonly-cell">{{ item._raw ? item._raw[col.prop] : item[col.prop] }}</span>
+                    <span class="readonly-cell">{{ item.hasChildren && item.visibleTotal ? (item.visibleTotal[col.prop] ?? (item._raw ? item._raw[col.prop] : item[col.prop])) : (item._raw ? item._raw[col.prop] : item[col.prop]) }}</span>
                   </template>
                 </div>
               </template>
@@ -153,6 +181,10 @@ const isEdit = computed(() => mode.value === "edit");
 const isAdd = computed(() => mode.value === "add");
 
 const saveLoading = ref(false);
+const exportLoading = ref(false);
+const exportTemplateLoading = ref(false);
+const importLoading = ref(false);
+const importFileInputRef = ref<HTMLInputElement | null>(null);
 // 表格相关
 const tableLoading = ref(false);
 const tableData = shallowRef<any[]>([]);
@@ -305,6 +337,40 @@ const rowHeight = 32;
 // expanded keys set (mutate in-place to avoid recreating Set)
 const expandedKeys = ref(new Set<string>());
 
+// 板块筛选：空字符串 = 全部
+const busiSegFilter = ref<string | number>("");
+
+// 板块筛选选项：从全量叶子节点的 busiSegId 去重派生（基于原始数据，不随筛选变化）
+const busiSegFilterOptions = computed(() => {
+  const leaves = getAllLeafNodes(tableData.value || []);
+  const map = new Map<string | number, string>();
+  leaves.forEach((n: any) => {
+    const val = n.busiSegId;
+    const name = n.segName;
+    // 排除 busiSegId 或 segName 为空/null/空白的无效项
+    if (val != null && String(val).trim() !== "" && name && String(name).trim() !== "") {
+      map.set(val, name);
+    }
+  });
+  return [
+    { value: "", label: "全部" },
+    ...[...map.entries()].map(([v, l]) => ({ value: v, label: l })),
+  ];
+});
+
+// 叶子节点是否匹配当前板块筛选
+const isLeafVisibleByFilter = (node: any): boolean => {
+  if (!busiSegFilter.value) return true;
+  return node.busiSegId === busiSegFilter.value;
+};
+
+// 子树中是否存在可见叶子（用于判断父级是否整体隐藏）
+const hasVisibleLeafInSubtree = (node: any): boolean => {
+  if (node.isLeaf) return isLeafVisibleByFilter(node);
+  if (!node.children || node.children.length === 0) return false;
+  return node.children.some((c: any) => hasVisibleLeafInSubtree(c));
+};
+
 const expandedKeysHas = (uuid: string) => {
   return expandedKeys.value.has(uuid);
 };
@@ -315,7 +381,50 @@ const toggleExpand = (uuid: string) => {
   // mutate in place — do not reassign a new Set (avoids full recompute)
 };
 
-// flatten tree to visible rows based on expandedKeys
+// 累加筛选后可见叶子得到的汇总（供父级小计/合计实时展示）
+const emptyVisibleTotals = () => {
+  const t: any = { totalCostAmt: 0, totalCostExclAmt: 0 };
+  productOptions.value.forEach((p: any) => {
+    t[`costAmt_${p.id}`] = 0;
+    t[`costExclAmt_${p.id}`] = 0;
+  });
+  return t;
+};
+
+// 递归计算某节点子树内「筛选可见叶子」的汇总值；无可见叶子返回 null
+const aggregateVisible = (node: any): any => {
+  if (node.isLeaf) {
+    if (!isLeafVisibleByFilter(node)) return null;
+    const t = emptyVisibleTotals();
+    productOptions.value.forEach((p: any) => {
+      const ca = Number(node[`costAmt_${p.id}`] || 0);
+      const ce = Number(node[`costExclAmt_${p.id}`] || 0);
+      t[`costAmt_${p.id}`] = ca;
+      t[`costExclAmt_${p.id}`] = ce;
+      t.totalCostAmt += ca;
+      t.totalCostExclAmt += ce;
+    });
+    return t;
+  }
+  if (!node.children || node.children.length === 0) return null;
+  const merged = emptyVisibleTotals();
+  let anyVisible = false;
+  node.children.forEach((c: any) => {
+    const sub = aggregateVisible(c);
+    if (sub) {
+      anyVisible = true;
+      productOptions.value.forEach((p: any) => {
+        merged[`costAmt_${p.id}`] += sub[`costAmt_${p.id}`];
+        merged[`costExclAmt_${p.id}`] += sub[`costExclAmt_${p.id}`];
+      });
+      merged.totalCostAmt += sub.totalCostAmt;
+      merged.totalCostExclAmt += sub.totalCostExclAmt;
+    }
+  });
+  return anyVisible ? merged : null;
+};
+
+// flatten tree to visible rows based on expandedKeys + busiSegFilter
 const getVisibleFlatRows = (nodes: any[], expanded: Set<string>) => {
   const res: any[] = [];
   const walk = (items: any[], level = 0, parentExpanded = true) => {
@@ -324,13 +433,24 @@ const getVisibleFlatRows = (nodes: any[], expanded: Set<string>) => {
       const hasChildren = node.children && node.children.length > 0;
       const uuid = node.uuid;
       const visible = parentExpanded;
-      if (visible) {
-        // push a lightweight wrapper that references the original node to avoid cloning
-        res.push({ _raw: node, level, hasChildren, uuid, expanded: expanded.has(uuid) });
+      if (!visible) continue;
+
+      if (!hasChildren) {
+        // 叶子节点：仅当匹配当前板块筛选时显示
+        if (isLeafVisibleByFilter(node)) {
+          res.push({ _raw: node, level, hasChildren: false, uuid, expanded: expanded.has(uuid), visibleTotal: aggregateVisible(node) });
+        }
+        continue;
       }
-      if (hasChildren && expanded.has(uuid)) {
-        walk(node.children, level + 1, visible && true);
+
+      // 父级节点：仅当其子树中存在可见叶子时才显示（否则整体隐藏）
+      if (hasVisibleLeafInSubtree(node)) {
+        res.push({ _raw: node, level, hasChildren: true, uuid, expanded: expanded.has(uuid), visibleTotal: aggregateVisible(node) });
+        if (expanded.has(uuid)) {
+          walk(node.children, level + 1, true);
+        }
       }
+      // 否则：父级及其子树整体隐藏
     }
   };
   walk(nodes, 0, true);
@@ -359,14 +479,17 @@ const flatRows = computed(() => {
 /**
  * 全局汇总：所有叶子节点含税总额、不含税总额
  */
+// 顶部合计：仅累加筛选后可见的叶子
 const totalCostTax = computed(() => {
   const leaves = getAllLeafNodes(tableData.value);
   let sum = 0;
   productOptions.value.forEach((product) => {
     const propKey = `costAmt_${product.id}`;
     leaves.forEach((node) => {
-      const val = Number(node[propKey] || 0);
-      if (!isNaN(val)) sum += val;
+      if (isLeafVisibleByFilter(node)) {
+        const val = Number(node[propKey] || 0);
+        if (!isNaN(val)) sum += val;
+      }
     });
   });
   return formatNumber(sum);
@@ -378,8 +501,10 @@ const totalCostNoTax = computed(() => {
   productOptions.value.forEach((product) => {
     const propKey = `costExclAmt_${product.id}`;
     leaves.forEach((node) => {
-      const val = Number(node[propKey] || 0);
-      if (!isNaN(val)) sum += val;
+      if (isLeafVisibleByFilter(node)) {
+        const val = Number(node[propKey] || 0);
+        if (!isNaN(val)) sum += val;
+      }
     });
   });
   return formatNumber(sum);
@@ -1018,6 +1143,94 @@ const handleBatchSave = async () => {
     saveLoading.value = false;
   }
 };
+/**
+ * 导出目标成本明细 Excel（真实数据）
+ */
+const handleExport = async () => {
+  if (!props.costMid) {
+    ElMessage.warning("缺少目标成本版本ID");
+    return;
+  }
+  try {
+    exportLoading.value = true;
+    await goalCostApi.exportProjectCostD(props.costMid);
+    ElMessage.success("导出成功");
+  } catch (error) {
+    console.error("导出失败", error);
+    ElMessage.error("导出失败");
+  } finally {
+    exportLoading.value = false;
+  }
+};
+
+/**
+ * 导出目标成本明细空模板（带科目/业态，金额全 0）
+ */
+const handleExportTemplate = async () => {
+  if (!props.costMid) {
+    ElMessage.warning("缺少目标成本版本ID");
+    return;
+  }
+  try {
+    exportTemplateLoading.value = true;
+    await goalCostApi.exportProjectCostDTemplate(props.costMid);
+    ElMessage.success("模板导出成功");
+  } catch (error) {
+    console.error("模板导出失败", error);
+    ElMessage.error("模板导出失败");
+  } finally {
+    exportTemplateLoading.value = false;
+  }
+};
+
+/**
+ * 触发文件选择
+ */
+const handleImport = () => {
+  if (!props.costMid) {
+    ElMessage.warning("缺少目标成本版本ID");
+    return;
+  }
+  // 通过 ref 触发隐藏的 file input
+  importFileInputRef.value?.click();
+};
+
+/**
+ * 选择文件后的处理（导入 Excel）
+ */
+const onImportFileChange = async (e: Event) => {
+  const target = e.target as HTMLInputElement;
+  const file = target.files?.[0];
+  // 清空 value，允许重复选择同一文件
+  target.value = "";
+  if (!file) return;
+  if (!props.costMid) {
+    ElMessage.warning("缺少目标成本版本ID");
+    return;
+  }
+  try {
+    importLoading.value = true;
+    const res = await goalCostApi.importProjectCostD(props.costMid, file);
+    if (res.code === 200) {
+      const { imported, discarded } = res.data || { imported: 0, discarded: 0 };
+      ElMessage.success(
+        `导入完成：成功 ${imported} 条，舍弃 ${discarded} 条`,
+      );
+      // 导入成功后重新拉取详情，刷新表格
+      await getDetailData();
+      if (detailTableList.value && detailTableList.value.length > 0) {
+        fillDetailDataToTable(detailTableList.value);
+      }
+    } else {
+      ElMessage.error(res.msg || "导入失败");
+    }
+  } catch (error) {
+    console.error("导入失败", error);
+    ElMessage.error("导入失败");
+  } finally {
+    importLoading.value = false;
+  }
+};
 // 获取详情数据
 const getDetailData = async () => {
   try {
@@ -1215,12 +1428,17 @@ $table-readonly-color: rgba(0, 0, 0, 0.65);
     justify-content: space-between;
   }
 
+  .toolbar-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
   .total-summary-bar {
     border: 1px solid $table-border-color;
     border-radius: 4px;
     padding: 8px 12px;
     display: flex;
-    gap: 32px;
     align-items: center;
     font-size: 14px;
     background: $table-header-bg;
@@ -1228,6 +1446,14 @@ $table-readonly-color: rgba(0, 0, 0, 0.65);
 
     .summary-item {
       font-weight: 500;
+      margin-right: 32px;
+    }
+
+    .busi-seg-filter {
+      /* 固定宽度避免被合计文字挤压 */
+      width: 140px;
+      margin-left: 4px;
+      flex-shrink: 0;
     }
 
     .amount-text {

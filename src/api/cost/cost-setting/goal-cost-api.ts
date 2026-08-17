@@ -204,4 +204,43 @@ export const goalCostApi = {
   getCostPrevList: (data: { costMid: number }) => {
     return http.post("/cost/projectCostD/getPrevList", data);
   },
+
+  /**
+   * @name 导出目标成本明细（真实数据，多层表头 Excel）
+   * @param costMid - 目标成本版本ID（必填）
+   */
+  exportProjectCostD: (costMid: number) => {
+    return http.exportFile(
+      "/cost/projectCostD/export",
+      { costMid },
+      `目标成本明细_${costMid}.xlsx`,
+    );
+  },
+
+  /**
+   * @name 导出目标成本明细空数据模板（含科目/业态，金额全 0）
+   * @param costMid - 目标成本版本ID（必填）
+   */
+  exportProjectCostDTemplate: (costMid: number) => {
+    return http.exportFile(
+      "/cost/projectCostD/exportTemplate",
+      { costMid },
+      `目标成本明细模板_${costMid}.xlsx`,
+    );
+  },
+
+  /**
+   * @name 导入目标成本明细 Excel（仅差异增改，不删除已有明细）
+   * @param costMid - 目标成本版本ID（必填）
+   * @param file - Excel 文件
+   */
+  importProjectCostD: (costMid: number, file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("costMid", String(costMid));
+    return http.upload<{ code: number; data: { imported: number; discarded: number }; msg?: string }>(
+      "/cost/projectCostD/import",
+      formData,
+    );
+  },
 };
