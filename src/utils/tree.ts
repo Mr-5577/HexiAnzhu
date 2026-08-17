@@ -92,6 +92,84 @@ export const buildTree = <T extends { id: number; pid: number | null }>(
   return tree;
 };
 
+/**
+ * 将扁平数据转换为树形结构（自动修复缺失父节点）--正式数据有缺失的父级节点
+ * @param list 扁平数据数组
+ * @returns 树形结构数组
+ */
+
+export const convertToTree = <
+  T extends {
+    id: number;
+    pid: number | null;
+    idPath?: string;
+    [key: string]: any;
+  }
+>(list: T[] = []): (T & { children?: T[] })[] => {
+  if (!list?.length) return [];
+
+  const allIds = new Set(list.map(item => item.id));
+  const map = new Map<number, T & { children?: T[] }>();
+  const tree: (T & { children?: T[] })[] = [];
+
+  list.forEach((item) => {
+    map.set(item.id, { ...item, children: [] });
+  });
+
+  list.forEach((item) => {
+    const node = map.get(item.id)!;
+    let parentId = item.pid ?? 0;
+
+    // 🔧 核心修复：父节点不存在时，从 idPath 解析
+    if (parentId !== 0 && !allIds.has(parentId) && item.idPath) {
+      const pathIds = item.idPath
+        .replace(/^,|,$/g, '')
+        .split(',')
+        .map(Number);
+
+      // 从后往前找（从最近祖先开始）
+      for (let i = pathIds.length - 2; i >= 0; i--) {
+        if (allIds.has(pathIds[i])) {
+          parentId = pathIds[i];
+          break;
+        }
+      }
+
+      // 如果还是找不到，检查是否需要挂在根节点 25 或 272
+      if (parentId === 0 && item.idPath.includes(',25,')) {
+        if (allIds.has(25)) parentId = 25;
+        else if (allIds.has(272)) parentId = 272;
+      }
+    }
+
+    // 如果父节点仍然不存在，作为根节点
+    if (parentId === 0 || !allIds.has(parentId)) {
+      tree.push(node);
+    } else {
+      const parent = map.get(parentId);
+      if (parent) {
+        parent.children!.push(node);
+      } else {
+        tree.push(node);
+      }
+    }
+  });
+
+  // 清理空 children
+  const cleanTree = (nodes: typeof tree) => {
+    nodes.forEach(node => {
+      if (node.children?.length === 0) {
+        delete node.children;
+      } else if (node.children) {
+        cleanTree(node.children);
+      }
+    });
+    return nodes;
+  };
+
+  return cleanTree(tree);
+};
+
 ////////////////////按条件查询树的节点-start////////////////////////////////////
 export interface ClassificationNode {
   [key: string]: any;

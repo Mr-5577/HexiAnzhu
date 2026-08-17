@@ -525,7 +525,11 @@ const onCellEdit = (row: any, prop: string, val: any, index?: number) => {
 
 // Safe index display for rows — fall back to finding item position when slot index is missing
 const getDisplayIndex = (item: any, idx: any) => {
-  if (typeof idx === "number" && !isNaN(idx)) return idx + 1;
+  // 如果 idx 是有效数字，直接使用
+  if (typeof idx === "number" && !isNaN(idx) && idx >= 0) {
+    return idx + 1;
+  }
+  // 否则通过 uuid 查找
   const pos = flatRows.value.findIndex((r: any) => r.uuid === item.uuid);
   return pos >= 0 ? pos + 1 : "";
 };
@@ -1027,7 +1031,7 @@ const getDetailData = async () => {
     });
     console.log("详情res", res);
     if (res.code === 200 && res.data) {
-      const { costDList, annexList } = res.data;
+      const { costDList, annexList } = res.data || {};
       // 如果详情信息里面有明细数据表示之前已经保存过，直接回显，否则查询上一版面积明细
       if (costDList && costDList.length > 0) {
         detailTableList.value = costDList || [];
@@ -1068,34 +1072,40 @@ const getPrevVersionDetail = async () => {
 const fillDetailDataToTable = (detailData: any[]) => {
   if (!detailData?.length) return;
 
-  // 构建 Map：key = "subId_prodId"
+  // 构建 Map：key = "subId_prodId"（统一转为字符串）
   const detailMap = new Map(
     detailData.map((item) => [`${item.subId}_${item.prodId}`, item]),
   );
 
-  // 递归遍历 tableData，匹配并填充数据
+  // console.log('detailMap keys:', Array.from(detailMap.keys())); // 调试用
+
   const fillTree = (nodes: any[]): any[] => {
     return nodes.map((node) => {
-      // 复制节点，避免原地修改（保证引用替换能被 watch 感知）
       const newNode: any = { ...node };
 
-      // 如果是叶子节点，匹配详情数据
       if (newNode.isLeaf) {
         let hasData = false;
         // 遍历所有业态，查找对应的详情
         productOptions.value.forEach((prod) => {
+          // 确保 prod.id 转为字符串匹配
           const key = `${newNode.subId}_${prod.id}`;
           const detail = detailMap.get(key);
+          
+          // console.log(`查找: ${key}, 找到: ${!!detail}`); // 调试用
+          
           if (detail) {
             hasData = true;
-            newNode[`costAmt_${prod.id}`] = detail.costAmt || 0;
-            newNode[`costExclAmt_${prod.id}`] = detail.costExclAmt || 0;
+            // 金额处理：确保是数字
+            newNode[`costAmt_${prod.id}`] = Number(detail.costAmt) || 0;
+            newNode[`costExclAmt_${prod.id}`] = Number(detail.costExclAmt) || 0;
             newNode[`detailId_${prod.id}`] = detail.id;
             newNode.costMid = detail.costMid || props.costMid;
           }
         });
-        // 如果有数据，设置公共字段（取第一条）
+        
+        // 如果有数据，设置公共字段
         if (hasData) {
+          // 找到该科目的第一条详情数据
           const firstDetail = detailData.find((d) => d.subId === newNode.subId);
           if (firstDetail) {
             newNode.busiSegId = firstDetail.busiSegId;
@@ -1108,7 +1118,7 @@ const fillDetailDataToTable = (detailData: any[]) => {
           }
         }
       }
-      // 递归子节点
+      
       if (newNode.children?.length) {
         newNode.children = fillTree(newNode.children);
       }
@@ -1116,9 +1126,8 @@ const fillDetailDataToTable = (detailData: any[]) => {
     });
   };
 
-  // 返回新树结构，重新赋值以触发响应式更新
+  // 应用数据并重新计算汇总
   tableData.value = fillTree(tableData.value);
-  // 重新计算汇总
   tableData.value = calculateAllTotals(tableData.value);
   leafNodesVersion = 0;
 };

@@ -130,6 +130,7 @@ const resolveBizRoute = async (
   bizId: string,
   subBizCode: string = "",
   mode: string = "",
+  bizKeyId: string = "0",
 ) => {
   // ========================================
   // 第一层：根据 bizItemCode 分支
@@ -154,6 +155,7 @@ const resolveBizRoute = async (
               bizId, // 业务ID
               bizType: bizItemCode, // 业务类型
               mode: "edit",
+              bizKeyId,
             });
           case "view":
           default:
@@ -162,6 +164,7 @@ const resolveBizRoute = async (
               bizId, // 业务ID
               bizType: bizItemCode, // 业务类型
               mode: "view",
+              bizKeyId,
             });
         }
       }
@@ -205,6 +208,7 @@ const resolveBizRoute = async (
               bizId, // 业务ID
               bizType: bizItemCode, // 业务类型
               mode: "edit",
+              bizKeyId,
             });
           case "view":
           default:
@@ -213,6 +217,7 @@ const resolveBizRoute = async (
               bizId, // 业务ID
               bizType: bizItemCode, // 业务类型
               mode: "view",
+              bizKeyId,
             });
         }
       }
@@ -326,6 +331,7 @@ const handleMockLogin = async () => {
   const bizItemCode = getQueryParam(query.bizItemCode) || "ZB_TND";
   const billId = getQueryParam(query.billId) || "1";
   const bizId = getQueryParam(query.bizId) || "1";
+  const bizKeyId = getQueryParam(query.bizKeyId) || "";
   const subBizCode = getQueryParam(query.subBizCode) || "";
   const mode = getQueryParam(query.mode) || "";
 
@@ -346,6 +352,7 @@ const handleMockLogin = async () => {
     bizId,
     subBizCode,
     mode,
+    bizKeyId,
   );
   await router.replace(targetPath);
 };
@@ -377,6 +384,7 @@ const handleOALogin = async (
       const bizItemCode = res.data.bizItemCode || "";
       const billId = res.data.billId || "";
       const bizId = res.data.bizId || "";
+      const bizKeyId = res.data.bizKeyId || "";
 
       localStorage.setItem("token", token);
       localStorage.setItem("accountNonExpired", String(accountNonExpired));
@@ -392,6 +400,7 @@ const handleOALogin = async (
         bizId,
         subBizCode,
         mode,
+        bizKeyId,
       );
       console.log("OA鉴权跳转路径:", targetPath);
       await router.replace(targetPath);

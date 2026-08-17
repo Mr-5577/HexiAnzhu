@@ -270,8 +270,12 @@ const apportionInfo = ref({
 const billId = route.query?.billId ? Number(route.query.billId) : undefined;
 // 业务ID
 const bizId = route.query?.bizId ? Number(route.query.bizId) : undefined;
+// bizKeyId
+const bizKeyId = route.query?.bizKeyId ? Number(route.query.bizKeyId) : undefined;
 // 业务类型，例 NCON_CST  NCON_PROC
 const bizType: any = route.query?.bizType ? route.query.bizType : "";
+
+
 // 显示的楼栋列表
 const buildingOptions = computed(() => {
   // 取对应合同的楼栋
@@ -497,6 +501,7 @@ const handleConfirm = async () => {
       projId: pageParams.value.projId,
       bizType: pageParams.value.bizType,
       bizBillId: billId,
+      bizKeyId: bizKeyId ? Number(bizKeyId) : 0,
       allocAmt: result?.allocAmt || 0,
       allocExclAmt: result?.allocExclAmt || 0,
       allocStatus: result?.allocStatus,

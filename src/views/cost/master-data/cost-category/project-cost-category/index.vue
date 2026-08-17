@@ -48,7 +48,7 @@ import { costCategoryApi } from "@/api/cost/master-data/cost-category-api.ts";
 import AddEditProjectCategoryDialog from "./add-edit-project-category-dialog.vue";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
 import { ctrlModeEnum } from "@/constants/master-data/enums.ts";
-import { buildTree } from "@/utils/tree.ts";
+import { buildTree, convertToTree } from "@/utils/tree.ts";
 
 defineOptions({ name: "project-cost-category" });
 
@@ -153,14 +153,13 @@ const getProjectProductList = async () => {
       buildTree: true,
     });
     if (res.code === 200) {
-      tableData.value = buildTree(res.data || []);
+      tableData.value = convertToTree(res.data || []);
       console.log(tableData.value);
     } else {
       ElMessage.error(res.msg || "获取数据失败");
     }
   } catch (error) {
     console.error("获取数据失败:", error);
-    ElMessage.error("获取数据失败");
   } finally {
     tableLoading.value = false;
   }
