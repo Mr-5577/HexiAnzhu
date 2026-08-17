@@ -932,7 +932,7 @@ const currentMonth = (): string => {
   const now = new Date();
   const y = now.getFullYear();
   const m = now.getMonth() + 1;
-  const last = new Date(y, m, 0).getDate();
+  const last = 1;//new Date(y, m, 0).getDate();
   return `${y}-${String(m).padStart(2, "0")}-${String(last).padStart(2, "0")}`;
 };
 
@@ -944,7 +944,7 @@ const addMonths = (yyyymm: string, n: number): string => {
   const d = new Date(y, m - 1 + (n || 0), 1); // 先取进位后的年月
   const ny = d.getFullYear();
   const nm = d.getMonth() + 1;
-  const last = new Date(ny, nm, 0).getDate(); // 该月月末最后一天
+  const last = 1;//new Date(ny, nm, 0).getDate(); // 该月月末最后一天
   return `${ny}-${String(nm).padStart(2, "0")}-${String(last).padStart(2, "0")}`;
 };
 
@@ -953,7 +953,7 @@ const toMonthEnd = (val: string): string => {
   if (!val) return "";
   const ym = val.slice(0, 7); // 兼容 YYYY-MM 与 YYYY-MM-DD
   const [y, m] = ym.split("-").map(Number);
-  const last = new Date(y, m, 0).getDate(); // 0 号 = 上月最后一天 = 本月月末
+  const last = 1;//new Date(y, m, 0).getDate(); // 0 号 = 上月最后一天 = 本月月末
   return `${y}-${String(m).padStart(2, "0")}-${String(last).padStart(2, "0")}`;
 };
 
