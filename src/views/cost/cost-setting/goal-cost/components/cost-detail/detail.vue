@@ -10,7 +10,6 @@
         <el-select
           v-model="busiSegFilter"
           placeholder="业务归属"
-          size="small"
           clearable
           class="busi-seg-filter"
         >

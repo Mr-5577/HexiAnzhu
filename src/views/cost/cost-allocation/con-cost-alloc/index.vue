@@ -493,9 +493,8 @@ const handleConfirm = async () => {
   if (!valida) return;
   const result = await getSubmitData();
   console.log("提交分摊明细", result);
-  debugger
   try {
-    // submitLoading.value = true;
+    submitLoading.value = true;
     const params = {
       id: apportionInfo.value?.id,
       projId: pageParams.value.projId,
@@ -529,6 +528,7 @@ const handleConfirm = async () => {
       }
     }
   } catch (error) {
+    console.log(error);
   } finally {
     submitLoading.value = false;
   }

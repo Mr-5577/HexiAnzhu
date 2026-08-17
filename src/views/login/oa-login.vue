@@ -130,7 +130,7 @@ const resolveBizRoute = async (
   bizId: string,
   subBizCode: string = "",
   mode: string = "",
-  bizKeyId: string = "0",
+  bizKeyId: string = "",
 ) => {
   // ========================================
   // 第一层：根据 bizItemCode 分支
@@ -365,6 +365,7 @@ const handleOALogin = async (
   signature: string,
   subBizCode: string,
   mode: string,
+  bizKeyId: string,
 ) => {
   checkIfUnmounted();
 
@@ -384,7 +385,6 @@ const handleOALogin = async (
       const bizItemCode = res.data.bizItemCode || "";
       const billId = res.data.billId || "";
       const bizId = res.data.bizId || "";
-      const bizKeyId = res.data.bizKeyId || "";
 
       localStorage.setItem("token", token);
       localStorage.setItem("accountNonExpired", String(accountNonExpired));
@@ -438,6 +438,7 @@ const handleRouteParams = async () => {
     const oaUserId = getQueryParam(query.oaUserId);
     const timestamp = getQueryParam(query.timestamp);
     const signature = getQueryParam(query.signature);
+    const bizKeyId = getQueryParam(query.bizKeyId);
     // 获取新增参数
     const subBizCode = getQueryParam(query.subBizCode);
     const mode = getQueryParam(query.mode);
@@ -448,6 +449,7 @@ const handleRouteParams = async () => {
       timestamp,
       signature,
       isMock,
+      bizKeyId,
       bizItemCode: getQueryParam(query.bizItemCode),
       billId: getQueryParam(query.billId),
       bizId: getQueryParam(query.bizId),
@@ -481,6 +483,7 @@ const handleRouteParams = async () => {
       signature,
       subBizCode,
       mode,
+      bizKeyId,
     );
   } catch (err) {
     if (err instanceof Error && err.message === "COMPONENT_UNMOUNTED") {
