@@ -158,10 +158,15 @@ const loadProjectData = async () => {
     const res = await projectAreaApi.getSegMguProjList();
     if (res.code === 200 && res.data) {
       treeData.value = processTreeData(res.data || []);
+
       // 得到建筑类型下的全部orgId
       const targetData = treeData.value.find((item) => item.orgId === 7);
       const orgIds = getAllOrgIds(targetData);
       emit("gainOrgId", orgIds);
+      // 默认返回第一个节点数据
+      if (treeData.value.length > 0) {
+        handleNodeClick(treeData.value[0]);
+      }
     }
   } catch (error) {
     console.error("加载项目数据失败:", error);

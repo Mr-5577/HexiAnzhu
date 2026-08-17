@@ -3,39 +3,21 @@
   <div class="tender-table-wrapper">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
       <el-form-item label="合同分类" prop="conTypeId">
-        <el-cascader
-          v-model="queryParams.conTypeId"
-          :options="conTypeOptions"
-          :show-all-levels="false"
-          :props="{
-            expandTrigger: 'hover',
-            emitPath: false,
-            checkStrictly: false,
-            value: 'id',
-            label: 'conTypeName',
-            children: 'children',
-          }"
-          placeholder="请选择合同分类"
-          style="width: 180px"
-          clearable
-          filterable
-        />
+        <el-cascader v-model="queryParams.conTypeId" :options="conTypeOptions" :show-all-levels="false" :props="{
+          expandTrigger: 'hover',
+          emitPath: false,
+          checkStrictly: false,
+          value: 'id',
+          label: 'conTypeName',
+          children: 'children',
+        }" placeholder="请选择合同分类" style="width: 180px" clearable filterable />
       </el-form-item>
       <el-form-item label="采购事项" prop="tenderName">
-        <el-input
-          v-model="queryParams.tenderName"
-          placeholder="请输入采购事项"
-          clearable
-          style="width: 180px"
-        />
+        <el-input v-model="queryParams.tenderName" placeholder="请输入采购事项" clearable style="width: 180px" />
       </el-form-item>
       <el-form-item label="招采责任人" prop="createId">
-        <el-cascader
-          ref="projCascaderRef"
-          v-model="queryParams.createId"
-          :options="empTreeData"
-          :show-all-levels="false"
-          :props="{
+        <el-cascader ref="projCascaderRef" v-model="queryParams.createId" :options="empTreeData"
+          :show-all-levels="false" :props="{
             expandTrigger: 'click',
             emitPath: false,
             checkStrictly: false,
@@ -47,26 +29,11 @@
               // dataType: 0 表示人员，即叶子节点
               return data.dataType === 0;
             },
-          }"
-          placeholder="请选择"
-          style="width: 180px"
-          clearable
-          filterable
-        />
+          }" placeholder="请选择" style="width: 180px" clearable filterable />
       </el-form-item>
       <el-form-item label="采购状态" prop="status">
-        <el-select
-          v-model="queryParams.status"
-          placeholder="请选择采购状态"
-          clearable
-          style="width: 180px"
-        >
-          <el-option
-            v-for="item in purchaseStatusEnum"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
+        <el-select v-model="queryParams.status" placeholder="请选择采购状态" clearable style="width: 180px">
+          <el-option v-for="item in purchaseStatusEnum" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </el-form-item>
       <el-form-item>
@@ -76,18 +43,10 @@
       </el-form-item>
     </el-form>
 
-    <base-table
-      :columns="columns"
-      :tableData="tableData"
-      :loading="tableLoading"
-      :rowKey="'id'"
-      :pagination="false"
-    >
+    <base-table :columns="columns" :tableData="paginatedData" :loading="tableLoading" :rowKey="'id'" :total="total"
+      :current-page="currentPage" :page-size="pageSize" @pagination-change="handlePaginationChange">
       <template #tenderStatus="{ row }">
-        <el-tag
-          size="small"
-          :type="getEnumType(purchaseStatusEnum, row.tenderStatus || 0)"
-        >
+        <el-tag size="small" :type="getEnumType(purchaseStatusEnum, row.tenderStatus || 0)">
           {{ getEnumLabel(purchaseStatusEnum, row.tenderStatus || 0) }}
         </el-tag>
       </template>
@@ -106,18 +65,13 @@
     </base-table>
 
     <!-- 新增/编辑 招标事项弹窗 -->
-    <add-edit-tender-dialog
-      v-model="tenderDialogVisible"
-      :edit-data="editData"
-      :empTreeData="empTreeData"
-      :conType-options="conTypeOptions"
-      @success="handleDialogSuccess"
-    />
+    <add-edit-tender-dialog v-model="tenderDialogVisible" :edit-data="editData" :empTreeData="empTreeData"
+      :conType-options="conTypeOptions" @success="handleDialogSuccess" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { useRouter } from "vue-router";
@@ -146,6 +100,9 @@ const emit = defineEmits<{
 const router = useRouter();
 
 const tableLoading = ref(false);
+const currentPage = ref<number>(1);
+const pageSize = ref<number>(20);
+const total = ref<number>(0);
 const tableData = ref<BidTender[]>([]);
 const tenderDialogVisible = ref(false);
 const editData = ref<BidTender | null>(null);
@@ -153,21 +110,19 @@ const editData = ref<BidTender | null>(null);
 const conTypeOptions = ref([]);
 // 人员树形结构数据
 const empTreeData = ref([]);
-const defaultProps = {
-  value: "treeId",
-  label: "orgName",
-  children: "children",
-  disabled: (data: any) => {
-    // 禁用所有 dataType 不为 'emp' 的节点 ==== seg: '板块',mgu: '管理单元',dept: '部门',emp: '员工'
-    return data.dataType !== 0;
-  },
-};
 
 const queryParams = ref({
   conTypeId: undefined,
   tenderName: undefined,
   createId: undefined,
   status: undefined,
+});
+
+// 手动分页
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return tableData.value.slice(start, end)
 });
 
 const columns: TableColumnItem[] = [
@@ -220,12 +175,18 @@ const getDataList = async () => {
     const res = await biddingManageApi.getTenderList(query);
     if (res.code === 200) {
       tableData.value = res.data || [];
+      total.value = res.data?.length || 0;
     }
   } catch (error) {
     console.error("获取招标事项列表失败:", error);
   } finally {
     tableLoading.value = false;
   }
+};
+
+const handlePaginationChange = (params: any) => {
+  currentPage.value = params.currentPage;
+  pageSize.value = params.pageSize;
 };
 
 const handleSearch = () => {
@@ -269,7 +230,7 @@ const handleDelete = (row: BidTender) => {
         getDataList();
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 
 const handleDialogSuccess = () => {
@@ -300,6 +261,9 @@ watch(
   () => props.selectedData,
   (val) => {
     if (val) {
+      currentPage.value = 1;
+      pageSize.value = 20;
+      total.value = 0;
       getConTypeList();
       getEmpTreeData();
       getDataList();

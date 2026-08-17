@@ -1,125 +1,96 @@
 <!-- 付款申请 列表 -->
- <!-- 补充合同 列表（样式优化版 · 合并真实逻辑） -->
 <template>
   <div class="payment-application-wrapper">
     <!-- <div class="pa-card">  -->
-      <!-- 顶部工具栏：标题 + 数量 + 刷新 -->
-      <div class="pa-toolbar">
-        <div class="pa-toolbar__title">
-          <span class="pa-toolbar__name">付款申请</span>
-          <el-tag size="small" type="info" effect="plain" round>
-            {{ tableData.length }} 个
-          </el-tag>
-        </div>
+    <!-- 顶部工具栏：标题 + 数量 + 刷新 -->
+    <div class="pa-toolbar">
+      <div class="pa-toolbar__title">
+        <span class="pa-toolbar__name">付款申请</span>
+        <el-tag size="small" type="info" effect="plain" round>
+          {{ tableData.length }} 个
+        </el-tag>
       </div>
+    </div>
 
-      <!-- 筛选区域 -->
-      <div class="pa-filter">
-        <el-form :model="queryParams" ref="queryRef" :inline="true">
-          <el-form-item label="请款说明" prop="paymentName">
-            <el-input
-              v-model="queryParams.bizTitle"
-              placeholder="请输入名称"
-              clearable
-              style="width: 300px"
-            />
-          </el-form-item>
-          <el-form-item label="审批状态" prop="status">
-            <el-select
-              v-model="queryParams.status"
-              placeholder="请选择审批状态"
-              style="width: 100px"
-              clearable
-            >
-              <el-option
-                v-for="item in approvalStatusEnum"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              />
-            </el-select>
-          </el-form-item>
-          <el-form-item>
-            <el-button
-              type="primary"
-              class="refresh-btn"
-              :class="{ 'is-refreshing': refreshing }"
-              :disabled="refreshing"
-              @click="handleRefresh"
-            >
-              <el-icon class="refresh-icon"><Refresh /></el-icon>
-              <span>{{ refreshing ? "搜索中" : "搜索" }}</span>
-            </el-button>
-            <!-- <el-button type="primary" @click="handleSearch"> 搜索 </el-button> -->
-            <el-button @click="handleReset">重置</el-button>
-            <el-button type="primary" class="add-btn" @click="handleAdd">
-              <el-icon><Plus /></el-icon>
-              <span>新增</span>
-            </el-button>
-          </el-form-item>
-        </el-form>
-      </div>
-
-      <base-table
-        :columns="tableColumns"
-        :tableData="tableData"
-        :loading="tableLoading"
-        :rowKey="'id'"
-        :pagination="false"
-      >
-        <template #status="{ row }">
-          <el-tag
-            size="small"
-            :type="getEnumType(approvalStatusEnum, row?.status || 0)"
-          >
-            {{ getEnumLabel(approvalStatusEnum, row?.status || 0) }}
-          </el-tag>
-        </template>
-        <template #reqType="{ row }">
-          <el-tag
-            size="small"
-            :type="getEnumType(ReqTypeEnum, row?.reqType || 0)"
-          >
-            {{ getEnumLabel(ReqTypeEnum, row?.reqType || 0) }}
-          </el-tag>
-        </template>
-        <template #payTypeId="{ row }">
-          <el-tag
-            size="small"
-            :type="getOptionsTypeById(paymentTypeOptions, row?.payTypeId || 0)"
-          >
-            {{ getOptionsLabelById(paymentTypeOptions, row?.payTypeId || 0) }}
-          </el-tag>
-        </template>
-        
-        <template #actions="{ row }">
-          <el-button type="primary" link class="row-link" @click="handleEdit(row)" :disabled="row.status !== 0 || row.createId !== userStore.userInfo.id">
-            编辑
+    <!-- 筛选区域 -->
+    <div class="pa-filter">
+      <el-form :model="queryParams" ref="queryRef" :inline="true">
+        <el-form-item label="请款说明" prop="paymentName">
+          <el-input v-model="queryParams.bizTitle" placeholder="请输入名称" clearable style="width: 300px" />
+        </el-form-item>
+        <el-form-item label="审批状态" prop="status">
+          <el-select v-model="queryParams.status" placeholder="请选择审批状态" style="width: 100px" clearable>
+            <el-option v-for="item in approvalStatusEnum" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" class="refresh-btn" :class="{ 'is-refreshing': refreshing }" :disabled="refreshing"
+            @click="handleRefresh">
+            <el-icon class="refresh-icon">
+              <Refresh />
+            </el-icon>
+            <span>{{ refreshing ? "搜索中" : "搜索" }}</span>
           </el-button>
-          <el-button type="primary" link class="row-link" @click="handleDetail(row)">
-            详情
-          </el-button> 
-          <!-- <el-button type="primary" link class="row-link" @click="handleApprove(row)">
+          <!-- <el-button type="primary" @click="handleSearch"> 搜索 </el-button> -->
+          <el-button @click="handleReset">重置</el-button>
+          <el-button type="primary" class="add-btn" @click="handleAdd">
+            <el-icon>
+              <Plus />
+            </el-icon>
+            <span>新增</span>
+          </el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+
+    <base-table :columns="tableColumns" :tableData="paginatedData" :loading="tableLoading" :rowKey="'id'" :total="total"
+      :current-page="currentPage" :page-size="pageSize" @pagination-change="handlePaginationChange">
+      <template #status="{ row }">
+        <el-tag size="small" :type="getEnumType(approvalStatusEnum, row?.status || 0)">
+          {{ getEnumLabel(approvalStatusEnum, row?.status || 0) }}
+        </el-tag>
+      </template>
+      <template #reqType="{ row }">
+        <el-tag size="small" :type="getEnumType(ReqTypeEnum, row?.reqType || 0)">
+          {{ getEnumLabel(ReqTypeEnum, row?.reqType || 0) }}
+        </el-tag>
+      </template>
+      <template #payTypeId="{ row }">
+        <el-tag size="small" :type="getOptionsTypeById(paymentTypeOptions, row?.payTypeId || 0)">
+          {{ getOptionsLabelById(paymentTypeOptions, row?.payTypeId || 0) }}
+        </el-tag>
+      </template>
+
+      <template #actions="{ row }">
+        <el-button type="primary" link class="row-link" @click="handleEdit(row)"
+          :disabled="row.status !== 0 || row.createId !== userStore.userInfo.id">
+          编辑
+        </el-button>
+        <el-button type="primary" link class="row-link" @click="handleDetail(row)">
+          详情
+        </el-button>
+        <!-- <el-button type="primary" link class="row-link" @click="handleApprove(row)">
             审批
           </el-button> -->
-          <el-button type="danger" link class="row-link" @click="handleDelete(row)" :disabled="row.status !== 0 || row.createId !== userStore.userInfo.id">
-            删除
-          </el-button>
-        </template>
-      </base-table>
-    </div>
+        <el-button type="danger" link class="row-link" @click="handleDelete(row)"
+          :disabled="row.status !== 0 || row.createId !== userStore.userInfo.id">
+          删除
+        </el-button>
+      </template>
+    </base-table>
+  </div>
   <!-- </div>  -->
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { dayjs, ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { useRouter } from "vue-router";
 import { paymentRequestApi } from "@/api/cost/contract-manage/payment-application-api";
 import { HConPayment } from "@/types/cost/contract-manage/payment-application-type";
 import { approvalStatusEnum } from "@/constants/bidding/enums";
-import { getEnumLabel, getEnumType, getOptionsTypeById ,getOptionsLabelById} from "@/utils/enum";
+import { getEnumLabel, getEnumType, getOptionsTypeById, getOptionsLabelById } from "@/utils/enum";
 import { useUserStore } from "@/stores/user-store";
 import { ReqTypeEnum } from "@/constants/contract-manage/enums";
 import { useDict } from "@/composables/use-dict";
@@ -134,6 +105,9 @@ const props = defineProps<{
 
 const router = useRouter();
 const tableLoading = ref(false);
+const currentPage = ref<number>(1);
+const pageSize = ref<number>(20);
+const total = ref<number>(0);
 const refreshing = ref(false); // 驱动刷新按钮旋转动画
 const tableData = ref([]);
 const userStore = useUserStore();
@@ -141,9 +115,9 @@ const paymentTypeOptions = ref<any[]>([]);
 
 
 const queryParams = ref({
-  conId:props.conId,
-  bizTitle:"",
-  status : null,
+  conId: props.conId,
+  bizTitle: "",
+  status: null,
 });
 
 const handleReset = () => {
@@ -176,19 +150,19 @@ const tableColumns: TableColumnItem[] = [
     prop: "reqAmt",
     label: "申请请款金额",
     width: 140,
-    formatType:"#,##0.00",
+    formatType: "#,##0.00",
   },
   {
     prop: "changeAmt",
     label: "扣款总金额",
     width: 140,
-    formatType:"#,##0.00",
+    formatType: "#,##0.00",
   },
   {
     prop: "factReqAmt",
     label: "实际请款金额",
     width: 140,
-    formatType:"#,##0.00",
+    formatType: "#,##0.00",
   },
   {
     slot: "payTypeId",
@@ -348,13 +322,20 @@ const tableColumns: TableColumnItem[] = [
 const { getDictList, loadDicts } = useDict(
   [dictMapping.paymentType],
   {
-  treeDictCodes: [],
-});
+    treeDictCodes: [],
+  });
 
 const initDictData = async () => {
   await loadDicts();
   paymentTypeOptions.value = getDictList(dictMapping.paymentType);//款项类型
 };
+
+// 手动分页
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return tableData.value.slice(start, end)
+});
 
 // 获取列表数据
 const getDataList = async () => {
@@ -363,9 +344,10 @@ const getDataList = async () => {
   }
   try {
     tableLoading.value = true;
-    const res = await paymentRequestApi.getPayList({ conId: props.conId, ...queryParams.value,});
+    const res = await paymentRequestApi.getPayList({ conId: props.conId, ...queryParams.value, });
     if (res.code === 200) {
       tableData.value = res.data || [];
+      total.value = res.data?.length || 0;
     }
   } catch (error) {
     console.error("获取列表失败:", error);
@@ -373,7 +355,10 @@ const getDataList = async () => {
     tableLoading.value = false;
   }
 };
-
+const handlePaginationChange = (params: any) => {
+  currentPage.value = params.currentPage;
+  pageSize.value = params.pageSize;
+};
 // 刷新
 const handleRefresh = () => {
   getDataList();
@@ -381,7 +366,7 @@ const handleRefresh = () => {
 
 // 新增
 const handleAdd = () => {
-  router.push({ 
+  router.push({
     path: "/con/payment-application/add",
     query: {
       projId: props.projId, // 项目ID
@@ -402,7 +387,7 @@ const handleEdit = async ({ id }) => {
 };
 
 // 详情
-const handleDetail = ({id}) => {
+const handleDetail = ({ id }) => {
   router.push({
     path: "/con/payment-application/detail",
     query: {
@@ -427,7 +412,7 @@ const handleDelete = ({ id }) => {
         console.error("删除失败:", error);
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 
 // 监听合同ID变化，自动刷新列表
@@ -468,6 +453,7 @@ onMounted(() => {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   // overflow: hidden;
   transition: box-shadow 0.25s ease;
+
   &:hover {
     box-shadow: 0 4px 18px rgba(0, 0, 0, 0.09);
   }
@@ -490,17 +476,20 @@ onMounted(() => {
   border-bottom: 1px solid #f0f2f5;
   background: linear-gradient(180deg, #fafcff 0%, #ffffff 100%);
 }
+
 .pa-toolbar__title {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .pa-toolbar__name {
   position: relative;
   padding-left: 12px;
   font-size: 16px;
   font-weight: 600;
   color: #303133;
+
   &::before {
     content: "";
     position: absolute;
@@ -513,6 +502,7 @@ onMounted(() => {
     background: #409eff;
   }
 }
+
 .pa-toolbar__actions {
   display: flex;
   align-items: center;
@@ -522,6 +512,7 @@ onMounted(() => {
 /* 筛选区域 */
 .pa-filter {
   padding: 12px 14px 0;
+
   :deep(.el-form-item) {
     margin-bottom: 12px;
   }
@@ -533,25 +524,31 @@ onMounted(() => {
   align-items: center;
   gap: 6px;
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+
   .refresh-icon {
     transition: transform 0.3s ease;
   }
+
   &:hover:not(:disabled) {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(64, 158, 255, 0.35);
   }
+
   &:active:not(:disabled) {
     transform: translateY(0);
     box-shadow: 0 2px 6px rgba(64, 158, 255, 0.3);
   }
+
   &.is-refreshing .refresh-icon {
     animation: pa-spin 0.8s linear infinite;
   }
 }
+
 @keyframes pa-spin {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -563,10 +560,12 @@ onMounted(() => {
   align-items: center;
   gap: 4px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+
   &:hover:not(:disabled) {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(64, 158, 255, 0.25);
   }
+
   &:active:not(:disabled) {
     transform: translateY(0);
   }
@@ -576,6 +575,7 @@ onMounted(() => {
 .row-link {
   font-weight: 500;
   transition: opacity 0.15s ease;
+
   &:hover {
     opacity: 0.85;
   }

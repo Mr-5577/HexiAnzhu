@@ -15,78 +15,44 @@
     <div class="pa-filter">
       <el-form :model="queryParams" ref="queryRef" :inline="true">
         <el-form-item label="变更事项名称" prop="changeName">
-          <el-input
-            v-model="queryParams.changeName"
-            placeholder="请输入变更事项名称"
-            clearable
-            style="width: 300px"
-          />
+          <el-input v-model="queryParams.changeName" placeholder="请输入变更事项名称" clearable style="width: 300px" />
         </el-form-item>
         <el-form-item label="变更类型" prop="changeType">
-          <el-select
-            v-model="queryParams.changeType"
-            placeholder="请选择变更类型"
-            style="width: 100px"
-            clearable
-          >
-            <el-option
-              v-for="item in ChangeTypeEnum"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
+          <el-select v-model="queryParams.changeType" placeholder="请选择变更类型" style="width: 100px" clearable>
+            <el-option v-for="item in ChangeTypeEnum" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
         <el-form-item label="审批状态" prop="status">
-          <el-select
-            v-model="queryParams.status"
-            placeholder="请选择审批状态"
-            style="width: 100px"
-            clearable
-          >
-            <el-option
-              v-for="item in approvalStatusEnum"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
+          <el-select v-model="queryParams.status" placeholder="请选择审批状态" style="width: 100px" clearable>
+            <el-option v-for="item in approvalStatusEnum" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button
-            type="primary"
-            class="refresh-btn"
-            :class="{ 'is-refreshing': refreshing }"
-            :disabled="refreshing"
-            @click="handleRefresh"
-          >
-            <el-icon class="refresh-icon"><Refresh /></el-icon>
+          <el-button type="primary" class="refresh-btn" :class="{ 'is-refreshing': refreshing }" :disabled="refreshing"
+            @click="handleRefresh">
+            <el-icon class="refresh-icon">
+              <Refresh />
+            </el-icon>
             <span>{{ refreshing ? "搜索中" : "搜索" }}</span>
           </el-button>
           <!-- <el-button type="primary" @click="handleSearch"> 搜索 </el-button> -->
           <el-button @click="handleReset">重置</el-button>
           <el-button type="primary" class="add-btn" @click="handleAdd">
-            <el-icon><Plus /></el-icon>
+            <el-icon>
+              <Plus />
+            </el-icon>
             <span>新增</span>
           </el-button>
         </el-form-item>
       </el-form>
     </div>
-    <base-table
-      :columns="tableColumns"
-      :tableData="tableData"
-      :loading="tableLoading"
-      :rowKey="'id'"
-      :pagination="false"
-    >
+    <base-table :columns="tableColumns" :tableData="paginatedData" :loading="tableLoading" :rowKey="'id'" :total="total"
+      :current-page="currentPage" :page-size="pageSize" @pagination-change="handlePaginationChange">
       <template #changeType="{ row }">
         {{ getChangeTypeText(row.changeType) }}
       </template>
       <template #status="{ row }">
-        <el-tag
-          size="small"
-          :type="getEnumType(approvalStatusEnum, row?.status || 0)"
-        >
+        <el-tag size="small" :type="getEnumType(approvalStatusEnum, row?.status || 0)">
           {{ getEnumLabel(approvalStatusEnum, row?.status || 0) }}
         </el-tag>
       </template>
@@ -94,25 +60,24 @@
         {{ getReasonText(row.changeReasonId) }}
       </template>
       <template #actions="{ row }">
-        <el-button type="primary" link @click="handleEdit(row)" :disabled="row.status !== 0 || row.createId !== userStore.userInfo.id">
+        <el-button type="primary" link @click="handleEdit(row)"
+          :disabled="row.status !== 0 || row.createId !== userStore.userInfo.id">
           编辑
         </el-button>
         <el-button type="primary" link @click="handleDetail(row)">
           详情
         </el-button>
-        <el-button type="danger" link @click="handleDelete(row)" :disabled="row.status !== 0 || row.createId !== userStore.userInfo.id">
+        <el-button type="danger" link @click="handleDelete(row)"
+          :disabled="row.status !== 0 || row.createId !== userStore.userInfo.id">
           删除
         </el-button>
-        <!-- <el-button type="primary" link @click="handleApproval(row)">
-          审批
-        </el-button> -->
       </template>
     </base-table>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { changeOrderApi } from "@/api/cost/contract-manage/change-order-api.ts";
@@ -138,11 +103,14 @@ const router = useRouter();
 const queryParams = ref({
   changeName: "",
   changeType: null,
-  conId:props.conId,
-  status:null,
+  conId: props.conId,
+  status: null,
 });
 
 const tableLoading = ref(false);
+const currentPage = ref<number>(1);
+const pageSize = ref<number>(20);
+const total = ref<number>(0);
 const tableData = ref([]);
 const changeReasonOptions = ref([]); // 变更原因列表
 
@@ -162,14 +130,14 @@ const { getDictList, loadDicts } = useDict(
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
   // { slot: "bizTitle", label: "标题" },
-  { slot: "changeType", label: "变更类型" , width: 120},
-  { prop: "changeName", label: "变更事项名称" , width: 300},
-  { prop: "changeAmt", label: "预估变更金额" , width: 150,formatType:"#,##0.00"},
+  { slot: "changeType", label: "变更类型", width: 120 },
+  { prop: "changeName", label: "变更事项名称", width: 300 },
+  { prop: "changeAmt", label: "预估变更金额", width: 150, formatType: "#,##0.00" },
   // { slot: "ww", label: "执行状态" },
   { slot: "changeReasonId", label: "变更原因", width: 150 },
   // { prop: "changeReasonDesc", label: "变更原因说明", width: 200 },
   // { prop: "changeConent", label: "变更内容", width: 200 },
-  { slot: "status", label: "审批状态" ,width: 90},
+  { slot: "status", label: "审批状态", width: 90 },
   { prop: "createName", label: "创建人", Width: 90 },
   { prop: "createDate", label: "创建时间", Width: 150 },
   {
@@ -189,6 +157,12 @@ const getReasonText = (id: number) => {
   const option = changeReasonOptions.value.find((item) => item.id === id);
   return option ? option.dicLabel : "";
 };
+// 手动分页
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return tableData.value.slice(start, end)
+});
 // 获取列表数据
 const getDataList = async () => {
   if (!props.conId) {
@@ -201,7 +175,8 @@ const getDataList = async () => {
       conId: props.conId, ...queryParams.value,
     });
     if (res.code === 200) {
-      tableData.value = res.data;
+      tableData.value = res.data || [];
+      total.value = res.data?.length || 0;
     }
   } catch (error) {
     console.error("获取变更合同列表失败:", error);
@@ -209,9 +184,12 @@ const getDataList = async () => {
     tableLoading.value = false;
   }
 };
-
+const handlePaginationChange = (params: any) => {
+  currentPage.value = params.currentPage;
+  pageSize.value = params.pageSize;
+};
 // 刷新
-const handleRefresh = async() => {
+const handleRefresh = async () => {
   refreshing.value = true;
   try {
     await getDataList();
@@ -265,28 +243,6 @@ const handleDetail = async (row) => {
   });
 };
 
-// 审批
-const handleApproval = async (row) => {
-  console.log("审批", row);
-  return;
-  ElMessageBox.confirm("确定创建该合同变更审批流程？", "提示", {
-    type: "warning",
-  })
-    .then(async () => {
-      try {
-        const res = await associatedApprovalApi.createChangeFlow({
-          changeId: row.id,
-        });
-        if (res.code === 200) {
-          ElMessage.success("操作成功");
-          getDataList();
-        }
-      } catch (error) {
-        console.error("失败:", error);
-      }
-    })
-    .catch(() => {});
-};
 // 删除
 const handleDelete = (row) => {
   ElMessageBox.confirm("确定删除该数据吗？", "提示", { type: "warning" })
@@ -301,7 +257,7 @@ const handleDelete = (row) => {
         console.error("删除失败:", error);
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 // 初始化数据字典数据
 const initDictData = async () => {
@@ -350,6 +306,7 @@ onMounted(async () => {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   // overflow: hidden;
   transition: box-shadow 0.25s ease;
+
   &:hover {
     box-shadow: 0 4px 18px rgba(0, 0, 0, 0.09);
   }
@@ -372,17 +329,20 @@ onMounted(async () => {
   border-bottom: 1px solid #f0f2f5;
   background: linear-gradient(180deg, #fafcff 0%, #ffffff 100%);
 }
+
 .pa-toolbar__title {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .pa-toolbar__name {
   position: relative;
   padding-left: 12px;
   font-size: 16px;
   font-weight: 600;
   color: #303133;
+
   &::before {
     content: "";
     position: absolute;
@@ -395,6 +355,7 @@ onMounted(async () => {
     background: #409eff;
   }
 }
+
 .pa-toolbar__actions {
   display: flex;
   align-items: center;
@@ -404,6 +365,7 @@ onMounted(async () => {
 /* 筛选区域 */
 .pa-filter {
   padding: 12px 14px 0;
+
   :deep(.el-form-item) {
     margin-bottom: 12px;
   }
@@ -415,25 +377,31 @@ onMounted(async () => {
   align-items: center;
   gap: 6px;
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+
   .refresh-icon {
     transition: transform 0.3s ease;
   }
+
   &:hover:not(:disabled) {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(64, 158, 255, 0.35);
   }
+
   &:active:not(:disabled) {
     transform: translateY(0);
     box-shadow: 0 2px 6px rgba(64, 158, 255, 0.3);
   }
+
   &.is-refreshing .refresh-icon {
     animation: pa-spin 0.8s linear infinite;
   }
 }
+
 @keyframes pa-spin {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -445,10 +413,12 @@ onMounted(async () => {
   align-items: center;
   gap: 4px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+
   &:hover:not(:disabled) {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(64, 158, 255, 0.25);
   }
+
   &:active:not(:disabled) {
     transform: translateY(0);
   }
@@ -458,6 +428,7 @@ onMounted(async () => {
 .row-link {
   font-weight: 500;
   transition: opacity 0.15s ease;
+
   &:hover {
     opacity: 0.85;
   }

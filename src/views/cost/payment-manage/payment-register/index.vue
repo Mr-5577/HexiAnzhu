@@ -62,7 +62,8 @@
       </el-tabs>
     </div>
 
-    <base-table :columns="columns" :tableData="tableData" :loading="tableLoading" :rowKey="'id'" :pagination="false">
+    <base-table :columns="columns" :tableData="paginatedData" :loading="tableLoading" :rowKey="'id'" :total="total"
+      :current-page="currentPage" :page-size="pageSize" @pagination-change="handlePaginationChange">
       <!-- 审批流程 0=草稿，10=审批中，40=已审批，80=作废，99=其他 -->
       <template #flowStatus="{ row }">
         <el-tag size="small" :type="getEnumType(costBillStatusEnum, row?.flowStatus || 0)">
@@ -104,7 +105,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
@@ -143,6 +144,9 @@ const batchDialog = ref(false);
 const singleDialog = ref(false);
 const viewDialog = ref(false);
 const currentRow = ref(null);
+const currentPage = ref<number>(1);
+const pageSize = ref<number>(20);
+const total = ref<number>(0);
 
 const columns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
@@ -173,6 +177,12 @@ const columns: TableColumnItem[] = [
   },
 ];
 
+// 手动分页
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return tableData.value.slice(start, end)
+});
 // 获取列表数据
 const getDataList = async () => {
   try {
@@ -187,6 +197,7 @@ const getDataList = async () => {
     const mainRes = await payRegisterApi.getPayLedgerMain(params);
     if (mainRes.code === 200) {
       tableData.value = mainRes.data || [];
+      total.value = mainRes.data?.length || 0;
     }
   } catch (error) {
     console.error("获取实付登记列表失败:", error);
@@ -194,7 +205,10 @@ const getDataList = async () => {
     tableLoading.value = false;
   }
 };
-
+const handlePaginationChange = (params: any) => {
+  currentPage.value = params.currentPage;
+  pageSize.value = params.pageSize;
+};
 // tab切换处理
 const handleTabChange = (tabName: string) => {
   queryParams.value.payStatus = tabName;
