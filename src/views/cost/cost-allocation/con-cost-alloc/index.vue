@@ -64,10 +64,10 @@
           <span class="info-label">合同名称：</span>
           <span class="info-value">{{ pageParams.displayName || "" }}</span>
         </div>
-        <!-- <div class="info-item" v-if="!isDialogMode">
-          <span class="info-label">综合税率：</span>
-          <span class="info-value">{{ compositeTaxRate || "" }}</span>
-        </div> -->
+        <div class="info-item info-item-tax">
+          <span class="info-label">综合税率(%)：</span>
+          <span class="info-value">{{ compositeTaxRate || "" }}%</span>
+        </div>
         <div class="info-row">
           <div class="info-item half">
             <span class="info-label">楼栋：</span>
@@ -238,7 +238,7 @@ const selectedBuildings = ref([]);
 const segId = ref(null)
 // 当前子合同业务ID
 const currSubConBizId = ref(null)
-// OA 打开需要通过合同税率计算科目不含税金额
+// 通过合同税率计算科目不含税金额
 const compositeTaxRate = ref(0)
 
 // 页面参数
@@ -929,7 +929,7 @@ const getTaxRate = async () => {
   try {
     const res = await costAllocationApi.getContractTaxRate({ conId: bizId });
     if (res.code == 200) {
-      compositeTaxRate.value = res.data;
+      compositeTaxRate.value = res.data || 0;
     }
   } catch (error) {
     console.log(error);
@@ -938,9 +938,6 @@ const getTaxRate = async () => {
 // 加载OA打开的分摊数据
 const loadAllocationData = async () => {
   console.log("OA打开页面参数:", route.query, isView.value);
-  // 获取合同税率
-  // await getTaxRate();
-
   switch (bizType) {
     case "CON_MAIN":
       await getConDetail(); // 主合同
@@ -1497,6 +1494,21 @@ const handleSave = async (data: any) => {
   const isSubjectAmt = column === "subjectAmt" || column === "subjectAmtExcl";
   const isAllocAmt = column?.startsWith("allocAmt_") || column?.startsWith("allocExclAmt_");
 
+  // 当编辑 subjectAmt（含税金额）时，通过税率计算不含税金额
+  if (column === "subjectAmt") {
+    if (compositeTaxRate && compositeTaxRate.value > 0) {
+      const taxRate = Number(compositeTaxRate.value) / 100; // 将百分比转为小数
+      const amtIncl = Number(newValue) || 0;
+      // 不含税金额 = 含税金额 / (1 + 税率)
+      const amtExcl = amtIncl / (1 + taxRate);
+      // 保留两位小数
+      row.subjectAmtExcl = Number(amtExcl.toFixed(2));
+    } else {
+      // 没有税率直接等于含税金额
+      row.subjectAmtExcl = row.subjectAmt
+    }
+  }
+
   // 防抖处理
   clearTimeout(saveTimer);
   saveTimer = setTimeout(() => {
@@ -1834,6 +1846,8 @@ const getSubmitData = async () => {
 };
 
 onMounted(async () => {
+  // 获取合同税率
+  await getTaxRate();
   // 弹窗模式时初始化
   if (isDialogMode.value) {
     if (props.projId) {
@@ -1862,7 +1876,7 @@ defineExpose({
 });
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .cost-allocation-container {
   max-width: 1600px;
   margin: 0 auto;
@@ -2048,7 +2062,7 @@ defineExpose({
 }
 
 /* 固定宽度的字段：项目名称、事项名称、业态 */
-.info-item:not(:nth-child(3)) {
+.info-item:not(:nth-child(4)) {
   /* flex: 0 1 20%; */
   min-width: 260px;
 }
@@ -2058,6 +2072,13 @@ defineExpose({
   flex: 1 1 auto;
   min-width: 120px;
   max-width: 100%;
+}
+
+.info-item-tax {
+  .info-value {
+    color: #2563eb;
+    font-weight: 700;
+  }
 }
 
 .info-label {
