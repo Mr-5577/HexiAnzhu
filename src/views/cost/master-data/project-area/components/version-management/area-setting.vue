@@ -11,51 +11,32 @@
       <div class="header-actions">
         <div class="building-info">
           <div class="go-back" @click="handleBack">
-            <el-icon><ArrowLeft /></el-icon>
+            <el-icon>
+              <ArrowLeft />
+            </el-icon>
             <span>返回</span>
           </div>
           <div class="building-detail-info">
             <span class="label">楼栋</span>
-            <el-select
-              v-model="queryParams.bldId"
-              placeholder="请选择楼栋"
-              style="width: 200px"
-              @change="getTableData"
-            >
-              <el-option
-                v-for="item in buildingList"
-                :key="item.id"
-                :label="item.bldName"
-                :value="item.id"
-              />
+            <el-select v-model="queryParams.bldId" placeholder="请选择楼栋" style="width: 200px"
+              @change="handleBuildingChange">
+              <el-option v-for="item in buildingList" :key="item.id" :label="item.bldName" :value="item.id" />
             </el-select>
           </div>
         </div>
         <div>
           <!-- 启用时不可操作 -->
-          <el-button
-            type="primary"
-            :loading="saveLoading"
-            @click="handleBatchSave"
-            v-if="props.currentData.status == 0"
-          >
+          <el-button type="primary" :loading="saveLoading" @click="handleBatchSave"
+            v-if="props.currentData.status == 0">
             批量保存
           </el-button>
         </div>
       </div>
     </div>
     <!-- 可编辑表格 -->
-    <editable-table
-      ref="businessDetailtableRef"
-      :rowKey="'uuid'"
-      v-model="tableList"
-      :columns="tableColumns"
-      :loading="tableLoading"
-      :pagination="false"
-      :highlight-current-row="false"
-      :showSummary="true"
-      :on-save="handleSave"
-    >
+    <editable-table ref="businessDetailtableRef" :rowKey="'uuid'" v-model="tableList" :columns="tableColumns"
+      :loading="tableLoading" :pagination="false" :highlight-current-row="false" :showSummary="true"
+      :on-save="handleSave">
     </editable-table>
   </div>
 </template>
@@ -99,6 +80,10 @@ const buildingList = ref([]);
 const saveLoading = ref(false);
 const tableLoading = ref(false);
 const tableList = ref([]);
+
+// 楼栋数据缓存：key 为楼栋ID，value 为对应的表格数据
+const buildingDataCache = ref<Map<number, any[]>>(new Map());
+
 const tableColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {
@@ -106,7 +91,6 @@ const tableColumns = computed<EditableColumn[]>(() => [
     label: "业态名称",
     editable: props.currentData.status ? false : true,
     showOverflowTooltip: false,
-    // 自定义键名
     optionLabelField: "prodName",
     optionValueField: "id",
     editType: "select",
@@ -180,6 +164,15 @@ const handleBack = () => {
 // 加载数据
 const getTableData = async () => {
   if (!queryParams.value.bldId) return;
+
+  // 1. 先检查缓存中是否有当前楼栋的数据
+  const cachedData = buildingDataCache.value.get(queryParams.value.bldId);
+  if (cachedData) {
+    tableList.value = cachedData;
+    return;
+  }
+
+  // 2. 缓存中没有，从接口获取
   try {
     tableLoading.value = true;
     tableList.value = [];
@@ -240,19 +233,27 @@ const getTableData = async () => {
               };
             });
             tableList.value = filterListByBuilding(newData);
+            // 存入缓存
+            buildingDataCache.value.set(
+              queryParams.value.bldId,
+              JSON.parse(JSON.stringify(tableList.value))
+            );
             return;
           }
         }
       }
+
       // 正常处理返回的数据
-      const newData = list.map((item) => {
-        return {
-          ...item,
-          uuid: uuidv4(),
-        };
-      });
+      const newData = list.map((item) => ({
+        ...item,
+        uuid: uuidv4(),
+      }));
       tableList.value = filterListByBuilding(newData);
-      console.log("tableList", filterListByBuilding(newData));
+      // 存入缓存
+      buildingDataCache.value.set(
+        queryParams.value.bldId,
+        JSON.parse(JSON.stringify(tableList.value))
+      );
     }
   } catch (error) {
     ElMessage.error("加载数据失败");
@@ -301,41 +302,21 @@ const filterListByBuilding = (dataList: any[]): any[] => {
   });
 };
 
-// 批量保存
-const handleBatchSave = async () => {
-  if (!tableList.value.length) {
-    ElMessage.warning("暂无保存的数据");
-    return;
-  }
-
-  try {
-    saveLoading.value = true;
-    const res = await projectAreaApi.batchSaveNet(
-      tableList.value,
-      queryParams.value.bldId,
-      props.currentData?.id,
-    );
-    if (res.code === 200) {
-      ElMessage.success("保存成功");
-      getTableData();
-      // emit("saveSuccess");
-      if (updateDetailByProjectId) {
-        updateDetailByProjectId();
-      }
-    }
-  } catch (error) {
-  } finally {
-    saveLoading.value = false;
-  }
-};
+// 更新行数据，同时更新缓存
 const updateRow = (rowIndex: number, data: any) => {
   const newData = [...tableList.value];
   newData[rowIndex] = { ...tableList.value[rowIndex], ...data };
   tableList.value = newData;
+
+  // 同步更新楼栋缓存
+  const bldId = queryParams.value.bldId;
+  if (bldId) {
+    buildingDataCache.value.set(bldId, JSON.parse(JSON.stringify(tableList.value)));
+  }
 };
-// 保存
+
+// 保存（单元格编辑时触发）
 const handleSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
-  // console.log("保存:", { row, column, newValue, oldValue, rowIndex });
   if (column === "prodId") {
     const selectedOption = productProjList.value.find(
       (option) => option.id === newValue,
@@ -345,6 +326,61 @@ const handleSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
     return;
   }
   updateRow(rowIndex, { [column]: newValue });
+};
+
+// 批量保存
+const handleBatchSave = async () => {
+  // 1. 先确保当前楼栋的数据已缓存
+  if (queryParams.value.bldId && tableList.value.length > 0) {
+    buildingDataCache.value.set(
+      queryParams.value.bldId,
+      JSON.parse(JSON.stringify(tableList.value))
+    );
+  }
+
+  // 2. 收集所有楼栋的缓存数据
+  const saveTasks: Promise<any>[] = [];
+  for (const [bldId, data] of buildingDataCache.value) {
+    if (data && data.length > 0) {
+      saveTasks.push(
+        projectAreaApi.batchSaveNet(data, bldId, props.currentData?.id)
+      );
+    }
+  }
+  if (saveTasks.length === 0) {
+    ElMessage.warning("暂无数据保存");
+    return;
+  }
+
+  try {
+    saveLoading.value = true;
+    // 并行执行所有保存请求
+    const results = await Promise.all(saveTasks);
+
+    const hasError = results.some(res => res.code !== 200);
+    if (hasError) {
+      ElMessage.warning(`部分楼栋保存失败，请检查数据`);
+    } else {
+      ElMessage.success(`成功保存楼栋数据！`);
+
+      // 3. 保存成功后清空缓存，重新从数据库获取最新数据
+      buildingDataCache.value.clear();
+      await getTableData();
+
+      if (updateDetailByProjectId) {
+        updateDetailByProjectId();
+      }
+    }
+  } catch (error) {
+    ElMessage.error("保存失败，请重试");
+  } finally {
+    saveLoading.value = false;
+  }
+};
+
+// 楼栋切换处理
+const handleBuildingChange = () => {
+  getTableData();
 };
 
 // 获取项目产品类型
@@ -364,6 +400,7 @@ const getProductProjList = async () => {
     console.error("获取数据失败:", error);
   }
 };
+
 // 获取楼栋列表
 const getBuildingList = async () => {
   if (!props.projectId) return;
@@ -375,8 +412,8 @@ const getBuildingList = async () => {
     if (res.code === 200) {
       buildingList.value = res.data || [];
       if (buildingList.value.length > 0) {
-        queryParams.value.bldId = buildingList.value[0].id; // 默认选中第一个楼栋
-        await getTableData(); // 获取默认选中楼栋的数据
+        queryParams.value.bldId = buildingList.value[0].id;
+        await getTableData();
       } else {
         ElMessage.warning("该项目下没有楼栋数据");
       }
@@ -385,6 +422,7 @@ const getBuildingList = async () => {
     ElMessage.error("加载数据失败");
   }
 };
+
 // 获取上一版面积版本明细
 const getPrevVersionDetail = async () => {
   if (!props.currentData?.id) return;
@@ -394,21 +432,19 @@ const getPrevVersionDetail = async () => {
       verMid: props.currentData?.id,
     });
     if (res.code === 200) {
-      console.log("上一版面积版本明细:", res.data);
       prevListData.value = res.data || [];
     }
   } catch (error) {
     ElMessage.error("加载数据失败");
   }
 };
+
 onMounted(async () => {
-  await getProductProjList(); // 获取产品类型
-  // 当未生效的版本面积设置时需要获取上一生效版本的面积版本明细，然后把对应楼栋的数据赋值上去显示
+  await getProductProjList();
   if (props.currentData.status == 0) {
-    await getPrevVersionDetail(); // 获取上一版面积版本明细
+    await getPrevVersionDetail();
   }
-  await getBuildingList(); // 先获取楼栋列表
-  // await getTableData(); // 默认查询选中的第一个楼栋下的数据
+  await getBuildingList();
 });
 </script>
 
@@ -431,6 +467,7 @@ onMounted(async () => {
       flex-direction: column;
       gap: 4px;
       margin-bottom: 20px;
+
       .title-main {
         font-size: 20px;
         font-weight: 600;
@@ -465,10 +502,12 @@ onMounted(async () => {
           padding: 8px 10px;
           border-radius: 6px;
           transition: all 0.3s;
+
           .el-icon {
             font-size: 16px;
             font-weight: 600;
           }
+
           &:hover {
             background-color: #f5f7fa;
             color: #409eff;
@@ -480,6 +519,7 @@ onMounted(async () => {
           align-items: center;
           padding-left: 20px;
           border-left: 1px solid #e4e7ed;
+
           .label {
             font-size: 14px;
             color: #606266;

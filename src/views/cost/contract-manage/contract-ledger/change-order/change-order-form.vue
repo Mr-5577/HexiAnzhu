@@ -173,8 +173,36 @@
           title="相关合同"
           v-model:collapsed="collapsedCards.process"
         >
+          <base-table :columns="linkConViewColumns" :tableData="tableList" :loading="tableLoading" :rowKey="'id'" :total="tableList.length" v-if="isReadonly">
+            <template #cstAllocStatus="{ row }">
+              <el-tag size="small" :type="getEnumType(allocStatusEnum, row?.cstAllocStatus || 0)">
+                {{ getEnumLabel(allocStatusEnum, row?.cstAllocStatus || 0) }}
+              </el-tag>
+            </template>
+            <template #cstAllocWarn="{ row }">
+              <el-tag size="small" :type="getEnumType(allocWarnEnum, row?.cstAllocWarn || null)">
+                {{ getEnumLabel(allocWarnEnum, row?.cstAllocWarn || null) }}
+              </el-tag>
+            </template> 
+            <template #wasteCostReasonId="{ row }">
+              <el-tag size="small" :type="getEnumType(invalidCostReasonOptions, row?.wasteCostReasonId || null)">
+                {{ getEnumLabel(invalidCostReasonOptions, row?.wasteCostReasonId || null) }}
+              </el-tag>
+            </template>
+            <template #actions="{ row }">
+              <el-button link type="primary" @click="handleAllocDetail(row)" v-if="isReadonly" :disabled="!isReadonly">
+                分摊
+              </el-button>
+              <el-button link type="danger" @click="deleteLinkCon(row)" v-if="!isReadonly" :disabled="isReadonly">
+                删除
+              </el-button>
+              <ConCostAllocDialog v-model="dialogVisible" :projId="row.projId" :projName="row.projName"
+                :displayName="row.conName" :bizType="formType.CON_CHANGE" :allocAmt="row.estChangeAmt" :cstMData="row.cstM"/> 
+            </template>
+          </base-table>
           <DetailTableCard
             ref="detailtableRef"
+            v-if="!isReadonly"
             title="变更明细"
             :count="tableList.length"
             add-text=""
@@ -192,14 +220,9 @@
               <el-button type="primary" size="small" @click="handleLinkCon">🔗关联合同</el-button>
             </template>
             <template #actions="{ row }">
-              <el-button link type="primary" @click="handleAllocDetail(row)" v-if="isReadonly" :disabled="!isReadonly">
-                分摊
-              </el-button>
               <el-button link type="danger" @click="deleteLinkCon(row)" v-if="!isReadonly" :disabled="isReadonly">
                 删除
               </el-button>
-              <ConCostAllocDialog v-model="dialogVisible" :projId="row.projId" :projName="row.projName"
-                :displayName="row.conName" :bizType="formType.CON_CHANGE" :allocAmt="row.estChangeAmt" /> //:cstMData="props.cstMData"
             </template>
           </DetailTableCard>
         </FormCard>
@@ -267,7 +290,7 @@ import ChooseConDialog from "@/components/business/choose-contract-dialog.vue";
 import DetailTableCard from "@/components/base/detail-table-card.vue";
 
 // —— 常量 / 枚举 ——
-import { ChangeTypeEnum } from "@/constants/contract-manage/enums";
+import { allocStatusEnum, allocWarnEnum, ChangeTypeEnum } from "@/constants/contract-manage/enums";
 
 // —— API ——
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
@@ -287,11 +310,12 @@ import { useTagsStore } from "@/stores/tags-store";
 
 // —— 类型 / 配置 ——
 import { formType } from "@/types/form/form-types.ts";
-import { NAV_CARDS, createLinkConColumns } from "./change-order-config.ts";
+import { BOOL_OPTIONS, NAV_CARDS, createLinkConColumns, linkConViewColumns } from "./change-order-config.ts";
 import { requiredInputRule, requiredRule } from "@/utils/form-rule-validate.ts";
 import { dateUtil } from "@/utils/date-util.ts";
 import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api.ts";
-import ConCostAllocDialog from "./con-cost-alloc-dialog.vue";
+import ConCostAllocDialog from "@/views/cost/cost-allocation/con-cost-alloc/con-cost-alloc-dialog.vue";
+import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
 
 defineOptions({ name: "change-order-form" });
 

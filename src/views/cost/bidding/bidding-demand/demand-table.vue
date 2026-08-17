@@ -3,35 +3,16 @@
   <div class="demand-table-wrapper">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
       <el-form-item label="招标事项" prop="tenderName">
-        <el-input
-          v-model="queryParams.tenderName"
-          placeholder="请输入招标事项"
-          clearable
-          style="width: 180px"
-        />
+        <el-input v-model="queryParams.tenderName" placeholder="请输入招标事项" clearable style="width: 180px" />
       </el-form-item>
       <el-form-item label="审批状态" prop="status">
-        <el-select
-          v-model="queryParams.status"
-          placeholder="请选择审批状态"
-          clearable
-          style="width: 180px"
-        >
-          <el-option
-            v-for="item in approvalStatusEnum"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
+        <el-select v-model="queryParams.status" placeholder="请选择审批状态" clearable style="width: 180px">
+          <el-option v-for="item in approvalStatusEnum" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </el-form-item>
       <el-form-item label="创建人" prop="createId">
-        <el-cascader
-          ref="projCascaderRef"
-          v-model="queryParams.createId"
-          :options="empTreeData"
-          :show-all-levels="false"
-          :props="{
+        <el-cascader ref="projCascaderRef" v-model="queryParams.createId" :options="empTreeData"
+          :show-all-levels="false" :props="{
             expandTrigger: 'click',
             emitPath: false,
             checkStrictly: false,
@@ -43,33 +24,11 @@
               // dataType: 0 表示人员，即叶子节点
               return data.dataType === 0;
             },
-          }"
-          placeholder="请选择"
-          style="width: 180px"
-          clearable
-          filterable
-        />
-        <!-- <el-tree-select
-          v-model="queryParams.createId"
-          node-key="treeId"
-          :props="defaultProps"
-          :data="empTreeData"
-          filterable
-          style="width: 180px"
-        /> -->
+          }" placeholder="请选择" style="width: 180px" clearable filterable />
       </el-form-item>
       <el-form-item label="创建时间" prop="time">
-        <el-date-picker
-          v-model="queryParams.time"
-          type="daterange"
-          range-separator="-"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          format="YYYY-MM-DD"
-          value-format="YYYY-MM-DD"
-          style="width: 220px"
-          clearable
-        />
+        <el-date-picker v-model="queryParams.time" type="daterange" range-separator="-" start-placeholder="开始日期"
+          end-placeholder="结束日期" format="YYYY-MM-DD" value-format="YYYY-MM-DD" style="width: 220px" clearable />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="handleSearch"> 搜索 </el-button>
@@ -78,37 +37,19 @@
       </el-form-item>
     </el-form>
 
-    <base-table
-      :columns="columns"
-      :tableData="tableData"
-      :loading="tableLoading"
-      :rowKey="'id'"
-      :pagination="false"
-    >
+    <base-table :columns="columns" :tableData="paginatedData" :loading="tableLoading" :rowKey="'id'" :total="total"
+      :current-page="currentPage" :page-size="pageSize" @pagination-change="handlePaginationChange">
       <template #status="{ row }">
-        <el-tag
-          size="small"
-          :type="getEnumType(approvalStatusEnum, row?.status || 0)"
-        >
+        <el-tag size="small" :type="getEnumType(approvalStatusEnum, row?.status || 0)">
           {{ getEnumLabel(approvalStatusEnum, row?.status || 0) }}
         </el-tag>
       </template>
 
       <template #actions="{ row }">
-        <el-button
-          type="primary"
-          link
-          @click="handleEdit(row)"
-          :disabled="row.status != 0"
-        >
+        <el-button type="primary" link @click="handleEdit(row)" :disabled="row.status != 0">
           编辑
         </el-button>
-        <el-button
-          type="danger"
-          link
-          @click="handleDelete(row)"
-          :disabled="row.status != 0"
-        >
+        <el-button type="danger" link @click="handleDelete(row)" :disabled="row.status != 0">
           删除
         </el-button>
         <el-button type="primary" link @click="handleDetail(row)">
@@ -120,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { useRouter } from "vue-router";
@@ -146,24 +87,25 @@ const emit = defineEmits<{
 const router = useRouter();
 
 const tableLoading = ref(false);
+const currentPage = ref<number>(1);
+const pageSize = ref<number>(20);
+const total = ref<number>(0);
 const tableData = ref([]);
 // 人员树形结构数据
 const empTreeData = ref([]);
-const defaultProps = {
-  value: "treeId",
-  label: "orgName",
-  children: "children",
-  disabled: (data: any) => {
-    // 禁用所有 dataType 不为 'emp' 的节点 ==== seg: '板块',mgu: '管理单元',dept: '部门',emp: '员工'
-    return data.dataType !== 0;
-  },
-};
 
 const queryParams = ref({
   tenderName: "",
   status: undefined,
   createId: undefined,
   time: [],
+});
+
+// 手动分页
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return tableData.value.slice(start, end)
 });
 
 const columns: TableColumnItem[] = [
@@ -214,6 +156,7 @@ const getDataList = async () => {
     const res = await biddingManageApi.getDemandList(query);
     if (res.code === 200) {
       tableData.value = res.data || [];
+      total.value = res.data?.length || 0;
     }
   } catch (error) {
     console.error("获取招标需求列表失败:", error);
@@ -221,7 +164,10 @@ const getDataList = async () => {
     tableLoading.value = false;
   }
 };
-
+const handlePaginationChange = (params: any) => {
+  currentPage.value = params.currentPage;
+  pageSize.value = params.pageSize;
+};
 const handleSearch = () => {
   getDataList();
 };
@@ -271,7 +217,7 @@ const handleDelete = ({ bidBillId }) => {
         getDataList();
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 
 // 获取人员树形数据
@@ -287,6 +233,9 @@ watch(
   () => props.selectedData,
   (val) => {
     if (val) {
+      currentPage.value = 1;
+      pageSize.value = 20;
+      total.value = 0;
       getEmpTreeData();
       getDataList();
     }

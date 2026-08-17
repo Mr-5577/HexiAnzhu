@@ -68,10 +68,12 @@ import { useMenuStore } from "@/stores/menu-store";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { userApi } from "@/api/system/user-api";
 import { useUserStore } from "@/stores/user-store";
+import { useTagsStore } from "@/stores/tags-store";
 import { useSalesData } from "@/composables/use-sales";
 
 const menuStore = useMenuStore();
 const userStore = useUserStore();
+const tagsStore = useTagsStore();
 const { resetData } = useSalesData();
 
 interface Props {
@@ -139,6 +141,8 @@ const selectAccount = async (account: any) => {
     // const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxNTE5NjY1NDMxMCIsIm9hVXNlcklkIjoiMTIyNjEzMjYxMDk2MTI0NDI0NCIsInVzZXJJZCI6MTUsInVzZXJuYW1lIjoiMTUxOTY2NTQzMTAiLCJpYXQiOjE3ODY2Njk3NjYsImV4cCI6MTc4Njc1NjE2Nn0.7tZOfRUYllVwg7gGqVSr1YLUO-RFYIP_Gyy55C0FvEc'
     ElMessage.success("切换账号成功，即将刷新获取账号数据！");
     const token = account.token;
+    // 重置所有持久化的 Store（关键步骤）
+    resetAllStores();
     localStorage.clear();
     sessionStorage.clear();
     resetData(); // 重置共享数据
@@ -175,7 +179,21 @@ const handleNavClick = (module: any) => {
 const handleProfile = () => {
   router.push("/system/user");
 };
+// 重置全部带有缓存标识的仓库
+const resetAllStores = () => {
+  // 重置 userStore
+  userStore.userInfo = null;
+  userStore.token = "";
+  userStore.isFullScreen = false;
+  userStore.stateTag = "";
+  userStore.isQueryFast = true;
+  userStore.empNo = "";
 
+  // 重置 tagsStore
+  tagsStore.visitedViews = [];
+  tagsStore.activeTag = "";
+  tagsStore.historyStack = [];
+};
 const logout = () => {
   ElMessageBox.confirm("确定要退出当前系统吗？", "退出", {
     confirmButtonText: "确认",
@@ -190,6 +208,9 @@ const logout = () => {
           const res = await userApi.logout();
           if (res.code === 200) {
             ElMessage.success("退出成功，即将跳转到登录页！");
+            // 重置所有持久化的 Store（关键步骤）
+            resetAllStores();
+            // 清除浏览器缓存
             localStorage.clear();
             sessionStorage.clear();
             resetData(); // 重置共享数据

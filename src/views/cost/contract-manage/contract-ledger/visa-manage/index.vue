@@ -1,109 +1,84 @@
 <!-- 签证管理 列表 -->
- <!-- 补充合同 列表（样式优化版 · 合并真实逻辑） -->
+<!-- 补充合同 列表（样式优化版 · 合并真实逻辑） -->
 <template>
   <div class="supplement-contract-table">
     <!-- <div class="pa-card">  -->
-      <!-- 顶部工具栏：标题 + 数量 + 刷新 -->
-      <div class="pa-toolbar">
-        <div class="pa-toolbar__title">
-          <span class="pa-toolbar__name">签证审批</span>
-          <el-tag size="small" type="info" effect="plain" round>
-            {{ tableData.length }} 个
-          </el-tag>
-        </div>
+    <!-- 顶部工具栏：标题 + 数量 + 刷新 -->
+    <div class="pa-toolbar">
+      <div class="pa-toolbar__title">
+        <span class="pa-toolbar__name">签证审批</span>
+        <el-tag size="small" type="info" effect="plain" round>
+          {{ tableData.length }} 个
+        </el-tag>
       </div>
+    </div>
 
-      <!-- 筛选区域 -->
-      <div class="pa-filter">
-        <el-form :model="queryParams" ref="queryRef" :inline="true">
-          <el-form-item label="签证名称" prop="bizTitle">
-            <el-input
-              v-model="queryParams.bizTitle"
-              placeholder=""
-              clearable
-              style="width: 300px"
-            />
-          </el-form-item>
-          <el-form-item label="审批状态" prop="status">
-          <el-select
-            v-model="queryParams.status"
-            placeholder="请选择审批状态"
-            style="width: 100px"
-            clearable
-          >
-            <el-option
-              v-for="item in approvalStatusEnum"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
+    <!-- 筛选区域 -->
+    <div class="pa-filter">
+      <el-form :model="queryParams" ref="queryRef" :inline="true">
+        <el-form-item label="签证名称" prop="bizTitle">
+          <el-input v-model="queryParams.bizTitle" placeholder="" clearable style="width: 300px" />
+        </el-form-item>
+        <el-form-item label="审批状态" prop="status">
+          <el-select v-model="queryParams.status" placeholder="请选择审批状态" style="width: 100px" clearable>
+            <el-option v-for="item in approvalStatusEnum" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
-          <el-form-item>
-            <el-button
-              type="primary"
-              class="refresh-btn"
-              :class="{ 'is-refreshing': refreshing }"
-              :disabled="refreshing"
-              @click="handleRefresh"
-            >
-              <el-icon class="refresh-icon"><Refresh /></el-icon>
-              <span>{{ refreshing ? "搜索中" : "搜索" }}</span>
-            </el-button>
-            <!-- <el-button type="primary" @click="handleSearch"> 搜索 </el-button> -->
-            <el-button @click="handleReset">重置</el-button>
-            <el-button type="primary" class="add-btn" @click="handleAdd">
-              <el-icon><Plus /></el-icon>
-              <span>新增</span>
-            </el-button>
-          </el-form-item>
-        </el-form>
-      </div>
-
-      <base-table
-        :columns="tableColumns"
-        :tableData="tableData"
-        :loading="tableLoading"
-        :rowKey="'id'"
-        :pagination="false"
-      >
-        <template #status="{ row }">
-          <el-tag
-            size="small"
-            :type="getEnumType(approvalStatusEnum, row?.status || 0)"
-          >
-            {{ getEnumLabel(approvalStatusEnum, row?.status || 0) }}
-          </el-tag>
-        </template>
-        <template #visaType="{ row }">
-          <el-tag
-            size="small"
-            :type="getEnumType(VisaTypeEnum, row?.visaType || null)"
-          >
-            {{ getEnumLabel(VisaTypeEnum, row?.visaType || null) }}
-          </el-tag>
-        </template>
-        <template #actions="{ row }">
-          <el-button type="primary" link class="row-link" @click="handleEdit(row)" :disabled="row.status !== 0 || row.createId !== userStore.userInfo.id">
-            编辑
+        <el-form-item>
+          <el-button type="primary" class="refresh-btn" :class="{ 'is-refreshing': refreshing }" :disabled="refreshing"
+            @click="handleRefresh">
+            <el-icon class="refresh-icon">
+              <Refresh />
+            </el-icon>
+            <span>{{ refreshing ? "搜索中" : "搜索" }}</span>
           </el-button>
-          <el-button type="primary" link class="row-link" @click="handleDetail(row)">
-            详情
-          </el-button> 
-          <!-- <el-button type="primary" link class="row-link" @click="handleApprove(row)">
+          <!-- <el-button type="primary" @click="handleSearch"> 搜索 </el-button> -->
+          <el-button @click="handleReset">重置</el-button>
+          <el-button type="primary" class="add-btn" @click="handleAdd">
+            <el-icon>
+              <Plus />
+            </el-icon>
+            <span>新增</span>
+          </el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+
+    <base-table :columns="tableColumns" :tableData="paginatedData" :loading="tableLoading" :rowKey="'id'" :total="total"
+      :current-page="currentPage" :page-size="pageSize" @pagination-change="handlePaginationChange">
+      <template #status="{ row }">
+        <el-tag size="small" :type="getEnumType(approvalStatusEnum, row?.status || 0)">
+          {{ getEnumLabel(approvalStatusEnum, row?.status || 0) }}
+        </el-tag>
+      </template>
+      <template #visaType="{ row }">
+        <el-tag size="small" :type="getEnumType(VisaTypeEnum, row?.visaType || null)">
+          {{ getEnumLabel(VisaTypeEnum, row?.visaType || null) }}
+        </el-tag>
+      </template>
+      <template #actions="{ row }">
+        <el-button type="primary" link class="row-link" @click="handleEdit(row)"
+          :disabled="row.status !== 0 || row.createId !== userStore.userInfo.id">
+          编辑
+        </el-button>
+        <el-button type="primary" link class="row-link" @click="handleDetail(row)">
+          详情
+        </el-button>
+        <!-- <el-button type="primary" link class="row-link" @click="handleApprove(row)">
             审批
           </el-button> -->
-          <el-button type="danger" link class="row-link" @click="handleDelete(row)" :disabled="row.status !== 0 || row.createId !== userStore.userInfo.id">
-            删除
-          </el-button>
-        </template>
-      </base-table>
-    </div>
+        <el-button type="danger" link class="row-link" @click="handleDelete(row)"
+          :disabled="row.status !== 0 || row.createId !== userStore.userInfo.id">
+          删除
+        </el-button>
+      </template>
+    </base-table>
+  </div>
   <!-- </div>  -->
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { ContractVisa } from "@/types/cost/contract-manage/visa-management-type.ts";
@@ -123,11 +98,14 @@ const props = defineProps<{
 
 const queryParams = ref({
   bizTitle: "",
-  status:null,
+  status: null,
 });
 
 const router = useRouter();
 const tableLoading = ref(false);
+const currentPage = ref<number>(1);
+const pageSize = ref<number>(20);
+const total = ref<number>(0);
 const refreshing = ref(false); // 驱动刷新按钮旋转动画
 const tableData = ref<ContractVisa[]>([]);
 const userStore = useUserStore();
@@ -138,21 +116,12 @@ const tableColumns: TableColumnItem[] = [
   { prop: "bizTitle", label: "签证名称" },
   // { prop: "changeType", label: "变更类型" },
   // { slot: "changeName", label: "变更事项" },
-  { prop: "visaApplyAmt", label: "申请签证金额" , width: 120,formatType:"#,##0.00",},
-  { prop: "auditReviewAmt", label: "审核签证金额", width: 120 ,formatType:"#,##0.00",},
-  { slot: "status", label: "状态" , width: 90},
+  { prop: "visaApplyAmt", label: "申请签证金额", width: 120, formatType: "#,##0.00", },
+  { prop: "auditReviewAmt", label: "审核签证金额", width: 120, formatType: "#,##0.00", },
+  { slot: "status", label: "状态", width: 90 },
   { prop: "visaApplyDesc", label: "签证说明" },
-  { prop: "createName", label: "创建人" , width: 90},
-  { prop: "createDate", label: "创建日期" , width: 150},
-  // { prop: "visaApplyDesc", label: "签证申报说明", width: 200 },
-  // { prop: "costingReviewAmt", label: "成本审核金额", width: 120 },
-  // { prop: "costingCutAmt", label: "成本审减金额", width: 120 },
-  // { prop: "costingOpinion", label: "成本审核意见", width: 200 },
-  // { prop: "wasteCostAmt", label: "无效成本金额", width: 120 },
-  // { prop: "wasteCostReasonId", label: "无效成本原因", width: 120 },
-  // { prop: "auditReviewAmt", label: "审计审核金额", width: 120 },
-  // { prop: "auditCutAmt", label: "审计审减金额", width: 120 },
-  // { prop: "auditOpinion", label: "审计审核意见", width: 200 },
+  { prop: "createName", label: "创建人", width: 90 },
+  { prop: "createDate", label: "创建日期", width: 150 },
   {
     label: "操作",
     width: 200,
@@ -160,21 +129,12 @@ const tableColumns: TableColumnItem[] = [
     fixed: "right",
   },
 ];
-const getStatusText = (status: number) => {
-  //  状态：0-草稿 5-审批中 10-已审批 30-已作废
-  switch (status) {
-    case 0:
-      return "草稿";
-    case 5:
-      return "审批中";
-    case 10:
-      return "已审批";
-    case 30:
-      return "已作废";
-    default:
-      return "未知状态";
-  }
-};
+// 手动分页
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return tableData.value.slice(start, end)
+});
 // 获取列表数据
 const getDataList = async () => {
   if (!props.conId) {
@@ -187,7 +147,8 @@ const getDataList = async () => {
       conId: props.conId, ...queryParams.value,
     });
     if (res.code === 200) {
-      tableData.value = res.data;
+      tableData.value = res.data || [];
+      total.value = res.data?.length || 0;
     }
   } catch (error) {
     console.error("获取工程核价列表失败:", error);
@@ -195,7 +156,10 @@ const getDataList = async () => {
     tableLoading.value = false;
   }
 };
-
+const handlePaginationChange = (params: any) => {
+  currentPage.value = params.currentPage;
+  pageSize.value = params.pageSize;
+};
 const handleDelete = (row) => {
   ElMessageBox.confirm("确定删除该数据吗？", "提示", { type: "warning" })
     .then(async () => {
@@ -209,10 +173,10 @@ const handleDelete = (row) => {
         console.error("删除失败:", error);
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 // 刷新按钮
-const handleRefresh = async() => {
+const handleRefresh = async () => {
   refreshing.value = true;
   try {
     await getDataList();
@@ -301,6 +265,7 @@ onMounted(() => {
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
   // overflow: hidden;
   transition: box-shadow 0.25s ease;
+
   &:hover {
     box-shadow: 0 4px 18px rgba(0, 0, 0, 0.09);
   }
@@ -323,17 +288,20 @@ onMounted(() => {
   border-bottom: 1px solid #f0f2f5;
   background: linear-gradient(180deg, #fafcff 0%, #ffffff 100%);
 }
+
 .pa-toolbar__title {
   display: flex;
   align-items: center;
   gap: 10px;
 }
+
 .pa-toolbar__name {
   position: relative;
   padding-left: 12px;
   font-size: 16px;
   font-weight: 600;
   color: #303133;
+
   &::before {
     content: "";
     position: absolute;
@@ -346,6 +314,7 @@ onMounted(() => {
     background: #409eff;
   }
 }
+
 .pa-toolbar__actions {
   display: flex;
   align-items: center;
@@ -355,6 +324,7 @@ onMounted(() => {
 /* 筛选区域 */
 .pa-filter {
   padding: 12px 14px 0;
+
   :deep(.el-form-item) {
     margin-bottom: 12px;
   }
@@ -366,25 +336,31 @@ onMounted(() => {
   align-items: center;
   gap: 6px;
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+
   .refresh-icon {
     transition: transform 0.3s ease;
   }
+
   &:hover:not(:disabled) {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(64, 158, 255, 0.35);
   }
+
   &:active:not(:disabled) {
     transform: translateY(0);
     box-shadow: 0 2px 6px rgba(64, 158, 255, 0.3);
   }
+
   &.is-refreshing .refresh-icon {
     animation: pa-spin 0.8s linear infinite;
   }
 }
+
 @keyframes pa-spin {
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -396,10 +372,12 @@ onMounted(() => {
   align-items: center;
   gap: 4px;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+
   &:hover:not(:disabled) {
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(64, 158, 255, 0.25);
   }
+
   &:active:not(:disabled) {
     transform: translateY(0);
   }
@@ -409,10 +387,9 @@ onMounted(() => {
 .row-link {
   font-weight: 500;
   transition: opacity 0.15s ease;
+
   &:hover {
     opacity: 0.85;
   }
 }
 </style>
-
-
