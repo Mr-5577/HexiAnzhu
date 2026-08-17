@@ -11,51 +11,31 @@
       <div class="header-actions">
         <div class="building-info">
           <div class="go-back" @click="handleBack">
-            <el-icon><ArrowLeft /></el-icon>
+            <el-icon>
+              <ArrowLeft />
+            </el-icon>
             <span>返回</span>
           </div>
           <div class="building-detail-info">
             <span class="label">楼栋</span>
-            <el-select
-              v-model="queryParams.bldId"
-              placeholder="请选择楼栋"
-              style="width: 200px"
-              @change="getTableData"
-            >
-              <el-option
-                v-for="item in buildingList"
-                :key="item.id"
-                :label="item.bldName"
-                :value="item.id"
-              />
+            <el-select v-model="queryParams.bldId" placeholder="请选择楼栋" style="width: 200px" @change="getTableData">
+              <el-option v-for="item in buildingList" :key="item.id" :label="item.bldName" :value="item.id" />
             </el-select>
           </div>
         </div>
         <div>
           <!-- 启用时不可操作 -->
-          <el-button
-            type="primary"
-            :loading="saveLoading"
-            @click="handleBatchSave"
-            v-if="props.currentData.status == 0"
-          >
+          <el-button type="primary" :loading="saveLoading" @click="handleBatchSave"
+            v-if="props.currentData.status == 0">
             批量保存
           </el-button>
         </div>
       </div>
     </div>
     <!-- 可编辑表格 -->
-    <editable-table
-      ref="businessDetailtableRef"
-      :rowKey="'uuid'"
-      v-model="tableList"
-      :columns="tableColumns"
-      :loading="tableLoading"
-      :pagination="false"
-      :highlight-current-row="false"
-      :showSummary="true"
-      :on-save="handleSave"
-    >
+    <editable-table ref="businessDetailtableRef" :rowKey="'uuid'" v-model="tableList" :columns="tableColumns"
+      :loading="tableLoading" :pagination="false" :highlight-current-row="false" :showSummary="true"
+      :on-save="handleSave">
     </editable-table>
   </div>
 </template>
@@ -431,6 +411,7 @@ onMounted(async () => {
       flex-direction: column;
       gap: 4px;
       margin-bottom: 20px;
+
       .title-main {
         font-size: 20px;
         font-weight: 600;
@@ -465,10 +446,12 @@ onMounted(async () => {
           padding: 8px 10px;
           border-radius: 6px;
           transition: all 0.3s;
+
           .el-icon {
             font-size: 16px;
             font-weight: 600;
           }
+
           &:hover {
             background-color: #f5f7fa;
             color: #409eff;
@@ -480,6 +463,7 @@ onMounted(async () => {
           align-items: center;
           padding-left: 20px;
           border-left: 1px solid #e4e7ed;
+
           .label {
             font-size: 14px;
             color: #606266;
