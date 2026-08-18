@@ -371,7 +371,7 @@ const handleSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
 const handleBatchSave = async () => {
   // 防止重复提交
   if (saveLoading.value) return;
-  // 1. 先确保当前显示的数据已同步到缓存
+  // 先确保当前显示的数据已同步到缓存
   if (queryParams.value.bldId && tableList.value.length > 0) {
     const fullData = buildingDataCache.value.get(queryParams.value.bldId) || [];
     // 用当前表格数据更新缓存中对应的行
@@ -386,35 +386,26 @@ const handleBatchSave = async () => {
   }
 
   console.log('所有楼栋缓存数据:', buildingDataCache.value);
-  debugger
-  // 2. 收集所有楼栋的缓存数据
-  const saveTasks: Promise<any>[] = [];
+
+  // 收集所有楼栋的缓存数据
+  let buildingDataObj = {}
   for (const [bldId, data] of buildingDataCache.value) {
     if (data && data.length > 0) {
       // 保存时只保存楼栋关联的业态列表数据
       const filteredData = filterListByBuilding(data, bldId);
       // console.log('filteredData:', { bldId, filteredData, verMid: props.currentData?.id });
       if (filteredData.length > 0) {
-        saveTasks.push(
-          projectAreaApi.batchSaveNet(filteredData, bldId, props.currentData?.id)
-        );
+        buildingDataObj[bldId] = filteredData
       }
     }
   }
-  if (saveTasks.length === 0) {
-    ElMessage.warning("暂无数据需要保存");
-    return;
-  }
-
+  console.log('buildingDataObj:', buildingDataObj);
   try {
+    // 批量保存
     saveLoading.value = true;
-    const results = await Promise.all(saveTasks);
-
-    const hasError = results.some(res => res.code !== 200);
-    if (hasError) {
-      ElMessage.warning("部分楼栋保存失败，请检查数据");
-    } else {
-      ElMessage.success(`成功保存 ${saveTasks.length} 个楼栋的数据！`);
+    const res = await projectAreaApi.batchSaveNet(buildingDataObj, props.currentData?.id)
+    if (res.code === 200) {
+      ElMessage.success(`保存成功！`);
 
       // 保存成功后清空缓存，重新加载数据
       buildingDataCache.value.clear();
@@ -426,7 +417,6 @@ const handleBatchSave = async () => {
     }
   } catch (error) {
     console.error('保存失败:', error);
-    ElMessage.error("保存失败，请重试");
   } finally {
     saveLoading.value = false;
   }

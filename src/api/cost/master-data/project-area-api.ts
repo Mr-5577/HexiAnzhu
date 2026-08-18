@@ -168,17 +168,14 @@ export const projectAreaApi = {
   /**
    * 批量保存面积明细网状结构
    * @param data - 面积明细列表
-   * @param bldId - 楼栋ID
    * @param verMid - 版本ID
-   * @returns Promise
    */
   batchSaveNet: (
-    data: ProjectAreaDetail[], // 列表数据
-    bldId: number | string, // 楼栋ID
+    data: any, // 列表数据
     verMid: number | string, // 版本ID
   ) => {
     return http.post(
-      `/mainData/areaVerD/saveNet?bldId=${bldId}&verMid=${verMid}`,
+      `/mainData/areaVerD/saveNet?verMid=${verMid}`,
       data,
       { addQueryFast: false },
     );
