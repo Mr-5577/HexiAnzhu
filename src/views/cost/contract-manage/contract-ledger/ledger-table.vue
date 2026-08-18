@@ -36,7 +36,7 @@
       </el-form-item>
     </el-form>
 
-    <base-table :columns="columns" :tableData="paginatedData" :loading="tableLoading" :rowKey="'id'" :total="total"
+    <base-table :columns="columns" :tableData="tableData" :loading="tableLoading" :rowKey="'id'" :total="total"
       :current-page="currentPage" :page-size="pageSize" @pagination-change="handlePaginationChange">
       <template #conProperty="{ row }">
         <span>{{ getEnumLabel(ConPropertyEnum, row?.conProperty || 0) }}</span>
@@ -165,16 +165,8 @@ const columns: TableColumnItem[] = [
   },
 ];
 
-// 手动分页
-const paginatedData = computed(() => {
-  const start = (currentPage.value - 1) * pageSize.value;
-  const end = start + pageSize.value;
-  return tableData.value.slice(start, end)
-});
-
 // 获取列表数据
 const getDataList = async () => {
-
   if (!props.selectedData) {
     return;
   }
@@ -198,13 +190,16 @@ const getDataList = async () => {
       ...params,
       createDateStart: startDate,
       createDateEnd: endDate,
+      pageNum: currentPage.value,
+      pageSize: pageSize.value,
     };
 
     const res = await contractLedgerApi.getContractLedgerList(query);
 
-    if (res.code === 200) {
-      tableData.value = res.data || [];
-      total.value = res.data?.length || 0;
+    if (res.code === 200 && res.data) {
+      const { records } = res.data;
+      tableData.value = records || [];
+      total.value = res.data?.total || 0;
     }
   } catch (error) {
     console.error("查询合同信息失败:", error);
@@ -215,6 +210,7 @@ const getDataList = async () => {
 const handlePaginationChange = (params: any) => {
   currentPage.value = params.currentPage;
   pageSize.value = params.pageSize;
+  getDataList();
 };
 const handleSearch = () => {
   getDataList();
@@ -233,6 +229,8 @@ const handleReset = () => {
     createId: undefined,
     time: [],
   };
+  currentPage.value = 1;
+  pageSize.value = 20;
   getDataList();
 };
 // 新增合同台账

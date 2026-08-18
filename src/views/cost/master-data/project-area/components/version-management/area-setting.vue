@@ -161,120 +161,152 @@ const handleBack = () => {
   emit("back");
 };
 
-// 加载数据
-const getTableData = async () => {
-  if (!queryParams.value.bldId) return;
+// 加载所有楼栋的面积数据
+const getAllBuildingAreaData = async () => {
+  if (!props.currentData?.id || !props.projectId) return;
 
-  // 1. 先检查缓存中是否有当前楼栋的数据
-  const cachedData = buildingDataCache.value.get(queryParams.value.bldId);
-  if (cachedData) {
-    tableList.value = cachedData;
-    return;
-  }
-
-  // 2. 缓存中没有，从接口获取
   try {
     tableLoading.value = true;
-    tableList.value = [];
+
+    // 获取所有楼栋ID
+    const bldIds = buildingList.value.map((item) => item.id);
+    if (bldIds.length === 0) {
+      tableList.value = [];
+      return;
+    }
+
     const params = {
       verMid: props.currentData?.id,
-      bldId: queryParams.value.bldId,
       prodId: props.projectId,
+      bldIds: bldIds, // 传入所有楼栋ID
     };
-    const res = await projectAreaApi.getNetByBldId(params);
-    if (res.code === 200) {
-      const list = res.data || [];
 
-      // 如果是未生效状态，并且返回的数据为空或所有数据都是空值，则回填上一版本数据
-      if (props.currentData?.status === 0) {
-        // 判断是否需要回填：列表为空 或 所有字段都没有值（新建状态）
-        const isEmpty =
-          list.length === 0 ||
-          list.every(
-            (item) =>
-              !item.agBuildArea &&
-              !item.ugBuildArea &&
-              !item.agSaleArea &&
-              !item.ugSaleArea &&
-              !item.houseNum &&
-              !item.elvNum,
-          );
-        if (isEmpty && prevListData.value.length > 0) {
+    const res = await projectAreaApi.getNetByBldId(params);
+    console.log('所有楼栋面积数据', res);
+
+    if (res.code === 200 && res.data) {
+      // 清空缓存
+      buildingDataCache.value.clear();
+
+      // 遍历接口返回的数据，按楼栋ID存入缓存
+      for (const [bldId, list] of Object.entries(res.data)) {
+        const bldIdNum = Number(bldId);
+        const dataList = list as any[];
+        let processedList = dataList;
+
+        // 如果是未生效状态，需要回填上一版本数据
+        if (props.currentData?.status === 0 && prevListData.value.length > 0) {
           // 获取当前楼栋的上一版数据
           const historyData = prevListData.value.filter(
-            (item: any) => item.bldId === queryParams.value.bldId,
+            (item: any) => item.bldId === bldIdNum
           );
+
           if (historyData.length > 0) {
-            // 将上一版本数据按 prodId 映射为对象，方便快速查找
+            // 将上一版本数据按 prodId 映射为对象
             const historyMap = historyData.reduce((map: any, item: any) => {
               map[item.prodId] = item;
               return map;
             }, {});
 
-            // 合并数据：用历史数据覆盖模板数据
-            const newData = list.map((item: any) => {
-              const historyItem = historyMap[item.prodId];
-              if (historyItem) {
+            // 判断当前列表是否为空数据（需要回填）
+            const isEmpty = dataList.length === 0 || dataList.every(
+              (item) =>
+                !item.agBuildArea &&
+                !item.ugBuildArea &&
+                !item.agSaleArea &&
+                !item.ugSaleArea &&
+                !item.houseNum &&
+                !item.elvNum
+            );
+
+            if (isEmpty) {
+              // 使用历史数据填充
+              processedList = dataList.map((item: any) => {
+                const historyItem = historyMap[item.prodId];
+                if (historyItem) {
+                  return {
+                    ...item,
+                    uuid: uuidv4(),
+                    agBuildArea: historyItem.agBuildArea || 0,
+                    ugBuildArea: historyItem.ugBuildArea || 0,
+                    agSaleArea: historyItem.agSaleArea || 0,
+                    ugSaleArea: historyItem.ugSaleArea || 0,
+                    houseNum: historyItem.houseNum || 0,
+                    elvNum: historyItem.elvNum || 0,
+                  };
+                }
                 return {
                   ...item,
                   uuid: uuidv4(),
-                  // 用历史数据覆盖面积字段
-                  agBuildArea: historyItem.agBuildArea || 0,
-                  ugBuildArea: historyItem.ugBuildArea || 0,
-                  agSaleArea: historyItem.agSaleArea || 0,
-                  ugSaleArea: historyItem.ugSaleArea || 0,
-                  houseNum: historyItem.houseNum || 0,
-                  elvNum: historyItem.elvNum || 0,
                 };
-              }
-              return {
+              });
+            } else {
+              // 有数据则直接添加uuid
+              processedList = dataList.map((item: any) => ({
                 ...item,
                 uuid: uuidv4(),
-              };
-            });
-            tableList.value = filterListByBuilding(newData);
-            // 存入缓存
-            buildingDataCache.value.set(
-              queryParams.value.bldId,
-              JSON.parse(JSON.stringify(tableList.value))
-            );
-            return;
+              }));
+            }
+          } else {
+            processedList = dataList.map((item: any) => ({
+              ...item,
+              uuid: uuidv4(),
+            }));
           }
+        } else {
+          // 已生效状态，直接添加uuid
+          processedList = dataList.map((item: any) => ({
+            ...item,
+            uuid: uuidv4(),
+          }));
         }
+
+        // 存入缓存
+        buildingDataCache.value.set(bldIdNum, processedList);
       }
 
-      // 正常处理返回的数据
-      const newData = list.map((item) => ({
-        ...item,
-        uuid: uuidv4(),
-      }));
-      tableList.value = filterListByBuilding(newData);
-      // 存入缓存
-      buildingDataCache.value.set(
-        queryParams.value.bldId,
-        JSON.parse(JSON.stringify(tableList.value))
-      );
+      // 默认选中第一个楼栋并显示
+      if (buildingList.value.length > 0) {
+        const firstBldId = buildingList.value[0].id;
+        queryParams.value.bldId = firstBldId; // 设置第一个为默认楼栋
+        loadBuildingData(firstBldId);
+      }
     }
   } catch (error) {
+    console.error('加载数据失败:', error);
     ElMessage.error("加载数据失败");
   } finally {
     tableLoading.value = false;
   }
 };
+// 加载指定楼栋的数据到表格
+const loadBuildingData = (bldId: number) => {
+  const cachedData = buildingDataCache.value.get(bldId);
+  if (cachedData) {
+    queryParams.value.bldId = bldId;
+    // 根据楼栋关联的业态过滤数据
+    const filteredData = filterListByBuilding(cachedData, bldId);
+    tableList.value = filteredData;
+  } else {
+    tableList.value = [];
+  }
+};
+
 /**
- * 根据楼栋ID过滤列表数据
- * @param dataList - 需要过滤的数据列表（包含prodId字段）
+ * 根据楼栋ID过滤数据列表
+ * @param dataList - 需要过滤的数据列表
+ * @param bldId - 楼栋ID
  * @returns 过滤后的数据列表
  */
-const filterListByBuilding = (dataList: any[]): any[] => {
+const filterListByBuilding = (dataList: any[], bldId: number): any[] => {
   // 如果没有选中楼栋，返回全部数据
-  if (!queryParams.value.bldId) {
+  if (bldId == null || bldId === undefined) {
     return dataList;
   }
 
   // 查找选中的楼栋
   const selectedBuilding = buildingList.value.find(
-    (item) => item.id === queryParams.value.bldId,
+    (item) => item.id === bldId,
   );
 
   // 如果没找到楼栋或楼栋没有prodIds，返回空数组
@@ -309,9 +341,16 @@ const updateRow = (rowIndex: number, data: any) => {
   tableList.value = newData;
 
   // 同步更新楼栋缓存
-  const bldId = queryParams.value.bldId;
-  if (bldId) {
-    buildingDataCache.value.set(bldId, JSON.parse(JSON.stringify(tableList.value)));
+  if (queryParams.value.bldId) {
+    const fullData = buildingDataCache.value.get(queryParams.value.bldId) || [];
+    // 找到对应行并更新
+    const updatedFullData = fullData.map((item) => {
+      if (item.uuid === newData[rowIndex].uuid) {
+        return { ...item, ...data };
+      }
+      return item;
+    });
+    buildingDataCache.value.set(queryParams.value.bldId, updatedFullData);
   }
 };
 
@@ -330,48 +369,63 @@ const handleSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
 
 // 批量保存
 const handleBatchSave = async () => {
-  // 1. 先确保当前楼栋的数据已缓存
+  // 防止重复提交
+  if (saveLoading.value) return;
+  // 1. 先确保当前显示的数据已同步到缓存
   if (queryParams.value.bldId && tableList.value.length > 0) {
-    buildingDataCache.value.set(
-      queryParams.value.bldId,
-      JSON.parse(JSON.stringify(tableList.value))
-    );
+    const fullData = buildingDataCache.value.get(queryParams.value.bldId) || [];
+    // 用当前表格数据更新缓存中对应的行
+    const updatedFullData = fullData.map((item) => {
+      const currentRow = tableList.value.find((row) => row.uuid === item.uuid);
+      if (currentRow) {
+        return { ...item, ...currentRow };
+      }
+      return item;
+    });
+    buildingDataCache.value.set(queryParams.value.bldId, updatedFullData);
   }
 
+  console.log('所有楼栋缓存数据:', buildingDataCache.value);
+  debugger
   // 2. 收集所有楼栋的缓存数据
   const saveTasks: Promise<any>[] = [];
   for (const [bldId, data] of buildingDataCache.value) {
     if (data && data.length > 0) {
-      saveTasks.push(
-        projectAreaApi.batchSaveNet(data, bldId, props.currentData?.id)
-      );
+      // 保存时只保存楼栋关联的业态列表数据
+      const filteredData = filterListByBuilding(data, bldId);
+      // console.log('filteredData:', { bldId, filteredData, verMid: props.currentData?.id });
+      if (filteredData.length > 0) {
+        saveTasks.push(
+          projectAreaApi.batchSaveNet(filteredData, bldId, props.currentData?.id)
+        );
+      }
     }
   }
   if (saveTasks.length === 0) {
-    ElMessage.warning("暂无数据保存");
+    ElMessage.warning("暂无数据需要保存");
     return;
   }
 
   try {
     saveLoading.value = true;
-    // 并行执行所有保存请求
     const results = await Promise.all(saveTasks);
 
     const hasError = results.some(res => res.code !== 200);
     if (hasError) {
-      ElMessage.warning(`部分楼栋保存失败，请检查数据`);
+      ElMessage.warning("部分楼栋保存失败，请检查数据");
     } else {
-      ElMessage.success(`成功保存楼栋数据！`);
+      ElMessage.success(`成功保存 ${saveTasks.length} 个楼栋的数据！`);
 
-      // 3. 保存成功后清空缓存，重新从数据库获取最新数据
+      // 保存成功后清空缓存，重新加载数据
       buildingDataCache.value.clear();
-      await getTableData();
+      await getAllBuildingAreaData();
 
       if (updateDetailByProjectId) {
-        updateDetailByProjectId();
+        await updateDetailByProjectId();
       }
     }
   } catch (error) {
+    console.error('保存失败:', error);
     ElMessage.error("保存失败，请重试");
   } finally {
     saveLoading.value = false;
@@ -379,8 +433,8 @@ const handleBatchSave = async () => {
 };
 
 // 楼栋切换处理
-const handleBuildingChange = () => {
-  getTableData();
+const handleBuildingChange = (bldId: number) => {
+  loadBuildingData(bldId);
 };
 
 // 获取项目产品类型
@@ -402,7 +456,7 @@ const getProductProjList = async () => {
 };
 
 // 获取楼栋列表
-const getBuildingList = async () => {
+const getBuildingOptions = async () => {
   if (!props.projectId) return;
   try {
     buildingList.value = [];
@@ -412,13 +466,14 @@ const getBuildingList = async () => {
     if (res.code === 200) {
       buildingList.value = res.data || [];
       if (buildingList.value.length > 0) {
-        queryParams.value.bldId = buildingList.value[0].id;
-        await getTableData();
+        // 加载所有楼栋的面积数据
+        await getAllBuildingAreaData();
       } else {
         ElMessage.warning("该项目下没有楼栋数据");
       }
     }
   } catch (error) {
+    console.error('加载楼栋列表失败:', error);
     ElMessage.error("加载数据失败");
   }
 };
@@ -444,7 +499,7 @@ onMounted(async () => {
   if (props.currentData.status == 0) {
     await getPrevVersionDetail();
   }
-  await getBuildingList();
+  await getBuildingOptions();
 });
 </script>
 

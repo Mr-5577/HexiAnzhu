@@ -234,7 +234,7 @@ export interface ProjectAreaDetailQueryParams {
   /** 版本ID */
   verMid?: number;
   /** 楼栋ID */
-  bldId?: number;
+  bldIds?: number[];
   /** 产品类型ID */
   prodId?: number;
 }

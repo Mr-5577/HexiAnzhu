@@ -156,7 +156,7 @@ export const projectAreaApi = {
   /**
    * 获取楼栋面积明细网状结构
    * @param data - 查询参数
-   * @param data.bldId - 楼栋ID
+   * @param data.bldIds - 楼栋ID集合
    * @param data.prodId - 产品类型ID
    * @param data.verMid - 版本ID
    * @returns Promise 面积明细网状结构数据
