@@ -178,7 +178,7 @@
           <div class="section-title">支付方式</div>
           <div style="display: flex; justify-content: flex-end; margin-bottom: 8px">
             <el-button type="primary" size="small" :disabled="payWayTable.length == 0" @click="handleFinanceAlloc"
-              v-if="!isAdd">
+              v-if="!isAdd && menuStore.hasExactPermission('fina-alloc:ncon-cst')">
               财务分摊
             </el-button>
             <el-button type="primary" size="small" @click="addPayWay" v-if="!isDetail">
@@ -271,8 +271,8 @@
           </template>
         </div>
 
-        <!-- 成本分摊 费用类型所属大类为建安类并且请款类型为正常请款0时显示  -->
-        <CostAllocationCard :visible="isShowCostAllocation && formData.reqType == 0"
+        <!-- 成本分摊 费用类型所属大类为建安类并且请款类型为正常请款0时显示 :visible="isShowCostAllocation && formData.reqType == 0"  -->
+        <CostAllocationCard v-if="menuStore.hasExactPermission('cost-alloc:ncon-cst')" :visible="isShowCostAllocation"
           :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'NCON_CST'"
           :projId="formData.projId" :projName="formData.projName" :displayName="cstProcessData.processName"
           :allocAmt="actualReqAmt" :bizBillId="paymentData.nconBillId" :cstMData="cstMData"
@@ -301,9 +301,10 @@
     <invoice-detail-dialog ref="invoiceDetailDialogRef" v-model="dialogVisible" :detailList="detailList"
       @success="handleInvoiceDetailSuccess" />
 
-    <!-- 财务分摊 erp页面纯查看 -->
+    <!-- 财务分摊 -->
     <FinanceAllocationDialog ref="financeAllocationDialogRef" v-model="financeAllocVisible" :payWayTable="payWayTable"
-      :segId="formData.segId" :projId="formData.projId" :bizType="'NCON_CST'" @select="getFinaList">
+      :segId="formData.segId" :projId="formData.projId" :bizType="'NCON_CST'" :bizBillId="billData?.id"
+      :bizId="paymentData?.id" @select="getFinaList">
     </FinanceAllocationDialog>
   </div>
 </template>
@@ -345,6 +346,7 @@ import BillHeader from "@/components/business/bill-components/bill-header.vue";
 import BillInfo from "@/components/business/bill-components/bill-info.vue";
 import CostAllocationCard from "@/views/cost/cost-allocation/ncon-cost-alloc/ncon-cost-alloc-card.vue";
 import FinanceAllocationDialog from "@/views/cost/finance-allocation/finance-allocation-dialog.vue";
+import { useMenuStore } from "@/stores/menu-store";
 
 defineOptions({ name: "cst-payment-form" });
 
@@ -362,6 +364,7 @@ const emit = defineEmits<{
   (e: "success", data: any): void;
 }>();
 
+const menuStore = useMenuStore();
 const router = useRouter();
 const userStore = useUserStore();
 const tagsStore = useTagsStore();

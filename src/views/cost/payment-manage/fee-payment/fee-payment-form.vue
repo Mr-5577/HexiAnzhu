@@ -191,7 +191,7 @@
               size="small"
               :disabled="payWayTable.length == 0"
               @click="handleFinanceAlloc"
-              v-if="!isAdd"
+              v-if="!isAdd && menuStore.hasExactPermission('fina-alloc:ncon-fee')"
             >
               财务分摊
             </el-button>
@@ -399,6 +399,8 @@
       v-model="financeAllocVisible"
       :payWayTable="payWayTable"
       :segId="formData.segId"
+      :bizBillId="billData?.id"
+      :bizId="paymentData?.id"
       :projId="formData.projId"
       :bizType="'NCON_FEE'"
       @select="getFinaList"
@@ -436,6 +438,7 @@ import { buildTree } from "@/utils/tree";
 import BillHeader from "@/components/business/bill-components/bill-header.vue";
 import BillInfo from "@/components/business/bill-components/bill-info.vue";
 import FinanceAllocationDialog from "@/views/cost/finance-allocation/finance-allocation-dialog.vue";
+import { useMenuStore } from "@/stores/menu-store";
 
 defineOptions({ name: "fee-payment-form" });
 
@@ -453,6 +456,7 @@ const emit = defineEmits<{
   (e: "success", data: any): void;
 }>();
 
+const menuStore = useMenuStore();
 const router = useRouter();
 const userStore = useUserStore();
 const tagsStore = useTagsStore();

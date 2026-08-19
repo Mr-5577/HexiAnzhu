@@ -66,7 +66,7 @@
         </div>
         <div class="info-item info-item-tax">
           <span class="info-label">综合税率(%)：</span>
-          <span class="info-value">{{ compositeTaxRate || "" }}%</span>
+          <span class="info-value">{{ compositeTaxRate || 0 }}%</span>
         </div>
         <div class="info-row">
           <div class="info-item half">
@@ -177,6 +177,8 @@ interface Props {
   isDialogMode?: boolean; // 是否为弹窗模式
   cstMData?: any; // 弹窗传参
   dialogMode?: string;
+  bizBillId?: number;
+  conId?: number;
 }
 const props = withDefaults(defineProps<Props>(), {
   projId: undefined,
@@ -188,6 +190,8 @@ const props = withDefaults(defineProps<Props>(), {
   isDialogMode: false, // 页面模式，默认非弹窗模式
   cstMData: null,
   dialogMode: "", // 弹窗模式， view  edit
+  bizBillId: undefined,
+  conId: undefined,
 });
 
 const emit = defineEmits<{
@@ -231,6 +235,8 @@ const tableKey = ref(0); // 表格key，用于刷新表格
 const projBuildingOptions = ref([]);
 // 合同楼栋
 const conBuildingOptions = ref([]);
+// 弹窗打开的楼栋数据
+const dialogBuildingOptions = ref([]);
 
 // 已选中的楼栋 (存储 value 数组)
 const selectedBuildings = ref([]);
@@ -267,13 +273,13 @@ const apportionInfo = ref({
   allocDs: [] as any[]
 });
 // 单据ID
-const billId = route.query?.billId ? Number(route.query.billId) : undefined;
+let billId: any = route.query?.billId ? Number(route.query.billId) : undefined;
 // 业务ID
-const bizId = route.query?.bizId ? Number(route.query.bizId) : undefined;
+let bizId = route.query?.bizId ? Number(route.query.bizId) : undefined;
 // bizKeyId
-const bizKeyId = route.query?.bizKeyId ? Number(route.query.bizKeyId) : undefined;
+let bizKeyId = route.query?.bizKeyId ? Number(route.query.bizKeyId) : undefined;
 // 业务类型，例 NCON_CST  NCON_PROC
-const bizType: any = route.query?.bizType ? route.query.bizType : "";
+let bizType: any = route.query?.bizType ? route.query.bizType : "";
 
 
 // 显示的楼栋列表
@@ -281,6 +287,19 @@ const buildingOptions = computed(() => {
   // 取对应合同的楼栋
   const list = projBuildingOptions.value.filter((item) => conBuildingOptions.value.includes(item.id))
   return list
+  // if (isDialogMode.value) {
+  //   if (dialogBuildingOptions.value.length) {
+  //     // 取对应合同的楼栋
+  //     const list = projBuildingOptions.value.filter((item) => dialogBuildingOptions.value.includes(item.id))
+  //     return list
+  //   } else {
+  //     return projBuildingOptions.value
+  //   }
+  // } else {
+  //   // 取对应合同的楼栋
+  //   const list = projBuildingOptions.value.filter((item) => conBuildingOptions.value.includes(item.id))
+  //   return list
+  // }
 })
 // 业态name信息
 const businessTypeNames = computed(() => {
@@ -738,6 +757,7 @@ const processPopupData = async (cstList: any) => {
         result.products
       );
       tableKey.value++;
+      console.log("editableSubjectData:", editableSubjectData.value);
     }
   }
 };
@@ -765,9 +785,100 @@ const initPage = async () => {
     getBuildingListByProjId(),
   ]);
   // 弹窗模式则是从erp系统打开弹窗操作，否则就是OA单独引用分摊页面
-  if (props?.cstMData && props.cstMData?.allocDs?.length > 0) {
-    const detaiList = props.cstMData?.allocDs || [];
-    processPopupData(detaiList);
+  // if (props?.cstMData && props.cstMData?.allocDs?.length > 0) {
+  //   const detaiList = props.cstMData?.allocDs || [];
+  //   processPopupData(detaiList);
+  //   if (props?.bizBillId) {
+  //     switch (props.bizType) {
+  //       case "CON_MAIN":
+  //         // 主合同查询轻量级详情信息
+  //         const liteRes = await contractLedgerApi.getConInfoLite({ conBillId: props.bizBillId });
+  //         if (liteRes?.code === 200 && liteRes?.data) {
+  //           // 保存合同楼栋信息
+  //           dialogBuildingOptions.value = liteRes?.data?.bldIds?.split(",").map((ite) => Number(ite)) || [];
+  //         }
+  //         break;
+  //       case "CON_ADD":
+  //         // 主合同下子项合同轻量级获取对应ID
+  //         const conSubRes = await contractLedgerApi.getSubConLiteInfo({ billId: props.bizBillId });
+  //         if (conSubRes?.code === 200 && conSubRes?.data) {
+  //           // 通过业务ID查询详细信息
+  //           const res = await supplementContractApi.getSupplementContractById(conSubRes.data);
+  //           if (res.code == 200 && res.data) {
+  //             const conAddData = res.data?.conAdd || null;
+  //             // 保存合同楼栋信息
+  //             dialogBuildingOptions.value = conAddData?.bldIds?.split(",").map((ite) => Number(ite)) || [];
+  //           }
+  //         }
+  //         break;
+  //       case "CON_BG":
+  //         const conSubRes2 = await contractLedgerApi.getSubConLiteInfo({ billId: billId });
+  //         if (conSubRes2?.code === 200 && conSubRes2?.data) {
+  //           // 通过业务ID查询详细信息
+  //           const res = await changeOrderApi.getChangeConDetail({
+  //             id: conSubRes2?.data,
+  //             isWithFlow: true,
+  //           });
+  //           if (res.code == 200 && res.data) {
+  //             const { conMain, } = res.data;
+  //             // 保存变更合同楼栋信息，变更合同取主合同楼栋
+  //             dialogBuildingOptions.value = conMain?.bldIds?.split(",").map((ite) => Number(ite)) || [];
+  //           }
+  //         }
+  //         break;
+  //       case "CON_QZ":
+  //         const conSubRes3 = await contractLedgerApi.getSubConLiteInfo({ billId: billId });
+  //         if (conSubRes3?.code === 200 && conSubRes3?.data) {
+  //           // 通过业务ID查询详细信息
+  //           const res = await visaManagementApi.getVisaDetail({
+  //             id: conSubRes3?.data,
+  //             isWithFlow: true,
+  //           });
+  //           if (res.code == 200 && res.data) {
+  //             const { conMain } = res.data;
+  //             // 保存签证合同楼栋信息，签证合同取主合同楼栋
+  //             dialogBuildingOptions.value = conMain?.bldIds?.split(",").map((ite) => Number(ite)) || [];
+  //           }
+  //         }
+  //         break;
+  //       case "CON_PROD":
+  //         const conSubRes4 = await contractLedgerApi.getSubConLiteInfo({ billId: billId });
+  //         if (conSubRes4?.code === 200 && conSubRes4?.data) {
+  //           // 通过业务ID查询详细信息
+  //           const res = await outputDeclarationApi.getProdValById({
+  //             id: conSubRes4?.data,
+  //             isWithFlow: true,
+  //           });
+  //           if (res.code == 200 && res.data) {
+  //             const { conMain } = res.data;
+  //             // 保存签证合同楼栋信息，签证合同取主合同楼栋
+  //             dialogBuildingOptions.value = conMain?.bldIds?.split(",").map((ite) => Number(ite)) || [];
+  //           }
+  //         }
+  //         break;
+  //       default:
+  //         break;
+  //     }
+  //   }
+  // }
+  switch (props.bizType) {
+    case "CON_MAIN":
+      await getConDetail(); // 主合同
+      break;
+    case "CON_ADD":
+      await getConAddDetail(); // 补充合同
+      break;
+    case "CON_BG":
+      await getConBgDetail(); // 变更
+      break;
+    case "CON_QZ":
+      await getConQzDetail(); // 签证
+      break;
+    case "CON_PROD":
+      await getConProdDetail(); // 合同产值
+      break;
+    default:
+      break;
   }
 };
 // 获取合同信息
@@ -929,10 +1040,10 @@ const getConProdDetail = async () => {
   }
 }
 // 获取合同税率
-const getTaxRate = async () => {
-  if (!bizId) return;
+const getTaxRate = async (conId: number) => {
+  if (!conId) return;
   try {
-    const res = await costAllocationApi.getContractTaxRate({ conId: bizId });
+    const res = await costAllocationApi.getContractTaxRate({ conId: conId });
     if (res.code == 200) {
       compositeTaxRate.value = res.data || 0;
     }
@@ -1549,7 +1660,7 @@ const autoAllocation = async () => {
     // 主合同取bizId,子合同取currSubConBizId,因为子合同从OA进入这个页面传递的bizId是合同ID
     // const currentBizId = bizType === 'CON_MAIN' ? bizId : currSubConBizId.value
     const params = {
-      conId: bizId,
+      conId: isDialogMode.value ? props.conId : bizId,
       subList: filterData,
       bldIds: selectedBuildings.value,
     }
@@ -1851,15 +1962,20 @@ const getSubmitData = async () => {
 };
 
 onMounted(async () => {
-  // 获取合同税率
-  await getTaxRate();
   // 弹窗模式时初始化
   if (isDialogMode.value) {
+    billId = props.bizBillId;
+    bizId = props.conId;
+    bizType = props.bizType;
+    // dialogBuildingOptions.value = []
+    await getTaxRate(props.conId); // 获取合同税率
     if (props.projId) {
       await initPage();
     }
+    await loadAllocationData();
   } else {
     // OA打开
+    await getTaxRate(bizId); // 获取合同税率
     await loadAllocationData();
   }
 });
@@ -1876,6 +1992,8 @@ defineExpose({
   },
   // 获取分摊的明细列表，列转行过后的数据
   getSubmitData: getSubmitData,
+  // 提交保存
+  handleConfirm: handleConfirm,
   // 校验
   validateTable,
 });

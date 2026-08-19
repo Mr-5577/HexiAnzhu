@@ -5,7 +5,8 @@
     @confirm="handleConfirm" @close="handleClose">
     <ConCostAlloc ref="costAllocationRef" :projId="props.projId" :projName="props.projName"
       :displayName="props.displayName" :bizType="props.bizType" :allocAmt="props.allocAmt" :cstMData="props.cstMData"
-      :isDialogMode="true" :dialogMode="props.dialogMode"></ConCostAlloc>
+      :isDialogMode="true" :dialogMode="props.dialogMode" :bizBillId="props.bizBillId" :conId="props.conId">
+    </ConCostAlloc>
   </base-modal>
 </template>
 
@@ -20,6 +21,8 @@ interface Props {
   projName?: string;
   displayName?: string;
   bizType?: string;
+  bizBillId?: number;
+  conId?: number;
   allocAmt?: number;
   cstMData?: any;
   dialogMode?: string;
@@ -31,9 +34,11 @@ const props = withDefaults(defineProps<Props>(), {
   projName: "",
   displayName: "",
   bizType: undefined,
+  bizBillId: undefined,
+  conId: undefined,
   allocAmt: 0,
   cstMData: null,
-  dialogMode: "view", // 弹窗模式，默认为查看模式 view  edit
+  dialogMode: "edit", // 弹窗模式，默认为查看模式 view  edit
 });
 
 // Emits
@@ -48,6 +53,8 @@ const dialogVisible = ref(props.modelValue);
 const confirmLoading = ref(false);
 
 const handleConfirm = async () => {
+  // 提交保存
+  costAllocationRef.value?.handleConfirm();
   // 校验列表数据
   const reslut = costAllocationRef.value?.validateTable();
   if (!reslut) return;

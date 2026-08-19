@@ -676,10 +676,10 @@
       </el-form>
 
       <!-- 成本分摊  合同产值只有甲供材才有成本分摊 -->
-      <ConCostAllocCard style="margin-top: 15px;" :visible="!isAdd && formData.isSelfSupply" :cstMData="cstMData"
-        :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'CON_QZ'"
+      <ConCostAllocCard v-if="menuStore.hasExactPermission('cost-alloc:con-prod')" style="margin-top: 15px;" :visible="!isAdd && formData.isSelfSupply" :cstMData="cstMData"
+        :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'CON_PROD'"
         :projId="formData.projId" :projName="formData?.projName" :displayName="formData.conName"
-        :allocAmt="formData.applyProdVal" :bizBillId="billData.id" />
+        :allocAmt="formData.applyProdVal" :bizBillId="billData.id" :conId="conMainData?.id" @selectData="getSelectCostAlloc" />
     </div>
 
     <!-- 隐藏的上传组件 -->
@@ -757,6 +757,7 @@ import { moneyRule, requiredInputRule, requiredRule } from "@/utils/form-rule-va
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";
 import ConCostAllocCard from "@/views/cost/cost-allocation/con-cost-alloc/con-cost-alloc-card.vue";
+import { useMenuStore } from "@/stores/menu-store";
 
 defineOptions({ name: "output-value-approval-form" });
 
@@ -776,6 +777,7 @@ const emit = defineEmits<{
   (e: "cancel"): void;
 }>();
 
+const menuStore = useMenuStore();
 // ============================================================
 // 4. 全局实例（store / route / router）
 // ============================================================
@@ -813,6 +815,7 @@ const billData = ref({
   flowId: null,
   createDate: null,
 });
+const conMainData = ref(null)
 // 成本分摊明细数据
 const cstMData = ref({
   id: undefined,
@@ -1592,8 +1595,9 @@ const loadDetail = async () => {
   if (!prodId.value) return;
   const res = await outputDeclarationApi.getProdValById({ id: prodId.value, isWithFlow: true });
   if (res.code === 200 && res.data) {
-    const { flowList, flowBase, bill, prodVal, billPayrates, billMaterials, annexList,cstM } = res.data;
+    const { flowList, flowBase, bill, prodVal, conMain, billPayrates, billMaterials, annexList,cstM } = res.data;
     billData.value = { ...billData.value, ...bill };
+    conMainData.value = { ...conMainData.value, ...conMain };
     flowListData.value = { ...flowListData.value, ...flowList };
     flowBaseData.value = { ...flowBaseData.value, ...flowBase };
     cstMData.value = { ...cstMData.value, ...cstM };
@@ -1834,7 +1838,7 @@ const focusFirstError = (invalidFields?: Record<string, any>) => {
 // ============================================================
 // 构建提交参数
 const buildSubmitParams = () => {
-  return {
+  let params:any = {
     bill: {
       ...billData.value,
       id: billData.value.id || undefined,
@@ -1884,6 +1888,14 @@ const buildSubmitParams = () => {
         : materialMinorTable.value,
     annexList: annexFileList.value || [],
   };
+  if (cstMData.value?.allocDs && cstMData.value.allocDs?.length > 0) {
+    params.cstM = {
+      ...cstMData.value,
+      projId: formData.value.projId,
+      bizType: "CON_PROD",
+    };
+  }
+  return params;
 };
 
 // 同步产值期间到当前明细表
@@ -2077,6 +2089,15 @@ const handleMaterialSave = async (data: any) => {
 const handleMaterialMinorSave = async (data: any) => {
   const { row, column } = data;
   recomputeMaterialPayAmt(row, column);
+};
+
+const getSelectCostAlloc = (data: any) => {
+  console.log("选中的成本分摊数据:", data);
+  cstMData.value.allocAmt = data.allocAmt;
+  cstMData.value.allocExclAmt = data.allocExclAmt;
+  cstMData.value.allocStatus = data.allocStatus;
+  cstMData.value.allocWarn = data.allocWarn;
+  cstMData.value.allocDs = data?.allocDs || [];
 };
 
 // ============================================================

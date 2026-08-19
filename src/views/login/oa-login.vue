@@ -78,7 +78,7 @@ const COST_ROUTE: Record<string, string> = {
   CON_ADD: "/oa/con/cost-alloc", // 补充合同
   CON_BG: "/oa/con/cost-alloc", // 变更合同
   CON_QZ: "/oa/con/cost-alloc", // 签证合同
-  CON_PROD: "/oa/con/cost-alloc", // 签证合同
+  CON_PROD: "/oa/con/cost-alloc", // 产值合同
   CON_PRE_SETTLE: "/home", // 合同预结算
   CON_SETTLE: "/home", // 合同结算
   NCON_CST: "/oa/ncon/cost-alloc", // 非合同请款

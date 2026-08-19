@@ -90,6 +90,9 @@ interface Props {
   isDialogMode?: boolean; // 是否为弹窗模式
   payWayTable?: any[]; // 支付方式表格数据
   bizType?: string; // 业务类型，NCON_CST:非合同请款  NCON_FEE:非合同费用报销  CON_PAY:合同支付
+  dialogMode?: string; // 弹窗模式， view  edit
+  bizBillId?: number; // 业务单据ID
+  bizId?: number; // 业务ID
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -98,21 +101,24 @@ const props = withDefaults(defineProps<Props>(), {
   isDialogMode: false, // 页面模式，默认非弹窗
   payWayTable: () => [],
   bizType: "NCON_CST", // 业务类型  NCON_CST:非合同请款  NCON_FEE:非合同费用报销  CON_PAY:合同支付
+  dialogMode: "edit", // 弹窗模式
+  bizBillId: undefined,
+  bizId: undefined,
 });
 
 const router = useRouter();
 const route = useRoute();
 
 // 单据ID
-const billId = route.query?.billId ? Number(route.query.billId) : undefined;
+let billId = route.query?.billId ? Number(route.query.billId) : undefined;
 // 业务ID
-const bizId = route.query?.bizId ? Number(route.query.bizId) : undefined;
+let bizId = route.query?.bizId ? Number(route.query.bizId) : undefined;
 // 业务类型，例：NCON_FEE
-const bizType = route.query?.bizType ? route.query.bizType : "";
+let bizType = route.query?.bizType ? route.query.bizType : "";
 
 // 只要是erp页面弹窗打开就是查看模式，OA调用打开则根据参数mode控制
 const isView = computed(() => {
-  return route.query.mode == "view" || props.isDialogMode;
+  return route.query.mode == "view" || props.dialogMode == "view";
 });
 
 const submitLoading = ref(false);
@@ -402,7 +408,8 @@ const handleSubmit = async () => {
   }
   const allValid = validateData();
   if (!allValid) return
-
+  
+  debugger
   if (allValid) {
     submitLoading.value = true;
 
@@ -412,7 +419,6 @@ const handleSubmit = async () => {
       ...item,
       allocStatus: 1, // 分摊状态,0-未分摊 1-已分摊 2-部分分摊
     }));
-
     try {
       let res;
       if (bizType === "CON_PAY") {
@@ -652,18 +658,22 @@ onMounted(async () => {
   // 判断是不是弹窗模式
   if (props.isDialogMode) {
     console.log("弹窗模式");
-    if (props?.segId) {
-      await getFinaOrgListBySegId(props.segId); // 获取业务板块下的费用组织
-      await getFinaSubjectListBySegId(props.segId); // 获取业务板块下的费用科目
-    }
-    if (props?.payWayTable && props?.payWayTable?.length > 0) {
-      const list = props?.payWayTable || [];
-      if (props.bizType === "CON_PAY") {
-        processConData(list);
-      } else {
-        processNconData(list);
-      }
-    }
+    // if (props?.segId) {
+    //   await getFinaOrgListBySegId(props.segId); // 获取业务板块下的费用组织
+    //   await getFinaSubjectListBySegId(props.segId); // 获取业务板块下的费用科目
+    // }
+    // if (props?.payWayTable && props?.payWayTable?.length > 0) {
+    //   const list = props?.payWayTable || [];
+    //   if (props.bizType === "CON_PAY") {
+    //     processConData(list);
+    //   } else {
+    //     processNconData(list);
+    //   }
+    // }
+    billId = props?.bizBillId
+    bizId = props?.bizId
+    bizType = props?.bizType
+    await getAllocDetail();
   } else {
     console.log("OA模式");
     await getAllocDetail();
@@ -673,6 +683,8 @@ onMounted(async () => {
 defineExpose({
   // 校验
   validateData: validateData,
+  handleSubmit: handleSubmit,
+  validateDetails: validateDetails,
   // 获取全部数据
   getData: () => mainTableData.value,
 });

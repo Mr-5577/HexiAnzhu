@@ -30,8 +30,8 @@
 
     <!-- 分摊详情弹窗 -->
     <ConCostAllocDialog v-model="dialogVisible" :projId="props.projId" :projName="props.projName"
-      :displayName="props.displayName" :bizType="props.bizType" :allocAmt="props.allocAmt" :cstMData="props.cstMData"
-      :dialogMode="props.dialogMode" @select="getData" />
+      :displayName="props.displayName" :bizType="props.bizType" :allocAmt="props.allocAmt" :bizBillId="props.bizBillId"
+      :conId="props.conId" :cstMData="props.cstMData" :dialogMode="props.dialogMode" @select="getData" />
   </div>
 </template>
 
@@ -60,12 +60,14 @@ interface Props {
   displayName?: string;
   /** 业务单据ID */
   bizBillId?: number | undefined;
+  conId?: number | undefined;
   /** 业务类型 */
   bizType?: string;
   /** 成本金额 */
   allocAmt?: number;
   /** 成本分摊数据 */
   cstMData?: any;
+  /** 弹窗模式，查看模式view  编辑模式edit */
   dialogMode?: string;
 }
 
@@ -77,10 +79,11 @@ const props = withDefaults(defineProps<Props>(), {
   projName: undefined,
   displayName: undefined,
   bizBillId: undefined,
+  conId: undefined,
   bizType: undefined,
   allocAmt: 0,
   cstMData: null,
-  dialogMode: "view", // 弹窗模式，默认为查看模式 view  edit
+  dialogMode: "edit", // 弹窗模式， view  edit
 });
 
 const emit = defineEmits<{
@@ -90,8 +93,8 @@ const emit = defineEmits<{
 
 const dialogVisible = ref(false);
 
-const getData = (dataList: any) => {
-  emit("selectData", dataList);
+const getData = (data: any) => {
+  emit("selectData", data);
 };
 // 处理分摊详情按钮点击
 const handleDetail = () => {
@@ -145,6 +148,7 @@ const handleDetail = () => {
     top: 4px;
   }
 }
+
 .status-dot {
   display: inline-block;
   width: 18px;
@@ -152,6 +156,7 @@ const handleDetail = () => {
   border-radius: 50%;
   flex-shrink: 0;
 }
+
 // 覆盖 el-form-item 默认样式，使其在卡片内更紧凑
 :deep(.el-form-item) {
   margin-bottom: 0;

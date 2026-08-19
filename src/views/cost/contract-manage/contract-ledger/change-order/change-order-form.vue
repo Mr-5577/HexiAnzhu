@@ -1,87 +1,38 @@
 <template>
   <div class="basic-form-content">
     <!-- ============ 顶部操作栏 ============ -->
-    <BillHeader
-      :title="'变更申请'"
-      :contract-no="billData.bizNo || ''"
-      :submitter="formData.userName || ''"
-      :submit-time="formData.createDate || ''"
-      :status="billData.status || 0"
-      :show-status="true"
-      :button-loading="submitLoading"
-      :save-disabled="isReadonly"
-      :submit-disabled="isReadonly"
-      :delete-disabled="isDetail || isAdd || !!billData.status"
-      :void-disabled="isDetail || isAdd || !!billData.status"
-      :view-disabled="isAdd"
-      @save="handleFormDataSave"
-      @submit="handleFormDataSubmit"
-      @delete="handleDelete"
-      @void="handleCancel"
-      @viewFlow="handleViewProcess"
-    />
+    <BillHeader :title="'变更申请'" :contract-no="billData.bizNo || ''" :submitter="formData.userName || ''"
+      :submit-time="formData.createDate || ''" :status="billData.status || 0" :show-status="true"
+      :button-loading="submitLoading" :save-disabled="isReadonly" :submit-disabled="isReadonly"
+      :delete-disabled="isDetail || isAdd || !!billData.status" :void-disabled="isDetail || isAdd || !!billData.status"
+      :view-disabled="isAdd" @save="handleFormDataSave" @submit="handleFormDataSubmit" @delete="handleDelete"
+      @void="handleCancel" @viewFlow="handleViewProcess" />
 
     <div class="form-scroll-area">
-      <el-form
-        ref="formRef"
-        :disabled="isReadonly"
-        :model="formData"
-        :rules="formRules"
-        label-width="120px"
-        class="adapt-form"
-      >
+      <el-form ref="formRef" :disabled="isReadonly" :model="formData" :rules="formRules" label-width="120px"
+        class="adapt-form">
         <!-- ====== 卡片1：单据信息 ====== -->
-        <BillInfo
-          v-model="formData"
-          :status="billData?.status || 0"
-          :disabled="isReadonly"
-          :project-options="projectOptions"
-          @project-change="changeProject"
-        />
+        <BillInfo v-model="formData" :status="billData?.status || 0" :disabled="isReadonly"
+          :project-options="projectOptions" @project-change="changeProject" />
 
         <!-- ====== 卡片2：变更信息 ====== -->
-        <FormCard
-          id="card-main"
-          icon="📄"
-          title="变更信息"
-          v-model:collapsed="collapsedCards.basic"
-        >
+        <FormCard id="card-main" icon="📄" title="变更信息" v-model:collapsed="collapsedCards.basic">
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item prop="changeName" label="变更事项名称" required>
-                <el-input
-                  v-model="formData.changeName"
-                  clearable
-                  :disabled="isDetail"
-                  placeholder="请录入变更事项名称"
-                />
+                <el-input v-model="formData.changeName" clearable :disabled="isDetail" placeholder="请录入变更事项名称" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item prop="changeType" label="变更类型" required>
-                <el-select
-                  v-model="formData.changeType"
-                  placeholder="请选择变更类型"
-                  style="width: 100%"
-                  :disabled="isDetail"
-                >
-                  <el-option
-                    v-for="item in ChangeTypeEnum"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                  />
+                <el-select v-model="formData.changeType" placeholder="请选择变更类型" style="width: 100%" :disabled="isDetail">
+                  <el-option v-for="item in ChangeTypeEnum" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item prop="changeNo" label="变更单号" required>
-                <el-input
-                  v-model="formData.changeNo"
-                  placeholder=""
-                  style="width: 100%"
-                  disabled
-                />
+                <el-input v-model="formData.changeNo" placeholder="" style="width: 100%" disabled />
               </el-form-item>
             </el-col>
           </el-row>
@@ -89,45 +40,25 @@
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item prop="changeAmt" label="变更总金额" required>
-                <el-input-number
-                  v-model="formData.changeAmt"
-                  :precision="2"
-                  :controls="false"
-                  placeholder="变更总金额由变更明细事项汇总"
-                  style="width: 100%"
+                <el-input-number v-model="formData.changeAmt" :precision="2" :controls="false"
+                  placeholder="变更总金额由变更明细事项汇总" style="width: 100%"
                   :formatter="value => `¥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')"
-                  :parser="value => value.replace(/¥\s?|(,*)/g, '')"
-                  disabled
-                />
+                  :parser="value => value.replace(/¥\s?|(,*)/g, '')" disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item prop="changeBusiDate" label="变更发生日期" required>
-                <el-date-picker
-                  v-model="formData.changeBusiDate"
-                  :disabled="isDetail"
-                  type="date"
-                  placeholder="请选择变更发生日期"
-                  style="width: 100%"
-                  value-format="YYYY-MM-DD"
-                  :disabled-date="(time: Date) => time.getTime() >= new Date(new Date().toLocaleDateString()).getTime() + 86400000"
-                />
+                <el-date-picker v-model="formData.changeBusiDate" :disabled="isDetail" type="date"
+                  placeholder="请选择变更发生日期" style="width: 100%" value-format="YYYY-MM-DD"
+                  :disabled-date="(time: Date) => time.getTime() >= new Date(new Date().toLocaleDateString()).getTime() + 86400000" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item prop="changeReasonId" label="变更原因" required>
-                <el-select
-                  v-model="formData.changeReasonId"
-                  placeholder="请选择变更原因"
-                  style="width: 100%"
-                  :disabled="isDetail"
-                >
-                  <el-option
-                    v-for="item in changeReasonOptions"
-                    :key="item.id"
-                    :label="item.dicLabel"
-                    :value="item.id"
-                  />
+                <el-select v-model="formData.changeReasonId" placeholder="请选择变更原因" style="width: 100%"
+                  :disabled="isDetail">
+                  <el-option v-for="item in changeReasonOptions" :key="item.id" :label="item.dicLabel"
+                    :value="item.id" />
                 </el-select>
               </el-form-item>
             </el-col>
@@ -136,14 +67,8 @@
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="24" :xl="24">
               <el-form-item prop="changeReasonDesc" label="变更原因说明" required>
-                <el-input
-                  v-model="formData.changeReasonDesc"
-                  type="textarea"
-                  clearable
-                  maxlength="500"
-                  :disabled="isDetail"
-                  placeholder="请录入变更原因说明"
-                />
+                <el-input v-model="formData.changeReasonDesc" type="textarea" clearable maxlength="500"
+                  :disabled="isDetail" placeholder="请录入变更原因说明" />
               </el-form-item>
             </el-col>
           </el-row>
@@ -151,29 +76,17 @@
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="24" :xl="24">
               <el-form-item prop="changeConent" label="变更内容">
-                <el-input
-                  v-model="formData.changeConent"
-                  type="textarea"
-                  placeholder="请输入变更内容"
-                  :rows="3"
-                  maxlength="500"
-                  show-word-limit
-                  style="width: 100%"
-                  :disabled="isDetail"
-                />
+                <el-input v-model="formData.changeConent" type="textarea" placeholder="请输入变更内容" :rows="3"
+                  maxlength="500" show-word-limit style="width: 100%" :disabled="isDetail" />
               </el-form-item>
             </el-col>
           </el-row>
         </FormCard>
 
         <!-- ====== 卡片3：相关合同 ====== -->
-        <FormCard
-          id="card-link-con"
-          icon="📄"
-          title="相关合同"
-          v-model:collapsed="collapsedCards.process"
-        >
-          <base-table :columns="linkConViewColumns" :tableData="tableList" :loading="tableLoading" :rowKey="'id'" :total="tableList.length" v-if="isReadonly">
+        <FormCard id="card-link-con" icon="📄" title="相关合同" v-model:collapsed="collapsedCards.process">
+          <base-table :columns="linkConViewColumns" :tableData="tableList" :loading="tableLoading" :rowKey="'id'"
+            :total="tableList.length" v-if="isReadonly">
             <template #cstAllocStatus="{ row }">
               <el-tag size="small" :type="getEnumType(allocStatusEnum, row?.cstAllocStatus || 0)">
                 {{ getEnumLabel(allocStatusEnum, row?.cstAllocStatus || 0) }}
@@ -183,39 +96,26 @@
               <el-tag size="small" :type="getEnumType(allocWarnEnum, row?.cstAllocWarn || null)">
                 {{ getEnumLabel(allocWarnEnum, row?.cstAllocWarn || null) }}
               </el-tag>
-            </template> 
+            </template>
             <template #wasteCostReasonId="{ row }">
               <el-tag size="small" :type="getEnumType(invalidCostReasonOptions, row?.wasteCostReasonId || null)">
                 {{ getEnumLabel(invalidCostReasonOptions, row?.wasteCostReasonId || null) }}
               </el-tag>
             </template>
             <template #actions="{ row }">
-              <el-button link type="primary" @click="handleAllocDetail(row)" v-if="isReadonly" :disabled="!isReadonly">
+              <el-button link type="primary" @click="handleAllocDetail(row)"
+                v-if="isReadonly && menuStore.hasExactPermission('cost-alloc:con-bg')" :disabled="!isReadonly">
                 分摊
               </el-button>
               <el-button link type="danger" @click="deleteLinkCon(row)" v-if="!isReadonly" :disabled="isReadonly">
                 删除
               </el-button>
-              <ConCostAllocDialog v-model="dialogVisible" :projId="row.projId" :projName="row.projName"
-                :displayName="row.conName" :bizType="formType.CON_CHANGE" :allocAmt="row.estChangeAmt" :cstMData="row.cstM"/> 
+
             </template>
           </base-table>
-          <DetailTableCard
-            ref="detailtableRef"
-            v-if="!isReadonly"
-            title="变更明细"
-            :count="tableList.length"
-            add-text=""
-            v-model="tableList"
-            :show-summary="true"
-            :highlight-current-row="false"
-            :height="'220px'"
-            :disabled="isDetail"
-            :loading="tableLoading"
-            :columns="linkConColumns"
-            :show-add="false"
-            @add="addLinkCon"
-          >
+          <DetailTableCard ref="detailtableRef" v-if="!isReadonly" title="变更明细" :count="tableList.length" add-text=""
+            v-model="tableList" :show-summary="true" :highlight-current-row="false" :height="'220px'"
+            :disabled="isDetail" :loading="tableLoading" :columns="linkConColumns" :show-add="false" @add="addLinkCon">
             <template #header-extra>
               <el-button type="primary" size="small" @click="handleLinkCon">🔗关联合同</el-button>
             </template>
@@ -228,27 +128,11 @@
         </FormCard>
 
         <!-- ====== 卡片5：补充合同附件 ====== -->
-        <FormCard
-          id="card-annex"
-          icon="📎"
-          title="相关附件"
-          v-model:collapsed="collapsedCards.annex"
-        >
+        <FormCard id="card-annex" icon="📎" title="相关附件" v-model:collapsed="collapsedCards.annex">
           <el-form-item label="相关附件">
-            <base-upload
-              v-model:file-list="tempFileList"
-              :limit="9"
-              :multiple="false"
-              :showIcon="true"
-              :showTip="true"
-              :maxSize="20"
-              :unrestricted="true"
-              :accept="''"
-              button-text="选择文件"
-              size="default"
-              :disabled="isReadonly"
-              @success="handleUploadSuccess"
-            />
+            <base-upload v-model:file-list="tempFileList" :limit="9" :multiple="false" :showIcon="true" :showTip="true"
+              :maxSize="20" :unrestricted="true" :accept="''" button-text="选择文件" size="default" :disabled="isReadonly"
+              @success="handleUploadSuccess" />
           </el-form-item>
         </FormCard>
       </el-form>
@@ -259,22 +143,20 @@
         :projId="formData.projId" :projName="formData?.projName" :displayName="formData.changeName"
         :allocAmt="formData.changeAmt" :bizBillId="billData.id" /> -->
       <!-- 分摊详情弹窗 -->
-      
+      <ConCostAllocDialog v-if="dialogVisible" v-model="dialogVisible" :projId="currentRowAlloc?.cstM?.projId"
+        :projName="currentRowAlloc?.cstM?.projName" :conId="currentRowAlloc?.conId"
+        :displayName="currentRowAlloc?.conName" :bizType="formType.CON_CHANGE"
+        :allocAmt="currentRowAlloc?.cstM?.allocAmt" :cstMData="currentRowAlloc?.cstM" @select="getData" />
     </div>
 
     <!-- ============ 选择合同 弹窗 ============ -->
-    <choose-con-dialog
-      ref="conDialogRef"
-      v-model="conDialogVisible"
-      :projId="props.projId"
-      @select="handleConSelect"
-    />
+    <choose-con-dialog ref="conDialogRef" v-model="conDialogVisible" :projId="props.projId" @select="handleConSelect" />
   </div>
 </template>
 
 <script setup lang="ts">
 // ==================== 模块导入 ====================
-import { ref, computed, onMounted, nextTick,watch  } from "vue";
+import { ref, computed, onMounted, nextTick, watch } from "vue";
 import {
   ElMessage,
   ElMessageBox,
@@ -316,6 +198,7 @@ import { dateUtil } from "@/utils/date-util.ts";
 import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api.ts";
 import ConCostAllocDialog from "@/views/cost/cost-allocation/con-cost-alloc/con-cost-alloc-dialog.vue";
 import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
+import { useMenuStore } from "@/stores/menu-store";
 
 defineOptions({ name: "change-order-form" });
 
@@ -342,7 +225,8 @@ const emit = defineEmits<{
   (e: "detail-click"): void;
 }>();
 
-  // conId：明细第一行的 conId，没有则回退 props.conId
+const menuStore = useMenuStore();
+// conId：明细第一行的 conId，没有则回退 props.conId
 const conId = computed<number | undefined>(() => {
   const first = tableList.value[0];
   return first?.conId || props.conId;
@@ -384,8 +268,8 @@ const billData = ref({
   bizItemCode: formType.CON_CHANGE,
   flowId: null,
   conId: null,
-  createName:"",
-  createDate:"",
+  createName: "",
+  createDate: "",
 });
 const changeData = ref(null)
 const flowListData = ref<any>(null);
@@ -423,7 +307,7 @@ const submitLoading = ref(false);
 const initFormData = () => ({
   id: undefined,
   conBillId: undefined,
-  flowId:null,
+  flowId: null,
   status: 0,
   changeName: "",
   changeType: undefined,
@@ -442,12 +326,12 @@ const initFormData = () => ({
   projId: undefined,
   projName: undefined,
   compId: null,
-  compName:"",
+  compName: "",
   userName: userStore.userInfo?.empName,
   createDate: dateUtil().format("YYYY-MM-DD"),
   deptName: userStore.userInfo?.deptName,
   mguName: userStore.userInfo?.mguName,
-  changeBusiDate:"",
+  changeBusiDate: "",
 });
 const formData = ref(initFormData());
 
@@ -473,14 +357,14 @@ const { addRow: addLinkCon, deleteRow: deleteLinkCon } = useTableEditor(
   () => ({
     id: null,
     conBillId: formData.value.conBillId,
-    changeId:formData.value.id,
-    conId:0,
-    conName:"",
-    conSysNo:"",
-    supName:"",
-    projId:0,
-    projName:"",
-    estChangeAmt:0,
+    changeId: formData.value.id,
+    conId: 0,
+    conName: "",
+    conSysNo: "",
+    supName: "",
+    projId: 0,
+    projName: "",
+    estChangeAmt: 0,
   }),
 );
 
@@ -522,11 +406,13 @@ const handleConSelect = (data) => {
 };
 
 const dialogVisible = ref(false);
-
+const currentRowAlloc = ref(null);
 // 处理分摊详情按钮点击
-const handleAllocDetail = (row : any) => {
+const handleAllocDetail = (row: any) => {
+  // console.log('当前行数据',row);
   // 如果有传入项目ID，则打开内部弹窗
   if (props.projId) {
+    currentRowAlloc.value = row;
     dialogVisible.value = true;
   } else {
     ElMessage.warning("请先选择项目");
@@ -534,7 +420,26 @@ const handleAllocDetail = (row : any) => {
   // 触发外部事件，让父组件自行处理
   emit("detail-click");
 };
-
+const getData = (data: any) => {
+  // console.log("选中的成本分摊数据:", data);
+  const newData = tableList.value?.map((item: any) => {
+    if (item.uuid === currentRowAlloc.value.uuid) {
+      const newData = {
+        ...item,
+        cstM: {
+          ...item.cstM,
+          ...data
+        }
+      }
+      currentRowAlloc.value = newData;
+      return newData
+    } else {
+      return item;
+    }
+  });
+  tableList.value = newData;
+  // console.log("tableList", tableList.value);
+};
 // ==================== 选项初始化方法 ====================
 // 获取业务板块列表
 const getSegOptions = async () => {
@@ -571,10 +476,10 @@ const getConMainData = async (conId) => {
       const {
         conMain,
       } = res.data;
-      tableList.value[tableList.value.length-1].conId = conMain.id;
-      tableList.value[tableList.value.length-1].conName = conMain.conName;
-      tableList.value[tableList.value.length-1].supName = conMain.supName;
-      tableList.value[tableList.value.length-1].conSysNo = conMain.conSysNo;
+      tableList.value[tableList.value.length - 1].conId = conMain.id;
+      tableList.value[tableList.value.length - 1].conName = conMain.conName;
+      tableList.value[tableList.value.length - 1].supName = conMain.supName;
+      tableList.value[tableList.value.length - 1].conSysNo = conMain.conSysNo;
     }
   } catch (error) {
     console.error("获取合同信息失败:", error);
@@ -611,7 +516,7 @@ const changeProject = async (value: number) => {
   if (value) {
     const res = await projectAreaApi.getInfoByProjId({ id: value });
     if (res.code === 200 && res.data) {
-      const { compName, compId, segId, segName,segNo } = res.data;
+      const { compName, compId, segId, segName, segNo } = res.data;
       formData.value.segId = segId || "";
       formData.value.segNo = segNo || "";
       formData.value.segName = segName || "";
@@ -645,25 +550,25 @@ const loadDetail = async () => {
   try {
     const res = await changeOrderApi.getChangeConDetail({
       id: Number(changeId.value),
-      isWithFlow:true,
+      isWithFlow: true,
     });
     if (res.code === 200) {
-      const { change, conlist, flowList, flowBase,bill,annexList = [],cstM } = res.data;
+      const { change, conlist, flowList, flowBase, bill, annexList = [], cstM } = res.data;
       changeData.value = { ...changeData.value, ...change };
       cstMData.value = { ...cstMData.value, ...cstM };
       billData.value = { ...billData.value, ...bill };
       flowListData.value = { ...flowListData.value, ...flowList };
       flowBaseData.value = { ...flowBaseData.value, ...flowBase };
       // 映射变更信息
-      
+
       formData.value = {
         ...formData.value,
         id: change.id,
-        flowId:billData.value.flowId,
+        flowId: billData.value.flowId,
         compName: flowBaseData.value.compName,
         segId: flowBaseData.value.segId,
         segNo: flowBaseData.value.segNo,
-        segName:flowBaseData.value.segName,
+        segName: flowBaseData.value.segName,
         projId: flowBaseData.value.projId,
         projName: flowBaseData.value.projName,
         conBillId: change.conBillId,
@@ -679,7 +584,7 @@ const loadDetail = async () => {
         changeNo: billData.value.bizNo || "",
         bizTitle: billData.value.bizTitle || "",
         userName: flowBaseData.value.userName || "",
-        createDate:billData.value.createDate || "",
+        createDate: billData.value.createDate || "",
         changeBusiDate: change.busiDate,
       };
       // 映射合同列表
@@ -700,12 +605,12 @@ const loadDetail = async () => {
         uuid: uuidv4(),
       }));
       if (annexList && annexList.length > 0) {
-          tempFileList.value = annexList.map((item: any) => ({
-            ...item,
-            name: item.annexName,
-            url: item.annexPath,
-          }));
-        }
+        tempFileList.value = annexList.map((item: any) => ({
+          ...item,
+          name: item.annexName,
+          url: item.annexPath,
+        }));
+      }
     }
   } catch (error) {
     console.error("加载详情失败:", error);
@@ -730,7 +635,7 @@ const focusFirstError = (invalidFields?: Record<string, any>) => {
   });
 };
 
-const validateConListable = (submit:boolean) => {
+const validateConListable = (submit: boolean) => {
   if (tableList.value.length === 0) {
     ElMessage.error("变更合同列表不能为空");
     return false;
@@ -763,19 +668,19 @@ const validateConListable = (submit:boolean) => {
 const buildSubmitParams = () => {
   return {
     bill: {
-        ...billData.value,
-        id: billData.value.id || undefined,
-        bizTitle: formData.value.bizTitle,
-        bizItemCode: formType.CON_CHANGE,
-        segId: formData.value.segId,
-        segName: formData.value.segName,
-        segNo: formData.value.segNo,
-        projId: formData.value.projId,
-        compId: formData.value.compId,
-        compName: formData.value.compName,
-        flowId:formData.value.flowId,
-        conId: conId.value,
-      },
+      ...billData.value,
+      id: billData.value.id || undefined,
+      bizTitle: formData.value.bizTitle,
+      bizItemCode: formType.CON_CHANGE,
+      segId: formData.value.segId,
+      segName: formData.value.segName,
+      segNo: formData.value.segNo,
+      projId: formData.value.projId,
+      compId: formData.value.compId,
+      compName: formData.value.compName,
+      flowId: formData.value.flowId,
+      conId: conId.value,
+    },
     change: {
       id: formData.value.id,
       conBillId: formData.value.conBillId,
@@ -863,7 +768,7 @@ const handleDelete = async () => {
 };
 
 const handleFormDataSave = async () => {
-  if(submitLoading.value) return
+  if (submitLoading.value) return
   submitLoading.value = true;
   try {
     await formRef.value.validateField(["bizTitle", "changeName"]);
@@ -874,7 +779,7 @@ const handleFormDataSave = async () => {
     const res = await changeOrderApi.editChangeCon(params);
     if (res.code === 200 && res.data) {
       formData.value.id = res.data;
-      changeId.value =formData.value.id;
+      changeId.value = formData.value.id;
       ElMessage.success("保存成功");
       await loadDetail();
     }
@@ -886,7 +791,7 @@ const handleFormDataSave = async () => {
 };
 
 const handleFormDataSubmit = async () => {
-  if(submitLoading.value) return
+  if (submitLoading.value) return
   submitLoading.value = true;
   try {
     await formRef.value.validate();
@@ -926,7 +831,7 @@ const handleFormDataSubmit = async () => {
 // ==================== 初始化与生命周期 ====================
 const initData = async () => {
   await initOptions();
-  
+
   if (isAdd.value) {
     formData.value = initFormData();
     await generateChangeNo();
@@ -1023,13 +928,16 @@ defineExpose({
   width: 8px;
   height: 8px;
 }
+
 .form-scroll-area::-webkit-scrollbar-thumb {
   background: #c0c4cc;
   border-radius: 4px;
 }
+
 .form-scroll-area::-webkit-scrollbar-thumb:hover {
   background: #909399;
 }
+
 .form-scroll-area::-webkit-scrollbar-track {
   background: transparent;
 }

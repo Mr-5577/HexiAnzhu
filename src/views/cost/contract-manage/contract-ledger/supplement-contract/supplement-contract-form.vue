@@ -1,164 +1,74 @@
 <template>
   <div class="supplement-contract-form">
     <!-- ============ 顶部操作栏 ============ -->
-    <BillHeader
-      :title="'补充合同审批'"
-      :contract-no="formData.addSysNo || ''"
-      :submitter="formData.userName || ''"
-      :submit-time="formData.createDate || ''"
-      :status="billData.status || 0"
-      :show-status="true"
-      :button-loading="submitLoading"
-      :save-disabled="isReadonly"
-      :submit-disabled="isReadonly"
-      :delete-disabled="isDetail || isAdd || !!billData.status"
-      :void-disabled="isDetail || isAdd || !!billData.status"
-      :view-disabled="isAdd"
-      @save="handleFormDataSave"
-      @submit="handleFormDataSubmit"
-      @delete="handleDelete"
-      @void="handleCancel"
-      @viewFlow="handleViewProcess"
-    />
+    <BillHeader :title="'补充合同审批'" :contract-no="formData.addSysNo || ''" :submitter="formData.userName || ''"
+      :submit-time="formData.createDate || ''" :status="billData.status || 0" :show-status="true"
+      :button-loading="submitLoading" :save-disabled="isReadonly" :submit-disabled="isReadonly"
+      :delete-disabled="isDetail || isAdd || !!billData.status" :void-disabled="isDetail || isAdd || !!billData.status"
+      :view-disabled="isAdd" @save="handleFormDataSave" @submit="handleFormDataSubmit" @delete="handleDelete"
+      @void="handleCancel" @viewFlow="handleViewProcess" />
     <div class="form-scroll-area">
-      <el-form
-        ref="formRef"
-        :disabled="isReadonly"
-        :validate-on-rule-change="false"
-        :model="formData"
-        :rules="formRules"
-        label-width="130px"
-        class="adapt-form"
-      >
+      <el-form ref="formRef" :disabled="isReadonly" :validate-on-rule-change="false" :model="formData"
+        :rules="formRules" label-width="130px" class="adapt-form">
         <!-- ====== 卡片1：单据信息 ====== -->
-        <BillInfo
-          v-model="formData"
-          :status="billData?.status || 0"
-          :disabled="isReadonly"
-          :project-options="projectOptions"
-          @project-change="changeProject"
-        />
+        <BillInfo v-model="formData" :status="billData?.status || 0" :disabled="isReadonly"
+          :project-options="projectOptions" @project-change="changeProject" />
 
         <!-- ====== 卡片2：主合同信息 ====== -->
-        <FormCard
-          id="card-main"
-          icon="📄"
-          title="主合同信息"
-          v-model:collapsed="collapsedCards.basic"
-        >
+        <FormCard id="card-main" icon="📄" title="主合同信息" v-model:collapsed="collapsedCards.basic">
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item label="主合同名称" prop="mainConId">
-                <PickInput
-                  v-model="formData.mainConName"
-                  placeholder="请选择主合同"
-                  :readonly="isReadonly"
-                  v-model:model-value-id="formData.mainConId"
-                  @pick="openMainConDialog"
-                />
+                <PickInput v-model="formData.mainConName" placeholder="请选择主合同" :readonly="isReadonly"
+                  v-model:model-value-id="formData.mainConId" @pick="openMainConDialog" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="合同类型" prop="conProperty" required>
-                <EnumSelect
-                  v-model="formData.conProperty"
-                  :options="ConPropertyEnum"
-                  placeholder=""
-                  disabled
-                />
+                <EnumSelect v-model="formData.conProperty" :options="ConPropertyEnum" placeholder="" disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item prop="conTypeId" label="合同分类" required>
-                <ConTypeSelector
-                  v-model="formData.conTypeId"
-                  :show-all-levels="false"
-                  placeholder=""
-                  style="width: 100%"
-                  :width="'100%'"
-                  clearable
-                  filterable
-                  disabled
-                />
+                <ConTypeSelector v-model="formData.conTypeId" :show-all-levels="false" placeholder=""
+                  style="width: 100%" :width="'100%'" clearable filterable disabled />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item label="签约公司" prop="compName" required>
-                <el-input
-                  v-model="formData.compName"
-                  clearable
-                  placeholder=""
-                  disabled
-                />
+                <el-input v-model="formData.compName" clearable placeholder="" disabled />
               </el-form-item>
             </el-col>
 
             <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item label="供应商名称" prop="supName" required>
-                <el-input
-                  v-model="formData.supName"
-                  clearable
-                  placeholder=""
-                  disabled
-                />
+                <el-input v-model="formData.supName" clearable placeholder="" disabled />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24" v-show="isJianAn">
             <el-col v-if="isJianAn" :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item label="楼栋范围" prop="mainBldNames">
-                <SelectWithAll
-                  v-model="formData.mainBldIds"
-                  v-model:labelText="formData.mainBldNames"
-                  select-all
-                  multiple
-                  :options="buildingOptions.map((i) => ({ value: i.id, label: i.bldName }))"
-                  placeholder="请选择楼栋"
-                  style="width: 100%"
-                  disabled
-                >
-                  <el-option
-                    v-for="item in buildingOptions"
-                    :key="item.id"
-                    :label="item.bldName"
-                    :value="item.id"
-                  />
+                <SelectWithAll v-model="formData.mainBldIds" v-model:labelText="formData.mainBldNames" select-all
+                  multiple :options="buildingOptions.map((i) => ({ value: i.id, label: i.bldName }))"
+                  placeholder="请选择楼栋" style="width: 100%" disabled>
+                  <el-option v-for="item in buildingOptions" :key="item.id" :label="item.bldName" :value="item.id" />
                 </SelectWithAll>
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="计价方式" prop="priceType" >
-                <el-select
-                  v-model="formData.priceType"
-                  :disabled="true"
-                  placeholder=""
-                  style="width: 100%"
-                >
-                  <el-option
-                    v-for="item in PriceTypeEnum"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                  />
+              <el-form-item label="计价方式" prop="priceType">
+                <el-select v-model="formData.priceType" :disabled="true" placeholder="" style="width: 100%">
+                  <el-option v-for="item in PriceTypeEnum" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="产值确认方式" prop="payMethod" >
-                <el-select
-                  v-model="formData.payMethod"
-                  :disabled="true"
-                  placeholder=""
-                  style="width: 100%"
-                >
-                  <el-option
-                    v-for="item in PayTypeEnum"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                  />
+              <el-form-item label="产值确认方式" prop="payMethod">
+                <el-select v-model="formData.payMethod" :disabled="true" placeholder="" style="width: 100%">
+                  <el-option v-for="item in PayTypeEnum" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
               </el-form-item>
             </el-col>
@@ -166,68 +76,33 @@
         </FormCard>
 
         <!-- ====== 卡片3：补充信息 ====== -->
-        <FormCard
-          id="card-add"
-          icon="📄"
-          title="补充合同信息"
-          v-model:collapsed="collapsedCards.basic"
-        >
+        <FormCard id="card-add" icon="📄" title="补充合同信息" v-model:collapsed="collapsedCards.basic">
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item label="补充合同名称" prop="addName" required>
-                <el-input
-                  v-model="formData.addName"
-                  :disabled="isDetail"
-                  clearable
-                  placeholder="请输入补充合同名称"
-                />
+                <el-input v-model="formData.addName" :disabled="isDetail" clearable placeholder="请输入补充合同名称" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="补充合同类型" prop="addType" required>
-                <el-select
-                  v-model="formData.addType"
-                  :disabled="isDetail"
-                  placeholder="请选择补充合同类型"
-                  style="width: 100%"
-                >
-                  <el-option
-                    v-for="item in AddTypeEnum"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                  />
+                <el-select v-model="formData.addType" :disabled="isDetail" placeholder="请选择补充合同类型" style="width: 100%">
+                  <el-option v-for="item in AddTypeEnum" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="系统编号" prop="addSysNo">
-                <el-input
-                  v-model="formData.addSysNo"
-                  disabled
-                  placeholder=""
-                />
+                <el-input v-model="formData.addSysNo" disabled placeholder="" />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col v-if="isJianAn" :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item label="楼栋范围" prop="bldNames" required>
-                <SelectWithAll
-                  v-model="formData.bldIds"
-                  v-model:labelText="formData.bldNames"
-                  select-all
-                  multiple
-                  :options="buildingOptions.map((i) => ({ value: i.id, label: i.bldName }))"
-                  placeholder="请选择楼栋"
-                  style="width: 100%"
-                >
-                  <el-option
-                    v-for="item in buildingOptions"
-                    :key="item.id"
-                    :label="item.bldName"
-                    :value="item.id"
-                  />
+                <SelectWithAll v-model="formData.bldIds" v-model:labelText="formData.bldNames" select-all multiple
+                  :options="buildingOptions.map((i) => ({ value: i.id, label: i.bldName }))" placeholder="请选择楼栋"
+                  style="width: 100%">
+                  <el-option v-for="item in buildingOptions" :key="item.id" :label="item.bldName" :value="item.id" />
                 </SelectWithAll>
               </el-form-item>
             </el-col>
@@ -235,15 +110,8 @@
           <el-row>
             <el-col :span="24">
               <el-form-item label="补充合同简述" prop="remark" required>
-                <el-input
-                  v-model="formData.remark"
-                  :disabled="isDetail"
-                  type="textarea"
-                  :rows="3"
-                  maxlength="500"
-                  show-word-limit
-                  placeholder="其他需要补充说明的信息"
-                />
+                <el-input v-model="formData.remark" :disabled="isDetail" type="textarea" :rows="3" maxlength="500"
+                  show-word-limit placeholder="其他需要补充说明的信息" />
               </el-form-item>
             </el-col>
           </el-row>
@@ -251,21 +119,11 @@
         </FormCard>
 
         <!-- ====== 卡片4：签约信息 ====== -->
-        <FormCard
-          id="card-sign"
-          icon="📄"
-          title="签约信息"
-          v-model:collapsed="collapsedCards.basic"
-        >
+        <FormCard id="card-sign" icon="📄" title="签约信息" v-model:collapsed="collapsedCards.basic">
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="是否需要用印" prop="needSeal" required>
-                <el-select
-                  v-model="formData.needSeal"
-                  :disabled="isDetail"
-                  placeholder="请选择"
-                  style="width: 100%"
-                >
+                <el-select v-model="formData.needSeal" :disabled="isDetail" placeholder="请选择" style="width: 100%">
                   <el-option label="是" :value="true" />
                   <el-option label="否" :value="false" />
                 </el-select>
@@ -273,54 +131,29 @@
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="印章类型" prop="sealTypes">
-                <el-select
-                  v-model="formData.sealTypes"
-                  :disabled="isDetail || !formData.needSeal"
-                  multiple
-                  collapse-tags
-                  placeholder="请选择印章类型"
-                  style="width: 100%"
-                >
-                  <el-option
-                    v-for="item in SealTypesEnum"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                  />
+                <el-select v-model="formData.sealTypes" :disabled="isDetail || !formData.needSeal" multiple
+                  collapse-tags placeholder="请选择印章类型" style="width: 100%">
+                  <el-option v-for="item in SealTypesEnum" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="签订日期" prop="signDate" required>
-                <el-date-picker
-                  v-model="formData.signDate"
-                  :disabled="isDetail"
-                  type="date"
-                  placeholder="请选择签订日期"
-                  style="width: 100%"
-                  value-format="YYYY-MM-DD"
-                />
+                <el-date-picker v-model="formData.signDate" :disabled="isDetail" type="date" placeholder="请选择签订日期"
+                  style="width: 100%" value-format="YYYY-MM-DD" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="签约地点" prop="signAddr">
-                <el-input
-                  v-model="formData.signAddr"
-                  :disabled="isDetail"
-                  placeholder="请输入签约地点"
-                />
+                <el-input v-model="formData.signAddr" :disabled="isDetail" placeholder="请输入签约地点" />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="甲方经办人" prop="agentId" required>
-                <el-cascader
-                  ref="projCascaderRef"
-                  v-model="formData.agentId"
-                  :options="empTreeOptions"
-                  :show-all-levels="false"
-                  :props="{
+                <el-cascader ref="projCascaderRef" v-model="formData.agentId" :options="empTreeOptions"
+                  :show-all-levels="false" :props="{
                     expandTrigger: 'click',
                     emitPath: false,
                     checkStrictly: false,
@@ -328,39 +161,22 @@
                     label: 'orgName',
                     children: 'children',
                     leaf: (data) => data.dataType === 0,
-                  }"
-                  placeholder="请选择经办人"
-                  style="width: 100%"
-                  clearable
-                  filterable
-                />
+                  }" placeholder="请选择经办人" style="width: 100%" clearable filterable />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="供应商联系人" prop="supCmanName">
-                <el-input
-                  v-model="formData.supCmanName"
-                  :disabled="isDetail"
-                  placeholder="请输入联系人姓名"
-                />
+                <el-input v-model="formData.supCmanName" :disabled="isDetail" placeholder="请输入联系人姓名" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="联系人电话" prop="supCmanTel">
-                <el-input
-                  v-model="formData.supCmanTel"
-                  :disabled="isDetail"
-                  placeholder="请输入联系电话"
-                />
+                <el-input v-model="formData.supCmanTel" :disabled="isDetail" placeholder="请输入联系电话" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="联系人身份证" prop="supCmanIdno">
-                <el-input
-                  v-model="formData.supCmanIdno"
-                  :disabled="isDetail"
-                  placeholder="请输入身份证号码"
-                />
+                <el-input v-model="formData.supCmanIdno" :disabled="isDetail" placeholder="请输入身份证号码" />
               </el-form-item>
             </el-col>
 
@@ -368,11 +184,7 @@
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="联系人职务" prop="supCmanJob">
-                <el-input
-                  v-model="formData.supCmanJob"
-                  :disabled="isDetail"
-                  placeholder="请输入职务"
-                />
+                <el-input v-model="formData.supCmanJob" :disabled="isDetail" placeholder="请输入职务" />
               </el-form-item>
             </el-col>
           </el-row>
@@ -380,21 +192,10 @@
         </FormCard>
 
         <!-- ====== 卡片5：价款信息 ====== -->
-        <FormCard
-          id="card-price"
-          icon="💰"
-          title="价款及税率"
-          v-model:collapsed="collapsedCards.price"
-        >
+        <FormCard id="card-price" icon="💰" title="价款及税率" v-model:collapsed="collapsedCards.price">
           <SummaryBar :items="summaryItems" />
-          <DetailTableCard
-            title="价税明细"
-            :count="priceTable.length"
-            add-text="新增价税明细"
-            v-model="priceTable"
-            :columns="priceColumns"
-            @add="addPrice"
-          >
+          <DetailTableCard title="价税明细" :count="priceTable.length" add-text="新增价税明细" v-model="priceTable"
+            :columns="priceColumns" @add="addPrice">
             <template #actions="{ row }">
               <el-button link type="danger" @click="deletePrice(row)">
                 删除
@@ -404,22 +205,10 @@
         </FormCard>
 
         <!-- ====== 卡片6：明细事项 ====== -->
-        <FormCard
-          id="card-process"
-          v-show="showProcess"
-          icon="📊"
-          title="事项明细"
-          v-model:collapsed="collapsedCards.process"
-        >
-          <DetailTableCard
-            title="事项明细"
-            :count="tableList.length"
-            add-text="新增事项"
-            v-model="tableList"
-            :show-summary="true" 
-            :columns="processColumns"
-            @add="addProcess"
-          >
+        <FormCard id="card-process" v-show="showProcess" icon="📊" title="事项明细"
+          v-model:collapsed="collapsedCards.process">
+          <DetailTableCard title="事项明细" :count="tableList.length" add-text="新增事项" v-model="tableList"
+            :show-summary="true" :columns="processColumns" @add="addProcess">
             <!-- ========= 表格上方额外按钮 ========= -->
             <template #header-extra>
               <el-button type="success" size="small" @click="handleLinkVisa">🔗关联签证</el-button>
@@ -434,87 +223,41 @@
         </FormCard>
 
         <!-- ====== 卡片7：补充合同附件 ====== -->
-        <FormCard
-          id="card-annex"
-          icon="📎"
-          title="补充合同附件"
-          v-model:collapsed="collapsedCards.annex"
-        >
+        <FormCard id="card-annex" icon="📎" title="补充合同附件" v-model:collapsed="collapsedCards.annex">
           <el-form-item label="补充合同正文及附件" required>
-            <base-upload
-              v-model:file-list="annexContractFileList"
-              :limit="9"
-              :multiple="false"
-              :showIcon="true"
-              :showTip="true"
-              :maxSize="20"
-              :unrestricted="true"
-              :accept="''"
-              button-text="选择文件"
-              size="default"
-              :disabled="isReadonly"
-              @success="handleUploadConSuccess"
-            />
+            <base-upload v-model:file-list="annexContractFileList" :limit="9" :multiple="false" :showIcon="true"
+              :showTip="true" :maxSize="20" :unrestricted="true" :accept="''" button-text="选择文件" size="default"
+              :disabled="isReadonly" @success="handleUploadConSuccess" />
           </el-form-item>
           <el-form-item label="其他附件">
-            <base-upload
-              v-model:file-list="annexFileList"
-              :limit="9"
-              :multiple="false"
-              :showIcon="true"
-              :showTip="true"
-              :maxSize="20"
-              :unrestricted="true"
-              :accept="''"
-              button-text="选择文件"
-              size="default"
-              :disabled="isReadonly"
-              @success="handleUploadOtherSuccess"
-            />
+            <base-upload v-model:file-list="annexFileList" :limit="9" :multiple="false" :showIcon="true" :showTip="true"
+              :maxSize="20" :unrestricted="true" :accept="''" button-text="选择文件" size="default" :disabled="isReadonly"
+              @success="handleUploadOtherSuccess" />
           </el-form-item>
         </FormCard>
       </el-form>
-       <!-- 成本分摊 -->
-      <ConCostAllocCard style="margin-top: 15px;" :visible="!isAdd && isJianAn" :cstMData="cstMData"
+      <!-- 成本分摊  :visible="!isAdd && isJianAn" -->
+      <ConCostAllocCard v-if="menuStore.hasExactPermission('cost-alloc:con-add')" style="margin-top: 15px;" :visible="!isAdd && isJianAn" :cstMData="cstMData"
         :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'CON_ADD'"
         :projId="formData.projId" :projName="conMainData?.projName" :displayName="formData.addName"
-        :allocAmt="priceTaxData.totalPriceTax" :bizBillId="billData.id" />
+        :allocAmt="priceTaxData.totalPriceTax" :bizBillId="billData.id" :conId="conMainData?.id"
+        @selectData="getSelectCostAlloc" />
     </div>
 
     <!-- ============ 悬浮定位栏 ============ -->
     <FloatNav :items="visibleNavCards" />
   </div>
   <!-- 选择合同弹窗 -->
-  <choose-contract-dialog
-    ref="contractDialogRef"
-    v-model="mainConDialogVisible"
-    :selectionMode="'single'"
-    :projId = formData.projId
-    @select="handleMainConSelect"
-  />
+  <choose-contract-dialog ref="contractDialogRef" v-model="mainConDialogVisible" :selectionMode="'single'"
+    :projId=formData.projId @select="handleMainConSelect" />
 
   <!-- 选择变更弹窗 (已归档、无需签证、未转补充合同的变更)-->
-  <choose-change-dialog
-    ref="contractDialogRef"
-    v-model="changeDialogVisible"
-    :selectionMode="'single'"
-    :conId = formData.mainConId
-    :isToAdd="false"
-    :needVisa="false"
-    :status="40"  
-    @select="handleChangeSelect"
-  />
+  <choose-change-dialog ref="contractDialogRef" v-model="changeDialogVisible" :selectionMode="'single'"
+    :conId=formData.mainConId :isToAdd="false" :needVisa="false" :status="40" @select="handleChangeSelect" />
 
   <!-- 选择签证弹窗(已归档、未转补充合同) -->
-  <choose-visa-dialog
-    ref="contractDialogRef"
-    v-model="visaDialogVisible"
-    :selectionMode="'single'"
-    :conId = formData.mainConId
-    :isToAdd="false"
-    :status="40"  
-    @select="handleVisaSelect"
-  />
+  <choose-visa-dialog ref="contractDialogRef" v-model="visaDialogVisible" :selectionMode="'single'"
+    :conId=formData.mainConId :isToAdd="false" :status="40" @select="handleVisaSelect" />
 </template>
 
 
@@ -578,6 +321,7 @@ import { NAV_CARDS, createPriceColumns, createProcessColumns } from "./supplemen
 import { bankCardRule, moneyRule, optionalInputRule, phoneRule, requiredInputRule, requiredRule } from "@/utils/form-rule-validate.ts";
 import { normalizeCode } from "@/utils/common.ts";
 import ConCostAllocCard from "@/views/cost/cost-allocation/con-cost-alloc/con-cost-alloc-card.vue";
+import { useMenuStore } from "@/stores/menu-store";
 
 // ===================== Props / Emits =====================
 const props = defineProps<{
@@ -591,6 +335,7 @@ const emit = defineEmits<{
   cancel: [];
 }>();
 
+const menuStore = useMenuStore();
 const isDetail = computed(() => props.mode === "detail");
 const isEdit = computed(() => props.mode === "edit");
 const isAdd = computed(() => props.mode === "add");
@@ -712,8 +457,8 @@ const initFormData = () => ({
   segId: null,
   segName: null,
   segNo: null,
-  bizTitle:"",
-  flowId:null,
+  bizTitle: "",
+  flowId: null,
   addName: "", // 补充合同名称
   companyId: null, // 主合同签约公司
   compName: null,
@@ -744,7 +489,7 @@ const initFormData = () => ({
   remark: "", // 备注
   userName: userStore.userInfo?.empName,
   createDate: dateUtil().format("YYYY-MM-DD"),
-  projId:null,
+  projId: null,
   mainConId: null,
   agentId: userStore.userInfo.id,
   deptName: userStore.userInfo?.deptName,
@@ -816,46 +561,46 @@ const formRules = ref({
 });
 
 // ---- 校验明细表 ----
-  const validatePriceTable = () => {
-    if (priceTable.value.length === 0) {
-      ElMessage.error("价税明细列表不能为空");
+const validatePriceTable = () => {
+  if (priceTable.value.length === 0) {
+    ElMessage.error("价税明细列表不能为空");
+    return false;
+  }
+  for (let i = 0; i < priceTable.value.length; i++) {
+    const item = priceTable.value[i];
+    if (!item.itemName || item.itemName.trim() === "") {
+      ElMessage.error(`价税明细列表第${i + 1}行：分项名称不能为空`);
       return false;
     }
-    for (let i = 0; i < priceTable.value.length; i++) {
-      const item = priceTable.value[i];
-      if (!item.itemName || item.itemName.trim() === "") {
-        ElMessage.error(`价税明细列表第${i + 1}行：分项名称不能为空`);
-        return false;
-      }
-    }
-    return true;
-  };
+  }
+  return true;
+};
 
- // 需求8：支付明细所有列均为必填
-  const validateProcessTable = () => {
-    if (!showProcess.value) {
-      tableList.value = [];
-      return true; // 不显示支付比例时不校验
-    }
-    if (tableList.value.length === 0) {
-      ElMessage.error("事项明细列表不能为空");
+// 需求8：支付明细所有列均为必填
+const validateProcessTable = () => {
+  if (!showProcess.value) {
+    tableList.value = [];
+    return true; // 不显示支付比例时不校验
+  }
+  if (tableList.value.length === 0) {
+    ElMessage.error("事项明细列表不能为空");
+    return false;
+  }
+  for (let i = 0; i < tableList.value.length; i++) {
+    const item = tableList.value[i];
+    if (!item.processName) {
+      ElMessage.error(`事项明细列表第${i + 1}行：请填写事项名称！`);
       return false;
     }
-    for (let i = 0; i < tableList.value.length; i++) {
-      const item = tableList.value[i];
-      if (!item.processName) {
-        ElMessage.error(`事项明细列表第${i + 1}行：请填写事项名称！`);
-        return false;
-      }
-      if (!item.processAmt) {
-        ElMessage.error(`事项明细列表第${i + 1}行：请填写事项含税金额！`);
-        return false;
-      }
+    if (!item.processAmt) {
+      ElMessage.error(`事项明细列表第${i + 1}行：请填写事项含税金额！`);
+      return false;
     }
-    return true;
-  };
+  }
+  return true;
+};
 
-  // =====================校验事项明细含税金额 = 价税明细含税金额 =====================
+// =====================校验事项明细含税金额 = 价税明细含税金额 =====================
 const validateProcessAmountMatch = (): boolean => {
   if (!showProcess.value)
     return true;
@@ -1013,16 +758,16 @@ const handleVisaSelect = (data) => {
       return;
     }
     addProcess()
-    if (tableList.value.length>0) {
-      
-      tableList.value[tableList.value.length-1].srcType = 0;//签证
-      tableList.value[tableList.value.length-1].srcId = selected.id;
-      tableList.value[tableList.value.length-1].srcApplyId = selected.createId;
-      tableList.value[tableList.value.length-1].srcApplyDate = selected.createDate;
-      tableList.value[tableList.value.length-1].processName = selected.bizTitle;
-      tableList.value[tableList.value.length-1].processAmt = selected.auditReviewAmt;
-      tableList.value[tableList.value.length-1].processExclAmt = selected.auditReviewAmt;
-      tableList.value[tableList.value.length-1].remark = selected.visaApplyDesc;
+    if (tableList.value.length > 0) {
+
+      tableList.value[tableList.value.length - 1].srcType = 0;//签证
+      tableList.value[tableList.value.length - 1].srcId = selected.id;
+      tableList.value[tableList.value.length - 1].srcApplyId = selected.createId;
+      tableList.value[tableList.value.length - 1].srcApplyDate = selected.createDate;
+      tableList.value[tableList.value.length - 1].processName = selected.bizTitle;
+      tableList.value[tableList.value.length - 1].processAmt = selected.auditReviewAmt;
+      tableList.value[tableList.value.length - 1].processExclAmt = selected.auditReviewAmt;
+      tableList.value[tableList.value.length - 1].remark = selected.visaApplyDesc;
     }
   }
 };
@@ -1043,17 +788,17 @@ const handleChangeSelect = (data) => {
       ElMessage.warning(`变更「${selected.changeName}」已在事项明细中，不可重复关联`);
       return;
     }
-    
+
     addProcess()
-    if (tableList.value.length>0) {
-      tableList.value[tableList.value.length-1].srcType = 1;//变更
-      tableList.value[tableList.value.length-1].srcId = selected.changeConId;
-      tableList.value[tableList.value.length-1].srcApplyId = selected.createId;
-      tableList.value[tableList.value.length-1].srcApplyDate = selected.createDate;
-      tableList.value[tableList.value.length-1].processName = selected.changeName;
-      tableList.value[tableList.value.length-1].processAmt = selected.estChangeAmt;
-      tableList.value[tableList.value.length-1].processExclAmt = selected.estChangeAmt;
-      tableList.value[tableList.value.length-1].remark = selected.remark;
+    if (tableList.value.length > 0) {
+      tableList.value[tableList.value.length - 1].srcType = 1;//变更
+      tableList.value[tableList.value.length - 1].srcId = selected.changeConId;
+      tableList.value[tableList.value.length - 1].srcApplyId = selected.createId;
+      tableList.value[tableList.value.length - 1].srcApplyDate = selected.createDate;
+      tableList.value[tableList.value.length - 1].processName = selected.changeName;
+      tableList.value[tableList.value.length - 1].processAmt = selected.estChangeAmt;
+      tableList.value[tableList.value.length - 1].processExclAmt = selected.estChangeAmt;
+      tableList.value[tableList.value.length - 1].remark = selected.remark;
     }
   }
 };
@@ -1062,7 +807,7 @@ const changeProject = async (value: number) => {
   if (value) {
     const res = await projectAreaApi.getInfoByProjId({ id: value });
     if (res.code === 200 && res.data) {
-      const { compName, compId, segId, segName,segNo } = res.data;
+      const { compName, compId, segId, segName, segNo } = res.data;
       formData.value.segId = segId || "";
       formData.value.segName = segName || "";
       formData.value.segNo = segNo || "";
@@ -1072,9 +817,9 @@ const changeProject = async (value: number) => {
       formData.value.bldNames = "";
       formData.value.mainConId = null;
       formData.value.mainConName = "";
-      formData.value.mainBldIds=[];
-      formData.value.mainBldNames="";
-      tableList.value=[];
+      formData.value.mainBldIds = [];
+      formData.value.mainBldNames = "";
+      tableList.value = [];
       if (value) {
         await getBuildingListByProjId(value);
         await getCompanyListByProjId(value);
@@ -1156,70 +901,78 @@ const handleDelete = async () => {
 };
 
 const buildSubmitParams = () => {
-    return {
-      conMain: {
-        ...conMainData.value,
-        id: formData.value.mainConId,
-      }, 
-      bill: {
-        ...billData.value,
-        id: billData.value.id || undefined,
-        bizTitle: formData.value.bizTitle,
-        bizItemCode: formType.CON_ADD,
-        segId: formData.value.segId,
-        segName: formData.value.segName,
-        segNo: formData.value.segNo,
-        projId: formData.value.projId,
-        compId: formData.value.companyId,
-        compName: formData.value.compName,
-        flowId:formData.value.flowId,
-      },
-      conAdd: {
-        id: formData.value.id,
-        conBillId: props.conId,
-        addName: formData.value.addName,
-        companyId: formData.value.companyId,
-        addSysNo: formData.value.addSysNo,
-        addPhyNo: formData.value.addPhyNo,
-        addType: formData.value.addType,
-        conTypeId: formData.value.conTypeId,
-        conProperty: formData.value.conProperty,
-        supId: formData.value.supId,
-        priceType: formData.value.priceType,
-        bldIds: formData.value.bldIds?.join(",") || "",
-        bldNames: formData.value.bldNames,
-        payMethod: formData.value.payMethod,
-        addAmt: priceTaxData.value.totalPriceTax,
-        addExclAmt: priceTaxData.value.totalPrice,
-        taxAmt: priceTaxData.value.taxAmount,
-        signDate: formData.value.signDate,
-        agentId: formData.value.agentId,
-        taxRate: priceTaxData.value.taxRate,
-      },
-      conAddExt: {
-        id: formData.value.id,
-        conBillId: props.conId,
-        addId: formData.value.id,
-        needSeal: formData.value.needSeal,
-        sealTypes: formData.value.sealTypes?.join(",") || "",
-        signAddr: formData.value.signAddr || "",
-        supCmanName: formData.value.supCmanName || "",
-        supCmanIdno: formData.value.supCmanIdno || "",
-        supCmanTel: formData.value.supCmanTel || "",
-        supCmanJob: formData.value.supCmanJob || "",
-        remark: formData.value.remark || "",
-      },
-      addProcesses: formData.value.addType == 1 ? tableList.value : [],
-      billPrices: priceTable.value,
-      annexContractList: annexContractFileList.value || [],
-      annexList: annexFileList.value || [],
-    };
+  let params:any = {
+    conMain: {
+      ...conMainData.value,
+      id: formData.value.mainConId,
+    },
+    bill: {
+      ...billData.value,
+      id: billData.value.id || undefined,
+      bizTitle: formData.value.bizTitle,
+      bizItemCode: formType.CON_ADD,
+      segId: formData.value.segId,
+      segName: formData.value.segName,
+      segNo: formData.value.segNo,
+      projId: formData.value.projId,
+      compId: formData.value.companyId,
+      compName: formData.value.compName,
+      flowId: formData.value.flowId,
+    },
+    conAdd: {
+      id: formData.value.id,
+      conBillId: props.conId,
+      addName: formData.value.addName,
+      companyId: formData.value.companyId,
+      addSysNo: formData.value.addSysNo,
+      addPhyNo: formData.value.addPhyNo,
+      addType: formData.value.addType,
+      conTypeId: formData.value.conTypeId,
+      conProperty: formData.value.conProperty,
+      supId: formData.value.supId,
+      priceType: formData.value.priceType,
+      bldIds: formData.value.bldIds?.join(",") || "",
+      bldNames: formData.value.bldNames,
+      payMethod: formData.value.payMethod,
+      addAmt: priceTaxData.value.totalPriceTax,
+      addExclAmt: priceTaxData.value.totalPrice,
+      taxAmt: priceTaxData.value.taxAmount,
+      signDate: formData.value.signDate,
+      agentId: formData.value.agentId,
+      taxRate: priceTaxData.value.taxRate,
+    },
+    conAddExt: {
+      id: formData.value.id,
+      conBillId: props.conId,
+      addId: formData.value.id,
+      needSeal: formData.value.needSeal,
+      sealTypes: formData.value.sealTypes?.join(",") || "",
+      signAddr: formData.value.signAddr || "",
+      supCmanName: formData.value.supCmanName || "",
+      supCmanIdno: formData.value.supCmanIdno || "",
+      supCmanTel: formData.value.supCmanTel || "",
+      supCmanJob: formData.value.supCmanJob || "",
+      remark: formData.value.remark || "",
+    },
+    addProcesses: formData.value.addType == 1 ? tableList.value : [],
+    billPrices: priceTable.value,
+    annexContractList: annexContractFileList.value || [],
+    annexList: annexFileList.value || [],
   };
+  if (cstMData.value?.allocDs && cstMData.value.allocDs?.length > 0) {
+    params.cstM = {
+      ...cstMData.value,
+      projId: formData.value.projId,
+      bizType: "CON_ADD",
+    };
+  }
+  return params;
+};
 
 const handleFormDataSave = async () => {
   submitLoading.value = true;
   try {
-    await formRef.value.validateField(["bizTitle","addName"]); 
+    await formRef.value.validateField(["bizTitle", "addName"]);
 
     const params = buildSubmitParams()
     const res = await supplementContractApi.editSupplementContract(params);
@@ -1245,10 +998,10 @@ const handleFormDataSubmit = async () => {
     if (!validateProcessTable()) return;
     if (!validateProcessAmountMatch()) return;   // ← 加这一行
     if (annexContractFileList.value.length === 0) {
-        ElMessage.warning(`未上传补充合同正文及附件，请上传后再提交！`,
+      ElMessage.warning(`未上传补充合同正文及附件，请上传后再提交！`,
       );
       return;
-    } 
+    }
 
     if (formData.value.addSysNo === "")
       await createConNo();
@@ -1303,7 +1056,7 @@ const getEmpTreeData = async () => {
 
 // 获取主合同信息
 const getConMainData = async (inConId) => {
-  
+
   if (!inConId) return;
   if (inConId === formData.value.mainConId) return;
   try {
@@ -1317,7 +1070,7 @@ const getConMainData = async (inConId) => {
 
       if (formData.value.projId != conMain.projId)
         await getBuildingListByProjId(conMain.projId);
-      
+
       formData.value.segId = conMain.segId;
       formData.value.segName = conMain.segName;
       formData.value.segNo = conMain.segNo;
@@ -1474,12 +1227,13 @@ const getBuildingListByProjId = async (projId: number) => {
 const createConNo = async () => {
   try {
     // BCBH:补充合同编号前缀
-    const conRes = await contractLedgerApi.getContractNo({ bizType: formType.CON_ADD,
-        mainConId:formData.value.mainConId,
-        projId:formData.value.projId,
-        conTypeId:formData.value.conTypeId,
-        compId: formData.value.companyId,
-      });
+    const conRes = await contractLedgerApi.getContractNo({
+      bizType: formType.CON_ADD,
+      mainConId: formData.value.mainConId,
+      projId: formData.value.projId,
+      conTypeId: formData.value.conTypeId,
+      compId: formData.value.companyId,
+    });
     if (conRes.code === 200) {
       formData.value.addSysNo = conRes.data;
       formData.value.addPhyNo = conRes.data;
@@ -1504,7 +1258,7 @@ const getSupplementContractDetail = async () => {
   try {
     const res = await supplementContractApi.getSupplementContractById(conAddId.value);
     if (res.code === 200 && res.data) {
-      const { conMain,bill,conAdd, conAddExt, addProcesses,billPrices, flowList, flowBase,annexList,annexContractList = [], cstM } = res.data;
+      const { conMain, bill, conAdd, conAddExt, addProcesses, billPrices, flowList, flowBase, annexList, annexContractList = [], cstM } = res.data;
       cstMData.value = { ...cstMData.value, ...cstM };
       billData.value = { ...billData.value, ...bill };
       conMainData.value = { ...conMainData.value, ...conMain }
@@ -1512,8 +1266,8 @@ const getSupplementContractDetail = async () => {
       flowBaseData.value = { ...flowBaseData.value, ...flowBase };
       formData.value = {
         id: conAdd.id,
-        bizTitle:billData.value.bizTitle,
-        flowId:billData.value.flowId,
+        bizTitle: billData.value.bizTitle,
+        flowId: billData.value.flowId,
         segId: conMain.segId,
         addName: conAdd.addName,
         companyId: conAdd.companyId,
@@ -1586,6 +1340,15 @@ const getSupplementContractDetail = async () => {
   } catch (error) {
     console.error("获取补充合同详情失败:", error);
   }
+};
+
+const getSelectCostAlloc = (data: any) => {
+  console.log("选中的成本分摊数据:", data);
+  cstMData.value.allocAmt = data.allocAmt;
+  cstMData.value.allocExclAmt = data.allocExclAmt;
+  cstMData.value.allocStatus = data.allocStatus;
+  cstMData.value.allocWarn = data.allocWarn;
+  cstMData.value.allocDs = data?.allocDs || [];
 };
 
 // ===================== 初始化 / 生命周期 =====================
@@ -1686,13 +1449,16 @@ defineExpose({
   width: 8px;
   height: 8px;
 }
+
 .form-scroll-area::-webkit-scrollbar-thumb {
   background: #c0c4cc;
   border-radius: 4px;
 }
+
 .form-scroll-area::-webkit-scrollbar-thumb:hover {
   background: #909399;
 }
+
 .form-scroll-area::-webkit-scrollbar-track {
   background: transparent;
 }
