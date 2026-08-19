@@ -50,6 +50,7 @@
       <el-form-item>
         <el-button type="primary" @click="handleSearch"> 搜索 </el-button>
         <el-button @click="handleReset">重置</el-button>
+        <el-button type="primary" :loading="exportLoading" @click="handleExport">导出</el-button>
       </el-form-item>
     </el-form>
 
@@ -59,7 +60,9 @@
         <el-tab-pane label="未支付" name="未支付" />
         <el-tab-pane label="已支付(部分)" name="部分支付" />
         <el-tab-pane label="全部支付" name="全部支付" />
+        <el-tab-pane label="所有请款单" name="" />
       </el-tabs>
+
     </div>
 
     <base-table :columns="columns" :tableData="paginatedData" :loading="tableLoading" :rowKey="'id'" :total="total"
@@ -117,6 +120,7 @@ import ViewDialog from "./view-dialog.vue";
 import { payRegisterApi } from "@/api/cost/payment-manage/payment-register-api.ts";
 import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
 import { costBillStatusEnum } from "@/constants/cost/enums.ts";
+import { exportExcel } from '@/utils/export-excel.ts';
 
 defineOptions({ name: "payment-register" });
 
@@ -147,6 +151,7 @@ const currentRow = ref(null);
 const currentPage = ref<number>(1);
 const pageSize = ref<number>(20);
 const total = ref<number>(0);
+const exportLoading = ref(false);
 
 const columns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
@@ -229,6 +234,48 @@ const handleReset = () => {
   queryParams.value.payStatus = "未支付";
   getDataList();
 };
+const handleExport = async () => {
+  try {
+    exportLoading.value = true;
+    const res = await payRegisterApi.getPayLedgerMain({ payStatus: '' });
+    if (res.code === 200) {
+      let list = res.data || [];
+      list.forEach((item: any) => {
+        item.isLocked = item.isLocked ? "已入账" : "未入账";
+        item.flowStatus = getEnumLabel(costBillStatusEnum, item.flowStatus);
+      });
+      const headerMap = {
+        flowTitle: "标题",
+        projName: "项目名称",
+        segName: "业务板块",
+        compName: "费用所属公司",
+        itemName: "合同/立项名称",
+        itemNo: "合同/立项单号",
+        supName: "供应商",
+        reqNo: "付款单号",
+        reqDesc: "付款申请说明",
+        belongMonth: "费用归属期间",
+        finaTypeName: "费用类型",
+        payableAmt: "请款金额",
+        paidAmt: "支付金额",
+        payStatus: "付款状态",
+        applyUserName: "申请人",
+        applyDate: "申请日期",
+        flowStatus: "审批流程",
+        isLocked: "是否入账",
+      }
+      exportExcel({
+        data: list,
+        headerMap: headerMap,
+        fileName: '实付登记列表'
+      });
+    }
+  } catch (error) {
+
+  } finally {
+    exportLoading.value = false;
+  }
+}
 // 批量登记
 const batchRegister = async (row) => {
   if (row.flowStatus == 40) {

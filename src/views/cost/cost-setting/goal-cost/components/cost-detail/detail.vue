@@ -78,7 +78,7 @@
                     <el-input-number v-if="(item._raw ? item._raw.isLeaf : item.isLeaf) && !isDetail"
                       :model-value="(item._raw ? item._raw[col.prop] : item[col.prop])" :controls="false" :step="0.01"
                       :precision="2" @change="(val) => onCellEdit(item, col.prop, val, index)" size="small" />
-                    <span v-else class="readonly-cell">{{ formatNumber(item.hasChildren && item.visibleTotal ? item.visibleTotal[col.prop] : (item._raw ? item._raw[col.prop] : item[col.prop]))
+                    <span v-else class="readonly-cell">{{ formatThousandWithPlaces(item.hasChildren && item.visibleTotal ? item.visibleTotal[col.prop] : (item._raw ? item._raw[col.prop] : item[col.prop]))
                     }}</span>
                   </template>
 
@@ -102,7 +102,7 @@
                   </template>
 
                   <template v-else>
-                    <span class="readonly-cell">{{ item.hasChildren && item.visibleTotal ? (item.visibleTotal[col.prop] ?? (item._raw ? item._raw[col.prop] : item[col.prop])) : (item._raw ? item._raw[col.prop] : item[col.prop]) }}</span>
+                    <span class="readonly-cell">{{ formatThousandWithPlaces(item.hasChildren && item.visibleTotal ? (item.visibleTotal[col.prop] ?? (item._raw ? item._raw[col.prop] : item[col.prop])) : (item._raw ? item._raw[col.prop] : item[col.prop])) }}</span>
                   </template>
                 </div>
               </template>
@@ -154,6 +154,7 @@ import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import {  buildSubjectTree, buildTree, convertToTree } from "@/utils/tree";
 import { allocRuleEnum } from "@/constants/master-data/enums";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
+import { toDecimal, formatDecimal, decimalAddNum, decimalSumNum, roundToTwo, formatThousandWithPlaces } from '@/utils/decimal';
 
 defineOptions({ name: "cost-detail-list" });
 
@@ -396,12 +397,12 @@ const aggregateVisible = (node: any): any => {
     if (!isLeafVisibleByFilter(node)) return null;
     const t = emptyVisibleTotals();
     productOptions.value.forEach((p: any) => {
-      const ca = Number(node[`costAmt_${p.id}`] || 0);
-      const ce = Number(node[`costExclAmt_${p.id}`] || 0);
+      const ca = roundToTwo(node[`costAmt_${p.id}`] || 0);
+      const ce = roundToTwo(node[`costExclAmt_${p.id}`] || 0);
       t[`costAmt_${p.id}`] = ca;
       t[`costExclAmt_${p.id}`] = ce;
-      t.totalCostAmt += ca;
-      t.totalCostExclAmt += ce;
+      t.totalCostAmt = roundToTwo(t.totalCostAmt + ca);
+      t.totalCostExclAmt = roundToTwo(t.totalCostExclAmt + ce);
     });
     return t;
   }
@@ -413,11 +414,11 @@ const aggregateVisible = (node: any): any => {
     if (sub) {
       anyVisible = true;
       productOptions.value.forEach((p: any) => {
-        merged[`costAmt_${p.id}`] += sub[`costAmt_${p.id}`];
-        merged[`costExclAmt_${p.id}`] += sub[`costExclAmt_${p.id}`];
+        merged[`costAmt_${p.id}`] = roundToTwo(merged[`costAmt_${p.id}`] + sub[`costAmt_${p.id}`]);
+        merged[`costExclAmt_${p.id}`] = roundToTwo(merged[`costExclAmt_${p.id}`] + sub[`costExclAmt_${p.id}`]);
       });
-      merged.totalCostAmt += sub.totalCostAmt;
-      merged.totalCostExclAmt += sub.totalCostExclAmt;
+      merged.totalCostAmt = roundToTwo(merged.totalCostAmt + sub.totalCostAmt);
+      merged.totalCostExclAmt = roundToTwo(merged.totalCostExclAmt + sub.totalCostExclAmt);
     }
   });
   return anyVisible ? merged : null;
@@ -481,32 +482,32 @@ const flatRows = computed(() => {
 // 顶部合计：仅累加筛选后可见的叶子
 const totalCostTax = computed(() => {
   const leaves = getAllLeafNodes(tableData.value);
-  let sum = 0;
+  const values: number[] = [];
   productOptions.value.forEach((product) => {
     const propKey = `costAmt_${product.id}`;
     leaves.forEach((node) => {
       if (isLeafVisibleByFilter(node)) {
         const val = Number(node[propKey] || 0);
-        if (!isNaN(val)) sum += val;
+        if (!isNaN(val)) values.push(val);
       }
     });
   });
-  return formatNumber(sum);
+  return formatNumber(decimalSumNum(values));
 });
 
 const totalCostNoTax = computed(() => {
   const leaves = getAllLeafNodes(tableData.value);
-  let sum = 0;
+  const values: number[] = [];
   productOptions.value.forEach((product) => {
     const propKey = `costExclAmt_${product.id}`;
     leaves.forEach((node) => {
       if (isLeafVisibleByFilter(node)) {
         const val = Number(node[propKey] || 0);
-        if (!isNaN(val)) sum += val;
+        if (!isNaN(val)) values.push(val);
       }
     });
   });
-  return formatNumber(sum);
+  return formatNumber(decimalSumNum(values));
 });
 
 // initialize expandedKeys to top-level nodes when tableData first loads
@@ -660,9 +661,7 @@ const getDisplayIndex = (item: any, idx: any) => {
 
 const formatNumber = (v: any) => {
   if (v === null || v === undefined || v === "") return "";
-  const n = Number(v);
-  if (isNaN(n)) return String(v);
-  return (Math.round(n * 100) / 100).toFixed(2);
+  return formatDecimal(v); // 使用 decimal.js 格式化
 };
 
 // 附件上传成功
@@ -731,13 +730,13 @@ const calculateNodeTotal = (node: any): any => {
     }
   }
 
-  // 四舍五入保留两位小数
+  // 使用 decimal.js 四舍五入 保留两位小数
   const roundedProductTotals = {};
   productOptions.value.forEach((product) => {
     roundedProductTotals[`costAmt_${product.id}`] =
-      Math.round(productTotals[`costAmt_${product.id}`] * 100) / 100;
+      roundToTwo(productTotals[`costAmt_${product.id}`]);
     roundedProductTotals[`costExclAmt_${product.id}`] =
-      Math.round(productTotals[`costExclAmt_${product.id}`] * 100) / 100;
+      roundToTwo(productTotals[`costExclAmt_${product.id}`]);
   });
 
   return {
@@ -1309,8 +1308,8 @@ const fillDetailDataToTable = (detailData: any[]) => {
           if (detail) {
             hasData = true;
             // 金额处理：确保是数字
-            newNode[`costAmt_${prod.id}`] = Number(detail.costAmt) || 0;
-            newNode[`costExclAmt_${prod.id}`] = Number(detail.costExclAmt) || 0;
+            newNode[`costAmt_${prod.id}`] = roundToTwo(detail.costAmt);
+            newNode[`costExclAmt_${prod.id}`] = roundToTwo(detail.costExclAmt);
             newNode[`detailId_${prod.id}`] = detail.id;
             newNode.costMid = detail.costMid || props.costMid;
           }

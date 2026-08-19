@@ -2,6 +2,12 @@
 <template>
   <div class="fee-payment-wrapper">
     <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px">
+      <el-form-item label="标题" prop="bizTitle">
+        <el-input v-model="queryParams.bizTitle" placeholder="请输入标题" clearable style="width: 220px" />
+      </el-form-item>
+      <el-form-item label="付款单号" prop="bizNo">
+        <el-input v-model="queryParams.bizNo" placeholder="请输入单号" clearable style="width: 220px" />
+      </el-form-item>
       <el-form-item label="业务板块" prop="segId">
         <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px" clearable>
           <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
@@ -96,6 +102,8 @@ const queryParams = ref({
   projId: undefined,
   status: undefined,
   createId: undefined,
+  bizTitle: undefined,
+  bizNo: undefined,
   time: [],
 });
 // 项目列表
@@ -113,6 +121,7 @@ const columns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60, fixed: "left" },
   { prop: "segName", label: "业务板块", width: 120 },
   { prop: "bizTitle", label: "标题", width: 200 },
+  { prop: "bizNo", label: "付款单号", width: 200 },
   { prop: "projName", label: "项目名称", width: 150 },
   // { prop: "feeTypeId", label: "费用类型", width: 150 },
   { prop: "reqAmt", label: "实际请款金额", width: 120 },
@@ -144,6 +153,8 @@ const getDataList = async () => {
       segId: queryParams.value.segId,
       status: queryParams.value.status,
       createId: queryParams.value.createId,
+      bizTitle: queryParams.value.bizTitle,
+      bizNo: queryParams.value.bizNo,
       createDateStart: queryParams.value.time?.[0] || "",
       createDateEnd: queryParams.value.time?.[1] || "",
     };
@@ -172,6 +183,8 @@ const handleReset = () => {
     projId: undefined,
     status: undefined,
     createId: undefined,
+    bizTitle: undefined,
+    bizNo: undefined,
     time: [],
   };
   getDataList();

@@ -8,6 +8,9 @@
       <el-form-item label="供应商名称" prop="supName">
         <el-input v-model="queryParams.supName" placeholder="请输入供应商名称" clearable style="width: 180px" />
       </el-form-item>
+      <el-form-item label="合同编号" prop="conSysNo">
+        <el-input v-model="queryParams.conSysNo" placeholder="请输入合同编号" clearable style="width: 180px" />
+      </el-form-item>
       <el-form-item label="合同分类" prop="conTypeId">
         <ConTypeSelector v-model="queryParams.conTypeId" placeholder="请选择合同分类" style="width: 180px" clearable
           filterable />
@@ -126,6 +129,7 @@ const queryParams = ref({
   conTypeId: undefined,
   agentId: undefined,
   createId: undefined,
+  conSysNo: "",
   time: [],
 });
 // 业务板块
@@ -187,6 +191,7 @@ const getDataList = async () => {
       createId: queryParams.value.createId,
       agentId: queryParams.value.agentId,
       conTypeId: queryParams.value.conTypeId,
+      conSysNo: queryParams.value.conSysNo,
       ...params,
       createDateStart: startDate,
       createDateEnd: endDate,
@@ -227,6 +232,7 @@ const handleReset = () => {
     conTypeId: undefined,
     agentId: undefined,
     createId: undefined,
+    conSysNo: "",
     time: [],
   };
   currentPage.value = 1;

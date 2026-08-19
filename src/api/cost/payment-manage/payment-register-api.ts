@@ -73,6 +73,7 @@ export const payRegisterApi = {
    * @param data.reqDateStart 支付日期起
    * @param data.reqDateEnd 支付日期止
    * @param data.wfStatus 流程状态筛选: 0=草稿, 10=审批中, 40=已审批, 80=作废, 99=其他
+   * @param data.payStatus 支付状态
    * @param data.isLocked 是否已确认筛选
    */
   getPayLedgerMain: (data: {
@@ -83,6 +84,7 @@ export const payRegisterApi = {
     reqDateEnd?: string;
     wfStatus?: number;
     isLocked?: boolean;
+    payStatus?: string;
   }) => {
     return http.post("/pay/ledger/main", data);
   },
