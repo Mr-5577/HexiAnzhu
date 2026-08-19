@@ -46,6 +46,12 @@
           <el-option label="未入账" :value="false" />
         </el-select>
       </el-form-item>
+      <el-form-item label="只看需支付" prop="isPayable">
+        <el-select v-model="queryParams.isPayable" placeholder="请选择" style="width: 220px">
+          <el-option label="是" :value="true" />
+          <el-option label="否" :value="false" />
+        </el-select>
+      </el-form-item>
 
       <el-form-item>
         <el-button type="primary" @click="handleSearch"> 搜索 </el-button>
@@ -121,6 +127,7 @@ import { payRegisterApi } from "@/api/cost/payment-manage/payment-register-api.t
 import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
 import { costBillStatusEnum } from "@/constants/cost/enums.ts";
 import { exportExcel } from '@/utils/export-excel.ts';
+import { formatThousandWithPlaces } from "@/utils/decimal.ts";
 
 defineOptions({ name: "payment-register" });
 
@@ -144,6 +151,7 @@ const queryParams = ref({
   payStatus: "未支付", // 未支付  部分支付  全部支付
   isLocked: undefined,
   wfTitle: undefined,
+  isPayable: true,
 });
 const projectOptions = ref([]); // 项目列表
 const segOptions = ref([]); // 业务板块列表
@@ -177,8 +185,8 @@ const columns: TableColumnItem[] = [
   { prop: "reqDesc", label: "付款申请说明", width: 200 },
   { prop: "belongMonth", label: "费用归属期间", width: 110 },
   { prop: "finaTypeName", label: "费用类型", width: 120 },
-  { prop: "payableAmt", label: "请款金额", width: 90 },
-  { prop: "paidAmt", label: "支付金额", width: 90 },
+  { prop: "payableAmt", label: "请款金额", width: 90, formatter: (row) => formatThousandWithPlaces(row.payableAmt || 0) },
+  { prop: "paidAmt", label: "支付金额", width: 90, formatter: (row) => formatThousandWithPlaces(row.paidAmt || 0) },
   { prop: "payStatus", label: "付款状态", width: 100 },
   { prop: "applyUserName", label: "申请人", width: 90 },
   { prop: "applyDate", label: "申请日期", width: 100 },
@@ -248,6 +256,7 @@ const handleReset = () => {
   queryParams.value.wfStatus = 40; // 0=草稿, 10=审批中, 40=已审批, 80=作废, 99=其他
   // 默认查询未支付
   queryParams.value.payStatus = "未支付";
+  queryParams.value.isPayable = true;
   getDataList();
 };
 const handleExport = async () => {

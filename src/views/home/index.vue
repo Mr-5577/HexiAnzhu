@@ -21,7 +21,9 @@
         <div class="quick-stats">
           <div class="stat-item">
             <div class="stat-icon" style="background: #e8f4ff">
-              <el-icon><Calendar /></el-icon>
+              <el-icon>
+                <Calendar />
+              </el-icon>
             </div>
             <div class="stat-info">
               <div class="stat-value">今日</div>
@@ -31,7 +33,9 @@
 
           <div class="stat-item">
             <div class="stat-icon" style="background: #f0f9eb">
-              <el-icon><Check /></el-icon>
+              <el-icon>
+                <Check />
+              </el-icon>
             </div>
             <div class="stat-info">
               <div class="stat-value">5</div>
@@ -41,7 +45,9 @@
 
           <div class="stat-item">
             <div class="stat-icon" style="background: #fef0f0">
-              <el-icon><Bell /></el-icon>
+              <el-icon>
+                <Bell />
+              </el-icon>
             </div>
             <div class="stat-info">
               <div class="stat-value">3</div>
@@ -51,7 +57,9 @@
 
           <div class="stat-item">
             <div class="stat-icon" style="background: #fdf6ec">
-              <el-icon><TrendCharts /></el-icon>
+              <el-icon>
+                <TrendCharts />
+              </el-icon>
             </div>
             <div class="stat-info">
               <div class="stat-value">12</div>
@@ -72,16 +80,8 @@
 
           <div class="action-grid">
             <!-- 动态渲染所有第二层菜单 -->
-            <div
-              v-for="(menu, index) in secondLevelMenus"
-              :key="menu.id"
-              class="action-item"
-              @click="goToMenu(menu)"
-            >
-              <div
-                class="action-icon"
-                :style="{ color: getColorByIndex(index) }"
-              >
+            <div v-for="(menu, index) in secondLevelMenus" :key="menu.id" class="action-item" @click="goToMenu(menu)">
+              <div class="action-icon" :style="{ color: getColorByIndex(index) }">
                 <!-- 动态图标 -->
                 <el-icon>
                   <component :is="getIconComponent(menu.meta?.icon)" />
@@ -218,8 +218,8 @@ const goToMenu = (menu: any) => {
     if (menu.children?.length > 0) {
       // 找到第一个有效的子菜单
       const validChild = menu.children.find((child: any) => {
-        // 只找menu类型且有path的
-        return child.type === "menu" && child.path;
+        // 只找menu类型且有path，可见的路由
+        return child.type === "menu" && child.path && child.meta.isVisible;
       });
 
       if (validChild) {
@@ -323,6 +323,7 @@ onMounted(() => {
   border-radius: 12px;
   border: none;
   margin-bottom: 10px;
+
   :deep(.el-card__header) {
     border-bottom: 1px solid #f0f0f0;
     padding: 18px 24px;

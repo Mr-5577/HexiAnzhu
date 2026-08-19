@@ -32,7 +32,7 @@ export const projectAreaApi = {
    * @param data - 查询参数
    * @param data.id - 项目ID（必填）
    */
-  getInfoByProjId: (data: { id: number }) => {
+  getInfoByProjId: (data?: { id: number }) => {
     return http.formPost("/mainData/project/getList", data);
   },
 

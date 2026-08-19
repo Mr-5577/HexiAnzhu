@@ -50,7 +50,7 @@
         :element-loading-text="'数据加载中...'"
         :element-loading-background="'rgba(0, 0, 0, 0.1)'"
       >
-        <div class="card-header">
+        <div class="card-header role-list">
           <span class="card-title">角色列表</span>
           <el-button
             :icon="Plus"
@@ -383,22 +383,24 @@ onMounted(() => {
     min-height: 0;
     flex-shrink: 0;
     .list-card {
-      width: 360px;
+      width: 600px;
       background: white;
       border-radius: 12px;
-      padding: 15px 0;
       box-sizing: border-box;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
       display: flex; // 新增
       flex-direction: column; // 新增
       min-height: 0;
+      .role-list {
+        padding: 12px 12px;
+        box-sizing: border-box;
+        border-bottom: 1px solid #e8ebed;
+      }
       .card-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         flex-shrink: 0;
-        padding: 0 15px;
-        box-sizing: border-box;
         .card-title {
           font-size: 16px;
           font-weight: 600;
@@ -475,7 +477,7 @@ onMounted(() => {
                 font-weight: 600;
                 color: #2c3e50;
                 font-size: 14px;
-                max-width: 130px;
+                max-width: 230px;
                 /* 添加以下属性实现省略号效果 */
                 overflow: hidden;
                 text-overflow: ellipsis;
