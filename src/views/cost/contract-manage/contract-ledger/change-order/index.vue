@@ -35,7 +35,6 @@
             </el-icon>
             <span>{{ refreshing ? "搜索中" : "搜索" }}</span>
           </el-button>
-          <!-- <el-button type="primary" @click="handleSearch"> 搜索 </el-button> -->
           <el-button @click="handleReset">重置</el-button>
           <el-button type="primary" class="add-btn" @click="handleAdd">
             <el-icon>
@@ -192,16 +191,21 @@ const handlePaginationChange = (params: any) => {
 const handleRefresh = async () => {
   refreshing.value = true;
   try {
+    resetPagination();
     await getDataList();
   } finally {
     refreshing.value = false;
   }
 };
-
+const resetPagination = () => {
+  currentPage.value = 1;
+  pageSize.value = 20;
+}
 const handleReset = () => {
   queryParams.value.changeName = "";
   queryParams.value.changeType = null;
   queryParams.value.status = null;
+  resetPagination();
   getDataList();
 };
 

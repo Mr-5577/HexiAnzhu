@@ -218,9 +218,13 @@ const handlePaginationChange = (params: any) => {
   getDataList();
 };
 const handleSearch = () => {
+  resetPagination();
   getDataList();
 };
-
+const resetPagination = () => {
+  currentPage.value = 1;
+  pageSize.value = 20;
+}
 const handleReset = () => {
   queryParams.value = {
     projSegId: undefined,
@@ -235,8 +239,7 @@ const handleReset = () => {
     conSysNo: "",
     time: [],
   };
-  currentPage.value = 1;
-  pageSize.value = 20;
+  resetPagination();
   getDataList();
 };
 // 新增合同台账

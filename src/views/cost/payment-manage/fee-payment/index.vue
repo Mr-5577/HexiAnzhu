@@ -174,10 +174,15 @@ const handlePaginationChange = (params: any) => {
   pageSize.value = params.pageSize;
 };
 const handleSearch = () => {
+  resetPagination();
   getDataList();
 };
-
+const resetPagination = () => {
+  currentPage.value = 1;
+  pageSize.value = 20;
+}
 const handleReset = () => {
+  resetPagination();
   queryParams.value = {
     segId: undefined,
     projId: undefined,

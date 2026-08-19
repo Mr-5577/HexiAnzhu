@@ -2,12 +2,6 @@
 <template>
   <div class="cst-process-wrapper">
     <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px">
-      <!-- <el-form-item label="标题" prop="bizTitle">
-        <el-input v-model="queryParams.bizTitle" placeholder="请输入标题" clearable style="width: 220px" />
-      </el-form-item>
-      <el-form-item label="单号" prop="bizNo">
-        <el-input v-model="queryParams.bizNo" placeholder="请输入单号" clearable style="width: 220px" />
-      </el-form-item> -->
       <el-form-item label="业务板块" prop="segId">
         <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px">
           <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
@@ -108,8 +102,6 @@ const queryParams = ref({
   processName: "",
   status: undefined,
   createId: undefined,
-  bizNo: "",
-  bizTitle: "",
   time: [],
 });
 // 项目列表
@@ -164,8 +156,6 @@ const getDataList = async () => {
       processName: queryParams.value.processName,
       status: queryParams.value.status,
       createId: queryParams.value.createId,
-      bizNo: queryParams.value.bizNo,
-      bizTitle: queryParams.value.bizTitle,
       createDateStart: queryParams.value.time?.[0] || "",
       createDateEnd: queryParams.value.time?.[1] || "",
     };
@@ -186,18 +176,21 @@ const handlePaginationChange = (params: any) => {
 };
 
 const handleSearch = () => {
+  resetPagination();
   getDataList();
 };
-
+const resetPagination = () => {
+  currentPage.value = 1;
+  pageSize.value = 20;
+}
 const handleReset = () => {
+  resetPagination();
   queryParams.value = {
     projId: undefined,
     segId: undefined,
     processName: "",
     status: undefined,
     createId: undefined,
-    bizNo: "",
-    bizTitle: "",
     time: [],
   };
   getDataList();

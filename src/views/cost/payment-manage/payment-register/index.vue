@@ -98,12 +98,12 @@
     </base-table>
     <!-- 批量付款登记 弹窗 -->
     <BatchRegisterDialog v-model="batchDialog" :currentRow="currentRow" :queryParams="queryParams"
-      @success="handleSearch" />
+      @success="getDataList" />
     <!-- 单项登记 弹窗 -->
     <SingleRegisterDialog v-model="singleDialog" :currentRow="currentRow" :queryParams="queryParams"
-      @success="handleSearch" />
+      @success="getDataList" />
     <!-- 查看弹窗 -->
-    <ViewDialog v-model="viewDialog" :currentRow="currentRow" :queryParams="queryParams" @success="handleSearch" />
+    <ViewDialog v-model="viewDialog" :currentRow="currentRow" :queryParams="queryParams" @success="getDataList" />
   </div>
 </template>
 
@@ -161,6 +161,7 @@ const columns: TableColumnItem[] = [
   { prop: "compName", label: "费用所属公司", width: 180 },
   { prop: "itemName", label: "合同/立项名称", width: 150 },
   { prop: "itemNo", label: "合同/立项单号", width: 180 },
+  { prop: "bizItemName", label: "单据类型", width: 150 },
   { prop: "supName", label: "供应商", width: 150 },
   { prop: "reqNo", label: "付款单号", width: 180 },
   { prop: "reqDesc", label: "付款申请说明", width: 200 },
@@ -217,14 +218,19 @@ const handlePaginationChange = (params: any) => {
 // tab切换处理
 const handleTabChange = (tabName: string) => {
   queryParams.value.payStatus = tabName;
-  getDataList();
+  handleSearch();
 };
 
 const handleSearch = () => {
+  resetPagination();
   getDataList();
 };
-
+const resetPagination = () => {
+  currentPage.value = 1;
+  pageSize.value = 20;
+}
 const handleReset = () => {
+  resetPagination();
   // 将所有字段重置为 undefined
   Object.keys(queryParams.value).forEach((key) => {
     queryParams.value[key] = undefined;
@@ -251,6 +257,7 @@ const handleExport = async () => {
         compName: "费用所属公司",
         itemName: "合同/立项名称",
         itemNo: "合同/立项单号",
+        bizItemName: "单据类型",
         supName: "供应商",
         reqNo: "付款单号",
         reqDesc: "付款申请说明",
