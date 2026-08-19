@@ -126,6 +126,11 @@ defineOptions({ name: "payment-register" });
 
 const router = useRouter();
 
+const bizITypeMapping = {
+  NCON_CST: "非合同请款支付",
+  NCON_FEE: "费用报销支付",
+}
+
 const queryParams = ref({
   projId: undefined,
   segId: undefined,
@@ -161,7 +166,12 @@ const columns: TableColumnItem[] = [
   { prop: "compName", label: "费用所属公司", width: 180 },
   { prop: "itemName", label: "合同/立项名称", width: 150 },
   { prop: "itemNo", label: "合同/立项单号", width: 180 },
-  { prop: "bizItemName", label: "单据类型", width: 150 },
+  {
+    prop: "bizItemName", label: "单据类型", width: 150, formatter: (row) => {
+      const name = bizITypeMapping[row.bizType] || row.bizItemName
+      return name
+    }
+  },
   { prop: "supName", label: "供应商", width: 150 },
   { prop: "reqNo", label: "付款单号", width: 180 },
   { prop: "reqDesc", label: "付款申请说明", width: 200 },
@@ -249,6 +259,7 @@ const handleExport = async () => {
       list.forEach((item: any) => {
         item.isLocked = item.isLocked ? "已入账" : "未入账";
         item.flowStatus = getEnumLabel(costBillStatusEnum, item.flowStatus);
+        item.bizItemName = bizITypeMapping[item.bizType] || item.bizItemName;
       });
       const headerMap = {
         flowTitle: "标题",
