@@ -151,7 +151,7 @@ import { useRoute } from "vue-router";
 import { v4 as uuidv4 } from "uuid";
 import { goalCostApi } from "@/api/cost/cost-setting/goal-cost-api";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
-import { buildTree } from "@/utils/tree";
+import {  buildSubjectTree, buildTree, convertToTree } from "@/utils/tree";
 import { allocRuleEnum } from "@/constants/master-data/enums";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 
@@ -863,9 +863,10 @@ const getSubjectProjList = async () => {
     const res = await costCategoryApi.getCostSubjectProjList({
       projId: props.projId,
       withDetail: true,
+      buildTree: true,
     });
     if (res.code === 200) {
-      subjectOptions.value = buildTree(res.data || []);
+      subjectOptions.value = buildSubjectTree(res.data || []);
     } else {
       ElMessage.error(res.msg || "获取数据失败");
     }
@@ -947,7 +948,7 @@ const buildTreeWithProducts = (nodes: any[]): any[] => {
 const generateCombinations = async () => {
   // 为每个科目节点添加基础业态数据
   const treeData = buildTreeWithProducts(subjectOptions.value);
-  // 计算所有节点的小计（包括各业态汇总）
+  console.log("treeData", treeData);
   tableData.value = calculateAllTotals(treeData);
   console.log("tableData.value", tableData.value);
   // 重置叶子节点缓存版本
