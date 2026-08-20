@@ -112,6 +112,20 @@ export const bizTypeEnum = [
   { label: "非合同请款", value: "NCON_CST" },
   { label: "费用报销", value: "NCON_FEE" },
 ];
+/** 合同业务类型常量 */
+export const bizTypeKey = {
+  CON_MAIN: 'CON_MAIN', // 合同
+  CON_ADD: 'CON_ADD', // 补充合同
+  CON_BG: 'CON_BG', // 变更
+  CON_QZ: 'CON_QZ', // 签证
+  CON_PROD: 'CON_PROD', // 产值
+  CON_PAY: 'CON_PAY', // 合同支付
+  CON_PRE_SETTLE: 'CON_PRE_SETTLE', // 合同预结算
+  CON_SETTLE: 'CON_SETTLE', // 合同结算
+  NCON_PROC: 'NCON_PROC', // 非合同立项
+  NCON_CST: 'NCON_CST', // 非合同请款
+  NCON_FEE: 'NCON_FEE', // 费用报销
+} as const;
 
 /** 分摊状态选项 */
 export const allocStatusEnum = [

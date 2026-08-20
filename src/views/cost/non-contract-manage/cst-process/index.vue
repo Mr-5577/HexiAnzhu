@@ -94,6 +94,7 @@ import { getEnumLabel, getEnumType } from "@/utils/enum";
 import { conBillStatusEnum } from "@/constants/contract-manage/enums";
 import { roleApi } from "@/api/system/role-api";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
+import { formatThousandWithPlaces } from "@/utils/decimal";
 
 defineOptions({ name: "cst-process" });
 
@@ -127,7 +128,7 @@ const columns: TableColumnItem[] = [
   // { prop: "finaTypeName", label: "费用类型", width: 140 },
   // { prop: "processNo", label: "事项编号", width: 140 },
   { prop: "processName", label: "事项名称", width: 160 },
-  { prop: "processAmt", label: "事项计划金额", width: 140 },
+  { prop: "processAmt", label: "事项计划金额", width: 140, formatter: (row) => formatThousandWithPlaces(row.processAmt || 0) },
   { prop: "createName", label: "创建人", width: 120 },
   { prop: "createDate", label: "创建日期", width: 120 },
   {

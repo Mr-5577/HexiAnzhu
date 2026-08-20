@@ -144,8 +144,8 @@
         :allocAmt="formData.changeAmt" :bizBillId="billData.id" /> -->
       <!-- 分摊详情弹窗 -->
       <ConCostAllocDialog v-if="dialogVisible" v-model="dialogVisible" :projId="currentRowAlloc?.cstM?.projId"
-        :projName="currentRowAlloc?.cstM?.projName" :conId="currentRowAlloc?.conId"
-        :displayName="currentRowAlloc?.conName" :bizType="formType.CON_CHANGE"
+        :projName="currentRowAlloc?.cstM?.projName" :conId="currentRowAlloc?.conId" :bizBillId="currentRowAlloc?.cstM
+          ?.bizBillId" :displayName="currentRowAlloc?.conName" :bizType="formType.CON_CHANGE"
         :allocAmt="currentRowAlloc?.cstM?.allocAmt" :cstMData="currentRowAlloc?.cstM" @select="getData" />
     </div>
 
@@ -409,7 +409,7 @@ const dialogVisible = ref(false);
 const currentRowAlloc = ref(null);
 // 处理分摊详情按钮点击
 const handleAllocDetail = (row: any) => {
-  // console.log('当前行数据',row);
+  console.log('当前行数据', row);
   // 如果有传入项目ID，则打开内部弹窗
   if (props.projId) {
     currentRowAlloc.value = row;

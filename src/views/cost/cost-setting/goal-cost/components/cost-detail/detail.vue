@@ -492,7 +492,7 @@ const totalCostTax = computed(() => {
       }
     });
   });
-  return formatNumber(decimalSumNum(values));
+  return formatThousandWithPlaces(decimalSumNum(values));
 });
 
 const totalCostNoTax = computed(() => {
@@ -507,7 +507,7 @@ const totalCostNoTax = computed(() => {
       }
     });
   });
-  return formatNumber(decimalSumNum(values));
+  return formatThousandWithPlaces(decimalSumNum(values));
 });
 
 // initialize expandedKeys to top-level nodes when tableData first loads
@@ -657,11 +657,6 @@ const getDisplayIndex = (item: any, idx: any) => {
   // 否则通过 uuid 查找
   const pos = flatRows.value.findIndex((r: any) => r.uuid === item.uuid);
   return pos >= 0 ? pos + 1 : "";
-};
-
-const formatNumber = (v: any) => {
-  if (v === null || v === undefined || v === "") return "";
-  return formatDecimal(v); // 使用 decimal.js 格式化
 };
 
 // 附件上传成功

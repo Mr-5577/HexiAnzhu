@@ -2,7 +2,7 @@
 <template>
   <div class="cst-payment-wrapper">
     <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px">
-            <el-form-item label="标题" prop="bizTitle">
+      <el-form-item label="标题" prop="bizTitle">
         <el-input v-model="queryParams.bizTitle" placeholder="请输入标题" clearable style="width: 220px" />
       </el-form-item>
       <el-form-item label="付款单号" prop="bizNo">
@@ -67,10 +67,12 @@
       </template>
 
       <template #actions="{ row }">
-        <el-button type="primary" link @click="handleEdit(row)" :disabled="row.status != 0 || row.createId !== userStore.userInfo.mdUserId">
+        <el-button type="primary" link @click="handleEdit(row)"
+          :disabled="row.status != 0 || row.createId !== userStore.userInfo.mdUserId">
           编辑
         </el-button>
-        <el-button type="danger" link @click="handleDelete(row)" :disabled="row.status != 0 || row.createId !== userStore.userInfo.mdUserId">
+        <el-button type="danger" link @click="handleDelete(row)"
+          :disabled="row.status != 0 || row.createId !== userStore.userInfo.mdUserId">
           删除
         </el-button>
         <el-button type="primary" link @click="handleDetail(row)">
@@ -94,6 +96,7 @@ import { getEnumLabel, getEnumType } from "@/utils/enum";
 import { conBillStatusEnum } from "@/constants/contract-manage/enums";
 import { roleApi } from "@/api/system/role-api";
 import { useUserStore } from "@/stores/user-store";
+import { formatThousandWithPlaces } from "@/utils/decimal";
 
 defineOptions({ name: "cst-payment" });
 
@@ -127,11 +130,11 @@ const columns: TableColumnItem[] = [
   { prop: "bizTitle", label: "标题", width: 200 },
   { prop: "bizNo", label: "付款单号", width: 200 },
   { prop: "projName", label: "项目名称", width: 150 },
-  { prop: "processAmt", label: "事项计划金额", width: 120 },
-  { prop: "sumAppyAmt", label: "累计已请款", width: 120 },
-  { prop: "sumOwedAmt", label: "剩余可请款金额", width: 120 },
-  { prop: "reqAmt", label: "本次请款金额", width: 120 },
-  { prop: "factReqAmt", label: "实际请款金额", width: 120 },
+  { prop: "processAmt", label: "事项计划金额", width: 120, formatter: (row) => formatThousandWithPlaces(row.processAmt || 0) },
+  { prop: "sumAppyAmt", label: "累计已请款", width: 120, formatter: (row) => formatThousandWithPlaces(row.sumAppyAmt || 0) },
+  { prop: "sumOwedAmt", label: "剩余可请款金额", width: 120, formatter: (row) => formatThousandWithPlaces(row.sumOwedAmt || 0) },
+  { prop: "reqAmt", label: "本次请款金额", width: 120, formatter: (row) => formatThousandWithPlaces(row.reqAmt || 0) },
+  { prop: "factReqAmt", label: "实际请款金额", width: 120, formatter: (row) => formatThousandWithPlaces(row.factReqAmt || 0) },
   { prop: "reqDesc", label: "请款说明", width: 200 },
   { slot: "status", label: "审批状态", width: 100 },
   { prop: "createName", label: "创建人", width: 100 },

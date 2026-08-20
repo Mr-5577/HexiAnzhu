@@ -235,8 +235,6 @@ const tableKey = ref(0); // 表格key，用于刷新表格
 const projBuildingOptions = ref([]);
 // 合同楼栋
 const conBuildingOptions = ref([]);
-// 弹窗打开的楼栋数据
-const dialogBuildingOptions = ref([]);
 
 // 已选中的楼栋 (存储 value 数组)
 const selectedBuildings = ref([]);
@@ -287,19 +285,6 @@ const buildingOptions = computed(() => {
   // 取对应合同的楼栋
   const list = projBuildingOptions.value.filter((item) => conBuildingOptions.value.includes(item.id))
   return list
-  // if (isDialogMode.value) {
-  //   if (dialogBuildingOptions.value.length) {
-  //     // 取对应合同的楼栋
-  //     const list = projBuildingOptions.value.filter((item) => dialogBuildingOptions.value.includes(item.id))
-  //     return list
-  //   } else {
-  //     return projBuildingOptions.value
-  //   }
-  // } else {
-  //   // 取对应合同的楼栋
-  //   const list = projBuildingOptions.value.filter((item) => conBuildingOptions.value.includes(item.id))
-  //   return list
-  // }
 })
 // 业态name信息
 const businessTypeNames = computed(() => {
@@ -717,12 +702,13 @@ const getBuildingListByProjId = async () => {
       const list = res.data || [];
       projBuildingOptions.value = list;
       // 弹窗模式默认选中全部楼栋,OA打开只能选择对应合同的楼栋
-      if (isDialogMode.value) {
-        // 默认选中全部业态
-        selectedBuildings.value = list.map((item: any) => item.id);
-      } else {
-        selectedBuildings.value = conBuildingOptions.value;
-      }
+      // if (isDialogMode.value) {
+      //   // 默认选中全部业态
+      //   selectedBuildings.value = list.map((item: any) => item.id);
+      // } else {
+      //   selectedBuildings.value = conBuildingOptions.value;
+      // }
+      selectedBuildings.value = conBuildingOptions.value;
       console.log("业态类型:", getBusinessType());
     }
   } catch (error) {
@@ -788,78 +774,6 @@ const initPage = async () => {
   // if (props?.cstMData && props.cstMData?.allocDs?.length > 0) {
   //   const detaiList = props.cstMData?.allocDs || [];
   //   processPopupData(detaiList);
-  //   if (props?.bizBillId) {
-  //     switch (props.bizType) {
-  //       case "CON_MAIN":
-  //         // 主合同查询轻量级详情信息
-  //         const liteRes = await contractLedgerApi.getConInfoLite({ conBillId: props.bizBillId });
-  //         if (liteRes?.code === 200 && liteRes?.data) {
-  //           // 保存合同楼栋信息
-  //           dialogBuildingOptions.value = liteRes?.data?.bldIds?.split(",").map((ite) => Number(ite)) || [];
-  //         }
-  //         break;
-  //       case "CON_ADD":
-  //         // 主合同下子项合同轻量级获取对应ID
-  //         const conSubRes = await contractLedgerApi.getSubConLiteInfo({ billId: props.bizBillId });
-  //         if (conSubRes?.code === 200 && conSubRes?.data) {
-  //           // 通过业务ID查询详细信息
-  //           const res = await supplementContractApi.getSupplementContractById(conSubRes.data);
-  //           if (res.code == 200 && res.data) {
-  //             const conAddData = res.data?.conAdd || null;
-  //             // 保存合同楼栋信息
-  //             dialogBuildingOptions.value = conAddData?.bldIds?.split(",").map((ite) => Number(ite)) || [];
-  //           }
-  //         }
-  //         break;
-  //       case "CON_BG":
-  //         const conSubRes2 = await contractLedgerApi.getSubConLiteInfo({ billId: billId });
-  //         if (conSubRes2?.code === 200 && conSubRes2?.data) {
-  //           // 通过业务ID查询详细信息
-  //           const res = await changeOrderApi.getChangeConDetail({
-  //             id: conSubRes2?.data,
-  //             isWithFlow: true,
-  //           });
-  //           if (res.code == 200 && res.data) {
-  //             const { conMain, } = res.data;
-  //             // 保存变更合同楼栋信息，变更合同取主合同楼栋
-  //             dialogBuildingOptions.value = conMain?.bldIds?.split(",").map((ite) => Number(ite)) || [];
-  //           }
-  //         }
-  //         break;
-  //       case "CON_QZ":
-  //         const conSubRes3 = await contractLedgerApi.getSubConLiteInfo({ billId: billId });
-  //         if (conSubRes3?.code === 200 && conSubRes3?.data) {
-  //           // 通过业务ID查询详细信息
-  //           const res = await visaManagementApi.getVisaDetail({
-  //             id: conSubRes3?.data,
-  //             isWithFlow: true,
-  //           });
-  //           if (res.code == 200 && res.data) {
-  //             const { conMain } = res.data;
-  //             // 保存签证合同楼栋信息，签证合同取主合同楼栋
-  //             dialogBuildingOptions.value = conMain?.bldIds?.split(",").map((ite) => Number(ite)) || [];
-  //           }
-  //         }
-  //         break;
-  //       case "CON_PROD":
-  //         const conSubRes4 = await contractLedgerApi.getSubConLiteInfo({ billId: billId });
-  //         if (conSubRes4?.code === 200 && conSubRes4?.data) {
-  //           // 通过业务ID查询详细信息
-  //           const res = await outputDeclarationApi.getProdValById({
-  //             id: conSubRes4?.data,
-  //             isWithFlow: true,
-  //           });
-  //           if (res.code == 200 && res.data) {
-  //             const { conMain } = res.data;
-  //             // 保存签证合同楼栋信息，签证合同取主合同楼栋
-  //             dialogBuildingOptions.value = conMain?.bldIds?.split(",").map((ite) => Number(ite)) || [];
-  //           }
-  //         }
-  //         break;
-  //       default:
-  //         break;
-  //     }
-  //   }
   // }
   switch (props.bizType) {
     case "CON_MAIN":
@@ -915,7 +829,7 @@ const getConAddDetail = async () => {
     // 通过业务ID查询详细信息
     const res = await supplementContractApi.getSupplementContractById(conSubRes.data);
     if (res.code == 200 && res.data) {
-      const { conMain, bill, conAdd, conAddExt, addProcesses, flowList, flowBase, cstM } = res.data;
+      const { conMain, bill, conAdd, conAddExt, addProcesses, flowBase, cstM } = res.data;
       segId.value = flowBase?.segId;
       pageParams.value.projId = flowBase?.projId || undefined
       pageParams.value.projName = flowBase?.projName || undefined
@@ -949,12 +863,12 @@ const getConBgDetail = async () => {
       isWithFlow: true,
     });
     if (res.code == 200 && res.data) {
-      const { change, conlist, flowList, conMain, flowBase, bill, cstM } = res.data;
+      const { change, conlist, conMain, flowBase, bill, cstM } = res.data;
       segId.value = flowBase?.segId;
       pageParams.value.projId = flowBase?.projId || undefined
       pageParams.value.projName = flowBase?.projName || undefined
       // pageParams.value.displayName = change.changeName || undefined
-      pageParams.value.displayName = conMain.conName || undefined
+      pageParams.value.displayName = conMain?.conName || undefined
       pageParams.value.bizType = bizType;
       pageParams.value.billId = billId;
       pageParams.value.allocAmt = change.changeAmt || 0;
@@ -983,12 +897,12 @@ const getConQzDetail = async () => {
       isWithFlow: true,
     });
     if (res.code == 200 && res.data) {
-      const { change, changeCon, visa, conMain, flowList, flowBase, bill, cstM } = res.data;
+      const { change, changeCon, visa, conMain, flowBase, bill, cstM } = res.data;
       segId.value = flowBase?.segId;
       pageParams.value.projId = flowBase?.projId || undefined
       pageParams.value.projName = flowBase?.projName || undefined
       // pageParams.value.displayName = bill.bizTitle || undefined
-      pageParams.value.displayName = conMain.conName || undefined
+      pageParams.value.displayName = conMain?.conName || undefined
       pageParams.value.bizType = bizType;
       pageParams.value.billId = billId;
       pageParams.value.allocAmt = visa.visaApplyAmt || 0;
@@ -1017,12 +931,13 @@ const getConProdDetail = async () => {
       isWithFlow: true,
     });
     if (res.code == 200 && res.data) {
-      const { flowList, flowBase, bill, prodVal, conMain, cstM } = res.data;
+      const { flowBase, bill, prodVal, conMain, cstM } = res.data;
+      debugger
       segId.value = flowBase?.segId;
       pageParams.value.projId = flowBase?.projId || undefined
       pageParams.value.projName = flowBase?.projName || undefined
       // pageParams.value.displayName = bill.bizTitle || undefined
-      pageParams.value.displayName = conMain.conName || undefined
+      pageParams.value.displayName = conMain?.conName || undefined
       pageParams.value.bizType = bizType;
       pageParams.value.billId = billId;
       pageParams.value.allocAmt = prodVal.applyProdVal || 0;
@@ -1967,12 +1882,10 @@ onMounted(async () => {
     billId = props.bizBillId;
     bizId = props.conId;
     bizType = props.bizType;
-    // dialogBuildingOptions.value = []
     await getTaxRate(props.conId); // 获取合同税率
     if (props.projId) {
       await initPage();
     }
-    await loadAllocationData();
   } else {
     // OA打开
     await getTaxRate(bizId); // 获取合同税率

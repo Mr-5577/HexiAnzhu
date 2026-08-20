@@ -95,6 +95,7 @@ import { conBillStatusEnum } from "@/constants/contract-manage/enums";
 import { roleApi } from "@/api/system/role-api";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import { useUserStore } from "@/stores/user-store";
+import { formatThousandWithPlaces } from "@/utils/decimal";
 
 defineOptions({ name: "fee-payment" });
 
@@ -128,7 +129,7 @@ const columns: TableColumnItem[] = [
   { prop: "bizNo", label: "付款单号", width: 200 },
   { prop: "projName", label: "项目名称", width: 150 },
   // { prop: "feeTypeId", label: "费用类型", width: 150 },
-  { prop: "reqAmt", label: "实际请款金额", width: 120 },
+  { prop: "reqAmt", label: "实际请款金额", width: 120, formatter: (row) => formatThousandWithPlaces(row.reqAmt || 0) },
   { prop: "reqDesc", label: "请款说明", width: 200 },
   { slot: "status", label: "审批状态", width: 100 },
   { prop: "createName", label: "创建人", width: 100 },
