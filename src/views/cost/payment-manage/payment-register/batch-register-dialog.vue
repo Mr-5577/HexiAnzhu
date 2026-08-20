@@ -163,7 +163,7 @@ const tableColumns = computed<EditableColumn[]>(() => [
   { type: "selection", width: 50, fixed: "left" },
   { prop: "finaSubDesc", label: "款项类型/事项", editable: false },
   { prop: "finaOrgName", label: "所属组织", editable: false },
-  { prop: "pmBankName", label: "收款方开户名", editable: false },
+  { prop: "pmBankName", label: "收款方开户行", editable: false },
   { prop: "pmAccountName", label: "收款方账户名", editable: false },
   { prop: "pmBankAccount", label: "收款方账号", editable: false },
   { prop: "payWayName", label: "支付方式", editable: false, width: 100 },
