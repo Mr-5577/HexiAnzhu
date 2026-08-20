@@ -67,10 +67,10 @@
       </template>
 
       <template #actions="{ row }">
-        <el-button type="primary" link @click="handleEdit(row)" :disabled="row.status != 0">
+        <el-button type="primary" link @click="handleEdit(row)" :disabled="row.status != 0 || row.createId !== userStore.userInfo.mdUserId">
           编辑
         </el-button>
-        <el-button type="danger" link @click="handleDelete(row)" :disabled="row.status != 0">
+        <el-button type="danger" link @click="handleDelete(row)" :disabled="row.status != 0 || row.createId !== userStore.userInfo.mdUserId">
           删除
         </el-button>
         <el-button type="primary" link @click="handleDetail(row)">
@@ -93,10 +93,12 @@ import { cstPaymentApi } from "@/api/cost/non-contract-manage/cst-payment-api";
 import { getEnumLabel, getEnumType } from "@/utils/enum";
 import { conBillStatusEnum } from "@/constants/contract-manage/enums";
 import { roleApi } from "@/api/system/role-api";
+import { useUserStore } from "@/stores/user-store";
 
 defineOptions({ name: "cst-payment" });
 
 const router = useRouter();
+const userStore = useUserStore();
 
 const queryParams = ref({
   segId: undefined,

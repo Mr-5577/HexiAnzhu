@@ -60,14 +60,14 @@
       </template>
       <template #actions="{ row }">
         <el-button type="primary" link @click="handleEdit(row)"
-          :disabled="row.status !== 0 || row.createId !== userStore.userInfo.id">
+          :disabled="row.status !== 0 || row.createId !== userStore.userInfo.mdUserId">
           编辑
         </el-button>
         <el-button type="primary" link @click="handleDetail(row)">
           详情
         </el-button>
         <el-button type="danger" link @click="handleDelete(row)"
-          :disabled="row.status !== 0 || row.createId !== userStore.userInfo.id">
+          :disabled="row.status !== 0 || row.createId !== userStore.userInfo.mdUserId">
           删除
         </el-button>
       </template>

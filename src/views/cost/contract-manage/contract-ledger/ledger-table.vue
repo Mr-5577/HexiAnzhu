@@ -56,7 +56,7 @@
       <template #actions="{ row }">
         <!-- 外部常驻按钮 -->
         <el-button type="primary" link @click="handleEdit(row)"
-          :disabled="row.conStatus !== 0 || row.createId !== userStore.userInfo.id">
+          :disabled="row.conStatus !== 0 || row.createId !== userStore.userInfo.mdUserId">
           编辑
         </el-button>
         <el-button type="primary" link @click="handleDetail(row)">
@@ -67,7 +67,7 @@
           台账详情
         </el-button>
         <el-button type="danger" link @click="handleDelete(row)"
-          :disabled="row.conStatus !== 0 || row.createId !== userStore.userInfo.id">
+          :disabled="row.conStatus !== 0 || row.createId !== userStore.userInfo.mdUserId">
           删除
         </el-button>
       </template>

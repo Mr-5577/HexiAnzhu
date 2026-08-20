@@ -1179,7 +1179,7 @@ export function useContractForm(
     await initOptions();
 
     if (isAddMode.value) {
-      formData.value.agentId = userStore.userInfo.id;
+      formData.value.agentId = userStore.userInfo.mdUserId;
       formData.value.pbAmount = 0;
       formData.value.manageType = ManageTypeEnum[1].value;
       formData.value.userName = userStore.userInfo?.empName || "";

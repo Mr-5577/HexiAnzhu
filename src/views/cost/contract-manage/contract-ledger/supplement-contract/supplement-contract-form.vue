@@ -491,7 +491,7 @@ const initFormData = () => ({
   createDate: dateUtil().format("YYYY-MM-DD"),
   projId: null,
   mainConId: null,
-  agentId: userStore.userInfo.id,
+  agentId: userStore.userInfo.mdUserId,
   deptName: userStore.userInfo?.deptName,
   mguName: userStore.userInfo?.mguName,
   mainConName: "",

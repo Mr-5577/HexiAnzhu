@@ -2255,7 +2255,6 @@ const getConPayType = async () => {
 // 切换项目
 const changeProject = async (value: number) => {
   if (value) {
-    ;
     const res = await projectAreaApi.getInfoByProjId({ id: value });
     if (res.code === 200 && res.data) {
       const { compName, compId, segId, segName, segNo } = res.data;
@@ -2467,7 +2466,6 @@ const loadDetail = async () => {
 
 // 数据回填
 const backfillData = async (data) => {
-  ;
   const { flowList, flowBase, bill, payment, payWays, paySubs, invoiceMs, invoiceDs, billDeds, annexList, bankAnnexList } = data;
   billData.value = { ...billData.value, ...bill };
   paymentData.value = { ...paymentData.value, ...payment };

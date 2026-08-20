@@ -563,7 +563,7 @@ const initData = async () => {
     // 设置默认提交人信息
     if (userStore.userInfo) {
       formData.value.submiterName = userStore.userInfo.empName || "";
-      formData.value.agentId = userStore.userInfo.id;
+      formData.value.agentId = userStore.userInfo.mdUserId;
     }
   } else {
     if (conVoidId.value) {

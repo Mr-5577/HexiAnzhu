@@ -18,7 +18,7 @@
         }" placeholder="请选择项目" style="width: 220px" clearable />
       </el-form-item>
 
-      
+
       <el-form-item label="事项名称" prop="processName">
         <el-input v-model="queryParams.processName" placeholder="请输入事项名称" clearable style="width: 220px" />
       </el-form-item>
@@ -65,10 +65,12 @@
       </template>
 
       <template #actions="{ row }">
-        <el-button type="primary" link @click="handleEdit(row)" :disabled="row.status != 0">
+        <el-button type="primary" link @click="handleEdit(row)"
+          :disabled="row.status != 0 || row.createId !== userStore.userInfo.mdUserId">
           编辑
         </el-button>
-        <el-button type="danger" link @click="handleDelete(row)" :disabled="row.status != 0">
+        <el-button type="danger" link @click="handleDelete(row)"
+          :disabled="row.status != 0 || row.createId !== userStore.userInfo.mdUserId">
           删除
         </el-button>
         <el-button type="primary" link @click="handleDetail(row)">
@@ -87,6 +89,7 @@ import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 import { largeScreenApi } from "@/api/sales/large-screen-api";
 import { cstProcessApi } from "@/api/cost/non-contract-manage/cst-process-api";
 import { useRouter } from "vue-router";
+import { useUserStore } from "@/stores/user-store";
 import { getEnumLabel, getEnumType } from "@/utils/enum";
 import { conBillStatusEnum } from "@/constants/contract-manage/enums";
 import { roleApi } from "@/api/system/role-api";
@@ -95,6 +98,7 @@ import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 defineOptions({ name: "cst-process" });
 
 const router = useRouter();
+const userStore = useUserStore();
 
 const queryParams = ref({
   projId: undefined,

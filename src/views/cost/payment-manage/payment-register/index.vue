@@ -73,6 +73,12 @@
 
     <base-table :columns="columns" :tableData="paginatedData" :loading="tableLoading" :rowKey="'id'" :total="total"
       :current-page="currentPage" :page-size="pageSize" @pagination-change="handlePaginationChange">
+      <!-- 付款单号 -->
+      <template #reqNo="{ row }">
+        <el-link type="primary" :underline="'hover'" @click="handleViewDetail(row)">
+          {{ row.reqNo || "" }}
+        </el-link>
+      </template>
       <!-- 审批流程 0=草稿，10=审批中，40=已审批，80=作废，99=其他 -->
       <template #flowStatus="{ row }">
         <el-tag size="small" :type="getEnumType(costBillStatusEnum, row?.flowStatus || 0)">
@@ -128,6 +134,7 @@ import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
 import { costBillStatusEnum } from "@/constants/cost/enums.ts";
 import { exportExcel } from '@/utils/export-excel.ts';
 import { formatThousandWithPlaces } from "@/utils/decimal.ts";
+import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api.ts";
 
 defineOptions({ name: "payment-register" });
 
@@ -136,6 +143,7 @@ const router = useRouter();
 const bizITypeMapping = {
   NCON_CST: "非合同请款支付",
   NCON_FEE: "费用报销支付",
+  CON_PAY: "合同支付",
 }
 
 const queryParams = ref({
@@ -173,7 +181,7 @@ const columns: TableColumnItem[] = [
   { prop: "segName", label: "业务板块", width: 90 },
   { prop: "compName", label: "费用所属公司", width: 180 },
   { prop: "itemName", label: "合同/立项名称", width: 150 },
-  { prop: "itemNo", label: "合同/立项单号", width: 180 },
+  { prop: "itemNo", label: "合同/立项单号", width: 220 },
   {
     prop: "bizItemName", label: "单据类型", width: 150, formatter: (row) => {
       const name = bizITypeMapping[row.bizType] || row.bizItemName
@@ -181,12 +189,12 @@ const columns: TableColumnItem[] = [
     }
   },
   { prop: "supName", label: "供应商", width: 150 },
-  { prop: "reqNo", label: "付款单号", width: 180 },
+  { slot: "reqNo", label: "付款单号", width: 220 },
   { prop: "reqDesc", label: "付款申请说明", width: 200 },
   { prop: "belongMonth", label: "费用归属期间", width: 110 },
   { prop: "finaTypeName", label: "费用类型", width: 120 },
-  { prop: "payableAmt", label: "请款金额", width: 90, formatter: (row) => formatThousandWithPlaces(row.payableAmt || 0) },
-  { prop: "paidAmt", label: "支付金额", width: 90, formatter: (row) => formatThousandWithPlaces(row.paidAmt || 0) },
+  { prop: "payableAmt", label: "请款金额", width: 120, formatter: (row) => formatThousandWithPlaces(row.payableAmt || 0) },
+  { prop: "paidAmt", label: "支付金额", width: 120, formatter: (row) => formatThousandWithPlaces(row.paidAmt || 0) },
   { prop: "payStatus", label: "付款状态", width: 100 },
   { prop: "applyUserName", label: "申请人", width: 90 },
   { prop: "applyDate", label: "申请日期", width: 100 },
@@ -347,6 +355,43 @@ const handleEntry = async (row) => {
     })
     .catch(() => { });
 };
+// 查看单据详情
+const handleViewDetail = async (row) => {
+  const { bizType, bizId, projId } = row;
+  if (!bizType || !bizId) return;
+  switch (bizType) {
+    case 'CON_PAY':
+      // 合同支付
+      router.push({
+        path: "/con/payment-application/detail",
+        query: {
+          paymentId: bizId, // 付款ID
+          projId: projId,
+        },
+      });
+      break;
+    case 'NCON_FEE':
+      // 费用报销
+      router.push({
+        path: "/ncon/fee-payment/detail",
+        query: {
+          feePaymentId: bizId, // 费用报销ID
+        },
+      });
+      break;
+    case 'NCON_CST':
+      // 非合同请款
+      router.push({
+        path: "/ncon/cst-payment/detail",
+        query: {
+          cstPaymentId: bizId, // 非合同请款ID
+        },
+      });
+      break;
+    default:
+      break;
+  }
+}
 
 // 获取项目列表
 const getProjectOptions = async () => {

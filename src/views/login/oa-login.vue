@@ -47,29 +47,6 @@ const buildRoutePath = (
     }
   });
   return query.toString() ? `${basePath}?${query.toString()}` : basePath;
-
-  // const query = new URLSearchParams();
-  // let path = basePath;
-
-  // // 👇 支持 mode 参数
-  // if (params.mode === "edit") {
-  //   path = `${basePath}/edit`;
-  // } else if (params.mode === "view") {
-  //   path = `${basePath}/detail`;
-  // }
-
-  // Object.entries(params).forEach(([key, value]) => {
-  //   if (
-  //     value !== undefined &&
-  //     value !== null &&
-  //     value !== "" &&
-  //     key !== "mode"
-  //   ) {
-  //     query.append(key, String(value));
-  //   }
-  // });
-
-  // return query.toString() ? `${path}?${query.toString()}` : path;
 };
 
 // COST 子业务路径映射（subBizCode = COST 时生效），成本分摊页面
