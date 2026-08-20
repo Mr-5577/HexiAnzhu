@@ -975,7 +975,7 @@
         </FormCard>       
 
         <!-- ====== 卡片：财务明细（仅详情查看，只读） ====== -->
-        <FormCard
+        <!-- <FormCard
           v-if="isDetail"
           id="card-finance"
           v-show="!isOffsetByInvoice"
@@ -993,7 +993,7 @@
             :show-toolbar="false"
             :show-action-bar="false"
           />
-        </FormCard>
+        </FormCard> -->
 
         <!-- ====== 卡片：相关附件 ====== -->
         <FormCard

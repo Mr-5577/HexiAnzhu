@@ -5,8 +5,6 @@
       mode="add"
       :projId="projId"
       :conId="conId"
-      @success="handleSuccess"
-      @cancel="handleCancel"
     />
   </div>
 </template>
@@ -23,13 +21,6 @@ defineOptions({ name: "payment-application-add" });
 const projId = Number(route.query.projId); // 项目ID
 const conId = Number(route.query.conId); // 合同ID
 
-const handleSuccess = () => {
-  //router.back();
-};
-
-const handleCancel = () => {
- // router.back();
-};
 </script>
 
 <style scoped lang="scss">

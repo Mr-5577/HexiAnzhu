@@ -1,13 +1,7 @@
 <!-- 产值申报 详情 -->
 <template>
   <div class="output-declaration-detail-page">
-    <OutputValueForm
-      mode="detail"
-      :con-id="conId"
-      :prod-id="prodId"
-      @success="handleSuccess"
-      @cancel="handleCancel"
-    />
+    <OutputValueForm mode="detail" :con-id="conId" :prod-id="prodId" />
   </div>
 </template>
 
@@ -23,13 +17,7 @@ defineOptions({ name: "output-declaration-detail" });
 const conId = Number(route.query.conId); // 合同ID
 const prodId = Number(route.query.prodId); // 产值ID
 
-const handleSuccess = () => {
-  // router.back();
-};
 
-const handleCancel = () => {
-  // router.back();
-};
 </script>
 
 <style scoped lang="scss">

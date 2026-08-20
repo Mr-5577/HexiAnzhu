@@ -43,7 +43,17 @@
             <List />
           </el-icon>成本分摊明细
         </span>
-        <div v-if="!isView">
+        <div style="display: flex;" v-if="!isView">
+          <!-- <div class="level-select">
+            <span class="level-label">展开科目层级：</span>
+            <el-select v-model="defaultLevel" style="width:120px" @change="handleLevelChange">
+              <el-option :label="'不展开'" :value="0" />
+              <el-option :label="'第一层'" :value="1" />
+              <el-option :label="'第二层'" :value="2" />
+              <el-option :label="'第三层'" :value="3" />
+              <el-option :label="'第四层'" :value="4" />
+            </el-select>
+          </div> -->
           <el-button plain type="primary" @click="handleChoose">
             选择分摊科目
           </el-button>
@@ -87,7 +97,8 @@
       <!-- 可编辑表格：只有叶子节点可编辑 -->
       <editable-table ref="editableTableRef" row-key="id" height="350px" v-model="editableSubjectData"
         :columns="subjectColumns" :pagination="false" :highlight-current-row="false" :show-summary="false"
-        :compact-empty="true" :editable="true" :default-expand-level="1" :on-save="handleSave" :key="tableKey">
+        :compact-empty="true" :editable="true" :default-expand-level="defaultLevel" :on-save="handleSave"
+        :key="tableKey">
         <template #actions="{ row }" v-if="!isView">
           <el-button v-if="row.isLeaf" type="danger" link @click="handleDeleteNode(row)">
             删除
@@ -212,7 +223,7 @@ const isDialogMode = computed(() => {
 const isView = computed(() => {
   return route.query.mode == "view" || props.dialogMode == "view";
 });
-
+const defaultLevel = ref(1); // 默认展开层级
 const warningVisible = ref(false); // 预警面板展开状态
 const confirmLoading = ref(false); // 自动分摊加载状态
 const dialogVisible = ref(false); // 选择科目弹窗
@@ -328,7 +339,9 @@ const businessTypeNames = computed(() => {
   // 去重后拼接
   return [...new Set(allProdNames)].join("、");
 });
-
+const handleLevelChange = () => {
+  tableKey.value++;
+}
 // 处理得到的选中楼栋关联的业态数据
 const getBusinessType = () => {
   // 获取所有楼栋数据的映射，方便通过id查找
@@ -2143,5 +2156,17 @@ defineExpose({
   width: 300px;
   min-width: 80px;
   flex: 1;
+}
+.level-select {
+  display: flex;
+  align-items: center;
+  margin-right: 20px;
+  .level-label {
+    flex-shrink: 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: #5a6e82;
+    white-space: nowrap;
+  }
 }
 </style>

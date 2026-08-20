@@ -46,7 +46,7 @@
           <el-option label="未入账" :value="false" />
         </el-select>
       </el-form-item>
-      <el-form-item label="只看需支付" prop="isPayable">
+      <el-form-item label="是否可支付" prop="isPayable">
         <el-select v-model="queryParams.isPayable" placeholder="请选择" style="width: 220px">
           <el-option label="是" :value="true" />
           <el-option label="否" :value="false" />
