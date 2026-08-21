@@ -663,7 +663,7 @@
               :multiple="false"
               :showIcon="true"
               :showTip="true"
-              :maxSize="20"
+              :maxSize="200"
               :unrestricted="true"
               :accept="''"
               button-text="选择文件"
