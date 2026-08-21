@@ -2570,7 +2570,7 @@ const backfillData = async (data) => {
   }
 
   if (formData.value.modifyAccAnnex) {
-    const res = await commonApi.getFileList({ annexId: paymentId.value });
+    const res = await commonApi.getFileList({ annexId: formData.value.modifyAccAnnex });
     if (res.code === 200 && res.data) {
       if (res.data.length > 0) {
         bankFileList.value = res.data.map((item: any) => ({
@@ -3038,7 +3038,6 @@ const initData = async () => {
 };
 
 onMounted(() => {
-  ;
   initData();
 });
 </script>
