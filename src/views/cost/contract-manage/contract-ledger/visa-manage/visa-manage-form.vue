@@ -406,11 +406,11 @@
         </FormCard>
       </el-form>
       
-      <!-- 成本分摊 -->
-      <ConCostAllocCard style="margin-top: 15px;" :visible="!isAdd" :cstMData="cstMData"
+      <!-- 成本分摊 :visible="!isAdd" -->
+      <ConCostAllocCard v-if="menuStore.hasExactPermission('cost-alloc:con-qz')" style="margin-top: 15px;" :visible="!isAdd" :cstMData="cstMData"
         :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'CON_QZ'"
         :projId="formData.projId" :projName="formData?.projName" :displayName="formData.changeName"
-        :allocAmt="formData.visaApplyAmt" :bizBillId="billData.id" />
+        :allocAmt="formData.visaApplyAmt" :bizBillId="billData.id" :conId="conMainData?.id" @selectData="getSelectCostAlloc" />
     </div>
   </div>
 
@@ -469,6 +469,7 @@ import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-ap
 import { requiredInputRule, requiredRule } from "@/utils/form-rule-validate.ts";
 import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
 import ConCostAllocCard from "@/views/cost/cost-allocation/con-cost-alloc/con-cost-alloc-card.vue";
+import { useMenuStore } from "@/stores/menu-store";
 const { collapsedCards, toggleCard, formatMoney } = useFormLayout(NAV_CARDS);
 
 defineOptions({ name: "visa-management-form" });
@@ -493,6 +494,7 @@ const emit = defineEmits<{
   (e: "cancel"): void;
 }>();
 
+const menuStore = useMenuStore();
 // ==================== 路由 / Store ====================
 const router = useRouter();
 const route = useRoute();
@@ -540,6 +542,7 @@ const billData = ref({
   createName:"",
   createDate:"",
 });
+const conMainData = ref(null)
 // 成本分摊明细数据
 const cstMData = ref({
   id: undefined,
@@ -851,6 +854,7 @@ const loadDetail = async () => {
     if (res.code === 200) {
       const { change, changeCon,visa, conMain,flowList, flowBase,bill,annexList = [],cstM } = res.data;
       billData.value = { ...billData.value, ...bill };
+      conMainData.value = { ...conMainData.value, ...conMain };
       flowListData.value = { ...flowListData.value, ...flowList };
       flowBaseData.value = { ...flowBaseData.value, ...flowBase };
       cstMData.value = { ...cstMData.value, ...cstM };
@@ -926,7 +930,7 @@ const loadDetail = async () => {
 
 // ==================== 提交参数构建 ====================
 const buildSubmitParams = () => {
-  return {
+  let params:any = {
     bill: {
         ...billData.value,
         id: billData.value.id || undefined,
@@ -960,6 +964,14 @@ const buildSubmitParams = () => {
     },
     annexList: tempFileList.value || [],
   };
+  if (cstMData.value?.allocDs && cstMData.value.allocDs?.length > 0) {
+    params.cstM = {
+      ...cstMData.value,
+      projId: formData.value.projId,
+      bizType: "CON_QZ",
+    };
+  }
+  return params;
 };
 
 // ==================== 顶部操作栏方法 ====================
@@ -1103,6 +1115,15 @@ const goBack = () => {
     tagsStore.closeTagByPath("/con/visa-manage/edit");
   }
   router.go(-1); // 返回上个页面
+};
+
+const getSelectCostAlloc = (data: any) => {
+  console.log("选中的成本分摊数据:", data);
+  cstMData.value.allocAmt = data.allocAmt;
+  cstMData.value.allocExclAmt = data.allocExclAmt;
+  cstMData.value.allocStatus = data.allocStatus;
+  cstMData.value.allocWarn = data.allocWarn;
+  cstMData.value.allocDs = data?.allocDs || [];
 };
 
 // ==================== 初始化与生命周期 ====================

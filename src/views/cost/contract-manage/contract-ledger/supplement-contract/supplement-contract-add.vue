@@ -6,8 +6,6 @@
       :proj-id="projId"
       :con-id="conId"
       :con-name="conName"
-      @success="handleSuccess"
-      @cancel="handleCancel"
     />
   </div>
 </template>
@@ -26,13 +24,6 @@ const conId = Number(route.query.conId);
 const projId = Number(route.query.projId);
 const conName = String(route.query.conName);
 
-const handleSuccess = () => {
-  //router.back();
-};
-
-const handleCancel = () => {
-  //router.back();
-};
 </script>
 
 <style scoped lang="scss">

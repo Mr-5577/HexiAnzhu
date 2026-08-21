@@ -161,7 +161,7 @@ export function useContractForm(
   const cstMData = ref({
     id: undefined,
     projId: undefined,
-    bizType: "",
+    bizType: "CON_MAIN",
     bizBillId: undefined,
     bizKeyId: 0,
     allocAmt: "",
@@ -636,7 +636,7 @@ export function useContractForm(
 
   // ---- 构建提交参数 ----
   const buildSubmitParams = () => {
-    return {
+    let params:any = {
       bill: {
         ...billData.value,
         id: billData.value.id || undefined,
@@ -705,6 +705,14 @@ export function useContractForm(
       annexContractList: annexContractFileList.value || [],
       annexList: annexFileList.value || [],
     };
+    if (cstMData.value?.allocDs && cstMData.value.allocDs?.length > 0) {
+      params.cstM = {
+        ...cstMData.value,
+        projId: formData.value.projId,
+        bizType: "CON_MAIN",
+      };
+    }
+    return params;
   };
 
   // ---- 解析回显数据 ----
@@ -1171,7 +1179,7 @@ export function useContractForm(
     await initOptions();
 
     if (isAddMode.value) {
-      formData.value.agentId = userStore.userInfo.id;
+      formData.value.agentId = userStore.userInfo.mdUserId;
       formData.value.pbAmount = 0;
       formData.value.manageType = ManageTypeEnum[1].value;
       formData.value.userName = userStore.userInfo?.empName || "";
@@ -1187,6 +1195,15 @@ export function useContractForm(
         await loadContractDetail();
       }
     }
+  };
+
+  const getSelectCostAlloc = (data: any) => {
+    console.log("选中的成本分摊数据:", data);
+    cstMData.value.allocAmt = data.allocAmt;
+    cstMData.value.allocExclAmt = data.allocExclAmt;
+    cstMData.value.allocStatus = data.allocStatus;
+    cstMData.value.allocWarn = data.allocWarn;
+    cstMData.value.allocDs = data?.allocDs || [];
   };
 
   onMounted(() => {
@@ -1264,5 +1281,6 @@ export function useContractForm(
     handleUploadOtherSuccess,
     handleUploadConSuccess,
     isJianAn,
+    getSelectCostAlloc,
   };
 }

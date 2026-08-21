@@ -161,19 +161,19 @@ const tableColumns = computed<EditableColumn[]>(() => [
   { prop: "finaSubName", label: "科目名称", editable: false, width: 140 },
   {
     prop: "pmBankName",
-    label: "收款银行",
+    label: "收款方开户行",
     editable: false,
     width: 120,
   },
   {
     prop: "pmAccountName",
-    label: "收款方",
+    label: "收款方账户名",
     editable: false,
     width: 120,
   },
   {
     prop: "pmBankAccount",
-    label: "收款账号",
+    label: "收款方账号",
     editable: false,
     width: 140,
   },

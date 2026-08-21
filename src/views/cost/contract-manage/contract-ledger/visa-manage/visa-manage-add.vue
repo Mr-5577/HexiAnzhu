@@ -5,8 +5,6 @@
       mode="add"
       :conId="conId"
       :projId="projId"
-      @success="handleSuccess"
-      @cancel="handleCancel"
     />
   </div>
 </template>
@@ -22,13 +20,6 @@ const router = useRouter();
 const conId = Number(route.query.conId); // 合同ID
 const projId = Number(route.query.projId); // 项目ID
 
-const handleSuccess = () => {
-  //router.back();
-};
-
-const handleCancel = () => {
-  //router.back();
-};
 </script>
 
 <style scoped lang="scss">

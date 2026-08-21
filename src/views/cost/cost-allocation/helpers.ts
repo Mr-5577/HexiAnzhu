@@ -104,3 +104,22 @@ export const extractDistinctProducts = (data) => {
   // 直接返回 values 数组（避免额外遍历）
   return Array.from(map.values());
 };
+
+/**
+ * @name 获取树形结构最大层级
+ * @param treeData 需要判断的树形结构数据
+ * @param depth 
+ */
+const getTreeDepthRecursive = (treeData, depth = 0) => {
+  if (!treeData?.length) return depth;
+  let maxDepth = depth + 1;
+  treeData.forEach((node) => {
+    if (node.children?.length) {
+      maxDepth = Math.max(
+        maxDepth,
+        getTreeDepthRecursive(node.children, depth + 1),
+      );
+    }
+  });
+  return maxDepth;
+};

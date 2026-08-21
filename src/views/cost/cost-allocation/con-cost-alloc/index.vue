@@ -43,7 +43,17 @@
             <List />
           </el-icon>成本分摊明细
         </span>
-        <div v-if="!isView">
+        <div style="display: flex;" v-if="!isView">
+          <!-- <div class="level-select">
+            <span class="level-label">展开科目层级：</span>
+            <el-select v-model="defaultLevel" style="width:120px" @change="handleLevelChange">
+              <el-option :label="'不展开'" :value="0" />
+              <el-option :label="'第一层'" :value="1" />
+              <el-option :label="'第二层'" :value="2" />
+              <el-option :label="'第三层'" :value="3" />
+              <el-option :label="'第四层'" :value="4" />
+            </el-select>
+          </div> -->
           <el-button plain type="primary" @click="handleChoose">
             选择分摊科目
           </el-button>
@@ -66,7 +76,7 @@
         </div>
         <div class="info-item info-item-tax">
           <span class="info-label">综合税率(%)：</span>
-          <span class="info-value">{{ compositeTaxRate || "" }}%</span>
+          <span class="info-value">{{ compositeTaxRate || 0 }}%</span>
         </div>
         <div class="info-row">
           <div class="info-item half">
@@ -87,7 +97,8 @@
       <!-- 可编辑表格：只有叶子节点可编辑 -->
       <editable-table ref="editableTableRef" row-key="id" height="350px" v-model="editableSubjectData"
         :columns="subjectColumns" :pagination="false" :highlight-current-row="false" :show-summary="false"
-        :compact-empty="true" :editable="true" :default-expand-level="1" :on-save="handleSave" :key="tableKey">
+        :compact-empty="true" :editable="true" :default-expand-level="defaultLevel" :on-save="handleSave"
+        :key="tableKey">
         <template #actions="{ row }" v-if="!isView">
           <el-button v-if="row.isLeaf" type="danger" link @click="handleDeleteNode(row)">
             删除
@@ -177,6 +188,8 @@ interface Props {
   isDialogMode?: boolean; // 是否为弹窗模式
   cstMData?: any; // 弹窗传参
   dialogMode?: string;
+  bizBillId?: number;
+  conId?: number;
 }
 const props = withDefaults(defineProps<Props>(), {
   projId: undefined,
@@ -188,6 +201,8 @@ const props = withDefaults(defineProps<Props>(), {
   isDialogMode: false, // 页面模式，默认非弹窗模式
   cstMData: null,
   dialogMode: "", // 弹窗模式， view  edit
+  bizBillId: undefined,
+  conId: undefined,
 });
 
 const emit = defineEmits<{
@@ -208,7 +223,7 @@ const isDialogMode = computed(() => {
 const isView = computed(() => {
   return route.query.mode == "view" || props.dialogMode == "view";
 });
-
+const defaultLevel = ref(1); // 默认展开层级
 const warningVisible = ref(false); // 预警面板展开状态
 const confirmLoading = ref(false); // 自动分摊加载状态
 const dialogVisible = ref(false); // 选择科目弹窗
@@ -267,13 +282,13 @@ const apportionInfo = ref({
   allocDs: [] as any[]
 });
 // 单据ID
-const billId = route.query?.billId ? Number(route.query.billId) : undefined;
+let billId: any = route.query?.billId ? Number(route.query.billId) : undefined;
 // 业务ID
-const bizId = route.query?.bizId ? Number(route.query.bizId) : undefined;
+let bizId = route.query?.bizId ? Number(route.query.bizId) : undefined;
 // bizKeyId
-const bizKeyId = route.query?.bizKeyId ? Number(route.query.bizKeyId) : undefined;
+let bizKeyId = route.query?.bizKeyId ? Number(route.query.bizKeyId) : undefined;
 // 业务类型，例 NCON_CST  NCON_PROC
-const bizType: any = route.query?.bizType ? route.query.bizType : "";
+let bizType: any = route.query?.bizType ? route.query.bizType : "";
 
 
 // 显示的楼栋列表
@@ -324,7 +339,9 @@ const businessTypeNames = computed(() => {
   // 去重后拼接
   return [...new Set(allProdNames)].join("、");
 });
-
+const handleLevelChange = () => {
+  tableKey.value++;
+}
 // 处理得到的选中楼栋关联的业态数据
 const getBusinessType = () => {
   // 获取所有楼栋数据的映射，方便通过id查找
@@ -698,12 +715,13 @@ const getBuildingListByProjId = async () => {
       const list = res.data || [];
       projBuildingOptions.value = list;
       // 弹窗模式默认选中全部楼栋,OA打开只能选择对应合同的楼栋
-      if (isDialogMode.value) {
-        // 默认选中全部业态
-        selectedBuildings.value = list.map((item: any) => item.id);
-      } else {
-        selectedBuildings.value = conBuildingOptions.value;
-      }
+      // if (isDialogMode.value) {
+      //   // 默认选中全部业态
+      //   selectedBuildings.value = list.map((item: any) => item.id);
+      // } else {
+      //   selectedBuildings.value = conBuildingOptions.value;
+      // }
+      selectedBuildings.value = conBuildingOptions.value;
       console.log("业态类型:", getBusinessType());
     }
   } catch (error) {
@@ -738,6 +756,7 @@ const processPopupData = async (cstList: any) => {
         result.products
       );
       tableKey.value++;
+      console.log("editableSubjectData:", editableSubjectData.value);
     }
   }
 };
@@ -765,9 +784,28 @@ const initPage = async () => {
     getBuildingListByProjId(),
   ]);
   // 弹窗模式则是从erp系统打开弹窗操作，否则就是OA单独引用分摊页面
-  if (props?.cstMData && props.cstMData?.allocDs?.length > 0) {
-    const detaiList = props.cstMData?.allocDs || [];
-    processPopupData(detaiList);
+  // if (props?.cstMData && props.cstMData?.allocDs?.length > 0) {
+  //   const detaiList = props.cstMData?.allocDs || [];
+  //   processPopupData(detaiList);
+  // }
+  switch (props.bizType) {
+    case "CON_MAIN":
+      await getConDetail(); // 主合同
+      break;
+    case "CON_ADD":
+      await getConAddDetail(); // 补充合同
+      break;
+    case "CON_BG":
+      await getConBgDetail(); // 变更
+      break;
+    case "CON_QZ":
+      await getConQzDetail(); // 签证
+      break;
+    case "CON_PROD":
+      await getConProdDetail(); // 合同产值
+      break;
+    default:
+      break;
   }
 };
 // 获取合同信息
@@ -804,7 +842,7 @@ const getConAddDetail = async () => {
     // 通过业务ID查询详细信息
     const res = await supplementContractApi.getSupplementContractById(conSubRes.data);
     if (res.code == 200 && res.data) {
-      const { conMain, bill, conAdd, conAddExt, addProcesses, flowList, flowBase, cstM } = res.data;
+      const { conMain, bill, conAdd, conAddExt, addProcesses, flowBase, cstM } = res.data;
       segId.value = flowBase?.segId;
       pageParams.value.projId = flowBase?.projId || undefined
       pageParams.value.projName = flowBase?.projName || undefined
@@ -838,12 +876,12 @@ const getConBgDetail = async () => {
       isWithFlow: true,
     });
     if (res.code == 200 && res.data) {
-      const { change, conlist, flowList, conMain, flowBase, bill, cstM } = res.data;
+      const { change, conlist, conMain, flowBase, bill, cstM } = res.data;
       segId.value = flowBase?.segId;
       pageParams.value.projId = flowBase?.projId || undefined
       pageParams.value.projName = flowBase?.projName || undefined
       // pageParams.value.displayName = change.changeName || undefined
-      pageParams.value.displayName = conMain.conName || undefined
+      pageParams.value.displayName = conMain?.conName || undefined
       pageParams.value.bizType = bizType;
       pageParams.value.billId = billId;
       pageParams.value.allocAmt = change.changeAmt || 0;
@@ -872,12 +910,12 @@ const getConQzDetail = async () => {
       isWithFlow: true,
     });
     if (res.code == 200 && res.data) {
-      const { change, changeCon, visa, conMain, flowList, flowBase, bill, cstM } = res.data;
+      const { change, changeCon, visa, conMain, flowBase, bill, cstM } = res.data;
       segId.value = flowBase?.segId;
       pageParams.value.projId = flowBase?.projId || undefined
       pageParams.value.projName = flowBase?.projName || undefined
       // pageParams.value.displayName = bill.bizTitle || undefined
-      pageParams.value.displayName = conMain.conName || undefined
+      pageParams.value.displayName = conMain?.conName || undefined
       pageParams.value.bizType = bizType;
       pageParams.value.billId = billId;
       pageParams.value.allocAmt = visa.visaApplyAmt || 0;
@@ -906,12 +944,13 @@ const getConProdDetail = async () => {
       isWithFlow: true,
     });
     if (res.code == 200 && res.data) {
-      const { flowList, flowBase, bill, prodVal, conMain, cstM } = res.data;
+      const { flowBase, bill, prodVal, conMain, cstM } = res.data;
+      debugger
       segId.value = flowBase?.segId;
       pageParams.value.projId = flowBase?.projId || undefined
       pageParams.value.projName = flowBase?.projName || undefined
       // pageParams.value.displayName = bill.bizTitle || undefined
-      pageParams.value.displayName = conMain.conName || undefined
+      pageParams.value.displayName = conMain?.conName || undefined
       pageParams.value.bizType = bizType;
       pageParams.value.billId = billId;
       pageParams.value.allocAmt = prodVal.applyProdVal || 0;
@@ -929,10 +968,10 @@ const getConProdDetail = async () => {
   }
 }
 // 获取合同税率
-const getTaxRate = async () => {
-  if (!bizId) return;
+const getTaxRate = async (conId: number) => {
+  if (!conId) return;
   try {
-    const res = await costAllocationApi.getContractTaxRate({ conId: bizId });
+    const res = await costAllocationApi.getContractTaxRate({ conId: conId });
     if (res.code == 200) {
       compositeTaxRate.value = res.data || 0;
     }
@@ -1549,7 +1588,7 @@ const autoAllocation = async () => {
     // 主合同取bizId,子合同取currSubConBizId,因为子合同从OA进入这个页面传递的bizId是合同ID
     // const currentBizId = bizType === 'CON_MAIN' ? bizId : currSubConBizId.value
     const params = {
-      conId: bizId,
+      conId: isDialogMode.value ? props.conId : bizId,
       subList: filterData,
       bldIds: selectedBuildings.value,
     }
@@ -1851,15 +1890,18 @@ const getSubmitData = async () => {
 };
 
 onMounted(async () => {
-  // 获取合同税率
-  await getTaxRate();
   // 弹窗模式时初始化
   if (isDialogMode.value) {
+    billId = props.bizBillId;
+    bizId = props.conId;
+    bizType = props.bizType;
+    await getTaxRate(props.conId); // 获取合同税率
     if (props.projId) {
       await initPage();
     }
   } else {
     // OA打开
+    await getTaxRate(bizId); // 获取合同税率
     await loadAllocationData();
   }
 });
@@ -1876,6 +1918,8 @@ defineExpose({
   },
   // 获取分摊的明细列表，列转行过后的数据
   getSubmitData: getSubmitData,
+  // 提交保存
+  handleConfirm: handleConfirm,
   // 校验
   validateTable,
 });
@@ -2112,5 +2156,17 @@ defineExpose({
   width: 300px;
   min-width: 80px;
   flex: 1;
+}
+.level-select {
+  display: flex;
+  align-items: center;
+  margin-right: 20px;
+  .level-label {
+    flex-shrink: 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: #5a6e82;
+    white-space: nowrap;
+  }
 }
 </style>

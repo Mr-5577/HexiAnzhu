@@ -6,8 +6,6 @@
       :con-id="conId"
       :add-id="addId"
       :proj-id="projId"
-      @success="handleSuccess"
-      @cancel="handleCancel"
     />
   </div>
 </template>
@@ -25,13 +23,6 @@ const conId = Number(route.query.conId);
 const addId = Number(route.query.addId);
 const projId = Number(route.query.projId);
 
-const handleSuccess = () => {
-  //router.back();
-};
-
-const handleCancel = () => {
-  //router.back();
-};
 </script>
 
 <style scoped lang="scss">

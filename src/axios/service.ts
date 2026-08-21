@@ -131,9 +131,7 @@ service.interceptors.request.use(
       // FormData、字符串 data 等不注入，避免破坏请求格式。
       const method = config.method?.toLowerCase();
       if (
-        (method === "post" ||
-          method === "put" ||
-          method === "patch") &&
+        (method === "post" || method === "put" || method === "patch") &&
         config.data &&
         typeof config.data === "object" &&
         !Array.isArray(config.data) &&
@@ -199,6 +197,9 @@ service.interceptors.response.use(
           );
         }
         return data;
+      case 400:
+        ElMessage.error(resMessage || "业务数据异常");
+        return Promise.reject(new Error(resMessage || "业务数据异常"));
       case 401:
         ElMessage.warning("登录已过期，请重新登录");
         localStorage.clear();
@@ -215,7 +216,7 @@ service.interceptors.response.use(
         return Promise.reject(new Error("资源不存在"));
       case 500:
         ElMessage.error(resMessage || "服务器内部错误");
-        return Promise.reject(new Error("服务器错误"));
+        return Promise.reject(new Error(resMessage || "服务器内部错误"));
       case 502:
         ElMessage.error("正在升级中，请稍后再试...");
         return Promise.reject(new Error("正在升级中，请稍后再试..."));
@@ -265,7 +266,7 @@ service.interceptors.response.use(
 
       switch (status) {
         case 400:
-          ElMessage.error(errorMessage || "请求参数错误");
+          ElMessage.error(errorMessage || "业务数据异常");
           break;
         case 401:
           ElMessage.warning("登录已过期，请重新登录");

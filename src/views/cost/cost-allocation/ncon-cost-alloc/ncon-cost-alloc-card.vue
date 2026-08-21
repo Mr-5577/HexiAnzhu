@@ -29,7 +29,7 @@
     </el-row>
 
     <!-- 分摊详情弹窗 -->
-    <NconCostAllocDialog v-model="dialogVisible" :projId="props.projId" :projName="props.projName"
+    <NconCostAllocDialog v-model="dialogVisible" :projId="props.projId" :projName="props.projName" :bizBillId="bizBillId"
       :displayName="props.displayName" :bizType="props.bizType" :allocAmt="props.allocAmt" :cstMData="props.cstMData"
       :dialogMode="props.dialogMode" @select="getData" />
   </div>
@@ -81,7 +81,7 @@ const props = withDefaults(defineProps<Props>(), {
   bizType: undefined,
   allocAmt: 0,
   cstMData: null,
-  dialogMode: "view", // 弹窗模式，默认为查看模式 view  edit
+  dialogMode: "edit", // 弹窗模式，默认为查看模式 view  edit
 });
 
 const emit = defineEmits<{

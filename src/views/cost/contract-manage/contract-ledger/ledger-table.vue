@@ -8,6 +8,9 @@
       <el-form-item label="供应商名称" prop="supName">
         <el-input v-model="queryParams.supName" placeholder="请输入供应商名称" clearable style="width: 180px" />
       </el-form-item>
+      <el-form-item label="合同编号" prop="conSysNo">
+        <el-input v-model="queryParams.conSysNo" placeholder="请输入合同编号" clearable style="width: 180px" />
+      </el-form-item>
       <el-form-item label="合同分类" prop="conTypeId">
         <ConTypeSelector v-model="queryParams.conTypeId" placeholder="请选择合同分类" style="width: 180px" clearable
           filterable />
@@ -53,7 +56,7 @@
       <template #actions="{ row }">
         <!-- 外部常驻按钮 -->
         <el-button type="primary" link @click="handleEdit(row)"
-          :disabled="row.conStatus !== 0 || row.createId !== userStore.userInfo.id">
+          :disabled="row.conStatus !== 0 || row.createId !== userStore.userInfo.mdUserId">
           编辑
         </el-button>
         <el-button type="primary" link @click="handleDetail(row)">
@@ -64,7 +67,7 @@
           台账详情
         </el-button>
         <el-button type="danger" link @click="handleDelete(row)"
-          :disabled="row.conStatus !== 0 || row.createId !== userStore.userInfo.id">
+          :disabled="row.conStatus !== 0 || row.createId !== userStore.userInfo.mdUserId">
           删除
         </el-button>
       </template>
@@ -126,6 +129,7 @@ const queryParams = ref({
   conTypeId: undefined,
   agentId: undefined,
   createId: undefined,
+  conSysNo: "",
   time: [],
 });
 // 业务板块
@@ -187,6 +191,7 @@ const getDataList = async () => {
       createId: queryParams.value.createId,
       agentId: queryParams.value.agentId,
       conTypeId: queryParams.value.conTypeId,
+      conSysNo: queryParams.value.conSysNo,
       ...params,
       createDateStart: startDate,
       createDateEnd: endDate,
@@ -213,9 +218,13 @@ const handlePaginationChange = (params: any) => {
   getDataList();
 };
 const handleSearch = () => {
+  resetPagination();
   getDataList();
 };
-
+const resetPagination = () => {
+  currentPage.value = 1;
+  pageSize.value = 20;
+}
 const handleReset = () => {
   queryParams.value = {
     projSegId: undefined,
@@ -227,10 +236,10 @@ const handleReset = () => {
     conTypeId: undefined,
     agentId: undefined,
     createId: undefined,
+    conSysNo: "",
     time: [],
   };
-  currentPage.value = 1;
-  pageSize.value = 20;
+  resetPagination();
   getDataList();
 };
 // 新增合同台账

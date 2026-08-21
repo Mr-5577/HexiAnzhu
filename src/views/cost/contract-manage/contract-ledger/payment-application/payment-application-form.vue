@@ -809,7 +809,7 @@
               size="small"
               :disabled="payWayTable.length == 0"
               @click="handleFinanceAlloc"
-              v-if="!isAdd"
+              v-if="!isAdd && menuStore.hasExactPermission('fina-alloc:con-pay')"
             >
               财务分摊
             </el-button>
@@ -975,7 +975,7 @@
         </FormCard>       
 
         <!-- ====== 卡片：财务明细（仅详情查看，只读） ====== -->
-        <FormCard
+        <!-- <FormCard
           v-if="isDetail"
           id="card-finance"
           v-show="!isOffsetByInvoice"
@@ -993,7 +993,7 @@
             :show-toolbar="false"
             :show-action-bar="false"
           />
-        </FormCard>
+        </FormCard> -->
 
         <!-- ====== 卡片：相关附件 ====== -->
         <FormCard
@@ -1056,6 +1056,8 @@
       :segId="formData.segId"
       :projId="formData.projId"
       :bizType="'CON_PAY'"
+      :bizBillId="billData?.id"
+      :bizId="paymentData?.id"
       @select="getFinaList"
     ></FinanceAllocationDialog>
 </template>
@@ -1155,6 +1157,7 @@ import { moneyRule, requiredInputRule, requiredRule } from "@/utils/form-rule-va
 import { buildTree } from "@/utils/tree";
 import FinanceAllocationDialog from "@/views/cost/finance-allocation/finance-allocation-dialog.vue";
 import { invcRecognitionRefresh, useInvoiceRecognition } from "@/composables/use-Invc-verif";
+import { useMenuStore } from "@/stores/menu-store";
 
 // ============================================================
 // 路由 / 状态仓库 实例化
@@ -1163,7 +1166,7 @@ const router = useRouter();
 const userStore = useUserStore();
 const mdStore = useMDStore();
 const tagsStore = useTagsStore();
-
+const menuStore = useMenuStore();
 // ============================================================
 // 组合式实例化
 // ============================================================
@@ -1197,6 +1200,7 @@ const billData = ref({
   flowId: null,
   createDate: null,
 });
+const paymentData = ref(null)
 const flowListData = ref<any>(null);
 const flowBaseData = ref<any>(null);
 
@@ -2047,6 +2051,7 @@ const handleUploadSuccess = (file: any) => {
 // ============================================================
 const getFinaList = (data) => {
   console.log("获取的财务分摊数据", data);
+  payWayTable.value = data || [];
 };
 const handleFinanceAlloc = () => {
   if (!formData.value.segId) {
@@ -2250,7 +2255,6 @@ const getConPayType = async () => {
 // 切换项目
 const changeProject = async (value: number) => {
   if (value) {
-    ;
     const res = await projectAreaApi.getInfoByProjId({ id: value });
     if (res.code === 200 && res.data) {
       const { compName, compId, segId, segName, segNo } = res.data;
@@ -2462,9 +2466,9 @@ const loadDetail = async () => {
 
 // 数据回填
 const backfillData = async (data) => {
-  ;
   const { flowList, flowBase, bill, payment, payWays, paySubs, invoiceMs, invoiceDs, billDeds, annexList, bankAnnexList } = data;
   billData.value = { ...billData.value, ...bill };
+  paymentData.value = { ...paymentData.value, ...payment };
   flowListData.value = { ...flowListData.value, ...flowList };
   flowBaseData.value = { ...flowBaseData.value, ...flowBase };
 

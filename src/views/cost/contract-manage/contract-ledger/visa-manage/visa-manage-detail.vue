@@ -6,8 +6,6 @@
       :conId="conId"
       :visaId="visaId"
       :projId="projId"
-      @success="handleSuccess"
-      @cancel="handleCancel"
     />
   </div>
 </template>
@@ -24,13 +22,6 @@ const conId = Number(route.query.conId); // 合同ID
 const visaId = Number(route.query.visaId); // 签证ID
 const projId = Number(route.query.projId); // 项目ID
 
-const handleSuccess = () => {
-  //router.back();
-};
-
-const handleCancel = () => {
-  //router.back();
-};
 </script>
 
 <style scoped lang="scss">

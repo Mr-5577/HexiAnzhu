@@ -53,12 +53,11 @@
           </el-row>
         </div>
 
-        <!-- 成本分摊  费用类型所属大类为建安类，并且是编辑/查看时显示 -->
-        <CostAllocationCard :visible="isShowCostAllocation && formData.processAmt > 0"
-          :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'NCON_PROC'"
-          :projId="formData.projId" :projName="formData.projName" :displayName="formData.processName"
-          :allocAmt="formData.processAmt" :bizBillId="processData.nconBillId" :cstMData="cstMData"
-          @selectData="getSelectCostAllocation" />
+        <!-- 成本分摊  费用类型所属大类为建安类，并且是编辑/查看时显示  :visible="isShowCostAllocation && formData.processAmt > 0" -->
+        <CostAllocationCard v-if="menuStore.hasExactPermission('cost-alloc:ncon-proc')" :visible="isShowCostAllocation" :allocation-status="cstMData.allocStatus"
+          :warning-status="cstMData.allocWarn" :bizType="'NCON_PROC'" :projId="formData.projId"
+          :projName="formData.projName" :displayName="formData.processName" :allocAmt="formData.processAmt"
+          :bizBillId="processData.nconBillId" :cstMData="cstMData" @selectData="getSelectCostAllocation" />
 
         <!-- 相关附件 -->
         <div class="item-card">
@@ -95,6 +94,7 @@ import { buildTree } from "@/utils/tree";
 import BillHeader from "@/components/business/bill-components/bill-header.vue";
 import BillInfo from "@/components/business/bill-components/bill-info.vue";
 import CostAllocationCard from "@/views/cost/cost-allocation/ncon-cost-alloc/ncon-cost-alloc-card.vue";
+import { useMenuStore } from "@/stores/menu-store";
 
 defineOptions({ name: "cst-process-form" });
 
@@ -113,6 +113,7 @@ const emit = defineEmits<{
   (e: "cancel"): void;
 }>();
 
+const menuStore = useMenuStore();
 const router = useRouter();
 const userStore = useUserStore();
 const tagsStore = useTagsStore();

@@ -47,29 +47,6 @@ const buildRoutePath = (
     }
   });
   return query.toString() ? `${basePath}?${query.toString()}` : basePath;
-
-  // const query = new URLSearchParams();
-  // let path = basePath;
-
-  // // 👇 支持 mode 参数
-  // if (params.mode === "edit") {
-  //   path = `${basePath}/edit`;
-  // } else if (params.mode === "view") {
-  //   path = `${basePath}/detail`;
-  // }
-
-  // Object.entries(params).forEach(([key, value]) => {
-  //   if (
-  //     value !== undefined &&
-  //     value !== null &&
-  //     value !== "" &&
-  //     key !== "mode"
-  //   ) {
-  //     query.append(key, String(value));
-  //   }
-  // });
-
-  // return query.toString() ? `${path}?${query.toString()}` : path;
 };
 
 // COST 子业务路径映射（subBizCode = COST 时生效），成本分摊页面
@@ -78,7 +55,7 @@ const COST_ROUTE: Record<string, string> = {
   CON_ADD: "/oa/con/cost-alloc", // 补充合同
   CON_BG: "/oa/con/cost-alloc", // 变更合同
   CON_QZ: "/oa/con/cost-alloc", // 签证合同
-  CON_PROD: "/oa/con/cost-alloc", // 签证合同
+  CON_PROD: "/oa/con/cost-alloc", // 产值合同
   CON_PRE_SETTLE: "/home", // 合同预结算
   CON_SETTLE: "/home", // 合同结算
   NCON_CST: "/oa/ncon/cost-alloc", // 非合同请款

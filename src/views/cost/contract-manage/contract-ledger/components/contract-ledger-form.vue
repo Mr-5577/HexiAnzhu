@@ -297,11 +297,12 @@
           </el-form-item>
         </FormCard>
       </el-form>
-      <!-- 成本分摊 -->
-      <ConCostAllocCard style="margin-top: 15px;" :visible="!isAddMode && isJianAn" :cstMData="cstMData"
+      <!-- 成本分摊  :visible="!isAddMode && isJianAn" -->
+      <ConCostAllocCard v-if="menuStore.hasExactPermission('cost-alloc:con-main')" style="margin-top: 15px;" :visible="!isAddMode && isJianAn" :cstMData="cstMData"
         :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'CON_MAIN'"
         :projId="formData.projId" :projName="formData.projName" :displayName="formData.conName"
-        :allocAmt="priceTaxData.totalPriceTax" :bizBillId="billData.id" />
+        :allocAmt="priceTaxData.totalPriceTax" :bizBillId="billData.id" :conId="formData.id"
+        @selectData="getSelectCostAlloc" />
     </div>
 
     <!-- ============ 悬浮定位栏 ============ -->
@@ -316,8 +317,8 @@
     :supStatus="2" @select="handleSupplierSelect" />
 
   <!-- 选择定标事项弹窗 -->
-  <ChooseAwardItemDialog v-model="awardItemDialogVisible" :selectionMode="'single'" :projId=formData.projId :wfStatus="40"
-    @select="handleAwardItemSelect" />
+  <ChooseAwardItemDialog v-model="awardItemDialogVisible" :selectionMode="'single'" :projId=formData.projId
+    :wfStatus="40" @select="handleAwardItemSelect" />
 </template>
 
 <script setup lang="ts">
@@ -347,6 +348,7 @@ import {
 } from "@/constants/contract-manage/enums";
 import { BOOL_OPTIONS } from "./contract-form-config";
 import ConCostAllocCard from "@/views/cost/cost-allocation/con-cost-alloc/con-cost-alloc-card.vue";
+import { useMenuStore } from "@/stores/menu-store";
 
 defineOptions({ name: "contract-ledger-form" });
 
@@ -355,6 +357,7 @@ const props = withDefaults(defineProps<ContractFormProps>(), {
   conId: undefined,
 });
 
+const menuStore = useMenuStore();
 const emit = defineEmits<ContractFormEmits>();
 const {
   // 表单核心
@@ -421,6 +424,7 @@ const {
   handleUploadOtherSuccess,
   handleUploadConSuccess,
   isJianAn,
+  getSelectCostAlloc,
 } = useContractForm(props, emit);
 
 // 价款汇总条数据

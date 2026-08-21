@@ -66,6 +66,10 @@ export const userApi = {
   getOtherLogin: () => {
     return http.post(`/auth/getOtherLogin`);
   },
+  // 获取当前用户的角色列表
+  getMyRoleList: () => {
+    return http.post(`/auth/getMyRoleList`);
+  },
   // 修改密码
   resetPassword: (data: {
     username: string;

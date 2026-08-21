@@ -2,6 +2,12 @@
 <template>
   <div class="cst-payment-wrapper">
     <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px">
+      <el-form-item label="标题" prop="bizTitle">
+        <el-input v-model="queryParams.bizTitle" placeholder="请输入标题" clearable style="width: 220px" />
+      </el-form-item>
+      <el-form-item label="付款单号" prop="bizNo">
+        <el-input v-model="queryParams.bizNo" placeholder="请输入单号" clearable style="width: 220px" />
+      </el-form-item>
       <el-form-item label="业务板块" prop="segId">
         <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px">
           <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
@@ -61,10 +67,12 @@
       </template>
 
       <template #actions="{ row }">
-        <el-button type="primary" link @click="handleEdit(row)" :disabled="row.status != 0">
+        <el-button type="primary" link @click="handleEdit(row)"
+          :disabled="row.status != 0 || row.createId !== userStore.userInfo.mdUserId">
           编辑
         </el-button>
-        <el-button type="danger" link @click="handleDelete(row)" :disabled="row.status != 0">
+        <el-button type="danger" link @click="handleDelete(row)"
+          :disabled="row.status != 0 || row.createId !== userStore.userInfo.mdUserId">
           删除
         </el-button>
         <el-button type="primary" link @click="handleDetail(row)">
@@ -87,16 +95,21 @@ import { cstPaymentApi } from "@/api/cost/non-contract-manage/cst-payment-api";
 import { getEnumLabel, getEnumType } from "@/utils/enum";
 import { conBillStatusEnum } from "@/constants/contract-manage/enums";
 import { roleApi } from "@/api/system/role-api";
+import { useUserStore } from "@/stores/user-store";
+import { formatThousandWithPlaces } from "@/utils/decimal";
 
 defineOptions({ name: "cst-payment" });
 
 const router = useRouter();
+const userStore = useUserStore();
 
 const queryParams = ref({
   segId: undefined,
   projId: undefined,
   status: undefined,
   createId: undefined,
+  bizNo: undefined,
+  bizTitle: undefined,
   time: [],
 });
 // 业务板块
@@ -115,12 +128,13 @@ const columns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60, fixed: "left" },
   { prop: "segName", label: "业务板块", width: 120 },
   { prop: "bizTitle", label: "标题", width: 200 },
+  { prop: "bizNo", label: "付款单号", width: 200 },
   { prop: "projName", label: "项目名称", width: 150 },
-  { prop: "processAmt", label: "事项计划金额", width: 120 },
-  { prop: "sumAppyAmt", label: "累计已请款", width: 120 },
-  { prop: "sumOwedAmt", label: "剩余可请款金额", width: 120 },
-  { prop: "reqAmt", label: "本次请款金额", width: 120 },
-  { prop: "factReqAmt", label: "实际请款金额", width: 120 },
+  { prop: "processAmt", label: "事项计划金额", width: 120, formatter: (row) => formatThousandWithPlaces(row.processAmt || 0) },
+  { prop: "sumAppyAmt", label: "累计已请款", width: 120, formatter: (row) => formatThousandWithPlaces(row.sumAppyAmt || 0) },
+  { prop: "sumOwedAmt", label: "剩余可请款金额", width: 120, formatter: (row) => formatThousandWithPlaces(row.sumOwedAmt || 0) },
+  { prop: "reqAmt", label: "本次请款金额", width: 120, formatter: (row) => formatThousandWithPlaces(row.reqAmt || 0) },
+  { prop: "factReqAmt", label: "实际请款金额", width: 120, formatter: (row) => formatThousandWithPlaces(row.factReqAmt || 0) },
   { prop: "reqDesc", label: "请款说明", width: 200 },
   { slot: "status", label: "审批状态", width: 100 },
   { prop: "createName", label: "创建人", width: 100 },
@@ -148,6 +162,8 @@ const getDataList = async () => {
       segId: queryParams.value.segId,
       status: queryParams.value.status,
       createId: queryParams.value.createId,
+      bizTitle: queryParams.value.bizTitle,
+      bizNo: queryParams.value.bizNo,
       createDateStart: queryParams.value.time?.[0] || "",
       createDateEnd: queryParams.value.time?.[1] || "",
     };
@@ -176,6 +192,8 @@ const handleReset = () => {
     segId: undefined,
     status: undefined,
     createId: undefined,
+    bizTitle: undefined,
+    bizNo: undefined,
     time: [],
   };
   getDataList();

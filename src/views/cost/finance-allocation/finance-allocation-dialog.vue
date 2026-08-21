@@ -1,10 +1,10 @@
 <!-- 财务分摊 组件 -->
 <template>
   <base-modal v-model="dialogVisible" title="财务分摊" width="1400px" :top="'8vh'" :confirm-loading="confirmLoading"
-    :confirm-text="'确定'" :showConfirmButton="false" :showCancelButton="false" @confirm="handleConfirm"
-    @close="handleClose">
+    :confirm-text="'确定'" @confirm="handleConfirm" @close="handleClose">
     <FinanceAllocationDetail ref="financeAllocationRef" :projId="props.projId" :segId="props.segId" :isDialogMode="true"
-      :bizType="props.bizType" :payWayTable="payWayTable"></FinanceAllocationDetail>
+      :bizType="props.bizType" :payWayTable="payWayTable" :dialogMode="props.dialogMode" :bizId="props.bizId"
+      :bizBillId="props.bizBillId"></FinanceAllocationDetail>
   </base-modal>
 </template>
 
@@ -19,6 +19,9 @@ interface Props {
   segId?: number | undefined;
   payWayTable?: any[];
   bizType?: string;
+  dialogMode?: string; // 弹窗模式， view  edit
+  bizBillId?: number | undefined; // 业务单据id
+  bizId?: number | undefined; // 业务id
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -27,6 +30,9 @@ const props = withDefaults(defineProps<Props>(), {
   segId: undefined,
   payWayTable: () => [],
   bizType: "NCON_CST", // 业务类型，NCON_CST:非合同请款  NCON_FEE:非合同费用报销  CON_PAY:合同支付
+  dialogMode: "edit", // 弹窗模式
+  bizBillId: undefined, // 业务单据id
+  bizId: undefined, // 业务id
 });
 
 // Emits
@@ -42,7 +48,14 @@ const confirmLoading = ref(false);
 const financeAllocationRef = ref(null);
 
 const handleConfirm = async () => {
+  // 提交保存
+  financeAllocationRef.value?.handleSubmit();
   // 校验列表数据
+  const { valid, msg } = financeAllocationRef.value?.validateDetails();
+  if (!valid) {
+    ElMessage.error(msg);
+    return;
+  }
   const reslut = financeAllocationRef.value?.validateData();
   if (reslut) {
     const data = financeAllocationRef.value?.getData();

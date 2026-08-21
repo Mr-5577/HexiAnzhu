@@ -90,7 +90,7 @@ const columns: TableColumnItem[] = [
   },
   {
     prop: "orgName",
-    label: "项目名称",
+    label: "组织名称",
     align: "left",
   },
   {

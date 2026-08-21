@@ -35,7 +35,6 @@
             </el-icon>
             <span>{{ refreshing ? "搜索中" : "搜索" }}</span>
           </el-button>
-          <!-- <el-button type="primary" @click="handleSearch"> 搜索 </el-button> -->
           <el-button @click="handleReset">重置</el-button>
           <el-button type="primary" class="add-btn" @click="handleAdd">
             <el-icon>
@@ -61,14 +60,14 @@
       </template>
       <template #actions="{ row }">
         <el-button type="primary" link @click="handleEdit(row)"
-          :disabled="row.status !== 0 || row.createId !== userStore.userInfo.id">
+          :disabled="row.status !== 0 || row.createId !== userStore.userInfo.mdUserId">
           编辑
         </el-button>
         <el-button type="primary" link @click="handleDetail(row)">
           详情
         </el-button>
         <el-button type="danger" link @click="handleDelete(row)"
-          :disabled="row.status !== 0 || row.createId !== userStore.userInfo.id">
+          :disabled="row.status !== 0 || row.createId !== userStore.userInfo.mdUserId">
           删除
         </el-button>
       </template>
@@ -192,16 +191,21 @@ const handlePaginationChange = (params: any) => {
 const handleRefresh = async () => {
   refreshing.value = true;
   try {
+    resetPagination();
     await getDataList();
   } finally {
     refreshing.value = false;
   }
 };
-
+const resetPagination = () => {
+  currentPage.value = 1;
+  pageSize.value = 20;
+}
 const handleReset = () => {
   queryParams.value.changeName = "";
   queryParams.value.changeType = null;
   queryParams.value.status = null;
+  resetPagination();
   getDataList();
 };
 

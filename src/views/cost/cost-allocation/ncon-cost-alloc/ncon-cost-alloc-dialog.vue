@@ -3,7 +3,7 @@
   <base-modal v-model="dialogVisible" title="成本分摊" width="1500px" :top="'8vh'" :confirm-loading="confirmLoading"
     :confirm-text="'确定'" :showConfirmButton="props.dialogMode != 'view'" :showCancelButton="props.dialogMode != 'view'"
     @confirm="handleConfirm" @close="handleClose">
-    <NconCostAlloc ref="costAllocationRef" :projId="props.projId" :projName="props.projName"
+    <NconCostAlloc ref="costAllocationRef" :projId="props.projId" :projName="props.projName" :bizBillId="bizBillId"
       :displayName="props.displayName" :bizType="props.bizType" :allocAmt="props.allocAmt" :cstMData="props.cstMData"
       :isDialogMode="true" :dialogMode="props.dialogMode"></NconCostAlloc>
   </base-modal>
@@ -23,6 +23,7 @@ interface Props {
   allocAmt?: number;
   cstMData?: any;
   dialogMode?: string;
+  bizBillId?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -34,6 +35,7 @@ const props = withDefaults(defineProps<Props>(), {
   allocAmt: 0,
   cstMData: null,
   dialogMode: "view", // 弹窗模式，默认为查看模式 view  edit
+  bizBillId: undefined,
 });
 
 // Emits
@@ -48,6 +50,8 @@ const dialogVisible = ref(props.modelValue);
 const confirmLoading = ref(false);
 
 const handleConfirm = async () => {
+  // 提交保存
+  costAllocationRef.value?.handleConfirm();
   // 校验列表数据
   const reslut = costAllocationRef.value?.validateTable();
   if (!reslut) return;
