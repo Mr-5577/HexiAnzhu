@@ -22,19 +22,22 @@
         </el-select>
       </div>
 
-      <div class="toolbar-buttons" v-if="!isDetail">
+      <div class="toolbar-buttons">
         <el-button type="primary" plain :loading="exportTemplateLoading" @click="handleExportTemplate">导出模板</el-button>
         <el-button type="primary" plain :loading="exportLoading" @click="handleExport">导出</el-button>
-        <el-button type="primary" plain :loading="importLoading" @click="handleImport">导入</el-button>
-        <el-button type="primary" :loading="saveLoading" @click="handleBatchSave">批量保存</el-button>
-        <!-- 隐藏的文件选择器，用于导入 -->
-        <input
-          ref="importFileInputRef"
-          type="file"
-          accept=".xlsx,.xls"
-          style="display: none"
-          @change="onImportFileChange"
-        />
+
+        <template v-if="!isDetail">
+          <el-button type="primary" plain :loading="importLoading" @click="handleImport">导入</el-button>
+          <el-button type="primary" :loading="saveLoading" @click="handleBatchSave">批量保存</el-button>
+          <!-- 隐藏的文件选择器，用于导入 -->
+          <input
+            ref="importFileInputRef"
+            type="file"
+            accept=".xlsx,.xls"
+            style="display: none"
+            @change="onImportFileChange"
+          />
+        </template>
       </div>
     </div>
 
@@ -1190,6 +1193,10 @@ const handleExportTemplate = async () => {
  * 触发文件选择
  */
 const handleImport = () => {
+  if (isDetail.value) {
+    ElMessage.warning("查看模式下不能导入");
+    return;
+  }
   if (!props.costMid) {
     ElMessage.warning("缺少目标成本版本ID");
     return;
