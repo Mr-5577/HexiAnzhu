@@ -94,16 +94,18 @@
 
       <!-- 只有已审批并且未锁定才能登记 -->
       <template #actions="{ row }">
-        <el-button type="primary" link @click="batchRegister(row)" :disabled="row.isLocked || row.payStatus == '全部支付'">
+        <el-button type="primary" link @click="batchRegister(row)" :disabled="disabledRegister(row)">
           批量登记
         </el-button>
-        <el-button type="primary" link @click="singleRegister(row)" :disabled="row.isLocked || row.payStatus == '全部支付'">
+        <el-button type="primary" link @click="singleRegister(row)" :disabled="disabledRegister(row)">
           单项登记
         </el-button>
-        <el-button type="primary" link @click="handleView(row)">
+        <el-button type="primary" link @click="handleView(row)"
+          v-if="menuStore.hasExactPermission('payment-register:detail')">
           明细
         </el-button>
-        <el-button type="primary" link @click="handleEntry(row)" :disabled="row.isLocked || row.payStatus !== '全部支付'">
+        <!-- <el-button type="primary" link @click="handleEntry(row)" :disabled="row.isLocked || row.payStatus !== '全部支付'"> -->
+        <el-button type="primary" link @click="handleEntry(row)" :disabled="disabledEntry(row)">
           入账
         </el-button>
       </template>
@@ -135,10 +137,12 @@ import { costBillStatusEnum } from "@/constants/cost/enums.ts";
 import { exportExcel } from '@/utils/export-excel.ts';
 import { formatThousandWithPlaces } from "@/utils/decimal.ts";
 import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api.ts";
+import { useMenuStore } from "@/stores/menu-store";
 
 defineOptions({ name: "payment-register" });
 
 const router = useRouter();
+const menuStore = useMenuStore();
 
 const bizITypeMapping = {
   NCON_CST: "非合同请款支付",
@@ -208,7 +212,28 @@ const columns: TableColumnItem[] = [
     fixed: "right",
   },
 ];
-
+const disabledRegister = (row) => {
+  const hasPermission = menuStore.hasExactPermission('payment-ledger:register')
+  // 无权限 → 禁用
+  if (!hasPermission) return true
+  // 已锁定 → 禁用
+  if (row.isLocked) return true
+  // 已全部支付 → 禁用
+  if (row.payStatus === '全部支付') return true
+  // 启用
+  return false
+}
+const disabledEntry = (row) => {
+  const hasPermission = menuStore.hasExactPermission('payment-ledger:entry')
+  // 无权限 → 禁用
+  if (!hasPermission) return true
+  // 已锁定 → 禁用
+  if (row.isLocked) return true
+  // 没有全部支付 → 禁用
+  if (row.payStatus !== '全部支付') return true
+  // 启用
+  return false
+}
 // 手动分页
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value;
