@@ -1,43 +1,19 @@
 <!-- 费用支付 表单 -->
 <template>
   <div class="basic-form-content">
-    <BillHeader
-      :title="'费用报销审批'"
-      :contract-no="billData.bizNo || ''"
-      :submitter="formData.userName || ''"
-      :submit-time="formData.createDate || ''"
-      :status="billData.status"
-      :show-status="true"
-      :button-loading="submitLoading"
-      :save-disabled="isDetail || !!billData.status"
-      :submit-disabled="isDetail || !!billData.status"
-      :delete-disabled="isDetail || isAdd || !!billData.status"
-      :void-disabled="isDetail || isAdd || !!billData.status"
-      :view-disabled="isAdd"
-      @save="handleSave"
-      @submit="handleSubmit"
-      @delete="handleDelete"
-      @void="handleCancel"
-      @viewFlow="handleViewProcess"
-    >
+    <BillHeader :title="'费用报销审批'" :contract-no="billData.bizNo || ''" :submitter="formData.userName || ''"
+      :submit-time="formData.createDate || ''" :status="billData.status" :show-status="true"
+      :button-loading="submitLoading" :save-disabled="isDetail || !!billData.status"
+      :submit-disabled="isDetail || !!billData.status" :delete-disabled="isDetail || isAdd || !!billData.status"
+      :void-disabled="isDetail || isAdd || !!billData.status" :view-disabled="isAdd" @save="handleSave"
+      @submit="handleSubmit" @delete="handleDelete" @void="handleCancel" @viewFlow="handleViewProcess">
     </BillHeader>
 
     <div class="form-scroll-area">
-      <el-form
-        ref="feePaymentFormRef"
-        :model="formData"
-        :rules="formRules"
-        label-width="120px"
-        class="adapt-form"
-      >
+      <el-form ref="feePaymentFormRef" :model="formData" :rules="formRules" label-width="120px" class="adapt-form">
         <!-- 基本信息 -->
-        <BillInfo
-          v-model="formData"
-          :status="billData?.status || 0"
-          :disabled="isDetail || !!billData.status"
-          :project-options="projectOptions"
-          @project-change="changeProject"
-        />
+        <BillInfo v-model="formData" :status="billData?.status || 0" :disabled="isDetail || !!billData.status"
+          :project-options="projectOptions" @project-change="changeProject" />
 
         <!-- 报销事项 -->
         <div class="item-card">
@@ -45,45 +21,27 @@
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="归属月份" prop="belongMonth" required>
-                <el-date-picker
-                  v-model="formData.belongMonth"
-                  type="month"
-                  value-format="YYYY-MM-DD"
-                  placeholder="请选择归属月份"
-                  :disabled="isDetail || !!billData.status"
-                />
+                <el-date-picker v-model="formData.belongMonth" type="month" value-format="YYYY-MM-DD"
+                  placeholder="请选择归属月份" :disabled="isDetail || !!billData.status" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="费用类型" prop="finaTypeId">
-                <el-cascader
-                  v-model="formData.finaTypeId"
-                  :options="feeTypeOptions"
-                  :show-all-levels="false"
-                  :props="{
-                    expandTrigger: 'hover',
-                    emitPath: false,
-                    checkStrictly: false,
-                    value: 'id',
-                    label: 'finaTypeName',
-                    children: 'children',
-                  }"
-                  placeholder="请选择费用类型"
-                  style="width: 100%"
-                  filterable
-                  :disabled="isDetail || !!billData.status"
-                />
+                <el-cascader v-model="formData.finaTypeId" :options="feeTypeOptions" :show-all-levels="false" :props="{
+                  expandTrigger: 'hover',
+                  emitPath: false,
+                  checkStrictly: false,
+                  value: 'id',
+                  label: 'finaTypeName',
+                  children: 'children',
+                }" placeholder="请选择费用类型" style="width: 100%" filterable :disabled="isDetail || !!billData.status" />
               </el-form-item>
             </el-col>
 
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="请款类型" prop="reqType" required>
-                <el-select
-                  v-model="formData.reqType"
-                  placeholder="请选择"
-                  style="width: 100%"
-                  :disabled="isDetail || !!billData.status"
-                >
+                <el-select v-model="formData.reqType" placeholder="请选择" style="width: 100%"
+                  :disabled="isDetail || !!billData.status">
                   <el-option label="正常请款" :value="0" />
                   <el-option label="来票冲账" :value="1" />
                 </el-select>
@@ -92,13 +50,8 @@
 
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="请款金额" prop="reqAmt" required>
-                <el-input-number
-                  v-model="formData.reqAmt"
-                  :precision="2"
-                  :controls="false"
-                  style="width: 100%"
-                  :disabled="isDetail || !!billData.status"
-                />
+                <el-input-number v-model="formData.reqAmt" :precision="2" :controls="false" style="width: 100%"
+                  :disabled="isDetail || !!billData.status" />
               </el-form-item>
             </el-col>
           </el-row>
@@ -117,15 +70,8 @@
           <el-row :gutter="24">
             <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
               <el-form-item label="请款说明" prop="reqDesc">
-                <el-input
-                  v-model="formData.reqDesc"
-                  type="textarea"
-                  :rows="3"
-                  maxlength="500"
-                  show-word-limit
-                  placeholder="请输入"
-                  :disabled="isDetail || !!billData.status"
-                />
+                <el-input v-model="formData.reqDesc" type="textarea" :rows="3" maxlength="500" show-word-limit
+                  placeholder="请输入" :disabled="isDetail || !!billData.status" />
               </el-form-item>
             </el-col>
           </el-row>
@@ -135,32 +81,14 @@
         <div class="item-card" v-if="showDeductionAndPayWay">
           <div class="section-title">款项调整</div>
           <template v-if="isDetail || !!billData.status">
-            <base-table
-              ref="dedTableRef"
-              :columns="dedDetailColumns"
-              :table-data="dedTable"
-              :row-key="'uuid'"
-              :pagination="false"
-              :show-toolbar="false"
-              :show-action-bar="false"
-              :height="'200px'"
-            >
+            <base-table ref="dedTableRef" :columns="dedDetailColumns" :table-data="dedTable" :row-key="'uuid'"
+              :pagination="false" :show-toolbar="false" :show-action-bar="false" :height="'200px'">
             </base-table>
           </template>
           <template v-else>
-            <editable-table
-              ref="dedTableRef"
-              :row-key="'uuid'"
-              :height="'200px'"
-              v-model="dedTable"
-              :columns="dedColumns"
-              :pagination="false"
-              :highlight-current-row="false"
-              :show-summary="true"
-              :compactEmpty="true"
-              :editable="true"
-              :on-save="handleDedSave"
-            >
+            <editable-table ref="dedTableRef" :row-key="'uuid'" :height="'200px'" v-model="dedTable"
+              :columns="dedColumns" :pagination="false" :highlight-current-row="false" :show-summary="true"
+              :compactEmpty="true" :editable="true" :on-save="handleDedSave">
               <template #actionBar>
                 <div class="actionBar-buttons">
                   <el-button type="primary" size="small" @click="handleAddDed">
@@ -183,54 +111,24 @@
         <!-- 支付方式 -->
         <div class="item-card" v-if="showDeductionAndPayWay">
           <div class="section-title">支付方式</div>
-          <div
-            style="display: flex; justify-content: flex-end; margin-bottom: 8px"
-          >
-            <el-button
-              type="primary"
-              size="small"
-              :disabled="payWayTable.length == 0"
-              @click="handleFinanceAlloc"
-              v-if="!isAdd && menuStore.hasExactPermission('fina-alloc:ncon-fee')"
-            >
+          <div style="display: flex; justify-content: flex-end; margin-bottom: 8px">
+            <el-button type="primary" size="small" :disabled="payWayTable.length == 0" @click="handleFinanceAlloc"
+              v-if="!isAdd && menuStore.hasExactPermission('fina-alloc:ncon-fee')">
               财务分摊
             </el-button>
-            <el-button
-              type="primary"
-              size="small"
-              @click="addPayWay"
-              v-if="!isDetail"
-            >
+            <el-button type="primary" size="small" @click="addPayWay" v-if="!isDetail">
               新增支付方式
             </el-button>
           </div>
           <template v-if="isDetail || !!billData.status">
-            <base-table
-              ref="payWayTableRef"
-              :columns="payWayDetailColumns"
-              :table-data="payWayTable"
-              :row-key="'uuid'"
-              :pagination="false"
-              :show-toolbar="false"
-              :show-action-bar="false"
-              :height="'200px'"
-            >
+            <base-table ref="payWayTableRef" :columns="payWayDetailColumns" :table-data="payWayTable" :row-key="'uuid'"
+              :pagination="false" :show-toolbar="false" :show-action-bar="false" :height="'200px'">
             </base-table>
           </template>
           <template v-else>
-            <editable-table
-              ref="payWayTableRef"
-              :row-key="'uuid'"
-              :height="'200px'"
-              v-model="payWayTable"
-              :columns="payWayColumns"
-              :pagination="false"
-              :highlight-current-row="false"
-              :show-summary="false"
-              :compactEmpty="true"
-              :editable="true"
-              :on-save="handlePayWaySave"
-            >
+            <editable-table ref="payWayTableRef" :row-key="'uuid'" :height="'200px'" v-model="payWayTable"
+              :columns="payWayColumns" :pagination="false" :highlight-current-row="false" :show-summary="false"
+              :compactEmpty="true" :editable="true" :on-save="handlePayWaySave">
               <template #actions="{ row }">
                 <el-button link type="danger" @click="deletePayWay(row)">
                   删除
@@ -240,10 +138,7 @@
           </template>
           <div class="pay-summary">
             付款合计：<span>{{ totalPayAmt.toFixed(2) }}</span>
-            <span
-              v-if="Math.abs(totalPayAmt - actualReqAmt) > 0.01"
-              class="pay-error"
-            >
+            <span v-if="Math.abs(totalPayAmt - actualReqAmt) > 0.01" class="pay-error">
               （必须等于实际请款金额 {{ actualReqAmt.toFixed(2) }}）
             </span>
             <span v-else class="pay-success">（等于实际请款金额）</span>
@@ -254,36 +149,19 @@
         <div class="item-card">
           <div class="section-title">发票登记</div>
           <template v-if="isDetail || !!billData.status">
-            <base-table
-              ref="invoiceMTableRef"
-              :columns="invoiceMDetailColumns"
-              :table-data="invoiceMTable"
-              :row-key="'uuid'"
-              :pagination="false"
-              :show-toolbar="false"
-              :show-action-bar="false"
-              :height="'200px'"
-            >
+            <base-table ref="invoiceMTableRef" :columns="invoiceMDetailColumns" :table-data="invoiceMTable"
+              :row-key="'uuid'" :pagination="false" :show-toolbar="false" :show-action-bar="false" :height="'200px'">
               <template #annexName="{ row }">
                 <div class="annex-cell">
-                  <el-link
-                    v-if="row.annexId"
-                    type="primary"
-                    :underline="'hover'"
-                    @click="handleViewAnnex(row)"
-                  >
+                  <el-link v-if="row.annexId" type="primary" :underline="'hover'" @click="handleViewAnnex(row)">
                     {{ row.annexName || "查看附件" }}
                   </el-link>
                 </div>
               </template>
               <template #actions="{ row }">
                 <div class="actions-btn">
-                  <el-button
-                    link
-                    type="primary"
-                    :disabled="!(row.annexId && row.invoiceDs?.length)"
-                    @click="detailInvoiceM(row)"
-                  >
+                  <el-button link type="primary" :disabled="!(row.annexId && row.invoiceDs?.length)"
+                    @click="detailInvoiceM(row)">
                     发票明细
                   </el-button>
                 </div>
@@ -291,25 +169,12 @@
             </base-table>
           </template>
           <template v-else>
-            <editable-table
-              ref="invoiceMTableRef"
-              :row-key="'uuid'"
-              :height="'200px'"
-              v-model="invoiceMTable"
-              :columns="invoiceMColumns"
-              :pagination="false"
-              :highlight-current-row="false"
-              :show-summary="false"
-              :compactEmpty="true"
-              :editable="true"
-            >
+            <editable-table ref="invoiceMTableRef" :row-key="'uuid'" :height="'200px'" v-model="invoiceMTable"
+              :columns="invoiceMColumns" :pagination="false" :highlight-current-row="false" :show-summary="false"
+              :compactEmpty="true" :editable="true">
               <template #actionBar>
                 <div class="actionBar-buttons">
-                  <el-button
-                    type="primary"
-                    size="small"
-                    @click="handleUploadInvoice"
-                  >
+                  <el-button type="primary" size="small" @click="handleUploadInvoice">
                     上传发票
                   </el-button>
                 </div>
@@ -317,12 +182,7 @@
 
               <template #annexName="{ row }">
                 <div class="annex-cell">
-                  <el-link
-                    v-if="row.annexId"
-                    type="primary"
-                    :underline="'hover'"
-                    @click="handleViewAnnex(row)"
-                  >
+                  <el-link v-if="row.annexId" type="primary" :underline="'hover'" @click="handleViewAnnex(row)">
                     {{ row.annexName || "查看附件" }}
                   </el-link>
                 </div>
@@ -330,20 +190,11 @@
 
               <template #actions="{ row }">
                 <div class="actions-btn">
-                  <el-button
-                    link
-                    type="primary"
-                    :disabled="!row.annexId"
-                    @click="handleInspect(row)"
-                  >
+                  <el-button link type="primary" :disabled="!row.annexId" @click="handleInspect(row)">
                     查验
                   </el-button>
-                  <el-button
-                    link
-                    type="primary"
-                    :disabled="!(row.annexId && row.invoiceDs?.length)"
-                    @click="detailInvoiceM(row)"
-                  >
+                  <el-button link type="primary" :disabled="!(row.annexId && row.invoiceDs?.length)"
+                    @click="detailInvoiceM(row)">
                     发票明细
                   </el-button>
                   <el-button link type="danger" @click="deleteInvoiceM(row)">
@@ -359,52 +210,25 @@
         <div class="item-card">
           <div class="section-title">相关附件</div>
           <el-form-item label="上传附件">
-            <base-upload
-              v-model:file-list="annexFileList"
-              :limit="9"
-              :multiple="false"
-              :showIcon="true"
-              :showTip="true"
-              :maxSize="20"
-              :unrestricted="true"
-              :accept="''"
-              button-text="选择文件"
-              size="default"
-              :disabled="isDetail || !!billData.status"
-              @success="handleFileSuccess"
-            />
+            <base-upload v-model:file-list="annexFileList" :limit="9" :multiple="false" :showIcon="true" :showTip="true"
+              :maxSize="20" :unrestricted="true" :accept="''" button-text="选择文件" size="default"
+              :disabled="isDetail || !!billData.status" @success="handleFileSuccess" />
           </el-form-item>
         </div>
       </el-form>
 
       <!-- 上传发票弹窗 -->
-      <UploadInvoiceDialog
-        v-model="uploadVisibleDialog"
-        @success="getAnnexFileList"
-      />
+      <UploadInvoiceDialog v-model="uploadVisibleDialog" @success="getAnnexFileList" />
     </div>
 
     <!-- 发票明细 弹窗 -->
-    <invoice-detail-dialog
-      ref="invoiceDetailDialogRef"
-      v-model="dialogVisible"
-      :detailList="detailList"
-      :disabled="isDetail || !!billData.status"
-      @success="handleInvoiceDetailSuccess"
-    />
+    <invoice-detail-dialog ref="invoiceDetailDialogRef" v-model="dialogVisible" :detailList="detailList"
+      :disabled="isDetail || !!billData.status" @success="handleInvoiceDetailSuccess" />
 
     <!-- 财务分摊  :dialogMode="isDetail ? 'view' : 'edit'" -->
-    <FinanceAllocationDialog
-      ref="financeAllocationDialogRef"
-      v-model="financeAllocVisible"
-      :payWayTable="payWayTable"
-      :segId="formData.segId"
-      :bizBillId="billData?.id"
-      :bizId="paymentData?.id"
-      :projId="formData.projId"
-      :bizType="'NCON_FEE'"
-      @select="getFinaList"
-    ></FinanceAllocationDialog>
+    <FinanceAllocationDialog ref="financeAllocationDialogRef" v-model="financeAllocVisible" :bizBillId="billData?.id"
+      :bizId="paymentData?.id" :bizType="'NCON_FEE'" @select="getFinaList" @updateData="updateData">
+    </FinanceAllocationDialog>
   </div>
 </template>
 
@@ -590,7 +414,7 @@ const getPayTypeOptions = async (segId: number) => {
         (item: any) => item.finaTypeCode != "03" && item.finaTypeCode != "01",
       );
     }
-  } catch (error) {}
+  } catch (error) { }
 };
 
 // ==================== 数据定义 ====================
@@ -1304,6 +1128,10 @@ const getFinaList = (data) => {
   console.log("获取的财务分摊数据", data);
   payWayTable.value = data || [];
 };
+const updateData = () => {
+  // 刷新页面
+  loadDetail();
+}
 const handleFinanceAlloc = () => {
   if (!formData.value.segId) {
     ElMessage.error("请先选择项目");
@@ -1501,14 +1329,14 @@ const buildSaveParams = () => {
   const deds = isCreditInvoice
     ? []
     : dedTable.value.map((item) => ({
-        id: item.id,
-        srcType: item.srcType,
-        nconBillId: item.nconBillId,
-        dedName: item.dedName || "",
-        dedAmt: item.dedAmt || 0,
-        dedTypeId: item.dedTypeId,
-        dedDesc: item.dedDesc || "",
-      }));
+      id: item.id,
+      srcType: item.srcType,
+      nconBillId: item.nconBillId,
+      dedName: item.dedName || "",
+      dedAmt: item.dedAmt || 0,
+      dedTypeId: item.dedTypeId,
+      dedDesc: item.dedDesc || "",
+    }));
 
   const invoiceMs: NconBillInvoiceM[] = [];
   invoiceMTable.value.forEach((item) => {
@@ -1544,18 +1372,18 @@ const buildSaveParams = () => {
   const payWays = isCreditInvoice
     ? []
     : payWayTable.value.map((item) => ({
-        id: item.id,
-        srcType: item.srcType,
-        nconBillId: item.nconBillId,
-        payWayId: item.payWayId || "",
-        payAmt: item.payAmt || 0,
-        dedRoomAmt: item.dedRoomAmt || 0,
-        payDesc: item.payDesc || "",
-        bankName: item.bankName || "",
-        accountName: item.accountName || "",
-        bankAccount: item.bankAccount || "",
-        finaDs: item?.finaDs || [], // 财务分摊
-      }));
+      id: item.id,
+      srcType: item.srcType,
+      nconBillId: item.nconBillId,
+      payWayId: item.payWayId || "",
+      payAmt: item.payAmt || 0,
+      dedRoomAmt: item.dedRoomAmt || 0,
+      payDesc: item.payDesc || "",
+      bankName: item.bankName || "",
+      accountName: item.accountName || "",
+      bankAccount: item.bankAccount || "",
+      finaDs: item?.finaDs || [], // 财务分摊
+    }));
 
   return {
     bill: bill,
@@ -1753,7 +1581,7 @@ const handleDelete = async () => {
         ElMessage.success("删除成功");
         goBack();
       }
-    } catch (error) {}
+    } catch (error) { }
   });
 };
 
@@ -1772,7 +1600,7 @@ const handleCancel = async () => {
         ElMessage.success("作废成功");
         goBack();
       }
-    } catch (error) {}
+    } catch (error) { }
   });
 };
 

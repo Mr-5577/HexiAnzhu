@@ -2,9 +2,8 @@
 <template>
   <base-modal v-model="dialogVisible" title="财务分摊" width="1400px" :top="'8vh'" :confirm-loading="confirmLoading"
     :confirm-text="'确定'" @confirm="handleConfirm" @close="handleClose">
-    <FinanceAllocationDetail ref="financeAllocationRef" :projId="props.projId" :segId="props.segId" :isDialogMode="true"
-      :bizType="props.bizType" :payWayTable="payWayTable" :dialogMode="props.dialogMode" :bizId="props.bizId"
-      :bizBillId="props.bizBillId"></FinanceAllocationDetail>
+    <FinanceAllocationDetail ref="financeAllocationRef" :isDialogMode="true" :bizType="props.bizType"
+      :bizId="props.bizId" :bizBillId="props.bizBillId"></FinanceAllocationDetail>
   </base-modal>
 </template>
 
@@ -15,9 +14,6 @@ import FinanceAllocationDetail from "./index.vue";
 
 interface Props {
   modelValue: boolean;
-  projId?: number | undefined;
-  segId?: number | undefined;
-  payWayTable?: any[];
   bizType?: string;
   dialogMode?: string; // 弹窗模式， view  edit
   bizBillId?: number | undefined; // 业务单据id
@@ -26,9 +22,6 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
-  projId: undefined,
-  segId: undefined,
-  payWayTable: () => [],
   bizType: "NCON_CST", // 业务类型，NCON_CST:非合同请款  NCON_FEE:非合同费用报销  CON_PAY:合同支付
   dialogMode: "edit", // 弹窗模式
   bizBillId: undefined, // 业务单据id
@@ -39,6 +32,7 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   "update:modelValue": [value: boolean];
   select: [data: any[]];
+  updateData: [];
 }>();
 
 // 弹窗显示状态
@@ -48,32 +42,16 @@ const confirmLoading = ref(false);
 const financeAllocationRef = ref(null);
 
 const handleConfirm = async () => {
-  // 提交保存
-  financeAllocationRef.value?.handleSubmit();
-  // 校验列表数据
-  const { valid, msg } = financeAllocationRef.value?.validateDetails();
-  if (!valid) {
-    ElMessage.error(msg);
-    return;
-  }
-  const reslut = financeAllocationRef.value?.validateData();
-  if (reslut) {
-    const data = financeAllocationRef.value?.getData();
-    console.log("校验通过", data);
-    if (data && data.length > 0) {
-      // const detailListArray = data.flatMap((item) => {
-      //   // 判断 detailList 是否存在且为数组
-      //   if (Array.isArray(item.detailList) && item.detailList.length > 0) {
-      //     return item.detailList;
-      //   }
-      //   return []; // 如果没有数据，返回空数组
-      // });
-      emit("select", data);
-      handleClose();
-    } else {
-      emit("select", []);
-      handleClose();
-    }
+  try {
+    confirmLoading.value = true;
+    // 提交保存
+    await financeAllocationRef.value?.handleSubmit();
+    emit("updateData");
+    handleClose();
+  } catch (error) {
+    console.log(error);
+  } finally {
+    confirmLoading.value = false;
   }
 };
 const handleClose = () => {

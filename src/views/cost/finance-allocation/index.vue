@@ -85,10 +85,7 @@ import { paymentRequestApi } from "@/api/cost/contract-manage/payment-applicatio
 defineOptions({ name: "finance-allocation" });
 
 interface Props {
-  projId?: number; // 项目ID
-  segId?: number; // 板块ID
   isDialogMode?: boolean; // 是否为弹窗模式
-  payWayTable?: any[]; // 支付方式表格数据
   bizType?: string; // 业务类型，NCON_CST:非合同请款  NCON_FEE:非合同费用报销  CON_PAY:合同支付
   dialogMode?: string; // 弹窗模式， view  edit
   bizBillId?: number; // 业务单据ID
@@ -96,10 +93,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  projId: undefined,
-  segId: undefined,
   isDialogMode: false, // 页面模式，默认非弹窗
-  payWayTable: () => [],
   bizType: "NCON_CST", // 业务类型  NCON_CST:非合同请款  NCON_FEE:非合同费用报销  CON_PAY:合同支付
   dialogMode: "edit", // 弹窗模式
   bizBillId: undefined,
@@ -118,7 +112,8 @@ let bizType = route.query?.bizType ? route.query.bizType : "";
 
 // 只要是erp页面弹窗打开就是查看模式，OA调用打开则根据参数mode控制
 const isView = computed(() => {
-  return route.query.mode == "view" || props.dialogMode == "view";
+  return false // ERP和OA打开都能编辑
+  // return route.query.mode == "view" || props.dialogMode == "view";
 });
 
 const submitLoading = ref(false);
@@ -200,7 +195,10 @@ const detailColumns = computed<EditableColumn[]>(() => [
     editType: "input",
     showOverflowTooltip: false,
     // 有regPayAmtSum字段并且值大于0表示已支付，不可编辑
-    disabled: (row: any) => row.regPayAmtSum,
+    disabled: (row: any) => {
+      const regPayAmt = Number(row.regPayAmtSum) || 0;
+      return regPayAmt > 0;
+    },
   },
   {
     prop: "finaOrgId",
@@ -224,7 +222,10 @@ const detailColumns = computed<EditableColumn[]>(() => [
       checkStrictly: false,
     },
     // 有regPayAmtSum字段并且值大于0表示已支付，不可编辑
-    disabled: (row: any) => row.regPayAmtSum,
+    disabled: (row: any) => {
+      const regPayAmt = Number(row.regPayAmtSum) || 0;
+      return regPayAmt > 0;
+    },
   },
   {
     prop: "finaSubId",
@@ -248,7 +249,10 @@ const detailColumns = computed<EditableColumn[]>(() => [
       filterable: true, // 启用过滤
     },
     // 有regPayAmtSum字段并且值大于0表示已支付，不可编辑
-    disabled: (row: any) => row.regPayAmtSum,
+    disabled: (row: any) => {
+      const regPayAmt = Number(row.regPayAmtSum) || 0;
+      return regPayAmt > 0;
+    },
   },
   {
     prop: "finaSubAmt",
@@ -381,8 +385,9 @@ const validateData = () => {
 };
 // 校验拆分明细是否已支付，有regPayAmtSum字段并且值大于0表示已支付
 const validateDetails = (data: any[]) => {
+  const safeData = data ?? [];
   const errors: string[] = [];
-  for (const item of data) {
+  for (const item of safeData) {
     for (const detail of item.finaDs || []) {
       const { finaSubAmt, regPayAmtSum, finaSubDesc } = detail;
       // 只校验有 regPayAmtSum 字段且大于 0 的明细
@@ -408,7 +413,7 @@ const handleSubmit = async () => {
   }
   const allValid = validateData();
   if (!allValid) return
-  
+
   debugger
   if (allValid) {
     submitLoading.value = true;
@@ -419,6 +424,7 @@ const handleSubmit = async () => {
       ...item,
       allocStatus: 1, // 分摊状态,0-未分摊 1-已分摊 2-部分分摊
     }));
+    console.log("财务分摊提交数据:", newData);
     try {
       let res;
       if (bizType === "CON_PAY") {
@@ -498,7 +504,7 @@ const processConData = (list) => {
       const hasFinaDs = item?.finaDs && item.finaDs.length > 0;
       let finaDs;
       if (hasFinaDs) {
-        // 有数据：使用原有数据，记录补充 uuid
+        // 有数据：使用原有数据记录，补充 uuid
         finaDs = item.finaDs.map((fd: any) => ({
           ...fd,
           uuid: uuidv4(),
@@ -512,7 +518,7 @@ const processConData = (list) => {
               id: undefined,
               conBillId: item.conBillId,
               payWayId: undefined,
-              pmWayId: props.isDialogMode ? undefined : item.id,
+              pmWayId: item.id, // 赋值当前报销明细行的ID
               finaSubDesc: item.payDesc,
               finaOrgId: undefined,
               finaSubId: undefined,
@@ -560,7 +566,7 @@ const processNconData = (list) => {
               id: undefined,
               nconBillId: item.nconBillId,
               payWayId: undefined,
-              pmWayId: props.isDialogMode ? undefined : item.id,
+              pmWayId: item.id, // 赋值当前报销明细行的ID
               finaSubDesc: item.payDesc,
               finaOrgId: undefined,
               finaSubId: undefined,
@@ -658,18 +664,6 @@ onMounted(async () => {
   // 判断是不是弹窗模式
   if (props.isDialogMode) {
     console.log("弹窗模式");
-    // if (props?.segId) {
-    //   await getFinaOrgListBySegId(props.segId); // 获取业务板块下的费用组织
-    //   await getFinaSubjectListBySegId(props.segId); // 获取业务板块下的费用科目
-    // }
-    // if (props?.payWayTable && props?.payWayTable?.length > 0) {
-    //   const list = props?.payWayTable || [];
-    //   if (props.bizType === "CON_PAY") {
-    //     processConData(list);
-    //   } else {
-    //     processNconData(list);
-    //   }
-    // }
     billId = props?.bizBillId
     bizId = props?.bizId
     bizType = props?.bizType

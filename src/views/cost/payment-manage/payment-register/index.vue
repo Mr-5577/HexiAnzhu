@@ -3,7 +3,7 @@
   <div class="payment-register-wrapper">
     <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="105px">
       <el-form-item label="标题" prop="wfTitle">
-        <el-input v-model="queryParams.wfTitle" placeholder="请输入标题" clearable style="width: 220px" />
+        <el-input v-model="queryParams.wfTitle" placeholder="请输入标题" clearable style="width: 200px" />
       </el-form-item>
       <el-form-item label="项目" prop="projId">
         <el-cascader v-model="queryParams.projId" :options="projectOptions" :show-all-levels="false" :props="{
@@ -13,41 +13,46 @@
           value: 'orgId',
           label: 'orgName',
           children: 'children',
-        }" placeholder="请选择项目" style="width: 220px" clearable filterable />
+        }" placeholder="请选择项目" style="width: 200px" clearable filterable />
       </el-form-item>
       <el-form-item label="业务板块" prop="segId">
-        <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px" clearable>
+        <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 200px" clearable>
           <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
         </el-select>
       </el-form-item>
       <el-form-item label="合同/立项单号" prop="itemNo">
-        <el-input v-model="queryParams.itemNo" placeholder="请输入合同/立项单号" clearable style="width: 220px" />
+        <el-input v-model="queryParams.itemNo" placeholder="请输入合同/立项单号" clearable style="width: 200px" />
       </el-form-item>
       <el-form-item label="合同/立项名称" prop="itemName">
-        <el-input v-model="queryParams.itemName" placeholder="请输入合同/立项名称" clearable style="width: 220px" />
+        <el-input v-model="queryParams.itemName" placeholder="请输入合同/立项名称" clearable style="width: 200px" />
       </el-form-item>
       <el-form-item label="供应商" prop="supName">
-        <el-input v-model="queryParams.supName" placeholder="请输入供应商名称" clearable style="width: 220px" />
+        <el-input v-model="queryParams.supName" placeholder="请输入供应商名称" clearable style="width: 200px" />
       </el-form-item>
       <el-form-item label="付款单号" prop="reqNo">
-        <el-input v-model="queryParams.reqNo" placeholder="请输入付款单号" clearable style="width: 220px" />
+        <el-input v-model="queryParams.reqNo" placeholder="请输入付款单号" clearable style="width: 200px" />
       </el-form-item>
       <el-form-item label="费用归属期间" prop="belongMonth">
         <el-date-picker v-model="queryParams.belongMonth" type="month" value-format="YYYY-MM" placeholder="费用归属期间"
-          style="width: 220px" />
+          style="width: 200px" />
       </el-form-item>
       <el-form-item label="申请日期" prop="applyDate">
         <el-date-picker v-model="queryParams.applyDate" type="daterange" range-separator="至" value-format="YYYY-MM-DD"
           start-placeholder="开始日期" end-placeholder="结束日期" style="width: 220px" />
       </el-form-item>
       <el-form-item label="入账状态" prop="isLocked">
-        <el-select v-model="queryParams.isLocked" placeholder="请选择" style="width: 220px" clearable>
+        <el-select v-model="queryParams.isLocked" placeholder="请选择" style="width: 200px" clearable>
           <el-option label="已入账" :value="true" />
           <el-option label="未入账" :value="false" />
         </el-select>
       </el-form-item>
+      <el-form-item label="流程状态" prop="wfStatus">
+        <el-select v-model="queryParams.wfStatus" placeholder="请选择" style="width: 200px" clearable>
+          <el-option v-for="item in costBillStatusEnum" :key="item.value" :label="item.label" :value="item.value" />
+        </el-select>
+      </el-form-item>
       <el-form-item label="是否可支付" prop="isPayable">
-        <el-select v-model="queryParams.isPayable" placeholder="请选择" style="width: 220px">
+        <el-select v-model="queryParams.isPayable" placeholder="请选择" style="width: 200px">
           <el-option label="是" :value="true" />
           <el-option label="否" :value="false" />
         </el-select>
@@ -101,10 +106,9 @@
           单项登记
         </el-button>
         <el-button type="primary" link @click="handleView(row)"
-          v-if="menuStore.hasExactPermission('payment-register:detail')">
+          v-if="menuStore.hasExactPermission('payment-register:detail') && row.flowStatus === 40">
           明细
         </el-button>
-        <!-- <el-button type="primary" link @click="handleEntry(row)" :disabled="row.isLocked || row.payStatus !== '全部支付'"> -->
         <el-button type="primary" link @click="handleEntry(row)" :disabled="disabledEntry(row)">
           入账
         </el-button>
@@ -185,7 +189,7 @@ const columns: TableColumnItem[] = [
   { prop: "segName", label: "业务板块", width: 90 },
   { prop: "compName", label: "费用所属公司", width: 180 },
   { prop: "itemName", label: "合同/立项名称", width: 150 },
-  { prop: "itemNo", label: "合同/立项单号", width: 220 },
+  { prop: "itemNo", label: "合同/立项单号", width: 200 },
   {
     prop: "bizItemName", label: "单据类型", width: 150, formatter: (row) => {
       const name = bizITypeMapping[row.bizType] || row.bizItemName
@@ -193,7 +197,7 @@ const columns: TableColumnItem[] = [
     }
   },
   { prop: "supName", label: "供应商", width: 150 },
-  { slot: "reqNo", label: "付款单号", width: 220 },
+  { slot: "reqNo", label: "付款单号", width: 200 },
   { prop: "reqDesc", label: "付款申请说明", width: 200 },
   { prop: "belongMonth", label: "费用归属期间", width: 110 },
   { prop: "finaTypeName", label: "费用类型", width: 120 },
@@ -207,7 +211,7 @@ const columns: TableColumnItem[] = [
   {
     label: "操作",
     prop: "actions",
-    width: 250,
+    width: 240,
     slot: "actions",
     fixed: "right",
   },
@@ -216,7 +220,9 @@ const disabledRegister = (row) => {
   const hasPermission = menuStore.hasExactPermission('payment-ledger:register')
   // 无权限 → 禁用
   if (!hasPermission) return true
-  // 已锁定 → 禁用
+  // 非已审批 → 禁用
+  if (row.wfStatus !== 40) return true
+  // 已入账 → 禁用
   if (row.isLocked) return true
   // 已全部支付 → 禁用
   if (row.payStatus === '全部支付') return true
@@ -227,7 +233,9 @@ const disabledEntry = (row) => {
   const hasPermission = menuStore.hasExactPermission('payment-ledger:entry')
   // 无权限 → 禁用
   if (!hasPermission) return true
-  // 已锁定 → 禁用
+  // 非已审批 → 禁用
+  if (row.wfStatus !== 40) return true
+  // 已入账 → 禁用
   if (row.isLocked) return true
   // 没有全部支付 → 禁用
   if (row.payStatus !== '全部支付') return true

@@ -2171,7 +2171,7 @@ const backfillData = async (data) => {
 
   if (formData.value.modifyAccAnnex) {
     const res = await commonApi.getFileList({
-      annexId: paymentId.value,
+      annexId: formData.value.modifyAccAnnex,
     });
     if (res.code === 200 && res.data) {
       if (res.data.length > 0) {

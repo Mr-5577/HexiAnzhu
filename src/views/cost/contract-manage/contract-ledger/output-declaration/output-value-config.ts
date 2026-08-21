@@ -395,7 +395,7 @@ export const createProdColumns = (options: ProdColumnOptions) => {
       editable: true,
       editType: "input",
       showOverflowTooltip: false,
-      width: 90,
+      width: 100,
       formatter: (row: any) => row.buildPeriod || "--",
     },
     {
@@ -403,7 +403,7 @@ export const createProdColumns = (options: ProdColumnOptions) => {
       label: "产值期间",
       editable: false,
       showOverflowTooltip: false,
-      width: 90,
+      width: 100,
       formatter: (row: any) => formatYM(row.prodValPeriod) || "--",
     },
     {
@@ -412,7 +412,7 @@ export const createProdColumns = (options: ProdColumnOptions) => {
       editable: true,
       showOverflowTooltip: false,
       thousandSeparator: true,
-      width: 90,
+      width: 100,
       //formatter: (row: any) => row.payDate || "--",
       //disabled: (row: any) => !!row.isCtrl,
     },

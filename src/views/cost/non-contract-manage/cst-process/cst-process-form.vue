@@ -54,10 +54,11 @@
         </div>
 
         <!-- 成本分摊  费用类型所属大类为建安类，并且是编辑/查看时显示  :visible="isShowCostAllocation && formData.processAmt > 0" -->
-        <CostAllocationCard v-if="menuStore.hasExactPermission('cost-alloc:ncon-proc')" :visible="isShowCostAllocation" :allocation-status="cstMData.allocStatus"
-          :warning-status="cstMData.allocWarn" :bizType="'NCON_PROC'" :projId="formData.projId"
-          :projName="formData.projName" :displayName="formData.processName" :allocAmt="formData.processAmt"
-          :bizBillId="processData.nconBillId" :cstMData="cstMData" @selectData="getSelectCostAllocation" />
+        <CostAllocationCard v-if="menuStore.hasExactPermission('cost-alloc:ncon-proc')" :visible="isShowCostAllocation"
+          :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'NCON_PROC'"
+          :projId="formData.projId" :projName="formData.projName" :displayName="formData.processName"
+          :allocAmt="formData.processAmt" :bizBillId="processData.nconBillId" :cstMData="cstMData"
+          @selectData="getSelectCostAllocation" />
 
         <!-- 相关附件 -->
         <div class="item-card">

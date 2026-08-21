@@ -302,9 +302,8 @@
       @success="handleInvoiceDetailSuccess" />
 
     <!-- 财务分摊 -->
-    <FinanceAllocationDialog ref="financeAllocationDialogRef" v-model="financeAllocVisible" :payWayTable="payWayTable"
-      :segId="formData.segId" :projId="formData.projId" :bizType="'NCON_CST'" :bizBillId="billData?.id"
-      :bizId="paymentData?.id" @select="getFinaList">
+    <FinanceAllocationDialog ref="financeAllocationDialogRef" v-model="financeAllocVisible" :bizType="'NCON_CST'"
+      :bizBillId="billData?.id" :bizId="paymentData?.id" @select="getFinaList" @updateData="updateData">
     </FinanceAllocationDialog>
   </div>
 </template>
@@ -1267,6 +1266,10 @@ const getFinaList = (data) => {
   console.log("获取的财务分摊数据", data);
   payWayTable.value = data || [];
 };
+const updateData = () => {
+  // 刷新页面
+  loadDetail();
+}
 const handleFinanceAlloc = () => {
   if (!formData.value.segId) {
     ElMessage.error("请先选择项目");
