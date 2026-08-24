@@ -44,6 +44,7 @@ import { requiredRule } from "@/utils/form-rule-validate.ts";
 import { formType } from "@/types/form/form-types.ts";
 import { normalizeCode } from "@/utils/common.ts";
 import { toBig, formatDecimal, BigNumber } from "@/utils/big-number.ts";
+
 export type { ContractFormProps, ContractFormEmits, ContractFormData };
 
 // ============ Composable ============
@@ -63,6 +64,10 @@ export function useContractForm(
   const isDetailMode = computed(() => mode.value === "detail");
   const isEditMode = computed(() => mode.value === "edit");
   const isAddMode = computed(() => mode.value === "add");
+  // 是否是超管角色
+  const isSuperAdmin = computed(() => {
+    return userStore.roleList?.some((role: any) => role.isSuper);
+  });
 
   // ---- 单据数据 ----
   const billData = ref({
@@ -82,9 +87,11 @@ export function useContractForm(
   const flowListData = ref<any>(null);
 
   // 统一只读态（detail 模式 或 单据已有 status）
-  const isReadonly = computed(
-    () => isDetailMode.value || !!billData.value.status,
-  );
+  const isReadonly = computed(() => {
+    // 超管保留编辑权限
+    if (isSuperAdmin.value) return false;
+    return isDetailMode.value || !!billData.value.status;
+  });
 
   // ---- UI 逻辑（卡片折叠 / 金额格式化）----
   // 悬浮定位栏已封装为 FloatNav 组件，内部自管 IntersectionObserver
@@ -1092,8 +1099,10 @@ export function useContractForm(
   const SAVE_FIELDS = Object.keys(saveContractFormRules());
   const handleSave = async () => {
     if (submitLoading.value) return;
-    if (isDetailMode.value) return;
-    if (!formRef.value) return;
+    if (!isSuperAdmin.value) {
+      if (isDetailMode.value) return;
+      if (!formRef.value) return;
+    }
     try {
       //await formRef.value.validateField(['bizTitle', 'projId', 'conProperty','conName','conTypeId','supId','priceType','payMethod']);
       await formRef.value.validateField(SAVE_FIELDS);
@@ -1237,6 +1246,7 @@ export function useContractForm(
     submitLoading,
     formRules,
     isReadonly,
+    isSuperAdmin,
     handleSubmit,
     handleSave,
     handleDelete,

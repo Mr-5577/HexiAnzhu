@@ -15,11 +15,14 @@
     <!-- 筛选区域 -->
     <div class="pa-filter">
       <el-form :model="queryParams" ref="queryRef" :inline="true">
-        <el-form-item label="请款说明" prop="paymentName">
-          <el-input v-model="queryParams.bizTitle" placeholder="请输入名称" clearable style="width: 300px" />
+        <el-form-item label="请款说明" prop="bizTitle">
+          <el-input v-model="queryParams.bizTitle" placeholder="请输入名称" clearable style="width: 200px" />
+        </el-form-item>
+        <el-form-item label="单据号" prop="bizNo">
+          <el-input v-model="queryParams.bizNo" placeholder="请输入单据号" clearable style="width: 200px" />
         </el-form-item>
         <el-form-item label="审批状态" prop="status">
-          <el-select v-model="queryParams.status" placeholder="请选择审批状态" style="width: 100px" clearable>
+          <el-select v-model="queryParams.status" placeholder="请选择审批状态" style="width: 150px" clearable>
             <el-option v-for="item in approvalStatusEnum" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
@@ -89,6 +92,7 @@ import { useRouter } from "vue-router";
 import { approvalStatusEnum } from "@/constants/bidding/enums";
 import { getEnumLabel, getEnumType } from "@/utils/enum";
 import { useUserStore } from "@/stores/user-store";
+import { formatThousandWithPlaces } from "@/utils/big-number";
 
 defineOptions({ name: "output-declaration" });
 
@@ -109,11 +113,13 @@ const userStore = useUserStore();
 const queryParams = ref({
   conId: props.conId,
   bizTitle: "",
+  bizNo: "",
   status: null,
 });
 
 const handleReset = () => {
   queryParams.value.bizTitle = "";
+  queryParams.value.bizNo = "";
   queryParams.value.status = null;
   resetPagination();
   getDataList();
@@ -121,16 +127,17 @@ const handleReset = () => {
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
+  { prop: "bizNo", label: "单据号", width: 200 },
   { prop: "bizTitle", label: "产值申报说明", width: 250 },
   { prop: "prodValPeriod", label: "产值月份", width: 100 },
-  { prop: "sumProdVal", label: "期初产值", width: 140 },
-  { prop: "sumPayAmt", label: "期初应付", width: 140 },
-  { prop: "applyProdVal", label: "本次申报产值", width: 140 },
-  { prop: "applyPayAmt", label: "本次申报应付", width: 140 },
-  { prop: "costProdVal", label: "成本复核产值", width: 140 },
-  { prop: "costPayAmt", label: "成本复核应付", width: 140 },
-  { prop: "totalProdVal", label: "期末总产值", width: 140 },
-  { prop: "totalPayVal", label: "期末总应付", width: 140 },
+  { prop: "sumProdVal", label: "期初产值", width: 140, formatter: (row) => formatThousandWithPlaces(row.sumProdVal || 0) },
+  { prop: "sumPayAmt", label: "期初应付", width: 140, formatter: (row) => formatThousandWithPlaces(row.sumPayAmt || 0) },
+  { prop: "applyProdVal", label: "本次申报产值", width: 140, formatter: (row) => formatThousandWithPlaces(row.applyProdVal || 0) },
+  { prop: "applyPayAmt", label: "本次申报应付", width: 140, formatter: (row) => formatThousandWithPlaces(row.applyPayAmt || 0) },
+  { prop: "costProdVal", label: "成本复核产值", width: 140, formatter: (row) => formatThousandWithPlaces(row.costProdVal || 0) },
+  { prop: "costPayAmt", label: "成本复核应付", width: 140, formatter: (row) => formatThousandWithPlaces(row.costPayAmt || 0) },
+  { prop: "totalProdVal", label: "期末总产值", width: 140, formatter: (row) => formatThousandWithPlaces(row.totalProdVal || 0) },
+  { prop: "totalPayVal", label: "期末总应付", width: 140, formatter: (row) => formatThousandWithPlaces(row.totalPayVal || 0) },
   { slot: "status", label: "审批状态", minWidth: 90 },
   { prop: "applyDesc", label: "申报说明", width: 250 },
   { prop: "createName", label: "创建人", minWidth: 90 },
@@ -155,6 +162,7 @@ const getDataList = async () => {
   try {
     tableLoading.value = true;
     const res = await outputDeclarationApi.getProdValList({
+      ...queryParams.value,
       conId: props.conId,
     });
     if (res.code === 200) {

@@ -1,11 +1,7 @@
 <template>
   <div class="content-layout">
     <!-- Header -->
-    <app-header
-      :active-module-id="activeModuleId"
-      @module-change="handleModuleChange"
-      v-show="!shouldHideLayout"
-    />
+    <app-header :active-module-id="activeModuleId" @module-change="handleModuleChange" v-show="!shouldHideLayout" />
     <div class="content-body">
       <!-- 左侧侧边栏 -->
       <app-sidebar :menu-data="sidebarMenu" v-show="!shouldHideLayout" />
@@ -17,17 +13,9 @@
         <!-- <router-view /> -->
         <router-view v-slot="{ Component, route }">
           <keep-alive :include="cachePagesArray">
-            <component
-              :is="Component"
-              :key="route.fullPath"
-              v-if="route.meta?.isKeepAlive"
-            />
+            <component :is="Component" :key="route.fullPath" v-if="route.meta?.isKeepAlive" />
           </keep-alive>
-          <component
-            :is="Component"
-            :key="route.fullPath"
-            v-if="!route.meta?.isKeepAlive"
-          />
+          <component :is="Component" :key="route.fullPath" v-if="!route.meta?.isKeepAlive" />
         </router-view>
       </main>
     </div>
@@ -153,11 +141,22 @@ const handleModuleChange = (module: any) => {
   activeModuleId.value = module.id;
   saveActiveModuleId(module.id);
 };
-
+// 用户基本信息
 const getUserInfo = async () => {
   const res = await userApi.getEmpInfo();
   if (res.code === 200) {
     userStore.setUserInfo(res.data || null);
+  }
+};
+// 用户角色
+const getRoleList = async () => {
+  try {
+    const res = await userApi.getMyRoleList();
+    if (res.code === 200) {
+      userStore.setRoleList(res.data || []);
+    }
+  } catch (error) {
+
   }
 };
 
@@ -180,9 +179,10 @@ onMounted(() => {
   }
   if (token) {
     getUserInfo();
+    getRoleList();
   }
 });
-onUnmounted(() => {});
+onUnmounted(() => { });
 </script>
 
 <style lang="scss" scoped>
@@ -200,17 +200,20 @@ onUnmounted(() => {});
     overflow: hidden;
     background-color: #032b44;
     min-height: 0;
+
     .content-main {
       flex: 1;
       display: flex;
       flex-direction: column;
       background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
       overflow: hidden;
-      min-height: 0; /* 防止内部内容溢出 */
+      min-height: 0;
+      /* 防止内部内容溢出 */
 
       /* 如果 tags-view 高度固定 */
-      & > :first-child:not(router-view) {
-        flex-shrink: 0; /* 防止 tags-view 被压缩 */
+      &> :first-child:not(router-view) {
+        flex-shrink: 0;
+        /* 防止 tags-view 被压缩 */
       }
 
       /* 路由视图容器自适应 */

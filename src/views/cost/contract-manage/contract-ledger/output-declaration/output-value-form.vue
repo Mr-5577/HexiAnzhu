@@ -3,15 +3,15 @@
   <div class="basic-form-content">
     <BillHeader :title="'产值申报'" :contract-no="billData.bizNo || ''" :submitter="formData.userName || ''"
       :submit-time="formData.createDate || ''" :status="billData.status || 0" :show-status="true"
-      :button-loading="submitLoading" :save-disabled="isDetail || !!billData.status"
-      :submit-disabled="isDetail || !!billData.status" :delete-disabled="isDetail || isAdd || !!billData.status"
-      :void-disabled="isDetail || isAdd || !!billData.status" :view-disabled="isAdd" @save="handleSave"
-      @submit="handleSubmit" @delete="handleDelete" @void="handleCancel" @viewFlow="handleViewProcess">
+      :button-loading="submitLoading" :save-disabled="isReadonly" :submit-disabled="isReadonly"
+      :delete-disabled="isDetail || isAdd || !!billData.status" :void-disabled="isDetail || isAdd || !!billData.status"
+      :view-disabled="isAdd" @save="handleSave" @submit="handleSubmit" @delete="handleDelete" @void="handleCancel"
+      @viewFlow="handleViewProcess">
     </BillHeader>
     <div class="form-scroll-area">
       <el-form ref="formRef" :model="formData" :rules="formRules" :disabled="isReadonly || loadingForm"
         :validate-on-rule-change="false" label-width="130px" class="adapt-form">
-        <BillInfo v-model="formData" :status="billData?.status || 0" :disabled="isDetail || !!billData.status"
+        <BillInfo v-model="formData" :status="billData?.status || 0" :disabled="isReadonly"
           :project-options="projectOptions" @project-change="changeProject" />
 
         <!-- 合同信息 -->
@@ -156,7 +156,7 @@
                   :accept="''"
                   button-text="选择文件"
                   size="default"
-                  :disabled="isDetail || !!billData.status"
+                  :disabled="isReadonly"
                   @success="declaraFileSuccess"
                 />
               </el-form-item>
@@ -173,7 +173,7 @@
               <el-button
                 type="primary"
                 size="small"
-                :disabled="isDetail || !!billData.status"
+                :disabled="isReadonly"
                 @click="addNonSelfSupply"
               >
                 新增明细
@@ -194,8 +194,7 @@
                   @change="row.payDate = toMonthEnd(row.payDate); update(row.payDate)" />
               </template>
               <template #actions="{ row }">
-                <el-button link type="danger" :disabled="isDetail || !!billData.status"
-                  @click="deleteNonSelfSupply(row)">
+                <el-button link type="danger" :disabled="isReadonly" @click="deleteNonSelfSupply(row)">
                   删除
                 </el-button>
               </template>
@@ -211,12 +210,10 @@
             <div class="header-content">
               <span class="header-title">产值明细（甲供材-主材）</span>
               <div>
-                <el-button type="primary" size="small" :disabled="isDetail || !!billData.status"
-                  @click="openMaterialDialog">
+                <el-button type="primary" size="small" :disabled="isReadonly" @click="openMaterialDialog">
                   新增明细
                 </el-button>
-                <el-button type="primary" size="small" :disabled="isDetail || !!billData.status"
-                  @click="clearMaterialTable">
+                <el-button type="primary" size="small" :disabled="isReadonly" @click="clearMaterialTable">
                   清空
                 </el-button>
               </div>
@@ -245,7 +242,7 @@
                 </div>
               </template>
               <template #actions="{ row }">
-                <el-button link type="danger" :disabled="isDetail || !!billData.status" @click="deleteMaterial(row)">
+                <el-button link type="danger" :disabled="isReadonly" @click="deleteMaterial(row)">
                   删除
                 </el-button>
               </template>
@@ -262,12 +259,10 @@
             <div class="header-content">
               <span class="header-title">产值明细（甲供材-零星）</span>
               <div>
-                <el-button type="primary" size="small" :disabled="isDetail || !!billData.status"
-                  @click="openMaterialDialog">
+                <el-button type="primary" size="small" :disabled="isReadonly" @click="openMaterialDialog">
                   新增明细
                 </el-button>
-                <el-button type="primary" size="small" :disabled="isDetail || !!billData.status"
-                  @click="clearMaterialTableMinor">
+                <el-button type="primary" size="small" :disabled="isReadonly" @click="clearMaterialTableMinor">
                   清空
                 </el-button>
               </div>
@@ -312,13 +307,12 @@
                 <!-- <el-button
                   link
                   type="primary"
-                  :disabled="isDetail || !!billData.status"
+                  :disabled="isReadonly"
                   @click="openUploadForRow(row)"
                 >
                   上传附件
                 </el-button> -->
-                <el-button link type="danger" :disabled="isDetail || !!billData.status"
-                  @click="deleteMaterialMinor(row)">
+                <el-button link type="danger" :disabled="isReadonly" @click="deleteMaterialMinor(row)">
                   删除
                 </el-button>
               </template>
@@ -361,8 +355,8 @@
         <FormCard id="card-annex" icon="📋" title="相关附件" v-model:collapsed="collapsedCards.annex">
           <el-form-item label="上传附件">
             <base-upload v-model:file-list="annexFileList" :limit="9" :multiple="false" :showIcon="true" :showTip="true"
-              :maxSize="200" :unrestricted="true" :accept="''" button-text="选择文件" size="default"
-              :disabled="isDetail || !!billData.status" @success="handleFileSuccess" />
+              :maxSize="200" :unrestricted="true" :accept="''" button-text="选择文件" size="default" :disabled="isReadonly"
+              @success="handleFileSuccess" />
           </el-form-item>
         </FormCard>
       </el-form>
@@ -507,10 +501,18 @@ const flowBaseData = ref<any>(null);
 const mode = ref<"add" | "edit" | "detail">(props.mode);
 const prodId = ref<number | undefined>(props.prodId);
 
+// 是否是超管角色
+const isSuperAdmin = computed(() => {
+  return userStore.roleList?.some((role: any) => role.isSuper);
+});
 const isDetail = computed(() => mode.value === "detail");
 const isEdit = computed(() => mode.value === "edit");
 const isAdd = computed(() => mode.value === "add");
-const isReadonly = computed(() => isDetail.value || !!billData.value.status);
+const isReadonly = computed(() => {
+  // 超管保留编辑权限
+  if (isSuperAdmin.value) return false;
+  return isDetail.value || !!billData.value.status
+});
 
 // 产值申报方式派生（payMethod：1=按进度确认/非甲供材，2=甲供材）
 const notMaterial = computed(() => formData.value.payMethod === 1); // 非甲供材
@@ -1635,8 +1637,10 @@ const goBack = () => {
 
 // 保存
 const handleSave = async () => {
-  if (isDetail.value) return;
-  if (!formRef.value) return;
+  if (!isSuperAdmin.value) {
+    if (isDetail.value) return;
+    if (!formRef.value) return;
+  };
   try {
     await formRef.value.validateField(["bizTitle", "projId", "conId"]);
     submitLoading.value = true;

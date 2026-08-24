@@ -1,4 +1,4 @@
-<!-- 招标需求 -->
+<!-- 财务分摊 -->
 <template>
   <div class="finance-allocation-page">
     <!-- 支付明细 -->

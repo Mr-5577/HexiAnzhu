@@ -260,7 +260,7 @@
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="归属月份" prop="belongMonth" required>
                 <el-date-picker v-model="formData.belongMonth" type="month" value-format="YYYY-MM-DD"
-                  placeholder="请选择归属月份" :disabled="isDetail || !!billData.status"
+                  placeholder="请选择归属月份" :disabled="isReadonly"
                   :disabled-date="disabledBelongMonth" />
               </el-form-item>
             </el-col>
@@ -274,7 +274,7 @@
                     value: 'id',
                     label: 'finaTypeName',
                     children: 'children',
-                  }" placeholder="请选择费用类型" style="width: 100%" filterable :disabled="isDetail || !!billData.status" />
+                  }" placeholder="请选择费用类型" style="width: 100%" filterable :disabled="isReadonly" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
@@ -467,7 +467,7 @@
         <FormCard id="card-ded" v-show="!isOffsetByInvoice" icon="⚖️" title="奖罚调整"
           v-model:collapsed="collapsedCards.ded">
           <SummaryBar :items="summaryDedItems" />
-          <template v-if="isDetail || !!billData.status">
+          <template v-if="isReadonly">
             <base-table ref="dedTableRef" :columns="dedDetailColumns" :table-data="dedTable" :row-key="'id'"
               :pagination="false" :show-toolbar="false" :show-action-bar="false" :height="'200px'">
             </base-table>
@@ -504,11 +504,11 @@
               v-if="!isAdd && menuStore.hasExactPermission('fina-alloc:con-pay')">
               财务分摊
             </el-button>
-            <el-button type="primary" size="small" @click="addPayWay" v-if="!(isDetail || !!billData.status)">
+            <el-button type="primary" size="small" @click="addPayWay" v-if="!(isReadonly)">
               新增支付方式
             </el-button>
           </div>
-          <template v-if="isDetail || !!billData.status">
+          <template v-if="isReadonly">
             <base-table ref="payWayTableRef" :columns="payWayDetailColumns" :table-data="payWayTable" :row-key="'id'"
               :pagination="false" :show-toolbar="false" :show-action-bar="false" :height="'200px'">
             </base-table>
@@ -537,7 +537,7 @@
         <FormCard id="card-invoice" icon="🧾" title="发票信息" v-model:collapsed="collapsedCards.invoice">
           <SummaryBar :items="summaryItems" />
 
-          <template v-if="isDetail || !!billData.status">
+          <template v-if="isReadonly">
             <base-table ref="invoiceMTableRef" :columns="invoiceMColumns" :table-data="invoiceMTable" :row-key="'id'"
               :pagination="false" :show-toolbar="false" :show-action-bar="false" :height="'200px'">
               <template #annexName="{ row }">
@@ -638,7 +638,7 @@
   <UploadInvoiceDialog v-model="uploadVisibleDialog" @success="getInvcData" />
   <!-- 发票明细 弹窗 -->
   <invoice-detail-dialog ref="invoiceDetailDialogRef" v-model="dialogVisible" :detailList="detailList"
-    :disabled="isDetail || !!billData.status" @success="handleInvoiceDetailSuccess" />
+    :disabled="isReadonly" @success="handleInvoiceDetailSuccess" />
 
   <!-- 财务分摊  -->
   <FinanceAllocationDialog ref="financeAllocationDialogRef" v-model="financeAllocVisible" :bizType="'CON_PAY'"
@@ -766,7 +766,15 @@ const loadingForm = ref(false); // 表单加载态
 const isDetail = computed(() => props.mode === "detail");
 const isEdit = computed(() => props.mode === "edit");
 const isAdd = computed(() => props.mode === "add");
-const isReadonly = computed(() => isDetail.value || !!billData.value.status);
+const isReadonly = computed(() => {
+  // 超管保留编辑权限
+  if (isSuperAdmin.value) return false;
+  return isDetail.value || !!billData.value.status
+});
+// 是否是超管角色
+const isSuperAdmin = computed(() => {
+  return userStore.roleList?.some((role: any) => role.isSuper);
+});
 
 const conId = ref<number | undefined>(props.conId);
 const paymentId = ref<number | undefined>(props.paymentId);
