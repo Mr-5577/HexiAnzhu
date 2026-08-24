@@ -24,13 +24,13 @@
         <el-col :span="6">
           <div class="summary-item bg-green">
             <div class="label">已分摊金额</div>
-            <div class="value large green">{{ allocatedAmount }}</div>
+            <div class="value large green">{{ formatDecimal(allocatedAmount) }}</div>
           </div>
         </el-col>
         <el-col :span="6">
           <div class="summary-item bg-gray-light">
             <div class="label">待分摊金额</div>
-            <div class="value large gray">{{ pendingAmount }}</div>
+            <div class="value large gray">{{ formatDecimal(pendingAmount) }}</div>
           </div>
         </el-col>
       </el-row>
@@ -66,17 +66,23 @@
 
       <!-- 项目、楼栋基本信息 -->
       <div class="card-info">
-        <div class="info-item">
-          <span class="info-label">项目名称：</span>
-          <span class="info-value">{{ pageParams.projName || "" }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">合同名称：</span>
-          <span class="info-value">{{ pageParams.displayName || "" }}</span>
-        </div>
-        <div class="info-item info-item-tax">
-          <span class="info-label">综合税率(%)：</span>
-          <span class="info-value">{{ compositeTaxRate || 0 }}%</span>
+        <div class="info-row">
+          <div class="info-item">
+            <span class="info-label">项目名称：</span>
+            <span class="info-value">{{ pageParams.projName || "" }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">合同名称：</span>
+            <span class="info-value">{{ pageParams.displayName || "" }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">合同编号：</span>
+            <span class="info-value">{{ pageParams.conNo || "" }}</span>
+          </div>
+          <div class="info-item info-item-tax">
+            <span class="info-label">综合税率(%)：</span>
+            <span class="info-value">{{ compositeTaxRate || 0 }}%</span>
+          </div>
         </div>
         <div class="info-row">
           <div class="info-item half">
@@ -177,6 +183,8 @@ import { supplementContractApi } from "@/api/cost/contract-manage/supplement-con
 import { changeOrderApi } from "@/api/cost/contract-manage/change-order-api.ts";
 import { visaManagementApi } from "@/api/cost/contract-manage/visa-management-api.ts";
 import { outputDeclarationApi } from "@/api/cost/contract-manage/output-declaration-api.ts";
+// ===== 修改：替换 decimal.js 为 bignumber.js =====
+import { toBig, formatDecimal, BigNumber } from "@/utils/big-number.ts";
 
 interface Props {
   projId?: number; // 项目ID
@@ -266,6 +274,7 @@ const pageParams = ref({
   bizKeyId: 0,
   allocAmt: 0,
   allocExclAmt: 0,
+  conNo: "",
 });
 // 分摊信息
 const apportionInfo = ref({
@@ -403,46 +412,48 @@ const handleBuildingChange = (val: any) => {
  * 本次已分摊金额计算（科目金额含税）
  * 把叶子节点的科目金额(含税)累加起来
  */
+// ===== 修改：使用 toBig 替代 toDecimal，BigNumber 替代 Decimal =====
 const allocatedAmount = computed(() => {
-  let total = 0;
+  let total = new BigNumber(0);
   const traverse = (data: any[]) => {
     for (const item of data) {
       if (item.children?.length) {
         traverse(item.children);
       } else {
-        total += Number(item.subjectAmt || 0);
+        total = total.plus(toBig(item.subjectAmt || 0));
       }
     }
   };
   traverse(editableSubjectData.value);
-  return total;
+  // 四舍五入到2位
+  return total.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 });
 /**
  * 本次已分摊金额计算（科目金额不含税）
  * 把叶子节点的科目金额(不含税)累加起来
  */
 const allocExclAmtTotal = computed(() => {
-  let total = 0;
+  let total = new BigNumber(0);
   const traverse = (data: any[]) => {
     for (const item of data) {
       if (item.children?.length) {
         traverse(item.children);
       } else {
-        total += Number(item.subjectAmtExcl || 0);
+        total = total.plus(toBig(item.subjectAmtExcl || 0));
       }
     }
   };
   traverse(editableSubjectData.value);
-  return total;
+  return total.toNumber();
 });
 
 /**
  * 待分摊金额 = 总金额 - 已分摊金额
  */
 const pendingAmount = computed(() => {
-  const total = Number(pageParams.value.allocAmt) || 0;
-  const allocated = allocatedAmount.value;
-  return Math.round((total - allocated) * 100) / 100;
+  const total = toBig(pageParams.value.allocAmt || 0);
+  const allocated = toBig(allocatedAmount.value);
+  return total.minus(allocated).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 });
 
 /**
@@ -579,6 +590,7 @@ const handleViewAlloc = async () => {
 /**
  * 计算单次分摊预警状态
  */
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const getWarnSubAlloc = async (params: any) => {
   if (!pageParams.value.projId) return;
   try {
@@ -589,12 +601,18 @@ const getWarnSubAlloc = async (params: any) => {
       // 为 statusList 添加小计字段
       const processedAllocList = (statusList || []).map((item: any) => ({
         ...item,
-        totalBalanceAmt:
-          (Number(item.balanceAmt) || 0) + (Number(item.balanceExclAmt) || 0),
-        totalAvailAmt:
-          (Number(item.availAmt) || 0) + (Number(item.availExclAmt) || 0),
-        totalAllocAmt:
-          (Number(item.allocAmt) || 0) + (Number(item.allocExclAmt) || 0),
+        totalBalanceAmt: toBig(item.balanceAmt || 0)
+          .plus(toBig(item.balanceExclAmt || 0))
+          .decimalPlaces(2, BigNumber.ROUND_HALF_UP)
+          .toNumber(),
+        totalAvailAmt: toBig(item.availAmt || 0)
+          .plus(toBig(item.availExclAmt || 0))
+          .decimalPlaces(2, BigNumber.ROUND_HALF_UP)
+          .toNumber(),
+        totalAllocAmt: toBig(item.allocAmt || 0)
+          .plus(toBig(item.allocExclAmt || 0))
+          .decimalPlaces(2, BigNumber.ROUND_HALF_UP)
+          .toNumber(),
       }));
 
       // 增量更新，只更新返回的科目
@@ -623,15 +641,14 @@ const getWarnSubAlloc = async (params: any) => {
  * @param apiDataList 接口返回的预警数据列表（只包含部分科目）
  * @returns 更新后的完整数据
  */
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const mergeTreeDetailData = (currentData: any[], apiDataList: any[]) => {
   if (!currentData?.length || !apiDataList?.length) {
     return currentData;
   }
 
-  // 构建 API 数据映射
   const apiMap = new Map(apiDataList.map((item) => [item.subId, item]));
 
-  // 需要更新的字段
   const fields = [
     "allocWarn",
     "balanceAmt",
@@ -652,12 +669,30 @@ const mergeTreeDetailData = (currentData: any[], apiDataList: any[]) => {
   ];
 
   const updateNode = (node: any): void => {
-    // 当前节点：如果有 API 数据则覆盖，否则设置默认值
     const apiItem = apiMap.get(node.subId || node.id);
     if (apiItem) {
       fields.forEach((key) => {
         node[key] = apiItem[key] ?? (key === "allocWarn" ? 2 : 0);
       });
+      // ✅ 使用 BigNumber 计算总计
+      if (apiItem.balanceAmt !== undefined || apiItem.balanceExclAmt !== undefined) {
+        node.totalBalanceAmt = toBig(apiItem.balanceAmt || 0)
+          .plus(toBig(apiItem.balanceExclAmt || 0))
+          .decimalPlaces(2, BigNumber.ROUND_HALF_UP)
+          .toNumber();
+      }
+      if (apiItem.availAmt !== undefined || apiItem.availExclAmt !== undefined) {
+        node.totalAvailAmt = toBig(apiItem.availAmt || 0)
+          .plus(toBig(apiItem.availExclAmt || 0))
+          .decimalPlaces(2, BigNumber.ROUND_HALF_UP)
+          .toNumber();
+      }
+      if (apiItem.allocAmt !== undefined || apiItem.allocExclAmt !== undefined) {
+        node.totalAllocAmt = toBig(apiItem.allocAmt || 0)
+          .plus(toBig(apiItem.allocExclAmt || 0))
+          .decimalPlaces(2, BigNumber.ROUND_HALF_UP)
+          .toNumber();
+      }
     } else {
       fields.forEach((key) => {
         if (node[key] === undefined || node[key] === null) {
@@ -666,7 +701,6 @@ const mergeTreeDetailData = (currentData: any[], apiDataList: any[]) => {
       });
     }
 
-    // 递归处理子节点
     if (node.children?.length) {
       node.children.forEach((child: any) => updateNode(child));
     }
@@ -674,7 +708,7 @@ const mergeTreeDetailData = (currentData: any[], apiDataList: any[]) => {
 
   currentData.forEach((node) => updateNode(node));
   return currentData;
-};
+}
 /**
  * 获取业务归属列表
  */
@@ -764,6 +798,7 @@ const processPopupData = async (cstList: any) => {
  * 弹窗打开初始化
  */
 const initPage = async () => {
+  console.log("分摊弹窗参数11:", props);
   // 解析参数，业务弹窗打开
   pageParams.value = {
     ...pageParams.value,
@@ -773,10 +808,10 @@ const initPage = async () => {
     bizType: props.bizType || "",
     billId: undefined,
     bizKeyId: undefined,
-    allocAmt: props.allocAmt || 0,
-    allocExclAmt: props.allocExclAmt || 0,
+    allocAmt: toBig(props.allocAmt || 0).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber(),
+    allocExclAmt: toBig(props.allocExclAmt || 0).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber(),
   };
-  console.log("分摊弹窗参数:", pageParams.value);
+  console.log("分摊弹窗参数22:", pageParams.value);
   // 获取项目产品类型列表
   await Promise.all([
     getBusiSegList(),
@@ -818,7 +853,8 @@ const getConDetail = async () => {
     pageParams.value.projId = liteRes?.data?.projId || undefined
     pageParams.value.projName = liteRes?.data?.projName || undefined
     pageParams.value.displayName = liteRes?.data?.conName || undefined
-    pageParams.value.allocAmt = liteRes.data?.signAmt || 0;
+    pageParams.value.conNo = liteRes?.data?.conSysNo || undefined
+    pageParams.value.allocAmt = toBig(liteRes.data?.signAmt || 0).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
     pageParams.value.allocExclAmt = 0;
     pageParams.value.bizType = bizType;
     pageParams.value.billId = billId;
@@ -848,6 +884,7 @@ const getConAddDetail = async () => {
       pageParams.value.projName = flowBase?.projName || undefined
       // pageParams.value.displayName = conAdd?.addName || undefined
       pageParams.value.displayName = conMain?.conName || undefined
+      pageParams.value.conNo = conMain?.conSysNo || undefined
       pageParams.value.bizType = bizType;
       pageParams.value.billId = billId;
       pageParams.value.allocAmt = conAdd?.addAmt || 0;
@@ -882,6 +919,7 @@ const getConBgDetail = async () => {
       pageParams.value.projName = flowBase?.projName || undefined
       // pageParams.value.displayName = change.changeName || undefined
       pageParams.value.displayName = conMain?.conName || undefined
+      pageParams.value.conNo = conMain?.conSysNo || undefined
       pageParams.value.bizType = bizType;
       pageParams.value.billId = billId;
       pageParams.value.allocAmt = change.changeAmt || 0;
@@ -916,6 +954,7 @@ const getConQzDetail = async () => {
       pageParams.value.projName = flowBase?.projName || undefined
       // pageParams.value.displayName = bill.bizTitle || undefined
       pageParams.value.displayName = conMain?.conName || undefined
+      pageParams.value.conNo = conMain?.conSysNo || undefined
       pageParams.value.bizType = bizType;
       pageParams.value.billId = billId;
       pageParams.value.allocAmt = visa.visaApplyAmt || 0;
@@ -945,15 +984,17 @@ const getConProdDetail = async () => {
     });
     if (res.code == 200 && res.data) {
       const { flowBase, bill, prodVal, conMain, cstM } = res.data;
-      debugger
       segId.value = flowBase?.segId;
       pageParams.value.projId = flowBase?.projId || undefined
       pageParams.value.projName = flowBase?.projName || undefined
       // pageParams.value.displayName = bill.bizTitle || undefined
       pageParams.value.displayName = conMain?.conName || undefined
+      pageParams.value.conNo = conMain?.conSysNo || undefined
       pageParams.value.bizType = bizType;
       pageParams.value.billId = billId;
-      pageParams.value.allocAmt = prodVal.applyProdVal || 0;
+      pageParams.value.allocAmt = toBig(prodVal.applyProdVal || 0)
+        .decimalPlaces(2, BigNumber.ROUND_HALF_UP)
+        .toNumber();
       pageParams.value.allocExclAmt = 0;
       // 保存签证合同楼栋信息，签证合同取主合同楼栋
       conBuildingOptions.value = conMain?.bldIds?.split(",").map((ite) => Number(ite)) || [];
@@ -1198,23 +1239,20 @@ const generateColumns = (products) => {
 /**
  * 合并树形科目与业态明细数据
  */
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const mergeTreeWithDetailApiData = (treeData, prodList) => {
-  // 1. 获取叶子节点
   const leafSubjects = getLeafSubjects(treeData);
 
-  // 2. 提取唯一业态
   const products: any = Array.from(
     new Map(prodList.map(item => [item.prodId, { prodId: item.prodId, prodName: item.prodName }])).values()
   );
 
-  // 3. 按 subId 分组
   const groupMap = new Map();
   for (const item of prodList) {
     if (!groupMap.has(item.subId)) groupMap.set(item.subId, []);
     groupMap.get(item.subId).push(item);
   }
 
-  // 4. 构建叶子节点数据映射
   const leafDataMap = new Map();
   for (const subject of leafSubjects) {
     const items = groupMap.get(subject.id) || [];
@@ -1228,7 +1266,6 @@ const mergeTreeWithDetailApiData = (treeData, prodList) => {
       level: subject.subLevel || 1,
       isLeaf: true,
       hasChildren: false,
-      // 使用节点自身的值
       busiSegId: subject.busiSegId ?? subject.busiSegId ?? undefined,
       segName: subject.busiSegName ?? subject.segName ?? '',
       allocRule: subject.allocRule ?? '',
@@ -1238,10 +1275,10 @@ const mergeTreeWithDetailApiData = (treeData, prodList) => {
       subjectAmtExcl: 0,
     };
 
-    let totalAmt = 0;
-    let totalExclAmt = 0;
+    // ✅ 使用 BigNumber 累加
+    let totalAmt = new BigNumber(0);
+    let totalExclAmt = new BigNumber(0);
 
-    // 为每个业态填充数据（行转列）
     for (const product of products) {
       const detail = items.find(item => item.prodId === product.prodId);
       const allocAmt = detail?.allocAmt ?? 0;
@@ -1251,16 +1288,15 @@ const mergeTreeWithDetailApiData = (treeData, prodList) => {
       row[`allocExclAmt_${product.prodId}`] = allocExclAmt;
       row[`allocWarn_${product.prodId}`] = detail?.allocWarn ?? 0;
 
-      totalAmt += allocAmt;
-      totalExclAmt += allocExclAmt;
+      totalAmt = totalAmt.plus(toBig(allocAmt));
+      totalExclAmt = totalExclAmt.plus(toBig(allocExclAmt));
     }
 
-    row.subjectAmt = totalAmt;
-    row.subjectAmtExcl = totalExclAmt;
+    row.subjectAmt = totalAmt.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
+    row.subjectAmtExcl = totalExclAmt.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
     leafDataMap.set(subject.id, row);
   }
 
-  // 5. 递归构建树形结构（直接使用节点自身的值）
   const buildTree = (nodes) => {
     return nodes.map(node => {
       const hasChildren = !!node.children?.length;
@@ -1272,7 +1308,6 @@ const mergeTreeWithDetailApiData = (treeData, prodList) => {
         level: node.subLevel || 1,
         hasChildren,
         isLeaf: !hasChildren,
-        // 直接使用节点自身的值，有就显示没有就不显示
         busiSegId: node.busiSegId || undefined,
         segName: node.busiSegName ?? node.segName ?? undefined,
         allocRule: node.allocRule ?? undefined,
@@ -1283,32 +1318,43 @@ const mergeTreeWithDetailApiData = (treeData, prodList) => {
       if (hasChildren) {
         const children = buildTree(node.children);
 
-        // 非叶子节点：使用自身的值，金额为子节点汇总
+        // ✅ 使用 BigNumber 累加子节点金额
+        let totalAmt = new BigNumber(0);
+        let totalExclAmt = new BigNumber(0);
+        children.forEach(child => {
+          totalAmt = totalAmt.plus(toBig(child.subjectAmt || 0));
+          totalExclAmt = totalExclAmt.plus(toBig(child.subjectAmtExcl || 0));
+        });
+
         const nonLeaf = {
           ...base,
           children,
-          subjectAmt: children.reduce((sum, child) => sum + (child.subjectAmt || 0), 0),
-          subjectAmtExcl: children.reduce((sum, child) => sum + (child.subjectAmtExcl || 0), 0),
+          subjectAmt: totalAmt.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber(),
+          subjectAmtExcl: totalExclAmt.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber(),
         };
 
-        // 业态字段为子节点汇总
+        // ✅ 使用 BigNumber 累加业态金额
         for (const product of products) {
           const pid = product.prodId;
-          nonLeaf[`allocAmt_${pid}`] = children.reduce((sum, child) => sum + (child[`allocAmt_${pid}`] || 0), 0);
-          nonLeaf[`allocExclAmt_${pid}`] = children.reduce((sum, child) => sum + (child[`allocExclAmt_${pid}`] || 0), 0);
+          let prodTotal = new BigNumber(0);
+          let prodExclTotal = new BigNumber(0);
+          children.forEach(child => {
+            prodTotal = prodTotal.plus(toBig(child[`allocAmt_${pid}`] || 0));
+            prodExclTotal = prodExclTotal.plus(toBig(child[`allocExclAmt_${pid}`] || 0));
+          });
+          nonLeaf[`allocAmt_${pid}`] = prodTotal.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
+          nonLeaf[`allocExclAmt_${pid}`] = prodExclTotal.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
           nonLeaf[`allocWarn_${pid}`] = 0;
         }
 
         return nonLeaf;
       }
 
-      // 叶子节点：使用合并数据
       const leafData = leafDataMap.get(node.id);
       return {
         ...base,
         ...leafData,
         children: [],
-        // 叶子节点优先使用明细数据中的值，如果没有则使用节点自身的值
         busiSegId: leafData?.busiSegId ?? base.busiSegId ?? undefined,
         segName: leafData?.segName ?? base.segName,
         allocRule: leafData?.allocRule ?? base.allocRule,
@@ -1317,7 +1363,6 @@ const mergeTreeWithDetailApiData = (treeData, prodList) => {
     });
   };
 
-  // 6. 生成动态列配置
   const columns = generateColumns(products);
 
   return {
@@ -1422,6 +1467,7 @@ const deleteNodeFromTree = (treeData: any[], nodeId: number): any[] => {
  * 汇总科目金额（只处理 subjectAmt 和 subjectAmtExcl）
  * 用于编辑科目金额时调用
  */
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const summarizeSubjectAmt = (treeData) => {
   // 深拷贝数据
   const cloneData = JSON.parse(JSON.stringify(treeData));
@@ -1436,16 +1482,16 @@ const summarizeSubjectAmt = (treeData) => {
     node.children = node.children.map((child) => summarize(child));
 
     // 重置并累加子节点的科目金额
-    let totalAmt = 0;
-    let totalExclAmt = 0;
+    let totalAmt = new BigNumber(0);
+    let totalExclAmt = new BigNumber(0);
 
     node.children.forEach((child) => {
-      totalAmt += Number(child.subjectAmt) || 0;
-      totalExclAmt += Number(child.subjectAmtExcl) || 0;
+      totalAmt = totalAmt.plus(toBig(child.subjectAmt || 0));
+      totalExclAmt = totalExclAmt.plus(toBig(child.subjectAmtExcl || 0));
     });
 
-    node.subjectAmt = Math.round(totalAmt * 100) / 100;
-    node.subjectAmtExcl = Math.round(totalExclAmt * 100) / 100;
+    node.subjectAmt = totalAmt.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
+    node.subjectAmtExcl = totalExclAmt.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 
     return node;
   }
@@ -1457,6 +1503,7 @@ const summarizeSubjectAmt = (treeData) => {
  * 完整汇总（业态金额 + 科目金额）
  * 用于编辑业态金额时调用
  */
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const summarizeTree = (treeData, productList) => {
   const productIds = productList.map((item) => item.prodId);
   // 深拷贝数据
@@ -1466,18 +1513,16 @@ const summarizeTree = (treeData, productList) => {
     // 叶子节点
     if (!node.children || node.children.length === 0) {
       // 叶子节点的科目金额 = 各业态金额之和
-      let totalAmt = 0;
-      let totalExclAmt = 0;
+      let totalAmt = new BigNumber(0);
+      let totalExclAmt = new BigNumber(0);
 
       productIds.forEach((id) => {
-        const amt = Number(node[`allocAmt_${id}`]) || 0;
-        const exclAmt = Number(node[`allocExclAmt_${id}`]) || 0;
-        totalAmt += amt;
-        totalExclAmt += exclAmt;
+        totalAmt = totalAmt.plus(toBig(node[`allocAmt_${id}`] || 0));
+        totalExclAmt = totalExclAmt.plus(toBig(node[`allocExclAmt_${id}`] || 0));
       });
 
-      node.subjectAmt = Math.round(totalAmt * 100) / 100;
-      node.subjectAmtExcl = Math.round(totalExclAmt * 100) / 100;
+      node.subjectAmt = totalAmt.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
+      node.subjectAmtExcl = totalExclAmt.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
       return node;
     }
 
@@ -1485,37 +1530,38 @@ const summarizeTree = (treeData, productList) => {
     node.children = node.children.map((child) => summarize(child));
 
     // 重置汇总字段
-    let totalSubjectAmt = 0;
-    let totalSubjectExclAmt = 0;
+    const totals: Record<string, BigNumber> = {};
+    const exclTotals: Record<string, BigNumber> = {};
+    const warnTotals: Record<string, number> = {};
 
     productIds.forEach((id) => {
-      node[`allocAmt_${id}`] = 0;
-      node[`allocExclAmt_${id}`] = 0;
-      node[`allocWarn_${id}`] = 0;
+      totals[id] = new BigNumber(0);
+      exclTotals[id] = new BigNumber(0);
+      warnTotals[id] = 0;
 
       // 累加子节点的业态金额
       node.children.forEach((child) => {
-        node[`allocAmt_${id}`] += Number(child[`allocAmt_${id}`]) || 0;
-        node[`allocExclAmt_${id}`] += Number(child[`allocExclAmt_${id}`]) || 0;
-        node[`allocWarn_${id}`] = Math.max(
-          node[`allocWarn_${id}`] || 0,
-          Number(child[`allocWarn_${id}`]) || 0
-        );
+        totals[id] = totals[id].plus(toBig(child[`allocAmt_${id}`] || 0));
+        exclTotals[id] = exclTotals[id].plus(toBig(child[`allocExclAmt_${id}`] || 0));
+        warnTotals[id] = Math.max(warnTotals[id] || 0, Number(child[`allocWarn_${id}`]) || 0);
       });
 
-      // 保留两位小数
-      node[`allocAmt_${id}`] = Math.round(node[`allocAmt_${id}`] * 100) / 100;
-      node[`allocExclAmt_${id}`] = Math.round(node[`allocExclAmt_${id}`] * 100) / 100;
+      node[`allocAmt_${id}`] = totals[id].decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
+      node[`allocExclAmt_${id}`] = exclTotals[id].decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
+      node[`allocWarn_${id}`] = warnTotals[id];
     });
 
     // 累加子节点的科目金额
+    let totalSubjectAmt = new BigNumber(0);
+    let totalSubjectExclAmt = new BigNumber(0);
+
     node.children.forEach((child) => {
-      totalSubjectAmt += Number(child.subjectAmt) || 0;
-      totalSubjectExclAmt += Number(child.subjectAmtExcl) || 0;
+      totalSubjectAmt = totalSubjectAmt.plus(toBig(child.subjectAmt || 0));
+      totalSubjectExclAmt = totalSubjectExclAmt.plus(toBig(child.subjectAmtExcl || 0));
     });
 
-    node.subjectAmt = Math.round(totalSubjectAmt * 100) / 100;
-    node.subjectAmtExcl = Math.round(totalSubjectExclAmt * 100) / 100;
+    node.subjectAmt = totalSubjectAmt.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
+    node.subjectAmtExcl = totalSubjectExclAmt.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 
     return node;
   }
@@ -1528,6 +1574,7 @@ const summarizeTree = (treeData, productList) => {
  */
 let saveTimer = null;
 
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const handleSave = async (data: any) => {
   const { row, column, newValue, oldValue, rowIndex } = data;
 
@@ -1541,15 +1588,14 @@ const handleSave = async (data: any) => {
   // 当编辑 subjectAmt（含税金额）时，通过税率计算不含税金额
   if (column === "subjectAmt") {
     if (compositeTaxRate && compositeTaxRate.value > 0) {
-      const taxRate = Number(compositeTaxRate.value) / 100; // 将百分比转为小数
-      const amtIncl = Number(newValue) || 0;
+      const taxRate = toBig(compositeTaxRate.value).dividedBy(100);
+      const amtIncl = toBig(newValue || 0);
       // 不含税金额 = 含税金额 / (1 + 税率)
-      const amtExcl = amtIncl / (1 + taxRate);
-      // 保留两位小数
-      row.subjectAmtExcl = Number(amtExcl.toFixed(2));
+      const amtExcl = amtIncl.dividedBy(new BigNumber(1).plus(taxRate));
+      row.subjectAmtExcl = amtExcl.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
     } else {
       // 没有税率直接等于含税金额
-      row.subjectAmtExcl = row.subjectAmt
+      row.subjectAmtExcl = row.subjectAmt;
     }
   }
 
@@ -1584,7 +1630,8 @@ const autoAllocation = async () => {
     const paramsObj: any = buildSubmitParams(editableSubjectData.value);
     console.log("自动分摊接口参数", paramsObj)
     // 过滤掉科目金额不含税为0的数据
-    const filterData = paramsObj.subList?.filter((item) => item.allocAmt > 0);
+    // ===== 修改：使用 toBig 替代 toDecimal =====
+    const filterData = paramsObj.subList?.filter((item) => toBig(item.allocAmt).isGreaterThan(0));
     // 主合同取bizId,子合同取currSubConBizId,因为子合同从OA进入这个页面传递的bizId是合同ID
     // const currentBizId = bizType === 'CON_MAIN' ? bizId : currSubConBizId.value
     const params = {
@@ -1688,26 +1735,31 @@ const buildSubmitParams = (treeData: any[]) => {
   };
 };
 // 确认时校验
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const validateTable = () => {
   if (!editableSubjectData.value?.length) {
     ElMessage.warning("没有可分摊的数据，请先选择科目并填写分摊金额");
     return false;
   }
   const leafSubjects = getLeafSubjects(editableSubjectData.value);
+
   // 判断叶子节点每一项的subjectAmt和subjectAmtExcl是否都为0
+  // ===== 修改：使用 isZero() 替代 equals(0) =====
   const isAllZero = leafSubjects.some(
-    (item: any) => item.subjectAmt === 0 || item.subjectAmtExcl === 0,
+    (item: any) => toBig(item.subjectAmt || 0).isZero() && toBig(item.subjectAmtExcl || 0).isZero(),
   );
   if (isAllZero) {
     ElMessage.error("请输入科目金额");
     return false;
   }
+
   // ====== 校验：不含税金额 ≤ 含税金额 ======
+  // ===== 修改：使用 isGreaterThan() 替代 greaterThan() =====
   const invalidTaxItems: string[] = [];
   leafSubjects.forEach((item: any) => {
-    const subjectAmt = Number(item.subjectAmt) || 0;
-    const subjectAmtExcl = Number(item.subjectAmtExcl) || 0;
-    if (subjectAmtExcl > subjectAmt) {
+    const subjectAmt = toBig(item.subjectAmt || 0);
+    const subjectAmtExcl = toBig(item.subjectAmtExcl || 0);
+    if (subjectAmtExcl.isGreaterThan(subjectAmt)) {
       invalidTaxItems.push(item.subName);
     }
   });
@@ -1724,11 +1776,16 @@ const validateTable = () => {
     ElMessage.error("各业态金额累加需要等于科目金额");
     return false;
   }
-  // 校验成本金额和分摊金额
-  if (allocatedAmount.value != pageParams.value.allocAmt) {
-    ElMessage.error("分摊金额必须等于成本金额");
+
+  // 使用 BigNumber 比较
+  // ===== 修改：使用 isEqualTo() 替代 equals() =====
+  const allocated = toBig(allocatedAmount.value);
+  const totalAmount = toBig(pageParams.value.allocAmt || 0);
+  if (!allocated.isEqualTo(totalAmount)) {
+    ElMessage.error(`分摊金额 (${allocated.decimalPlaces(2).toString()}) 必须等于成本金额 (${totalAmount.decimalPlaces(2).toString()})`);
     return false;
   }
+
   return true;
 };
 /**
@@ -1736,57 +1793,57 @@ const validateTable = () => {
  * @param leafNodes - 叶子节点数组
  * @returns 校验结果
  */
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const validateLeafNodesStrict = (leafNodes: any[]) => {
   const errors: any[] = [];
 
   leafNodes.forEach((node) => {
     // 1. 计算所有 allocAmt_* 的累计值（含税）
-    let totalAllocAmt = 0;
+    let totalAllocAmt = new BigNumber(0);
     // 2. 计算所有 allocExclAmt_* 的累计值（不含税）
-    let totalAllocExclAmt = 0;
+    let totalAllocExclAmt = new BigNumber(0);
 
     Object.keys(node).forEach((key) => {
       if (key.startsWith("allocAmt_")) {
-        totalAllocAmt += Number(node[key]) || 0;
+        totalAllocAmt = totalAllocAmt.plus(toBig(node[key] || 0));
       }
       if (key.startsWith("allocExclAmt_")) {
-        totalAllocExclAmt += Number(node[key]) || 0;
+        totalAllocExclAmt = totalAllocExclAmt.plus(toBig(node[key] || 0));
       }
     });
 
-    // 修复浮点数精度（保留两位小数）
-    totalAllocAmt = Number(totalAllocAmt.toFixed(2));
-    totalAllocExclAmt = Number(totalAllocExclAmt.toFixed(2));
+    // 保留两位小数
+    totalAllocAmt = totalAllocAmt.decimalPlaces(2, BigNumber.ROUND_HALF_UP);
+    totalAllocExclAmt = totalAllocExclAmt.decimalPlaces(2, BigNumber.ROUND_HALF_UP);
 
     // 3. 获取科目金额
-    const subjectAmt = Number((Number(node.subjectAmt) || 0).toFixed(2));
-    const subjectAmtExcl = Number(
-      (Number(node.subjectAmtExcl) || 0).toFixed(2),
-    );
+    const subjectAmt = toBig(node.subjectAmt || 0).decimalPlaces(2, BigNumber.ROUND_HALF_UP);
+    const subjectAmtExcl = toBig(node.subjectAmtExcl || 0).decimalPlaces(2, BigNumber.ROUND_HALF_UP);
 
     // 4. 校验含税金额是否相等
-    if (totalAllocAmt !== subjectAmt) {
+    // ===== 修改：使用 isEqualTo() 替代 equals() =====
+    if (!totalAllocAmt.isEqualTo(subjectAmt)) {
       errors.push({
         nodeId: node.id,
         nodeName: node.subName,
         field: "subjectAmt",
-        subjectAmt: subjectAmt,
-        totalAllocAmt: totalAllocAmt,
-        diff: Number((totalAllocAmt - subjectAmt).toFixed(2)),
-        message: `科目金额(含税) ${subjectAmt} ≠ 业态合计(含税) ${totalAllocAmt}，差额 ${(totalAllocAmt - subjectAmt).toFixed(2)}`,
+        subjectAmt: subjectAmt.toNumber(),
+        totalAllocAmt: totalAllocAmt.toNumber(),
+        diff: totalAllocAmt.minus(subjectAmt).toNumber(),
+        message: `科目金额(含税) ${subjectAmt.toFixed(2)} ≠ 业态合计(含税) ${totalAllocAmt.toFixed(2)}，差额 ${totalAllocAmt.minus(subjectAmt).toFixed(2)}`,
       });
     }
 
     // 5. 校验不含税金额是否相等
-    if (totalAllocExclAmt !== subjectAmtExcl) {
+    if (!totalAllocExclAmt.isEqualTo(subjectAmtExcl)) {
       errors.push({
         nodeId: node.id,
         nodeName: node.subName,
         field: "subjectAmtExcl",
-        subjectAmtExcl: subjectAmtExcl,
-        totalAllocExclAmt: totalAllocExclAmt,
-        diff: Number((totalAllocExclAmt - subjectAmtExcl).toFixed(2)),
-        message: `科目金额(不含税) ${subjectAmtExcl} ≠ 业态合计(不含税) ${totalAllocExclAmt}，差额 ${(totalAllocExclAmt - subjectAmtExcl).toFixed(2)}`,
+        subjectAmtExcl: subjectAmtExcl.toNumber(),
+        totalAllocExclAmt: totalAllocExclAmt.toNumber(),
+        diff: totalAllocExclAmt.minus(subjectAmtExcl).toNumber(),
+        message: `科目金额(不含税) ${subjectAmtExcl.toFixed(2)} ≠ 业态合计(不含税) ${totalAllocExclAmt.toFixed(2)}，差额 ${totalAllocExclAmt.minus(subjectAmtExcl).toFixed(2)}`,
       });
     }
   });
@@ -1839,6 +1896,7 @@ const convertTreeDataToRows = (treeData: any[], products: any[]): any[] => {
   return rows;
 };
 // 后期确认参数
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const getSubmitData = async () => {
   const leafSubjects = getLeafSubjects(editableSubjectData.value);
   const subList = leafSubjects.map((item) => {
@@ -1856,18 +1914,21 @@ const getSubmitData = async () => {
   if (res.code == 200) {
     const { totalAllocWarn, statusList = [] } = res.data;
     let allocStatus = 0; // 分摊状态(0:未分摊,1:已分摊,2:部分分摊)
-    // 已分摊金额为0，未分摊0
-    if (allocatedAmount.value == 0) {
+
+    const allocated = toBig(allocatedAmount.value);
+    const pending = toBig(pendingAmount.value);
+
+    // ✅ 使用 BigNumber 比较
+    // ===== 修改：使用 isZero() 替代 equals(0)，isGreaterThan() 替代 greaterThan() =====
+    if (allocated.isZero()) {
       allocStatus = 0;
-    } else if (pendingAmount.value > 0) {
-      // 待分摊金额大于0，部分分摊2
+    } else if (pending.isGreaterThan(0)) {
       allocStatus = 2;
     } else {
-      // 成本金额=已分摊金额，已分摊1
       allocStatus = 1;
     }
-    const currProdList = getBusinessType(); // 获取当前业态列表
-    // console.log("statusList", editableSubjectData.value, currProdList);
+
+    const currProdList = getBusinessType();
     const detailList = convertTreeDataToRows(
       editableSubjectData.value,
       currProdList,
@@ -1880,11 +1941,11 @@ const getSubmitData = async () => {
       };
     });
     return {
-      allocAmt: allocatedAmount.value, // 分摊金额(含税)
-      allocExclAmt: allocExclAmtTotal.value, // 分摊金额(不含税)
-      allocStatus: allocStatus, // 分摊状态(0:未分摊,1:已分摊,2:部分分摊)
-      allocWarn: totalAllocWarn, // 分摊预警
-      allocDs: newData, // 分摊明细列表
+      allocAmt: allocatedAmount.value,
+      allocExclAmt: allocExclAmtTotal.value,
+      allocStatus: allocStatus,
+      allocWarn: totalAllocWarn,
+      allocDs: newData,
     };
   }
 };
@@ -2088,10 +2149,8 @@ defineExpose({
   padding: 0.5rem 1rem;
   border: 1px solid #e8edf4;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: nowrap;
-  min-width: 0;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .info-row {
@@ -2103,24 +2162,18 @@ defineExpose({
   min-width: 0;
 }
 
+/* 上面一行：项目名称、合同名称、合同编号、综合税率 */
+.info-row:first-child .info-item {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+
 .info-item {
   display: flex;
   align-items: center;
   min-width: 0;
   gap: 0.3rem;
-}
-
-/* 固定宽度的字段：项目名称、事项名称、业态 */
-.info-item:not(:nth-child(4)) {
-  /* flex: 0 1 20%; */
-  min-width: 260px;
-}
-
-/* 楼栋字段自适应剩余空间 */
-.info-item:nth-child(3) {
-  flex: 1 1 auto;
-  min-width: 120px;
-  max-width: 100%;
 }
 
 .info-item-tax {
@@ -2144,6 +2197,9 @@ defineExpose({
   font-size: 0.88rem;
   min-width: 0;
   flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .ellipsis {
@@ -2157,10 +2213,12 @@ defineExpose({
   min-width: 80px;
   flex: 1;
 }
+
 .level-select {
   display: flex;
   align-items: center;
   margin-right: 20px;
+
   .level-label {
     flex-shrink: 0;
     font-size: 14px;

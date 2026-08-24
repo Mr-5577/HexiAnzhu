@@ -82,7 +82,7 @@ export const payRegisterApi = {
     projId?: number;
     reqDateStart?: string;
     reqDateEnd?: string;
-    wfStatus?: number;
+    wfStatus?: number[];
     isLocked?: boolean;
     payStatus?: string;
   }) => {

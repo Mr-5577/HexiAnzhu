@@ -157,7 +157,7 @@ import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import {  buildSubjectTree, buildTree, convertToTree } from "@/utils/tree";
 import { allocRuleEnum } from "@/constants/master-data/enums";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
-import { toDecimal, formatDecimal, decimalAddNum, decimalSumNum, roundToTwo, formatThousandWithPlaces } from '@/utils/decimal';
+import { bigSumNum, roundToTwo, formatThousandWithPlaces } from "@/utils/big-number.ts";
 
 defineOptions({ name: "cost-detail-list" });
 
@@ -495,7 +495,7 @@ const totalCostTax = computed(() => {
       }
     });
   });
-  return formatThousandWithPlaces(decimalSumNum(values));
+  return formatThousandWithPlaces(bigSumNum(values));
 });
 
 const totalCostNoTax = computed(() => {
@@ -510,7 +510,7 @@ const totalCostNoTax = computed(() => {
       }
     });
   });
-  return formatThousandWithPlaces(decimalSumNum(values));
+  return formatThousandWithPlaces(bigSumNum(values));
 });
 
 // initialize expandedKeys to top-level nodes when tableData first loads
@@ -728,7 +728,7 @@ const calculateNodeTotal = (node: any): any => {
     }
   }
 
-  // 使用 decimal.js 四舍五入 保留两位小数
+  // 使用 roundToTwo 四舍五入保留两位小数
   const roundedProductTotals = {};
   productOptions.value.forEach((product) => {
     roundedProductTotals[`costAmt_${product.id}`] =
@@ -740,8 +740,8 @@ const calculateNodeTotal = (node: any): any => {
   return {
     ...node,
     ...roundedProductTotals, // 【关键】各业态汇总值也写入节点
-    totalCostAmt: Math.round(totalCostAmt * 100) / 100,
-    totalCostExclAmt: Math.round(totalCostExclAmt * 100) / 100,
+    totalCostAmt: roundToTwo(totalCostAmt),
+    totalCostExclAmt: roundToTwo(totalCostExclAmt),
   };
 };
 
@@ -1309,7 +1309,7 @@ const fillDetailDataToTable = (detailData: any[]) => {
           
           if (detail) {
             hasData = true;
-            // 金额处理：确保是数字
+            // 金额处理：确保是数字，使用 roundToTwo
             newNode[`costAmt_${prod.id}`] = roundToTwo(detail.costAmt);
             newNode[`costExclAmt_${prod.id}`] = roundToTwo(detail.costExclAmt);
             newNode[`detailId_${prod.id}`] = detail.id;

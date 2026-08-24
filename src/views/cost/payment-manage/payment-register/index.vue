@@ -3,7 +3,7 @@
   <div class="payment-register-wrapper">
     <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="105px">
       <el-form-item label="标题" prop="wfTitle">
-        <el-input v-model="queryParams.wfTitle" placeholder="请输入标题" clearable style="width: 200px" />
+        <el-input v-model="queryParams.wfTitle" placeholder="请输入标题" clearable style="width: 180px" />
       </el-form-item>
       <el-form-item label="项目" prop="projId">
         <el-cascader v-model="queryParams.projId" :options="projectOptions" :show-all-levels="false" :props="{
@@ -13,49 +13,55 @@
           value: 'orgId',
           label: 'orgName',
           children: 'children',
-        }" placeholder="请选择项目" style="width: 200px" clearable filterable />
+        }" placeholder="请选择项目" style="width: 180px" clearable filterable />
       </el-form-item>
       <el-form-item label="业务板块" prop="segId">
-        <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 200px" clearable>
+        <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 180px" clearable>
           <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
         </el-select>
       </el-form-item>
       <el-form-item label="合同/立项单号" prop="itemNo">
-        <el-input v-model="queryParams.itemNo" placeholder="请输入合同/立项单号" clearable style="width: 200px" />
+        <el-input v-model="queryParams.itemNo" placeholder="请输入合同/立项单号" clearable style="width: 180px" />
       </el-form-item>
       <el-form-item label="合同/立项名称" prop="itemName">
-        <el-input v-model="queryParams.itemName" placeholder="请输入合同/立项名称" clearable style="width: 200px" />
+        <el-input v-model="queryParams.itemName" placeholder="请输入合同/立项名称" clearable style="width: 180px" />
       </el-form-item>
       <el-form-item label="供应商" prop="supName">
-        <el-input v-model="queryParams.supName" placeholder="请输入供应商名称" clearable style="width: 200px" />
+        <el-input v-model="queryParams.supName" placeholder="请输入供应商名称" clearable style="width: 180px" />
       </el-form-item>
       <el-form-item label="付款单号" prop="reqNo">
-        <el-input v-model="queryParams.reqNo" placeholder="请输入付款单号" clearable style="width: 200px" />
+        <el-input v-model="queryParams.reqNo" placeholder="请输入付款单号" clearable style="width: 180px" />
       </el-form-item>
       <el-form-item label="费用归属期间" prop="belongMonth">
         <el-date-picker v-model="queryParams.belongMonth" type="month" value-format="YYYY-MM" placeholder="费用归属期间"
-          style="width: 200px" />
+          style="width: 180px" />
       </el-form-item>
-      <el-form-item label="申请日期" prop="applyDate">
-        <el-date-picker v-model="queryParams.applyDate" type="daterange" range-separator="至" value-format="YYYY-MM-DD"
-          start-placeholder="开始日期" end-placeholder="结束日期" style="width: 220px" />
-      </el-form-item>
+
       <el-form-item label="入账状态" prop="isLocked">
-        <el-select v-model="queryParams.isLocked" placeholder="请选择" style="width: 200px" clearable>
+        <el-select v-model="queryParams.isLocked" placeholder="请选择" style="width: 180px" clearable>
           <el-option label="已入账" :value="true" />
           <el-option label="未入账" :value="false" />
         </el-select>
       </el-form-item>
       <el-form-item label="流程状态" prop="wfStatus">
-        <el-select v-model="queryParams.wfStatus" placeholder="请选择" style="width: 200px" clearable>
-          <el-option v-for="item in costBillStatusEnum" :key="item.value" :label="item.label" :value="item.value" />
+        <el-select v-model="queryParams.wfStatus" placeholder="请选择" style="width: 180px" multiple collapse-tags
+          clearable>
+          <el-option v-for="item in processStatus" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </el-form-item>
       <el-form-item label="是否可支付" prop="isPayable">
-        <el-select v-model="queryParams.isPayable" placeholder="请选择" style="width: 200px">
+        <el-select v-model="queryParams.isPayable" placeholder="请选择" style="width: 180px">
           <el-option label="是" :value="true" />
           <el-option label="否" :value="false" />
         </el-select>
+      </el-form-item>
+      <el-form-item label="申请日期" prop="applyDate">
+        <el-date-picker v-model="queryParams.applyDate" type="daterange" range-separator="至" value-format="YYYY-MM-DD"
+          start-placeholder="开始日期" end-placeholder="结束日期" style="width: 220px" />
+      </el-form-item>
+      <el-form-item label="支付日期" prop="payDate">
+        <el-date-picker v-model="queryParams.payDate" type="daterange" range-separator="至" value-format="YYYY-MM-DD"
+          start-placeholder="开始日期" end-placeholder="结束日期" style="width: 220px" />
       </el-form-item>
 
       <el-form-item>
@@ -139,9 +145,9 @@ import { payRegisterApi } from "@/api/cost/payment-manage/payment-register-api.t
 import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
 import { costBillStatusEnum } from "@/constants/cost/enums.ts";
 import { exportExcel } from '@/utils/export-excel.ts';
-import { formatThousandWithPlaces } from "@/utils/decimal.ts";
 import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api.ts";
 import { useMenuStore } from "@/stores/menu-store";
+import { formatThousandWithPlaces } from "@/utils/big-number.ts";
 
 defineOptions({ name: "payment-register" });
 
@@ -163,7 +169,8 @@ const queryParams = ref({
   reqNo: undefined,
   belongMonth: undefined,
   applyDate: [],
-  wfStatus: 40, // 0=草稿, 10=审批中, 40=已审批, 80=作废, 99=其他
+  payDate: [],
+  wfStatus: [], // 0=草稿, 10=审批中, 40=已审批, 80=作废, 99=其他
   payStatus: "未支付", // 未支付  部分支付  全部支付
   isLocked: undefined,
   wfTitle: undefined,
@@ -242,6 +249,11 @@ const disabledEntry = (row) => {
   // 启用
   return false
 }
+// 只查询审批中、已审批
+const processStatus = computed(() => {
+  const filterData = costBillStatusEnum.filter((item) => item.value == 10 || item.value == 40);
+  return filterData;
+})
 // 手动分页
 const paginatedData = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value;
@@ -252,11 +264,13 @@ const paginatedData = computed(() => {
 const getDataList = async () => {
   try {
     tableLoading.value = true;
-    const { applyDate, ...rest } = queryParams.value;
+    const { applyDate, payDate, ...rest } = queryParams.value;
     const params = {
       ...rest,
       reqDateStart: queryParams.value.applyDate?.[0],
       reqDateEnd: queryParams.value.applyDate?.[1],
+      payDateStart: queryParams.value.payDate?.[0],
+      payDateEnd: queryParams.value.payDate?.[1],
     };
     tableData.value = [];
     const mainRes = await payRegisterApi.getPayLedgerMain(params);
@@ -294,7 +308,7 @@ const handleReset = () => {
   Object.keys(queryParams.value).forEach((key) => {
     queryParams.value[key] = undefined;
   });
-  queryParams.value.wfStatus = 40; // 0=草稿, 10=审批中, 40=已审批, 80=作废, 99=其他
+  queryParams.value.wfStatus = [40]; // 0=草稿, 10=审批中, 40=已审批, 80=作废, 99=其他
   // 默认查询未支付
   queryParams.value.payStatus = "未支付";
   queryParams.value.isPayable = true;

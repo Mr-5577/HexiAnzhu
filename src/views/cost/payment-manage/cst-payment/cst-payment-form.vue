@@ -169,7 +169,7 @@
             </editable-table>
           </template>
           <div class="deduction-summary">
-            实际请款：<span>{{ actualReqAmt.toFixed(2) }}</span>
+            实际请款：<span>{{ formatDecimal(actualReqAmt) }}</span>
           </div>
         </div>
 
@@ -202,9 +202,9 @@
             </editable-table>
           </template>
           <div class="pay-summary">
-            付款合计：<span>{{ totalPayAmt.toFixed(2) }}</span>
-            <span v-if="Math.abs(totalPayAmt - actualReqAmt) > 0.01" class="pay-error">
-              （必须等于实际请款金额 {{ actualReqAmt.toFixed(2) }}）
+            付款合计：<span>{{ formatDecimal(totalPayAmt) }}</span>
+            <span v-if="!toBig(totalPayAmt).isEqualTo(toBig(actualReqAmt))" class="pay-error">
+              （必须等于实际请款金额 {{ formatDecimal(actualReqAmt) }}）
             </span>
             <span v-else class="pay-success">（等于实际请款金额）</span>
           </div>
@@ -323,14 +323,12 @@ import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user-store";
 import { useTagsStore } from "@/stores/tags-store";
 import { invoiceStatusEnum } from "@/constants/contract-manage/enums";
-import { costCategoryApi } from "@/api/cost/master-data/cost-category-api";
 import BaseUpload from "@/components/base/base-upload.vue";
 import InvoiceDetailDialog from "@/components/business/invoice-detail-dialog.vue";
 import { commonApi } from "@/api/cost/common-api";
 import { NconBillInvoiceM } from "@/types/cost/non-contract-manage/cst-payment-type.ts";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api.ts";
 import { cstPaymentApi } from "@/api/cost/non-contract-manage/cst-payment-api.ts";
-import CostAllocationDetailDialog from "@/views/cost/cost-allocation/cost-allocation-detail-dialog.vue";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
 import { useDict } from "@/composables/use-dict.ts";
 import { dictMapping } from "@/utils/dict-mapping.ts";
@@ -346,6 +344,8 @@ import BillInfo from "@/components/business/bill-components/bill-info.vue";
 import CostAllocationCard from "@/views/cost/cost-allocation/ncon-cost-alloc/ncon-cost-alloc-card.vue";
 import FinanceAllocationDialog from "@/views/cost/finance-allocation/finance-allocation-dialog.vue";
 import { useMenuStore } from "@/stores/menu-store";
+// ===== 修改：替换 decimal.js 为 bignumber.js =====
+import { toBig, formatDecimal, BigNumber } from "@/utils/big-number.ts";
 
 defineOptions({ name: "cst-payment-form" });
 
@@ -515,10 +515,6 @@ const changeProject = async (value: number) => {
       formData.value.compName = compName || "";
       formData.value.segId = segId || "";
       formData.value.segName = segName || "";
-      // formData.value.finaTypeId = undefined;
-      // feeTypeOptions.value = [];
-      // feeTypeFlatOptions.value = [];
-      // getpayTypeOptions(segId);
     }
   } else {
     // 如果清空了项目选择，也清空相关字段
@@ -526,9 +522,6 @@ const changeProject = async (value: number) => {
     formData.value.compName = "";
     formData.value.segId = "";
     formData.value.segName = "";
-    // formData.value.finaTypeId = undefined;
-    // feeTypeOptions.value = [];
-    // feeTypeFlatOptions.value = [];
   }
 };
 // 获取费用类型
@@ -1310,12 +1303,15 @@ const updatePayWayRow = (rowIndex: number, data: any) => {
   payWayTable.value = newData;
 };
 
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const handlePayWaySave = async (data) => {
   const { row, column, newValue, oldValue, rowIndex } = data;
-  // 修改“其中抵房金额”不能大于付款金额
+  // 修改"其中抵房金额"不能大于付款金额
   if (column === "dedRoomAmt") {
     // 如果新值大于付款金额，提示错误并重置为0
-    if (newValue > row.payAmt) {
+    const dedRoomAmt = toBig(newValue || 0);
+    const payAmt = toBig(row.payAmt || 0);
+    if (dedRoomAmt.isGreaterThan(payAmt)) {
       ElMessage.error("其中抵房金额不能大于付款金额");
       updatePayWayRow(rowIndex, { dedRoomAmt: 0 });
       return;
@@ -1445,12 +1441,13 @@ const backfillData = async (data) => {
   }
 };
 
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const buildSaveParams = () => {
   let bill = {
     ...billData.value,
     id: billData.value.id || undefined,
     bizTitle: formData.value.bizTitle,
-    bizItemCode: "NCON_CST", // 业务类型编码, NCON_PROC-非合同立项；NCON_CST-非合同建安支付； NCON_FEE-非合同费用支付
+    bizItemCode: "NCON_CST",
     segId: formData.value.segId,
     segName: formData.value.segName,
     segNo: formData.value.segNo,
@@ -1468,12 +1465,12 @@ const buildSaveParams = () => {
     belongMonth: formData.value.belongMonth,
     finaTypeId: formData.value.finaTypeId,
     reqType: formData.value.reqType,
-    reqAmt: formData.value.reqAmt,
-    factReqAmt: formData.value.factReqAmt,
+    reqAmt: toBig(formData.value.reqAmt || 0).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber(),
+    factReqAmt: toBig(formData.value.factReqAmt || 0).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber(),
     reqDesc: formData.value.reqDesc,
-    invRecAmt: formData.value.invRecAmt,
-    invRcvdAmt: formData.value.invRcvdAmt,
-    invOweAmt: formData.value.invOweAmt,
+    invRecAmt: toBig(formData.value.invRecAmt || 0).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber(),
+    invRcvdAmt: toBig(formData.value.invRcvdAmt || 0).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber(),
+    invOweAmt: toBig(formData.value.invOweAmt || 0).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber(),
     isLastRec: formData.value.isLastRec,
     processId: cstProcessData.value.id,
     processAmt: cstProcessData.value.processAmt,
@@ -1511,7 +1508,6 @@ const buildSaveParams = () => {
         invType: item.invType || "",
         annexId: item.annexId,
         invoiceDs: item.invoiceDs || [],
-        // ✅ 补充查验相关字段
         isValid: item.isValid ?? false,
         validateMsg: item.validateMsg || "",
         ocrRes: item.ocrRes || "",
@@ -1572,6 +1568,7 @@ const goBack = () => {
   router.go(-1);
 };
 
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const validateData = () => {
   // 如果是来票冲账，跳过款项调整和支付方式的校验，但是发票登记必填一条数据
   if (formData.value.reqType === 1) {
@@ -1601,11 +1598,11 @@ const validateData = () => {
   }
 
   // 校验支付方式金额合计必须等于实际请款金额
-  const totalPay = totalPayAmt.value;
-  const actualAmt = actualReqAmt.value;
-  if (Math.abs(totalPay - actualAmt) > 0.01) {
+  const totalPay = toBig(totalPayAmt.value);
+  const actualAmt = toBig(actualReqAmt.value);
+  if (!totalPay.isEqualTo(actualAmt)) {
     ElMessage.error(
-      `支付方式付款金额合计(${totalPay.toFixed(2)})必须等于实际请款金额(${actualAmt.toFixed(2)})`,
+      `支付方式付款金额合计(${totalPay.decimalPlaces(2).toString()})必须等于实际请款金额(${actualAmt.decimalPlaces(2).toString()})`,
     );
     return false;
   }
@@ -1639,12 +1636,12 @@ const validateData = () => {
   }
 
   // ========== 校验：本次请款金额 <= 剩余金额 ==========
-  const reqAmt = formData.value.reqAmt || 0;
-  const owedAmt = cstProcessData.value.sumOwedAmt || 0;
+  const reqAmt = toBig(formData.value.reqAmt || 0);
+  const owedAmt = toBig(cstProcessData.value.sumOwedAmt || 0);
 
   // 只有当选择了关联立项且剩余金额存在时才校验
-  if (cstProcessData.value.id && owedAmt > 0) {
-    if (reqAmt > owedAmt) {
+  if (cstProcessData.value.id && owedAmt.isGreaterThan(0)) {
+    if (reqAmt.isGreaterThan(owedAmt)) {
       ElMessage.error(`本次请款金额不能大于剩余金额，请调整请款金额！`);
       return false;
     }
@@ -1824,20 +1821,24 @@ const initDictData = async () => {
   dedTypeOptions.value = getDictList(dictMapping.dedType);
 };
 
+// ===== 修改：使用 toBig 替代 toDecimal =====
 // 1. 实际请款金额 = 本次请款金额 + 扣款金额汇总
 const actualReqAmt = computed(() => {
-  const reqAmt = formData.value.reqAmt || 0;
-  const totalDedAmt = dedTable.value.reduce((sum, item) => {
-    return sum + (Number(item.dedAmt) || 0);
-  }, 0);
-  return totalDedAmt + reqAmt;
+  const reqAmt = toBig(formData.value.reqAmt || 0);
+  let totalDedAmt = new BigNumber(0);
+  dedTable.value.forEach((item) => {
+    totalDedAmt = totalDedAmt.plus(toBig(item.dedAmt || 0));
+  });
+  return reqAmt.plus(totalDedAmt).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 });
 
 // 2. 已收发票金额 = 发票列表发票总金额汇总
 const receivedInvoiceAmt = computed(() => {
-  return invoiceMTable.value.reduce((sum, item) => {
-    return sum + (Number(item.totalAmt) || 0);
-  }, 0);
+  let total = new BigNumber(0);
+  invoiceMTable.value.forEach((item) => {
+    total = total.plus(toBig(item.totalAmt || 0));
+  });
+  return total.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 });
 
 // 3. 应收发票金额 = 实际请款金额
@@ -1847,14 +1848,18 @@ const receivableInvoiceAmt = computed(() => {
 
 // 4. 欠票金额 = 应收发票金额 - 已收发票金额
 const oweInvoiceAmt = computed(() => {
-  return receivableInvoiceAmt.value - receivedInvoiceAmt.value;
+  const receivable = toBig(receivableInvoiceAmt.value);
+  const received = toBig(receivedInvoiceAmt.value);
+  return receivable.minus(received).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 });
 
 // 5. 支付方式付款金额合计
 const totalPayAmt = computed(() => {
-  return payWayTable.value.reduce((sum, item) => {
-    return sum + (Number(item.payAmt) || 0);
-  }, 0);
+  let total = new BigNumber(0);
+  payWayTable.value.forEach((item) => {
+    total = total.plus(toBig(item.payAmt || 0));
+  });
+  return total.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 });
 
 // 判断是否显示款项调整和支付方式模块（来票冲账时不显示）
@@ -1862,13 +1867,14 @@ const showDeductionAndPayWay = computed(() => {
   return formData.value.reqType !== 1; // 1 为来票冲账
 });
 
+// ===== 修改：使用 toBig 替代 toDecimal =====
 // 监听实际请款金额变化，更新表单字段
 watch(
   actualReqAmt,
   (newVal) => {
-    formData.value.factReqAmt = Number(newVal.toFixed(2));
-    formData.value.invRecAmt = Number(newVal.toFixed(2));
-    formData.value.invOweAmt = Number(oweInvoiceAmt.value.toFixed(2));
+    formData.value.factReqAmt = toBig(newVal).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
+    formData.value.invRecAmt = toBig(newVal).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
+    formData.value.invOweAmt = toBig(oweInvoiceAmt.value).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
   },
   { immediate: true },
 );
@@ -1877,8 +1883,8 @@ watch(
 watch(
   receivedInvoiceAmt,
   () => {
-    formData.value.invRcvdAmt = Number(receivedInvoiceAmt.value.toFixed(2));
-    formData.value.invOweAmt = Number(oweInvoiceAmt.value.toFixed(2));
+    formData.value.invRcvdAmt = toBig(receivedInvoiceAmt.value).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
+    formData.value.invOweAmt = toBig(oweInvoiceAmt.value).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
   },
   { immediate: true },
 );

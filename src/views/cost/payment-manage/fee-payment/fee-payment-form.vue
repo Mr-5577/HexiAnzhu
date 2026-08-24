@@ -104,7 +104,7 @@
             </editable-table>
           </template>
           <div class="deduction-summary">
-            实际请款：<span>{{ actualReqAmt.toFixed(2) }}</span>
+            实际请款：<span>{{ formatDecimal(actualReqAmt) }}</span>
           </div>
         </div>
 
@@ -137,9 +137,9 @@
             </editable-table>
           </template>
           <div class="pay-summary">
-            付款合计：<span>{{ totalPayAmt.toFixed(2) }}</span>
-            <span v-if="Math.abs(totalPayAmt - actualReqAmt) > 0.01" class="pay-error">
-              （必须等于实际请款金额 {{ actualReqAmt.toFixed(2) }}）
+            付款合计：<span>{{ formatDecimal(totalPayAmt) }}</span>
+            <span v-if="!toBig(totalPayAmt).isEqualTo(toBig(actualReqAmt))" class="pay-error">
+              （必须等于实际请款金额 {{ formatDecimal(actualReqAmt) }}）
             </span>
             <span v-else class="pay-success">（等于实际请款金额）</span>
           </div>
@@ -263,6 +263,8 @@ import BillHeader from "@/components/business/bill-components/bill-header.vue";
 import BillInfo from "@/components/business/bill-components/bill-info.vue";
 import FinanceAllocationDialog from "@/views/cost/finance-allocation/finance-allocation-dialog.vue";
 import { useMenuStore } from "@/stores/menu-store";
+// ===== 修改：替换 decimal.js 为 bignumber.js =====
+import { toBig, formatDecimal, BigNumber } from "@/utils/big-number.ts";
 
 defineOptions({ name: "fee-payment-form" });
 
@@ -425,19 +427,24 @@ const payWayTable = ref([]);
 // ==================== 计算逻辑 ====================
 
 // 1. 实际请款金额 = 请款金额 + 扣款金额汇总
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const actualReqAmt = computed(() => {
-  const reqAmt = formData.value.reqAmt || 0;
-  const totalDedAmt = dedTable.value.reduce((sum, item) => {
-    return sum + (Number(item.dedAmt) || 0);
-  }, 0);
-  return totalDedAmt + reqAmt;
+  const reqAmt = toBig(formData.value.reqAmt || 0);
+  let totalDedAmt = new BigNumber(0);
+  dedTable.value.forEach((item) => {
+    totalDedAmt = totalDedAmt.plus(toBig(item.dedAmt || 0));
+  });
+  return reqAmt.plus(totalDedAmt).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 });
 
 // 2. 已收发票金额 = 发票列表发票总金额汇总
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const receivedInvoiceAmt = computed(() => {
-  return invoiceMTable.value.reduce((sum, item) => {
-    return sum + (Number(item.totalAmt) || 0);
-  }, 0);
+  let total = new BigNumber(0);
+  invoiceMTable.value.forEach((item) => {
+    total = total.plus(toBig(item.totalAmt || 0));
+  });
+  return total.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 });
 
 // 3. 应收发票金额 = 实际请款金额
@@ -446,24 +453,31 @@ const receivableInvoiceAmt = computed(() => {
 });
 
 // 4. 欠票金额 = 应收发票金额 - 已收发票金额
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const oweInvoiceAmt = computed(() => {
-  return receivableInvoiceAmt.value - receivedInvoiceAmt.value;
+  const receivable = toBig(receivableInvoiceAmt.value);
+  const received = toBig(receivedInvoiceAmt.value);
+  return receivable.minus(received).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 });
 
 // 5. 支付方式付款金额合计
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const totalPayAmt = computed(() => {
-  return payWayTable.value.reduce((sum, item) => {
-    return sum + (Number(item.payAmt) || 0);
-  }, 0);
+  let total = new BigNumber(0);
+  payWayTable.value.forEach((item) => {
+    total = total.plus(toBig(item.payAmt || 0));
+  });
+  return total.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 });
 
 // ==================== Watch 监听 ====================
+// ===== 修改：使用 toBig 替代 toDecimal =====
 watch(
   actualReqAmt,
   (newVal) => {
-    formData.value.factReqAmt = Number(newVal.toFixed(2));
-    formData.value.invRecAmt = Number(newVal.toFixed(2));
-    formData.value.invOweAmt = Number(oweInvoiceAmt.value.toFixed(2));
+    formData.value.factReqAmt = toBig(newVal).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
+    formData.value.invRecAmt = toBig(newVal).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
+    formData.value.invOweAmt = toBig(oweInvoiceAmt.value).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
   },
   { immediate: true },
 );
@@ -471,8 +485,8 @@ watch(
 watch(
   receivedInvoiceAmt,
   () => {
-    formData.value.invRcvdAmt = Number(receivedInvoiceAmt.value.toFixed(2));
-    formData.value.invOweAmt = Number(oweInvoiceAmt.value.toFixed(2));
+    formData.value.invRcvdAmt = toBig(receivedInvoiceAmt.value).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
+    formData.value.invOweAmt = toBig(oweInvoiceAmt.value).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
   },
   { immediate: true },
 );
@@ -592,6 +606,7 @@ const updateDedRow = (rowIndex: number, data: any) => {
   dedTable.value = newData;
 };
 
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const handleDedSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
   if (column === "dedTypeId") {
     updateDedRow(rowIndex, { dedTypeId: newValue, dedAmt: 0 });
@@ -602,14 +617,15 @@ const handleDedSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
       (item) => item.id == row.dedTypeId,
     );
     if (targetData) {
+      const amt = toBig(newValue || 0);
       if (targetData.dicValue == "1") {
-        if (newValue <= 0) {
+        if (amt.isLessThanOrEqualTo(0)) {
           ElMessage.error("调增金额必须为正数");
           updateDedRow(rowIndex, { dedAmt: 0 });
           return;
         }
       } else {
-        if (newValue >= 0) {
+        if (amt.isGreaterThanOrEqualTo(0)) {
           ElMessage.error("扣款金额必须为负数");
           updateDedRow(rowIndex, { dedAmt: 0 });
           return;
@@ -1171,12 +1187,15 @@ const updatePayWayRow = (rowIndex: number, data: any) => {
   payWayTable.value = newData;
 };
 
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const handlePayWaySave = async (data) => {
   const { row, column, newValue, oldValue, rowIndex } = data;
-  // 修改“其中抵房金额”不能大于付款金额
+  // 修改"其中抵房金额"不能大于付款金额
   if (column === "dedRoomAmt") {
     // 如果新值大于付款金额，提示错误并重置为0
-    if (newValue > row.payAmt) {
+    const dedRoomAmt = toBig(newValue || 0);
+    const payAmt = toBig(row.payAmt || 0);
+    if (dedRoomAmt.isGreaterThan(payAmt)) {
       ElMessage.error("其中抵房金额不能大于付款金额");
       updatePayWayRow(rowIndex, { dedRoomAmt: 0 });
       return;
@@ -1396,6 +1415,7 @@ const buildSaveParams = () => {
 };
 
 // ==================== 校验数据 ====================
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const validateData = () => {
   // 如果是来票冲账，跳过款项调整和支付方式的校验，但是发票登记必填一条数据
   if (formData.value.reqType === 1) {
@@ -1418,7 +1438,7 @@ const validateData = () => {
         ElMessage.error("调整类型为必填项，请完善后提交");
         return false;
       }
-      if (!item.dedAmt || Number(item.dedAmt) === 0) {
+      if (!item.dedAmt || toBig(item.dedAmt).isZero()) {
         ElMessage.error("金额不能为0，请完善后提交");
         return false;
       }
@@ -1426,11 +1446,11 @@ const validateData = () => {
   }
 
   // 校验支付方式金额合计必须等于实际请款金额
-  const totalPay = totalPayAmt.value;
-  const actualAmt = actualReqAmt.value;
-  if (Math.abs(totalPay - actualAmt) > 0.01) {
+  const totalPay = toBig(totalPayAmt.value);
+  const actualAmt = toBig(actualReqAmt.value);
+  if (!totalPay.isEqualTo(actualAmt)) {
     ElMessage.error(
-      `支付方式付款金额合计(${totalPay.toFixed(2)})必须等于实际请款金额(${actualAmt.toFixed(2)})`,
+      `支付方式付款金额合计(${totalPay.decimalPlaces(2).toString()})必须等于实际请款金额(${actualAmt.decimalPlaces(2).toString()})`,
     );
     return false;
   }
@@ -1445,7 +1465,7 @@ const validateData = () => {
       ElMessage.error("请选择付款方式");
       return false;
     }
-    if (!item.payAmt || Number(item.payAmt) <= 0) {
+    if (!item.payAmt || toBig(item.payAmt).isLessThanOrEqualTo(0)) {
       ElMessage.error("付款金额必须大于0");
       return false;
     }
@@ -1466,25 +1486,29 @@ const validateData = () => {
   return true;
 };
 // 获取差额（主表金额 - 明细合计）
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const getDiffAmount = (row: any): number => {
-  const mainAmount = parseFloat(row.payAmt) || 0;
-  if (!row.finaDs || row.finaDs.length === 0) return 0; // 当没有分摊明细数据时，跳过校验
-  const detailTotal = getDetailTotal(row.finaDs);
-  return mainAmount - detailTotal;
+  const mainAmount = toBig(row.payAmt || 0);
+  if (!row.finaDs || row.finaDs.length === 0) return 0;
+  const detailTotal = toBig(getDetailTotal(row.finaDs));
+  return mainAmount.minus(detailTotal).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 };
 // 获取明细合计
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const getDetailTotal = (finaDs: any[]): number => {
   if (!finaDs || finaDs.length === 0) return 0;
-  return finaDs.reduce((sum, item) => {
-    const amount = parseFloat(item.finaSubAmt) || 0;
-    return sum + amount;
-  }, 0);
+  let total = new BigNumber(0);
+  finaDs.forEach((item) => {
+    total = total.plus(toBig(item.finaSubAmt || 0));
+  });
+  return total.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 };
 // 校验支付方式明细金额是否等于主数据金额
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const validatePayDetail = () => {
   for (const row of payWayTable.value) {
-    const diff = getDiffAmount(row);
-    if (diff !== 0) {
+    const diff = toBig(getDiffAmount(row));
+    if (!diff.isZero()) {
       ElMessage.warning(
         `报销事项 "${row.payDesc || ""}" 存在差额，请检查明细金额`,
       );

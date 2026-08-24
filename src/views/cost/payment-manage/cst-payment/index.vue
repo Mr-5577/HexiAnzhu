@@ -96,7 +96,7 @@ import { getEnumLabel, getEnumType } from "@/utils/enum";
 import { conBillStatusEnum } from "@/constants/contract-manage/enums";
 import { roleApi } from "@/api/system/role-api";
 import { useUserStore } from "@/stores/user-store";
-import { formatThousandWithPlaces } from "@/utils/decimal";
+import { formatThousandWithPlaces } from "@/utils/big-number";
 
 defineOptions({ name: "cst-payment" });
 

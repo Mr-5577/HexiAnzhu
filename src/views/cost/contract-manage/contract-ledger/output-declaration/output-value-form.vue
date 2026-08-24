@@ -1,167 +1,81 @@
 <!-- 产值申报 审批 -->
 <template>
   <div class="basic-form-content">
-    <BillHeader
-      :title="'产值申报'"
-      :contract-no="billData.bizNo || ''"
-      :submitter="formData.userName || ''"
-      :submit-time="formData.createDate || ''"
-      :status="billData.status || 0"
-      :show-status="true"
-      :button-loading="submitLoading"
-      :save-disabled="isDetail || !!billData.status"
-      :submit-disabled="isDetail || !!billData.status"
-      :delete-disabled="isDetail || isAdd || !!billData.status"
-      :void-disabled="isDetail || isAdd || !!billData.status"
-      :view-disabled="isAdd"
-      @save="handleSave"
-      @submit="handleSubmit"
-      @delete="handleDelete"
-      @void="handleCancel"
-      @viewFlow="handleViewProcess"
-    >
+    <BillHeader :title="'产值申报'" :contract-no="billData.bizNo || ''" :submitter="formData.userName || ''"
+      :submit-time="formData.createDate || ''" :status="billData.status || 0" :show-status="true"
+      :button-loading="submitLoading" :save-disabled="isDetail || !!billData.status"
+      :submit-disabled="isDetail || !!billData.status" :delete-disabled="isDetail || isAdd || !!billData.status"
+      :void-disabled="isDetail || isAdd || !!billData.status" :view-disabled="isAdd" @save="handleSave"
+      @submit="handleSubmit" @delete="handleDelete" @void="handleCancel" @viewFlow="handleViewProcess">
     </BillHeader>
     <div class="form-scroll-area">
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="formRules"
-        :disabled="isReadonly || loadingForm"
-        :validate-on-rule-change="false"
-        label-width="130px"
-        class="adapt-form"
-      >
-        <BillInfo
-          v-model="formData"
-          :status="billData?.status || 0"
-          :disabled="isDetail || !!billData.status"
-          :project-options="projectOptions"
-          @project-change="changeProject"
-        />
+      <el-form ref="formRef" :model="formData" :rules="formRules" :disabled="isReadonly || loadingForm"
+        :validate-on-rule-change="false" label-width="130px" class="adapt-form">
+        <BillInfo v-model="formData" :status="billData?.status || 0" :disabled="isDetail || !!billData.status"
+          :project-options="projectOptions" @project-change="changeProject" />
 
         <!-- 合同信息 -->
-        <FormCard
-          id="card-base"
-          icon="📋"
-          title="合同信息"
-          v-model:collapsed="collapsedCards.base"
-        >
+        <FormCard id="card-base" icon="📋" title="合同信息" v-model:collapsed="collapsedCards.base">
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item label="合同名称" prop="conId" required>
-                <PickInput
-                  v-model="formData.conName"
-                  placeholder="请选择付款合同"
-                  :readonly="isReadonly || !formData.projId"
-                  v-model:model-value-id="formData.conId"
-                  @pick="openMainConDialog"
-                />
+                <PickInput v-model="formData.conName" placeholder="请选择付款合同" :readonly="isReadonly || !formData.projId"
+                  v-model:model-value-id="formData.conId" @pick="openMainConDialog" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="供应商名称" prop="supName">
-                <el-input
-                  v-model="formData.supName"
-                  placeholder=" "
-                  style="width: 100%"
-                  disabled
-                />
+                <el-input v-model="formData.supName" placeholder=" " style="width: 100%" disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="合同分类" prop="conTypeName">
-                <el-input
-                  v-model="formData.conTypeName"
-                  placeholder=" "
-                  style="width: 100%"
-                  disabled
-                />
+                <el-input v-model="formData.conTypeName" placeholder=" " style="width: 100%" disabled />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="签约合同金额" prop="signAmt">
-                <el-input-number
-                  v-model="formData.signAmt"
-                  :precision="2"
-                  :controls="false"
-                  placeholder="0.00"
-                  style="width: 100%"
-                  disabled
-                />
+                <el-input-number v-model="formData.signAmt" :precision="2" :controls="false" placeholder="0.00"
+                  style="width: 100%" disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="补充合同金额" prop="addAmt">
-                <el-input-number
-                  v-model="formData.addAmt"
-                  :precision="2"
-                  :controls="false"
-                  placeholder="0.00"
-                  style="width: 100%"
-                  disabled
-                />
+                <el-input-number v-model="formData.addAmt" :precision="2" :controls="false" placeholder="0.00"
+                  style="width: 100%" disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="累计变更签证" prop="sumChangeAmt">
-                <el-input-number
-                  v-model="formData.sumChangeAmt"
-                  :precision="2"
-                  :controls="false"
-                  placeholder="0.00"
-                  style="width: 100%"
-                  disabled
-                />
+                <el-input-number v-model="formData.sumChangeAmt" :precision="2" :controls="false" placeholder="0.00"
+                  style="width: 100%" disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="预结算合同金额" prop="preSettleAmt">
-                <el-input-number
-                  v-model="formData.preSettleAmt"
-                  :precision="2"
-                  :controls="false"
-                  placeholder="0.00"
-                  style="width: 100%"
-                  disabled
-                />
+                <el-input-number v-model="formData.preSettleAmt" :precision="2" :controls="false" placeholder="0.00"
+                  style="width: 100%" disabled />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="期初产值金额" prop="sumProdVal">
-                <el-input-number
-                  v-model="formData.sumProdVal"
-                  :precision="2"
-                  :controls="false"
-                  placeholder="0.00"
-                  style="width: 100%"
-                  disabled
-                />
+                <el-input-number v-model="formData.sumProdVal" :precision="2" :controls="false" placeholder="0.00"
+                  style="width: 100%" disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="期初应付金额" prop="sumPayAmt">
-                <el-input-number
-                  v-model="formData.sumPayAmt"
-                  :precision="2"
-                  :controls="false"
-                  placeholder="0.00"
-                  style="width: 100%"
-                  disabled
-                />
+                <el-input-number v-model="formData.sumPayAmt" :precision="2" :controls="false" placeholder="0.00"
+                  style="width: 100%" disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="是否甲供材" prop="isSelfSupply">
-                <el-select
-                  v-model="formData.isSelfSupply"
-                  placeholder="是否甲供材"
-                  style="width: 100%"
-                  disabled
-                >
+                <el-select v-model="formData.isSelfSupply" placeholder="是否甲供材" style="width: 100%" disabled>
                   <el-option label="否" :value="false" />
                   <el-option label="是" :value="true" />
                 </el-select>
@@ -169,12 +83,8 @@
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="甲供材类型" prop="selfSupplyType">
-                <el-select
-                  v-model="formData.selfSupplyType"
-                  placeholder=""
-                  style="width: 100%"
-                  :disabled="formData.isSelfSupply === false"
-                >
+                <el-select v-model="formData.selfSupplyType" placeholder="" style="width: 100%"
+                  :disabled="formData.isSelfSupply === false">
                   <el-option label="甲供材-主材" :value="1" />
                   <el-option label="甲供材-零星" :value="2" />
                 </el-select>
@@ -184,108 +94,53 @@
         </FormCard>
 
         <!-- 产值信息 -->
-        <FormCard
-          id="card-prod"
-          icon="📋"
-          title="产值信息"
-          v-model:collapsed="collapsedCards.prod"
-        >
+        <FormCard id="card-prod" icon="📋" title="产值信息" v-model:collapsed="collapsedCards.prod">
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="产值申报方式">
-                <el-select
-                  v-model="formData.payMethod"
-                  placeholder="请选择"
-                  style="width: 100%"
-                  disabled
-                >
-                  <el-option
-                    v-for="item in PayTypeEnum"
-                    :key="item.value"
-                    :label="item.label"
-                    :value="item.value"
-                  />
+                <el-select v-model="formData.payMethod" placeholder="请选择" style="width: 100%" disabled>
+                  <el-option v-for="item in PayTypeEnum" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="产值期间" prop="prodValPeriod">
-                <el-date-picker
-                  v-model="formData.prodValPeriod"
-                  type="month"
-                  value-format="YYYY-MM-DD"
-                  placeholder="请选择归属月份"
-                  disabled
-                />
+                <el-date-picker v-model="formData.prodValPeriod" type="month" value-format="YYYY-MM-DD"
+                  placeholder="请选择归属月份" disabled />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="本次申报产值" prop="applyProdVal" required>
-                <el-input-number
-                  v-model="formData.applyProdVal"
-                  :min="0"
-                  :precision="2"
-                  :controls="false"
-                  placeholder="请输入申报产值"
-                  style="width: 100%"
-                  disabled
-                />
+                <el-input-number v-model="formData.applyProdVal" :min="0" :precision="2" :controls="false"
+                  placeholder="请输入申报产值" style="width: 100%" disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="本次申报应付" prop="applyPayAmt" required>
-                <el-input-number
-                  v-model="formData.applyPayAmt"
-                  :min="0"
-                  :precision="2"
-                  :controls="false"
-                  placeholder="请输入申报应付"
-                  style="width: 100%"
-                  disabled
-                />
+                <el-input-number v-model="formData.applyPayAmt" :min="0" :precision="2" :controls="false"
+                  placeholder="请输入申报应付" style="width: 100%" disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="本次成本复核产值" prop="costProdVal">
-                <el-input-number
-                  v-model="formData.costProdVal"
-                  :min="0"
-                  :precision="2"
-                  :controls="false"
-                  placeholder="成本复核产值"
-                  style="width: 100%"
-                  disabled
-                />
+                <el-input-number v-model="formData.costProdVal" :min="0" :precision="2" :controls="false"
+                  placeholder="成本复核产值" style="width: 100%" disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="本次成本复核应付" prop="costPayAmt">
-                <el-input-number
-                  v-model="formData.costPayAmt"
-                  :min="0"
-                  :precision="2"
-                  :controls="false"
-                  placeholder="成本复核应付"
-                  style="width: 100%"
-                  disabled
-                />
+                <el-input-number v-model="formData.costPayAmt" :min="0" :precision="2" :controls="false"
+                  placeholder="成本复核应付" style="width: 100%" disabled />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
               <el-form-item label="申报说明" prop="applyDesc">
-                <el-input
-                  v-model="formData.applyDesc"
-                  type="textarea"
-                  :rows="2"
-                  maxlength="500"
-                  show-word-limit
-                  placeholder="请输入申报说明"
-                  :disabled="isDetail"
-                />
+                <el-input v-model="formData.applyDesc" type="textarea" :rows="2" maxlength="500" show-word-limit
+                  placeholder="请输入申报说明" :disabled="isDetail" />
               </el-form-item>
             </el-col>
             <!-- <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
@@ -310,12 +165,7 @@
         </FormCard>
 
         <!-- 材料合同产值 -->
-        <FormCard
-          id="card-con"
-          icon="📋"
-          title="合同产值"
-          v-model:collapsed="collapsedCards.con"
-        >
+        <FormCard id="card-con" icon="📋" title="合同产值" v-model:collapsed="collapsedCards.con">
           <!-- 非甲供材  产值申报方式：按进度确认 -> 显示非甲供材  -->
           <div class="detail-table" v-if="formData.payMethod == 1">
             <!-- <div class="header-content">
@@ -329,51 +179,23 @@
                 新增明细
               </el-button>
             </div> -->
-            <editable-table
-              ref="nonSelfSupplyRef"
-              :row-key="'uuid'"
-              :height="'200px'"
-              v-model="nonSelfSupplyTable"
-              :columns="prodColumns"
-              :pagination="false"
-              :highlight-current-row="false"
-              :show-summary="true"
-              :summary-method="nonSelfSupplySummary"
-              :compactEmpty="true"
-              :on-save="handleNonSelfSupplySave"
-            >
+            <editable-table ref="nonSelfSupplyRef" :row-key="'uuid'" :height="'200px'" v-model="nonSelfSupplyTable"
+              :columns="prodColumns" :pagination="false" :highlight-current-row="false" :show-summary="true"
+              :summary-method="nonSelfSupplySummary" :compactEmpty="true" :on-save="handleNonSelfSupplySave">
               <template #edit-buildPeriod="{ row, update }">
-                <el-date-picker
-                  v-model="row.buildPeriod"
-                  type="month"
-                  value-format="YYYY-MM-DD"
-                  format="YYYY-MM"
-                  size="small"
-                  style="width: 100%"
-                  :disabled="isReadonly || !!billData.status"
+                <el-date-picker v-model="row.buildPeriod" type="month" value-format="YYYY-MM-DD" format="YYYY-MM"
+                  size="small" style="width: 100%" :disabled="isReadonly || !!billData.status"
                   :disabled-date="disabledBuildPeriod"
-                  @change="row.buildPeriod = toMonthEnd(row.buildPeriod); update(row.buildPeriod)"
-                />
+                  @change="row.buildPeriod = toMonthEnd(row.buildPeriod); update(row.buildPeriod)" />
               </template>
               <template #edit-payDate="{ row, update }">
-                <el-date-picker
-                  v-model="row.payDate"
-                  type="month"
-                  value-format="YYYY-MM-DD"
-                  format="YYYY-MM"
-                  size="small"
-                  style="width: 100%"
-                  :disabled="isReadonly || !!billData.status || row.isCtrl"
-                  @change="row.payDate = toMonthEnd(row.payDate); update(row.payDate)"
-                />
+                <el-date-picker v-model="row.payDate" type="month" value-format="YYYY-MM-DD" format="YYYY-MM"
+                  size="small" style="width: 100%" :disabled="isReadonly || !!billData.status || row.isCtrl"
+                  @change="row.payDate = toMonthEnd(row.payDate); update(row.payDate)" />
               </template>
               <template #actions="{ row }">
-                <el-button
-                  link
-                  type="danger"
-                  :disabled="isDetail || !!billData.status"
-                  @click="deleteNonSelfSupply(row)"
-                >
+                <el-button link type="danger" :disabled="isDetail || !!billData.status"
+                  @click="deleteNonSelfSupply(row)">
                   删除
                 </el-button>
               </template>
@@ -381,95 +203,49 @@
           </div>
 
           <!-- 产值明细（甲供材-主材） -->
-          <div
-            class="detail-table"
-            v-if="
-              formData.payMethod == 2 &&
-              formData.isSelfSupply == true &&
-              formData.selfSupplyType == 1
-            "
-          >
+          <div class="detail-table" v-if="
+            formData.payMethod == 2 &&
+            formData.isSelfSupply == true &&
+            formData.selfSupplyType == 1
+          ">
             <div class="header-content">
               <span class="header-title">产值明细（甲供材-主材）</span>
               <div>
-                <el-button
-                  type="primary"
-                  size="small"
-                  :disabled="isDetail || !!billData.status"
-                  @click="openMaterialDialog"
-                >
+                <el-button type="primary" size="small" :disabled="isDetail || !!billData.status"
+                  @click="openMaterialDialog">
                   新增明细
                 </el-button>
-                <el-button
-                  type="primary"
-                  size="small"
-                  :disabled="isDetail || !!billData.status"
-                  @click="clearMaterialTable"
-                >
+                <el-button type="primary" size="small" :disabled="isDetail || !!billData.status"
+                  @click="clearMaterialTable">
                   清空
                 </el-button>
               </div>
             </div>
-            <editable-table
-              ref="materialRef"
-              :row-key="'uuid'"
-              :height="'400px'"
-              v-model="materialTable"
-              :columns="materialColumns"
-              :pagination="false"
-              :highlight-current-row="false"
-              :show-summary="true"
-              :summary-method="materialSummary"
-              :compactEmpty="true"
-              :editable="!isDetail && !billData.status"
-              :on-save="handleMaterialSave"
-            >
+            <editable-table ref="materialRef" :row-key="'uuid'" :height="'400px'" v-model="materialTable"
+              :columns="materialColumns" :pagination="false" :highlight-current-row="false" :show-summary="true"
+              :summary-method="materialSummary" :compactEmpty="true" :editable="!isDetail && !billData.status"
+              :on-save="handleMaterialSave">
               <template #edit-buildPeriod="{ row, update }">
-                <el-date-picker
-                  v-model="row.buildPeriod"
-                  type="month"
-                  value-format="YYYY-MM-DD"
-                  format="YYYY-MM"
-                  size="small"
-                  style="width: 100%"
-                  :disabled="isReadonly || !!billData.status"
+                <el-date-picker v-model="row.buildPeriod" type="month" value-format="YYYY-MM-DD" format="YYYY-MM"
+                  size="small" style="width: 100%" :disabled="isReadonly || !!billData.status"
                   :disabled-date="disabledBuildPeriod"
-                  @change="row.buildPeriod = toMonthEnd(row.buildPeriod); update(row.buildPeriod)"
-                />
+                  @change="row.buildPeriod = toMonthEnd(row.buildPeriod); update(row.buildPeriod)" />
               </template>
               <template #edit-payDate="{ row, update }">
-                <el-date-picker
-                  v-model="row.payDate"
-                  type="month"
-                  value-format="YYYY-MM-DD"
-                  format="YYYY-MM"
-                  size="small"
-                  style="width: 100%"
-                  :disabled="isReadonly || !!billData.status || row.hasVal"
-                  @change="row.payDate = toMonthEnd(row.payDate); update(row.payDate)"
-                />
+                <el-date-picker v-model="row.payDate" type="month" value-format="YYYY-MM-DD" format="YYYY-MM"
+                  size="small" style="width: 100%" :disabled="isReadonly || !!billData.status || row.hasVal"
+                  @change="row.payDate = toMonthEnd(row.payDate); update(row.payDate)" />
               </template>
               <template #edit-payRate="{ row, update }">
                 <span v-if="isReadonly || billData.status" class="pct-text">{{ formatPercent(row.payRate) }}</span>
                 <div v-else class="pct-edit">
-                  <el-input-number
-                    v-model="row.payRate"
-                    :controls="false"
-                    :precision="2"
-                    size="small"
-                    style="width: 100%"
-                    @change="update(row.payRate)"
-                  />
+                  <el-input-number v-model="row.payRate" :controls="false" :precision="2" size="small"
+                    style="width: 100%" @change="update(row.payRate)" />
                   <span class="pct-suffix">%</span>
                 </div>
               </template>
               <template #actions="{ row }">
-                <el-button
-                  link
-                  type="danger"
-                  :disabled="isDetail || !!billData.status"
-                  @click="deleteMaterial(row)"
-                >
+                <el-button link type="danger" :disabled="isDetail || !!billData.status" @click="deleteMaterial(row)">
                   删除
                 </el-button>
               </template>
@@ -477,86 +253,45 @@
           </div>
 
           <!-- 产值明细 - 甲供材-零星  -->
-          <div
-            class="detail-table"
-            v-if="
-              (formData.payMethod == 2 && formData.isSelfSupply === false) ||
-              (formData.payMethod == 2 &&
-                formData.isSelfSupply === true &&
-                formData.selfSupplyType == 2)
-            "
-          >
+          <div class="detail-table" v-if="
+            (formData.payMethod == 2 && formData.isSelfSupply === false) ||
+            (formData.payMethod == 2 &&
+              formData.isSelfSupply === true &&
+              formData.selfSupplyType == 2)
+          ">
             <div class="header-content">
               <span class="header-title">产值明细（甲供材-零星）</span>
               <div>
-                <el-button
-                  type="primary"
-                  size="small"
-                  :disabled="isDetail || !!billData.status"
-                  @click="openMaterialDialog"
-                >
+                <el-button type="primary" size="small" :disabled="isDetail || !!billData.status"
+                  @click="openMaterialDialog">
                   新增明细
                 </el-button>
-                <el-button
-                  type="primary"
-                  size="small"
-                  :disabled="isDetail || !!billData.status"
-                  @click="clearMaterialTableMinor"
-                >
+                <el-button type="primary" size="small" :disabled="isDetail || !!billData.status"
+                  @click="clearMaterialTableMinor">
                   清空
                 </el-button>
               </div>
             </div>
-            <editable-table
-              ref="materialMinorRef"
-              :row-key="'uuid'"
-              :height="'400px'"
-              v-model="materialMinorTable"
-              :columns="materialMinorColumns"
-              :pagination="false"
-              :highlight-current-row="false"
-              :show-summary="true"
-              :summary-method="materialMinorSummary"
-              :compactEmpty="true"
-              :editable="!isDetail && !billData.status"
-              :on-save="handleMaterialMinorSave"
-            >
+            <editable-table ref="materialMinorRef" :row-key="'uuid'" :height="'400px'" v-model="materialMinorTable"
+              :columns="materialMinorColumns" :pagination="false" :highlight-current-row="false" :show-summary="true"
+              :summary-method="materialMinorSummary" :compactEmpty="true" :editable="!isDetail && !billData.status"
+              :on-save="handleMaterialMinorSave">
               <template #edit-buildPeriod="{ row, update }">
-                <el-date-picker
-                  v-model="row.buildPeriod"
-                  type="month"
-                  value-format="YYYY-MM-DD"
-                  format="YYYY-MM"
-                  size="small"
-                  style="width: 100%"
-                  :disabled="isReadonly || !!billData.status"
+                <el-date-picker v-model="row.buildPeriod" type="month" value-format="YYYY-MM-DD" format="YYYY-MM"
+                  size="small" style="width: 100%" :disabled="isReadonly || !!billData.status"
                   :disabled-date="disabledBuildPeriod"
-                  @change="row.buildPeriod = toMonthEnd(row.buildPeriod); update(row.buildPeriod)"
-                />
+                  @change="row.buildPeriod = toMonthEnd(row.buildPeriod); update(row.buildPeriod)" />
               </template>
               <template #edit-payDate="{ row, update }">
-                <el-date-picker
-                  v-model="row.payDate"
-                  type="month"
-                  value-format="YYYY-MM-DD"
-                  format="YYYY-MM"
-                  size="small"
-                  style="width: 100%"
-                  :disabled="isReadonly || !!billData.status || row.hasVal"
-                  @change="row.payDate = toMonthEnd(row.payDate); update(row.payDate)"
-                />
+                <el-date-picker v-model="row.payDate" type="month" value-format="YYYY-MM-DD" format="YYYY-MM"
+                  size="small" style="width: 100%" :disabled="isReadonly || !!billData.status || row.hasVal"
+                  @change="row.payDate = toMonthEnd(row.payDate); update(row.payDate)" />
               </template>
               <template #edit-payRate="{ row, update }">
                 <span v-if="isReadonly || billData.status" class="pct-text">{{ formatPercent(row.payRate) }}</span>
                 <div v-else class="pct-edit">
-                  <el-input-number
-                    v-model="row.payRate"
-                    :controls="false"
-                    :precision="2"
-                    size="small"
-                    style="width: 100%"
-                    @change="update(row.payRate)"
-                  />
+                  <el-input-number v-model="row.payRate" :controls="false" :precision="2" size="small"
+                    style="width: 100%" @change="update(row.payRate)" />
                   <span class="pct-suffix">%</span>
                 </div>
               </template>
@@ -582,12 +317,8 @@
                 >
                   上传附件
                 </el-button> -->
-                <el-button
-                  link
-                  type="danger"
-                  :disabled="isDetail || !!billData.status"
-                  @click="deleteMaterialMinor(row)"
-                >
+                <el-button link type="danger" :disabled="isDetail || !!billData.status"
+                  @click="deleteMaterialMinor(row)">
                   删除
                 </el-button>
               </template>
@@ -596,41 +327,18 @@
         </FormCard>
 
         <!-- 本次申报后累计情况 -->
-        <FormCard
-          id="card-sum"
-          icon="📋"
-          title="累计产值"
-          v-model:collapsed="collapsedCards.sum"
-        >
+        <FormCard id="card-sum" icon="📋" title="累计产值" v-model:collapsed="collapsedCards.sum">
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item
-                label="期末产值(含本单)"
-                prop="totalProdVal"
-                required
-              >
-                <el-input-number
-                  v-model="formData.totalProdVal"
-                  :min="0"
-                  :precision="2"
-                  :controls="false"
-                  placeholder="0"
-                  style="width: 100%"
-                  disabled
-                />
+              <el-form-item label="期末产值(含本单)" prop="totalProdVal" required>
+                <el-input-number v-model="formData.totalProdVal" :min="0" :precision="2" :controls="false"
+                  placeholder="0" style="width: 100%" disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="期末应付(含本单)" prop="totalPayVal">
-                <el-input-number
-                  v-model="formData.totalPayVal"
-                  :min="0"
-                  :precision="2"
-                  :controls="false"
-                  placeholder="0"
-                  style="width: 100%"
-                  disabled
-                />
+                <el-input-number v-model="formData.totalPayVal" :min="0" :precision="2" :controls="false"
+                  placeholder="0" style="width: 100%" disabled />
               </el-form-item>
             </el-col>
             <!-- <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
@@ -650,77 +358,39 @@
         </FormCard>
 
         <!-- 相关附件 -->
-        <FormCard
-          id="card-annex"
-          icon="📋"
-          title="相关附件"
-          v-model:collapsed="collapsedCards.annex"
-        >
+        <FormCard id="card-annex" icon="📋" title="相关附件" v-model:collapsed="collapsedCards.annex">
           <el-form-item label="上传附件">
-            <base-upload
-              v-model:file-list="annexFileList"
-              :limit="9"
-              :multiple="false"
-              :showIcon="true"
-              :showTip="true"
-              :maxSize="200"
-              :unrestricted="true"
-              :accept="''"
-              button-text="选择文件"
-              size="default"
-              :disabled="isDetail || !!billData.status"
-              @success="handleFileSuccess"
-            />
+            <base-upload v-model:file-list="annexFileList" :limit="9" :multiple="false" :showIcon="true" :showTip="true"
+              :maxSize="200" :unrestricted="true" :accept="''" button-text="选择文件" size="default"
+              :disabled="isDetail || !!billData.status" @success="handleFileSuccess" />
           </el-form-item>
         </FormCard>
       </el-form>
 
       <!-- 成本分摊  合同产值只有甲供材才有成本分摊 -->
-      <ConCostAllocCard v-if="menuStore.hasExactPermission('cost-alloc:con-prod')" style="margin-top: 15px;" :visible="!isAdd && formData.isSelfSupply" :cstMData="cstMData"
-        :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'CON_PROD'"
-        :projId="formData.projId" :projName="formData?.projName" :displayName="formData.conName"
-        :allocAmt="formData.applyProdVal" :bizBillId="billData.id" :conId="conMainData?.id" @selectData="getSelectCostAlloc" />
+      <ConCostAllocCard v-if="menuStore.hasExactPermission('cost-alloc:con-prod')" style="margin-top: 15px;"
+        :visible="!isAdd && formData.isSelfSupply" :cstMData="cstMData" :allocation-status="cstMData.allocStatus"
+        :warning-status="cstMData.allocWarn" :bizType="'CON_PROD'" :projId="formData.projId"
+        :projName="formData?.projName" :displayName="formData.conName" :allocAmt="formData.applyProdVal"
+        :bizBillId="billData.id" :conId="conMainData?.id" @selectData="getSelectCostAlloc" />
     </div>
 
     <!-- 隐藏的上传组件 -->
     <Teleport to="body">
       <div style="display: none" @click.stop @mousedown.stop>
-        <base-upload
-          ref="annexUploadRef"
-          key="minorAnnex"
-          v-model:file-list="tempFileList"
-          :limit="1"
-          :maxSize="20"
-          :multiple="false"
-          :showIcon="true"
-          :showTip="false"
-          button-text="选择文件"
-          size="default"
-          button-type="primary"
-          @success="handleUploadSuccess"
-        />
+        <base-upload ref="annexUploadRef" key="minorAnnex" v-model:file-list="tempFileList" :limit="1" :maxSize="20"
+          :multiple="false" :showIcon="true" :showTip="false" button-text="选择文件" size="default" button-type="primary"
+          @success="handleUploadSuccess" />
       </div>
     </Teleport>
     <!-- ============ 悬浮定位栏 ============ -->
     <FloatNav :items="visibleNavCards" />
   </div>
   <!-- ============ 选择主合同弹窗 ============ -->
-  <choose-contract-dialog
-    ref="contractDialogRef"
-    v-model="mainConDialogVisible"
-    :selectionMode="'single'"
-    :projId="formData.projId"
-    @select="handleMainConSelect"
-  />
-  <choose-material-val-dialog
-    ref="materialDialogRef"
-    v-model="mtDialogVisible"
-    :selectionMode="'multiple'"
-    :conNo="formData.conSysNo"
-    :cgType="formData.selfSupplyType"
-    :is-uesd="false"
-    @select="handleMaterialSelect"
-  />
+  <choose-contract-dialog ref="contractDialogRef" v-model="mainConDialogVisible" :selectionMode="'single'"
+    :projId="formData.projId" @select="handleMainConSelect" />
+  <choose-material-val-dialog ref="materialDialogRef" v-model="mtDialogVisible" :selectionMode="'multiple'"
+    :conNo="formData.conSysNo" :cgType="formData.selfSupplyType" :is-uesd="false" @select="handleMaterialSelect" />
 </template>
 
 <script setup lang="ts">
@@ -758,6 +428,7 @@ import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";
 import ConCostAllocCard from "@/views/cost/cost-allocation/con-cost-alloc/con-cost-alloc-card.vue";
 import { useMenuStore } from "@/stores/menu-store";
+import { toBig, formatDecimal, BigNumber } from "@/utils/big-number.ts";
 
 defineOptions({ name: "output-value-approval-form" });
 
@@ -973,13 +644,6 @@ const disabledBuildPeriod = (time: Date): boolean => {
   return time.getTime() >= firstOfThisMonth.getTime();
 };
 
-/** 金额千分位（2 位小数） */
-const fmtMoney = (n: number): string =>
-  (Number(n) || 0).toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-
 /** 百分比显示：80 -> 80% */
 const formatPercent = (val: any): string => {
   if (val === undefined || val === null || val === "") return "--";
@@ -992,8 +656,12 @@ const summaryBuilder = (columns: any[], data: any[], amountProps: string[]): str
     if (index === 0) return "合计";
     const p = col.property || col.prop;
     if (amountProps.includes(p)) {
-      const total = data.reduce((s: number, r: any) => s + (Number(r[p]) || 0), 0);
-      return fmtMoney(total);
+      let total = new BigNumber(0);
+      data.forEach((r: any) => {
+        total = total.plus(toBig(r[p] || 0));
+      });
+      return total.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber()
+        .toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
     return "";
   });
@@ -1046,11 +714,12 @@ const recomputeNonSelfSupply = (row: any, column: string) => {
     row.isCtrl = isCtrl;
     row.payIntvl = payIntvl;
   }
-  const prodVal = Number(row.prodVal) || 0;
-  const payRate = Number(row.payRate) || 0;
+  const prodVal = toBig(row.prodVal || 0);
+  const payRate = toBig(row.payRate || 0);
   // 本次应付 = 本次产值 × 应付比例（强控时锁定，不强控也给默认值，仍可手改）
   if (["prodVal", "payRate", "payTypeId", "isCtrl"].includes(column)) {
-    row.payAmt = Number(((prodVal * payRate) / 100).toFixed(2));
+    row.payAmt = prodVal.times(payRate).dividedBy(100)
+      .decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
   }
   // 付款期间 = 产值期间 + 支付周期(月)
   const payIntvl = Number(row.payIntvl) || 0;
@@ -1238,6 +907,8 @@ const handleMaterialSelect = async (data) => {
         const exists = materialTable.value.some((recd) => recd.srcKeyId === item.keyid);
         if (!exists) {
           addMaterial();
+          const prodVal = toBig(item.recvVal ?? 0).minus(toBig(item.dedAmt ?? 0))
+            .decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
           const dataIndex = materialTable.value.length - 1;
           materialTable.value[dataIndex].srcKeyId = item.keyid;
           materialTable.value[dataIndex].recvBillNo = item.requestmark;
@@ -1250,9 +921,9 @@ const handleMaterialSelect = async (data) => {
           materialTable.value[dataIndex].recvPrice = item.recvPrice;
           materialTable.value[dataIndex].recvProdAmt = item.recvVal;
           materialTable.value[dataIndex].fineAmt = item.dedAmt;
-          materialTable.value[dataIndex].prodVal = Number(item.recvVal ?? 0) - Number(item.dedAmt ?? 0);
+          materialTable.value[dataIndex].prodVal = prodVal;
           materialTable.value[dataIndex].payRate = 100;
-          materialTable.value[dataIndex].payAmt = Number(item.recvVal ?? 0) - Number(item.dedAmt ?? 0);
+          materialTable.value[dataIndex].payAmt = prodVal;
           materialTable.value[dataIndex].buildPeriod = item.recvDate;
           materialTable.value[dataIndex].payIntvl = 1;
           materialTable.value[dataIndex].payDate = addMonths(currentMonth(), 1);
@@ -1264,6 +935,8 @@ const handleMaterialSelect = async (data) => {
         const exists = materialMinorTable.value.some((recd) => recd.srcKeyId === item.keyid);
         if (!exists) {
           addMaterialMinor();
+          const prodValMinor = toBig(item.recvVal ?? 0).minus(toBig(item.dedAmt ?? 0))
+            .decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
           const dataIndex = materialMinorTable.value.length - 1;
           materialMinorTable.value[dataIndex].srcKeyId = item.keyid;
           materialMinorTable.value[dataIndex].recvBillNo = item.requestmark;
@@ -1272,9 +945,9 @@ const handleMaterialSelect = async (data) => {
           materialMinorTable.value[dataIndex].recvPrice = item.recvPrice;
           materialMinorTable.value[dataIndex].recvProdAmt = item.recvVal;
           materialMinorTable.value[dataIndex].fineAmt = item.dedAmt;
-          materialMinorTable.value[dataIndex].prodVal = Number(item.recvVal ?? 0) - Number(item.dedAmt ?? 0);
+          materialMinorTable.value[dataIndex].prodVal = prodValMinor;
           materialMinorTable.value[dataIndex].payRate = 100;
-          materialMinorTable.value[dataIndex].payAmt = Number(item.recvVal ?? 0) - Number(item.dedAmt ?? 0);
+          materialMinorTable.value[dataIndex].payAmt = prodValMinor;
           materialMinorTable.value[dataIndex].buildPeriod = item.recvDate;
           materialMinorTable.value[dataIndex].payIntvl = 1;
           materialMinorTable.value[dataIndex].payDate = addMonths(currentMonth(), 1);
@@ -1310,14 +983,24 @@ const activeDetailTable = computed(() => {
 });
 
 /** 主表本次申报产值 = 当前显示明细表的本次产值之和 */
-const detailApplyProdVal = computed(() =>
-  activeDetailTable.value.reduce((s: number, r: any) => s + (Number(r.prodVal) || 0), 0),
-);
+const detailApplyProdVal = computed(() => {
+  let total = new BigNumber(0);
+  const tableData = activeDetailTable.value;
+  for (const item of tableData) {
+    total = total.plus(toBig(item.prodVal || 0));
+  }
+  return total.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
+});
 
 /** 主表本次申报应付 = 当前显示明细表的本次应付之和（甲供材用 payAmt，非甲供材用 applyPayAmt） */
-const detailApplyPayAmt = computed(() =>
-  activeDetailTable.value.reduce((s: number, r: any) => s + (Number(r.payAmt ?? r.applyPayAmt) || 0), 0),
-);
+const detailApplyPayAmt = computed(() => {
+  let total = new BigNumber(0);
+  const tableData = activeDetailTable.value;
+  for (const item of tableData) {
+    total = total.plus(toBig(item.payAmt ?? item.applyPayAmt ?? 0));
+  }
+  return total.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
+});
 
 watch(
   [
@@ -1333,13 +1016,18 @@ watch(
     f.applyProdVal = detailApplyProdVal.value;
     f.applyPayAmt = detailApplyPayAmt.value;
     // 含本单累计产值 = 累计产值 + 本次申报产值（有成本复核产值则用成本复核值）
-    f.totalProdVal =
-      (Number(f.sumProdVal) || 0) +
-      ((Number(f.costProdVal) || 0) !== 0 ? Number(f.costProdVal) : detailApplyProdVal.value);
+    const sumProdVal = toBig(f.sumProdVal || 0);
+    const costProdVal = toBig(f.costProdVal || 0);
+    const applyProdVal = toBig(detailApplyProdVal.value);
+    f.totalProdVal = sumProdVal.plus(costProdVal.isZero() ? applyProdVal : costProdVal)
+      .decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
+
     // 含本单累计应付 = 累计应付 + 本次申报应付（有成本复核应付则用成本复核值）
-    f.totalPayVal =
-      (Number(f.sumPayAmt) || 0) +
-      ((Number(f.costPayAmt) || 0) !== 0 ? Number(f.costPayAmt) : detailApplyPayAmt.value);
+    const sumPayAmt = toBig(f.sumPayAmt || 0);
+    const costPayAmt = toBig(f.costPayAmt || 0);
+    const applyPayAmt = toBig(detailApplyPayAmt.value);
+    f.totalPayVal = sumPayAmt.plus(costPayAmt.isZero() ? applyPayAmt : costPayAmt)
+      .decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
   },
   { immediate: true },
 );
@@ -1351,7 +1039,7 @@ watch(
     if (!hasProgressRow.value) return;
     let changed = false;
     const next = nonSelfSupplyTable.value.map((r: any) => {
-      if (r.payTypeId === ACCEPT_PAY_TYPE && (Number(r.prodVal) || 0) !== 0) {
+      if (r.payTypeId === ACCEPT_PAY_TYPE && !toBig(r.prodVal || 0).isZero()) {
         changed = true;
         return { ...r, prodVal: 0, payAmt: 0 };
       }
@@ -1478,27 +1166,28 @@ const getConTotal = async (inputConId) => {
     formData.value.addAmt = 0;
     const res = await cumulativeDataApi.getAccumData({
       conId: inputConId,
-      typeList: [0, 1,  7, 8, 10],
+      typeList: [0, 1, 7, 8, 10],
     });
     if (res.code === 200 && res.data) {
       const list = res.data || [];
       list.forEach((item) => {
-        const total = item.archAmt + item.inTransAmt; // 归档 + 在途
+        // 归档 + 在途
+        const total = toBig(item.archAmt || 0).plus(toBig(item.inTransAmt || 0));
         switch (item.type) {
           case 0: // 产值
-            formData.value.sumProdVal += total;
+            formData.value.sumProdVal = toBig(formData.value.sumProdVal).plus(total).toNumber();
             break;
           case 1: // 应付
-            formData.value.sumPayAmt += total;
+            formData.value.sumPayAmt = toBig(formData.value.sumPayAmt).plus(total).toNumber();
             break;
           case 7: // 变更
-            formData.value.sumChangeAmt += total;
+            formData.value.sumChangeAmt = toBig(formData.value.sumChangeAmt).plus(total).toNumber();
             break;
           case 8: // 签证
-            formData.value.sumChangeAmt += total;
+            formData.value.sumChangeAmt = toBig(formData.value.sumChangeAmt).plus(total).toNumber();
             break;
           case 10: // 补充合同
-            formData.value.addAmt += total;
+            formData.value.addAmt = toBig(formData.value.addAmt).plus(total).toNumber();
             break;
           default:
             break;
@@ -1513,22 +1202,22 @@ const getConTotal = async (inputConId) => {
   try {
     const res = await cumulativeDataApi.getSettleData({
       conId: conId,
-      typeList: [0,1],
+      typeList: [0, 1],
     });
 
     if (res.code !== 200 || !res.data) {
       console.warn("获取合同结算信息失败:", res.message);
       return;
-    } 
+    }
 
     const stMap = new Map();
     res.data.forEach((item) => {
       stMap.set(item.type, item.archivedAmt || 0);
     });
 
-    const [preSettleAmt,settledAmt] = [0,1].map((type) => stMap.get(type) || 0);
+    const [preSettleAmt, settledAmt] = [0, 1].map((type) => stMap.get(type) || 0);
 
-    if ((settledAmt || 0) > 0) 
+    if ((settledAmt || 0) > 0)
       formData.value.preSettleAmt = settledAmt;
     else formData.value.preSettleAmt = preSettleAmt;
   } catch (error) {
@@ -1575,16 +1264,16 @@ const getContractYskAmt = async (inputConId) => {
       conId: inputConId,
       typeList: [0, 1],
     });
-    let yskAmt = 0;
-    let yskTotalAmt = 0;
+    let yskAmt = new BigNumber(0);
+    let yskTotalAmt = new BigNumber(0);
     for (const item of res.data) {
       if (item.type === 1) {
-        yskTotalAmt = item.amount ?? 0;
+        yskTotalAmt = toBig(item.amount ?? 0);
       } else if (item.type === 0) {
-        yskAmt = item.amount ?? 0;
+        yskAmt = toBig(item.amount ?? 0);
       }
     }
-    return (yskTotalAmt ?? 0) - (yskAmt ?? 0);
+    return yskTotalAmt.minus(yskAmt).toNumber();
   } catch (error) {
     console.error("查询合同验收数据失败:", error);
   }
@@ -1595,7 +1284,7 @@ const loadDetail = async () => {
   if (!prodId.value) return;
   const res = await outputDeclarationApi.getProdValById({ id: prodId.value, isWithFlow: true });
   if (res.code === 200 && res.data) {
-    const { flowList, flowBase, bill, prodVal, conMain, billPayrates, billMaterials, annexList,cstM } = res.data;
+    const { flowList, flowBase, bill, prodVal, conMain, billPayrates, billMaterials, annexList, cstM } = res.data;
     billData.value = { ...billData.value, ...bill };
     conMainData.value = { ...conMainData.value, ...conMain };
     flowListData.value = { ...flowListData.value, ...flowList };
@@ -1708,13 +1397,14 @@ const validateProdTables = async () => {
 
     const progressRows = rows.filter((r) => r.payTypeId === PROGRESS_PAY_TYPE);
     const acceptRows = rows.filter((r) => r.payTypeId === ACCEPT_PAY_TYPE);
+    // ✅ 使用 BigNumber
+    let appYskAmt = new BigNumber(0);
+    let yskRate = new BigNumber(0);
 
-    let appYskAmt = 0;
-    let yskRate = 0;
     if (progressRows.length > 0) {
       // 存在进度款：产值只能填在进度款行，验收款不得有产值
       for (const row of acceptRows) {
-        if ((Number(row.prodVal) || 0) !== 0) {
+        if (!toBig(row.prodVal || 0).isZero()) {
           ElMessage.error("已存在进度款，验收款不得填写产值金额！");
           return false;
         }
@@ -1722,16 +1412,22 @@ const validateProdTables = async () => {
       for (const row of progressRows) {
         if (
           (!row.buildPeriod || !row.prodValPeriod || !row.payDate) &&
-          ((row.prodVal ?? 0) !== 0 || (row.payAmt ?? 0) !== 0)
+          (!toBig(row.prodVal || 0).isZero() || !toBig(row.payAmt || 0).isZero())
         ) {
           ElMessage.error("进度款行的施工期间、产值期间、计划付款期间均不能为空！");
           return false;
         }
-        if (row.payDate < row.prodValPeriod && ((row.prodVal ?? 0) !== 0 || (row.payAmt ?? 0) !== 0)) {
+        if (
+          row.payDate < row.prodValPeriod &&
+          (!toBig(row.prodVal || 0).isZero() || !toBig(row.payAmt || 0).isZero())
+        ) {
           ElMessage.error("计划付款期间不能早于产值期间！");
           return false;
         }
-        if (row.buildPeriod > row.prodValPeriod && ((row.prodVal ?? 0) !== 0 || (row.payAmt ?? 0) !== 0)) {
+        if (
+          row.buildPeriod > row.prodValPeriod &&
+          (!toBig(row.prodVal || 0).isZero() || !toBig(row.payAmt || 0).isZero())
+        ) {
           ElMessage.error("产值期间不能早于施工期间！");
           return false;
         }
@@ -1747,35 +1443,41 @@ const validateProdTables = async () => {
       for (const row of acceptRows) {
         if (
           (!row.buildPeriod || !row.prodValPeriod || !row.payDate) &&
-          ((row.prodVal ?? 0) !== 0 || (row.payAmt ?? 0) !== 0)
+          (!toBig(row.prodVal || 0).isZero() || !toBig(row.payAmt || 0).isZero())
         ) {
           ElMessage.error("验收款行的施工期间、产值期间、计划付款期间均不能为空！");
           return false;
         }
-        if (row.payDate < row.prodValPeriod && ((row.prodVal ?? 0) !== 0 || (row.payAmt ?? 0) !== 0)) {
+        if (
+          row.payDate < row.prodValPeriod &&
+          (!toBig(row.prodVal || 0).isZero() || !toBig(row.payAmt || 0).isZero())
+        ) {
           ElMessage.error("计划付款期间不能早于产值期间！");
           return false;
         }
-        if (row.buildPeriod > row.prodValPeriod && ((row.prodVal ?? 0) !== 0 || (row.payAmt ?? 0) !== 0)) {
+        if (
+          row.buildPeriod > row.prodValPeriod &&
+          (!toBig(row.prodVal || 0).isZero() || !toBig(row.payAmt || 0).isZero())
+        ) {
           ElMessage.error("产值期间不能早于施工期间！");
           return false;
         }
-        yskRate = row.payRate;
-        appYskAmt = appYskAmt + row.payAmt;
+        yskRate = toBig(row.payRate || 0);
+        appYskAmt = appYskAmt.plus(toBig(row.payAmt || 0));
       }
 
       if (progressRows.length > 0) {
         const yskAmt = await getContractYskAmt(formData.value.conId);
+        const safeYskAmt = toBig(yskAmt ?? 0);
+        const safeApplyProdVal = toBig(formData.value.applyProdVal ?? 0);
+        const safeYskRate = yskRate;
+        const safeAppYskAmt = appYskAmt;
 
-        const safeYskAmt = Number(yskAmt ?? 0);
-        const safeApplyProdVal = Number(formData.value.applyProdVal ?? 0);
-        const safeYskRate = Number(yskRate ?? 0);
-        const safeAppYskAmt = Number(appYskAmt ?? 0);
+        const yskOverAmt = safeYskAmt.plus(safeApplyProdVal.times(safeYskRate).dividedBy(100)).minus(safeAppYskAmt);
+        const yskCanAmt = safeYskAmt.plus(safeApplyProdVal.times(safeYskRate).dividedBy(100));
 
-        const yskOverAmt = safeYskAmt + (safeApplyProdVal * safeYskRate) / 100 - safeAppYskAmt;
-        const yskCanAmt = safeYskAmt + (safeApplyProdVal * safeYskRate) / 100;
-        if (yskOverAmt < 0) {
-          ElMessage.error("验收款申报应付金额超产值！请大可申报验收款应付额度：" + yskCanAmt + "元。");
+        if (yskOverAmt.isLessThan(0)) {
+          ElMessage.error("验收款申报应付金额超产值！最大可申报验收款应付额度：" + yskCanAmt.decimalPlaces(2).toString() + "元。");
           return false;
         }
       }
@@ -1787,20 +1489,25 @@ const validateProdTables = async () => {
       return false;
     }
     for (const row of matRows) {
-      if ((Number(row.prodVal) || 0) === 0) {
+      // 使用 BigNumber 比较
+      const prodVal = toBig(row.prodVal || 0);
+      const payAmt = toBig(row.payAmt || 0);
+      const recvProdAmt = toBig(row.recvProdAmt || 0);
+
+      if (prodVal.isZero()) {
         ElMessage.error("产值明细表中，本次申报产值金额不能为0！");
         return false;
       }
-      if ((Number(row.payAmt) || 0) === 0) {
+      if (payAmt.isZero()) {
         ElMessage.error("产值明细表中，应付金额不能为0！");
         return false;
       }
-      if ((Number(row.prodVal) || 0) > (Number(row.recvProdAmt) || 0)) {
+      if (prodVal.isGreaterThan(recvProdAmt)) {
         ElMessage.error("产值明细表中，本次申报产值不能大于接收产值！");
         return false;
       }
       if (!row.buildPeriod || !row.prodValPeriod || !row.payDate) {
-        ElMessage.error("进产值明细表中，施工期间、产值期间、计划付款期间均不能为空！");
+        ElMessage.error("产值明细表中，施工期间、产值期间、计划付款期间均不能为空！");
         return false;
       }
       if (row.payDate < row.prodValPeriod) {
@@ -1838,7 +1545,7 @@ const focusFirstError = (invalidFields?: Record<string, any>) => {
 // ============================================================
 // 构建提交参数
 const buildSubmitParams = () => {
-  let params:any = {
+  let params: any = {
     bill: {
       ...billData.value,
       id: billData.value.id || undefined,
@@ -1879,7 +1586,7 @@ const buildSubmitParams = () => {
       totalPayVal: formData.value.totalPayVal ?? "",
       isMaterial: formData.value.isSelfSupply,
       materialType: formData.value.selfSupplyType,
-      prodValPeriod:formData.value.prodValPeriod,
+      prodValPeriod: formData.value.prodValPeriod,
     },
     billPayrates: formData.value.payMethod === 1 ? nonSelfSupplyTable.value : [],
     billMaterials:
@@ -1973,17 +1680,24 @@ const handleSubmit = async () => {
       return false;
     }
 
-    let ctrlAmt = 0;
-    if (formData.value.preSettleAmt > 0) {
-      ctrlAmt = formData.value.preSettleAmt;
+    // 使用 BigNumber 比较
+    const preSettleAmt = toBig(formData.value.preSettleAmt || 0);
+    const signAmt = toBig(formData.value.signAmt || 0);
+    const addAmt = toBig(formData.value.addAmt || 0);
+    const totalProdVal = toBig(formData.value.totalProdVal || 0);
+    const totalPayVal = toBig(formData.value.totalPayVal || 0);
+    let ctrlAmt: BigNumber;
+    if (preSettleAmt.isGreaterThan(0)) {
+      ctrlAmt = preSettleAmt;
     } else {
-      ctrlAmt = (formData.value.signAmt || 0) + (formData.value.addAmt || 0);
+      ctrlAmt = signAmt.plus(addAmt);
     }
-    if (ctrlAmt < formData.value.totalProdVal) {
+
+    if (ctrlAmt.isLessThan(totalProdVal)) {
       ElMessage.error("期末累计产值金额已超合同金额！不可提交！");
       return false;
-    } 
-    if (ctrlAmt < formData.value.totalPayVal) {
+    }
+    if (ctrlAmt.isLessThan(totalPayVal)) {
       ElMessage.error("期末累计应付金额已超合同金额！不可提交！");
       return false;
     }
@@ -2077,9 +1791,10 @@ const handleFileSuccess = (file: any) => {
 // ============================================================
 const recomputeMaterialPayAmt = (row: any, column: string) => {
   if (column === "prodVal" || column === "payRate") {
-    const v = Number(row.prodVal) || 0;
-    const r = Number(row.payRate) || 0;
-    row.payAmt = Number(((v * r) / 100).toFixed(2));
+    const v = toBig(row.prodVal || 0);
+    const r = toBig(row.payRate || 0);
+    row.payAmt = v.times(r).dividedBy(100)
+      .decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
   }
 };
 const handleMaterialSave = async (data: any) => {

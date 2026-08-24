@@ -94,7 +94,7 @@ import { getEnumLabel, getEnumType } from "@/utils/enum";
 import { conBillStatusEnum } from "@/constants/contract-manage/enums";
 import { roleApi } from "@/api/system/role-api";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
-import { formatThousandWithPlaces } from "@/utils/decimal";
+import { formatThousandWithPlaces } from "@/utils/big-number";
 
 defineOptions({ name: "cst-process" });
 

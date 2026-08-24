@@ -43,6 +43,7 @@ import { requiredRule } from "@/utils/form-rule-validate.ts";
 // 重新导出类型，保持外部 import 路径不变
 import { formType } from "@/types/form/form-types.ts";
 import { normalizeCode } from "@/utils/common.ts";
+import { toBig, formatDecimal, BigNumber } from "@/utils/big-number.ts";
 export type { ContractFormProps, ContractFormEmits, ContractFormData };
 
 // ============ Composable ============
@@ -249,9 +250,16 @@ export function useContractForm(
     const finalTaxRate =
       result.taxRate > 0 ? Math.round(result.taxRate * 100) / 100 : 0;
     return {
-      totalPriceTax: Math.round(result.totalPriceTax * 100) / 100,
-      totalPrice: Math.round(result.totalPrice * 100) / 100,
-      taxAmount: Math.round(result.taxAmount * 100) / 100,
+      // 使用 BigNumber 进行精确计算
+      totalPriceTax: toBig(result.totalPriceTax)
+        .decimalPlaces(2, BigNumber.ROUND_HALF_UP)
+        .toNumber(),
+      totalPrice: toBig(result.totalPrice)
+        .decimalPlaces(2, BigNumber.ROUND_HALF_UP)
+        .toNumber(),
+      taxAmount: toBig(result.taxAmount)
+        .decimalPlaces(2, BigNumber.ROUND_HALF_UP)
+        .toNumber(),
       taxRate: finalTaxRate,
     };
   }
@@ -260,11 +268,19 @@ export function useContractForm(
     () => priceTable.value.map((item) => `${item.itemAmt}-${item.itemTaxRate}`),
     () => {
       priceTable.value.forEach((item) => {
-        const amt = Number(item.itemAmt) || 0; // ← 确认这行存在
-        const rate = Number(item.itemTaxRate) || 0; // ← 确认这行存在
-        if (amt > 0 && rate >= 0) {
-          item.itemExclAmt = Math.round((amt / (1 + rate / 100)) * 100) / 100;
-          item.itemTaxAmt = Math.round((amt - item.itemExclAmt) * 100) / 100;
+        const amt = toBig(item.itemAmt || 0);
+        const rate = toBig(item.itemTaxRate || 0);
+        if (amt.isGreaterThan(0) && rate.isGreaterThanOrEqualTo(0)) {
+          // 不含税金额 = 含税金额 / (1 + 税率/100)
+          const exclAmt = amt.dividedBy(toBig(1).plus(rate.dividedBy(100)));
+          item.itemExclAmt = exclAmt
+            .decimalPlaces(2, BigNumber.ROUND_HALF_UP)
+            .toNumber();
+          // 税额 = 含税金额 - 不含税金额
+          const taxAmt = amt.minus(exclAmt);
+          item.itemTaxAmt = taxAmt
+            .decimalPlaces(2, BigNumber.ROUND_HALF_UP)
+            .toNumber();
         }
       });
     },
@@ -368,12 +384,12 @@ export function useContractForm(
     }
 
     // 应付比例之和
-    const rateTotal = payrateTable.value.reduce(
-      (sum, item) => sum + (Number(item.payRate) || 0),
-      0,
-    );
+    let rateTotal = new BigNumber(0);
+    payrateTable.value.forEach((item) => {
+      rateTotal = rateTotal.plus(toBig(item.payRate || 0));
+    });
 
-    if (rateTotal !== 100) {
+    if (!rateTotal.isEqualTo(100)) {
       ElMessage.warning(`支付方式表应付比例合计应等于100%，请核对后再提交！`);
       return false;
     }
@@ -636,7 +652,7 @@ export function useContractForm(
 
   // ---- 构建提交参数 ----
   const buildSubmitParams = () => {
-    let params:any = {
+    let params: any = {
       bill: {
         ...billData.value,
         id: billData.value.id || undefined,
@@ -976,7 +992,8 @@ export function useContractForm(
       }
       payTypeMap.get(item.payTypeId)!.push(rowNum);
 
-      if (!item.payRate || item.payRate <= 0) {
+      const payRateVal = toBig(item.payRate || 0);
+      if (payRateVal.isLessThanOrEqualTo(0)) {
         ElMessage.error(`支付比例明细列表第${rowNum}行：应付比例必须大于0`);
         return false;
       }

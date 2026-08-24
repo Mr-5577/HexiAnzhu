@@ -69,7 +69,6 @@ import { ref, onMounted, reactive, shallowRef, computed, markRaw } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { List } from "@element-plus/icons-vue";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
-import { largeScreenApi } from "@/api/sales/large-screen-api";
 import { useRoute, useRouter } from "vue-router";
 import { v4 as uuidv4 } from "uuid";
 import EditableTable from "@/components/base/editable-table.vue";
@@ -81,6 +80,8 @@ import { feePaymentApi } from "@/api/cost/non-contract-manage/fee-payment-api";
 import { cstPaymentApi } from "@/api/cost/non-contract-manage/cst-payment-api";
 import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api";
 import { paymentRequestApi } from "@/api/cost/contract-manage/payment-application-api";
+// ===== 修改：替换 decimal.js 为 bignumber.js =====
+import { toBig, formatDecimal, BigNumber } from "@/utils/big-number.ts";
 
 defineOptions({ name: "finance-allocation" });
 
@@ -141,30 +142,32 @@ const getDiffClass = (diff: number): string => {
 };
 
 // 获取明细合计
+// ===== 修改：使用 toBig 替代 toDecimal，BigNumber 替代 Decimal =====
 const getDetailTotal = (finaDs: any[]): number => {
   if (!finaDs || finaDs.length === 0) return 0;
-  return finaDs.reduce((sum, item) => {
-    const amount = parseFloat(item.finaSubAmt) || 0;
-    return sum + amount;
-  }, 0);
+  let total = new BigNumber(0);
+  finaDs.forEach((item) => {
+    total = total.plus(toBig(item.finaSubAmt || 0));
+  });
+  return total.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 };
-
 // 获取差额（主表金额 - 明细合计）
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const getDiffAmount = (row: any): number => {
-  const mainAmount = parseFloat(row.payAmt) || 0;
-  const detailTotal = getDetailTotal(row.finaDs);
-  return mainAmount - detailTotal;
+  const mainAmount = toBig(row.payAmt || 0);
+  const detailTotal = toBig(getDetailTotal(row.finaDs));
+  return mainAmount.minus(detailTotal).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 };
 
 // 格式化金额（保留两位小数，带千分位）
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const formatMoney = (value: number): string => {
-  if (value === null || value === undefined || isNaN(value)) {
-    return "0.00";
-  }
-  return value.toLocaleString("zh-CN", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  const dec = toBig(value);
+  const parts = dec.toFixed(2).split('.');
+  const integerPart = parts[0];
+  const decimalPart = parts[1] || '00';
+  const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return `${formattedInteger}.${decimalPart}`;
 };
 
 // 主表列配置
@@ -358,6 +361,7 @@ const validateDetailRow = (
 };
 
 // 校验数据是否通过
+// ===== 修改：使用 toBig 替代 toDecimal，isEqualTo 替代 equals =====
 const validateData = () => {
   // 先校验所有明细是否填写完整
   for (const row of mainTableData.value) {
@@ -372,30 +376,35 @@ const validateData = () => {
 
   // 明细校验通过后，再校验差额
   for (const row of mainTableData.value) {
-    const diff = getDiffAmount(row);
-    if (diff !== 0) {
+    const diff = toBig(getDiffAmount(row));
+    if (!diff.isZero()) {
       ElMessage.warning(
         `报销事项 "${row.payDesc || row.tenderNo || "未命名"}" 存在差额，请检查明细金额`,
       );
-      return false; // ✅ 立即终止
+      return false;
     }
   }
 
   return true;
 };
 // 校验拆分明细是否已支付，有regPayAmtSum字段并且值大于0表示已支付
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const validateDetails = (data: any[]) => {
   const safeData = data ?? [];
   const errors: string[] = [];
   for (const item of safeData) {
     for (const detail of item.finaDs || []) {
       const { finaSubAmt, regPayAmtSum, finaSubDesc } = detail;
-      // 只校验有 regPayAmtSum 字段且大于 0 的明细
-      if (typeof regPayAmtSum === 'number' && regPayAmtSum > 0) {
-        if (finaSubAmt <= 0) {
-          errors.push(`金额必须大于0`);
-        } else if (finaSubAmt > regPayAmtSum) {
-          errors.push(`拆分明细“${finaSubDesc}”金额不能超过已付 ${regPayAmtSum}`);
+      // 只校验有 regPayAmtSum 字段且大于 0 的明细 - 使用 BigNumber
+      if (regPayAmtSum !== undefined && regPayAmtSum !== null) {
+        const regAmt = toBig(regPayAmtSum);
+        const amt = toBig(finaSubAmt || 0);
+        if (regAmt.isGreaterThan(0)) {
+          if (amt.isLessThanOrEqualTo(0)) {
+            errors.push(`金额必须大于0`);
+          } else if (amt.isGreaterThan(regAmt)) {
+            errors.push(`拆分明细“${finaSubDesc}”金额不能超过已付 ${regAmt.decimalPlaces(2).toString()}`);
+          }
         }
       }
     }
@@ -403,6 +412,7 @@ const validateDetails = (data: any[]) => {
   return { valid: !errors.length, msg: errors.join('；') };
 };
 // 提交确认支付
+// ===== 修改：使用 toBig 替代 toDecimal，decimalPlaces 替代 toDecimalPlaces =====
 const handleSubmit = async () => {
   console.log("提交数据:", mainTableData.value);
   // 验拆分明细是否已支付，有regPayAmtSum字段并且值大于0表示已支付
@@ -423,6 +433,8 @@ const handleSubmit = async () => {
     const newData = detailList.map((item) => ({
       ...item,
       allocStatus: 1, // 分摊状态,0-未分摊 1-已分摊 2-部分分摊
+      // 确保金额是数字类型，保留两位小数
+      finaSubAmt: toBig(item.finaSubAmt || 0).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber()
     }));
     console.log("财务分摊提交数据:", newData);
     try {
@@ -496,6 +508,7 @@ const getFinaSubjectListBySegId = async (segId: number) => {
   }
 };
 // 处理合同支付财务分摊数据
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const processConData = (list) => {
   console.log("处理合同支付分摊数据", list);
   if (list && list.length > 0) {
@@ -536,6 +549,7 @@ const processConData = (list) => {
   }
 };
 // 处理非合同请款、费用报销财务分摊数据
+// ===== 修改：使用 toBig 替代 toDecimal =====
 const processNconData = (list) => {
   console.log("处理非合同财务分摊数据", list);
   if (list && list.length > 0) {
@@ -547,10 +561,10 @@ const processNconData = (list) => {
         // 有数据：使用原有数据，记录补充 uuid
         finaDs = item.finaDs.map((fd: any) => {
           // 使用当前行自己的 regPayAmtSum 和 finaSubAmt 判断
-          const regAmt = Number(fd.regPayAmtSum) || 0; // 已付金额
-          const finaAmt = Number(fd.finaSubAmt) || 0;
+          const regAmt = toBig(fd.regPayAmtSum || 0); // 已付金额
+          const finaAmt = toBig(fd.finaSubAmt || 0);
           // 判断是否可拆分： 分摊金额 == 已付金额  不可拆分
-          const canSplit = finaAmt == regAmt;
+          const canSplit = finaAmt.isEqualTo(regAmt);
           return {
             ...fd,
             uuid: uuidv4(),
