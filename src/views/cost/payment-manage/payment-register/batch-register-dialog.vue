@@ -106,6 +106,7 @@ import { useUserStore } from "@/stores/user-store";
 import { useMDStore } from "@/stores/md-store.ts";
 import { v4 as uuidv4 } from "uuid";
 import { payRegisterApi } from "@/api/cost/payment-manage/payment-register-api";
+import { roundToTwo } from "@/utils/big-number";
 
 interface Props {
   modelValue: boolean;
@@ -333,8 +334,10 @@ const getDetailList = async () => {
   try {
     const params = {
       ...rest,
-      reqDateStart: rest.applyDate?.[0],
-      reqDateEnd: rest.applyDate?.[1],
+      reqDateStart: rest?.applyDate?.[0],
+      reqDateEnd: rest?.applyDate?.[1],
+      payDateStart: rest?.payDate?.[0],
+      payDateEnd: rest?.payDate?.[1],
       bizBillId: props.currentRow.bizBillId,
       bizType: props.currentRow.bizType,
     };
@@ -344,8 +347,10 @@ const getDetailList = async () => {
       const list = res.data || [];
       tableData.value = list.map((item) => {
         // 计算未付金额 = 请款金额 - 已付金额
-        const unpaidAmt =
-          (Number(item.finaSubAmt) || 0) - (Number(item.regPayAmtSum) || 0);
+        const finaSubAmt = Number(item.finaSubAmt || 0);
+        const regPayAmtSum = Number(item.regPayAmtSum || 0);
+        const unpaidAmt = roundToTwo(finaSubAmt - regPayAmtSum)
+
         return {
           ...item,
           uuid: uuidv4(),

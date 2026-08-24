@@ -36,6 +36,9 @@
         <el-date-picker v-model="queryParams.belongMonth" type="month" value-format="YYYY-MM" placeholder="费用归属期间"
           style="width: 180px" />
       </el-form-item>
+      <el-form-item label="收款方账户名" prop="pmAccountName">
+        <el-input v-model="queryParams.pmAccountName" placeholder="请输入" clearable style="width: 180px" />
+      </el-form-item>
 
       <el-form-item label="入账状态" prop="isLocked">
         <el-select v-model="queryParams.isLocked" placeholder="请选择" style="width: 180px" clearable>
@@ -45,7 +48,7 @@
       </el-form-item>
       <el-form-item label="流程状态" prop="wfStatus">
         <el-select v-model="queryParams.wfStatus" placeholder="请选择" style="width: 180px" multiple collapse-tags
-          clearable>
+          @change="changeWfStatus">
           <el-option v-for="item in processStatus" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </el-form-item>
@@ -112,7 +115,7 @@
           单项登记
         </el-button>
         <el-button type="primary" link @click="handleView(row)"
-          v-if="menuStore.hasExactPermission('payment-register:detail') && row.flowStatus === 40">
+          :disabled="!(menuStore.hasExactPermission('payment-register:detail') && row.flowStatus === 40)">
           明细
         </el-button>
         <el-button type="primary" link @click="handleEntry(row)" :disabled="disabledEntry(row)">
@@ -145,7 +148,6 @@ import { payRegisterApi } from "@/api/cost/payment-manage/payment-register-api.t
 import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
 import { costBillStatusEnum } from "@/constants/cost/enums.ts";
 import { exportExcel } from '@/utils/export-excel.ts';
-import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api.ts";
 import { useMenuStore } from "@/stores/menu-store";
 import { formatThousandWithPlaces } from "@/utils/big-number.ts";
 
@@ -168,9 +170,10 @@ const queryParams = ref({
   supName: undefined,
   reqNo: undefined,
   belongMonth: undefined,
+  pmAccountName: undefined,
   applyDate: [],
   payDate: [],
-  wfStatus: [], // 0=草稿, 10=审批中, 40=已审批, 80=作废, 99=其他
+  wfStatus: [40], // 0=草稿, 10=审批中, 40=已审批, 80=作废, 99=其他
   payStatus: "未支付", // 未支付  部分支付  全部支付
   isLocked: undefined,
   wfTitle: undefined,
@@ -228,7 +231,7 @@ const disabledRegister = (row) => {
   // 无权限 → 禁用
   if (!hasPermission) return true
   // 非已审批 → 禁用
-  if (row.wfStatus !== 40) return true
+  if (row.flowStatus !== 40) return true
   // 已入账 → 禁用
   if (row.isLocked) return true
   // 已全部支付 → 禁用
@@ -241,7 +244,7 @@ const disabledEntry = (row) => {
   // 无权限 → 禁用
   if (!hasPermission) return true
   // 非已审批 → 禁用
-  if (row.wfStatus !== 40) return true
+  if (row.flowStatus !== 40) return true
   // 已入账 → 禁用
   if (row.isLocked) return true
   // 没有全部支付 → 禁用
@@ -310,10 +313,17 @@ const handleReset = () => {
   });
   queryParams.value.wfStatus = [40]; // 0=草稿, 10=审批中, 40=已审批, 80=作废, 99=其他
   // 默认查询未支付
-  queryParams.value.payStatus = "未支付";
+  // queryParams.value.payStatus = "未支付";
   queryParams.value.isPayable = true;
   getDataList();
 };
+const changeWfStatus = (val) => {
+  // if (val.length === 0) {
+  //   queryParams.value.wfStatus = [40];
+  // } else {
+  //   queryParams.value.wfStatus = val;
+  // }
+}
 const handleExport = async () => {
   try {
     exportLoading.value = true;

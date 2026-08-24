@@ -1,92 +1,62 @@
 <!-- 付款登记查看 弹窗 -->
 <template>
-  <base-modal
-    v-model="dialogVisible"
-    :title="'付款登记明细'"
-    width="1400px"
-    :showConfirmButton="false"
-    :showCancelButton="false"
-    @close="handleClose"
-  >
+  <base-modal v-model="dialogVisible" :title="'付款登记明细'" width="1400px" :showConfirmButton="false"
+    :showCancelButton="false" @close="handleClose">
     <div style="padding-right: 8px; box-sizing: border-box">
-      <!-- <div class="title">款项明细</div> -->
-      <base-table
-        :columns="tableColumns"
-        :tableData="tableData"
-        :rowKey="'id'"
-        :pagination="false"
-        :show-toolbar="false"
-        :auto-height="false"
-        :height="'500px'"
-        :border="true"
-        :stripe="true"
-      >
-        <!-- 回单照片列自定义渲染 -->
-        <template #receiptPhotos="{ row }">
-          <div class="photo-list">
-            <template v-if="row.receiptPhotos && row.receiptPhotos.length > 0">
-              <div
-                v-for="(photo, index) in getDisplayPhotos(row.receiptPhotos)"
-                :key="photo.id || index"
-                class="photo-item-wrapper"
-                @click.stop="handlePreview(row.receiptPhotos, index)"
-              >
-                <el-image
-                  :src="photo.url || photo"
-                  fit="cover"
-                  class="photo-item"
-                  :preview-teleported="true"
-                />
-              </div>
-              <span
-                v-if="row.receiptPhotos.length > 3"
-                class="photo-more"
-                @click.stop="handlePreview(row.receiptPhotos, 3)"
-              >
-                +{{ row.receiptPhotos.length - 3 }}
-              </span>
-            </template>
-            <span v-else style="color: #909399; font-size: 12px">
-              暂无照片
-            </span>
+      <base-table :columns="payLedgerSubColumns" :tableData="combineTable" :rowKey="'uuid'" :pagination="false"
+        :show-toolbar="false" :auto-height="false" :height="'500px'" :border="true" :stripe="true">
+        <!-- 展开行：显示明细表格 -->
+        <template #expand="{ row }">
+          <div class="expand-table-wrapper">
+            <div class="expand-title">明细</div>
+            <base-table :columns="tableColumns" :tableData="row.children" :rowKey="'id'" :pagination="false"
+              :show-toolbar="false" :auto-height="false" :height="'150px'" :border="true" :stripe="true"
+              :compactEmpty="true">
+              <!-- 回单照片列自定义渲染 -->
+              <template #receiptPhotos="{ row: childRow }">
+                <div class="photo-list">
+                  <template v-if="childRow.receiptPhotos && childRow.receiptPhotos.length > 0">
+                    <div v-for="(photo, index) in getDisplayPhotos(childRow.receiptPhotos)" :key="photo.id || index"
+                      class="photo-item-wrapper" @click.stop="handlePreview(childRow.receiptPhotos, index)">
+                      <el-image :src="photo.url || photo" fit="cover" class="photo-item" :preview-teleported="true" />
+                    </div>
+                    <span v-if="childRow.receiptPhotos.length > 3" class="photo-more"
+                      @click.stop="handlePreview(childRow.receiptPhotos, 3)">
+                      +{{ childRow.receiptPhotos.length - 3 }}
+                    </span>
+                  </template>
+                  <span v-else style="color: #909399; font-size: 12px">
+                    暂无照片
+                  </span>
+                </div>
+              </template>
+              <template #actions="{ row: childRow }">
+                <el-button type="primary" link @click="handleEdit(childRow)">
+                  编辑
+                </el-button>
+                <el-button type="danger" link @click="handleDelete(childRow)">
+                  删除
+                </el-button>
+              </template>
+            </base-table>
           </div>
-        </template>
-
-        <template #actions="{ row }">
-          <el-button type="primary" link @click="handleEdit(row)">
-            编辑
-          </el-button>
-          <el-button type="danger" link @click="handleDelete(row)">
-            删除
-          </el-button>
         </template>
       </base-table>
 
       <!-- 图片预览组件 -->
-      <el-image-viewer
-        v-if="showViewer"
-        :url-list="previewList"
-        :initial-index="previewIndex"
-        :teleported="true"
-        @close="closePreview"
-        @switch="handleSwitch"
-      />
+      <el-image-viewer v-if="showViewer" :url-list="previewList" :initial-index="previewIndex" :teleported="true"
+        @close="closePreview" @switch="handleSwitch" />
 
       <!-- 编辑登记明细弹窗 -->
-      <edit-register-dialog
-        v-model="editDialogVisible"
-        :unpaidAmt="unpaidAmt"
-        :projId="props.currentRow?.projId"
-        :row-data="editRowData"
-        @success="handleSuccess"
-      />
+      <edit-register-dialog v-model="editDialogVisible" :unpaidAmt="unpaidAmt" :projId="props.currentRow?.projId"
+        :row-data="editRowData" @success="handleSuccess" />
     </div>
   </base-modal>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from "vue";
-import { ElMessage, ElMessageBox, type FormInstance } from "element-plus";
+import { ElMessage, ElMessageBox, formatter, type FormInstance } from "element-plus";
 import { ElImageViewer } from "element-plus";
 import { dateUtil } from "@/utils/date-util";
 import { v4 as uuidv4 } from "uuid";
@@ -96,6 +66,7 @@ import { payRegisterApi } from "@/api/cost/payment-manage/payment-register-api";
 import { commonApi } from "@/api/cost/common-api";
 import { buildFileUrl } from "@/utils/file-path-util";
 import EditRegisterDialog from "./edit-register-dialog.vue";
+import { toBig, formatThousandWithPlaces, roundToTwo, BigNumber } from "@/utils/big-number.ts";
 
 interface Props {
   modelValue: boolean;
@@ -119,7 +90,6 @@ const mdStore = useMDStore();
 
 const dialogVisible = ref(props.modelValue);
 const formRef = ref<FormInstance>();
-const payComOptions = ref([]);
 const editDialogVisible = ref(false);
 const editRowData = ref(null);
 
@@ -137,25 +107,43 @@ const formData = ref({
   modifyDate: "",
 });
 
-// 计算未付金额 = 请款金额 - 已支付金额合计
+// 计算未付金额 = 请款金额（四舍五入后）- 已支付金额合计（每笔先四舍五入后累加）
 const unpaidAmt = computed(() => {
   if (!props.currentRow) return 0;
-  const payableAmt = Number(props.currentRow?.payableAmt || 0) || 0;
-  const paidAmt = tableData.value.reduce((sum, item) => {
-    return sum + (Number(item.payAmt || 0) || 0);
-  }, 0);
-  return payableAmt - paidAmt;
+  // 请款金额先四舍五入
+  const payableAmt = roundToTwo(props.currentRow?.payableAmt || 0);
+  // 每笔已付金额先四舍五入，再累加
+  let paidAmt = 0;
+  tableData.value.forEach((item) => {
+    paidAmt += roundToTwo(item.payAmt || 0);
+  });
+  // 结果四舍五入
+  return roundToTwo(payableAmt - paidAmt);
 });
 
 // 表格数据
-const tableData = ref([]);
+const payLedgerSubData = ref([]); // 付款台账子记录
+const tableData = ref([]); // 实付登记列表
+const combineTable = ref([]); // 合并后的表格数据
+const payLedgerSubColumns = [
+  { type: "expand", width: "50", slot: "expand" },
+  { prop: "finaSubDesc", label: "款项类型/事项" },
+  { prop: "finaOrgName", label: "所属组织" },
+  { prop: "pmBankName", label: "收款方开户行" },
+  { prop: "pmAccountName", label: "收款方账户名" },
+  { prop: "pmBankAccount", label: "收款方账号" },
+  { prop: "payWayName", label: "支付方式", width: 100 },
+  { prop: "finaSubName", label: "科目名称" },
+  { prop: "finaSubAmt", label: "请款金额", width: 90 },
+  { prop: "unpaidAmt", label: "未付金额", width: 90 },
+]
 // 表格列配置
 const tableColumns = computed(() => {
   const baseColumns = [
     { type: "index", label: "序号", width: 60 },
     { prop: "finaSubDesc", label: "摘要", width: 150 },
     { prop: "payWayName", label: "支付方式", width: 100 },
-    { prop: "payAmt", label: "支付金额", width: 100 },
+    { prop: "payAmt", label: "支付金额", width: 100, formatter: (row) => formatThousandWithPlaces(row.payAmt || 0) },
     { prop: "payDate", label: "支付日期", width: 100 },
     { prop: "payDesc", label: "备注", width: 150 },
     { prop: "payCompName", label: "支付公司" },
@@ -195,7 +183,7 @@ const handleDelete = (row) => {
         // handleClose();
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 const handleSuccess = () => {
   // 更新当前登记列表数据
@@ -240,23 +228,34 @@ const handleClose = () => {
   closePreview();
 };
 
-// 获取公司列表
-const getCompanyListByProjId = async () => {
-  const projId = props?.currentRow?.projId;
-  if (!projId) {
-    payComOptions.value = [];
-    return;
-  }
+// 获取付款台账子记录
+// ===== 修改：先四舍五入再计算未付金额 =====
+const getPayLedgerSubData = async () => {
+  if (!props.queryParams) return;
   try {
-    payComOptions.value = [];
-    const companies = await mdStore.getProjCompanyList(projId);
-    payComOptions.value = companies || [];
+    const params = {
+      bizBillId: props.currentRow.bizBillId,
+      bizType: props.currentRow.bizType,
+    }
+    const res = await payRegisterApi.getPayLedgerSub(params);
+    if (res.code === 200) {
+      const list = res.data || [];
+      payLedgerSubData.value = list.map((item) => {
+        // 计算未付金额 = 请款金额（四舍五入）- 已付金额（四舍五入）
+        const finaSubAmt = roundToTwo(item.finaSubAmt || 0);
+        const regPayAmtSum = roundToTwo(item.regPayAmtSum || 0);
+        const unpaidAmtVal = roundToTwo(finaSubAmt - regPayAmtSum);
+        return {
+          ...item,
+          uuid: uuidv4(),
+          unpaidAmt: unpaidAmtVal, // 未付金额
+        };
+      })
+    }
   } catch (error) {
-    console.error("获取公司列表失败:", error);
-    payComOptions.value = [];
-  }
-};
 
+  }
+}
 // 获取明细数据
 const getDetailList = async () => {
   try {
@@ -317,16 +316,49 @@ const getDetailList = async () => {
 
       // 更新表格数据
       tableData.value = processedList || [];
+
+      // 组合表格数据
+      const combinedData = combineTableData(payLedgerSubData.value, processedList);
+      console.log("combinedData", combinedData);
+      combineTable.value = combinedData;
     }
   } catch (error) {
     console.error("获取明细列表失败:", error);
-    ElMessage.error("获取数据失败，请重试");
   }
 };
 
+// 组合表格数据 - 一对多关系
+const combineTableData = (parentData: any[], childData: any[]) => {
+  if (!parentData || parentData.length === 0) return [];
+
+  // 建立子数据索引，按 finaAllocId 分组（一对多）
+  const childMap = new Map();
+  childData.forEach(item => {
+    const key = item.finaAllocId;
+    if (!childMap.has(key)) {
+      childMap.set(key, []);
+    }
+    childMap.get(key).push({
+      ...item,
+      _isChild: true,
+    });
+  });
+
+  // 组合父级数据，添加 children 数组
+  return parentData.map((parent) => {
+    const children = childMap.get(parent.finaAllocId) || [];
+    return {
+      ...parent,
+      _isParent: true,
+      children: children,
+      childrenCount: children.length,
+    };
+  });
+};
+
 const initData = async () => {
-  console.log("initData", props.currentRow);
-  await getDetailList();
+  await getPayLedgerSubData(); // 获取付款台账子记录
+  await getDetailList(); // 获取实付登记明细数据
 };
 
 watch(
@@ -348,22 +380,16 @@ watch(dialogVisible, (val) => {
 </script>
 
 <style lang="scss" scoped>
-.title {
-  font-size: 16px;
-  font-weight: bold;
-  margin-bottom: 12px;
-  padding-left: 12px;
-  box-sizing: border-box;
-  position: relative;
-  &::before {
-    content: "";
-    width: 4px;
-    height: 16px;
-    background: linear-gradient(180deg, #409eff, #66b1ff);
-    border-radius: 2px;
-    position: absolute;
-    left: 0;
-    top: 5px;
+.expand-table-wrapper {
+  padding: 8px 0;
+
+  .expand-title {
+    font-size: 13px;
+    font-weight: 500;
+    color: #409eff;
+    margin-bottom: 6px;
+    padding-left: 8px;
+    border-left: 3px solid #409eff;
   }
 }
 
