@@ -11,6 +11,9 @@
       <el-form-item label="合同编号" prop="conSysNo">
         <el-input v-model="queryParams.conSysNo" placeholder="请输入合同编号" clearable style="width: 180px" />
       </el-form-item>
+      <el-form-item label="关联编号" prop="bizNo">
+        <el-input v-model="queryParams.bizNo" placeholder="请输入关联编号" clearable style="width: 180px" />
+      </el-form-item>
       <el-form-item label="合同分类" prop="conTypeId">
         <ConTypeSelector v-model="queryParams.conTypeId" placeholder="请选择合同分类" style="width: 180px" clearable
           filterable />
@@ -130,6 +133,7 @@ const queryParams = ref({
   agentId: undefined,
   createId: undefined,
   conSysNo: "",
+  bizNo: "",
   time: [],
 });
 // 业务板块
@@ -192,6 +196,7 @@ const getDataList = async () => {
       agentId: queryParams.value.agentId,
       conTypeId: queryParams.value.conTypeId,
       conSysNo: queryParams.value.conSysNo,
+      bizNo: queryParams.value.bizNo,
       ...params,
       createDateStart: startDate,
       createDateEnd: endDate,
@@ -237,6 +242,7 @@ const handleReset = () => {
     agentId: undefined,
     createId: undefined,
     conSysNo: "",
+    bizNo: "",
     time: [],
   };
   resetPagination();

@@ -15,11 +15,14 @@
     <!-- 筛选区域 -->
     <div class="pa-filter">
       <el-form :model="queryParams" ref="queryRef" :inline="true">
-        <el-form-item label="请款说明" prop="paymentName">
-          <el-input v-model="queryParams.bizTitle" placeholder="请输入名称" clearable style="width: 300px" />
+        <el-form-item label="请款说明" prop="bizTitle">
+          <el-input v-model="queryParams.bizTitle" placeholder="请输入名称" clearable style="width: 200px" />
+        </el-form-item>
+        <el-form-item label="单据号" prop="bizNo">
+          <el-input v-model="queryParams.bizNo" placeholder="请输入单据号" clearable style="width: 200px" />
         </el-form-item>
         <el-form-item label="审批状态" prop="status">
-          <el-select v-model="queryParams.status" placeholder="请选择审批状态" style="width: 100px" clearable>
+          <el-select v-model="queryParams.status" placeholder="请选择审批状态" style="width: 150px" clearable>
             <el-option v-for="item in approvalStatusEnum" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
         </el-form-item>
@@ -116,11 +119,13 @@ const paymentTypeOptions = ref<any[]>([]);
 const queryParams = ref({
   conId: props.conId,
   bizTitle: "",
+  bizNo: "",
   status: null,
 });
 
 const handleReset = () => {
   queryParams.value.bizTitle = "";
+  queryParams.value.bizNo = "";
   queryParams.value.status = null;
   resetPagination();
   getDataList();
@@ -128,6 +133,12 @@ const handleReset = () => {
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
+  {
+    prop: "bizNo",
+    label: "单据号",
+    width: 180,
+    showOverflowTooltip: true,
+  },
   {
     prop: "bizTitle",
     label: "付款申请说明",
