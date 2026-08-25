@@ -8,10 +8,13 @@ export const useMenuStore = defineStore("menu-store", () => {
 
   // 将权限数组转换为对象映射，便于快速查找，{ 'menu:del': true }
   const permissions = computed(() => {
-    return permissionList.value.reduce((acc, permission) => {
-      acc[permission] = true;
-      return acc;
-    }, {} as Record<string, boolean>);
+    return permissionList.value.reduce(
+      (acc, permission) => {
+        acc[permission] = true;
+        return acc;
+      },
+      {} as Record<string, boolean>,
+    );
   });
 
   // 保存菜单数据

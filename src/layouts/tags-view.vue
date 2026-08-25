@@ -1,29 +1,13 @@
 <template>
-  <div
-    class="tags-view-container"
-    :class="isLargeScreen ? 'dark-background' : ''"
-  >
+  <div class="tags-view-container" :class="isLargeScreen ? 'dark-background' : ''">
     <div ref="wrapperRef" class="tags-view-wrapper">
-      <router-link
-        v-for="tag in visitedViews"
-        :key="tag.uniqueId || tag.path"
-        :to="{ path: tag.path, query: extractQueryParams(tag) }"
-        :class="['tags-view-item', { active: isActive(tag) }]"
-        @contextmenu.prevent="showContextMenu($event, tag)"
-      >
-        <el-tooltip
-          :content="tag.title"
-          placement="bottom-end"
-          effect="light"
-          :disabled="tag.title.length <= 6"
-        >
+      <router-link v-for="tag in visitedViews" :key="tag.uniqueId || tag.path"
+        :to="{ path: tag.path, query: extractQueryParams(tag) }" :class="['tags-view-item', { active: isActive(tag) }]"
+        @contextmenu.prevent="showContextMenu($event, tag)">
+        <el-tooltip :content="tag.title" placement="bottom-end" effect="light" :disabled="tag.title.length <= 6">
           <span class="tag-title">{{ tag.title }}</span>
         </el-tooltip>
-        <el-icon
-          v-if="!tag.affix"
-          class="close-icon"
-          @click.prevent.stop="closeSelectedTag(tag)"
-        >
+        <el-icon v-if="!tag.affix" class="close-icon" @click.prevent.stop="closeSelectedTag(tag)">
           <Close />
         </el-icon>
       </router-link>
@@ -270,17 +254,20 @@ onUnmounted(() => {
       height: 5px;
       background-color: transparent;
     }
+
     &::-webkit-scrollbar-track {
       background-color: transparent;
       border-radius: 2px;
       margin: 0 12px;
     }
+
     &::-webkit-scrollbar-thumb {
       background-color: rgba(0, 0, 0, 0.15);
       border-radius: 2px;
       transition: background-color 0.3s ease;
       cursor: pointer;
     }
+
     &::-webkit-scrollbar-thumb:hover {
       cursor: pointer;
       background-color: rgba(0, 0, 0, 0.2) !important;
@@ -316,6 +303,7 @@ onUnmounted(() => {
 
         .close-icon {
           color: rgba(255, 255, 255, 0.8);
+
           &:hover {
             background-color: rgba(255, 255, 255, 0.3);
             color: #ffffff;
@@ -385,12 +373,14 @@ onUnmounted(() => {
   .tags-view-wrapper::-webkit-scrollbar-thumb {
     background-color: rgba(255, 255, 255, 0.2);
   }
+
   .tags-view-wrapper::-webkit-scrollbar-thumb:hover {
     background-color: rgba(255, 255, 255, 0.3);
   }
 
   .tags-view-item {
     color: #fff !important;
+
     &:hover {
       background: linear-gradient(135deg, #0a649c 0%, #063958 100%) !important;
     }

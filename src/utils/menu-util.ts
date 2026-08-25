@@ -24,7 +24,7 @@ export function extractModules(menuData: BackendMenuItem[]): ModuleItem[] {
  * 提取所有菜单数据（用于生成路由和侧边栏）
  */
 export function extractAllMenus(
-  menuData: BackendMenuItem[]
+  menuData: BackendMenuItem[],
 ): BackendMenuItem[] {
   const allMenus: BackendMenuItem[] = [];
 
@@ -53,11 +53,11 @@ export function extractAllMenus(
  */
 export function getSidebarMenuByModule(
   menuData: BackendMenuItem[],
-  moduleId: number
+  moduleId: number,
 ): SidebarMenuItem[] {
   // console.log("根据模块ID获取该模块下的侧边栏菜单", menuData, moduleId);
   const module = menuData.find(
-    (item) => item.id === moduleId && item.type === "module"
+    (item) => item.id === moduleId && item.type === "module",
   );
   if (!module || !module.children) return [];
 
@@ -68,7 +68,7 @@ export function getSidebarMenuByModule(
  * 将菜单数据转换为侧边栏格式,过滤掉isVisible为false的菜单
  */
 function transformMenuToSidebar(
-  menuData: BackendMenuItem[]
+  menuData: BackendMenuItem[],
 ): SidebarMenuItem[] {
   const buildMenuItems = (items: BackendMenuItem[]): SidebarMenuItem[] => {
     const result: SidebarMenuItem[] = [];
@@ -111,10 +111,10 @@ function transformMenuToSidebar(
  */
 export function getFirstRoutePath(
   menuData: BackendMenuItem[],
-  moduleId: number
+  moduleId: number,
 ): string | null {
   const module = menuData.find(
-    (item) => item.id === moduleId && item.type === "module"
+    (item) => item.id === moduleId && item.type === "module",
   );
   if (!module || !module.children) return null;
 
@@ -146,7 +146,7 @@ export function transformMenuDataExact(originalData: any) {
   if (originalData && originalData.length == 0) return [];
   // 先找到所有可见的顶级模块 menuType:0模块 1菜单 2按钮  isVisible:是否可见  true可见 false不可见
   const topModules = originalData.filter(
-    (node: any) => node.menuType === 0 && node.isVisible
+    (node: any) => node.menuType === 0 && node.isVisible,
   );
 
   const result: any = [];
@@ -204,12 +204,12 @@ export function transformMenuDataExact(originalData: any) {
             // 递归处理子菜单
             if (child.children && child.children.length > 0) {
               const validGrandChildren = child.children.filter(
-                (gc: any) => gc.menuType === 1
+                (gc: any) => gc.menuType === 1,
               );
               if (validGrandChildren.length > 0) {
                 (childNode as any).children = processChildren(
                   validGrandChildren,
-                  childNode.id
+                  childNode.id,
                 );
               }
             }
@@ -221,7 +221,7 @@ export function transformMenuDataExact(originalData: any) {
       moduleNode.children = processChildren(
         module.children,
         moduleNode.id,
-        moduleNode.pid
+        moduleNode.pid,
       );
     }
 

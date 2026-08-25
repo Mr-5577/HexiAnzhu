@@ -176,8 +176,7 @@ export async function addDynamicRoutes(
     router.addRoute(route);
   });
 
-
-   // 批量添加独立路由
+  // 批量添加独立路由
   independentRoutes.forEach((route) => {
     router.addRoute(route);
   });

@@ -3,11 +3,7 @@
     <!-- 隐藏的菜单不渲染 -->
   </template>
 
-  <el-menu-item
-    v-else-if="!item.children || item.children.length === 0"
-    :index="item.index"
-    @click="handleClick"
-  >
+  <el-menu-item v-else-if="!item.children || item.children.length === 0" :index="item.index" @click="handleClick">
     <template #title>
       <div class="menu-content">
         <!-- <el-icon v-if="item.icon">
@@ -28,12 +24,8 @@
       </div>
     </template>
 
-    <sidebar-menu-item
-      v-for="child in item.children"
-      :key="child.index"
-      :item="child"
-      @menu-click="emit('menu-click', $event)"
-    />
+    <sidebar-menu-item v-for="child in item.children" :key="child.index" :item="child"
+      @menu-click="emit('menu-click', $event)" />
   </el-sub-menu>
 </template>
 
@@ -70,6 +62,7 @@ const handleClick = () => {
     flex: 1;
   }
 }
+
 .menu-content:hover {
   .el-icon {
     color: #fff;
