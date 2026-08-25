@@ -17,7 +17,8 @@
             </el-icon>
             <span>{{ refreshing ? "刷新中" : "刷新列表" }}</span>
           </el-button>
-          <el-button type="primary" class="add-btn" @click="handleUpload">
+          <el-button type="primary" class="add-btn" @click="handleUpload"
+            :disabled="!menuStore.hasExactPermission('contract-annex:upload')">
             <el-icon>
               <Upload />
             </el-icon>
@@ -33,7 +34,7 @@
         <template #annexSrc="{ row }">
           <span>{{ getEnumLabel(FileSourceEnum, row?.annexSrc) }}</span>
         </template>
-        
+
         <template #actions="{ row }">
           <el-button type="primary" link class="row-link" @click="handleView(row)">
             查看
@@ -42,7 +43,9 @@
             下载
           </el-button>
           <!-- 只能删除附件来源为 手工上传的附件 -->
-          <el-button type="danger" link class="row-link" :disabled="row.annexSrc === 0" @click="handleDelete(row)">
+          <el-button type="danger" link class="row-link"
+            :disabled="!menuStore.hasExactPermission('contract-annex:delete') || row.annexSrc !== 1"
+            @click="handleDelete(row)">
             删除
           </el-button>
         </template>
@@ -69,6 +72,7 @@ import { getEnumLabel } from "@/utils/enum";
 import { FileSourceEnum, AnnexTypeEnum } from "@/constants/contract-manage/enums.ts";
 import { commonApi } from "@/api/cost/common-api.ts";
 import { buildFileUrl } from "@/utils/file-path-util.ts";
+import { useMenuStore } from "@/stores/menu-store";
 
 defineOptions({ name: "attachment" });
 
@@ -76,6 +80,7 @@ const props = defineProps<{
   conId: number | null;
 }>();
 
+const menuStore = useMenuStore();
 const dialogVisible = ref(false);
 const tableLoading = ref(false);
 const refreshing = ref(false);
@@ -240,6 +245,7 @@ onMounted(async () => {
   transition: box-shadow 0.25s ease;
   padding: 0 15px 15px;
   box-sizing: border-box;
+
   &:hover {
     box-shadow: 0 4px 18px rgba(0, 0, 0, 0.09);
   }
