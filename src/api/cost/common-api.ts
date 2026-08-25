@@ -135,4 +135,12 @@ export const commonApi = {
   generateRedirectUrl: (data: { oaRequestId: string }) => {
     return http.formPost("/workflow/generateRedirectUrl", data);
   },
+  /**
+   * @name 下载附件
+   * @param annexId - 附件ID
+   */
+  downloadAnnex: (params: { annexId: number }, fileName?: string) => {
+    // return http.get(`/system/downloadAnnex?annexId=${annexId}`);
+    return http.download("/system/downloadAnnex", params, fileName);
+  },
 };

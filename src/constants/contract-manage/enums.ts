@@ -61,6 +61,7 @@ export const FileSourceEnum = [
 export const AnnexTypeEnum = [
   { value: 0, label: "电子文档" },
   { value: 1, label: "扫描件" },
+  { value: 2, label: "签署文件" },
 ] as const;
 
 /** 补充合同类型 */

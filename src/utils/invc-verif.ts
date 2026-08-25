@@ -15,7 +15,7 @@
  */
 
 /* 固定使用的识别接口（如路径不同，按你项目实际结构调整） */
-import { commonApi } from "@/api/common-api";
+import { commonApi } from "@/api/cost/common-api";
 
 /* ============================ 类型定义 ============================ */
 

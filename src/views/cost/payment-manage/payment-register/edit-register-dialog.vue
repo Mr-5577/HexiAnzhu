@@ -91,7 +91,7 @@ import { dictMapping } from "@/utils/dict-mapping";
 import { useMDStore } from "@/stores/md-store.ts";
 import BaseUpload from "@/components/base/base-upload.vue";
 import { payRegisterApi } from "@/api/cost/payment-manage/payment-register-api";
-import { commonApi } from "@/api/common-api";
+import { commonApi } from "@/api/cost/common-api";
 import { buildFileUrl } from "@/utils/file-path-util";
 
 interface Props {

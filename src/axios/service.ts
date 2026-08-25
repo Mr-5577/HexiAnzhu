@@ -415,7 +415,7 @@ export const http = {
     // 检查是否是错误响应
     await checkBlobError(blob);
     const finalFilename =
-      filename || getFilenameFromHeaders(response.headers) || "download";
+      filename || getFilenameFromHeaders(response.headers) || "文件";
     saveAs(blob, finalFilename);
     return await blob;
   },
