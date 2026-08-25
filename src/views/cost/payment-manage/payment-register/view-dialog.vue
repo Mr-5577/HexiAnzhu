@@ -4,7 +4,7 @@
     :showCancelButton="false" @close="handleClose">
     <div style="padding-right: 8px; box-sizing: border-box">
       <base-table :columns="payLedgerSubColumns" :tableData="combineTable" :rowKey="'uuid'" :pagination="false"
-        :show-toolbar="false" :auto-height="false" :height="'500px'" :border="true" :stripe="true">
+        :show-toolbar="false" :auto-height="false" :height="'500px'" :border="true" :stripe="true" :isExpandAll="true">
         <!-- 展开行：显示明细表格 -->
         <template #expand="{ row }">
           <div class="expand-table-wrapper">

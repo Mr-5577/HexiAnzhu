@@ -324,10 +324,19 @@ const changeWfStatus = (val) => {
   //   queryParams.value.wfStatus = val;
   // }
 }
+// 导出当前查询条件下的全部数据
 const handleExport = async () => {
   try {
     exportLoading.value = true;
-    const res = await payRegisterApi.getPayLedgerMain({ payStatus: '' });
+    const { applyDate, payDate, ...rest } = queryParams.value;
+    const params = {
+      ...rest,
+      reqDateStart: queryParams.value.applyDate?.[0],
+      reqDateEnd: queryParams.value.applyDate?.[1],
+      payDateStart: queryParams.value.payDate?.[0],
+      payDateEnd: queryParams.value.payDate?.[1],
+    };
+    const res = await payRegisterApi.getPayLedgerMain(params);
     if (res.code === 200) {
       let list = res.data || [];
       list.forEach((item: any) => {
