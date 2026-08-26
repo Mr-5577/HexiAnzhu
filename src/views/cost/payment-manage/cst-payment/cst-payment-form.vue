@@ -1636,14 +1636,14 @@ const validateData = () => {
     }
   }
 
-  // ========== 校验：本次请款金额 <= 剩余金额 ==========
-  const reqAmt = toBig(formData.value.reqAmt || 0);
+  // ========== 校验：实际请款金额 <= 剩余金额 ==========
+  const factReqAmt = toBig(formData.value.factReqAmt || 0);
   const owedAmt = toBig(cstProcessData.value.sumOwedAmt || 0);
 
   // 只有当选择了关联立项且剩余金额存在时才校验
   if (cstProcessData.value.id && owedAmt.isGreaterThan(0)) {
-    if (reqAmt.isGreaterThan(owedAmt)) {
-      ElMessage.error(`本次请款金额不能大于剩余金额，请调整请款金额！`);
+    if (factReqAmt.isGreaterThan(owedAmt)) {
+      ElMessage.error(`实际请款金额不能大于剩余金额，请调整请款金额！`);
       return false;
     }
   }
