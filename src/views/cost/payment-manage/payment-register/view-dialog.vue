@@ -30,7 +30,7 @@
                   </span>
                 </div>
               </template>
-              <template #actions="{ row: childRow }">
+              <template #actions="{ row: childRow }" v-if="menuStore.hasExactPermission(PERMISSIONS.PAY_REG_DETAIL)">
                 <el-button type="primary" link @click="handleEdit(childRow)">
                   编辑
                 </el-button>
@@ -67,6 +67,8 @@ import { commonApi } from "@/api/cost/common-api";
 import { buildFileUrl } from "@/utils/file-path-util";
 import EditRegisterDialog from "./edit-register-dialog.vue";
 import { toBig, formatThousandWithPlaces, roundToTwo, BigNumber } from "@/utils/big-number.ts";
+import { PERMISSIONS } from "@/constants/permission.ts";
+import { useMenuStore } from "@/stores/menu-store";
 
 interface Props {
   modelValue: boolean;
@@ -87,6 +89,7 @@ const emit = defineEmits<{
 
 const userStore = useUserStore();
 const mdStore = useMDStore();
+const menuStore = useMenuStore();
 
 const dialogVisible = ref(props.modelValue);
 const formRef = ref<FormInstance>();

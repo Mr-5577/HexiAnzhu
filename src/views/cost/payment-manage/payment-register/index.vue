@@ -114,8 +114,7 @@
         <el-button type="primary" link @click="singleRegister(row)" :disabled="disabledRegister(row)">
           单项登记
         </el-button>
-        <el-button type="primary" link @click="handleView(row)"
-          :disabled="!(menuStore.hasExactPermission(PERMISSIONS.PAY_REG_DETAIL) && row.flowStatus === 40)">
+        <el-button type="primary" link @click="handleView(row)" :disabled="row.flowStatus !== 40">
           明细
         </el-button>
         <el-button type="primary" link @click="handleEntry(row)" :disabled="disabledEntry(row)">
@@ -216,6 +215,7 @@ const columns: TableColumnItem[] = [
   { prop: "paidAmt", label: "支付金额", width: 120, formatter: (row) => formatThousandWithPlaces(row.paidAmt || 0) },
   { prop: "payStatus", label: "付款状态", width: 100 },
   { prop: "applyUserName", label: "申请人", width: 90 },
+  { prop: "maxPayDate", label: "最近支付日期", width: 100 },
   { prop: "applyDate", label: "申请日期", width: 100 },
   { slot: "flowStatus", label: "审批流程", width: 100 },
   { slot: "isLocked", label: "是否入账", width: 90 },
@@ -362,6 +362,7 @@ const handleExport = async () => {
         paidAmt: "支付金额",
         payStatus: "付款状态",
         applyUserName: "申请人",
+        maxPayDate: "最近支付日期",
         applyDate: "申请日期",
         flowStatus: "审批流程",
         isLocked: "是否入账",
