@@ -4,12 +4,7 @@
     <div class="form-header">
       <div class="header-title">特殊事项审批</div>
       <div class="header-btn">
-        <el-button
-          type="primary"
-          icon="DocumentAdd"
-          :loading="submitLoading"
-          @click="handleSubmit"
-        >
+        <el-button type="primary" icon="DocumentAdd" :loading="submitLoading" @click="handleSubmit">
           保存
         </el-button>
         <el-button type="success" plain icon="Promotion"> 提交 </el-button>
@@ -19,137 +14,71 @@
       </div>
     </div>
     <div class="form-scroll-area">
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="formRules"
-        label-width="120px"
-        class="adapt-form"
-      >
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="120px" class="adapt-form">
         <div class="item-card">
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="18" :xl="18">
               <el-form-item label="标题" prop="title">
-                <el-input
-                  v-model="formData.title"
-                  clearable
-                  :disabled="isDetail"
-                  placeholder="请输入标题"
-                />
+                <el-input v-model="formData.title" clearable :disabled="isDetail" placeholder="请输入标题" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="审批状态" prop="approvalStatus">
-                <el-input
-                  v-model="formData.approvalStatus"
-                  clearable
-                  :disabled="isDetail"
-                  placeholder="审批状态"
-                />
+                <el-input v-model="formData.approvalStatus" clearable :disabled="isDetail" placeholder="审批状态" />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="业务板块" prop="segId" required>
-                <el-select
-                  v-model="formData.segId"
-                  placeholder="请选择业务板块"
-                  style="width: 100%"
-                  :disabled="isDetail"
-                >
-                  <el-option
-                    v-for="item in segOptions"
-                    :key="item.id"
-                    :label="item.segName"
-                    :value="item.id"
-                  />
+                <el-select v-model="formData.segId" placeholder="请选择业务板块" style="width: 100%" :disabled="isDetail">
+                  <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
                 </el-select>
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="板块编码" prop="segCode">
-                <el-input
-                  v-model="formData.segCode"
-                  clearable
-                  :disabled="isDetail"
-                  placeholder="板块编码"
-                />
+                <el-input v-model="formData.segCode" clearable :disabled="isDetail" placeholder="板块编码" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="部门" prop="departmentName">
-                <el-input
-                  v-model="formData.departmentName"
-                  clearable
-                  :disabled="isDetail"
-                  placeholder="部门"
-                />
+                <el-input v-model="formData.departmentName" clearable :disabled="isDetail" placeholder="部门" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="分部" prop="branchName">
-                <el-input
-                  v-model="formData.branchName"
-                  clearable
-                  :disabled="isDetail"
-                  placeholder="分部"
-                />
+                <el-input v-model="formData.branchName" clearable :disabled="isDetail" placeholder="分部" />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="所属项目" prop="projId" required>
-                <el-cascader
-                  ref="projCascaderRef"
-                  v-model="formData.projId"
-                  :options="projectOptions"
-                  :show-all-levels="false"
-                  :props="{
+                <el-cascader ref="projCascaderRef" v-model="formData.projId" :options="projectOptions"
+                  :show-all-levels="false" :props="{
                     expandTrigger: 'hover',
                     emitPath: false,
                     checkStrictly: false,
                     value: 'orgId',
                     label: 'orgName',
                     children: 'children',
-                  }"
-                  placeholder="请选择项目"
-                  style="width: 100%"
-                  clearable
-                  :disabled="isDetail"
-                  @change="changeProject"
-                />
+                  }" placeholder="请选择项目" style="width: 100%" clearable :disabled="isDetail" @change="changeProject" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="项目所属公司" prop="companyName">
-                <el-input
-                  v-model="formData.companyName"
-                  clearable
-                  placeholder="项目所属公司"
-                  disabled
-                />
+                <el-input v-model="formData.companyName" clearable placeholder="项目所属公司" disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="提交人" prop="submiterName">
-                <el-input
-                  v-model="formData.submiterName"
-                  clearable
-                  :disabled="isDetail"
-                  placeholder="提交人"
-                />
+                <el-input v-model="formData.submiterName" clearable :disabled="isDetail" placeholder="提交人" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="提交时间" prop="submiterDate">
-                <el-input
-                  v-model="formData.submiterDate"
-                  clearable
-                  :disabled="isDetail"
-                  placeholder="提交时间"
-                />
+                <el-input v-model="formData.submiterDate" clearable :disabled="isDetail" placeholder="提交时间" />
               </el-form-item>
             </el-col>
           </el-row>
@@ -161,125 +90,66 @@
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item label="合同名称" prop="conName">
-                <el-input
-                  v-model="formData.conName"
-                  placeholder="合同名称"
-                  disabled
-                  style="width: 100%"
-                />
+                <el-input v-model="formData.conName" placeholder="合同名称" disabled style="width: 100%" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="合同编号" prop="conSysNo">
-                <el-input
-                  v-model="formData.conSysNo"
-                  placeholder="合同系统编号"
-                  disabled
-                  style="width: 100%"
-                />
+                <el-input v-model="formData.conSysNo" placeholder="合同系统编号" disabled style="width: 100%" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="档案编号" prop="conPhyNo">
-                <el-input
-                  v-model="formData.conPhyNo"
-                  placeholder="合同档案编号"
-                  disabled
-                  style="width: 100%"
-                />
+                <el-input v-model="formData.conPhyNo" placeholder="合同档案编号" disabled style="width: 100%" />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="供应商名称" prop="supName">
-                <el-input
-                  v-model="formData.supName"
-                  placeholder="供应商名称"
-                  disabled
-                  style="width: 100%"
-                />
+                <el-input v-model="formData.supName" placeholder="供应商名称" disabled style="width: 100%" />
               </el-form-item>
             </el-col>
 
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="合同金额" prop="conAmt">
-                <el-input-number
-                  v-model="formData.conAmt"
-                  :min="0"
-                  :precision="2"
-                  :controls="false"
-                  placeholder="合同金额"
-                  disabled
-                  style="width: 100%"
-                />
+                <el-input-number v-model="formData.conAmt" :min="0" :precision="2" :controls="false" placeholder="合同金额"
+                  disabled style="width: 100%" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="履约金额" prop="conProperty">
-                <el-input
-                  v-model="formData.conProperty"
-                  placeholder="履约金额"
-                  disabled
-                  style="width: 100%"
-                />
+                <el-input v-model="formData.conProperty" placeholder="履约金额" disabled style="width: 100%" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="累计产值" prop="proProf">
-                <el-input
-                  v-model="formData.proProf"
-                  placeholder="累计产值"
-                  disabled
-                  style="width: 100%"
-                />
+                <el-input v-model="formData.proProf" placeholder="累计产值" disabled style="width: 100%" />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="累计应付" prop="conSignDate">
-                <el-input
-                  v-model="formData.conSignDate"
-                  placeholder="累计应付"
-                  disabled
-                  style="width: 100%"
-                />
+                <el-input v-model="formData.conSignDate" placeholder="累计应付" disabled style="width: 100%" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="累计已付" prop="conEffectDate">
-                <el-input
-                  v-model="formData.conEffectDate"
-                  placeholder="累计已付"
-                  disabled
-                  style="width: 100%"
-                />
+                <el-input v-model="formData.conEffectDate" placeholder="累计已付" disabled style="width: 100%" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="累计欠款" prop="conEndDate">
-                <el-input
-                  v-model="formData.conEndDate"
-                  placeholder="累计欠款"
-                  disabled
-                  style="width: 100%"
-                />
+                <el-input v-model="formData.conEndDate" placeholder="累计欠款" disabled style="width: 100%" />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :span="24">
               <el-form-item label="争议内容" prop="remark">
-                <el-input
-                  v-model="formData.remark"
-                  type="textarea"
-                  :rows="4"
-                  maxlength="500"
-                  show-word-limit
-                  placeholder="请输入争议内容"
-                  :disabled="isDetail"
-                />
+                <el-input v-model="formData.remark" type="textarea" :rows="4" maxlength="500" show-word-limit
+                  placeholder="请输入争议内容" :disabled="isDetail" />
               </el-form-item>
             </el-col>
           </el-row>
@@ -289,17 +159,9 @@
         <div class="item-card">
           <div class="section-title">相关附件</div>
           <el-form-item label="上传附件">
-            <base-upload
-              :disabled="isDetail"
-              v-model:file-list="tempFileList"
-              :limit="9"
-              :multiple="false"
-              :showIcon="true"
-              :showTip="true"
-              button-text="选择文件"
-              size="default"
-              @success="handleUploadSuccess"
-            ></base-upload>
+            <base-upload :disabled="isDetail" v-model:file-list="tempFileList" :limit="9" :multiple="false"
+              :showIcon="true" :showTip="true" button-text="选择文件" size="default"
+              @success="handleUploadSuccess"></base-upload>
           </el-form-item>
         </div>
       </el-form>
@@ -322,11 +184,13 @@ defineOptions({ name: "special-matter-form" });
 interface Props {
   mode: "add" | "edit" | "detail";
   specialId?: number; // 特殊事项ID
+  conId?: number | undefined; // 合同ID
 }
 
 const props = withDefaults(defineProps<Props>(), {
   mode: "add",
   specialId: undefined,
+  conId: undefined,
 });
 
 const emit = defineEmits<{
@@ -477,7 +341,7 @@ const handleUploadSuccess = (fileList: any) => {
 const loadDetail = async () => {
   if (!specialId.value) return;
   try {
-  } catch (error) {}
+  } catch (error) { }
 };
 
 // 提交表单

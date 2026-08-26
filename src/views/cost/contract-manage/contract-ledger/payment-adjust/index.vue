@@ -8,33 +8,25 @@
       <!-- 列表外操作栏 -->
       <template #actionBar>
         <div class="actionBar-buttons">
-          <el-button type="primary" icon="Refresh" @click="handleRefresh">
+          <el-button type="primary" icon="Refresh" @click="getDataList">
             刷新列表
           </el-button>
           <el-button type="primary" @click="handleAdd"> 新增 </el-button>
         </div>
       </template>
 
-      <template #dedTypeId="{ row }">
-        {{ getDedTypeName(row.dedTypeId) }}
-      </template>
-
-      <template #status="{ row }">
-        {{ getStatusName(row.status) }}
-      </template>
-
       <template #actions="{ row }">
         <el-button type="primary" link @click="handleEdit(row)">
           编辑
+        </el-button>
+        <el-button type="primary" link @click="handleDetail(row)">
+          详情
         </el-button>
         <el-button type="danger" link @click="handleDelete(row)">
           删除
         </el-button>
       </template>
     </base-table>
-
-    <!-- 新增/编辑 款项调整/合同奖惩弹窗 -->
-    <add-edit-ded-dialog v-model="dialogVisible" :conId="props.conId" :editData="editData" @success="handleRefresh" />
   </div>
 </template>
 
@@ -43,7 +35,6 @@ import { ref, watch, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
-import AddEditDedDialog from "./add-edit-ded-dialog.vue";
 import { paymentAdjustApi } from "@/api/cost/contract-manage/payment-adjust-api.ts";
 import { dedTypeEnum } from "@/constants/contract-manage/enums";
 import { ContractDed } from "@/types/cost/contract-manage/payment-adjust-type.ts";
@@ -51,23 +42,17 @@ import { ContractDed } from "@/types/cost/contract-manage/payment-adjust-type.ts
 defineOptions({ name: "payment-adjust" });
 
 const props = defineProps<{
-  conId: number | null;
+  conId?: number | null;
 }>();
 
 const route = useRoute();
 const router = useRouter();
 
-const dialogVisible = ref(false);
-const editData = ref(null);
 const tableLoading = ref(false);
 const tableData = ref([]);
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
-  // { prop: "dedName", label: "款项标题" },
-  // { slot: "dedTypeId", label: "调整类型" },
-  // { prop: "dedAmt", label: "调整金额" },
-  // { prop: "dedDesc", label: "说明" },
   { prop: "ww", label: "大类" },
   { prop: "ww", label: "小类" },
   { prop: "dedDesc", label: "事项说明", width: 200 },
@@ -84,25 +69,7 @@ const tableColumns: TableColumnItem[] = [
     fixed: "right",
   },
 ];
-const getDedTypeName = (dedTypeId: number) => {
-  const dedType = dedTypeEnum.find((item) => item.value == dedTypeId);
-  return dedType?.label || "";
-};
-/** 状态：0-草稿，5-审批中，10-已审批，30-已作废 */
-const getStatusName = (status: number) => {
-  switch (status) {
-    case 0:
-      return "草稿";
-    case 5:
-      return "审批中";
-    case 10:
-      return "已审批";
-    case 30:
-      return "已作废";
-    default:
-      return "-";
-  }
-};
+
 // 获取列表数据
 const getDataList = async () => {
   if (!props.conId) {
@@ -122,17 +89,23 @@ const getDataList = async () => {
   }
 };
 
-// 刷新
-const handleRefresh = () => {
-  getDataList();
-};
-
 // 新增
 const handleAdd = () => {
   router.push({
     path: "/con/payment-adjust/add",
     query: {
+      conId: props.conId, // 合同ID
       t: Date.now(),
+    },
+  });
+};
+// 详情
+const handleDetail = ({ id }) => {
+  router.push({
+    path: "/con/payment-adjust/detail",
+    query: {
+      conId: props.conId, // 合同ID
+      dedId: id, // 奖罚/款项调整ID
     },
   });
 };
@@ -141,6 +114,7 @@ const handleEdit = ({ id }) => {
   router.push({
     path: "/con/payment-adjust/edit",
     query: {
+      conId: props.conId, // 合同ID
       dedId: id, // 奖罚/款项调整ID
     },
   });

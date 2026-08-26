@@ -21,10 +21,12 @@
         <el-button type="primary" link @click="handleEdit(row)">
           编辑
         </el-button>
+         <el-button type="primary" link @click="handleDetail(row)">
+          详情
+        </el-button>
         <el-button type="danger" link @click="handleDelete(row)">
           删除
         </el-button>
-        <el-button type="primary" link> 审批 </el-button>
       </template>
     </base-table>
 
@@ -139,6 +141,7 @@ const handleAdd = () => {
   router.push({
     path: "/con/special-matter/add",
     query: {
+      conId: props.conId, // 合同ID
       t: Date.now(),
     },
   });
@@ -149,6 +152,17 @@ const handleEdit = ({ id }) => {
     path: "/con/special-matter/edit",
     query: {
       specialId: id, // 特殊事项ID
+      conId: props.conId, // 合同ID
+    },
+  });
+};
+// 详情
+const handleDetail = ({ id }) => {
+  router.push({
+    path: "/con/special-matter/detail",
+    query: {
+      specialId: id, // 特殊事项ID
+      conId: props.conId, // 合同ID
     },
   });
 };
