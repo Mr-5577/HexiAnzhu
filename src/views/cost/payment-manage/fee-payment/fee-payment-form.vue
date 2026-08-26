@@ -113,7 +113,7 @@
           <div class="section-title">支付方式</div>
           <div style="display: flex; justify-content: flex-end; margin-bottom: 8px">
             <el-button type="primary" size="small" :disabled="payWayTable.length == 0" @click="handleFinanceAlloc"
-              v-if="!isAdd && menuStore.hasExactPermission('fina-alloc:ncon-fee')">
+              v-if="!isAdd && menuStore.hasExactPermission(PERMISSIONS.FINA_ALLOC_NCON_FEE)">
               财务分摊
             </el-button>
             <el-button type="primary" size="small" @click="addPayWay" v-if="!isDetail">
@@ -265,6 +265,7 @@ import FinanceAllocationDialog from "@/views/cost/finance-allocation/finance-all
 import { useMenuStore } from "@/stores/menu-store";
 // ===== 修改：替换 decimal.js 为 bignumber.js =====
 import { toBig, formatDecimal, BigNumber } from "@/utils/big-number.ts";
+import { PERMISSIONS } from "@/constants/permission";
 
 defineOptions({ name: "fee-payment-form" });
 

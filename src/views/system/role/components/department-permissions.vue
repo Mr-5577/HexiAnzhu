@@ -33,7 +33,7 @@
             :loading="saveLoading"
             @click="handleSave"
             :disabled="
-              !menuStore.hasExactPermission('department-permissions:edit')
+              !menuStore.hasExactPermission(PERMISSIONS.DEPT_PERM_EDIT)
             "
           >
             保存设置
@@ -67,6 +67,7 @@ import { ElMessage } from "element-plus";
 
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { useMenuStore } from "@/stores/menu-store";
+import { PERMISSIONS } from "@/constants/permission";
 const menuStore = useMenuStore();
 
 interface Props {

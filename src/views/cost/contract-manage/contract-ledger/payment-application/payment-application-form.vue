@@ -501,7 +501,7 @@
           v-model:collapsed="collapsedCards.payway">
           <div style="display: flex; justify-content: flex-end; margin-bottom: 8px">
             <el-button type="primary" size="small" :disabled="payWayTable.length == 0" @click="handleFinanceAlloc"
-              v-if="!isAdd && menuStore.hasExactPermission('fina-alloc:con-pay')">
+              v-if="!isAdd && menuStore.hasExactPermission(PERMISSIONS.FINA_ALLOC_CON_PAY)">
               财务分摊
             </el-button>
             <el-button type="primary" size="small" @click="addPayWay" v-if="!(isReadonly)">
@@ -743,6 +743,7 @@ import FinanceAllocationDialog from "@/views/cost/finance-allocation/finance-all
 import { invcRecognitionRefresh, useInvoiceRecognition } from "@/composables/use-Invc-verif";
 import { useMenuStore } from "@/stores/menu-store";
 import { toBig, formatDecimal, BigNumber } from "@/utils/big-number.ts";
+import { PERMISSIONS } from "@/constants/permission";
 
 // ============================================================
 // 路由 / 状态仓库 实例化

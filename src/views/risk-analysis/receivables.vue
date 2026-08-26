@@ -3,61 +3,25 @@
   <div class="receivables-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
       <el-form-item label="项目" prop="projIds">
-        <!-- <el-cascader
-          class="fixed-height-cascader"
-          :filterable="true"
-          v-model="queryParams.projIds"
-          placeholder="请选择"
-          :options="projectOptions"
-          :props="cascaderProps"
-          collapse-tags
-          collapse-tags-tooltip
-          clearable
-          :show-all-levels="false"
-          :max-collapse-tags="1"
-        ></el-cascader> -->
-        <project-tree-selector
-          v-model="queryParams.projIds"
-          :project-list="projectOptions"
-          placeholder="请选择项目"
-          width="220px"
-        ></project-tree-selector>
+        <project-tree-selector v-model="queryParams.projIds" :project-list="projectOptions" placeholder="请选择项目"
+          width="220px"></project-tree-selector>
       </el-form-item>
       <el-form-item>
-        <el-button
-          type="primary"
-          icon="Search"
-          :loading="tableLoading"
-          @click="handleQuery"
-        >
+        <el-button type="primary" icon="Search" :loading="tableLoading" @click="handleQuery">
           搜索
         </el-button>
         <el-button icon="Refresh" :loading="tableLoading" @click="resetQuery">
           重置
         </el-button>
-        <el-button
-          type="primary"
-          icon="Download"
-          :loading="exportLoading"
-          @click="handleExport"
-          :disabled="!menuStore.hasExactPermission('receivables:export')"
-        >
+        <el-button type="primary" icon="Download" :loading="exportLoading" @click="handleExport"
+          :disabled="!menuStore.hasExactPermission(PERMISSIONS.RECV_EXPORT)">
           导出
         </el-button>
       </el-form-item>
     </el-form>
-    <base-table
-      :rowKey="'uuid'"
-      :showSummary="true"
-      :columns="tableColumns"
-      :tableData="paginatedData"
-      :loading="tableLoading"
-      :total="total"
-      :current-page="currentPage"
-      :page-size="pageSize"
-      @pagination-change="handlePaginationChange"
-      @cell-event="handleCellEventClick"
-    ></base-table>
+    <base-table :rowKey="'uuid'" :showSummary="true" :columns="tableColumns" :tableData="paginatedData"
+      :loading="tableLoading" :total="total" :current-page="currentPage" :page-size="pageSize"
+      @pagination-change="handlePaginationChange" @cell-event="handleCellEventClick"></base-table>
   </div>
 </template>
 
@@ -71,6 +35,7 @@ import { useRoute, useRouter } from "vue-router";
 import { v4 as uuidv4 } from "uuid";
 import { findProjectIdByXsProjId } from "@/utils/project-helper";
 import { useMenuStore } from "@/stores/menu-store";
+import { PERMISSIONS } from "@/constants/permission";
 const menuStore = useMenuStore();
 const route = useRoute();
 const router = useRouter();
@@ -86,20 +51,6 @@ const {
   loadData,
   getAllLeafProjectIds,
 } = useSalesData();
-
-const cascaderProps = computed(() => ({
-  value: "id",
-  label: "projName",
-  multiple: true,
-  emitPath: false,
-  checkStrictly: true, // 可选：是否严格选择模式
-  expandTrigger: "hover", // 可选：展开方式
-  // 关键：根据 projType 设置 disabled
-  // disabled: (data: any, node: any) => {
-  //   // projType !== 1 的项目禁用
-  //   return data.projType !== 1;
-  // },
-}));
 
 // ref
 const queryParams = ref({
@@ -301,7 +252,7 @@ onMounted(() => {
 });
 
 // 清理
-onUnmounted(() => {});
+onUnmounted(() => { });
 </script>
 
 <style lang="scss" scoped>

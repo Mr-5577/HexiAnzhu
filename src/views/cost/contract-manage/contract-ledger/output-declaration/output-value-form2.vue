@@ -362,7 +362,7 @@
       </el-form>
 
       <!-- 成本分摊  合同产值只有甲供材才有成本分摊 -->
-      <ConCostAllocCard v-if="menuStore.hasExactPermission('cost-alloc:con-prod')" style="margin-top: 15px;"
+      <ConCostAllocCard v-if="menuStore.hasExactPermission(PERMISSIONS.COST_ALLOC_CON_PROD)" style="margin-top: 15px;"
         :visible="!isAdd && formData.isSelfSupply" :cstMData="cstMData" :allocation-status="cstMData.allocStatus"
         :warning-status="cstMData.allocWarn" :bizType="'CON_PROD'" :projId="formData.projId"
         :projName="formData?.projName" :displayName="formData.conName" :allocAmt="formData.applyProdVal"
@@ -423,6 +423,7 @@ import { dictMapping } from "@/utils/dict-mapping";
 import ConCostAllocCard from "@/views/cost/cost-allocation/con-cost-alloc/con-cost-alloc-card.vue";
 import { useMenuStore } from "@/stores/menu-store";
 import { toBig, formatDecimal, BigNumber } from "@/utils/big-number.ts";
+import { PERMISSIONS } from "@/constants/permission.ts";
 
 defineOptions({ name: "output-value-approval-form" });
 

@@ -1,127 +1,48 @@
 <!-- 签约业绩明细 -->
 <template>
   <div class="contract-detail-page">
-    <el-form
-      :model="queryParams"
-      ref="queryRef"
-      :inline="true"
-      label-width="70px"
-    >
+    <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="70px">
       <el-form-item label="项目" prop="projIds">
-        <!-- <el-cascader
-          class="fixed-height-cascader"
-          :filterable="true"
-          v-model="queryParams.projIds"
-          placeholder="请选择"
-          :options="projectOptions"
-          :props="cascaderProps"
-          collapse-tags
-          collapse-tags-tooltip
-          clearable
-          :show-all-levels="false"
-          :max-collapse-tags="1"
-        /> -->
-        <project-tree-selector
-          v-model="queryParams.projIds"
-          :project-list="projectOptions"
-          placeholder="请选择项目"
-          width="220px"
-        ></project-tree-selector>
+        <project-tree-selector v-model="queryParams.projIds" :project-list="projectOptions" placeholder="请选择项目"
+          width="220px"></project-tree-selector>
       </el-form-item>
       <el-form-item label="业态" prop="productTypes">
-        <el-select
-          v-model="queryParams.productTypes"
-          placeholder="业态"
-          clearable
-          multiple
-          collapse-tags
-          style="width: 220px"
-        >
-          <el-option
-            v-for="item in productTypeList"
-            :key="item.id"
-            :label="item.productTypeName"
-            :value="item.id"
-          />
+        <el-select v-model="queryParams.productTypes" placeholder="业态" clearable multiple collapse-tags
+          style="width: 220px">
+          <el-option v-for="item in productTypeList" :key="item.id" :label="item.productTypeName" :value="item.id" />
         </el-select>
       </el-form-item>
       <el-form-item label="签约日期" prop="time">
-        <el-date-picker
-          v-model="queryParams.time"
-          type="daterange"
-          range-separator="-"
-          start-placeholder="开始时间"
-          end-placeholder="结束时间"
-          format="YYYY-MM-DD"
-          value-format="YYYY-MM-DD"
-          style="width: 220px"
-          :clearable="false"
-        />
+        <el-date-picker v-model="queryParams.time" type="daterange" range-separator="-" start-placeholder="开始时间"
+          end-placeholder="结束时间" format="YYYY-MM-DD" value-format="YYYY-MM-DD" style="width: 220px"
+          :clearable="false" />
       </el-form-item>
       <el-form-item label="业主姓名" prop="custName">
-        <el-input
-          v-model="queryParams.custName"
-          placeholder="业主姓名"
-          clearable
-          style="width: 220px"
-        />
+        <el-input v-model="queryParams.custName" placeholder="业主姓名" clearable style="width: 220px" />
       </el-form-item>
       <el-form-item label="业主房号" prop="roomNum">
-        <el-input
-          v-model="queryParams.roomNum"
-          placeholder="房号"
-          clearable
-          style="width: 220px"
-        />
+        <el-input v-model="queryParams.roomNum" placeholder="房号" clearable style="width: 220px" />
       </el-form-item>
       <el-form-item label="置业顾问" prop="salerName">
-        <el-input
-          v-model="queryParams.salerName"
-          placeholder="置业顾问"
-          clearable
-          style="width: 220px"
-        />
+        <el-input v-model="queryParams.salerName" placeholder="置业顾问" clearable style="width: 220px" />
       </el-form-item>
       <el-form-item label="团队名称" prop="teamName">
-        <el-input
-          v-model="queryParams.teamName"
-          placeholder="团队名称"
-          clearable
-          style="width: 220px"
-        />
+        <el-input v-model="queryParams.teamName" placeholder="团队名称" clearable style="width: 220px" />
       </el-form-item>
       <el-form-item>
-        <el-button
-          type="primary"
-          icon="Search"
-          @click="handleQuery"
-          :loading="tableLoading"
-        >
+        <el-button type="primary" icon="Search" @click="handleQuery" :loading="tableLoading">
           搜索
         </el-button>
         <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-        <el-button
-          type="primary"
-          icon="Download"
-          :loading="exportLoading"
-          @click="handleExport"
-          :disabled="!menuStore.hasExactPermission('contract-detail:export')"
-        >
+        <el-button type="primary" icon="Download" :loading="exportLoading" @click="handleExport"
+          :disabled="!menuStore.hasExactPermission(PERMISSIONS.CONT_DETAIL_EXPORT)">
           导出
         </el-button>
       </el-form-item>
     </el-form>
-    <base-table
-      :rowKey="'uuid'"
-      :showSummary="true"
-      :columns="ContractDetailColumns"
-      :tableData="paginatedData"
-      :loading="tableLoading"
-      :total="filteredTotal"
-      :current-page="currentPage"
-      :page-size="pageSize"
-      @pagination-change="handlePaginationChange"
-    ></base-table>
+    <base-table :rowKey="'uuid'" :showSummary="true" :columns="ContractDetailColumns" :tableData="paginatedData"
+      :loading="tableLoading" :total="filteredTotal" :current-page="currentPage" :page-size="pageSize"
+      @pagination-change="handlePaginationChange"></base-table>
   </div>
 </template>
 
@@ -135,6 +56,7 @@ import { ElMessage } from "element-plus";
 import { useRoute } from "vue-router";
 import { v4 as uuidv4 } from "uuid";
 import { useMenuStore } from "@/stores/menu-store";
+import { PERMISSIONS } from "@/constants/permission";
 const menuStore = useMenuStore();
 const route = useRoute();
 
@@ -151,20 +73,6 @@ const {
   getAllLeafProjectIds,
   getAllProductTypeIds,
 } = useSalesData();
-
-const cascaderProps = computed(() => ({
-  value: "id",
-  label: "projName",
-  multiple: true,
-  emitPath: false,
-  checkStrictly: true, // 可选：是否严格选择模式
-  expandTrigger: "hover", // 可选：展开方式
-  // 关键：根据 projType 设置 disabled
-  // disabled: (data: any, node: any) => {
-  //   // projType !== 1 的项目禁用
-  //   return data.projType !== 1;
-  // },
-}));
 
 // ref
 const queryParams = ref({
@@ -315,7 +223,7 @@ const getParams = () => {
     day: `${time[0]} 00:00:00`,
     beginDate: `${time[0]} 00:00:00`,
     endDate: `${time[1]} 23:59:59`,
-    isShowTel: menuStore.hasExactPermission("contract-detail:showTel"),
+    isShowTel: menuStore.hasExactPermission(PERMISSIONS.CONT_DETAIL_SHOW_TEL),
   };
 };
 // 获取列表
@@ -409,7 +317,7 @@ onMounted(() => {
 });
 
 // 清理
-onUnmounted(() => {});
+onUnmounted(() => { });
 </script>
 
 <style lang="scss" scoped>

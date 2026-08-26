@@ -178,7 +178,7 @@
           <div class="section-title">支付方式</div>
           <div style="display: flex; justify-content: flex-end; margin-bottom: 8px">
             <el-button type="primary" size="small" :disabled="payWayTable.length == 0" @click="handleFinanceAlloc"
-              v-if="!isAdd && menuStore.hasExactPermission('fina-alloc:ncon-cst')">
+              v-if="!isAdd && menuStore.hasExactPermission(PERMISSIONS.FINA_ALLOC_NCON_CST)">
               财务分摊
             </el-button>
             <el-button type="primary" size="small" @click="addPayWay" v-if="!isDetail">
@@ -272,7 +272,7 @@
         </div>
 
         <!-- 成本分摊 费用类型所属大类为建安类并且请款类型为正常请款0时显示 :visible="isShowCostAllocation && formData.reqType == 0"  -->
-        <CostAllocationCard v-if="menuStore.hasExactPermission('cost-alloc:ncon-cst')" :visible="isShowCostAllocation"
+        <CostAllocationCard v-if="menuStore.hasExactPermission(PERMISSIONS.COST_ALLOC_NCON_CST)" :visible="isShowCostAllocation"
           :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'NCON_CST'"
           :projId="formData.projId" :projName="formData.projName" :displayName="cstProcessData.processName"
           :allocAmt="actualReqAmt" :bizBillId="paymentData.nconBillId" :cstMData="cstMData"
@@ -346,6 +346,7 @@ import FinanceAllocationDialog from "@/views/cost/finance-allocation/finance-all
 import { useMenuStore } from "@/stores/menu-store";
 // ===== 修改：替换 decimal.js 为 bignumber.js =====
 import { toBig, formatDecimal, BigNumber } from "@/utils/big-number.ts";
+import { PERMISSIONS } from "@/constants/permission.ts";
 
 defineOptions({ name: "cst-payment-form" });
 

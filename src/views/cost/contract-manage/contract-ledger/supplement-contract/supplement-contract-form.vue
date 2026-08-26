@@ -237,7 +237,7 @@
         </FormCard>
       </el-form>
       <!-- 成本分摊  :visible="!isAdd && isJianAn" -->
-      <ConCostAllocCard v-if="menuStore.hasExactPermission('cost-alloc:con-add')" style="margin-top: 15px;" :visible="!isAdd && isJianAn" :cstMData="cstMData"
+      <ConCostAllocCard v-if="menuStore.hasExactPermission(PERMISSIONS.COST_ALLOC_CON_ADD)" style="margin-top: 15px;" :visible="!isAdd && isJianAn" :cstMData="cstMData"
         :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'CON_ADD'"
         :projId="formData.projId" :projName="conMainData?.projName" :displayName="formData.addName"
         :allocAmt="priceTaxData.totalPriceTax" :bizBillId="billData.id" :conId="conMainData?.id"
@@ -322,6 +322,7 @@ import { bankCardRule, moneyRule, optionalInputRule, phoneRule, requiredInputRul
 import { normalizeCode } from "@/utils/common.ts";
 import ConCostAllocCard from "@/views/cost/cost-allocation/con-cost-alloc/con-cost-alloc-card.vue";
 import { useMenuStore } from "@/stores/menu-store";
+import { PERMISSIONS } from "@/constants/permission.ts";
 
 // ===================== Props / Emits =====================
 const props = defineProps<{

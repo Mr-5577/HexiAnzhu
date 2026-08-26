@@ -18,7 +18,7 @@
             <span>{{ refreshing ? "刷新中" : "刷新列表" }}</span>
           </el-button>
           <el-button type="primary" class="add-btn" @click="handleUpload"
-            :disabled="!menuStore.hasExactPermission('contract-annex:upload')">
+            :disabled="!menuStore.hasExactPermission(PERMISSIONS.CONT_ANNEX_UPLOAD)">
             <el-icon>
               <Upload />
             </el-icon>
@@ -44,7 +44,7 @@
           </el-button>
           <!-- 只能删除附件来源为 手工上传的附件 -->
           <el-button type="danger" link class="row-link"
-            :disabled="!menuStore.hasExactPermission('contract-annex:delete') || row.annexSrc !== 1"
+            :disabled="!menuStore.hasExactPermission(PERMISSIONS.CONT_ANNEX_DELETE) || row.annexSrc !== 1"
             @click="handleDelete(row)">
             删除
           </el-button>
@@ -73,6 +73,7 @@ import { FileSourceEnum, AnnexTypeEnum } from "@/constants/contract-manage/enums
 import { commonApi } from "@/api/cost/common-api.ts";
 import { buildFileUrl } from "@/utils/file-path-util.ts";
 import { useMenuStore } from "@/stores/menu-store";
+import { PERMISSIONS } from "@/constants/permission.ts";
 
 defineOptions({ name: "attachment" });
 

@@ -104,7 +104,7 @@
             </template>
             <template #actions="{ row }">
               <el-button link type="primary" @click="handleAllocDetail(row)"
-                v-if="isReadonly && menuStore.hasExactPermission('cost-alloc:con-bg')" :disabled="!isReadonly">
+                v-if="isReadonly && menuStore.hasExactPermission(PERMISSIONS.COST_ALLOC_CON_BG)" :disabled="!isReadonly">
                 分摊
               </el-button>
               <el-button link type="danger" @click="deleteLinkCon(row)" v-if="!isReadonly" :disabled="isReadonly">
@@ -199,6 +199,7 @@ import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-ap
 import ConCostAllocDialog from "@/views/cost/cost-allocation/con-cost-alloc/con-cost-alloc-dialog.vue";
 import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
 import { useMenuStore } from "@/stores/menu-store";
+import { PERMISSIONS } from "@/constants/permission.ts";
 
 defineOptions({ name: "change-order-form" });
 

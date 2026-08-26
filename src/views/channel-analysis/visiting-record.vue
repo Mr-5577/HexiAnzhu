@@ -1,87 +1,38 @@
 <!-- 来访记录页面 -->
 <template>
   <div class="visiting-record-page">
-    <el-form
-      :model="queryParams"
-      ref="queryRef"
-      :inline="true"
-      label-width="80px"
-    >
+    <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="80px">
       <el-form-item label="项目" prop="projId">
-        <el-select
-          v-model="queryParams.projId"
-          placeholder="项目"
-          :clearable="false"
-          style="width: 200px"
-          @change="handleProjectChange"
-        >
-          <el-option
-            v-for="item in projectList"
-            :key="item.projId"
-            :label="item.projName"
-            :value="item.projId"
-          />
+        <el-select v-model="queryParams.projId" placeholder="项目" :clearable="false" style="width: 200px"
+          @change="handleProjectChange">
+          <el-option v-for="item in projectList" :key="item.projId" :label="item.projName" :value="item.projId" />
         </el-select>
       </el-form-item>
       <el-form-item label="来访日期" prop="day">
-        <el-date-picker
-          v-model="queryParams.day"
-          type="date"
-          placeholder="来访日期"
-          :clearable="true"
-          format="YYYY-MM-DD"
-          value-format="YYYY-MM-DD"
-          style="width: 200px"
-        />
+        <el-date-picker v-model="queryParams.day" type="date" placeholder="来访日期" :clearable="true" format="YYYY-MM-DD"
+          value-format="YYYY-MM-DD" style="width: 200px" />
       </el-form-item>
       <el-form-item label="客户姓名" prop="custName">
-        <el-input
-          v-model="queryParams.custName"
-          placeholder="请输入客户姓名"
-          clearable
-          style="width: 200px"
-        />
+        <el-input v-model="queryParams.custName" placeholder="请输入客户姓名" clearable style="width: 200px" />
       </el-form-item>
       <el-form-item label="客户电话" prop="custTel">
-        <el-input
-          v-model="queryParams.custTel"
-          placeholder="请输入客户电话"
-          clearable
-          style="width: 200px"
-        />
+        <el-input v-model="queryParams.custTel" placeholder="请输入客户电话" clearable style="width: 200px" />
       </el-form-item>
       <el-form-item>
-        <el-button
-          type="primary"
-          icon="Search"
-          :loading="tableLoading"
-          @click="handleQuery"
-        >
+        <el-button type="primary" icon="Search" :loading="tableLoading" @click="handleQuery">
           搜索
         </el-button>
         <el-button icon="Refresh" :loading="tableLoading" @click="resetQuery">
           重置
         </el-button>
-        <el-button
-          type="primary"
-          :loading="exportLoading"
-          @click="exportExcel"
-          :disabled="!menuStore.hasExactPermission('visiting-record:export')"
-        >
+        <el-button type="primary" :loading="exportLoading" @click="exportExcel"
+          :disabled="!menuStore.hasExactPermission(PERMISSIONS.VISIT_RECORD_EXPORT)">
           导出
         </el-button>
       </el-form-item>
     </el-form>
-    <base-table
-      :rowKey="'id'"
-      :columns="visitingRecordColumns"
-      :tableData="paginatedData"
-      :loading="tableLoading"
-      :total="total"
-      :current-page="currentPage"
-      :page-size="pageSize"
-      @pagination-change="handlePaginationChange"
-    >
+    <base-table :rowKey="'id'" :columns="visitingRecordColumns" :tableData="paginatedData" :loading="tableLoading"
+      :total="total" :current-page="currentPage" :page-size="pageSize" @pagination-change="handlePaginationChange">
       <!-- 项目名称 -->
       <template #projName="scope">
         <div>{{ getProjectName(scope.row.visitProjId) }}</div>
@@ -108,23 +59,10 @@
       </template>
     </base-table>
     <!-- 打印表单 -->
-    <base-modal
-      v-model="modalVisible"
-      :title="'打印详情'"
-      width="900px"
-      class="print-modal"
-      :confirm-loading="confirmLoading"
-      :confirmText="'确认打印'"
-      @confirm="handleSubmit"
-      @cancel="handleClose"
-    >
+    <base-modal v-model="modalVisible" :title="'打印详情'" width="900px" class="print-modal"
+      :confirm-loading="confirmLoading" :confirmText="'确认打印'" @confirm="handleSubmit" @cancel="handleClose">
       <template v-if="currentPrintRow">
-        <el-descriptions
-          :column="2"
-          :size="'default'"
-          border
-          id="custom-descriptions-detail"
-        >
+        <el-descriptions :column="2" :size="'default'" border id="custom-descriptions-detail">
           <template #title>
             <div>
               {{ getProjectName(currentPrintRow.visitProjId) || "-" }} -
@@ -261,6 +199,7 @@ import { VuePrintNext } from "vue-print-next";
 import { useUserStore } from "@/stores/user-store";
 import { ElMessage } from "element-plus";
 import { useMenuStore } from "@/stores/menu-store";
+import { PERMISSIONS } from "@/constants/permission";
 const menuStore = useMenuStore();
 
 const userStore = useUserStore();
@@ -321,7 +260,7 @@ const exportExcel = async () => {
     const params = {
       ...queryParams.value,
       isExport: true,
-      isShowTel: menuStore.hasExactPermission("visiting-record:showAllTel"),
+      isShowTel: menuStore.hasExactPermission(PERMISSIONS.VISIT_RECORD_SHOW_ALL_TEL),
     };
     const fileBlob = await assetManagementApi.exportVisitHis(params);
     console.log("fileBlob", fileBlob);
@@ -410,7 +349,7 @@ const getTableList = async () => {
       custTel: custTel,
       visitTimeStart: day ? `${day} 00:00:00` : "",
       visitTimeEnd: day ? `${day} 23:59:59` : "",
-      isShowTel: menuStore.hasExactPermission("visiting-record:showAllTel"),
+      isShowTel: menuStore.hasExactPermission(PERMISSIONS.VISIT_RECORD_SHOW_ALL_TEL),
     };
     const res = await assetManagementApi.getVisitHis(params);
     if (res.code === 200) {
@@ -515,16 +454,20 @@ onUnmounted(() => {
   box-sizing: border-box;
   background: #fff;
 }
+
 #custom-descriptions-detail {
   padding: 20px;
+
   :deep(.el-descriptions__header) {
     width: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
   }
+
   :deep(.el-descriptions__label) {
-    width: 120px; /* 设置固定宽度 */
+    width: 120px;
+    /* 设置固定宽度 */
   }
 }
 </style>

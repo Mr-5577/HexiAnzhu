@@ -115,7 +115,7 @@
           单项登记
         </el-button>
         <el-button type="primary" link @click="handleView(row)"
-          :disabled="!(menuStore.hasExactPermission('payment-register:detail') && row.flowStatus === 40)">
+          :disabled="!(menuStore.hasExactPermission(PERMISSIONS.PAY_REG_DETAIL) && row.flowStatus === 40)">
           明细
         </el-button>
         <el-button type="primary" link @click="handleEntry(row)" :disabled="disabledEntry(row)">
@@ -150,6 +150,7 @@ import { costBillStatusEnum } from "@/constants/cost/enums.ts";
 import { exportExcel } from '@/utils/export-excel.ts';
 import { useMenuStore } from "@/stores/menu-store";
 import { formatThousandWithPlaces } from "@/utils/big-number.ts";
+import { PERMISSIONS } from "@/constants/permission.ts";
 
 defineOptions({ name: "payment-register" });
 
@@ -227,7 +228,7 @@ const columns: TableColumnItem[] = [
   },
 ];
 const disabledRegister = (row) => {
-  const hasPermission = menuStore.hasExactPermission('payment-ledger:register')
+  const hasPermission = menuStore.hasExactPermission(PERMISSIONS.PAY_LEDGER_REG)
   // 无权限 → 禁用
   if (!hasPermission) return true
   // 非已审批 → 禁用
@@ -240,7 +241,7 @@ const disabledRegister = (row) => {
   return false
 }
 const disabledEntry = (row) => {
-  const hasPermission = menuStore.hasExactPermission('payment-ledger:entry')
+  const hasPermission = menuStore.hasExactPermission(PERMISSIONS.PAY_LEDGER_ENTRY)
   // 无权限 → 禁用
   if (!hasPermission) return true
   // 非已审批 → 禁用

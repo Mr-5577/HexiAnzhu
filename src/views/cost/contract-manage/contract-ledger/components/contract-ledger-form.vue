@@ -298,11 +298,11 @@
         </FormCard>
       </el-form>
       <!-- 成本分摊  :visible="!isAddMode && isJianAn" -->
-      <ConCostAllocCard v-if="menuStore.hasExactPermission('cost-alloc:con-main')" style="margin-top: 15px;" :visible="!isAddMode && isJianAn" :cstMData="cstMData"
-        :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'CON_MAIN'"
-        :projId="formData.projId" :projName="formData.projName" :displayName="formData.conName"
-        :allocAmt="priceTaxData.totalPriceTax" :bizBillId="billData.id" :conId="formData.id"
-        @selectData="getSelectCostAlloc" />
+      <ConCostAllocCard v-if="menuStore.hasExactPermission(PERMISSIONS.COST_ALLOC_CON_MAIN)" style="margin-top: 15px;"
+        :visible="!isAddMode && isJianAn" :cstMData="cstMData" :allocation-status="cstMData.allocStatus"
+        :warning-status="cstMData.allocWarn" :bizType="'CON_MAIN'" :projId="formData.projId"
+        :projName="formData.projName" :displayName="formData.conName" :allocAmt="priceTaxData.totalPriceTax"
+        :bizBillId="billData.id" :conId="formData.id" @selectData="getSelectCostAlloc" />
     </div>
 
     <!-- ============ 悬浮定位栏 ============ -->
@@ -349,6 +349,7 @@ import {
 import { BOOL_OPTIONS } from "./contract-form-config";
 import ConCostAllocCard from "@/views/cost/cost-allocation/con-cost-alloc/con-cost-alloc-card.vue";
 import { useMenuStore } from "@/stores/menu-store";
+import { PERMISSIONS } from "@/constants/permission";
 
 defineOptions({ name: "contract-ledger-form" });
 
