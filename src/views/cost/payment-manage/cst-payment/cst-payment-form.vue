@@ -344,7 +344,6 @@ import BillInfo from "@/components/business/bill-components/bill-info.vue";
 import CostAllocationCard from "@/views/cost/cost-allocation/ncon-cost-alloc/ncon-cost-alloc-card.vue";
 import FinanceAllocationDialog from "@/views/cost/finance-allocation/finance-allocation-dialog.vue";
 import { useMenuStore } from "@/stores/menu-store";
-// ===== 修改：替换 decimal.js 为 bignumber.js =====
 import { toBig, formatDecimal, BigNumber } from "@/utils/big-number.ts";
 import { PERMISSIONS } from "@/constants/permission.ts";
 
