@@ -736,47 +736,10 @@ const recomputeNonSelfSupply = (row: any, column: string) => {
     row.prodVal = 0;
   }
 };
-const updateNonSelfSupplyRow = (rowIndex: number, data: any) => {
-  const newData = [...nonSelfSupplyTable.value];
-  newData[rowIndex] = { ...nonSelfSupplyTable.value[rowIndex], ...data };
-  nonSelfSupplyTable.value = newData;
-};
-const handleNonSelfSupplySave = async (data: any) => {
-  const { row, column, newValue, oldValue, rowIndex } = data;
-  // recomputeNonSelfSupply(row, column);
 
-  if (column === 'costProdVal' || column === 'costPayAmt') {
-    updateNonSelfSupplyRow(rowIndex, { [column]: newValue });
-    return
-  }
-  // 选择款项类型时回填应付比例、是否强控、支付周期
-  if (column === "payTypeId") {
-    const target = billPayratesList.value.find((i) => i.payTypeId === row.payTypeId);
-    const { payRate, isCtrl, payIntvl } = target || {};
-    row.payRate = payRate;
-    row.isCtrl = isCtrl;
-    row.payIntvl = payIntvl;
-  }
-  const prodVal = toBig(row.prodVal || 0);
-  const payRate = toBig(row.payRate || 0);
-  // 本次应付 = 本次产值 × 应付比例（强控时锁定，不强控也给默认值，仍可手改）
-  if (["prodVal", "payRate", "payTypeId", "isCtrl"].includes(column)) {
-    row.payAmt = prodVal.times(payRate).dividedBy(100)
-      .decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
-  }
-  // 付款期间 = 产值期间 + 支付周期(月)
-  const payIntvl = Number(row.payIntvl) || 0;
-  if (
-    (column === "prodValPeriod" || column === "payTypeId" || column === "payIntvl") &&
-    row.prodValPeriod
-  ) {
-    row.payDate = addMonths(row.prodValPeriod, payIntvl);
-  }
-  // 进度款/验收款互斥承载产值：存在进度款时，验收款行的产值强制为 0
-  if (hasProgressRow.value && row.payTypeId === ACCEPT_PAY_TYPE) {
-    row.prodVal = 0;
-  }
-  updateNonSelfSupplyRow(rowIndex, { ...row });
+const handleNonSelfSupplySave = async (data: any) => {
+  const { row, column } = data;
+  recomputeNonSelfSupply(row, column);
 };
 
 // ============================================================
@@ -1040,32 +1003,11 @@ const detailApplyPayAmt = computed(() => {
   }
   return total.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 });
-/** 明细表 - 成本复核产值汇总 */
-const detailCostProdVal = computed(() => {
-  let total = new BigNumber(0);
-  const tableData = activeDetailTable.value;
-  for (const item of tableData) {
-    total = total.plus(toBig(item.costProdVal || 0));
-  }
-  return total.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
-});
-
-/** 明细表 - 成本复核应付汇总 */
-const detailCostPayAmt = computed(() => {
-  let total = new BigNumber(0);
-  const tableData = activeDetailTable.value;
-  for (const item of tableData) {
-    total = total.plus(toBig(item.costPayAmt || 0));
-  }
-  return total.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
-});
 
 watch(
   [
     detailApplyProdVal,
     detailApplyPayAmt,
-    detailCostProdVal,
-    detailCostPayAmt,
     () => formData.value.costProdVal,
     () => formData.value.costPayAmt,
     () => formData.value.sumProdVal,
@@ -1075,8 +1017,6 @@ watch(
     const f = formData.value;
     f.applyProdVal = detailApplyProdVal.value;
     f.applyPayAmt = detailApplyPayAmt.value;
-    f.costProdVal = detailCostProdVal.value;
-    f.costPayAmt = detailCostPayAmt.value;
     // 含本单累计产值 = 累计产值 + 本次申报产值（有成本复核产值则用成本复核值）
     const sumProdVal = toBig(f.sumProdVal || 0);
     const costProdVal = toBig(f.costProdVal || 0);
@@ -1861,104 +1801,13 @@ const recomputeMaterialPayAmt = (row: any, column: string) => {
       .decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
   }
 };
-const updateMaterialRow = (rowIndex: number, data: any) => {
-  const newData = [...materialTable.value];
-  newData[rowIndex] = { ...materialTable.value[rowIndex], ...data };
-  materialTable.value = newData;
-};
 const handleMaterialSave = async (data: any) => {
-  const { row, column, newValue, oldValue, rowIndex } = data;
-  // recomputeMaterialPayAmt(row, column);
-
-  // 使用 BigNumber 处理所有数值比较
-  const safeNewValue = toBig(newValue ?? 0);
-  const safeProdVal = toBig(row.prodVal ?? 0);
-  const safePayAmt = toBig(row.payAmt ?? 0);
-
-  if (column === "prodVal") {
-    if (safeNewValue.isLessThan(0)) {
-      ElMessage.warning("本次申报产值不能为负数！");
-      updateMaterialRow(rowIndex, { prodVal: 0 });
-      return;
-    }
-    // 校验：应付不能大于产值
-    if (safePayAmt.isGreaterThan(safeNewValue)) {
-      ElMessage.warning("本次申报应付不能大于本次申报产值！");
-      // 将应付调整为与产值相同
-      updateMaterialRow(rowIndex, { prodVal: safeNewValue.toNumber(), payAmt: safeNewValue.toNumber() });
-      return;
-    }
-    // 正常更新产值（payAmt 保持不变，但已经通过上面的校验确保 payAmt <= prodVal）
-    updateMaterialRow(rowIndex, { prodVal: safeNewValue.toNumber() });
-    return;
-  }
-  if (column === "payAmt") {
-    // 应付不能为负数
-    if (safeNewValue.isLessThan(0)) {
-      ElMessage.warning("本次申报应付不能为负数！");
-      updateMaterialRow(rowIndex, { payAmt: 0 });
-      return;
-    }
-    // 应付不能大于产值
-    if (safeNewValue.isGreaterThan(safeProdVal)) {
-      ElMessage.warning("本次申报应付不能大于本次申报产值！");
-      updateMaterialRow(rowIndex, { payAmt: safeProdVal.toNumber() });
-      return;
-    }
-    // 正常更新
-    updateMaterialRow(rowIndex, { payAmt: safeNewValue.toNumber() });
-    return;
-  }
-};
-const updateMaterialMinorRow = (rowIndex: number, data: any) => {
-  const newData = [...materialMinorTable.value];
-  newData[rowIndex] = { ...materialMinorTable.value[rowIndex], ...data };
-  materialMinorTable.value = newData;
+  const { row, column } = data;
+  recomputeMaterialPayAmt(row, column);
 };
 const handleMaterialMinorSave = async (data: any) => {
-  const { row, column, newValue, oldValue, rowIndex } = data;
-  // recomputeMaterialPayAmt(row, column);
-  // if (column === "prodVal" || column === "payRate") {
-  //   const v = toBig(row.prodVal || 0);
-  //   const r = toBig(row.payRate || 0);
-  //   row.payAmt = v.times(r).dividedBy(100)
-  //   updateMaterialMinorRow(rowIndex, { ...row });
-  // }
-
-  // 使用 BigNumber 处理所有数值比较
-  const safeNewValue = toBig(newValue ?? 0);
-  const safeProdVal = toBig(row.prodVal ?? 0);
-  const safePayRate = toBig(row.payRate || 0);
-
-  if (column === "prodVal") {
-    if (safeNewValue.isLessThan(0)) {
-      ElMessage.warning("本次申报产值不能为负数！");
-      updateMaterialMinorRow(rowIndex, { prodVal: 0 });
-      return;
-    }
-    // 通过应付比例计算应付
-    const newPayAmt = safeNewValue.times(safePayRate).dividedBy(100);
-    // 正常更新
-    updateMaterialMinorRow(rowIndex, { prodVal: safeNewValue.toNumber(), payAmt: newPayAmt.toNumber() });
-    return;
-  }
-  if (column === "payAmt") {
-    // 应付不能为负数
-    if (safeNewValue.isLessThan(0)) {
-      ElMessage.warning("本次申报应付不能为负数！");
-      updateMaterialMinorRow(rowIndex, { payAmt: 0 });
-      return;
-    }
-    // 应付不能大于产值
-    if (safeNewValue.isGreaterThan(safeProdVal)) {
-      ElMessage.warning("本次申报应付不能大于本次申报产值！");
-      updateMaterialMinorRow(rowIndex, { payAmt: safeProdVal.toNumber() });
-      return;
-    }
-    // 正常更新
-    updateMaterialMinorRow(rowIndex, { payAmt: safeNewValue.toNumber() });
-    return;
-  }
+  const { row, column } = data;
+  recomputeMaterialPayAmt(row, column);
 };
 
 const getSelectCostAlloc = (data: any) => {
