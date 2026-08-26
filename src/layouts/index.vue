@@ -1,16 +1,17 @@
 <template>
   <div class="content-layout">
     <!-- Header -->
-    <app-header :active-module-id="activeModuleId" @module-change="handleModuleChange" v-show="!shouldHideLayout" />
+    <app-header :active-module-id="activeModuleId" v-show="!shouldHideLayout" />
+
     <div class="content-body">
-      <!-- 左侧侧边栏 -->
+      <!-- 侧边栏 -->
       <app-sidebar :menu-data="sidebarMenu" v-show="!shouldHideLayout" />
-      <!-- 右侧内容区域 -->
+
+      <!-- 主内容区域 -->
       <main class="content-main">
-        <!-- 页签 -->
-        <tags-view v-show="!shouldHideLayout"></tags-view>
-        <!-- 主内容 -->
-        <!-- <router-view /> -->
+        <tags-view v-show="!shouldHideLayout" />
+
+        <!-- 路由视图 -->
         <router-view v-slot="{ Component, route }">
           <keep-alive :include="cachePagesArray">
             <component :is="Component" :key="route.fullPath" v-if="route.meta?.isKeepAlive" />
@@ -23,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch, provide } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
 import AppHeader from "./app-header.vue";
@@ -31,42 +32,29 @@ import AppSidebar from "./app-sidebar.vue";
 import TagsView from "./tags-view.vue";
 import { useMenuStore } from "@/stores/menu-store";
 import { useTagsStore } from "@/stores/tags-store";
-import { getSidebarMenuByModule, extractModules } from "@/utils/menu-util";
 import { useUserStore } from "@/stores/user-store";
-import { userApi } from "@/api/system/user-api.ts";
+import { getSidebarMenuByModule, extractModules } from "@/utils/menu-util";
+import { userApi } from "@/api/system/user-api";
 
-const userStore = useUserStore();
 const route = useRoute();
 const router = useRouter();
 const menuStore = useMenuStore();
 const tagsStore = useTagsStore();
+const userStore = useUserStore();
 
-// 获取标签页列表
 const { visitedViews } = storeToRefs(tagsStore);
 
-const currentRoutePath = computed(() => route.path);
 // 判断是否在大屏页面
-const isInLargeScreen = computed(() => {
-  return currentRoutePath.value === "/sales-analysis/large-screen";
-});
-// 判断是否需要隐藏布局组件
-const shouldHideLayout = computed(() => {
-  // 如果不在大屏页面，就显示布局组件
-  if (!isInLargeScreen.value) {
-    return false;
-  }
-  // 如果在大屏页面，就用 isFullScreen 控制
-  return userStore.isFullScreen;
-});
+const isInLargeScreen = computed(() => route.path === "/sales-analysis/large-screen");
+const shouldHideLayout = computed(() => isInLargeScreen.value && userStore.isFullScreen);
 
-// 基于当前打开的标签页动态计算需要缓存的组件列表
+// 缓存页面列表
 const cachePagesArray = computed(() => {
   const routes = router.getRoutes();
   const cacheNames: string[] = [];
 
-  // 遍历当前打开的标签页
-  visitedViews.value.forEach((tag) => {
-    const routeRecord = routes.find((r) => r.path === tag.path);
+  visitedViews.value.forEach(tag => {
+    const routeRecord = routes.find(r => r.path === tag.path);
     if (routeRecord?.meta?.isKeepAlive) {
       const componentName = routeRecord.components?.default?.name;
       if (componentName && !cacheNames.includes(componentName)) {
@@ -78,77 +66,113 @@ const cachePagesArray = computed(() => {
   return cacheNames;
 });
 
-// 缓存KEY
-const ACTIVE_MODULE_STORAGE_KEY = "active-module-id";
-// 从 localStorage 读取保存的模块ID
-const getStoredActiveModuleId = (): number => {
-  const stored = localStorage.getItem(ACTIVE_MODULE_STORAGE_KEY);
+// 模块 ID 存储
+const STORAGE_KEY = "active-module-id";
+const getStoredModuleId = (): number => {
+  const stored = localStorage.getItem(STORAGE_KEY);
   return stored ? parseInt(stored, 10) : 0;
 };
-
-// 保存到 localStorage
-const saveActiveModuleId = (moduleId: number) => {
-  localStorage.setItem(ACTIVE_MODULE_STORAGE_KEY, moduleId.toString());
+const saveModuleId = (id: number) => {
+  localStorage.setItem(STORAGE_KEY, id.toString());
 };
 
-// 当前激活的模块ID
-const activeModuleId = ref<number>(getStoredActiveModuleId());
+const activeModuleId = ref<number>(getStoredModuleId());
 
-// 根据激活模块ID计算侧边栏菜单
+// 侧边栏菜单（仅可见菜单）
 const sidebarMenu = computed(() => {
-  // if (!activeModuleId.value) return [];
   return getSidebarMenuByModule(menuStore.menuData, activeModuleId.value);
 });
 
-// 根据当前路由确定激活的模块
+/**
+ * 获取模块下的所有菜单项（包括 isVisible: false 的）
+ * 用于路由匹配，确保新增/编辑/详情页面能正确匹配到所属模块
+ */
+const getAllMenusByModule = (moduleId: number): any[] => {
+  const module = menuStore.menuData.find(
+    (item) => item.id === moduleId && item.menuType === 0
+  );
+  if (!module || !module.children) return [];
+
+  const result: any[] = [];
+
+  const collect = (items: any[]) => {
+    for (const item of items) {
+      // 只收集菜单类型（menuType === 1），跳过按钮（menuType === 2）
+      if (item.menuType === 1) {
+        result.push(item);
+      }
+      if (item.children && item.children.length > 0) {
+        collect(item.children);
+      }
+    }
+  };
+
+  collect(module.children);
+  return result;
+};
+
+/**
+ * 检查路径是否匹配菜单（支持父子路径匹配）
+ * 例如：/master-data/dictionary/add 匹配 /master-data/dictionary
+ */
+const isRouteMatchMenu = (path: string, menuPath: string): boolean => {
+  // 确保菜单路径以 / 开头
+  const normalizedMenuPath = menuPath.startsWith("/") ? menuPath : `/${menuPath}`;
+  
+  // 完全匹配
+  if (path === normalizedMenuPath) return true;
+  
+  // 子路径匹配：/xxx/add 匹配 /xxx
+  if (path.startsWith(normalizedMenuPath + "/")) return true;
+  
+  return false;
+};
+
+/**
+ * 自动匹配激活模块
+ * 使用完整菜单数据（包含不可见菜单）进行匹配
+ */
 const determineActiveModule = () => {
   const currentPath = route.path;
   const modules = extractModules(menuStore.menuData);
 
+  if (modules.length === 0) return;
+
+  // 遍历所有模块，查找当前路由属于哪个模块
   for (const module of modules) {
-    const moduleMenus = getSidebarMenuByModule(menuStore.menuData, module.id);
-    // console.log("333333", currentPath, moduleMenus);
-    if (isRouteInMenu(currentPath, moduleMenus)) {
-      // console.log("找到匹配的模块:", module.title);
-      activeModuleId.value = module.id;
+    // 获取该模块下的所有菜单项（包括不可见的）
+    const allMenus = getAllMenusByModule(module.id);
+    
+    // 检查当前路径是否匹配该模块下的任意菜单
+    const matched = allMenus.some(menu => 
+      menu.path && isRouteMatchMenu(currentPath, menu.path)
+    );
+    
+    if (matched) {
+      // 如果当前模块 ID 变化，更新并保存
+      if (activeModuleId.value !== module.id) {
+        activeModuleId.value = module.id;
+        saveModuleId(module.id);
+      }
       return;
     }
   }
 
-  // 如果没有找到匹配的模块，使用第一个模块
-  if (modules.length > 0) {
-    // console.log("未找到匹配模块，使用默认模块:", modules[0].title);
+  // 如果没有匹配到任何模块，使用第一个模块
+  if (activeModuleId.value !== modules[0].id) {
     activeModuleId.value = modules[0].id;
+    saveModuleId(modules[0].id);
   }
 };
 
-// 检查路由是否在菜单中
-const isRouteInMenu = (path: string, menus: any[]): boolean => {
-  for (const menu of menus) {
-    if (menu.path === path) {
-      // console.log("找到匹配菜单:", menu.title, menu.path);
-      return true;
-    }
-    if (menu.children && isRouteInMenu(path, menu.children)) {
-      return true;
-    }
-  }
-  return false;
-};
-
-// 处理模块切换
-const handleModuleChange = (module: any) => {
-  activeModuleId.value = module.id;
-  saveActiveModuleId(module.id);
-};
-// 用户基本信息
+// 获取用户信息
 const getUserInfo = async () => {
   const res = await userApi.getEmpInfo();
   if (res.code === 200) {
     userStore.setUserInfo(res.data || null);
   }
 };
-// 用户角色
+
 const getRoleList = async () => {
   try {
     const res = await userApi.getMyRoleList();
@@ -156,7 +180,7 @@ const getRoleList = async () => {
       userStore.setRoleList(res.data || []);
     }
   } catch (error) {
-
+    console.error("获取角色列表失败:", error);
   }
 };
 
@@ -168,21 +192,19 @@ watch(
       determineActiveModule();
     }
   },
-  { immediate: true },
+  { immediate: true }
 );
 
-// 初始化
 onMounted(() => {
   const token = localStorage.getItem("token");
-  if (token && menuStore.menuData.length > 0) {
-    determineActiveModule();
-  }
   if (token) {
+    if (menuStore.menuData.length > 0) {
+      determineActiveModule();
+    }
     getUserInfo();
     getRoleList();
   }
 });
-onUnmounted(() => { });
 </script>
 
 <style lang="scss" scoped>
@@ -208,22 +230,6 @@ onUnmounted(() => { });
       background: linear-gradient(135deg, #f5f7fa 0%, #e4efe9 100%);
       overflow: hidden;
       min-height: 0;
-      /* 防止内部内容溢出 */
-
-      /* 如果 tags-view 高度固定 */
-      &> :first-child:not(router-view) {
-        flex-shrink: 0;
-        /* 防止 tags-view 被压缩 */
-      }
-
-      /* 路由视图容器自适应 */
-      router-view,
-      :deep(> .keep-alive-container),
-      :deep(> *:not(:first-child)) {
-        flex: 1;
-        overflow: auto;
-        min-height: 0;
-      }
     }
   }
 }
