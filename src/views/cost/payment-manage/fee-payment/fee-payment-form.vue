@@ -26,7 +26,7 @@
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="费用类型" prop="finaTypeId">
+              <el-form-item label="费用类型" prop="finaTypeId" required>
                 <el-cascader v-model="formData.finaTypeId" :options="feeTypeOptions" :show-all-levels="false" :props="{
                   expandTrigger: 'hover',
                   emitPath: false,
@@ -373,6 +373,9 @@ const formRules = {
   reqType: [{ required: true, message: "请选择请款类型", trigger: "change" }],
   belongMonth: [
     { required: true, message: "请选择归属月份", trigger: "change" },
+  ],
+  finaTypeId: [
+    { required: true, message: "请选择费用类型", trigger: "change" },
   ],
   reqAmt: [{ required: true, message: "请输入请款金额", trigger: "blur" }],
 };

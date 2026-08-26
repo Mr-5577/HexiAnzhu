@@ -2419,14 +2419,12 @@ const buildSubmitParams = () => {
 const handleFormDataSave = async () => {
   submitLoading.value = true;
   try {
-    await formRef.value.validateField(["bizTitle", "projId", "conId"]);
+    await formRef.value.validateField(["bizTitle", "projId", "conId", "belongMonth", "finaTypeId", "payTypeId"]);
     if (canApplySettle.value === false && (formData.value.payTypeId === 2064 || formData.value.payTypeId === 2065)) {
       ElMessage.error("该合同尚未结算，不可请结算款和质保金！");
       return;
     }
-    ;
     const params = buildSubmitParams();
-    ;
     const res = await paymentRequestApi.editPay(params);
     if (res.code === 200 && res.data) {
       formData.value.id = res.data;
