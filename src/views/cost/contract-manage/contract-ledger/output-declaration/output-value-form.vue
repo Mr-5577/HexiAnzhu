@@ -379,12 +379,12 @@
     </Teleport>
     <!-- ============ 悬浮定位栏 ============ -->
     <FloatNav :items="visibleNavCards" />
+    <!-- ============ 选择主合同弹窗 ============ -->
+    <choose-contract-dialog ref="contractDialogRef" v-model="mainConDialogVisible" :selectionMode="'single'"
+      :projId="formData.projId" @select="handleMainConSelect" />
+    <choose-material-val-dialog ref="materialDialogRef" v-model="mtDialogVisible" :selectionMode="'multiple'"
+      :conNo="formData.conSysNo" :cgType="formData.selfSupplyType" :is-uesd="false" @select="handleMaterialSelect" />
   </div>
-  <!-- ============ 选择主合同弹窗 ============ -->
-  <choose-contract-dialog ref="contractDialogRef" v-model="mainConDialogVisible" :selectionMode="'single'"
-    :projId="formData.projId" @select="handleMainConSelect" />
-  <choose-material-val-dialog ref="materialDialogRef" v-model="mtDialogVisible" :selectionMode="'multiple'"
-    :conNo="formData.conSysNo" :cgType="formData.selfSupplyType" :is-uesd="false" @select="handleMaterialSelect" />
 </template>
 
 <script setup lang="ts">
@@ -968,7 +968,8 @@ const handleMaterialSelect = async (data) => {
           materialTable.value[dataIndex].payAmt = prodVal;
           materialTable.value[dataIndex].buildPeriod = item.recvDate;
           materialTable.value[dataIndex].payIntvl = 1;
-          materialTable.value[dataIndex].payDate = addMonths(currentMonth(), 1);
+          // 当合同产值确认方式为：“按材料到货确认” 时计划付款期间为当前月份
+          materialTable.value[dataIndex].payDate = formData.value.payMethod == 2 ? currentMonth() : addMonths(currentMonth(), 1);
           materialTable.value[dataIndex].srcOaRequestId = item.oaRequestId;
         }
       });
@@ -992,7 +993,8 @@ const handleMaterialSelect = async (data) => {
           materialMinorTable.value[dataIndex].payAmt = prodValMinor;
           materialMinorTable.value[dataIndex].buildPeriod = item.recvDate;
           materialMinorTable.value[dataIndex].payIntvl = 1;
-          materialMinorTable.value[dataIndex].payDate = addMonths(currentMonth(), 1);
+          // 当合同产值确认方式为：“按材料到货确认” 时计划付款期间为当前月份
+          materialMinorTable.value[dataIndex].payDate = formData.value.payMethod == 2 ? currentMonth() : addMonths(currentMonth(), 1);
           materialMinorTable.value[dataIndex].srcOaRequestId = item.oaRequestId;
         }
       });

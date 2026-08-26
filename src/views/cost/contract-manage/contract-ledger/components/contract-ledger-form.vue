@@ -307,18 +307,18 @@
 
     <!-- ============ 悬浮定位栏 ============ -->
     <FloatNav :items="navCards" />
+    <!-- 选择合同弹窗 -->
+    <choose-contract-dialog ref="contractDialogRef" v-model="mainConDialogVisible" @select="handleMainConSelect" />
+  
+    <!-- 选择供应商弹窗 -->
+    <choose-supplier-dialog ref="supplierDialogRef" v-model="supplierDialogVisible" :selectionMode="'single'"
+      :supStatus="2" @select="handleSupplierSelect" />
+  
+    <!-- 选择定标事项弹窗 -->
+    <ChooseAwardItemDialog v-model="awardItemDialogVisible" :selectionMode="'single'" :projId=formData.projId
+      :wfStatus="40" @select="handleAwardItemSelect" />
   </div>
 
-  <!-- 选择合同弹窗 -->
-  <choose-contract-dialog ref="contractDialogRef" v-model="mainConDialogVisible" @select="handleMainConSelect" />
-
-  <!-- 选择供应商弹窗 -->
-  <choose-supplier-dialog ref="supplierDialogRef" v-model="supplierDialogVisible" :selectionMode="'single'"
-    :supStatus="2" @select="handleSupplierSelect" />
-
-  <!-- 选择定标事项弹窗 -->
-  <ChooseAwardItemDialog v-model="awardItemDialogVisible" :selectionMode="'single'" :projId=formData.projId
-    :wfStatus="40" @select="handleAwardItemSelect" />
 </template>
 
 <script setup lang="ts">

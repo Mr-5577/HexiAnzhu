@@ -630,20 +630,20 @@
 
     <!-- ============ 悬浮定位栏 ============ -->
     <FloatNav :items="visibleNavCards" />
+    <!-- ============ 选择主合同弹窗 ============ -->
+    <choose-contract-dialog ref="contractDialogRef" v-model="mainConDialogVisible" :selectionMode="'single'"
+      :projId=formData.projId @select="handleMainConSelect" />
+    <!-- 上传发票弹窗 -->
+    <UploadInvoiceDialog v-model="uploadVisibleDialog" @success="getInvcData" />
+    <!-- 发票明细 弹窗 -->
+    <invoice-detail-dialog ref="invoiceDetailDialogRef" v-model="dialogVisible" :detailList="detailList"
+      :disabled="isReadonly" @success="handleInvoiceDetailSuccess" />
+  
+    <!-- 财务分摊  -->
+    <FinanceAllocationDialog ref="financeAllocationDialogRef" v-model="financeAllocVisible" :bizType="'CON_PAY'"
+      :bizBillId="billData?.id" :bizId="paymentData?.id" @select="getFinaList" @updateData="updateData">
+    </FinanceAllocationDialog>
   </div>
-  <!-- ============ 选择主合同弹窗 ============ -->
-  <choose-contract-dialog ref="contractDialogRef" v-model="mainConDialogVisible" :selectionMode="'single'"
-    :projId=formData.projId @select="handleMainConSelect" />
-  <!-- 上传发票弹窗 -->
-  <UploadInvoiceDialog v-model="uploadVisibleDialog" @success="getInvcData" />
-  <!-- 发票明细 弹窗 -->
-  <invoice-detail-dialog ref="invoiceDetailDialogRef" v-model="dialogVisible" :detailList="detailList"
-    :disabled="isReadonly" @success="handleInvoiceDetailSuccess" />
-
-  <!-- 财务分摊  -->
-  <FinanceAllocationDialog ref="financeAllocationDialogRef" v-model="financeAllocVisible" :bizType="'CON_PAY'"
-    :bizBillId="billData?.id" :bizId="paymentData?.id" @select="getFinaList" @updateData="updateData">
-  </FinanceAllocationDialog>
 </template>
 
 <script setup lang="ts">

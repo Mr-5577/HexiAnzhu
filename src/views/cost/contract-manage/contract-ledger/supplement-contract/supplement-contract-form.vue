@@ -246,18 +246,18 @@
 
     <!-- ============ 悬浮定位栏 ============ -->
     <FloatNav :items="visibleNavCards" />
+    <!-- 选择合同弹窗 -->
+    <choose-contract-dialog ref="contractDialogRef" v-model="mainConDialogVisible" :selectionMode="'single'"
+      :projId=formData.projId @select="handleMainConSelect" />
+  
+    <!-- 选择变更弹窗 (已归档、无需签证、未转补充合同的变更)-->
+    <choose-change-dialog ref="contractDialogRef" v-model="changeDialogVisible" :selectionMode="'single'"
+      :conId=formData.mainConId :isToAdd="false" :needVisa="false" :status="40" @select="handleChangeSelect" />
+  
+    <!-- 选择签证弹窗(已归档、未转补充合同) -->
+    <choose-visa-dialog ref="contractDialogRef" v-model="visaDialogVisible" :selectionMode="'single'"
+      :conId=formData.mainConId :isToAdd="false" :status="40" @select="handleVisaSelect" />
   </div>
-  <!-- 选择合同弹窗 -->
-  <choose-contract-dialog ref="contractDialogRef" v-model="mainConDialogVisible" :selectionMode="'single'"
-    :projId=formData.projId @select="handleMainConSelect" />
-
-  <!-- 选择变更弹窗 (已归档、无需签证、未转补充合同的变更)-->
-  <choose-change-dialog ref="contractDialogRef" v-model="changeDialogVisible" :selectionMode="'single'"
-    :conId=formData.mainConId :isToAdd="false" :needVisa="false" :status="40" @select="handleChangeSelect" />
-
-  <!-- 选择签证弹窗(已归档、未转补充合同) -->
-  <choose-visa-dialog ref="contractDialogRef" v-model="visaDialogVisible" :selectionMode="'single'"
-    :conId=formData.mainConId :isToAdd="false" :status="40" @select="handleVisaSelect" />
 </template>
 
 
