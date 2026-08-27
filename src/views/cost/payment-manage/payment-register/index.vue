@@ -52,10 +52,9 @@
           <el-option v-for="item in processStatus" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </el-form-item>
-      <el-form-item label="是否可支付" prop="isPayable">
-        <el-select v-model="queryParams.isPayable" placeholder="请选择" style="width: 180px">
-          <el-option label="是" :value="true" />
-          <el-option label="否" :value="false" />
+      <el-form-item label="请款类型" prop="reqType">
+        <el-select v-model="queryParams.reqType" placeholder="请选择请款类型" style="width: 180px" clearable>
+          <el-option v-for="item in ReqTypeEnum" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </el-form-item>
       <el-form-item label="申请日期" prop="applyDate">
@@ -150,6 +149,7 @@ import { exportExcel } from '@/utils/export-excel.ts';
 import { useMenuStore } from "@/stores/menu-store";
 import { formatThousandWithPlaces } from "@/utils/big-number.ts";
 import { PERMISSIONS } from "@/constants/permission.ts";
+import { ReqTypeEnum } from "@/constants/contract-manage/enums.ts";
 
 defineOptions({ name: "payment-register" });
 
@@ -177,7 +177,7 @@ const queryParams = ref({
   payStatus: "未支付", // 未支付  部分支付  全部支付
   isLocked: undefined,
   wfTitle: undefined,
-  isPayable: true,
+  reqType: undefined,
 });
 const projectOptions = ref([]); // 项目列表
 const segOptions = ref([]); // 业务板块列表
@@ -308,14 +308,16 @@ const resetPagination = () => {
 }
 const handleReset = () => {
   resetPagination();
-  // 将所有字段重置为 undefined
   Object.keys(queryParams.value).forEach((key) => {
-    queryParams.value[key] = undefined;
+    if (Array.isArray(queryParams.value[key])) {
+      queryParams.value[key] = [];
+    } else {
+      queryParams.value[key] = undefined;
+    }
   });
   queryParams.value.wfStatus = [40]; // 0=草稿, 10=审批中, 40=已审批, 80=作废, 99=其他
   // 默认查询未支付
   // queryParams.value.payStatus = "未支付";
-  queryParams.value.isPayable = true;
   getDataList();
 };
 const changeWfStatus = (val) => {
