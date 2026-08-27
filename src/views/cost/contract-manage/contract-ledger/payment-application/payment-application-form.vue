@@ -1152,13 +1152,13 @@ const isOffsetByInvoice = computed(() => formData.value.reqType != 0);
 // ============================================================
 // 归属月份只能选择当月及以前（禁止未来月份）
 const disabledBelongMonth = (date: Date) => {
-  const now = new Date();
-  const curYear = now.getFullYear();
-  const curMonth = now.getMonth(); // 0-based
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  if (year > curYear) return true;
-  if (year === curYear && month > curMonth) return true;
+  // const now = new Date();
+  // const curYear = now.getFullYear();
+  // const curMonth = now.getMonth(); // 0-based
+  // const year = date.getFullYear();
+  // const month = date.getMonth();
+  // if (year > curYear) return true;
+  // if (year === curYear && month > curMonth) return true;
   return false;
 };
 
