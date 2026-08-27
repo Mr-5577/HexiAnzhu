@@ -27,7 +27,7 @@ const formatYM = (val: any): string => {
   return String(val).slice(0, 7);
 };
 
-export const materialColumns = computed<EditableColumn[]>(() => [
+export const materialColumns: any = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {
     prop: "recvBillNo",

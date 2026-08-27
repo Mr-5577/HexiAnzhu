@@ -358,6 +358,7 @@ const handleExport = async () => {
         reqDesc: "付款申请说明",
         belongMonth: "费用归属期间",
         finaTypeName: "费用类型",
+        allocDetail: "科目名称",
         payableAmt: "请款金额",
         paidAmt: "支付金额",
         payStatus: "付款状态",
