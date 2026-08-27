@@ -378,7 +378,6 @@ const dedTypeOptions = ref([]);
 const cstProcessList = ref([]);
 const paymentFormRef = ref();
 const submitLoading = ref(false);
-const segOptions = ref([]);
 const feeTypeOptions = ref([]);
 const feeTypeFlatOptions = ref([]);
 const annexFileList = ref([]);
@@ -1335,17 +1334,6 @@ const getProjectOptions = async () => {
     console.error("获取项目列表失败:", error);
   }
 };
-// 获取业务板块数据
-const getSegOptions = async () => {
-  try {
-    const res = await dictionaryApi.getsegmentList({ isAuth: true });
-    if (res.code === 200) {
-      segOptions.value = res.data || [];
-    }
-  } catch (error) {
-    console.error("获取业务板块列表失败:", error);
-  }
-};
 
 const loadDetail = async () => {
   if (!props.cstPaymentId) return;
@@ -1926,7 +1914,6 @@ onMounted(async () => {
   await initDictData();
   await getCstProcessList();
   await getProjectOptions();
-  await getSegOptions();
   formData.value.userName = userStore.userInfo?.empName || "";
   formData.value.createDate = dateUtil().format("YYYY-MM-DD");
   formData.value.belongMonth = dateUtil().format("YYYY-MM-DD");

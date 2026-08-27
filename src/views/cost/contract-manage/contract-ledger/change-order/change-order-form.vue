@@ -234,7 +234,6 @@ const conId = computed<number | undefined>(() => {
 });
 
 // ==================== 选项数据 ====================
-const segOptions = ref([]);
 const projectOptions = ref([]);
 const changeReasonOptions = ref([]);
 const invalidCostReasonOptions = ref<any[]>([]);
@@ -442,17 +441,6 @@ const getData = (data: any) => {
   // console.log("tableList", tableList.value);
 };
 // ==================== 选项初始化方法 ====================
-// 获取业务板块列表
-const getSegOptions = async () => {
-  try {
-    const res = await dictionaryApi.getsegmentList();
-    if (res.code === 200) {
-      segOptions.value = res.data || [];
-    }
-  } catch (error) {
-    console.error("获取业务板块列表失败:", error);
-  }
-};
 
 // 获取项目列表
 const getProjectOptions = async () => {
@@ -496,7 +484,7 @@ const initDictData = async () => {
 
 // 初始化所有选项
 const initOptions = async () => {
-  await Promise.all([getSegOptions(), getProjectOptions(), initDictData()]);
+  await Promise.all([getProjectOptions(), initDictData()]);
 };
 
 // ==================== 单号生成 ====================

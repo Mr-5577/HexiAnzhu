@@ -136,8 +136,6 @@ const queryParams = ref({
   bizNo: "",
   time: [],
 });
-// 业务板块
-const segOptions = ref([]);
 // 项目列表
 const projectOptions = ref([]);
 
@@ -306,17 +304,6 @@ const handleDelete = (row: HConMain) => {
     .catch(() => { });
 };
 
-// 获取业务板块列表
-const getSegOptions = async () => {
-  try {
-    const res = await dictionaryApi.getsegmentList();
-    if (res.code === 200) {
-      segOptions.value = res.data || [];
-    }
-  } catch (error) {
-    console.error("获取业务板块列表失败:", error);
-  }
-};
 // 获取项目列表
 const getProjectOptions = async () => {
   try {
@@ -337,7 +324,6 @@ watch(
       currentPage.value = 1;
       pageSize.value = 20;
       total.value = 0;
-      getSegOptions();
       getProjectOptions();
       getDataList();
     }

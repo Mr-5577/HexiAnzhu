@@ -37,20 +37,6 @@
           @change="handleProductChange"
         />
       </el-form-item>
-      <!-- <el-form-item prop="segId" label="业务板块" required>
-        <el-select
-          v-model="formData.segId"
-          placeholder="请选择业务板块"
-          style="width: 100%"
-        >
-          <el-option
-            v-for="item in segOptions"
-            :key="item.id"
-            :label="item.segName"
-            :value="item.id"
-          />
-        </el-select>
-      </el-form-item> -->
       <el-form-item prop="remark" label="备注">
         <el-input
           v-model="formData.remark"
@@ -133,17 +119,6 @@ const getBaseProductList = async () => {
     console.error("获取成本科目失败:", error);
   } finally {
     productTreeLoading.value = false;
-  }
-};
-// 获取业务板块列表
-const getSegOptions = async () => {
-  try {
-    const res = await dictionaryApi.getsegmentList();
-    if (res.code === 200) {
-      segOptions.value = res.data || [];
-    }
-  } catch (error) {
-    console.error("获取业务板块列表失败:", error);
   }
 };
 const handleProductChange = (val: number) => {

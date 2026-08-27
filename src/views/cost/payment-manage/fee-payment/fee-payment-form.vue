@@ -296,7 +296,6 @@ const payTypeOptions = ref([]);
 const dedTypeOptions = ref([]);
 const feePaymentFormRef = ref();
 const submitLoading = ref(false);
-const segOptions = ref([]);
 const annexFileList = ref([]);
 const feeTypeOptions = ref([]);
 const feeTypeFlatOptions = ref([]);
@@ -1223,18 +1222,6 @@ const getProjectOptions = async () => {
   }
 };
 
-// 获取业务板块列表
-const getSegOptions = async () => {
-  try {
-    const res = await dictionaryApi.getsegmentList({ isAuth: true });
-    if (res.code === 200) {
-      segOptions.value = res.data || [];
-    }
-  } catch (error) {
-    console.error("获取业务板块列表失败:", error);
-  }
-};
-
 // ==================== 加载费用支付详情 ====================
 const loadDetail = async () => {
   if (!props.feePaymentId) return;
@@ -1673,7 +1660,6 @@ const showDeductionAndPayWay = computed(() => {
 onMounted(async () => {
   await initDictData();
   await getProjectOptions();
-  await getSegOptions();
   formData.value.userName = userStore.userInfo?.empName || "";
   formData.value.createDate = dateUtil().format("YYYY-MM-DD");
   formData.value.belongMonth = dateUtil().format("YYYY-MM-DD");

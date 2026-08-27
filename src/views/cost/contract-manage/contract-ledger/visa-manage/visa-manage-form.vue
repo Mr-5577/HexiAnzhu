@@ -523,7 +523,6 @@ const formRef = ref<FormInstance>();
 const submitLoading = ref(false);
 
 // ==================== 选项数据 ====================
-const segOptions = ref([]);
 const projectOptions = ref([]);
 const changeOrderOptions = ref([]);
 const wasteCostReasonOptions = ref([]);
@@ -672,17 +671,6 @@ const handleAuditCutAmtChange = () => {
 };
 
 // ==================== 选项初始化方法 ====================
-// 获取业务板块列表
-const getSegOptions = async () => {
-  try {
-    const res = await dictionaryApi.getsegmentList();
-    if (res.code === 200) {
-      segOptions.value = res.data || [];
-    }
-  } catch (error) {
-    console.error("获取业务板块列表失败:", error);
-  }
-};
 
 // ---- 主合同选择 ----
 const mainConDialogVisible = ref(false);
@@ -1129,7 +1117,6 @@ const getSelectCostAlloc = (data: any) => {
 
 // ==================== 初始化与生命周期 ====================
 const initData = async () => {
-  await getSegOptions();
   await getProjectOptions();
   await initDictData();
 
