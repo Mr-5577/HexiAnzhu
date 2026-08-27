@@ -6,6 +6,12 @@ import "./assets/styles/element-override.scss"; // Element Plus样式覆盖
 import "./assets/styles/global.css"; 
 import zhCn from "element-plus/es/locale/lang/zh-cn";
 
+// ===== 引入 vxe-table 和 vxe-pc-ui =====
+import VxeTable from 'vxe-table'
+import VxePcUI from 'vxe-pc-ui'
+import 'vxe-table/lib/style.css'
+import 'vxe-pc-ui/lib/style.css'
+
 import App from "./App.vue";
 // 基础表格组件
 import BaseTable from "@/components/base/base-table.vue";
@@ -33,6 +39,8 @@ app.use(router);
 app.use(ElementPlus, {
   locale: zhCn,
 });
+app.use(VxeTable)  // 注册 vxe-
+app.use(VxePcUI) // 注册 vxe-pc-ui
 setupPermission(app);
 // 全局注册 BaseTable 组件
 app.component("BaseTable", BaseTable);

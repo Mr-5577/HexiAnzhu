@@ -2,19 +2,32 @@
   <div class="invoice-manage-page">
     <div class="content">
       <el-tabs v-model="activeTab" @tab-change="changeTab">
-        <el-tab-pane
-          label="合同发票台账"
-          name="invoice-ledger"
-          style="height: 100%"
-        >
-          <invoice-ledger v-show="activeTab === 'invoice-ledger'" />
+        <el-tab-pane label="列表(基础编辑)" name="table1" style="height: 100%">
+          <table1 />
         </el-tab-pane>
-        <el-tab-pane
-          label="发票核验明细"
-          name="invoice-verification"
-          style="height: 100%"
-        >
-          <invoice-verification v-show="activeTab === 'invoice-verification'" />
+        <el-tab-pane label="列表（带分页）" name="table2" style="height: 100%">
+          <table2 />
+        </el-tab-pane>
+        <el-tab-pane label="树形列表" name="table3" style="height: 100%">
+          <table3 />
+        </el-tab-pane>
+        <el-tab-pane label="字典映射列表" name="table4" style="height: 100%">
+          <table4 />
+        </el-tab-pane>
+        <el-tab-pane label="多级表头-编辑" name="table5" style="height: 100%">
+          <table5 />
+        </el-tab-pane>
+        <el-tab-pane label="综合列表" name="table6" style="height: 100%">
+          <table6 />
+        </el-tab-pane>
+        <el-tab-pane label="列表-只读" name="table7" style="height: 100%">
+          <table7 />
+        </el-tab-pane>
+        <el-tab-pane label="列表-部分可编辑" name="table8" style="height: 100%">
+          <table8 />
+        </el-tab-pane>
+        <el-tab-pane label="列表-不编辑" name="table9" style="height: 100%">
+          <table9 />
         </el-tab-pane>
       </el-tabs>
     </div>
@@ -23,12 +36,19 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import InvoiceLedger from "./invoice-ledger/index.vue";
-import InvoiceVerification from "./invoice-verification/index.vue";
+import table1 from "./example-vxe-table/table1.vue";
+import table2 from "./example-vxe-table/table2.vue";
+import table3 from "./example-vxe-table/table3.vue";
+import table4 from "./example-vxe-table/table4.vue";
+import table5 from "./example-vxe-table/table5.vue";
+import table6 from "./example-vxe-table/table6.vue";
+import table7 from "./example-vxe-table/table7.vue";
+import table8 from "./example-vxe-table/table8.vue";
+import table9 from "./example-vxe-table/table9.vue";
 
 defineOptions({ name: "invoice-manage" });
 
-const activeTab = ref("invoice-ledger");
+const activeTab = ref("table1");
 
 const changeTab = (name: string) => {
   activeTab.value = name;
