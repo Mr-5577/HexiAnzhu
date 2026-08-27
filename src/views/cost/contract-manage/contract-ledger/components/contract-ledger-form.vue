@@ -285,10 +285,10 @@
         <!-- ====== 卡片7：合同附件 ====== -->
         <FormCard id="card-annex" icon="📎" title="合同附件" :disabled="isReadonly"
           v-model:collapsed="collapsedCards.annex">
-          <el-form-item label="合同正文及附件" required>
-            <base-upload v-model:file-list="annexContractFileList" :limit="9" :multiple="false" :showIcon="true"
-              :showTip="true" :maxSize="20" :unrestricted="true" :accept="''" button-text="选择文件" size="default"
-              :disabled="isReadonly" @success="handleUploadConSuccess" />
+          <el-form-item label="合同正文" required>
+            <base-upload v-model:file-list="annexContractFileList" :limit="1" :multiple="false" :showIcon="true"
+              :showTip="true" :maxSize="20"  :accept="'.docx'"  button-text="选择文件" size="default" :disabled="isReadonly"
+              @success="handleUploadConSuccess" />
           </el-form-item>
           <el-form-item label="其他附件">
             <base-upload v-model:file-list="annexFileList" :limit="9" :multiple="false" :showIcon="true" :showTip="true"
@@ -309,11 +309,11 @@
     <FloatNav :items="navCards" />
     <!-- 选择合同弹窗 -->
     <choose-contract-dialog ref="contractDialogRef" v-model="mainConDialogVisible" @select="handleMainConSelect" />
-  
+
     <!-- 选择供应商弹窗 -->
     <choose-supplier-dialog ref="supplierDialogRef" v-model="supplierDialogVisible" :selectionMode="'single'"
       :supStatus="2" @select="handleSupplierSelect" />
-  
+
     <!-- 选择定标事项弹窗 -->
     <ChooseAwardItemDialog v-model="awardItemDialogVisible" :selectionMode="'single'" :projId=formData.projId
       :wfStatus="40" @select="handleAwardItemSelect" />
