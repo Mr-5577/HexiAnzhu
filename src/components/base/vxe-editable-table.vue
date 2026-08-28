@@ -62,7 +62,6 @@
         :data="internalData"
         :columns="computedColumns"
         :loading="loading"
-        :header-row-config="headerRowConfig"
         :row-config="rowConfig"
         :tree-config="treeConfig"
         :edit-config="editConfig"
@@ -104,7 +103,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, h, resolveComponent } from "vue";
+import {
+  ref,
+  computed,
+  watch,
+  onMounted,
+  h,
+  resolveComponent,
+  nextTick,
+} from "vue";
 import { Refresh } from "@element-plus/icons-vue";
 import type { VxeGridInstance, VxeGridProps } from "vxe-table";
 
@@ -480,23 +487,11 @@ watch(
  * keyField: 行数据的唯一标识字段，用于 vxe-table 内部追踪行
  * isHover: 是否启用悬停效果
  * isCurrent: 是否启用当前行高亮
- * height: 单元格高度，设置为 38px
  */
 const rowConfig = computed(() => ({
   keyField: props.rowKey,
   isHover: true,
   isCurrent: true,
-  height: 38, // ✅ 单元格高度，设置为 38px
-  minHeight: 38, // ✅ 单元格最小高度，设置为 38px
-}));
-
-/**
- * 表头配置
- * height: 表头高度，设置为 38px
- */
-const headerRowConfig = computed(() => ({
-  height: 38, // 表头高度 38px
-  minHeight: 38, // 表头最小高度 38px
 }));
 
 /**
@@ -715,8 +710,8 @@ const getEditRender = (col: EditableColumn): any => {
         name: "VxeDatePicker",
         props: {
           ...commonProps,
-          format: "YYYY-MM-DD",
-          valueFormat: "YYYY-MM-DD",
+          format: "yyyy-MM-dd",
+          valueFormat: "yyyy-MM-dd",
         },
       };
     }
@@ -1051,7 +1046,44 @@ defineExpose({
   /** 收起所有树节点 */
   collapseAll: () => gridRef.value?.setAllTreeExpand(false),
   /** 展开到指定层级 */
-  expandToLevel: (level: number) => gridRef.value?.setTreeExpand(level, true),
+  // 在 defineExpose 中替换 expandToLevel
+  expandToLevel: async (level: number) => {
+    // 等待 DOM 更新
+    await nextTick();
+    const grid = gridRef.value;
+    if (!grid) {
+      console.warn("表格实例未就绪");
+      return;
+    }
+
+    // 先全部收起，避免之前展开状态干扰
+    grid.setAllTreeExpand(false);
+
+    // 获取树形数据（直接使用 internalData，它是响应式数据）
+    const data = internalData.value;
+    if (!data || data.length === 0) return;
+
+    // 递归展开节点
+    const expandNode = (node: any, currentDepth: number) => {
+      // currentDepth 从 0 开始（根节点深度为 0）
+      if (currentDepth < level) {
+        // 展开当前节点（v4 支持 setTreeExpand(row, expand)）
+        grid.setTreeExpand(node, true);
+        // 获取子节点
+        const childrenField = props.treeConfig?.childrenField || "children";
+        const children = node[childrenField];
+        if (Array.isArray(children) && children.length) {
+          children.forEach((child: any) => expandNode(child, currentDepth + 1));
+        }
+      }
+    };
+
+    // 从所有根节点开始展开
+    data.forEach((root: any) => expandNode(root, 0));
+
+    // 可选：强制刷新表格（部分版本需要）
+    // grid.reloadData?.();
+  },
   /**
    * 手动触发编辑
    * @param row 要编辑的行数据

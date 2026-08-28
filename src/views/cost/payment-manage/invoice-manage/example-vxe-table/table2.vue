@@ -69,7 +69,6 @@ const getPageData = () => {
   const start = (currentPage.value - 1) * pageSize.value;
   const end = start + pageSize.value;
   tableData.value = allData.slice(start, end);
-  console.log("当前页数据:", tableData.value);
 };
 
 // ===== 列配置 =====

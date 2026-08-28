@@ -12,6 +12,15 @@ import VxePcUI from 'vxe-pc-ui'
 import 'vxe-table/lib/style.css'
 import 'vxe-pc-ui/lib/style.css'
 
+VxeTable.setup({
+  table: {
+    // 表头单元格高度(全局)
+    headerCellConfig: { height: 36 },
+    // 单元格高度(全局)
+    cellConfig: { height: 36 }
+  }
+})
+
 import App from "./App.vue";
 // 基础表格组件
 import BaseTable from "@/components/base/base-table.vue";
