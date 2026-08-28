@@ -16,7 +16,6 @@
       :total="total"
       :page-size="pageSize"
       :current-page="currentPage"
-      :page-sizes="[10, 20, 50]"
       @pagination-change="handlePageChange"
       @selection-change="handleSelectionChange"
       @refresh="handleRefresh"

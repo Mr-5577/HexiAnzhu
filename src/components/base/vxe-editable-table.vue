@@ -97,6 +97,8 @@
         :layouts="paginationLayouts"
         :total="total"
         @page-change="handlePageChange"
+        size="small"
+        background
       />
     </div>
   </div>
