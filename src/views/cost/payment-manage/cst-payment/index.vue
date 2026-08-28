@@ -264,7 +264,7 @@ const getProjectOptions = async () => {
 };
 // 获取人员树形数据
 const getEmpTreeData = async () => {
-  const res = await roleApi.getEmpTree({ empName: "", isIncludeLeave: false });
+  const res = await roleApi.getEmpTree({ empName: "", isIncludeLeave: true });
   if (res.code === 200) {
     empTreeData.value = res.data || [];
   }

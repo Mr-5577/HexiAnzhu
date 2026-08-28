@@ -170,7 +170,7 @@
               <el-cascader
                 ref="projCascaderRef"
                 v-model="formData.dutyMan"
-                :options="props.empTreeData"
+                :options="empTreeData"
                 :show-all-levels="false"
                 :props="{
                   expandTrigger: 'click',
@@ -284,18 +284,17 @@ import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import { largeScreenApi } from "@/api/sales/large-screen-api";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";
+import { roleApi } from "@/api/system/role-api";
 
 interface Props<T = any> {
   modelValue: boolean;
   editData?: BidTender | null;
-  empTreeData?: T[];
   conTypeOptions?: T[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
   editData: null,
-  empTreeData: () => [],
   conTypeOptions: () => [],
 });
 
@@ -319,6 +318,8 @@ const purchaseMethodOptions = ref([]);
 const tenderMethodOptions = ref([]);
 // 清单模式
 const billModeOptions = ref([]);
+// 责任人
+const empTreeData = ref([]);
 // 数据字典
 const { getDictList, loadDicts } = useDict([
   dictMapping.purchaseMethod, // 采购方式
@@ -525,6 +526,14 @@ const getProjectOptions = async () => {
     console.error("获取项目列表失败:", error);
   }
 };
+// 获取人员树形数据
+const getEmpTreeData = async () => {
+  const res = await roleApi.getEmpTree({ empName: "", isIncludeLeave: false });
+  // console.log("获取人员列表", res);
+  if (res.code === 200) {
+    empTreeData.value = res.data || [];
+  }
+};
 // 初始化数据字典数据
 const initDictData = async () => {
   await loadDicts();
@@ -600,7 +609,7 @@ const getInfo = async () => {
 
 const initFormData = async () => {
   if (isEditMode.value && props.editData) {
-    getInfo();
+    await getInfo();
   } else {
     formData.value = {
       id: null,
@@ -786,6 +795,7 @@ watch(
       await getSegOptions();
       await getProjectOptions();
       await initDictData();
+      await getEmpTreeData();
       initFormData();
     }
   },

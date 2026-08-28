@@ -382,13 +382,13 @@ const isReadonly = computed(
 );
 
 // ===================== 下拉 / 字典数据 =====================
-const projectOptions = ref<any[]>([]);
+const projectOptions = ref([]);
 const companyOptions = ref([]); // 签约公司选项
 const conTypeOptions = ref([]); // 合同分类选项
 const supplierOptions = ref([]); // 供应商选项
 const buildingOptions = ref([]); // 楼栋选项
 const proProfOptions = ref([]); // 生产专业列表
-const empTreeOptions = ref<any[]>([]); // 组织及人员
+const empTreeOptions = ref([]); // 组织及人员
 const visaList = ref([]); // 签证单据列表
 
 // 数据字典
@@ -508,9 +508,9 @@ const tableLoading = ref(false);
 const tableList = ref([]);
 const processColumns = createProcessColumns();
 const priceColumns = createPriceColumns();
-const priceTable = ref<any[]>([]);
-const annexContractFileList = ref<any[]>([]);
-const annexFileList = ref<any[]>([]);
+const priceTable = ref([]);
+const annexContractFileList = ref([]);
+const annexFileList = ref([]);
 
 const { addRow: addPrice, deleteRow: deletePrice } = useTableEditor(
   priceTable,
