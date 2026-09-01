@@ -86,10 +86,11 @@ const columns: EditableColumn[] = [
   {
     field: "contractNo",
     title: "合同编号",
-    width: 550,
+    minWidth: 200,
     editable: true,
     editType: "input",
     placeholder: "请输入合同编号",
+    disabled: (row: any) => row.id === 1,
   },
   {
     field: "contractName",

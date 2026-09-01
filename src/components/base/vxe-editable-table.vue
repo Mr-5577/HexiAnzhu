@@ -678,6 +678,7 @@ const createHeaderWithTip = (title: string, tipConfig: HeaderTipConfig) => {
  */
 const getEditRender = (col: EditableColumn): any => {
   const commonProps = {
+    size: "small",
     placeholder: col.placeholder || "",
     disabled: col.disabled,
   };
@@ -891,15 +892,9 @@ const convertColumn = (col: EditableColumn): any => {
   }
 
   // ===== 可点击单元格 =====
-  // 添加点击样式，并触发 cell-click 事件
+  // 添加点击样式
   if (col.clickable) {
     baseCol.className = "clickable-cell";
-    baseCol.cellClick = (params: any) => {
-      if (col.onClick) {
-        col.onClick(params.row, col);
-      }
-      emit("cell-click", { row: params.row, column: col, event: params.event });
-    };
   }
 
   return baseCol;
@@ -976,6 +971,12 @@ const handleCheckboxAll = (params: any) => {
  * 单元格点击事件
  */
 const handleCellClick = (params: any) => {
+  // 根据点击列的 field 匹配原始列配置
+  const col = props.columns.find((c) => c.field === params.column.field);
+  if (col?.clickable && typeof col.onClick === "function") {
+    col.onClick(params.row, col);
+  }
+  // 继续触发全局事件，供父组件监听
   emit("cell-click", {
     row: params.row,
     column: params.column,
@@ -1233,16 +1234,16 @@ watch(
           .vxe-body-column {
             font-size: 13px;
             color: #606266;
-
-            &.clickable-cell {
-              cursor: pointer;
-              color: #1890ff;
-
-              &:hover {
-                text-decoration: underline;
-              }
-            }
           }
+        }
+      }
+      //   可点击单元格样式
+      .clickable-cell {
+        cursor: pointer;
+        color: #1890ff;
+
+        &:hover {
+          text-decoration: underline;
         }
       }
 

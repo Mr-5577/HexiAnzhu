@@ -91,37 +91,40 @@ const columns: EditableColumn[] = [
     width: 150,
     // 即使设置了 editable，disabled: true 也会覆盖
     editable: true,
+    clickable: true, // 点击单元格触发 onClick 事件
+    onClick: (data) => {
+      console.log("点击了合同编号:", data);
+    },
   },
   {
     field: "contractName",
     title: "合同名称",
     width: 200,
-    editable: true,
   },
   {
     field: "supplier",
     title: "供应商",
     width: 180,
-    editable: true,
   },
   {
     field: "amount",
     title: "合同金额",
     width: 150,
     slots: { default: "amount" },
-    editable: true,
   },
   {
     field: "status",
     title: "状态",
     width: 100,
     slots: { default: "status" },
-    editable: true,
   },
 ];
 
 const handleSelectionChange = (selection: any[]) => {
   console.log("选中:", selection);
+};
+const handleCellClick = (data: any) => {
+  console.log("单元格点击:", data);
 };
 </script>
 
