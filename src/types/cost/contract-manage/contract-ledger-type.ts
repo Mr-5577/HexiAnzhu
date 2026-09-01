@@ -277,7 +277,7 @@ export interface HConMainQuery {
   /** 供应商名称 */
   supName?: string;
   /** 合同分类 */
-  conTypeId?: number;
+  conTypeId?: number | number[];
   /** 经办人 */
   agentId?: number;
   /** 创建人 */

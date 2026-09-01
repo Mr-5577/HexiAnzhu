@@ -26,14 +26,18 @@
           <!-- 列设置 -->
           <el-tooltip content="列设置">
             <el-button size="small" @click="handleColumnSetting">
-              <el-icon><Setting /></el-icon>
+              <el-icon>
+                <Setting />
+              </el-icon>
             </el-button>
           </el-tooltip>
 
           <!-- 刷新 -->
           <el-tooltip content="刷新">
             <el-button size="small" @click="handleRefresh" :loading="loading">
-              <el-icon><Refresh /></el-icon>
+              <el-icon>
+                <Refresh />
+              </el-icon>
             </el-button>
           </el-tooltip>
         </slot>
@@ -42,44 +46,21 @@
 
     <!-- 表格部分 -->
     <div class="table-wrapper" :style="tableWrapperStyle">
-      <el-table
-        ref="tableRef"
-        :row-key="rowKey"
-        v-bind="getTableProps"
-        :data="tableData"
-        v-loading="loading"
-        :show-summary="showSummary"
-        :summary-method="props.summaryMethod || defaultSummaryMethod"
-        :default-expand-all="isExpandAll"
-        :row-class-name="getRowClassName"
-        element-loading-text="数据加载中..."
-        element-loading-background="rgba(255, 255, 255, 0.8)"
-        @selection-change="handleSelectionChange"
-        @sort-change="handleSortChange"
-        @row-click="handleRowClick"
-      >
+      <el-table ref="tableRef" :row-key="rowKey" v-bind="getTableProps" :data="tableData" v-loading="loading"
+        :show-summary="showSummary" :summary-method="props.summaryMethod || defaultSummaryMethod"
+        :default-expand-all="isExpandAll" :row-class-name="getRowClassName" element-loading-text="数据加载中..."
+        element-loading-background="rgba(255, 255, 255, 0.8)" @selection-change="handleSelectionChange"
+        @sort-change="handleSortChange" @row-click="handleRowClick">
         <!-- 递归渲染多级表头 -->
-        <template
-          v-for="(item, index) in visibleColumns"
-          :key="item.prop ?? item.type ?? index"
-        >
-          <component
-            :is="TableColumn"
-            :column="item"
-            :slots="$slots"
-            :dict-data="dictData"
-            @cell-click="handleTableCellClick"
-            @cell-event="handleTableCellEvent"
-          />
+        <template v-for="(item, index) in visibleColumns" :key="item.prop ?? item.type ?? index">
+          <component :is="TableColumn" :column="item" :slots="$slots" :dict-data="dictData"
+            @cell-click="handleTableCellClick" @cell-event="handleTableCellEvent" />
         </template>
 
         <!-- 空状态 -->
         <template #empty>
-          <div
-            :class="
-              compactEmpty ? 'empty-container compact' : 'empty-container'
-            "
-          >
+          <div :class="compactEmpty ? 'empty-container compact' : 'empty-container'
+            ">
             <slot name="empty">
               <el-empty description="暂无数据" />
             </slot>
@@ -90,17 +71,9 @@
 
     <!-- 分页部分 -->
     <div class="pagination" v-if="pagination">
-      <el-pagination
-        :size="'small'"
-        :current-page="currentPage"
-        :page-size="pageSize"
-        :page-sizes="pageSizes"
-        :total="total"
-        :layout="paginationLayout"
-        :background="paginationBackground"
-        @size-change="handlePageSizeChange"
-        @current-change="handleCurrentChange"
-      />
+      <el-pagination :size="'small'" :current-page="currentPage" :page-size="pageSize" :page-sizes="pageSizes"
+        :total="total" :layout="paginationLayout" :background="paginationBackground" @size-change="handlePageSizeChange"
+        @current-change="handleCurrentChange" />
     </div>
   </div>
 </template>
@@ -332,19 +305,19 @@ interface Emits {
 const formatValueByType = (value: any, formatType: string): string => {
   // 处理空值
   if (value === null || value === undefined || value === '') return '-';
-  
+
   const num = Number(value);
   if (isNaN(num)) return String(value);
-  
+
   switch (formatType) {
     case 'd%':
       // 整数百分比：13 → 13%
       return `${Math.floor(num)}%`;
-      
+
     case '0.00%':
       // 保留原始小数位数百分比：0.131234 → 0.131234%
       return `${num}%`;
-      
+
     case '#,##0.00%':
       // 千分位两位小数百分比：12345.678 → 12,345.68%
       const percentage = num * 100;
@@ -353,29 +326,29 @@ const formatValueByType = (value: any, formatType: string): string => {
         maximumFractionDigits: 2,
       });
       return `${formatted}%`;
-      
+
     case 'fixed2':
     case '0.00':
       // 固定保留两位小数：13.4567 → 13.46
       return num.toFixed(2);
-      
+
     case 'thousand':
       // 千分位格式化，保留原始小数位数
       return num.toLocaleString('zh-CN', {
         minimumFractionDigits: 0,
         maximumFractionDigits: 20,
       });
-      
+
     case '#,##0.00':
       // 千分位固定保留两位小数：1234567.89 → 1,234,567.89
       return num.toLocaleString('zh-CN', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       });
-      
+
     case '100*d%':
       // 整数百分比：13 → 13%
-      return `${Math.floor(num*100)}%`;
+      return `${Math.floor(num * 100)}%`;
     default:
       return String(value);
   }
@@ -636,9 +609,9 @@ const TableColumn = {
               expandSlot
                 ? expandSlot(scope)
                 : h(
-                    "span",
-                    `Expand content for ${scope.row.id || scope.$index}`,
-                  ),
+                  "span",
+                  `Expand content for ${scope.row.id || scope.$index}`,
+                ),
           },
         );
       }
@@ -1224,10 +1197,12 @@ defineExpose({
   padding-bottom: 5px;
   box-sizing: border-box;
 }
+
 .action-bar {
   margin-bottom: 10px;
   flex-shrink: 0;
 }
+
 .toolbar {
   height: 28px;
   display: flex;
@@ -1238,15 +1213,18 @@ defineExpose({
   gap: 8px;
   flex-shrink: 0;
 }
+
 .toolbar .left {
   display: flex;
   align-items: center;
   gap: 12px;
 }
+
 .toolbar .right {
   display: flex;
   align-items: center;
 }
+
 .batch-actions {
   display: flex;
   align-items: center;
@@ -1255,33 +1233,43 @@ defineExpose({
   background-color: #f0f9ff;
   border-radius: 4px;
 }
+
 .selected-count {
   font-size: 14px;
   color: #409eff;
 }
+
 .table-wrapper {
   flex: 1;
   min-height: 150px;
+
   :deep(.el-table) {
     .el-table__header-wrapper {
       background-color: #f8f8f9 !important;
+
       .el-table__header {
         background-color: #f8f8f9 !important;
+
         .el-table__cell {
           padding: 0; // 调整内边距来控制高度
+
           // 固定内容区高度，确保行高一致
           .cell {
             height: 28px;
             line-height: 28px;
           }
         }
+
         thead {
           background-color: #f8f8f9 !important;
+
           tr {
             background-color: #f8f8f9 !important;
+
             th {
               background-color: #f8f8f9 !important;
               color: #515a6e !important;
+
               .cell {
                 color: #515a6e !important;
               }
@@ -1290,18 +1278,22 @@ defineExpose({
         }
       }
     }
+
     .el-table__body {
       .el-table__cell {
         padding: 0; // 调整内边距来控制高度
+
         // 固定内容区高度，确保行高一致
         .cell {
           height: 28px;
           line-height: 28px;
         }
+
         // 可点击单元格样式
         .clickable-cell {
           cursor: pointer;
           color: #1890ff;
+
           &:hover {
             text-decoration: underline;
           }
@@ -1310,7 +1302,7 @@ defineExpose({
 
       // 添加点击行高亮样式
       .current-row {
-        & > .el-table__cell {
+        &>.el-table__cell {
           background-color: #e0ecfc !important;
         }
       }
@@ -1318,43 +1310,107 @@ defineExpose({
       // 鼠标悬停效果
       .el-table__row {
         &:hover {
-          & > .el-table__cell {
+          &>.el-table__cell {
             background-color: #f0f5ff !important;
           }
         }
       }
     }
+
     // 表格空数据时的高度调整
     .el-table__empty-block {
       height: 100% !important;
     }
   }
+  // 新调整的table列表的样式=======开始
+  :deep(.el-table) {
+    border-radius: 8px;
+    font-size: 14px;
+
+    .el-table__header-wrapper {
+      th.el-table__cell {
+        background-color: #f7f8fa;
+        // color: #4a5568;
+        // font-weight: 600;
+        font-size: 14px;
+        border-bottom: 1px solid #edf2f7;
+        // padding: 12px 0;
+
+        .cell {
+          padding: 0 12px;
+        }
+      }
+    }
+
+    .el-table__body-wrapper {
+      tr.el-table__row {
+        transition: background 0.15s;
+
+        td.el-table__cell {
+          border-bottom: 1px solid #f0f2f5;
+          // padding: 10px 0;
+          // color: #2d3748;
+
+          .cell {
+            padding: 0 12px;
+          }
+        }
+
+        &:hover td.el-table__cell {
+          background-color: #f7fafc;
+        }
+
+        &:nth-child(even) td.el-table__cell {
+          background-color: #fafbfc;
+        }
+
+        &:nth-child(even):hover td.el-table__cell {
+          background-color: #f7fafc;
+        }
+      }
+    }
+  }
+
+  :deep(.el-table__empty-block) {
+    padding: 40px 0;
+    color: #a0aec0;
+    font-size: 14px;
+  }
+  // 新调整的table列表的样式=======结束
 }
+
 .pagination {
   display: flex;
   justify-content: flex-end;
   margin-top: 10px;
   flex-shrink: 0;
+
   :deep(.el-pager) {
     .is-active {
       background: linear-gradient(135deg, #05456e 0%, #4096cc 100%);
     }
   }
 }
+
 .empty-container {
   padding: 40px 0;
+
   // 紧凑型空状态样式，适用于小高度容器（如弹窗内的表格）
   &.compact {
     padding: 8px 0;
+
     :deep(.el-empty) {
+
       // padding: 8px 0;
       .el-empty__image {
         width: 60px;
         height: 60px;
         margin-bottom: 4px;
       }
+
       .el-empty__description {
         margin-top: 4px;
+
         p {
           font-size: 12px;
           line-height: 1.2;
@@ -1363,13 +1419,16 @@ defineExpose({
     }
   }
 }
+
 /* 调整合计行高度 */
 .pro-table-container {
   :deep(.el-table) {
     .el-table__footer-wrapper {
+
       // 调整整个合计行区域的高度
       .el-table__cell {
         padding: 0; // 调整内边距来控制高度
+
         .cell {
           line-height: 1.5; // 调整行高
           min-height: 32px; // 最小高度
@@ -1404,6 +1463,7 @@ defineExpose({
     flex-direction: column;
     align-items: stretch;
   }
+
   .toolbar .left,
   .toolbar .right {
     justify-content: space-between;

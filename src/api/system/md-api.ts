@@ -5,11 +5,9 @@ export const mdApi = {
   /**
    * 获取指定业态下的公司列表（包含项目列表）
    * @param data segId 业态ID
+   * @param data projId 项目ID
    */
-  getSegCompanyList: (data: { segId: number }) => {
-    return http.post("/mainData/company/getList", data);
-  },
-  getProjCompanyList: (data: { projId: number }) => {
+  getProjCompanyList: (data?: { projId?: number; segId?: number }) => {
     return http.post("/mainData/company/getList", data);
   },
 };
