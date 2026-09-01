@@ -161,7 +161,7 @@
               v-model="formData.remark"
               type="textarea"
               :rows="3"
-              maxlength="500"
+              maxlength="8000"
               show-word-limit
               :disabled="isDetail || !!billData.status"
               placeholder="其他补充信息"
