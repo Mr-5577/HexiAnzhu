@@ -570,7 +570,7 @@ const scrollYConfig = computed(() => {
  */
 const computedHeight = computed(() => {
   if (props.height) return props.height;
-  return undefined;
+  return "100%";
 });
 
 /**
@@ -966,15 +966,35 @@ const handleCheckboxAll = (params: any) => {
   selectedRows.value = selection;
   emit("selection-change", selectedRows.value);
 };
-
+/**
+ * 递归查找列配置（支持多级表头）
+ */
+const findColumnByField = (
+  columns: EditableColumn[],
+  field: string,
+): EditableColumn | undefined => {
+  for (const col of columns) {
+    if (col.field === field) {
+      return col;
+    }
+    if (col.children) {
+      const found = findColumnByField(col.children, field);
+      if (found) return found;
+    }
+  }
+  return undefined;
+};
 /**
  * 单元格点击事件
  */
 const handleCellClick = (params: any) => {
   // 根据点击列的 field 匹配原始列配置
-  const col = props.columns.find((c) => c.field === params.column.field);
-  if (col?.clickable && typeof col.onClick === "function") {
-    col.onClick(params.row, col);
+  const field = params.column.field;
+  if (field) {
+    const col = findColumnByField(props.columns, field);
+    if (col?.clickable && typeof col.onClick === "function") {
+      col.onClick(params.row, col);
+    }
   }
   // 继续触发全局事件，供父组件监听
   emit("cell-click", {
