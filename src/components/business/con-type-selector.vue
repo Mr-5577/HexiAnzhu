@@ -11,8 +11,8 @@ import { useMDStore } from "@/stores/md-store";
 
 // Props定义
 interface Props {
-  /** 选中值（支持v-model双向绑定） */
-  modelValue?: string | number;
+  /** 选中值（支持v-model双向绑定），单选为string/number，多选为数组 */
+  modelValue?: string | number | (string | number)[];
   /** 占位提示文本 */
   placeholder?: string;
   /** 是否禁用 */
@@ -25,6 +25,8 @@ interface Props {
   showAllLevels?: boolean;
   /** 组件宽度 */
   width?: string | number;
+  /** 是否多选（默认单选） */
+  multiple?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -35,12 +37,13 @@ const props = withDefaults(defineProps<Props>(), {
   filterable: true,
   showAllLevels: false,
   width: "180px",
+  multiple: false,
 });
 
 // Emits定义
 const emit = defineEmits<{
-  (e: "update:modelValue", value: string | number): void;
-  (e: "change", value: string | number): void;
+  (e: "update:modelValue", value: string | number | (string | number)[]): void;
+  (e: "change", value: string | number | (string | number)[]): void;
 }>();
 
 // 初始化store
@@ -61,6 +64,7 @@ const cascaderProps = computed(() => ({
   value: "id",           // 值字段（提交用）
   label: "conTypeName",  // ✅ 显示名称字段（就是你接口里的分类名称字段）
   children: "children",  // 子节点字段
+  multiple: props.multiple
 }));
 
 // 加载分类数据
@@ -92,7 +96,7 @@ const wrapperStyle = computed(() => ({
 }));
 
 // 处理值变化
-const handleUpdate = (value: string | number) => {
+const handleUpdate = (value: string | number | (string | number)[]) => {
   emit("update:modelValue", value);
   emit("change", value);
 };
@@ -108,6 +112,7 @@ const handleUpdate = (value: string | number) => {
     :clearable="clearable"
     :filterable="filterable"
     :show-all-levels="showAllLevels"
+    :collapse-tags="multiple"
     :style="wrapperStyle"
     popper-class="con-type-selector-popper"
     @update:model-value="handleUpdate"
