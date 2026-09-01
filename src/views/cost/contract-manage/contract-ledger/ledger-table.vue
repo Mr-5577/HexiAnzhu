@@ -15,13 +15,17 @@
         <el-input v-model="queryParams.bizNo" placeholder="请输入关联编号" clearable style="width: 180px" />
       </el-form-item>
       <el-form-item label="合同分类" prop="conTypeId">
-        <ConTypeSelector v-model="queryParams.conTypeId" placeholder="请选择合同分类" style="width: 180px" clearable
-          filterable />
+        <ConTypeSelector v-model="queryParams.conTypeId" placeholder="请选择合同分类" style="width: 180px" :multiple="false"
+          clearable filterable />
       </el-form-item>
       <el-form-item label="合同状态" prop="conStatus">
         <el-select v-model="queryParams.conStatus" placeholder="请选择合同状态" clearable style="width: 180px">
           <el-option v-for="item in ConStatusEnum" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
+      </el-form-item>
+      <el-form-item label="产值确认方式" prop="payMethod">
+        <EnumSelect v-model="queryParams.payMethod" :options="PayTypeEnum" clearable placeholder="请选择产值确认方式"
+          :width="'180px'" />
       </el-form-item>
       <el-form-item label="经办人" prop="agentId">
         <ChooseEmployee v-model="queryParams.agentId" :show-all-levels="false" placeholder="请选择" style="width: 180px"
@@ -92,6 +96,7 @@ import {
   PriceTypeEnum,
   ConStatusEnum,
   getLabel,
+  PayTypeEnum,
 } from "@/constants/contract-manage/enums";
 import { getEnumLabel, getEnumType } from "@/utils/enum";
 import { conBillStatusEnum } from "@/constants/contract-manage/enums.ts"
@@ -101,7 +106,7 @@ import {
 } from "@/types/cost/contract-manage/contract-ledger-type";
 import { useUserStore } from "@/stores/user-store";
 import ConTypeSelector from "@/components/business/con-type-selector.vue";
-
+import EnumSelect from "@/components/base/base-enum-select.vue";
 
 defineOptions({ name: "contract-ledger-table" });
 
@@ -134,6 +139,7 @@ const queryParams = ref({
   createId: undefined,
   conSysNo: "",
   bizNo: "",
+  payMethod: undefined,
   time: [],
 });
 // 项目列表
@@ -195,6 +201,7 @@ const getDataList = async () => {
       conTypeId: queryParams.value.conTypeId,
       conSysNo: queryParams.value.conSysNo,
       bizNo: queryParams.value.bizNo,
+      payMethod: queryParams.value.payMethod,
       ...params,
       createDateStart: startDate,
       createDateEnd: endDate,
@@ -241,6 +248,7 @@ const handleReset = () => {
     createId: undefined,
     conSysNo: "",
     bizNo: "",
+    payMethod: undefined,
     time: [],
   };
   resetPagination();
