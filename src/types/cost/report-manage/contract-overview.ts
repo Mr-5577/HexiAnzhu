@@ -1,27 +1,9 @@
 // ==================== 合同执行概览 类型定义 ====================
 
 /**
- * 通用基础类型
- */
-export interface BaseEntity {
-  /** 主键，自增 */
-  id?: number;
-  /** 删除标识：false-未删除，true-已删除 */
-  isDel?: boolean;
-  /** 创建人ID */
-  createId?: number;
-  /** 创建时间 */
-  createDate?: string;
-  /** 更新人ID */
-  operId?: number;
-  /** 更新时间 */
-  operDate?: string;
-}
-
-/**
  * 合同执行概览 列表
  */
-export interface ConExecutionReportVO extends BaseEntity {
+export interface ConExecutionReportVO {
   // ===== 合同基本信息 =====
   /** 业务板块 */
   segName: string;
@@ -100,4 +82,30 @@ export interface ConExecutionReportVO extends BaseEntity {
   payInvOweAmt: number;
   /** 已付欠票额（已付 - 开票） */
   paidInvOweAmt: number;
+}
+
+/**
+ * 合同执行概览 查询参数
+ */
+export interface ContractExecutionQueryParam {
+  /** 业务板块ID列表（若选择“全部”则传入所有板块ID，否则传入选中单个ID的数组） */
+  segIdList?: number[];
+  /** 项目ID列表（多选） */
+  projIdList?: number[];
+  /** 签约开始日期（YYYY-MM-DD） */
+  signDateStart?: string;
+  /** 签约结束日期（YYYY-MM-DD） */
+  signDateEnd?: string;
+  /** 甲方签约公司ID */
+  companyId?: number;
+  /** 供应商名称（模糊匹配） */
+  supName?: string;
+  /** 合同类型（枚举值，如 '总包合同'、'分包合同' 等） */
+  conProperty?: string;
+  /** 合同分类ID列表（多选级联） */
+  conTypeIdList?: number[];
+  /** 产值确认方式（枚举值） */
+  payMethod?: string;
+  /** 是否导出（true 时触发导出接口） */
+  isExport?: boolean;
 }
