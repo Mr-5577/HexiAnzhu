@@ -35,6 +35,12 @@
             </div>
           </div>
         </template>
+        <!-- 是否默认列 -->
+        <template #isDefault="{ row }">
+          <el-tag :type="row.isDefault ? 'success' : 'danger'" size="small" effect="light">
+            {{ row.isDefault ? "是" : "否" }}
+          </el-tag>
+        </template>
         <!-- 是否启用列 -->
         <template #isEnabled="{ row }">
           <el-tag :type="row.isEnabled ? 'success' : 'danger'" size="small" effect="light">
@@ -88,6 +94,7 @@ const tableColumns: TableColumnItem[] = [
   { prop: "bankName", label: "开户银行" },
   { prop: "accountName", label: "银行户名" },
   { prop: "bankAccount", label: "银行账号" },
+  { slot: "isDefault", label: "是否默认", width: 100 },
   { slot: "isEnabled", label: "是否启用", width: 100 },
   // 如需操作列，取消注释即可（#actions 插槽已就绪）
   // { label: "操作", width: 200, slot: "actions", fixed: "right" },
