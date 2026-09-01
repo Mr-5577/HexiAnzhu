@@ -68,4 +68,19 @@ export const conTypeApi = {
   delConType: (data: { id: number }) => {
     return http.formPost("/mainData/conType/del", data);
   },
+
+  /** 查询某分类 + 板块下的模板版本列表 */
+  getTemplateList: (data: { conTypeId: number; segId: number | string }) => {
+    return http.formPost("/mainData/conTypeTemplate/getList", data);
+  },
+  
+    /** 保存（新增 / 编辑）单个版本 */
+  saveTemplate: (data: any) => {
+    return http.post("/mainData/conTypeTemplate/save", data);
+  },
+  
+    /** 删除版本 */
+  delTemplate:(data: { id: number }) => {
+    return http.formPost("/mainData/conTypeTemplate/del", data);
+  },
 };

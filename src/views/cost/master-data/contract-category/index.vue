@@ -1,4 +1,3 @@
-<!-- 合同类别 -->
 <template>
   <div class="contract-category-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
@@ -11,53 +10,56 @@
         />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleSearch">
-          搜索
-        </el-button>
+        <el-button type="primary" icon="Search" @click="handleSearch">搜索</el-button>
         <el-button icon="Refresh" @click="handleReset">重置</el-button>
-        <el-button type="primary" @click="handleAddTopLevel">
-          新建顶级分类
-        </el-button>
+        <el-button type="primary" @click="handleAddTopLevel">新建顶级分类</el-button>
       </el-form-item>
     </el-form>
 
-    <base-table
-      v-if="refreshTable"
-      :columns="columns"
-      :tableData="tableData"
-      :loading="loading"
-      :total="total"
-      :rowKey="'id'"
-      :current-page="currentPage"
-      :page-size="pageSize"
-      :pagination="false"
-      @pagination-change="handlePaginationChange"
-      :isExpandAll="isExpandAll"
-    >
-      <template #isEnabled="{ row }">
-        <!-- <el-tag :type="row.isEnabled ? 'success' : 'danger'" size="small">
-          {{ row.isEnabled ? "启用" : "禁用" }}
-        </el-tag> -->
-        <el-switch
-          v-model="row.isEnabled"
-          :active-value="true"
-          :inactive-value="false"
-          size="small"
-          :loading="enabledLoading"
-          @change="handleEnabledChange(row)"
-        />
-      </template>
+    <div class="content">
+      <!-- 左：合同类别树形表格 -->
+      <div class="left">
+        <base-table
+          v-if="refreshTable"
+          :columns="columns"
+          :tableData="tableData"
+          :loading="loading"
+          :total="total"
+          :rowKey="'id'"
+          :current-page="currentPage"
+          :page-size="pageSize"
+          :pagination="false"
+          highlight-current-row
+          @row-click="onRowClick"
+          @pagination-change="handlePaginationChange"
+          :isExpandAll="isExpandAll"
+        >
+          <template #isEnabled="{ row }">
+            <el-switch
+              v-model="row.isEnabled"
+              :active-value="true"
+              :inactive-value="false"
+              size="small"
+              :loading="enabledLoading"
+              @change="handleEnabledChange(row)"
+            />
+          </template>
 
-      <template #actions="{ row }">
-        <el-button type="primary" link @click="handleAddSub(row)">
-          添加下级
-        </el-button>
-        <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
-        <el-button type="danger" link @click="handleDelete(row)">
-          删除
-        </el-button>
-      </template>
-    </base-table>
+          <template #actions="{ row }">
+            <el-button type="primary" link @click="handleAddSub(row)">添加下级</el-button>
+            <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
+            <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+          </template>
+        </base-table>
+      </div>
+
+      <!-- 右：合同模板设置 -->
+      <contract-template-setting
+        ref="tplRef"
+        :conTypeId="selectedCatId"
+        class="right"
+      />
+    </div>
 
     <!-- 新增/编辑 合同类别弹窗 -->
     <contract-category-dialog
@@ -78,6 +80,7 @@ import type {
   ContractTypeTreeNode,
 } from "@/types/cost/master-data/contract-category-type.ts";
 import ContractCategoryDialog from "./contract-category-dialog.vue";
+import ContractTemplateSetting from "./contract-template-setting.vue";
 import { conTypeApi } from "@/api/cost/master-data/contract-category-api.ts";
 import { buildTree } from "@/utils/tree";
 
@@ -98,6 +101,10 @@ const pageSize = ref(10);
 const total = ref(0);
 const tableData = ref<ContractTypeTreeNode[]>([]);
 
+// 右侧模板设置：当前选中的合同分类
+const selectedCatId = ref<number | null>(null);
+const tplRef = ref<InstanceType<typeof ContractTemplateSetting> | null>(null);
+
 // 弹窗相关
 const dialogVisible = ref(false);
 const currentEditData = ref<ContractType | null>(null);
@@ -109,16 +116,30 @@ const columns: TableColumnItem[] = [
   { prop: "conTypeName", label: "类别名称", align: "left" },
   { prop: "conTypeCode", label: "类别编码" },
   { prop: "remark", label: "类别说明" },
-  // { prop: "majorName", label: "所属职能专业", width: 150 },
-  // {
-  //   prop: "isNeedOutValue",
-  //   label: "是否报产值",
-  //   width: 100,
-  //   formatter: (row: ContractType) => (row.isNeedOutValue ? "是" : "否"),
-  // },
   { label: "是否启用", width: 100, slot: "isEnabled" },
   { label: "操作", width: 200, slot: "actions", fixed: "right" },
 ];
+
+// 统一解析树节点主键（兼容 base-table 把 row 包成 { row, event } 的情况）
+const getNodeId = (row: any): number | null => {
+  const actualRow = row?.row ?? row;
+  if (!actualRow) return null;
+  const v = actualRow.id ?? actualRow.conTypeId ?? actualRow.categoryId ?? actualRow.typeId;
+  return v == null ? null : Number(v);
+};
+
+// 点击树表格行 -> 选中分类（切换前若模板有改动会提示保存）
+const onRowClick = async (payload: any) => {
+  const row = payload?.row ?? payload;
+  const id = getNodeId(row);
+  if (id == null) return;
+  if (selectedCatId.value === id) return; // 已选中，避免重复触发
+  if (selectedCatId.value && tplRef.value) {
+    const ok = await tplRef.value.beforeLeave();
+    if (!ok) return; // 用户取消切换
+  }
+  selectedCatId.value = id;
+};
 
 // 获取数据列表
 const getDataList = async () => {
@@ -189,6 +210,7 @@ const handleDelete = async (row: ContractTypeTreeNode) => {
     })
     .catch(() => {});
 };
+
 // 启用/禁用
 const handleEnabledChange = async (row: ContractTypeTreeNode) => {
   try {
@@ -207,12 +229,10 @@ const handleEnabledChange = async (row: ContractTypeTreeNode) => {
       ElMessage.success(`已${row.isEnabled ? "启用" : "禁用"}成功`);
       await getDataList();
     } else {
-      // 失败时回滚状态
       row.isEnabled = !row.isEnabled;
       ElMessage.error(res.message || "操作失败");
     }
   } catch (error) {
-    // 出错时回滚状态
     row.isEnabled = !row.isEnabled;
     ElMessage.error("操作失败");
   } finally {
@@ -251,5 +271,30 @@ onMounted(() => {
   padding: 15px;
   box-sizing: border-box;
   background: #fff;
+
+  .content {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+    margin-top: 12px;
+    gap: 12px;
+  }
+  .left {
+    flex: 1 1 55%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .right {
+    flex: 1 1 45%;
+    min-width: 420px;
+    max-width: 620px;
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 6px;
+    overflow: hidden;
+  }
 }
 </style>
