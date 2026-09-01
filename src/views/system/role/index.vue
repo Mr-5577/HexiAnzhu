@@ -56,7 +56,7 @@
             :icon="Plus"
             type="primary"
             @click="handleAddRole"
-            :disabled="!menuStore.hasExactPermission('role:add')"
+            :disabled="!menuStore.hasExactPermission(PERMISSIONS.ROLE_ADD)"
           >
             新增
           </el-button>
@@ -93,14 +93,14 @@
               <el-icon
                 class="edit-btn"
                 @click.stop="handleEditRole(role)"
-                v-if="menuStore.hasExactPermission('role:edit')"
+                v-if="menuStore.hasExactPermission(PERMISSIONS.ROLE_EDIT)"
               >
                 <Edit />
               </el-icon>
               <el-icon
                 class="delete-btn"
                 @click.stop="handleDeleteRole(role)"
-                v-if="menuStore.hasExactPermission('role:del')"
+                v-if="menuStore.hasExactPermission(PERMISSIONS.ROLE_DEL)"
               >
                 <Delete />
               </el-icon>
@@ -208,6 +208,7 @@ import { RoleItem, RoleSearchForm } from "@/types/system/role-type.ts";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { Plus, Delete, Edit, Search, Refresh } from "@element-plus/icons-vue";
 import { useMenuStore } from "@/stores/menu-store";
+import { PERMISSIONS } from "@/constants/permission.ts";
 const menuStore = useMenuStore();
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({

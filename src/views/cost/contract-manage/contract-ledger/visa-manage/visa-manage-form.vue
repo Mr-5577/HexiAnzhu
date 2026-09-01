@@ -407,7 +407,7 @@
       </el-form>
       
       <!-- 成本分摊 :visible="!isAdd" -->
-      <ConCostAllocCard v-if="menuStore.hasExactPermission('cost-alloc:con-qz')" style="margin-top: 15px;" :visible="!isAdd" :cstMData="cstMData"
+      <ConCostAllocCard v-if="menuStore.hasExactPermission(PERMISSIONS.COST_ALLOC_CON_QZ)" style="margin-top: 15px;" :visible="!isAdd" :cstMData="cstMData"
         :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'CON_QZ'"
         :projId="formData.projId" :projName="formData?.projName" :displayName="formData.changeName"
         :allocAmt="formData.visaApplyAmt" :bizBillId="billData.id" :conId="conMainData?.id" @selectData="getSelectCostAlloc" />
@@ -470,6 +470,7 @@ import { requiredInputRule, requiredRule } from "@/utils/form-rule-validate.ts";
 import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
 import ConCostAllocCard from "@/views/cost/cost-allocation/con-cost-alloc/con-cost-alloc-card.vue";
 import { useMenuStore } from "@/stores/menu-store";
+import { PERMISSIONS } from "@/constants/permission.ts";
 const { collapsedCards, toggleCard, formatMoney } = useFormLayout(NAV_CARDS);
 
 defineOptions({ name: "visa-management-form" });
@@ -522,7 +523,6 @@ const formRef = ref<FormInstance>();
 const submitLoading = ref(false);
 
 // ==================== 选项数据 ====================
-const segOptions = ref([]);
 const projectOptions = ref([]);
 const changeOrderOptions = ref([]);
 const wasteCostReasonOptions = ref([]);
@@ -671,17 +671,6 @@ const handleAuditCutAmtChange = () => {
 };
 
 // ==================== 选项初始化方法 ====================
-// 获取业务板块列表
-const getSegOptions = async () => {
-  try {
-    const res = await dictionaryApi.getsegmentList();
-    if (res.code === 200) {
-      segOptions.value = res.data || [];
-    }
-  } catch (error) {
-    console.error("获取业务板块列表失败:", error);
-  }
-};
 
 // ---- 主合同选择 ----
 const mainConDialogVisible = ref(false);
@@ -1128,7 +1117,6 @@ const getSelectCostAlloc = (data: any) => {
 
 // ==================== 初始化与生命周期 ====================
 const initData = async () => {
-  await getSegOptions();
   await getProjectOptions();
   await initDictData();
 

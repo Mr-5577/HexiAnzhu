@@ -52,10 +52,9 @@
           <el-option v-for="item in processStatus" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </el-form-item>
-      <el-form-item label="是否可支付" prop="isPayable">
-        <el-select v-model="queryParams.isPayable" placeholder="请选择" style="width: 180px">
-          <el-option label="是" :value="true" />
-          <el-option label="否" :value="false" />
+      <el-form-item label="请款类型" prop="reqType">
+        <el-select v-model="queryParams.reqType" placeholder="请选择请款类型" style="width: 180px" clearable>
+          <el-option v-for="item in ReqTypeEnum" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
       </el-form-item>
       <el-form-item label="申请日期" prop="applyDate">
@@ -114,8 +113,7 @@
         <el-button type="primary" link @click="singleRegister(row)" :disabled="disabledRegister(row)">
           单项登记
         </el-button>
-        <el-button type="primary" link @click="handleView(row)"
-          :disabled="!(menuStore.hasExactPermission('payment-register:detail') && row.flowStatus === 40)">
+        <el-button type="primary" link @click="handleView(row)" :disabled="row.flowStatus !== 40">
           明细
         </el-button>
         <el-button type="primary" link @click="handleEntry(row)" :disabled="disabledEntry(row)">
@@ -150,6 +148,8 @@ import { costBillStatusEnum } from "@/constants/cost/enums.ts";
 import { exportExcel } from '@/utils/export-excel.ts';
 import { useMenuStore } from "@/stores/menu-store";
 import { formatThousandWithPlaces } from "@/utils/big-number.ts";
+import { PERMISSIONS } from "@/constants/permission.ts";
+import { ReqTypeEnum } from "@/constants/contract-manage/enums.ts";
 
 defineOptions({ name: "payment-register" });
 
@@ -177,7 +177,7 @@ const queryParams = ref({
   payStatus: "未支付", // 未支付  部分支付  全部支付
   isLocked: undefined,
   wfTitle: undefined,
-  isPayable: true,
+  reqType: undefined,
 });
 const projectOptions = ref([]); // 项目列表
 const segOptions = ref([]); // 业务板块列表
@@ -215,6 +215,7 @@ const columns: TableColumnItem[] = [
   { prop: "paidAmt", label: "支付金额", width: 120, formatter: (row) => formatThousandWithPlaces(row.paidAmt || 0) },
   { prop: "payStatus", label: "付款状态", width: 100 },
   { prop: "applyUserName", label: "申请人", width: 90 },
+  { prop: "maxPayDate", label: "最近支付日期", width: 100 },
   { prop: "applyDate", label: "申请日期", width: 100 },
   { slot: "flowStatus", label: "审批流程", width: 100 },
   { slot: "isLocked", label: "是否入账", width: 90 },
@@ -227,7 +228,7 @@ const columns: TableColumnItem[] = [
   },
 ];
 const disabledRegister = (row) => {
-  const hasPermission = menuStore.hasExactPermission('payment-ledger:register')
+  const hasPermission = menuStore.hasExactPermission(PERMISSIONS.PAY_LEDGER_REG)
   // 无权限 → 禁用
   if (!hasPermission) return true
   // 非已审批 → 禁用
@@ -240,7 +241,7 @@ const disabledRegister = (row) => {
   return false
 }
 const disabledEntry = (row) => {
-  const hasPermission = menuStore.hasExactPermission('payment-ledger:entry')
+  const hasPermission = menuStore.hasExactPermission(PERMISSIONS.PAY_LEDGER_ENTRY)
   // 无权限 → 禁用
   if (!hasPermission) return true
   // 非已审批 → 禁用
@@ -307,14 +308,16 @@ const resetPagination = () => {
 }
 const handleReset = () => {
   resetPagination();
-  // 将所有字段重置为 undefined
   Object.keys(queryParams.value).forEach((key) => {
-    queryParams.value[key] = undefined;
+    if (Array.isArray(queryParams.value[key])) {
+      queryParams.value[key] = [];
+    } else {
+      queryParams.value[key] = undefined;
+    }
   });
   queryParams.value.wfStatus = [40]; // 0=草稿, 10=审批中, 40=已审批, 80=作废, 99=其他
   // 默认查询未支付
   // queryParams.value.payStatus = "未支付";
-  queryParams.value.isPayable = true;
   getDataList();
 };
 const changeWfStatus = (val) => {
@@ -357,10 +360,12 @@ const handleExport = async () => {
         reqDesc: "付款申请说明",
         belongMonth: "费用归属期间",
         finaTypeName: "费用类型",
+        allocDetail: "科目名称",
         payableAmt: "请款金额",
         paidAmt: "支付金额",
         payStatus: "付款状态",
         applyUserName: "申请人",
+        maxPayDate: "最近支付日期",
         applyDate: "申请日期",
         flowStatus: "审批流程",
         isLocked: "是否入账",

@@ -501,7 +501,7 @@
           v-model:collapsed="collapsedCards.payway">
           <div style="display: flex; justify-content: flex-end; margin-bottom: 8px">
             <el-button type="primary" size="small" :disabled="payWayTable.length == 0" @click="handleFinanceAlloc"
-              v-if="!isAdd && menuStore.hasExactPermission('fina-alloc:con-pay')">
+              v-if="!isAdd && menuStore.hasExactPermission(PERMISSIONS.FINA_ALLOC_CON_PAY)">
               财务分摊
             </el-button>
             <el-button type="primary" size="small" @click="addPayWay" v-if="!(isReadonly)">
@@ -630,20 +630,20 @@
 
     <!-- ============ 悬浮定位栏 ============ -->
     <FloatNav :items="visibleNavCards" />
+    <!-- ============ 选择主合同弹窗 ============ -->
+    <choose-contract-dialog ref="contractDialogRef" v-model="mainConDialogVisible" :selectionMode="'single'"
+      :projId=formData.projId @select="handleMainConSelect" />
+    <!-- 上传发票弹窗 -->
+    <UploadInvoiceDialog v-model="uploadVisibleDialog" @success="getInvcData" />
+    <!-- 发票明细 弹窗 -->
+    <invoice-detail-dialog ref="invoiceDetailDialogRef" v-model="dialogVisible" :detailList="detailList"
+      :disabled="isReadonly" @success="handleInvoiceDetailSuccess" />
+  
+    <!-- 财务分摊  -->
+    <FinanceAllocationDialog ref="financeAllocationDialogRef" v-model="financeAllocVisible" :bizType="'CON_PAY'"
+      :bizBillId="billData?.id" :bizId="paymentData?.id" @select="getFinaList" @updateData="updateData">
+    </FinanceAllocationDialog>
   </div>
-  <!-- ============ 选择主合同弹窗 ============ -->
-  <choose-contract-dialog ref="contractDialogRef" v-model="mainConDialogVisible" :selectionMode="'single'"
-    :projId=formData.projId @select="handleMainConSelect" />
-  <!-- 上传发票弹窗 -->
-  <UploadInvoiceDialog v-model="uploadVisibleDialog" @success="getInvcData" />
-  <!-- 发票明细 弹窗 -->
-  <invoice-detail-dialog ref="invoiceDetailDialogRef" v-model="dialogVisible" :detailList="detailList"
-    :disabled="isReadonly" @success="handleInvoiceDetailSuccess" />
-
-  <!-- 财务分摊  -->
-  <FinanceAllocationDialog ref="financeAllocationDialogRef" v-model="financeAllocVisible" :bizType="'CON_PAY'"
-    :bizBillId="billData?.id" :bizId="paymentData?.id" @select="getFinaList" @updateData="updateData">
-  </FinanceAllocationDialog>
 </template>
 
 <script setup lang="ts">
@@ -743,6 +743,7 @@ import FinanceAllocationDialog from "@/views/cost/finance-allocation/finance-all
 import { invcRecognitionRefresh, useInvoiceRecognition } from "@/composables/use-Invc-verif";
 import { useMenuStore } from "@/stores/menu-store";
 import { toBig, formatDecimal, BigNumber } from "@/utils/big-number.ts";
+import { PERMISSIONS } from "@/constants/permission";
 
 // ============================================================
 // 路由 / 状态仓库 实例化
@@ -1151,13 +1152,13 @@ const isOffsetByInvoice = computed(() => formData.value.reqType != 0);
 // ============================================================
 // 归属月份只能选择当月及以前（禁止未来月份）
 const disabledBelongMonth = (date: Date) => {
-  const now = new Date();
-  const curYear = now.getFullYear();
-  const curMonth = now.getMonth(); // 0-based
-  const year = date.getFullYear();
-  const month = date.getMonth();
-  if (year > curYear) return true;
-  if (year === curYear && month > curMonth) return true;
+  // const now = new Date();
+  // const curYear = now.getFullYear();
+  // const curMonth = now.getMonth(); // 0-based
+  // const year = date.getFullYear();
+  // const month = date.getMonth();
+  // if (year > curYear) return true;
+  // if (year === curYear && month > curMonth) return true;
   return false;
 };
 
@@ -2419,14 +2420,12 @@ const buildSubmitParams = () => {
 const handleFormDataSave = async () => {
   submitLoading.value = true;
   try {
-    await formRef.value.validateField(["bizTitle", "projId", "conId"]);
+    await formRef.value.validateField(["bizTitle", "projId", "conId", "belongMonth", "finaTypeId", "payTypeId"]);
     if (canApplySettle.value === false && (formData.value.payTypeId === 2064 || formData.value.payTypeId === 2065)) {
       ElMessage.error("该合同尚未结算，不可请结算款和质保金！");
       return;
     }
-    ;
     const params = buildSubmitParams();
-    ;
     const res = await paymentRequestApi.editPay(params);
     if (res.code === 200 && res.data) {
       formData.value.id = res.data;

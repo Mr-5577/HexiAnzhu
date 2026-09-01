@@ -80,7 +80,6 @@ import { feePaymentApi } from "@/api/cost/non-contract-manage/fee-payment-api";
 import { cstPaymentApi } from "@/api/cost/non-contract-manage/cst-payment-api";
 import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api";
 import { paymentRequestApi } from "@/api/cost/contract-manage/payment-application-api";
-// ===== 修改：替换 decimal.js 为 bignumber.js =====
 import { toBig, formatDecimal, BigNumber } from "@/utils/big-number.ts";
 
 defineOptions({ name: "finance-allocation" });
@@ -142,7 +141,6 @@ const getDiffClass = (diff: number): string => {
 };
 
 // 获取明细合计
-// ===== 修改：使用 toBig 替代 toDecimal，BigNumber 替代 Decimal =====
 const getDetailTotal = (finaDs: any[]): number => {
   if (!finaDs || finaDs.length === 0) return 0;
   let total = new BigNumber(0);

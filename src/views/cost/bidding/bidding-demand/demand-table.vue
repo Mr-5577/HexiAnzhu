@@ -220,9 +220,9 @@ const handleDelete = ({ bidBillId }) => {
     .catch(() => { });
 };
 
-// 获取人员树形数据
+// 获取人员树形数据(包含离职)
 const getEmpTreeData = async () => {
-  const res = await roleApi.getEmpTree({ empName: "", isIncludeLeave: false });
+  const res = await roleApi.getEmpTree({ empName: "", isIncludeLeave: true });
   // console.log("获取人员列表", res);
   if (res.code === 200) {
     empTreeData.value = res.data || [];

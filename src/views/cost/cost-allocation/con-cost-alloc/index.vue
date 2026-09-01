@@ -183,7 +183,6 @@ import { supplementContractApi } from "@/api/cost/contract-manage/supplement-con
 import { changeOrderApi } from "@/api/cost/contract-manage/change-order-api.ts";
 import { visaManagementApi } from "@/api/cost/contract-manage/visa-management-api.ts";
 import { outputDeclarationApi } from "@/api/cost/contract-manage/output-declaration-api.ts";
-// ===== 修改：替换 decimal.js 为 bignumber.js =====
 import { toBig, formatDecimal, BigNumber } from "@/utils/big-number.ts";
 
 interface Props {
@@ -412,7 +411,6 @@ const handleBuildingChange = (val: any) => {
  * 本次已分摊金额计算（科目金额含税）
  * 把叶子节点的科目金额(含税)累加起来
  */
-// ===== 修改：使用 toBig 替代 toDecimal，BigNumber 替代 Decimal =====
 const allocatedAmount = computed(() => {
   let total = new BigNumber(0);
   const traverse = (data: any[]) => {

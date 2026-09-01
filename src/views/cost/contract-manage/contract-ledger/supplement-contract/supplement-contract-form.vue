@@ -237,7 +237,7 @@
         </FormCard>
       </el-form>
       <!-- 成本分摊  :visible="!isAdd && isJianAn" -->
-      <ConCostAllocCard v-if="menuStore.hasExactPermission('cost-alloc:con-add')" style="margin-top: 15px;" :visible="!isAdd && isJianAn" :cstMData="cstMData"
+      <ConCostAllocCard v-if="menuStore.hasExactPermission(PERMISSIONS.COST_ALLOC_CON_ADD)" style="margin-top: 15px;" :visible="!isAdd && isJianAn" :cstMData="cstMData"
         :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'CON_ADD'"
         :projId="formData.projId" :projName="conMainData?.projName" :displayName="formData.addName"
         :allocAmt="priceTaxData.totalPriceTax" :bizBillId="billData.id" :conId="conMainData?.id"
@@ -246,18 +246,18 @@
 
     <!-- ============ 悬浮定位栏 ============ -->
     <FloatNav :items="visibleNavCards" />
+    <!-- 选择合同弹窗 -->
+    <choose-contract-dialog ref="contractDialogRef" v-model="mainConDialogVisible" :selectionMode="'single'"
+      :projId=formData.projId @select="handleMainConSelect" />
+  
+    <!-- 选择变更弹窗 (已归档、无需签证、未转补充合同的变更)-->
+    <choose-change-dialog ref="contractDialogRef" v-model="changeDialogVisible" :selectionMode="'single'"
+      :conId=formData.mainConId :isToAdd="false" :needVisa="false" :status="40" @select="handleChangeSelect" />
+  
+    <!-- 选择签证弹窗(已归档、未转补充合同) -->
+    <choose-visa-dialog ref="contractDialogRef" v-model="visaDialogVisible" :selectionMode="'single'"
+      :conId=formData.mainConId :isToAdd="false" :status="40" @select="handleVisaSelect" />
   </div>
-  <!-- 选择合同弹窗 -->
-  <choose-contract-dialog ref="contractDialogRef" v-model="mainConDialogVisible" :selectionMode="'single'"
-    :projId=formData.projId @select="handleMainConSelect" />
-
-  <!-- 选择变更弹窗 (已归档、无需签证、未转补充合同的变更)-->
-  <choose-change-dialog ref="contractDialogRef" v-model="changeDialogVisible" :selectionMode="'single'"
-    :conId=formData.mainConId :isToAdd="false" :needVisa="false" :status="40" @select="handleChangeSelect" />
-
-  <!-- 选择签证弹窗(已归档、未转补充合同) -->
-  <choose-visa-dialog ref="contractDialogRef" v-model="visaDialogVisible" :selectionMode="'single'"
-    :conId=formData.mainConId :isToAdd="false" :status="40" @select="handleVisaSelect" />
 </template>
 
 
@@ -322,6 +322,7 @@ import { bankCardRule, moneyRule, optionalInputRule, phoneRule, requiredInputRul
 import { normalizeCode } from "@/utils/common.ts";
 import ConCostAllocCard from "@/views/cost/cost-allocation/con-cost-alloc/con-cost-alloc-card.vue";
 import { useMenuStore } from "@/stores/menu-store";
+import { PERMISSIONS } from "@/constants/permission.ts";
 
 // ===================== Props / Emits =====================
 const props = defineProps<{
@@ -381,13 +382,13 @@ const isReadonly = computed(
 );
 
 // ===================== 下拉 / 字典数据 =====================
-const projectOptions = ref<any[]>([]);
+const projectOptions = ref([]);
 const companyOptions = ref([]); // 签约公司选项
 const conTypeOptions = ref([]); // 合同分类选项
 const supplierOptions = ref([]); // 供应商选项
 const buildingOptions = ref([]); // 楼栋选项
 const proProfOptions = ref([]); // 生产专业列表
-const empTreeOptions = ref<any[]>([]); // 组织及人员
+const empTreeOptions = ref([]); // 组织及人员
 const visaList = ref([]); // 签证单据列表
 
 // 数据字典
@@ -507,9 +508,9 @@ const tableLoading = ref(false);
 const tableList = ref([]);
 const processColumns = createProcessColumns();
 const priceColumns = createPriceColumns();
-const priceTable = ref<any[]>([]);
-const annexContractFileList = ref<any[]>([]);
-const annexFileList = ref<any[]>([]);
+const priceTable = ref([]);
+const annexContractFileList = ref([]);
+const annexFileList = ref([]);
 
 const { addRow: addPrice, deleteRow: deletePrice } = useTableEditor(
   priceTable,

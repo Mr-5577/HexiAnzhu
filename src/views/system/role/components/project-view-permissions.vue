@@ -9,7 +9,7 @@
                     <el-button type="primary" size="small" plain :icon="Sort" @click="toggleExpandAll">
                         展开/折叠
                     </el-button>
-                    <el-button type="primary" size="small" plain :loading="saveLoading" @click="handleSave" :disabled="!menuStore.hasExactPermission('project-permissions:edit')
+                    <el-button type="primary" size="small" plain :loading="saveLoading" @click="handleSave" :disabled="!menuStore.hasExactPermission(PERMISSIONS.PROJ_PERM_EDIT)
                         ">
                         保存设置
                     </el-button>
@@ -38,6 +38,7 @@ import { ElMessage } from "element-plus";
 
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { useMenuStore } from "@/stores/menu-store";
+import { PERMISSIONS } from "@/constants/permission";
 const menuStore = useMenuStore();
 
 interface Props {

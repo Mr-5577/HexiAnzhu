@@ -7,7 +7,7 @@
       <template #actionBar>
         <div class="actionBar-buttons">
           <el-button type="primary" size="small" plain @click="handleAdd()"
-            :disabled="!menuStore.hasExactPermission('member:add')">
+            :disabled="!menuStore.hasExactPermission(PERMISSIONS.MEMBER_ADD)">
             新增
           </el-button>
           <el-button type="danger" size="small" plain :disabled="true" @click="batchDelete()">
@@ -19,11 +19,11 @@
       <template #action="scope">
         <div class="action-buttons">
           <el-button link type="primary" @click="handleEdit(scope.row)"
-            :disabled="!menuStore.hasExactPermission('member:edit')">
+            :disabled="!menuStore.hasExactPermission(PERMISSIONS.MEMBER_EDIT)">
             编辑
           </el-button>
           <el-button link type="danger" @click="handleDelete(scope.row)"
-            :disabled="!menuStore.hasExactPermission('member:del')">
+            :disabled="!menuStore.hasExactPermission(PERMISSIONS.MEMBER_DEL)">
             删除
           </el-button>
         </div>
@@ -44,6 +44,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import AddEditMember from "./components/add-edit-member.vue";
 import { useMenuStore } from "@/stores/menu-store";
 import { useRoleStore } from "@/stores/role-store";
+import { PERMISSIONS } from "@/constants/permission.ts";
 const menuStore = useMenuStore();
 const roleStore = useRoleStore();
 

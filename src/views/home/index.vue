@@ -10,65 +10,6 @@
 
     <!-- 主要内容区域 -->
     <div class="welcome-content">
-      <!-- 工作概览 -->
-      <el-card class="welcome-card" v-show="false">
-        <template #header>
-          <div class="card-header">
-            <span class="card-title">📊 工作概览</span>
-          </div>
-        </template>
-
-        <div class="quick-stats">
-          <div class="stat-item">
-            <div class="stat-icon" style="background: #e8f4ff">
-              <el-icon>
-                <Calendar />
-              </el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-value">今日</div>
-              <div class="stat-label">工作状态</div>
-            </div>
-          </div>
-
-          <div class="stat-item">
-            <div class="stat-icon" style="background: #f0f9eb">
-              <el-icon>
-                <Check />
-              </el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-value">5</div>
-              <div class="stat-label">待办事项</div>
-            </div>
-          </div>
-
-          <div class="stat-item">
-            <div class="stat-icon" style="background: #fef0f0">
-              <el-icon>
-                <Bell />
-              </el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-value">3</div>
-              <div class="stat-label">新消息</div>
-            </div>
-          </div>
-
-          <div class="stat-item">
-            <div class="stat-icon" style="background: #fdf6ec">
-              <el-icon>
-                <TrendCharts />
-              </el-icon>
-            </div>
-            <div class="stat-info">
-              <div class="stat-value">12</div>
-              <div class="stat-label">系统访问</div>
-            </div>
-          </div>
-        </div>
-      </el-card>
-
       <!-- 快捷入口 -->
       <div class="quick-actions">
         <el-card class="action-card">
@@ -79,17 +20,19 @@
           </template>
 
           <div class="action-grid">
-            <!-- 动态渲染所有第二层菜单 -->
-            <div v-for="(menu, index) in secondLevelMenus" :key="menu.id" class="action-item" @click="goToMenu(menu)">
+            <!-- 展示所有顶层模块下的第一层子菜单 -->
+            <div 
+              v-for="(menu, index) in secondLevelMenus" 
+              :key="menu.id" 
+              class="action-item" 
+              @click="goToMenu(menu)"
+            >
               <div class="action-icon" :style="{ color: getColorByIndex(index) }">
-                <!-- 动态图标 -->
                 <el-icon>
-                  <component :is="getIconComponent(menu.meta?.icon)" />
+                  <component :is="getIconComponent(menu.icon)" />
                 </el-icon>
               </div>
-              <span class="action-text">{{
-                menu.meta?.title || menu.name
-              }}</span>
+              <span class="action-text">{{ menu.title }}</span>
             </div>
           </div>
         </el-card>
@@ -102,25 +45,18 @@
 import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import * as ElementPlusIcons from "@element-plus/icons-vue";
-import {
-  Calendar,
-  Check,
-  Bell,
-  TrendCharts,
-  Folder, // 默认图标
-} from "@element-plus/icons-vue";
+import { Folder } from "@element-plus/icons-vue";
 import { useUserStore } from "@/stores/user-store";
 import { useMenuStore } from "@/stores/menu-store";
+import { getFirstRoutePath } from "@/utils/menu-util";
 
 const userStore = useUserStore();
 const menuStore = useMenuStore();
-
 const router = useRouter();
 
-// 组件name，需要和菜单配置里面的name一致
 defineOptions({ name: "home" });
 
-// 当前日期和时间
+// 当前日期
 const currentDate = ref("");
 
 // 颜色数组
@@ -129,7 +65,6 @@ const colorPalette = [
   "#67C23A", // 绿色
   "#E6A23C", // 橙色
   "#F56C6C", // 红色
-  "#909399", // 灰色
   "#8E44AD", // 紫色
   "#16A085", // 青色
   "#E74C3C", // 红色
@@ -137,135 +72,109 @@ const colorPalette = [
   "#2ECC71", // 绿色
   "#F39C12", // 黄色
   "#1ABC9C", // 青色
+  "#9B59B6", // 紫色
 ];
 
-// 获取所有第二层菜单
+/**
+ * 获取所有顶层模块下的第一层子菜单（二级菜单）
+ * 用于快捷入口展示
+ */
 const secondLevelMenus = computed(() => {
-  const secondLevel: any[] = [];
+  const result: any[] = [];
 
-  // 过滤掉dashboard菜单
-  const filteredMenus = menuStore.menuData.filter(
-    (menu) => menu.name !== "dashboard"
+  // 获取所有顶层模块（menuType === 0）
+  const modules = menuStore.menuData.filter(
+    (item) => item.menuType === 0
   );
 
-  // 遍历每个顶级菜单，收集其children
-  filteredMenus.forEach((topMenu) => {
-    if (topMenu.children && topMenu.children.length > 0) {
-      topMenu.children.forEach((child) => {
-        // 只添加type为'menu'的（排除按钮等）
-        if (child.type === "menu") {
-          secondLevel.push(child);
-        }
-      });
+  // 遍历每个顶层模块，收集其第一层子菜单
+  modules.forEach((module) => {
+    if (module.children && module.children.length > 0) {
+      // 只取 menuType === 1 且可见的菜单
+      const visibleChildren = module.children.filter(
+        (child) => child.menuType === 1 && child.isVisible !== false
+      );
+      result.push(...visibleChildren);
     }
   });
 
-  return secondLevel;
+  return result;
 });
 
-// 根据索引获取颜色
+/**
+ * 根据索引获取颜色
+ */
 const getColorByIndex = (index: number) => {
   return colorPalette[index % colorPalette.length];
 };
 
-// 获取图标组件
+/**
+ * 获取图标组件
+ */
 const getIconComponent = (iconName: string | undefined) => {
-  // 如果iconName是空的，使用默认图标
   if (!iconName || iconName.trim() === "") {
-    return Folder; // 返回默认图标组件
+    return Folder;
   }
 
-  // 将iconName转换为驼峰命名
-  let componentName = iconName;
-
-  // 确保首字母大写
-  componentName =
-    componentName.charAt(0).toUpperCase() + componentName.slice(1);
-
-  // 检查图标是否存在
-  const iconComponent =
-    ElementPlusIcons[componentName as keyof typeof ElementPlusIcons];
+  let componentName = iconName.charAt(0).toUpperCase() + iconName.slice(1);
+  
+  const iconComponent = ElementPlusIcons[componentName as keyof typeof ElementPlusIcons];
   if (iconComponent) {
     return iconComponent;
   }
 
-  // 如果找不到对应的图标，使用默认图标
   return Folder;
 };
 
-// 生成正确的路径
-const getValidPath = (path: string | undefined): string | null => {
-  if (!path) return null;
-  // 清理路径，确保格式正确
-  let cleanPath = path.trim();
-  // 移除开头的多个斜杠
-  cleanPath = cleanPath.replace(/^\/+/, "/");
-  // 如果路径为空，返回null
-  if (!cleanPath) return null;
-  // 确保以 / 开头
-  if (!cleanPath.startsWith("/")) {
-    cleanPath = "/" + cleanPath;
-  }
-  return cleanPath;
-};
-
-// 跳转到对应菜单
+/**
+ * 跳转到菜单项
+ * 如果菜单有子菜单，跳转到第一个可见的子页面
+ * 否则直接跳转到当前菜单
+ */
 const goToMenu = (menu: any) => {
-  console.log("跳转到菜单:", menu);
+  console.log("[首页] 点击菜单:", menu.title, "ID:", menu.id);
 
-  try {
-    // 如果菜单有子菜单，跳转到第一个有效的子菜单
-    if (menu.children?.length > 0) {
-      // 找到第一个有效的子菜单
-      const validChild = menu.children.find((child: any) => {
-        // 只找menu类型且有path，可见的路由
-        return child.type === "menu" && child.path && child.meta.isVisible;
-      });
-
-      if (validChild) {
-        const path = getValidPath(validChild.path);
-        if (path) {
-          router.push(path);
-          return;
-        }
-      }
-    }
-
-    // 跳转当前菜单
-    const currentPath = getValidPath(menu.path);
-    if (currentPath) {
-      router.push(currentPath);
+  // 检查菜单是否有可见的子菜单
+  if (menu.children && menu.children.length > 0) {
+    // 查找第一个可见的子菜单
+    const firstVisibleChild = menu.children.find(
+      (child: any) => child.menuType === 1 && child.isVisible !== false && child.path
+    );
+    
+    if (firstVisibleChild) {
+      const path = firstVisibleChild.path.startsWith("/") 
+        ? firstVisibleChild.path 
+        : `/${firstVisibleChild.path}`;
+      console.log(`[首页] 跳转到子菜单: ${path}`);
+      router.push(path);
       return;
     }
-    console.warn("无法跳转菜单:", menu);
-  } catch (error) {
-    console.error("跳转菜单失败:", error);
   }
+
+  // 如果当前菜单有 path，直接跳转
+  if (menu.path) {
+    const path = menu.path.startsWith("/") ? menu.path : `/${menu.path}`;
+    console.log(`[首页] 跳转到: ${path}`);
+    router.push(path);
+    return;
+  }
+
+  console.warn(`[首页] 菜单 "${menu.title}" 无法跳转`);
 };
 
-// 更新日期时间
+/**
+ * 更新日期时间
+ */
 const updateDateTime = () => {
   const now = new Date();
-
-  // 格式化日期
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
-  const weekDays = [
-    "星期日",
-    "星期一",
-    "星期二",
-    "星期三",
-    "星期四",
-    "星期五",
-    "星期六",
-  ];
+  const weekDays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
   const weekDay = weekDays[now.getDay()];
-
   currentDate.value = `${year}年${month}月${day}日 ${weekDay}`;
 };
 
-// 生命周期
 onMounted(() => {
   updateDateTime();
 });
@@ -278,6 +187,7 @@ onMounted(() => {
   box-sizing: border-box;
   background: linear-gradient(135deg, #f8fafc 0%, #e6edfa 100%);
   min-height: calc(100vh - 64px);
+  overflow-y: auto;
 }
 
 .welcome-header {
@@ -286,7 +196,7 @@ onMounted(() => {
   align-items: center;
   margin-bottom: 24px;
   background: white;
-  padding: 24px;
+  padding: 24px 32px;
   border-radius: 12px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 
@@ -294,6 +204,7 @@ onMounted(() => {
     flex-direction: column;
     text-align: center;
     gap: 16px;
+    padding: 20px;
   }
 }
 
@@ -314,19 +225,45 @@ onMounted(() => {
 
 .welcome-subtitle {
   font-size: 15px;
-  color: #5f6063;
+  color: #909399;
   margin: 0;
 }
 
-.welcome-card {
-  height: 100%;
+.welcome-content {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.quick-actions {
+  width: 100%;
+}
+
+.action-card {
   border-radius: 12px;
   border: none;
-  margin-bottom: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 
   :deep(.el-card__header) {
     border-bottom: 1px solid #f0f0f0;
     padding: 18px 24px;
+
+    @media (max-width: 768px) {
+      padding: 14px 16px;
+    }
+  }
+
+  :deep(.el-card__body) {
+    padding: 24px;
+
+    @media (max-width: 768px) {
+      padding: 16px;
+    }
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
 
   .card-title {
@@ -340,126 +277,19 @@ onMounted(() => {
   }
 }
 
-.quick-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 16px;
-  width: 100%;
-
-  @media (max-width: 768px) {
-    grid-template-columns: repeat(2, minmax(140px, 1fr));
-  }
-
-  @media (max-width: 480px) {
-    grid-template-columns: 1fr;
-  }
-}
-
-.stat-item {
-  display: flex;
-  align-items: center;
-  padding: 16px;
-  background: #fafafa;
-  border-radius: 8px;
-  transition: all 0.3s ease;
-  min-width: 0;
-  width: 100%;
-  box-sizing: border-box;
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  }
-
-  @media (max-width: 768px) {
-    padding: 12px;
-  }
-}
-
-.stat-icon {
-  flex-shrink: 0;
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 16px;
-
-  .el-icon {
-    font-size: 24px;
-    color: #409eff;
-  }
-
-  @media (max-width: 768px) {
-    width: 40px;
-    height: 40px;
-    margin-right: 12px;
-
-    .el-icon {
-      font-size: 20px;
-    }
-  }
-}
-
-.stat-info {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 600;
-  color: #303133;
-  margin-bottom: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-
-  @media (max-width: 768px) {
-    font-size: 20px;
-  }
-
-  @media (max-width: 480px) {
-    font-size: 18px;
-  }
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #909399;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-
-  @media (max-width: 768px) {
-    font-size: 13px;
-  }
-}
-
-.action-card {
-  height: 100%;
-  border-radius: 12px;
-  border: none;
-
-  :deep(.el-card__header) {
-    border-bottom: 1px solid #f0f0f0;
-    padding: 18px 24px;
-  }
-}
-
 .action-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 16px;
 
   @media (max-width: 768px) {
-    grid-template-columns: repeat(2, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
   }
 
   @media (max-width: 480px) {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
 }
 
@@ -467,48 +297,73 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px 12px;
+  justify-content: center;
+  padding: 24px 12px;
   background: #fafafa;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-width: 0;
-  width: 100%;
-  box-sizing: border-box;
+  min-height: 120px;
+  border: 1px solid transparent;
 
   &:hover {
     background: #edf7fd;
-    transform: translateY(-4px);
-    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.15);
+    transform: translateY(-6px);
+    box-shadow: 0 4px 16px rgba(64, 158, 255, 0.15);
+    // border-color: #409EFF;
+  }
+
+  &:active {
+    transform: translateY(0px);
   }
 
   @media (max-width: 768px) {
-    padding: 16px 8px;
+    padding: 18px 8px;
+    min-height: 100px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 14px 6px;
+    min-height: 80px;
   }
 }
 
 .action-icon {
-  font-size: 32px;
+  font-size: 36px;
   margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+
+  .action-item:hover & {
+    transform: scale(1.1);
+  }
 
   @media (max-width: 768px) {
-    font-size: 28px;
+    font-size: 30px;
     margin-bottom: 8px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 26px;
+    margin-bottom: 6px;
   }
 }
 
 .action-text {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   color: #303133;
   text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%;
+  line-height: 1.4;
 
   @media (max-width: 768px) {
-    font-size: 14px;
+    font-size: 13px;
+  }
+
+  @media (max-width: 480px) {
+    font-size: 12px;
   }
 }
 </style>

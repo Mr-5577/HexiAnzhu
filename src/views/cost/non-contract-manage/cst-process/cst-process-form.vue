@@ -54,7 +54,7 @@
         </div>
 
         <!-- 成本分摊  费用类型所属大类为建安类，并且是编辑/查看时显示  :visible="isShowCostAllocation && formData.processAmt > 0" -->
-        <CostAllocationCard v-if="menuStore.hasExactPermission('cost-alloc:ncon-proc')" :visible="isShowCostAllocation"
+        <CostAllocationCard v-if="menuStore.hasExactPermission(PERMISSIONS.COST_ALLOC_NCON_PROC)" :visible="isShowCostAllocation"
           :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'NCON_PROC'"
           :projId="formData.projId" :projName="formData.projName" :displayName="formData.processName"
           :allocAmt="formData.processAmt" :bizBillId="processData.nconBillId" :cstMData="cstMData"
@@ -96,6 +96,7 @@ import BillHeader from "@/components/business/bill-components/bill-header.vue";
 import BillInfo from "@/components/business/bill-components/bill-info.vue";
 import CostAllocationCard from "@/views/cost/cost-allocation/ncon-cost-alloc/ncon-cost-alloc-card.vue";
 import { useMenuStore } from "@/stores/menu-store";
+import { PERMISSIONS } from "@/constants/permission";
 
 defineOptions({ name: "cst-process-form" });
 
@@ -149,7 +150,6 @@ const initFormData = () => ({
 const formData = ref(initFormData());
 const submitLoading = ref(false);
 const formRef = ref<FormInstance>();
-const segOptions = ref([]);
 const projectOptions = ref([]);
 const feeTypeFlatOptions = ref([]);
 const feeTypeOptions = ref([]);
@@ -252,17 +252,6 @@ const getSelectCostAllocation = (data: any) => {
   cstMData.value.allocWarn = data.allocWarn;
   cstMData.value.allocDs = data?.allocDs || [];
 };
-// 获取业务板块列表
-const getSegOptions = async () => {
-  try {
-    const res = await dictionaryApi.getsegmentList({ isAuth: true });
-    if (res.code === 200) {
-      segOptions.value = res.data || [];
-    }
-  } catch (error) {
-    console.error("获取业务板块列表失败:", error);
-  }
-};
 
 // 获取项目列表
 const getProjectOptions = async () => {
@@ -279,7 +268,7 @@ const getProjectOptions = async () => {
 
 // 初始化所有下拉选项
 const initOptions = async () => {
-  await Promise.all([getSegOptions(), getProjectOptions()]);
+  await Promise.all([getProjectOptions()]);
 };
 
 // 选择项目
@@ -301,22 +290,6 @@ const changeProject = async (value: number) => {
       // 根据业务板块查询费用类型
       getpayTypeOptions(segId);
     }
-  }
-};
-// 查询业务板块
-const handleSeg = (value: number) => {
-  console.log("选中的业务板块数据:", value);
-  if (value) {
-    const target = segOptions.value.find((item: any) => item.id === value);
-    formData.value.segId = target?.id || "";
-    formData.value.segName = target?.segName || "";
-    formData.value.segNo = target?.segNo || "";
-    // 置空费用类型相关字段数据
-    formData.value.finaTypeId = "";
-    feeTypeFlatOptions.value = [];
-    feeTypeOptions.value = [];
-    // 根据业务板块查询费用类型
-    getpayTypeOptions(value);
   }
 };
 // 查询费用类型

@@ -28,7 +28,7 @@
           plain
           :loading="saveLoading"
           @click="handleSave"
-          :disabled="!menuStore.hasExactPermission('menu-permissions:edit')"
+          :disabled="!menuStore.hasExactPermission(PERMISSIONS.MENU_PERM_EDIT)"
         >
           保存设置
         </el-button>
@@ -60,6 +60,7 @@ import { ElMessage, type ElTree } from "element-plus";
 import { roleApi } from "@/api/system/role-api";
 import { useMenuStore } from "@/stores/menu-store";
 import { Sort } from "@element-plus/icons-vue";
+import { PERMISSIONS } from "@/constants/permission";
 
 const menuStore = useMenuStore();
 

@@ -3,9 +3,14 @@ import type { EditableColumn } from "@/components/base/editable-table.vue";
 import type { NavCard } from "@/composables/use-form-layout";
 import { AddProcessSrcEnum, invoiceStatusEnum } from "@/constants/contract-manage/enums";
 import { getEnumLabel, getOptionsLabelById } from "@/utils/enum";
+import { useUserStore } from "@/stores/user-store";
 
 
-
+const userStore = useUserStore();
+// 是否是超管角色
+const isSuperAdmin = computed(() => {
+  return userStore.roleList?.some((role: any) => role.isSuper);
+});
 /** 悬浮定位栏配置 */
   // —— 悬浮定位栏（仅用于界面风格，不影响逻辑）——
 export const NAV_CARDS: NavCard[] = [
@@ -22,7 +27,7 @@ const formatYM = (val: any): string => {
   return String(val).slice(0, 7);
 };
 
-export const materialColumns = computed<EditableColumn[]>(() => [
+export const materialColumns: any = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {
     prop: "recvBillNo",
@@ -61,7 +66,7 @@ export const materialColumns = computed<EditableColumn[]>(() => [
     label: "接收数量",
     editable: false,
     editType: "number",
-    thousandSeparator: true,
+    // thousandSeparator: true,
     showOverflowTooltip: false,
     precision: 0,
     width: 100,
@@ -79,7 +84,7 @@ export const materialColumns = computed<EditableColumn[]>(() => [
     label: "单价",
     editable: false,
     editType: "number",
-    thousandSeparator: true,
+    // thousandSeparator: true,
     showOverflowTooltip: false,
     formatType:"#,##0.00",
     width: 120,
@@ -89,7 +94,7 @@ export const materialColumns = computed<EditableColumn[]>(() => [
     label: "接收产值",
     editable: false,
     editType: "number",
-    thousandSeparator: true,
+    // thousandSeparator: true,
     showOverflowTooltip: false,
     formatType:"#,##0.00",
     width: 150,
@@ -99,7 +104,7 @@ export const materialColumns = computed<EditableColumn[]>(() => [
     label: "罚款",
     editable: false,
     editType: "number",
-    thousandSeparator: true,
+    // thousandSeparator: true,
     showOverflowTooltip: false,
     formatType:"#,##0.00",
     width: 100,
@@ -127,9 +132,9 @@ export const materialColumns = computed<EditableColumn[]>(() => [
   {
     prop: "payAmt",
     label: "本次申报应付",
-    editable: false,
+    editable: true,
     editType: "number",
-    thousandSeparator: true,
+    // thousandSeparator: true,
     showOverflowTooltip: false,
     formatType:"#,##0.00",
     width: 140,
@@ -207,7 +212,7 @@ export const materialMinorColumns = computed<EditableColumn[]>(() => [
     label: "接收产值",
     editable: false,
     editType: "number",
-    thousandSeparator: true,
+    // thousandSeparator: true,
     showOverflowTooltip: false,
     formatType:"#,##0.00",
     width: 150,
@@ -245,9 +250,9 @@ export const materialMinorColumns = computed<EditableColumn[]>(() => [
   {
     prop: "payAmt",
     label: "本次申报应付",
-    editable: false,
+    editable: true,
     editType: "number",
-    thousandSeparator: true,
+    // thousandSeparator: true,
     showOverflowTooltip: false,
     formatType:"#,##0.00",
     width: 150,
@@ -348,7 +353,7 @@ export const createProdColumns = (options: ProdColumnOptions) => {
       label: "应付比例(%)",
       editable: false,
       width: 90,
-      formatType:"d%",
+      // formatType:"d%",
       // formatter: (row: any) => formatPercent(row.payRate),
     },
     {
@@ -386,8 +391,8 @@ export const createProdColumns = (options: ProdColumnOptions) => {
       //thousandSeparator: true,
       showOverflowTooltip: false,
       width: 120,
-      formatType:"#,##0.00",
-      disabled: (row: any) => row.hasVal && !!row.isCtrl,
+      // formatType:"#,##0.00",
+      disabled: (row: any) => row.hasVal && !!row.isCtrl, // 有产值且强控支付时，不可编辑
     },
     {
       prop: "buildPeriod",
@@ -411,7 +416,7 @@ export const createProdColumns = (options: ProdColumnOptions) => {
       label: "计划付款期间",
       editable: true,
       showOverflowTooltip: false,
-      thousandSeparator: true,
+      // thousandSeparator: true,
       width: 100,
       //formatter: (row: any) => row.payDate || "--",
       //disabled: (row: any) => !!row.isCtrl,
@@ -419,18 +424,20 @@ export const createProdColumns = (options: ProdColumnOptions) => {
     {
       prop: "costProdVal",
       label: "成本复核产值",
-      editable: false,
-      thousandSeparator: true,
+      editable: isSuperAdmin.value ? true : false,
+      editType: isSuperAdmin.value ? "number" : "input",
+      // thousandSeparator: true,
       width: 120,
-      formatType:"#,##0.00",
+      // formatType:"#,##0.00",
     },
     {
       prop: "costPayAmt",
       label: "成本复核应付",
-      editable: false,
-      thousandSeparator: true,
+      editable: isSuperAdmin.value ? true : false,
+      editType: isSuperAdmin.value ? "number" : "input",
+      // thousandSeparator: true,
       width: 120,
-      formatType:"#,##0.00",
+      // formatType:"#,##0.00",
     },
     // {
     //   label: "操作",

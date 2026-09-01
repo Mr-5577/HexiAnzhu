@@ -58,20 +58,6 @@
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="业务板块" prop="segId" required>
-                <!-- <el-select
-                  v-model="formData.segId"
-                  placeholder="请选择业务板块"
-                  style="width: 100%"
-                  @change="handleSeg"
-                  :disabled="!!flowListData?.wfStatus"
-                >
-                  <el-option
-                    v-for="item in segOptions"
-                    :key="item.id"
-                    :label="item.segName"
-                    :value="item.id"
-                  />
-                </el-select> -->
                 <el-input
                   v-model="formData.segName"
                   disabled
@@ -326,7 +312,6 @@ const suppliersData = ref(null); // 关联的供应商数据
 const saveLoading = ref(false);
 const submitLoading = ref(false);
 const formRef = ref<FormInstance>();
-const segOptions = ref([]);
 const projectOptions = ref([]);
 const tempFileList = ref([]);
 const currentUploadRow = ref(null);
@@ -420,17 +405,6 @@ const tableColumns = computed<EditableColumn[]>(() => {
   }
   return baseColumns;
 });
-// 获取业务板块列表
-const getSegOptions = async () => {
-  try {
-    const res = await dictionaryApi.getsegmentList();
-    if (res.code === 200) {
-      segOptions.value = res.data || [];
-    }
-  } catch (error) {
-    console.error("获取业务板块列表失败:", error);
-  }
-};
 
 // 获取项目列表
 const getProjectOptions = async () => {
@@ -457,14 +431,6 @@ const changeProject = async (value: number) => {
       formData.value.segName = segName || "";
       formData.value.segNo = segNo || "";
     }
-  }
-};
-const handleSeg = (value: number) => {
-  console.log("选中的业务板块数据:", value);
-  if (value) {
-    const target = segOptions.value.find((item: any) => item.id === value);
-    formData.value.segId = target?.id || "";
-    formData.value.segNo = target?.segNo || "";
   }
 };
 // 表单、列表校验
@@ -691,7 +657,6 @@ const handleUploadSuccess = (file: any) => {
 // 初始化所有下拉选项
 const initOptions = async () => {
   await Promise.all([
-    getSegOptions(),
     getProjectOptions(),
     getSupplierTypeList(),
   ]);

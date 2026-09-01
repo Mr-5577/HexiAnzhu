@@ -65,7 +65,7 @@
     </base-table>
 
     <!-- 新增/编辑 招标事项弹窗 -->
-    <add-edit-tender-dialog v-model="tenderDialogVisible" :edit-data="editData" :empTreeData="empTreeData"
+    <add-edit-tender-dialog v-model="tenderDialogVisible" :edit-data="editData"
       :conType-options="conTypeOptions" @success="handleDialogSuccess" />
   </div>
 </template>
@@ -248,9 +248,9 @@ const getConTypeList = async () => {
   }
 };
 
-// 获取人员树形数据
+// 获取人员树形数据（全部）
 const getEmpTreeData = async () => {
-  const res = await roleApi.getEmpTree({ empName: "", isIncludeLeave: false });
+  const res = await roleApi.getEmpTree({ empName: "", isIncludeLeave: true });
   // console.log("获取人员列表", res);
   if (res.code === 200) {
     empTreeData.value = res.data || [];

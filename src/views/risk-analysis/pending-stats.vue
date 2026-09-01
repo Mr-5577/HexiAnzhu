@@ -3,19 +3,6 @@
   <div class="pending-stats-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
       <el-form-item label="项目" prop="projIds">
-        <!-- <el-cascader
-          class="fixed-height-cascader"
-          :filterable="true"
-          v-model="queryParams.projIds"
-          placeholder="请选择"
-          :options="projectOptions"
-          :props="cascaderProps"
-          collapse-tags
-          collapse-tags-tooltip
-          clearable
-          :show-all-levels="false"
-          :max-collapse-tags="1"
-        /> -->
         <project-tree-selector
           v-model="queryParams.projIds"
           :project-list="projectOptions"
@@ -70,7 +57,7 @@
           icon="Download"
           :loading="exportLoading"
           @click="handleExport"
-          :disabled="!menuStore.hasExactPermission('pending-stats:export')"
+          :disabled="!menuStore.hasExactPermission(PERMISSIONS.PEND_STATS_EXPORT)"
         >
           导出
         </el-button>
@@ -103,6 +90,7 @@ import { useRoute, useRouter } from "vue-router";
 import { v4 as uuidv4 } from "uuid";
 import { findProjectIdByXsProjId } from "@/utils/project-helper";
 import { useMenuStore } from "@/stores/menu-store";
+import { PERMISSIONS } from "@/constants/permission";
 const menuStore = useMenuStore();
 const route = useRoute();
 const router = useRouter();
@@ -120,20 +108,6 @@ const {
   getAllLeafProjectIds,
   getAllProductTypeIds,
 } = useSalesData();
-
-const cascaderProps = computed(() => ({
-  value: "id",
-  label: "projName",
-  multiple: true,
-  emitPath: false,
-  checkStrictly: true, // 可选：是否严格选择模式
-  expandTrigger: "hover", // 可选：展开方式
-  // 关键：根据 projType 设置 disabled
-  // disabled: (data: any, node: any) => {
-  //   // projType !== 1 的项目禁用
-  //   return data.projType !== 1;
-  // },
-}));
 
 // ref
 const queryParams = ref({

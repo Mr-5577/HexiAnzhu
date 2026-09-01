@@ -26,7 +26,7 @@
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="费用类型" prop="finaTypeId">
+              <el-form-item label="费用类型" prop="finaTypeId" required>
                 <el-cascader v-model="formData.finaTypeId" :options="feeTypeOptions" :show-all-levels="false" :props="{
                   expandTrigger: 'hover',
                   emitPath: false,
@@ -113,7 +113,7 @@
           <div class="section-title">支付方式</div>
           <div style="display: flex; justify-content: flex-end; margin-bottom: 8px">
             <el-button type="primary" size="small" :disabled="payWayTable.length == 0" @click="handleFinanceAlloc"
-              v-if="!isAdd && menuStore.hasExactPermission('fina-alloc:ncon-fee')">
+              v-if="!isAdd && menuStore.hasExactPermission(PERMISSIONS.FINA_ALLOC_NCON_FEE)">
               财务分摊
             </el-button>
             <el-button type="primary" size="small" @click="addPayWay" v-if="!isDetail">
@@ -263,8 +263,8 @@ import BillHeader from "@/components/business/bill-components/bill-header.vue";
 import BillInfo from "@/components/business/bill-components/bill-info.vue";
 import FinanceAllocationDialog from "@/views/cost/finance-allocation/finance-allocation-dialog.vue";
 import { useMenuStore } from "@/stores/menu-store";
-// ===== 修改：替换 decimal.js 为 bignumber.js =====
 import { toBig, formatDecimal, BigNumber } from "@/utils/big-number.ts";
+import { PERMISSIONS } from "@/constants/permission";
 
 defineOptions({ name: "fee-payment-form" });
 
@@ -296,7 +296,6 @@ const payTypeOptions = ref([]);
 const dedTypeOptions = ref([]);
 const feePaymentFormRef = ref();
 const submitLoading = ref(false);
-const segOptions = ref([]);
 const annexFileList = ref([]);
 const feeTypeOptions = ref([]);
 const feeTypeFlatOptions = ref([]);
@@ -373,6 +372,9 @@ const formRules = {
   reqType: [{ required: true, message: "请选择请款类型", trigger: "change" }],
   belongMonth: [
     { required: true, message: "请选择归属月份", trigger: "change" },
+  ],
+  finaTypeId: [
+    { required: true, message: "请选择费用类型", trigger: "change" },
   ],
   reqAmt: [{ required: true, message: "请输入请款金额", trigger: "blur" }],
 };
@@ -1220,18 +1222,6 @@ const getProjectOptions = async () => {
   }
 };
 
-// 获取业务板块列表
-const getSegOptions = async () => {
-  try {
-    const res = await dictionaryApi.getsegmentList({ isAuth: true });
-    if (res.code === 200) {
-      segOptions.value = res.data || [];
-    }
-  } catch (error) {
-    console.error("获取业务板块列表失败:", error);
-  }
-};
-
 // ==================== 加载费用支付详情 ====================
 const loadDetail = async () => {
   if (!props.feePaymentId) return;
@@ -1670,7 +1660,6 @@ const showDeductionAndPayWay = computed(() => {
 onMounted(async () => {
   await initDictData();
   await getProjectOptions();
-  await getSegOptions();
   formData.value.userName = userStore.userInfo?.empName || "";
   formData.value.createDate = dateUtil().format("YYYY-MM-DD");
   formData.value.belongMonth = dateUtil().format("YYYY-MM-DD");

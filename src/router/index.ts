@@ -1,33 +1,17 @@
 import { useMenuStore } from "@/stores/menu-store";
-import {
-  transformMenuDataExact,
-  extractButtonPermissions,
-} from "@/utils/menu-util";
-import {
-  createRouter,
-  createWebHashHistory,
-  createWebHistory,
-  RouteRecordRaw,
-} from "vue-router";
+import { transformMenuDataExact, extractButtonPermissions } from "@/utils/menu-util";
+import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import { addDynamicRoutes } from "./dynamic-routes";
 import { userApi } from "@/api/system/user-api";
 import { ElLoading } from "element-plus";
-import { getEnvironmentName } from "@/utils/config";
 import { useTagsStore } from "@/stores/tags-store";
 
-// 静态路由名称定义为常量
+// 静态路由名称常量
 const STATIC_ROUTE_NAMES = new Set([
-  "login",
-  "404",
-  "403",
-  "resetPassword",
-  "autoLogin",
-  "scanLogin",
-  "oaLogin",
+  "login", "404", "403", "resetPassword", "autoLogin", "scanLogin", "oaLogin"
 ]);
 
-console.log("当前环境：", getEnvironmentName());
-// 静态路由（登录页等）
+// 静态路由
 const staticRoutes: Array<RouteRecordRaw> = [
   {
     path: "/",
@@ -37,219 +21,151 @@ const staticRoutes: Array<RouteRecordRaw> = [
     path: "/login",
     name: "login",
     component: () => import("@/views/login/index.vue"),
-    meta: {
-      title: "登录",
-      requiresAuth: false,
-      hide: true,
-      isKeepAlive: false, // 登录页不需要缓存
-    },
+    meta: { title: "登录", requiresAuth: false, hide: true, isKeepAlive: false },
   },
   {
     path: "/autoLogin",
     name: "autoLogin",
     component: () => import("@/views/login/auto-login.vue"),
-    meta: {
-      title: "外部登录",
-    },
+    meta: { title: "外部登录" },
   },
   {
     path: "/scanLogin",
     name: "scanLogin",
     component: () => import("@/views/login/scan-login.vue"),
-    meta: {
-      title: "扫码登录",
-    },
+    meta: { title: "扫码登录" },
   },
   {
     path: "/oaLogin",
     name: "oaLogin",
     component: () => import("@/views/login/oa-login.vue"),
-    meta: {
-      title: "OA登录",
-    },
+    meta: { title: "OA登录" },
   },
   {
     path: "/reset-password",
     name: "resetPassword",
     component: () => import("@/views/login/reset-password.vue"),
-    meta: {
-      title: "重置密码",
-    },
-  },
-  {
-    path: "/test",
-    name: "test",
-    component: () => import("@/views/test.vue"),
-    meta: {
-      title: "测试",
-      isKeepAlive: false,
-    },
+    meta: { title: "重置密码" },
   },
   {
     path: "/403",
     name: "403",
     component: () => import("@/views/403.vue"),
-    meta: {
-      title: "无访问权限",
-      requiresAuth: false,
-      hide: true,
-      isKeepAlive: false,
-    },
+    meta: { title: "无访问权限", requiresAuth: false, hide: true },
   },
   {
     path: "/404",
     name: "404",
     component: () => import("@/views/404.vue"),
-    meta: {
-      title: "页面不存在",
-      requiresAuth: false,
-      hide: true,
-      isKeepAlive: false,
-    },
+    meta: { title: "页面不存在", requiresAuth: false, hide: true },
   },
 ];
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL), // history模式
-  // history: createWebHashHistory(import.meta.env.BASE_URL), // hash模式
+  history: createWebHistory(import.meta.env.BASE_URL),
   routes: staticRoutes,
 });
 
-// 清理动态路由的函数
+// 清理动态路由
 const cleanupDynamicRoutes = () => {
-  // 获取所有路由
   const routes = router.getRoutes();
-
-  // 找出动态路由（根据你的路由特征，比如meta中的标记）
-  routes.forEach((route: any) => {
-    // 只删除有名称且不是静态路由的路由
-    if (route.name && !STATIC_ROUTE_NAMES.has(route.name)) {
+  routes.forEach(route => {
+    if (route.name && !STATIC_ROUTE_NAMES.has(route.name as string)) {
       router.removeRoute(route.name);
     }
   });
 };
 
-// 菜单是否加载
 let menuLoaded = false;
 
-// 检查密码是否过期
-const isPasswordExpired = () => {
-  // 检查密码是否过期,accountNonExpired:true没有过期  accountNonExpired:false过期
-  const accountNonExpired = localStorage.getItem("accountNonExpired");
-  // localStorage存储的是字符串 "true" 或 "false"
-  return accountNonExpired == "false";
-};
+const isPasswordExpired = () => localStorage.getItem("accountNonExpired") === "false";
 
-// 白名单路由
-const whiteListPaths = [
-  "/login",
-  "/test",
-  "/autoLogin",
-  "/scanLogin",
-  "/oaLogin",
-  "/403",
-  "/404",
-  "/reset-password", // 重置密码
-];
+const whiteListPaths = ["/login", "/autoLogin", "/scanLogin", "/oaLogin", "/403", "/404", "/reset-password"];
+
 router.beforeEach(async (to, from, next) => {
-  // console.log("路由切换:", from.path, "->", to.path);
-
-  // 设置页面标题
-  // if (to.meta.title) {
-  //   document.title = to.meta.title as string;
-  // }
-
-  // 创建大小写不敏感的白名单
-  const whiteListLower = whiteListPaths.map((path) => path.toLowerCase());
-  if (whiteListLower.includes(to.path.toLowerCase())) {
+  // 白名单直接放行
+  if (whiteListPaths.includes(to.path.toLowerCase())) {
     next();
     return;
   }
 
-  // 检查token是否存在
   const token = localStorage.getItem("token");
   if (!token) {
     next("/login");
     return;
   }
 
-  // 有token，检查密码是否过期
-  const passwordExpired = isPasswordExpired();
-  if (passwordExpired) {
+  if (isPasswordExpired()) {
     next("/reset-password");
     return;
   }
 
   const menuStore = useMenuStore();
-  // 菜单没加载过，就加载菜单数据并添加动态路由
+
+  // 菜单未加载，加载数据并添加动态路由
   if (!menuLoaded) {
     let loadingInstance = null;
     try {
-      // 创建加载实例 - 全屏加载
       loadingInstance = ElLoading.service({
         lock: true,
         text: "正在加载数据，请稍候...",
         background: "rgba(255, 255, 255, 0.9)",
-        spinner: "el-icon-loading",
-        customClass: "clean-loading",
       });
-      const res = await userApi.getUserMenuPowerList();
-      // console.log("获取到菜单数据:", res);
-      if (res.code === 200) {
-        let menuData = res.data || [];
 
+      const res = await userApi.getUserMenuPowerList();
+      if (res.code === 200) {
+        const menuData = res.data || [];
+        
         // 提取按钮权限
         const buttonPermission = extractButtonPermissions(menuData);
-        // console.log("权限列表:", buttonPermission);
-        // 数据转换
-        const exactData = transformMenuDataExact(menuData || []);
-        // console.log("转换后的数据：", exactData);
-        // 先清理动态路由
-        cleanupDynamicRoutes();
-        // 存储到store
+        
+        // 转换菜单数据（用于展示）
+        const exactData = transformMenuDataExact(menuData);
+        
+        // 存储到 store
         menuStore.setMenuData(exactData);
         menuStore.setPermissionData(buttonPermission);
-        // 添加动态路由
+
+        // 清理旧动态路由
+        cleanupDynamicRoutes();
+        
+        // 添加新动态路由
         await addDynamicRoutes(router, exactData);
-        // 标记为已加载
+        
         menuLoaded = true;
+
+        // 菜单为空则跳转 403
         if (exactData.length === 0) {
-          // 没有任何菜单权限，直接跳转到403
           next("/403");
           return;
-        } else {
-          // 重新导航
-          next({ ...to, replace: true });
         }
+
+        // 重新导航到目标路由
+        next({ ...to, replace: true });
+        return;
       }
-      return;
     } catch (error) {
       console.error("加载菜单失败:", error);
       localStorage.removeItem("token");
       next("/login");
-      return;
     } finally {
-      // 关闭加载效果
       if (loadingInstance) {
         loadingInstance.close();
       }
     }
+    return;
   }
 
-  // 菜单已加载，直接放行
   next();
 });
 
 router.afterEach((to) => {
   const tagsStore = useTagsStore();
-  // 同步历史记录（要避免重复记录）
   if (to.fullPath && to.fullPath !== "/") {
-    // 检查是否已经存在，避免重复
     const index = tagsStore.historyStack.indexOf(to.fullPath);
     if (index === -1) {
       tagsStore.addHistory(to.fullPath);
     } else {
-      // 如果已存在，将其移到末尾（表示最近访问）
       tagsStore.historyStack.splice(index, 1);
       tagsStore.historyStack.push(to.fullPath);
     }

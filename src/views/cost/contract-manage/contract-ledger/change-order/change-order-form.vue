@@ -104,7 +104,7 @@
             </template>
             <template #actions="{ row }">
               <el-button link type="primary" @click="handleAllocDetail(row)"
-                v-if="isReadonly && menuStore.hasExactPermission('cost-alloc:con-bg')" :disabled="!isReadonly">
+                v-if="isReadonly && menuStore.hasExactPermission(PERMISSIONS.COST_ALLOC_CON_BG)" :disabled="!isReadonly">
                 分摊
               </el-button>
               <el-button link type="danger" @click="deleteLinkCon(row)" v-if="!isReadonly" :disabled="isReadonly">
@@ -199,6 +199,7 @@ import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-ap
 import ConCostAllocDialog from "@/views/cost/cost-allocation/con-cost-alloc/con-cost-alloc-dialog.vue";
 import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
 import { useMenuStore } from "@/stores/menu-store";
+import { PERMISSIONS } from "@/constants/permission.ts";
 
 defineOptions({ name: "change-order-form" });
 
@@ -233,7 +234,6 @@ const conId = computed<number | undefined>(() => {
 });
 
 // ==================== 选项数据 ====================
-const segOptions = ref([]);
 const projectOptions = ref([]);
 const changeReasonOptions = ref([]);
 const invalidCostReasonOptions = ref<any[]>([]);
@@ -441,17 +441,6 @@ const getData = (data: any) => {
   // console.log("tableList", tableList.value);
 };
 // ==================== 选项初始化方法 ====================
-// 获取业务板块列表
-const getSegOptions = async () => {
-  try {
-    const res = await dictionaryApi.getsegmentList();
-    if (res.code === 200) {
-      segOptions.value = res.data || [];
-    }
-  } catch (error) {
-    console.error("获取业务板块列表失败:", error);
-  }
-};
 
 // 获取项目列表
 const getProjectOptions = async () => {
@@ -495,7 +484,7 @@ const initDictData = async () => {
 
 // 初始化所有选项
 const initOptions = async () => {
-  await Promise.all([getSegOptions(), getProjectOptions(), initDictData()]);
+  await Promise.all([getProjectOptions(), initDictData()]);
 };
 
 // ==================== 单号生成 ====================

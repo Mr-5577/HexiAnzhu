@@ -3,84 +3,32 @@
   <div class="tree-daily-report-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
       <el-form-item label="项目" prop="projIds">
-        <!-- <el-cascader
-          class="fixed-height-cascader"
-          :filterable="true"
-          v-model="queryParams.projIds"
-          placeholder="请选择"
-          :options="projectOptions"
-          :props="cascaderProps"
-          collapse-tags
-          collapse-tags-tooltip
-          clearable
-          :show-all-levels="false"
-          :max-collapse-tags="1"
-        ></el-cascader> -->
-        <project-tree-selector
-          v-model="queryParams.projIds"
-          :project-list="projectOptions"
-          placeholder="请选择项目"
-          width="220px"
-        ></project-tree-selector>
+        <project-tree-selector v-model="queryParams.projIds" :project-list="projectOptions" placeholder="请选择项目"
+          width="220px"></project-tree-selector>
       </el-form-item>
       <el-form-item label="日期" prop="day">
-        <el-date-picker
-          v-model="queryParams.day"
-          type="date"
-          placeholder="日期"
-          format="YYYY-MM-DD"
-          value-format="YYYY-MM-DD"
-          :clearable="false"
-        />
+        <el-date-picker v-model="queryParams.day" type="date" placeholder="日期" format="YYYY-MM-DD"
+          value-format="YYYY-MM-DD" :clearable="false" />
       </el-form-item>
       <el-form-item>
-        <el-button
-          type="primary"
-          icon="Search"
-          :loading="tableLoading"
-          @click="handleQuery"
-        >
+        <el-button type="primary" icon="Search" :loading="tableLoading" @click="handleQuery">
           搜索
         </el-button>
         <el-button icon="Refresh" :loading="tableLoading" @click="resetQuery">
           重置
         </el-button>
-        <!-- <el-button
-          type="primary"
-          icon="Download"
-          :loading="exportLoading"
-          @click="handleExport"
-          :disabled="!menuStore.hasExactPermission('tree-daily-report:export')"
-        >
-          导出
-        </el-button> -->
-        <el-dropdown
-          placement="bottom-start"
-          :disabled="!menuStore.hasExactPermission('tree-daily-report:export')"
-        >
-          <el-button
-            type="primary"
-            icon="Download"
-            :loading="exportLoading"
-            :disabled="
-              !menuStore.hasExactPermission('tree-daily-report:export')
-            "
-            style="margin-left: 12px"
-          >
+        <el-dropdown placement="bottom-start"
+          :disabled="!menuStore.hasExactPermission(PERMISSIONS.TREE_DAILY_REPORT_EXPORT)">
+          <el-button type="primary" icon="Download" :loading="exportLoading" :disabled="!menuStore.hasExactPermission(PERMISSIONS.TREE_DAILY_REPORT_EXPORT)
+            " style="margin-left: 12px">
             导出
           </el-button>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item
-                command="default"
-                @click="handleExport('DEFAULT')"
-              >
+              <el-dropdown-item command="default" @click="handleExport('DEFAULT')">
                 默认模版
               </el-dropdown-item>
-              <el-dropdown-item
-                command="simple"
-                @click="handleExport('PERFORMANCE')"
-              >
+              <el-dropdown-item command="simple" @click="handleExport('PERFORMANCE')">
                 汇报模版
               </el-dropdown-item>
             </el-dropdown-menu>
@@ -88,18 +36,9 @@
         </el-dropdown>
       </el-form-item>
     </el-form>
-    <base-table
-      :rowKey="'treeId'"
-      :showSummary="true"
-      :columns="dailylReportColumns"
-      :tableData="paginatedData"
-      :loading="tableLoading"
-      :total="total"
-      :current-page="currentPage"
-      :page-size="pageSize"
-      @pagination-change="handlePaginationChange"
-      @cell-event="handleCellEventClick"
-    ></base-table>
+    <base-table :rowKey="'treeId'" :showSummary="true" :columns="dailylReportColumns" :tableData="paginatedData"
+      :loading="tableLoading" :total="total" :current-page="currentPage" :page-size="pageSize"
+      @pagination-change="handlePaginationChange" @cell-event="handleCellEventClick"></base-table>
   </div>
 </template>
 
@@ -114,6 +53,7 @@ import { useRoute, useRouter } from "vue-router";
 import { v4 as uuidv4 } from "uuid";
 import { findProjectIdsByXsProjIds } from "@/utils/project-helper";
 import { useMenuStore } from "@/stores/menu-store";
+import { PERMISSIONS } from "@/constants/permission";
 const menuStore = useMenuStore();
 const route = useRoute();
 const router = useRouter();
@@ -123,19 +63,6 @@ defineOptions({ name: "tree-daily-report" });
 
 // 使用共享的 data hook
 const { projectOptions, loadData, getAllLeafProjectIds } = useSalesData();
-const cascaderProps = computed(() => ({
-  value: "id",
-  label: "projName",
-  multiple: true,
-  emitPath: false,
-  checkStrictly: true, // 可选：是否严格选择模式
-  expandTrigger: "hover", // 可选：展开方式
-  // 关键：根据 projType 设置 disabled
-  // disabled: (data: any, node: any) => {
-  //   // projType !== 1 的项目禁用
-  //   return data.projType !== 1;
-  // },
-}));
 
 // ref
 const queryParams = ref({
@@ -385,7 +312,7 @@ onMounted(() => {
 });
 
 // 清理
-onUnmounted(() => {});
+onUnmounted(() => { });
 </script>
 
 <style lang="scss" scoped>

@@ -788,7 +788,6 @@ const isDetail = computed(() => mode.value === "detail");
 const isEdit = computed(() => mode.value === "edit");
 const isAdd = computed(() => mode.value === "add");
 
-const segOptions = ref([]);
 const projectOptions = ref([]);
 const annexFileList = ref([]);
 const updateFileList = ref([]);
@@ -1531,18 +1530,6 @@ const formRules: FormRules = {
   remark: [{ max: 500, message: "备注不能超过500个字符", trigger: "blur" }],
 };
 
-// 获取业务板块列表
-const getSegOptions = async () => {
-  try {
-    const res = await dictionaryApi.getsegmentList();
-    if (res.code === 200) {
-      segOptions.value = res.data || [];
-    }
-  } catch (error) {
-    console.error("获取业务板块列表失败:", error);
-  }
-};
-
 // 获取项目数据
 const getProjectOptions = async () => {
   try {
@@ -1688,7 +1675,7 @@ const initDictData = async () => {
 
 const initData = async () => {
   await initDictData();
-  await Promise.all([getSegOptions(), getProjectOptions()]);
+  await Promise.all([getProjectOptions()]);
 
   formData.userName = userStore.userInfo?.empName || "";
   formData.createDate = new Date().toLocaleString();
