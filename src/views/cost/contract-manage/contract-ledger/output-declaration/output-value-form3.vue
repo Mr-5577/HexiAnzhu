@@ -213,46 +213,93 @@
                 <el-upload :before-upload="importMaterial" accept=".xlsx,.xls" :show-file-list="false">
                   <el-button size="small" type="primary" :disabled="isReadonly">导入并更新</el-button>
                 </el-upload>
-                <el-button type="primary" size="small" :disabled="isReadonly" @click="exportMaterial">
-                  导出
-                </el-button>
-                <el-button type="primary" size="small" :disabled="isReadonly" @click="openMaterialDialog">
-                  新增明细
-                </el-button>
-                <el-button type="primary" size="small" :disabled="isReadonly" @click="clearMaterialTable">
-                  清空
-                </el-button>
+                <el-button type="primary" size="small" :disabled="isReadonly" @click="exportMaterial">导出</el-button>
+                <el-button type="primary" size="small" :disabled="isReadonly"
+                  @click="openMaterialDialog">新增明细</el-button>
+                <el-button type="primary" size="small" :disabled="isReadonly" @click="clearMaterialTable">清空</el-button>
               </div>
             </div>
-            <editable-table ref="materialRef" :row-key="'uuid'" :height="'400px'" v-model="materialTable"
-              :columns="materialColumns" :pagination="false" :highlight-current-row="false" :show-summary="true"
-              :summary-method="materialSummary" :compactEmpty="true" :editable="!isDetail && !billData.status"
-              :on-save="handleMaterialSave">
-              <template #edit-buildPeriod="{ row, update }">
-                <el-date-picker v-model="row.buildPeriod" type="month" value-format="YYYY-MM-DD" format="YYYY-MM"
-                  size="small" style="width: 100%" :disabled="isReadonly || !!billData.status"
-                  :disabled-date="disabledBuildPeriod"
-                  @change="row.buildPeriod = toMonthEnd(row.buildPeriod); update(row.buildPeriod)" />
-              </template>
-              <template #edit-payDate="{ row, update }">
-                <el-date-picker v-model="row.payDate" type="month" value-format="YYYY-MM-DD" format="YYYY-MM"
-                  size="small" style="width: 100%" :disabled="isReadonly || row.hasVal"
-                  @change="row.payDate = toMonthEnd(row.payDate); update(row.payDate)" />
-              </template>
-              <template #edit-payRate="{ row, update }">
-                <span v-if="isReadonly || billData.status" class="pct-text">{{ formatPercent(row.payRate) }}</span>
-                <div v-else class="pct-edit">
-                  <el-input-number v-model="row.payRate" :controls="false" :precision="2" size="small"
-                    style="width: 100%" @change="update(row.payRate)" />
-                  <span class="pct-suffix">%</span>
+
+            <!-- 虚拟滚动表格 -->
+            <div class="virtual-table-wrapper">
+              <div class="virtual-scroll-container">
+                <!-- 表头 -->
+                <div class="virtual-header">
+                  <div class="virtual-row">
+                    <div v-for="col in materialColumns" :key="col.prop || col.type" class="virtual-cell header-cell"
+                      :style="getColStyle(col)">
+                      {{ col.label }}
+                    </div>
+                  </div>
                 </div>
-              </template>
-              <template #actions="{ row }">
-                <el-button link type="danger" :disabled="isReadonly" @click="deleteMaterial(row)">
-                  删除
-                </el-button>
-              </template>
-            </editable-table>
+  
+                <!-- 表体（虚拟滚动） -->
+                <RecycleScroller class="virtual-body" :items="materialTable" :item-size="36" key-field="uuid"
+                  :buffer="200">
+                  <template #default="{ item, index }">
+                    <div class="virtual-row" :class="{ even: index % 2 === 0 }">
+                      <div v-for="col in materialColumns" :key="col.prop || col.type" class="virtual-cell"
+                        :style="getColStyle(col)">
+                        <!-- 序号列 -->
+                        <template v-if="col.type === 'index'">
+                          {{ index + 1 }}
+                        </template>
+  
+                        <!-- 操作列 -->
+                        <template v-else-if="col.slot === 'actions'">
+                          <el-button link type="danger" :disabled="isReadonly" @click="deleteMaterial(item)">
+                            删除
+                          </el-button>
+                        </template>
+  
+                        <!-- 可编辑列：本次申报产值 -->
+                        <template v-else-if="col.prop === 'prodVal'">
+                          <el-input-number v-model="item.prodVal" :min="0" :precision="2" :controls="false" size="small"
+                            style="width:100%" :disabled="isReadonly || !!billData.status"
+                            @change="handleVirtualSave(item, 'prodVal', index)" />
+                        </template>
+  
+                        <!-- 可编辑列：本次申报应付 -->
+                        <template v-else-if="col.prop === 'payAmt'">
+                          <el-input-number v-model="item.payAmt" :min="0" :precision="2" :controls="false" size="small"
+                            style="width:100%" :disabled="isReadonly || !!billData.status"
+                            @change="handleVirtualSave(item, 'payAmt', index)" />
+                        </template>
+  
+                        <!-- 可编辑列：计划付款期间 -->
+                        <template v-else-if="col.prop === 'payDate'">
+                          <el-date-picker v-model="item.payDate" type="month" value-format="YYYY-MM-DD" format="YYYY-MM"
+                            size="small" style="width:100%" :disabled="isReadonly || item.hasVal"
+                            @change="item.payDate = toMonthEnd(item.payDate); handleVirtualSave(item, 'payDate', index)" />
+                        </template>
+  
+                        <!-- 只读列：使用 formatter 格式化 -->
+                        <template v-else>
+                          <span>{{ col.formatter ? col.formatter(item) : (item[col.prop] ?? '--') }}</span>
+                        </template>
+                      </div>
+                    </div>
+                  </template>
+                </RecycleScroller>
+  
+                <!-- 合计行 -->
+                <div v-if="materialTable.length > 0" class="virtual-footer">
+                  <div class="virtual-row summary-row">
+                    <div v-for="col in materialColumns" :key="col.prop || col.type" class="virtual-cell"
+                      :style="getColStyle(col)">
+                      <template v-if="col.type === 'index'">
+                        <span style="font-weight:bold;">合计</span>
+                      </template>
+                      <template v-else-if="col.slot === 'actions'">
+                      </template>
+                      <template v-else>
+                        <span style="font-weight:bold;">{{ getVirtualTotal(col.prop) }}</span>
+                      </template>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- 产值明细 - 甲供材-零星  -->
@@ -424,7 +471,7 @@ import { formType } from "@/types/form/form-types";
 import { dateUtil } from "@/utils/date-util";
 import { outputDeclarationApi } from "@/api/cost/contract-manage/output-declaration-api";
 import ChooseMaterialValDialog from "./choose-martrial-val-dialog.vue";
-import { createProdColumns, materialColumns, materialMinorColumns, NAV_CARDS } from "./output-value-config";
+import { createProdColumns, materialColumns, materialMinorColumns, NAV_CARDS } from "./output-value-config.ts";
 import { useFormLayout } from "@/composables/use-form-layout";
 import FormCard from "@/components/base/base-form-card.vue";
 import PickInput from "@/components/base/base-pick-input.vue";
@@ -435,8 +482,8 @@ import { dictMapping } from "@/utils/dict-mapping";
 import ConCostAllocCard from "@/views/cost/cost-allocation/con-cost-alloc/con-cost-alloc-card.vue";
 import { useMenuStore } from "@/stores/menu-store";
 import { toBig, formatDecimal, BigNumber } from "@/utils/big-number.ts";
-import { DynamicScroller } from "vue-virtual-scroller";
-import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
+import { RecycleScroller } from 'vue-virtual-scroller'
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 import { PERMISSIONS } from "@/constants/permission.ts";
 import * as XLSX from 'xlsx';
 
@@ -1930,6 +1977,52 @@ const handleMaterialSave = async (data: any) => {
     return;
   }
 };
+// 获取列样式
+const getColStyle = (col: any) => {
+  const width = col.width || 120
+  return {
+    minWidth: typeof width === 'number' ? width + 'px' : width,
+    maxWidth: typeof width === 'number' ? width + 'px' : width,
+    flexShrink: 0,
+    padding: '0 4px'
+  }
+}
+
+// 虚拟滚动保存（复用 handleMaterialSave）
+const handleVirtualSave = (row: any, column: string, rowIndex: number) => {
+  // 直接调用原有的 handleMaterialSave
+  handleMaterialSave({ row, column, newValue: row[column], oldValue: null, rowIndex })
+}
+
+// 合计计算
+const getVirtualTotal = (prop: string) => {
+  // 如果没有 prop 或者 prop 是特殊列（序号、操作等），不计算
+  if (!prop) return '--'
+  
+  // 只对数字类型的列进行合计（根据 materialColumns 中的 editType 或 formatType 判断）
+  const col = materialColumns.value.find(c => c.prop === prop)
+  if (!col) return '--'
+  
+  // 如果列不是数字类型，不计算（序号、操作、日期等）
+  if (col.type === 'index' || col.slot === 'actions') return '--'
+  if (col.editType === 'input' && !col.formatType) return '--'
+  if (col.prop === 'buildPeriod' || col.prop === 'payDate' || col.prop === 'prodValPeriod') return '--'
+  
+  let total = new BigNumber(0)
+  materialTable.value.forEach((item: any) => {
+    const val = item[prop]
+    // 只对有效数字累加
+    if (val !== null && val !== undefined && val !== '') {
+      const num = Number(val)
+      if (!isNaN(num)) {
+        total = total.plus(num)
+      }
+    }
+  })
+  
+  return total.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber()
+    .toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
 // 导入
 const importMaterial = (file) => {
   const reader = new FileReader();
@@ -2298,5 +2391,166 @@ onMounted(() => {
 
 .pct-text {
   font-size: 12px;
+}
+
+// 虚拟滚动表格样式
+.virtual-table-wrapper {
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+  overflow: hidden;
+  height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+// 横向滚动容器
+.virtual-scroll-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: auto; // 同时支持横向和纵向滚动
+  
+  // 隐藏纵向滚动条（由 RecycleScroller 管理）
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+    &:hover { background: #a8a8a8; }
+  }
+}
+.virtual-header {
+  flex-shrink: 0;
+  background: #f8f8f9;
+  border-bottom: 2px solid #ebeef5;
+  overflow: visible;
+  min-width: max-content; // 确保表头不换行
+  
+  .virtual-row {
+    min-width: max-content; // 确保行不换行
+  }
+  
+  .header-cell {
+    font-weight: 600;
+    color: #515a6e;
+    font-size: 13px;
+    background: #f8f8f9;
+    justify-content: center !important;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+}
+
+.virtual-body {
+  flex: 1;
+  overflow: visible !important; // 让 RecycleScroller 自己管理滚动
+  min-width: max-content;
+  
+  // RecycleScroller 内部样式
+  :deep(.vue-recycle-scroller) {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: visible;
+  }
+  
+  :deep(.vue-recycle-scroller__item-wrapper) {
+    min-width: max-content;
+  }
+}
+
+.virtual-row {
+  display: flex;
+  align-items: center;
+  height: 36px;
+  border-bottom: 1px solid #ebeef5;
+  background: #fff;
+  min-width: max-content; // 防止行换行
+  
+  &.even { background: #fafafa; }
+  &:hover { background: #f5f7fa; }
+}
+
+.virtual-cell {
+  display: flex;
+  align-items: center;
+  padding: 0 4px;
+  height: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  flex-shrink: 0;
+  
+  // 居中对齐
+  &.text-center {
+    justify-content: center;
+  }
+  
+  .cell-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+  }
+  
+  // 编辑组件统一样式
+  :deep(.el-input__wrapper),
+  :deep(.el-date-editor .el-input__wrapper),
+  :deep(.el-input-number .el-input__wrapper) {
+    border-radius: 0;
+    padding: 0 4px;
+    height: 28px;
+    background: transparent;
+    box-shadow: none;
+    &:hover { box-shadow: 0 0 0 1px #409eff inset; }
+    &.is-focus { box-shadow: 0 0 0 2px rgba(64,158,255,0.3) inset; }
+  }
+  
+  :deep(.el-input-number) {
+    width: 100%;
+    .el-input-number__wrapper {
+      padding: 0;
+      border-radius: 0;
+      height: 28px;
+      background: transparent;
+      box-shadow: none;
+      &:hover { box-shadow: 0 0 0 1px #409eff inset; }
+    }
+    .el-input-number__increase,
+    .el-input-number__decrease { display: none; }
+  }
+  
+  :deep(.el-date-editor) {
+    width: 100%;
+    height: 28px;
+    .el-input__wrapper {
+      width: 100%;
+      border-radius: 0;
+      padding: 0 4px;
+      height: 28px;
+      background: transparent;
+      box-shadow: none;
+      &:hover { box-shadow: 0 0 0 1px #409eff inset; }
+    }
+  }
+}
+
+.virtual-footer {
+  flex-shrink: 0;
+  border-top: 2px solid #409eff;
+  background: #f5f7fa;
+  overflow: visible;
+  min-width: max-content;
+  
+  .summary-row { 
+    border-bottom: none;
+    min-width: max-content;
+  }
 }
 </style>
