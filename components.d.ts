@@ -32,7 +32,6 @@ declare module 'vue' {
     ConTypeSelector: typeof import('./src/components/business/con-type-selector.vue')['default']
     DetailTableCard: typeof import('./src/components/base/detail-table-card.vue')['default']
     EditableTable: typeof import('./src/components/base/editable-table.vue')['default']
-    EditableTable2: typeof import('./src/components/base/editable-table2.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']
     ElAside: typeof import('element-plus/es')['ElAside']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
@@ -94,6 +93,7 @@ declare module 'vue' {
     SummaryBar: typeof import('./src/components/business/summary-bar.vue')['default']
     UploadInvoiceDialog: typeof import('./src/components/business/upload-invoice-dialog.vue')['default']
     UrbanProjectTree: typeof import('./src/components/business/urban-project-tree.vue')['default']
+    VxeEditableTable: typeof import('./src/components/base/vxe-editable-table.vue')['default']
   }
   export interface GlobalDirectives {
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']

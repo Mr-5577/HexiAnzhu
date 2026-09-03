@@ -34,6 +34,9 @@
     "vue-print-next": "^1.1.6",
     "vue-router": "^4.6.3",
     "vue-virtual-scroller": "next",
+    "vxe-pc-ui": "~4.16.27",
+    "vxe-table": "~4.20.10",
+    "xe-utils": "^4.0.12",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
