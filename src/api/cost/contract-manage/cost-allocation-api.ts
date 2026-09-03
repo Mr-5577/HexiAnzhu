@@ -73,11 +73,13 @@ export const costAllocationApi = {
    * @param data.id - 成本分摊主表ID
    * @param data.bizBillId - 单据ID
    * @param data.bizType - 业务类型
+   * @param data.bizKeyId
    */
   getProjectAlloc: (data: {
     id?: number;
     bizBillId?: number | string;
     bizType?: string;
+    bizKeyId?: number | string;
   }) => {
     return http.formPost("/cost/projectAlloc/getList", data);
   },

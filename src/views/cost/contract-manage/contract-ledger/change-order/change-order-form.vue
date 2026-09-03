@@ -137,16 +137,11 @@
         </FormCard>
       </el-form>
 
-      <!-- 成本分摊 -->
-      <!-- <ConCostAllocCard style="margin-top: 15px;" :visible="!isAdd" :cstMData="cstMData"
-        :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'CON_BG'"
-        :projId="formData.projId" :projName="formData?.projName" :displayName="formData.changeName"
-        :allocAmt="formData.changeAmt" :bizBillId="billData.id" /> -->
       <!-- 分摊详情弹窗 -->
       <ConCostAllocDialog v-if="dialogVisible" v-model="dialogVisible" :projId="currentRowAlloc?.cstM?.projId"
         :projName="currentRowAlloc?.cstM?.projName" :conId="currentRowAlloc?.conId" :bizBillId="currentRowAlloc?.cstM
           ?.bizBillId" :displayName="currentRowAlloc?.conName" :bizType="formType.CON_CHANGE"
-        :allocAmt="currentRowAlloc?.cstM?.allocAmt" :cstMData="currentRowAlloc?.cstM" @select="getData" />
+        :allocAmt="currentRowAlloc?.cstM?.allocAmt" :cstMData="currentRowAlloc?.cstM" :bizKeyId="currentRowAlloc?.cstM?.bizKeyId" @select="getData" />
     </div>
 
     <!-- ============ 选择合同 弹窗 ============ -->

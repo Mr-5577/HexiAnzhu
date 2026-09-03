@@ -294,9 +294,10 @@ onMounted(() => {
   padding: 10px;
   box-sizing: border-box;
   background: #f0f2f6;
-
+  overflow: hidden;
   .left-content {
     width: 320px;
+    height: 100%;
     flex-shrink: 0;
     background: #fff;
     border-radius: 8px;
@@ -340,8 +341,8 @@ onMounted(() => {
     .tree-wrapper {
       flex: 1;
       overflow: auto;
-      padding: 8px;
-
+      padding: 8px 8px;
+      box-sizing: border-box;
       .tree-node {
         flex: 1;
         display: flex;

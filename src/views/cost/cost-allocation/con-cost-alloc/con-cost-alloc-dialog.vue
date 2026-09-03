@@ -5,7 +5,8 @@
     @confirm="handleConfirm" @close="handleClose">
     <ConCostAlloc ref="costAllocationRef" :projId="props.projId" :projName="props.projName"
       :displayName="props.displayName" :bizType="props.bizType" :allocAmt="props.allocAmt" :cstMData="props.cstMData"
-      :isDialogMode="true" :dialogMode="props.dialogMode" :bizBillId="props.bizBillId" :conId="props.conId">
+      :isDialogMode="true" :dialogMode="props.dialogMode" :bizBillId="props.bizBillId" :conId="props.conId"
+      :bizKeyId="props.bizKeyId">
     </ConCostAlloc>
   </base-modal>
 </template>
@@ -26,6 +27,7 @@ interface Props {
   allocAmt?: number;
   cstMData?: any;
   dialogMode?: string;
+  bizKeyId?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -39,6 +41,7 @@ const props = withDefaults(defineProps<Props>(), {
   allocAmt: 0,
   cstMData: null,
   dialogMode: "edit", // 弹窗模式，默认为查看模式 view  edit
+  bizKeyId: 0,
 });
 
 // Emits

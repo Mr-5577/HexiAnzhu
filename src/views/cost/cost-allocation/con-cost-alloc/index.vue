@@ -197,6 +197,7 @@ interface Props {
   dialogMode?: string;
   bizBillId?: number;
   conId?: number;
+  bizKeyId?: number;
 }
 const props = withDefaults(defineProps<Props>(), {
   projId: undefined,
@@ -210,6 +211,7 @@ const props = withDefaults(defineProps<Props>(), {
   dialogMode: "", // 弹窗模式， view  edit
   bizBillId: undefined,
   conId: undefined,
+  bizKeyId: 0,
 });
 
 const emit = defineEmits<{
@@ -230,7 +232,7 @@ const isDialogMode = computed(() => {
 const isView = computed(() => {
   return route.query.mode == "view" || props.dialogMode == "view";
 });
-const defaultLevel = ref(1); // 默认展开层级
+const defaultLevel = ref(6); // 默认展开层级
 const warningVisible = ref(false); // 预警面板展开状态
 const confirmLoading = ref(false); // 自动分摊加载状态
 const dialogVisible = ref(false); // 选择科目弹窗
@@ -792,55 +794,6 @@ const processPopupData = async (cstList: any) => {
     }
   }
 };
-/**
- * 弹窗打开初始化
- */
-const initPage = async () => {
-  console.log("分摊弹窗参数11:", props);
-  // 解析参数，业务弹窗打开
-  pageParams.value = {
-    ...pageParams.value,
-    projId: props.projId,
-    projName: props.projName || "",
-    displayName: props.displayName || "",
-    bizType: props.bizType || "",
-    billId: undefined,
-    bizKeyId: undefined,
-    allocAmt: toBig(props.allocAmt || 0).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber(),
-    allocExclAmt: toBig(props.allocExclAmt || 0).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber(),
-  };
-  console.log("分摊弹窗参数22:", pageParams.value);
-  // 获取项目产品类型列表
-  await Promise.all([
-    getBusiSegList(),
-    getProductList(),
-    getBuildingListByProjId(),
-  ]);
-  // 弹窗模式则是从erp系统打开弹窗操作，否则就是OA单独引用分摊页面
-  // if (props?.cstMData && props.cstMData?.allocDs?.length > 0) {
-  //   const detaiList = props.cstMData?.allocDs || [];
-  //   processPopupData(detaiList);
-  // }
-  switch (props.bizType) {
-    case "CON_MAIN":
-      await getConDetail(); // 主合同
-      break;
-    case "CON_ADD":
-      await getConAddDetail(); // 补充合同
-      break;
-    case "CON_BG":
-      await getConBgDetail(); // 变更
-      break;
-    case "CON_QZ":
-      await getConQzDetail(); // 签证
-      break;
-    case "CON_PROD":
-      await getConProdDetail(); // 合同产值
-      break;
-    default:
-      break;
-  }
-};
 // 获取合同信息
 const getConDetail = async () => {
   // 主合同查询轻量级详情信息
@@ -856,9 +809,11 @@ const getConDetail = async () => {
     pageParams.value.allocExclAmt = 0;
     pageParams.value.bizType = bizType;
     pageParams.value.billId = billId;
+    bizId = liteRes?.data?.id; // 合同ID
     // 保存合同楼栋信息
     conBuildingOptions.value = liteRes?.data?.bldIds?.split(",").map((ite) => Number(ite)) || [];
     console.log("主合同楼栋信息:", conBuildingOptions.value);
+    await getTaxRate(bizId); // 获取合同税率
     if (pageParams.value.projId) {
       await getBuildingListByProjId();
       await Promise.all([getBusiSegList(), getProductList()]);
@@ -887,8 +842,10 @@ const getConAddDetail = async () => {
       pageParams.value.billId = billId;
       pageParams.value.allocAmt = conAdd?.addAmt || 0;
       pageParams.value.allocExclAmt = 0;
+      bizId = conMain?.id; // 合同ID
       // 保存补充合同楼栋信息，补充合同取补充合同楼栋
       conBuildingOptions.value = conAdd?.bldIds?.split(",").map((ite) => Number(ite)) || [];
+      await getTaxRate(bizId); // 获取合同税率
       if (pageParams.value.projId) {
         await getBuildingListByProjId();
         await Promise.all([getBusiSegList(), getProductList()]);
@@ -922,8 +879,10 @@ const getConBgDetail = async () => {
       pageParams.value.billId = billId;
       pageParams.value.allocAmt = change.changeAmt || 0;
       pageParams.value.allocExclAmt = 0;
+      bizId = conMain?.id; // 合同ID
       // 保存变更合同楼栋信息，变更合同取主合同楼栋
       conBuildingOptions.value = conMain?.bldIds?.split(",").map((ite) => Number(ite)) || [];
+      await getTaxRate(bizId); // 获取合同税率
       if (pageParams.value.projId) {
         await getBuildingListByProjId();
         await Promise.all([getBusiSegList(), getProductList()]);
@@ -957,8 +916,10 @@ const getConQzDetail = async () => {
       pageParams.value.billId = billId;
       pageParams.value.allocAmt = visa.visaApplyAmt || 0;
       pageParams.value.allocExclAmt = 0;
+      bizId = conMain?.id; // 合同ID
       // 保存签证合同楼栋信息，签证合同取主合同楼栋
       conBuildingOptions.value = conMain?.bldIds?.split(",").map((ite) => Number(ite)) || [];
+      await getTaxRate(bizId); // 获取合同税率
       if (pageParams.value.projId) {
         await getBuildingListByProjId();
         await Promise.all([getBusiSegList(), getProductList()]);
@@ -994,8 +955,10 @@ const getConProdDetail = async () => {
         .decimalPlaces(2, BigNumber.ROUND_HALF_UP)
         .toNumber();
       pageParams.value.allocExclAmt = 0;
+      bizId = conMain?.id; // 合同ID
       // 保存签证合同楼栋信息，签证合同取主合同楼栋
       conBuildingOptions.value = conMain?.bldIds?.split(",").map((ite) => Number(ite)) || [];
+      await getTaxRate(bizId); // 获取合同税率
       if (pageParams.value.projId) {
         await getBuildingListByProjId();
         await Promise.all([getBusiSegList(), getProductList()]);
@@ -1018,9 +981,8 @@ const getTaxRate = async (conId: number) => {
     console.log(error);
   }
 }
-// 加载OA打开的分摊数据
+// 加载分摊数据
 const loadAllocationData = async () => {
-  console.log("OA打开页面参数:", route.query, isView.value);
   switch (bizType) {
     case "CON_MAIN":
       await getConDetail(); // 主合同
@@ -1047,6 +1009,7 @@ const getProjectAllocData = async () => {
     const allocRes = await costAllocationApi.getProjectAlloc({
       bizBillId: billId,
       bizType: bizType,
+      bizKeyId: bizKeyId ? Number(bizKeyId) : 0,
     });
     if (allocRes.code == 200) {
       if (allocRes?.data) {
@@ -1633,7 +1596,7 @@ const autoAllocation = async () => {
     // 主合同取bizId,子合同取currSubConBizId,因为子合同从OA进入这个页面传递的bizId是合同ID
     // const currentBizId = bizType === 'CON_MAIN' ? bizId : currSubConBizId.value
     const params = {
-      conId: isDialogMode.value ? props.conId : bizId,
+      conId: bizId,
       subList: filterData,
       bldIds: selectedBuildings.value,
     }
@@ -1952,15 +1915,12 @@ onMounted(async () => {
   // 弹窗模式时初始化
   if (isDialogMode.value) {
     billId = props.bizBillId;
-    bizId = props.conId;
     bizType = props.bizType;
-    await getTaxRate(props.conId); // 获取合同税率
-    if (props.projId) {
-      await initPage();
-    }
+    bizKeyId = props.bizKeyId;
+    await loadAllocationData();
   } else {
     // OA打开
-    await getTaxRate(bizId); // 获取合同税率
+    console.log("OA打开页面参数:", route.query, isView.value);
     await loadAllocationData();
   }
 });
