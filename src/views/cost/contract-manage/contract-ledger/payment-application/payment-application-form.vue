@@ -18,6 +18,10 @@
 
         <!-- ====== 卡片：基本信息 ====== -->
         <FormCard id="card-base" icon="📋" title="合同信息" v-model:collapsed="collapsedCards.base">
+          <el-button type="primary" plain size="small" v-if="isSuperAdmin" @click="refreshConSumData"
+            style="position: absolute; left: 150px; top: 15px;">
+            刷新
+          </el-button>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item label="合同名称" prop="conId" required>
@@ -260,8 +264,7 @@
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="归属月份" prop="belongMonth" required>
                 <el-date-picker v-model="formData.belongMonth" type="month" value-format="YYYY-MM-DD"
-                  placeholder="请选择归属月份" :disabled="isReadonly"
-                  :disabled-date="disabledBelongMonth" />
+                  placeholder="请选择归属月份" :disabled="isReadonly" :disabled-date="disabledBelongMonth" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
@@ -638,7 +641,7 @@
     <!-- 发票明细 弹窗 -->
     <invoice-detail-dialog ref="invoiceDetailDialogRef" v-model="dialogVisible" :detailList="detailList"
       :disabled="isReadonly" @success="handleInvoiceDetailSuccess" />
-  
+
     <!-- 财务分摊  -->
     <FinanceAllocationDialog ref="financeAllocationDialogRef" v-model="financeAllocVisible" :bizType="'CON_PAY'"
       :bizBillId="billData?.id" :bizId="paymentData?.id" @select="getFinaList" @updateData="updateData">
@@ -1243,12 +1246,21 @@ const calcFields = () => {
 // ============================================================
 const mainConDialogVisible = ref(false);
 const openMainConDialog = () => {
-  if (isDetail.value) return;
-  if (!formData.value.projId) {
-    ElMessage.warning(`请先选择项目！`);
-    return;
+  if (isSuperAdmin.value) {
+    // 超级管理员操作
+    if (!formData.value.projId) {
+      ElMessage.warning(`请先选择项目！`);
+      return;
+    }
+    mainConDialogVisible.value = true;
+  } else {
+    if (isDetail.value) return;
+    if (!formData.value.projId) {
+      ElMessage.warning(`请先选择项目！`);
+      return;
+    }
+    mainConDialogVisible.value = true;
   }
-  mainConDialogVisible.value = true;
 };
 const handleMainConSelect = async (data) => {
   if (data && data.length > 0) {
@@ -1261,6 +1273,12 @@ const handleMainConSelect = async (data) => {
     }
   }
 };
+// 更新主合同数据
+const refreshConSumData = async () => {
+  if (formData.value.conId) {
+    await getConSumData(formData.value.conId);
+  }
+}
 
 // ============================================================
 // 事件处理：扣款明细（奖罚调整）

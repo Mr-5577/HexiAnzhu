@@ -46,7 +46,7 @@ const handleToggle = () => {
   overflow: hidden;
   transition: box-shadow 0.3s ease;
   scroll-margin-top: 76px;
-
+  position: relative;
   &:hover {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   }

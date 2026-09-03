@@ -16,6 +16,10 @@
 
         <!-- 合同信息 -->
         <FormCard id="card-base" icon="📋" title="合同信息" v-model:collapsed="collapsedCards.base">
+          <el-button type="primary" plain size="small" v-if="isSuperAdmin" @click="refreshConSumData"
+            style="position: absolute; left: 150px; top: 30px;">
+            刷新
+          </el-button>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item label="合同名称" prop="conId" required>
@@ -925,12 +929,21 @@ const handleViewAnnex = async (row: any) => {
 // ---- 主合同选择 ----
 const mainConDialogVisible = ref(false);
 const openMainConDialog = () => {
-  if (isDetail.value) return;
-  if (!formData.value.projId) {
-    ElMessage.warning(`请先选择项目！`);
-    return;
+  if (isSuperAdmin.value) {
+    // 超级管理员操作
+    if (!formData.value.projId) {
+      ElMessage.warning(`请先选择项目！`);
+      return;
+    }
+    mainConDialogVisible.value = true;
+  } else {
+    if (isDetail.value) return;
+    if (!formData.value.projId) {
+      ElMessage.warning(`请先选择项目！`);
+      return;
+    }
+    mainConDialogVisible.value = true;
   }
-  mainConDialogVisible.value = true;
 };
 const handleMainConSelect = async (data) => {
   if (data && data.length > 0) {
@@ -943,6 +956,11 @@ const handleMainConSelect = async (data) => {
     }
   }
 };
+// 更新合同累计数据
+const refreshConSumData = async () => {
+  if (!formData.value.conId) return;
+  await getConTotal(formData.value.conId);
+}
 
 // ---- 材料收货选择 ----
 const mtDialogVisible = ref(false);
@@ -1929,6 +1947,8 @@ const handleMaterialSave = async (data: any) => {
     updateMaterialRow(rowIndex, { payAmt: safeNewValue.toNumber() });
     return;
   }
+  // 正常更新
+  updateMaterialRow(rowIndex, { [column]: newValue });
 };
 // 导入
 const importMaterial = (file) => {
@@ -1957,10 +1977,10 @@ const compareAndFill = (tableList, importList) => {
     return tableList;
   }
 
-  // 2. 是否包含 uuid 列
-  const hasUuid = importList.some(row => row.uuid !== undefined && row.uuid !== null);
-  if (!hasUuid) {
-    ElMessage.error('导入文件缺少 "uuid" 列，请使用系统导出的模板');
+  // 2. 是否包含 id 列
+  const hasId = importList.some(row => row.id !== undefined && row.id !== null && row.id !== '');
+  if (!hasId) {
+    ElMessage.error('导入文件缺少 "id" 列，请使用系统导出的模板');
     return tableList;
   }
 
@@ -1968,19 +1988,22 @@ const compareAndFill = (tableList, importList) => {
     '本次申报产值': 'prodVal',
     '本次申报应付': 'payAmt',
     '施工期间': 'buildPeriod',
-    '计划付款期间': 'payDate'
+    '计划付款期间': 'payDate',
+    '成本复核产值': 'costProdVal',
+    '成本复核应付': 'costPayAmt'
   };
 
-  const map = new Map(importList.map(r => [String(r.uuid)?.trim(), r]));
-  const matchedUuids = new Set();
+  // 使用 id 构建映射
+  const map = new Map(importList.map(r => [String(r.id)?.trim(), r]));
+  const matchedIds = new Set();
   let count = 0;
 
   const newData = tableList.map((item) => {
-    const uuid = String(item.uuid)?.trim();
-    const src = map.get(uuid);
+    const id = String(item.id)?.trim();
+    const src = map.get(id);
     if (!src) return item;
 
-    matchedUuids.add(uuid);
+    matchedIds.add(id);
     const updated = { ...item };
     let changed = false;
 
@@ -2021,9 +2044,9 @@ const compareAndFill = (tableList, importList) => {
   });
 
   // 提示未匹配的行
-  const unmatched = importList.filter(r => !matchedUuids.has(String(r.uuid)?.trim()));
+  const unmatched = importList.filter(r => !matchedIds.has(String(r.id)?.trim()));
   if (unmatched.length) {
-    ElMessage.warning(`有 ${unmatched.length} 行数据未匹配到表格中的 uuid，已忽略`);
+    ElMessage.warning(`有 ${unmatched.length} 行数据未匹配到表格中的 id，已忽略`);
   }
 
   if (count === 0 && unmatched.length === 0) {
@@ -2042,7 +2065,7 @@ const exportMaterial = async () => {
     return;
   }
   const exportData = materialTable.value.map(item => ({
-    'uuid': item.uuid,          // 导出唯一标识,导入时需要通过这个唯一值ID进行数据回填
+    'id': item.id,          // 导出唯一标识,导入时需要通过这个唯一值ID进行数据回填
     '接收单号': item.recvBillNo,
     '材料名称': item.mtName,
     '材料规格': item.mtModel,
@@ -2117,6 +2140,8 @@ const handleMaterialMinorSave = async (data: any) => {
     updateMaterialMinorRow(rowIndex, { payAmt: safeNewValue.toNumber() });
     return;
   }
+  // 正常更新
+  updateMaterialMinorRow(rowIndex, { [column]: newValue });
 };
 
 const exportMaterialMinor = async () => {
@@ -2126,7 +2151,7 @@ const exportMaterialMinor = async () => {
     return;
   }
   const exportData = materialMinorTable.value.map(item => ({
-    'uuid': item.uuid,          // 导出唯一标识,导入时需要通过这个唯一值ID进行数据回填
+    'id': item.id,          // 导出唯一标识,导入时需要通过这个唯一值ID进行数据回填
     '接收单号': item.recvBillNo,
     '材料类别': item.mtName,
     '接收产值': item.recvProdAmt,

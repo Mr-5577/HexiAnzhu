@@ -168,18 +168,20 @@ export const materialColumns: any = computed<EditableColumn[]>(() => [
   {
     prop: "costProdVal",
     label: "成本复核产值",
-    editable: false,
-    thousandSeparator: true,
+    editType: "number",
+    editable: isSuperAdmin.value ? true : false, // 是否是超管角色
+    // thousandSeparator: true,
     width: 150,
-    formatType:"#,##0.00",
+    // formatType:"#,##0.00",
   },
   {
     prop: "costPayAmt",
     label: "成本复核应付",
-    editable: false,
-    thousandSeparator: true,
+    editType: "number",
+    editable: isSuperAdmin.value ? true : false, // 是否是超管角色
+    // thousandSeparator: true,
     width: 150,
-    formatType:"#,##0.00",
+    // formatType:"#,##0.00",
   },
   {
     label: "操作",
@@ -286,21 +288,21 @@ export const materialMinorColumns = computed<EditableColumn[]>(() => [
   {
     prop: "costProdVal",
     label: "成本复核产值",
-    editable: false,
+    editable: isSuperAdmin.value ? true : false, // 是否是超管角色
     editType: "number",
-    thousandSeparator: true,
+    // thousandSeparator: true,
     showOverflowTooltip: false,
-    formatType:"#,##0.00",
+    // formatType:"#,##0.00",
     width: 150,
   },
   {
     prop: "costPayAmt",
     label: "成本复核应付",
-    editable: false,
+    editable: isSuperAdmin.value ? true : false, // 是否是超管角色
     editType: "number",
-    thousandSeparator: true,
+    // thousandSeparator: true,
     showOverflowTooltip: false,
-    formatType:"#,##0.00",
+    // formatType:"#,##0.00",
     width: 150,
   },
   // {

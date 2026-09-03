@@ -3,25 +3,29 @@
   <div class="basic-form-content">
     <BillHeader :title="'非合同请款审批'" :contract-no="billData.bizNo || ''" :submitter="formData.userName || ''"
       :submit-time="formData.createDate || ''" :status="billData.status" :show-status="true"
-      :button-loading="submitLoading" :save-disabled="isDetail || !!billData.status"
-      :submit-disabled="isDetail || !!billData.status" :delete-disabled="isDetail || isAdd || !!billData.status"
-      :void-disabled="isDetail || isAdd || !!billData.status" :view-disabled="isAdd" @save="handleSave"
-      @submit="handleSubmit" @delete="handleDelete" @void="handleCancel" @viewFlow="handleViewProcess">
+      :button-loading="submitLoading" :save-disabled="isReadonly" :submit-disabled="isReadonly"
+      :delete-disabled="isDetail || isAdd || !!billData.status" :void-disabled="isDetail || isAdd || !!billData.status"
+      :view-disabled="isAdd" @save="handleSave" @submit="handleSubmit" @delete="handleDelete" @void="handleCancel"
+      @viewFlow="handleViewProcess">
     </BillHeader>
 
     <div class="form-scroll-area">
       <el-form ref="paymentFormRef" :model="formData" :rules="formRules" label-width="120px" class="adapt-form">
-        <BillInfo v-model="formData" :status="billData?.status || 0" :disabled="isDetail || !!billData.status"
+        <BillInfo v-model="formData" :status="billData?.status || 0" :disabled="isReadonly"
           :project-options="projectOptions" @project-change="changeProject" />
 
         <div class="item-card">
-          <div class="section-title">立项信息</div>
+          <div class="section-title">立项信息
+            <el-button type="primary" plain size="small" v-if="isSuperAdmin" @click="refreshProcess">
+              刷新
+            </el-button>
+          </div>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
               <el-form-item label="事项名称" required>
                 <el-input v-model="cstProcessData.processName" placeholder="" style="width: 100%" readonly disabled>
                   <template #append>
-                    <el-button @click="changeProcess" plain type="primary" :disabled="isDetail || !!billData.status">
+                    <el-button @click="changeProcess" plain type="primary" :disabled="isReadonly">
                       关联立项
                     </el-button>
                   </template>
@@ -60,7 +64,7 @@
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="归属月份" prop="belongMonth" required>
                 <el-date-picker v-model="formData.belongMonth" type="month" value-format="YYYY-MM-DD"
-                  placeholder="请选择归属月份" style="width: 100%" :disabled="isDetail || !!billData.status" />
+                  placeholder="请选择归属月份" style="width: 100%" :disabled="isReadonly" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
@@ -77,8 +81,7 @@
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="请款类型" prop="reqType" required>
-                <el-select v-model="formData.reqType" placeholder="请选择" style="width: 100%"
-                  :disabled="isDetail || !!billData.status">
+                <el-select v-model="formData.reqType" placeholder="请选择" style="width: 100%" :disabled="isReadonly">
                   <el-option label="正常请款" :value="0" />
                   <el-option label="来票冲账" :value="1" />
                 </el-select>
@@ -87,7 +90,7 @@
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <!-- 请款类型为来票冲账时 置灰不可编辑 -->
               <el-form-item label="是否最后一笔" prop="isLastRec" required>
-                <el-select v-model="formData.isLastRec" placeholder="请选择" style="width: 100%" :disabled="isDetail || !!billData.status || formData.reqType == 1
+                <el-select v-model="formData.isLastRec" placeholder="请选择" style="width: 100%" :disabled="isReadonly || formData.reqType == 1
                   ">
                   <el-option label="是" :value="1" />
                   <el-option label="否" :value="0" />
@@ -100,7 +103,7 @@
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="本次请款金额" prop="reqAmt" required>
                 <el-input-number v-model="formData.reqAmt" :precision="2" :controls="false" style="width: 100%"
-                  :disabled="isDetail || !!billData.status" />
+                  :disabled="isReadonly" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
@@ -136,7 +139,7 @@
             <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
               <el-form-item label="请款说明" prop="reqDesc">
                 <el-input v-model="formData.reqDesc" type="textarea" :rows="3" maxlength="500" show-word-limit
-                  placeholder="请输入" :disabled="isDetail || !!billData.status" />
+                  placeholder="请输入" :disabled="isReadonly" />
               </el-form-item>
             </el-col>
           </el-row>
@@ -145,7 +148,7 @@
         <!-- 扣款事项明细 -->
         <div class="item-card" v-if="showDeductionAndPayWay">
           <div class="section-title">款项调整</div>
-          <template v-if="isDetail || !!billData.status">
+          <template v-if="isReadonly">
             <base-table ref="dedTableRef" :columns="dedDetailColumns" :table-data="dedTable" :row-key="'uuid'"
               :pagination="false" :show-toolbar="false" :show-action-bar="false" :height="'200px'">
             </base-table>
@@ -185,7 +188,7 @@
               新增支付方式
             </el-button>
           </div>
-          <template v-if="isDetail || !!billData.status">
+          <template v-if="isReadonly">
             <base-table ref="tableRef" :columns="payWayDetailColumns" :table-data="payWayTable" :row-key="'uuid'"
               :pagination="false" :show-toolbar="false" :show-action-bar="false" :height="'200px'">
             </base-table>
@@ -213,7 +216,7 @@
         <!-- 发票登记 -->
         <div class="item-card">
           <div class="section-title">发票登记</div>
-          <template v-if="isDetail || !!billData.status">
+          <template v-if="isReadonly">
             <base-table ref="tableRef" :columns="invoiceMDetailColumns" :table-data="invoiceMTable" :row-key="'uuid'"
               :pagination="false" :show-toolbar="false" :show-action-bar="false" :height="'200px'">
               <template #annexName="{ row }">
@@ -272,19 +275,19 @@
         </div>
 
         <!-- 成本分摊 费用类型所属大类为建安类并且请款类型为正常请款0时显示 :visible="isShowCostAllocation && formData.reqType == 0"  -->
-        <CostAllocationCard v-if="menuStore.hasExactPermission(PERMISSIONS.COST_ALLOC_NCON_CST)" :visible="isShowCostAllocation"
-          :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'NCON_CST'"
-          :projId="formData.projId" :projName="formData.projName" :displayName="cstProcessData.processName"
-          :allocAmt="actualReqAmt" :bizBillId="paymentData.nconBillId" :cstMData="cstMData"
-          @selectData="getSelectCostAllocation" />
+        <CostAllocationCard v-if="menuStore.hasExactPermission(PERMISSIONS.COST_ALLOC_NCON_CST)"
+          :visible="isShowCostAllocation" :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn"
+          :bizType="'NCON_CST'" :projId="formData.projId" :projName="formData.projName"
+          :displayName="cstProcessData.processName" :allocAmt="actualReqAmt" :bizBillId="paymentData.nconBillId"
+          :cstMData="cstMData" @selectData="getSelectCostAllocation" />
 
         <!-- 相关附件 -->
         <div class="item-card">
           <div class="section-title">相关附件</div>
           <el-form-item label="上传附件">
             <base-upload v-model:file-list="annexFileList" :limit="9" :multiple="false" :showIcon="true" :showTip="true"
-              :maxSize="20" :unrestricted="true" :accept="''" button-text="选择文件" size="default"
-              :disabled="isDetail || !!billData.status" @success="handleFileSuccess"></base-upload>
+              :maxSize="20" :unrestricted="true" :accept="''" button-text="选择文件" size="default" :disabled="isReadonly"
+              @success="handleFileSuccess"></base-upload>
           </el-form-item>
         </div>
       </el-form>
@@ -456,7 +459,15 @@ const initFormData = () => ({
 });
 const formData = ref(initFormData());
 
-const costAllocationData = ref(null);
+const isReadonly = computed(() => {
+  // 超管保留编辑权限
+  if (isSuperAdmin.value) return false;
+  return isDetail.value || !!billData.value.status
+});
+// 是否是超管角色
+const isSuperAdmin = computed(() => {
+  return userStore.roleList?.some((role: any) => role.isSuper);
+});
 
 // 费用类型所属大类是不是建安类
 const isShowCostAllocation = computed(() => {
@@ -596,6 +607,20 @@ const handleDemandSelect = async (data) => {
     addPayWay();
   }
 };
+// 更新立项金额
+const refreshProcess = async () => {
+  if(!cstProcessData.value.id) return
+  try {
+    const res = await cstPaymentApi.getAccumByProcessId({
+      processId: cstProcessData.value.id,
+    });
+    if (res.code === 200 && res.data) {
+      cstProcessData.value.processAmt = res.data.processAmt;
+      cstProcessData.value.sumAppyAmt = res.data.sumAppyAmt;
+      cstProcessData.value.sumOwedAmt = res.data.sumOwedAmt;
+    }
+  } catch (error) { }
+}
 
 const dedTable = ref([]);
 const dedDetailColumns = [
