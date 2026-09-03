@@ -178,7 +178,6 @@ const columns: EditableColumn[] = [
     slots: { default: "amount" },
     editable: true,
     editType: "number",
-    precision: 2,
     placeholder: "请输入金额",
   },
   {

@@ -12,6 +12,7 @@
  *   ✅ 分页
  *   ✅ 可配置的工具栏
  *   ✅ 表头提示（在表头文字后显示自定义图标，鼠标悬停显示提示内容）
+ *   ✅ 合计行（支持 sum / avg / count / custom，通过 showSummary 或 summary 配置）
  *
  * 使用示例：
  *   <editable-table-vxe
@@ -20,6 +21,7 @@
  *     row-key="id"
  *     :edit-config="{ trigger: 'click', mode: 'cell' }"
  *     @data-change="handleDataChange"
+ *     :show-footer="true"
  *   />
  * ============================================================================
  -->
@@ -90,14 +92,25 @@
 
     <!-- ===== 分页组件 ===== -->
     <div class="pagination" v-if="pagination">
-      <vxe-pager
+      <!-- <vxe-pager
         v-model:current-page="internalCurrentPage"
         v-model:page-size="internalPageSize"
         :page-sizes="pageSizes"
         :layouts="paginationLayouts"
         :total="total"
         @page-change="handlePageChange"
-        size="small"
+        size="mini"
+        background
+      /> -->
+      <el-pagination
+        :current-page="currentPage"
+        :page-size="pageSize"
+        :page-sizes="pageSizes"
+        :total="total"
+        :layout="'total, sizes, prev, pager, next, jumper'"
+        @size-change="handlePageSizeChange"
+        @current-change="handleCurrentChange"
+        :size="'small'"
         background
       />
     </div>
@@ -231,8 +244,16 @@ export interface EditableColumn {
   multiple?: boolean;
 
   // ===== 数字输入相关 =====
-  /** 数字精度（小数位数） */
-  precision?: number;
+  /** 数字间隔 */
+  step?: number;
+  /** 数字输入类型：'number' | 'integer' | 'float'，默认 'float' */
+  numberType?: "number" | "integer" | "float";
+  /** 小数位数（当numberType设置为float时才生效） */
+  digits?: number;
+  /** 最小值，仅 number 类型有效 */
+  min?: number;
+  /** 最大值，仅 number 类型有效 */
+  max?: number;
 
   // ===== 级联选择相关 =====
   /** 级联选择器配置 */
@@ -255,8 +276,17 @@ export interface EditableColumn {
   onClick?: (row: any, column: EditableColumn) => void;
   /** 数据字典键名，从 dictData 中获取选项 */
   dict?: string;
-  /** 是否显示在汇总行 */
+  /** 是否显示在汇总行（简化开关，默认对数值列求和） */
   showSummary?: boolean;
+  /** 合计配置（高级用法，可指定类型和自定义函数） */
+  summary?: {
+    /** 合计类型：sum | avg | count | custom */
+    type: "sum" | "avg" | "count" | "custom";
+    /** 自定义合计函数，当 type 为 custom 时使用 */
+    customFunc?: (values: any[]) => any;
+    /** 合计值的格式化器 */
+    formatter?: (value: any) => string;
+  };
 }
 
 /**
@@ -325,6 +355,20 @@ interface Props {
     /** 是否手风琴模式（同时只能展开一个节点） */
     accordion?: boolean;
   };
+
+  // ===== 合计行 =====
+  /** 是否显示合计行 */
+  showFooter?: boolean;
+  /**
+   * 自定义合计方法
+   * @param data 当前表格数据（数组）
+   * @returns 二维数组，每个子数组代表一行合计行
+   */
+  footerMethod?: (params: { data: any[] }) => any[][];
+  /** 合计行数据（直接传入，与 footerMethod 二选一，优先级更高） */
+  footerData?: any[][];
+  /** 合计行样式（固定/浮动等） */
+  footerRowConfig?: { className?: string; style?: any };
 
   // ===== 选择模式 =====
   /** 选择模式：single（单选）| multiple（多选），默认 multiple */
@@ -404,6 +448,7 @@ const props = withDefaults(defineProps<Props>(), {
     "NextPage",
     "NextJump",
     "Sizes",
+    "Jump",
     "Total",
   ],
   showToolbar: false,
@@ -425,6 +470,10 @@ const props = withDefaults(defineProps<Props>(), {
   readonly: false,
   virtualScroll: false,
   virtualThreshold: 100,
+  showFooter: false,
+  footerMethod: undefined,
+  footerData: () => [],
+  footerRowConfig: () => ({}),
 });
 
 const emit = defineEmits<Emits>();
@@ -584,6 +633,18 @@ const gridOptions = computed<VxeGridProps>(() => ({
   showOverflow: true,
   showHeaderOverflow: true,
   keepSource: true,
+  // 合计行配置
+  showFooter: props.showFooter,
+  footerData:
+    props.footerData && props.footerData.length > 0
+      ? props.footerData
+      : undefined,
+  footerMethod:
+    props.footerData && props.footerData.length > 0
+      ? undefined
+      : props.footerMethod || defaultFooterMethod,
+  // 👇 合并默认合计行样式，外部可覆盖
+  footerRowConfig: props.footerRowConfig,
 }));
 
 // ============================================================================
@@ -703,7 +764,15 @@ const getEditRender = (col: EditableColumn): any => {
         name: "VxeNumberInput",
         props: {
           ...commonProps,
-          step: col.precision ? Math.pow(0.1, col.precision) : 0.01,
+          step: col.step ? col.step : 1, // 数字间隔
+          type: col.numberType || "float", // 默认 float
+          digits: col.digits ?? 2, // 控制小数位数,仅当 type='float' 时生效
+          min: col.min ?? 0,
+          max: col.max,
+          // 控制按钮配置项
+          controlConfig: {
+            enabled: false, // 不启用增减按钮
+          },
         },
       };
     }
@@ -799,6 +868,7 @@ const getOptions = (col: EditableColumn): any[] => {
  */
 const convertColumn = (col: EditableColumn): any => {
   // ===== 特殊列类型 =====
+  //   复选框列
   if (col.type === "checkbox") {
     return {
       type: "checkbox",
@@ -807,6 +877,16 @@ const convertColumn = (col: EditableColumn): any => {
       fixed: col.fixed,
     };
   }
+  //   单选框列
+  if (col.type === "radio") {
+    return {
+      type: "radio",
+      width: col.width || 50,
+      align: col.align || "center",
+      fixed: col.fixed,
+    };
+  }
+  //   序号列
   if (col.type === "seq") {
     return {
       type: "seq",
@@ -814,14 +894,6 @@ const convertColumn = (col: EditableColumn): any => {
       align: col.align || "center",
       fixed: col.fixed,
       title: col.title || "序号",
-    };
-  }
-  if (col.type === "radio") {
-    return {
-      type: "radio",
-      width: col.width || 50,
-      align: col.align || "center",
-      fixed: col.fixed,
     };
   }
 
@@ -911,6 +983,96 @@ const computedColumns = computed(() => {
 });
 
 // ============================================================================
+// 合计行相关功能
+// ============================================================================
+
+/**
+ * 递归获取所有叶子列（用于合计计算）
+ */
+const getAllLeafColumns = (cols: EditableColumn[]): EditableColumn[] => {
+  let leaves: EditableColumn[] = [];
+  cols.forEach((col) => {
+    if (col.children?.length) {
+      leaves = leaves.concat(getAllLeafColumns(col.children));
+    } else {
+      leaves.push(col);
+    }
+  });
+  return leaves;
+};
+
+/**
+ * 默认合计方法（加强版）
+ *
+ * 支持两种配置方式：
+ * 1. 简写：`showSummary: true` → 对数值列求和
+ * 2. 高级：`summary: { type: 'sum' | 'avg' | 'count' | 'custom', customFunc?, formatter? }`
+ *
+ * 注意：合计行仅对叶子列（没有 children 的列）生效，多级表头会自动展平。
+ */
+const defaultFooterMethod = ({ data }: { data: any[] }) => {
+  const leafColumns = getAllLeafColumns(props.columns);
+
+  // 找到第一个可作为合计标签的列（排除 checkbox/seq/radio）
+  const labelColumnIndex = leafColumns.findIndex(
+    (col) => col.type && ["checkbox", "seq", "radio"].includes(col.type || ""),
+  );
+
+  // 按列顺序生成合计值
+  const sumRow = leafColumns.map((col, index) => {
+    // 如果是第一个标签列，显示“合计”
+    if (index === labelColumnIndex) {
+      return "合计";
+    }
+
+    // 检查是否有合计配置（优先使用 summary 对象，其次使用 showSummary 布尔）
+    const hasSummary = !!(col.summary || col.showSummary);
+    if (!hasSummary) return "";
+
+    // 提取数值
+    const values = data
+      .map((row) => Number(row[col.field] ?? 0))
+      .filter((v) => !isNaN(v));
+
+    let result = 0;
+
+    // 如果配置了 summary 对象，按类型计算
+    if (col.summary) {
+      switch (col.summary.type) {
+        case "sum":
+          result = values.reduce((a, b) => a + b, 0);
+          break;
+        case "avg":
+          result = values.length
+            ? values.reduce((a, b) => a + b, 0) / values.length
+            : 0;
+          break;
+        case "count":
+          result = values.length;
+          break;
+        case "custom":
+          result = col.summary.customFunc?.(values) ?? 0;
+          break;
+        default:
+          result = 0;
+      }
+      // 如果有自定义格式化器，使用它
+      if (col.summary.formatter) {
+        return col.summary.formatter(result);
+      }
+    } else if (col.showSummary) {
+      // 简写模式：只求和
+      result = values.reduce((a, b) => a + b, 0);
+    }
+
+    // 如果没有指定 formatter，则直接返回数值（vxe-table 会原样显示）
+    return result;
+  });
+
+  return [sumRow]; // 返回二维数组，支持多行合计
+};
+
+// ============================================================================
 // 事件处理
 // ============================================================================
 
@@ -946,6 +1108,12 @@ const handleEditClosed = (params: any) => {
         oldValue: oldCellValue,
       });
     }
+    // 合计行数据更新（若显示合计）
+    if (props.showFooter) {
+      nextTick(() => {
+        gridRef.value?.updateFooter?.();
+      });
+    }
   }
 };
 
@@ -966,6 +1134,7 @@ const handleCheckboxAll = (params: any) => {
   selectedRows.value = selection;
   emit("selection-change", selectedRows.value);
 };
+
 /**
  * 递归查找列配置（支持多级表头）
  */
@@ -984,6 +1153,7 @@ const findColumnByField = (
   }
   return undefined;
 };
+
 /**
  * 单元格点击事件
  */
@@ -1003,9 +1173,21 @@ const handleCellClick = (params: any) => {
     event: params.event,
   });
 };
+/**
+ * element-plus 分页组件变化事件
+ */
+const handlePageSizeChange = (val: number): void => {
+  emit("update:pageSize", val);
+  emit("pagination-change", { pageSize: val, currentPage: props.currentPage });
+};
+
+const handleCurrentChange = (val: number): void => {
+  emit("update:currentPage", val);
+  emit("pagination-change", { pageSize: props.pageSize, currentPage: val });
+};
 
 /**
- * 分页变化事件
+ * vxe-pager 分页变化事件
  */
 const handlePageChange = (params: {
   currentPage: number;
@@ -1058,6 +1240,8 @@ defineExpose({
       internalData.value = [...actualData.value];
     }
   },
+  /** 更新合计行数据（手动触发重新计算） */
+  updateFooter: () => gridRef.value?.updateFooter?.(),
   /** 获取 vxe-grid 实例，用于高级操作 */
   getGridRef: () => gridRef.value,
   /** 清空所有选中 */
@@ -1134,6 +1318,10 @@ onMounted(() => {
   if (actualData.value && actualData.value.length > 0) {
     internalData.value = [...actualData.value];
   }
+  // 初始化时更新合计
+  if (props.showFooter) {
+    nextTick(() => gridRef.value?.updateFooter?.());
+  }
 });
 
 // 监听外部数据变化，重新同步到内部
@@ -1144,6 +1332,19 @@ watch(
       internalData.value = [...newData];
     } else {
       internalData.value = [];
+    }
+  },
+  { deep: false },
+);
+
+// watch 内部数据变化时刷新合计（数据编辑后自动更新）
+watch(
+  () => internalData.value,
+  () => {
+    if (props.showFooter) {
+      nextTick(() => {
+        gridRef.value?.updateFooter?.();
+      });
     }
   },
   { deep: false },
@@ -1298,19 +1499,99 @@ watch(
     }
   }
 }
+// 合计行统一样式（覆盖 vxe-table 默认）
+.table-wrapper {
+  :deep(.vxe-table--footer-wrapper) {
+    .vxe-table--footer-inner-wrapper {
+      height: 30px !important;
+    }
+    .vxe-footer--row {
+      height: 30px !important;
+      background: #f5f7fa !important;
+      .vxe-footer--column {
+        .vxe-cell {
+          min-height: 30px !important;
+          height: 30px !important;
+          line-height: 30px !important;
+          font-weight: 600;
+          color: #1a3c5e;
+        }
+      }
+    }
+  }
+}
 
+// ==================== 分页样式 ====================
 .pagination {
   display: flex;
   justify-content: flex-end;
   margin-top: 10px;
   flex-shrink: 0;
 
-  :deep(.vxe-pager) {
-    .vxe-pager--btn {
+  // 穿透修改 el-pagination 样式
+  :deep(.el-pagination) {
+    background: #fff;
+    padding: 4px 4px;
+    box-sizing: border-box;
+    border-radius: 6px;
+    // 可加轻微边框或阴影
+    // border: 1px solid #e2e8f0;
+    // box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+
+    // 上一页、下一页按钮
+    .btn-prev,
+    .btn-next {
       border-radius: 4px;
-      &.is-active {
-        background: linear-gradient(135deg, #05456e 0%, #4096cc 100%);
-        color: #fff;
+      border: 1px solid #dcdfe6;
+      background: #fff;
+      margin: 0 2px;
+      transition: all 0.2s;
+      &:hover:not(.is-disabled):not([disabled]) {
+        color: #409eff;
+        border-color: #409eff;
+        background: #ecf5ff;
+      }
+      // 禁用状态统一样式（包含类或属性）
+      &.is-disabled,
+      &[disabled] {
+        opacity: 0.9;
+        cursor: not-allowed;
+        // border-color: #e4e7ed; // 更淡的灰色边框
+      }
+    }
+
+    // 页码列表容器
+    .el-pager {
+      display: flex;
+      gap: 4px; // 按钮间距
+      li {
+        border-radius: 4px;
+        border: 1px solid transparent;
+        transition: all 0.2s;
+        text-align: center;
+        cursor: pointer;
+        &:hover:not(.is-active):not(.more) {
+          background: #f0f5ff;
+          color: #409eff;
+          border-color: #c6e2ff;
+        }
+        &.is-active {
+          background: linear-gradient(135deg, #05456e 0%, #4096cc 100%);
+          color: #fff;
+          box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+          border-color: transparent;
+          cursor: default;
+        }
+        // 省略号（more）样式
+        &.more {
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          color: #606266;
+          &:hover {
+            color: #409eff;
+          }
+        }
       }
     }
   }

@@ -104,7 +104,6 @@ const columns: EditableColumn[] = [
         slots: { default: "amount-format" },
         editable: true,
         editType: "number",
-        precision: 2,
         placeholder: "请输入收入",
       },
       {
@@ -114,7 +113,6 @@ const columns: EditableColumn[] = [
         slots: { default: "amount-format" },
         editable: true,
         editType: "number",
-        precision: 2,
         placeholder: "请输入成本",
       },
       {
@@ -124,7 +122,6 @@ const columns: EditableColumn[] = [
         slots: { default: "amount-format" },
         editable: true,
         editType: "number",
-        precision: 2,
         placeholder: "请输入利润",
       },
     ],
@@ -138,7 +135,6 @@ const columns: EditableColumn[] = [
         width: 120,
         editable: true,
         editType: "number",
-        precision: 1,
         placeholder: "请输入利润率",
         formatter: (value) => (value !== undefined ? `${value}%` : "-"),
       },

@@ -10,6 +10,7 @@
       :stripe="true"
       :show-toolbar="true"
       :pagination="false"
+      :show-footer="true"
       @data-change="handleDataChange"
       @selection-change="handleSelectionChange"
       @refresh="handleRefresh"
@@ -82,6 +83,7 @@ const tableData = ref([
 // ===== 列配置 =====
 const columns: EditableColumn[] = [
   { type: "checkbox", width: 50 },
+  { type: "seq", title: "序号"},
   { field: "id", title: "ID", width: 70 },
   {
     field: "contractNo",
@@ -114,8 +116,9 @@ const columns: EditableColumn[] = [
     width: 160,
     editable: true,
     editType: "number",
-    precision: 2,
+    digits: 2, // 小数位数
     placeholder: "请输入金额",
+    showSummary: true,
     formatter: (value) => {
       if (!value) return "-";
       return value.toLocaleString("zh-CN");
@@ -127,7 +130,7 @@ const columns: EditableColumn[] = [
     width: 100,
     editable: true,
     editType: "number",
-    precision: 0,
+    numberType: 'integer', // 整数类型
     placeholder: "请输入税率",
   },
   {

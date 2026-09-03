@@ -58,7 +58,7 @@ const generateData = (count: number) => {
   }));
 };
 
-const allData = generateData(45);
+const allData = generateData(400);
 const tableData = ref<any[]>([]);
 const currentPage = ref(1);
 const pageSize = ref(10);
@@ -106,7 +106,6 @@ const columns: EditableColumn[] = [
     slots: { default: "amount" },
     editable: true,
     editType: "number",
-    precision: 2,
     placeholder: "请输入金额",
     // ✅ 添加表头提示
     headerTip: {

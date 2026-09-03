@@ -277,7 +277,6 @@ const columns: EditableColumn[] = [
     slots: { default: "budget" },
     editable: true,
     editType: "number",
-    precision: 2,
     placeholder: "请输入预算",
   },
   {
