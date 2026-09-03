@@ -1,6 +1,6 @@
 <template>
   <!-- 菜单项（无子菜单或子菜单全部不可见） -->
-  <el-menu-item v-if="!hasVisibleChildren" :index="item.index" @click="handleClick">
+  <el-menu-item v-if="!hasVisibleChildren" :index="item.index" :title="item.title" @click="handleClick">
     <template #title>
       <div class="menu-content">
         <span class="menu-title">{{ item.title }}</span>
@@ -11,7 +11,7 @@
   <!-- 子菜单（有可见的子菜单项） -->
   <el-sub-menu v-else :index="item.index">
     <template #title>
-      <div class="menu-content">
+      <div class="menu-content" :title="item.title">
         <span class="menu-title">{{ item.title }}</span>
       </div>
     </template>
