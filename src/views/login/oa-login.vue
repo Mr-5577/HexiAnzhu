@@ -297,43 +297,6 @@ const resolveBizRoute = async (
   }
 };
 
-// 模拟登录
-const handleMockLogin = async () => {
-  checkIfUnmounted();
-
-  const existingToken =
-    localStorage.getItem("token") || sessionStorage.getItem("token");
-  const token = existingToken || "mock-token";
-  const query = route.query;
-  const bizItemCode = getQueryParam(query.bizItemCode) || "ZB_TND";
-  const billId = getQueryParam(query.billId) || "1";
-  const bizId = getQueryParam(query.bizId) || "1";
-  const bizKeyId = getQueryParam(query.bizKeyId) || "";
-  const subBizCode = getQueryParam(query.subBizCode) || "";
-  const mode = getQueryParam(query.mode) || "";
-
-  if (!existingToken) {
-    localStorage.setItem("token", token);
-  }
-  localStorage.setItem("accountNonExpired", "true");
-
-  ElMessage.success(
-    existingToken ? "MOCK 跳转中..." : "没有Token，请先登陆...",
-  );
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  checkIfUnmounted();
-  const targetPath = await resolveBizRoute(
-    bizItemCode,
-    billId,
-    bizId,
-    subBizCode,
-    mode,
-    bizKeyId,
-  );
-  await router.replace(targetPath);
-};
-
 // OA鉴权登录
 const handleOALogin = async (
   requestId: string,
@@ -433,11 +396,6 @@ const handleRouteParams = async () => {
       subBizCode,
       mode,
     });
-
-    if (isMock) {
-      await handleMockLogin();
-      return;
-    }
 
     if (!requestId || !oaUserId || !timestamp || !signature) {
       const missingParams = [];

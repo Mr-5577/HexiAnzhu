@@ -143,6 +143,49 @@ export const formatDecimal = (value: any): string => {
   return toBig(value).toFixed(2);
 };
 
+/**
+ * 将小数格式化为百分比字符串
+ *
+ * @param {any} value - 小数（如 0.0001）
+ * @param {number} decimalPlaces - 保留小数位数，默认 2
+ * @param {boolean} showSpace - 是否在数字和%之间加空格，默认 false
+ * @returns {string} 百分比字符串（如 "0.01%"）
+ *
+ * @example
+ * formatPercent(0.0001)          // => "0.01%"
+ * formatPercent(0.1234)          // => "12.34%"
+ * formatPercent(1)               // => "100.00%"
+ * formatPercent(null)            // => "-"
+ * formatPercent(0.0001, 4)       // => "0.0100%"
+ * formatPercent(0.1234, 0)       // => "12%"
+ */
+export const formatPercent = (
+  value: any,
+  decimalPlaces: number = 2,
+): string => {
+  // 边界处理
+  if (value === null || value === undefined || value === "") {
+    return "-";
+  }
+
+  const num = toBig(value);
+  // 非法值
+  if (!num.isFinite() || num.isNaN()) {
+    return "-";
+  }
+
+  // 乘以100得到百分比数值
+  const percent = num.times(100);
+  
+  // 如果为0，返回指定显示
+  if (percent.eq(0)) {
+    return '0';
+  }
+  // 使用 formatThousandWithPlaces 格式化（自带千分位）
+  const formatted = formatThousandWithPlaces(percent.toNumber(), decimalPlaces);
+  return formatted + "%";
+};
+
 // ============================================
 // 三、加法运算
 // ============================================

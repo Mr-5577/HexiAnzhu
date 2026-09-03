@@ -427,7 +427,6 @@ const handlePaginationChange = (params: any) => {
 };
 
 const handleExport = async () => {
-    if (!queryParams.value.projId) return;
     try {
         exportLoading.value = true;
         const params = buildParams();
