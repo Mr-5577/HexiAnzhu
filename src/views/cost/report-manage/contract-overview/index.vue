@@ -31,7 +31,8 @@
                 </el-form-item>
 
                 <el-form-item label="甲方签约公司" prop="companyId">
-                    <el-select v-model="queryParams.companyId" placeholder="请选择公司" clearable style="width: 220px">
+                    <el-select v-model="queryParams.companyId" placeholder="请选择公司" clearable filterable
+                        style="width: 220px">
                         <el-option v-for="item in companyOptions" :key="item.id" :label="item.compName"
                             :value="item.id" />
                     </el-select>
@@ -155,7 +156,6 @@ const projectData = computed(() => {
     }
 });
 
-// ============ 列配置 ===========
 const columns: TableColumnItem[] = [
     { type: "index", label: "序号", width: 60, fixed: "left" },
     { prop: "segName", label: "业务板块", width: 80, fixed: "left" },
@@ -186,6 +186,24 @@ const columns: TableColumnItem[] = [
                 label: "税率",
                 width: 80,
                 formatter: (row) => row.taxRate ? `${row.taxRate}%` : "-",
+            },
+            {
+                prop: "pbAmt",
+                label: "应交履约保证金",
+                width: 120,
+                formatter: (row) => formatThousandWithPlaces(row.pbAmt || 0),
+            },
+            {
+                prop: "pbRecvAmt",
+                label: "已交履约保证金",
+                width: 120,
+                formatter: (row) => formatThousandWithPlaces(row.pbRecvAmt || 0),
+            },
+            {
+                prop: "pbRefundAmt",
+                label: "已退履约保证金",
+                width: 120,
+                formatter: (row) => formatThousandWithPlaces(row.pbRefundAmt || 0),
             },
             { prop: "needSettle", label: "是否需办结算", width: 110 },
         ],
@@ -302,16 +320,20 @@ const columns: TableColumnItem[] = [
             },
         ],
     },
-
-    // ===== 发票 =====
     {
         label: "发票",
         children: [
             {
                 prop: "invcAmt",
-                label: "开票金额",
-                width: 100,
+                label: "开票金额(含税)",
+                width: 120,
                 formatter: (row) => formatThousandWithPlaces(row.invcAmt || 0),
+            },
+            {
+                prop: "invcNotTaxAmt",
+                label: "开票金额(不含税)",
+                width: 140,
+                formatter: (row) => formatThousandWithPlaces(row.invcNotTaxAmt || 0),
             },
             {
                 prop: "reqInvOweAmt",
@@ -437,6 +459,9 @@ const handleExport = async () => {
                 companyName: "甲方签约公司",
                 agentName: "甲方经办人",
                 signDate: "签订日期",
+                pbAmt: "应交履约保证金",
+                pbRecvAmt: "已交履约保证金",
+                pbRefundAmt: "已退履约保证金",
                 taxRate: "税率",
                 needSettle: "是否需办结算",
                 signAmt: "合同签约金额",
@@ -455,7 +480,8 @@ const handleExport = async () => {
                 paidAmt: "已付金额",
                 reqOweAmt: "请款欠款金额",
                 payOweAmt: "应付欠款金额",
-                invcAmt: "开票金额",
+                invcAmt: "开票金额(含税)",
+                invcNotTaxAmt: "开票金额(不含税)",
                 reqInvOweAmt: "请款欠票额",
                 payInvOweAmt: "应付欠票额",
                 paidInvOweAmt: "已付欠票额"

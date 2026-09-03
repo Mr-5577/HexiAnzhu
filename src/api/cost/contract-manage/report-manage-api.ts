@@ -59,4 +59,52 @@ export const reportManageApi = {
       "post",
     );
   },
+  /** 目标成本对比分析 */
+  getTargetCostAnalyze: (data: any) => {
+    return http.post("/cost/report/targetCostAnalyze", data);
+  },
+  /** 导出 目标成本对比分析 */
+  exportTargetCostAnalyze: (
+    data: any,
+    filename: string = "目标成本对比分析.xlsx",
+  ) => {
+    return http.exportFile(
+      "/cost/report/targetCostAnalyze",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
+    );
+  },
+  /** 目标成本执行概览 */
+  getDynamicReport: (data: any) => {
+    return http.post("/cost/report/dynamicReport", data);
+  },
+  /** 导出 目标成本执行概览 */
+  exportDynamicReport: (
+    data: any,
+    filename: string = "目标成本执行概览.xlsx",
+  ) => {
+    return http.exportFile(
+      "/cost/report/dynamicReport",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
+    );
+  },
+  /** 目标成本执行概览明细 */
+  getDynamicReportDetail: (data: any) => {
+    return http.post("/cost/report/dynamicReportDetail", data);
+  },
+  /** 导出 目标成本执行概览明细 */
+  exportDynamicReportDetail: (
+    data: any,
+    filename: string = "目标成本执行概览明细.xlsx",
+  ) => {
+    return http.exportFile(
+      "/cost/report/dynamicReportDetail",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
+    );
+  },
 };
