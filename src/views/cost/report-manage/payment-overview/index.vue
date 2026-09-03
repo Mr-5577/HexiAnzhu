@@ -5,8 +5,7 @@
     <div class="search-card">
       <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="80px" class="search-form">
         <el-form-item label="业务板块" prop="segId">
-          <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px" filterable
-            @change="changeSeg">
+          <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px" @change="changeSeg">
             <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
           </el-select>
         </el-form-item>
@@ -81,16 +80,17 @@
           <el-date-picker v-model="queryParams.statMonth" type="month" value-format="YYYY-MM" placeholder="请选择支付统计月"
             style="width: 220px" />
         </el-form-item>
-
-        <el-form-item label="费用类型" prop="finaTypeId">
-          <el-cascader v-model="queryParams.finaTypeId" :options="feeTypeOptions" :show-all-levels="false" :props="{
-            expandTrigger: 'hover',
-            emitPath: false,
-            checkStrictly: false,
-            value: 'id',
-            label: 'finaTypeName',
-            children: 'children',
-          }" placeholder="请选择费用类型" style="width: 220px" filterable clearable />
+        <el-form-item label="费用类型" prop="finaTypeIds">
+          <el-cascader v-model="queryParams.finaTypeIds" :options="feeTypeOptions" :collapse-tags="true"
+            :collapse-tags-tooltip="true" :max-collapse-tags="1" :show-all-levels="false" :props="{
+              expandTrigger: 'hover',
+              emitPath: false,
+              checkStrictly: false,
+              value: 'id',
+              label: 'finaTypeName',
+              children: 'children',
+              multiple: true,
+            }" placeholder="请选择费用类型" style="width: 220px" filterable clearable />
         </el-form-item>
 
         <el-form-item class="action-buttons">
@@ -118,13 +118,23 @@
 
     <!-- 统计卡片 -->
     <div class="statistics-card">
+      <!-- 单位切换 -->
+      <div class="unit-setting">
+        <span class="unit-label">单位</span>
+        <el-radio-group v-model="unitMode" size="small">
+          <el-radio-button value="元">元</el-radio-button>
+          <el-radio-button value="万元">万元</el-radio-button>
+        </el-radio-group>
+      </div>
       <div class="stat-item stat-item-request">
         <div class="stat-icon"><el-icon>
             <Money />
           </el-icon></div>
         <div class="stat-content">
           <span class="stat-label">请款金额</span>
-          <span class="stat-value">{{ formatThousandWithPlaces(statistics.totalRequestAmt) }}</span>
+          <span class="stat-value">{{ formatAmount(statistics.totalRequestAmt) }}
+            <span class="stat-unit">{{ unitMode }}</span>
+          </span>
         </div>
       </div>
       <div class="stat-item stat-item-adjust">
@@ -133,7 +143,9 @@
           </el-icon></div>
         <div class="stat-content">
           <span class="stat-label">款项调整金额</span>
-          <span class="stat-value">{{ formatThousandWithPlaces(statistics.totalAdjustAmt) }}</span>
+          <span class="stat-value">{{ formatAmount(statistics.totalAdjustAmt) }}
+            <span class="stat-unit">{{ unitMode }}</span>
+          </span>
         </div>
       </div>
       <div class="stat-item stat-item-actual">
@@ -142,7 +154,9 @@
           </el-icon></div>
         <div class="stat-content">
           <span class="stat-label">实际请款金额</span>
-          <span class="stat-value">{{ formatThousandWithPlaces(statistics.totalActualRequestAmt) }}</span>
+          <span class="stat-value">{{ formatAmount(statistics.totalActualRequestAmt) }}
+            <span class="stat-unit">{{ unitMode }}</span>
+          </span>
         </div>
       </div>
       <div class="stat-item stat-item-paid">
@@ -151,7 +165,9 @@
           </el-icon></div>
         <div class="stat-content">
           <span class="stat-label">已付金额(累计)</span>
-          <span class="stat-value">{{ formatThousandWithPlaces(statistics.totalPaidAmt) }}</span>
+          <span class="stat-value">{{ formatAmount(statistics.totalPaidAmt) }}
+            <span class="stat-unit">{{ unitMode }}</span>
+          </span>
         </div>
       </div>
       <div class="stat-item stat-item-unpaid">
@@ -160,7 +176,9 @@
           </el-icon></div>
         <div class="stat-content">
           <span class="stat-label">未付金额</span>
-          <span class="stat-value">{{ formatThousandWithPlaces(statistics.totalUnpaidAmt) }}</span>
+          <span class="stat-value">{{ formatAmount(statistics.totalUnpaidAmt) }}
+            <span class="stat-unit">{{ unitMode }}</span>
+          </span>
         </div>
       </div>
     </div>
@@ -206,7 +224,7 @@ const queryParams = ref({
   payStatus: undefined,
   // statMonth: dayjs().format("YYYY-MM"),
   statMonth: undefined,
-  finaTypeId: undefined,
+  finaTypeIds: [],
 });
 
 const segOptions = ref([]);
@@ -234,7 +252,7 @@ const currentPage = ref(1);
 const pageSize = ref(20);
 const total = ref(0);
 const exportLoading = ref(false);
-
+const unitMode = ref<'元' | '万元'>('万元');
 const statistics = ref({
   totalRequestAmt: 0,
   totalAdjustAmt: 0,
@@ -317,7 +335,20 @@ const paginatedData = computed(() => {
   const end = start + pageSize.value;
   return tableData.value.slice(start, end);
 });
-
+/**
+ * 根据单位模式格式化金额
+ * @param value 原始金额（单位：元）
+ * @returns 格式化后的字符串（含单位）
+ */
+const formatAmount = (value: number): string => {
+  if (value === undefined || value === null || isNaN(value)) return '0';
+  let num = value;
+  if (unitMode.value === '万元') {
+    num = value / 10000;
+  }
+  // 保留两位小数
+  return formatThousandWithPlaces(num, 2);
+};
 // ============ 计算统计数据 ============
 const calcStatistics = (data: any[]) => {
   if (!data || data.length === 0) {
@@ -507,7 +538,7 @@ const changeSeg = (val: number) => {
   queryParams.value.projIds = [];        // 清空项目
   queryParams.value.payCompId = undefined;
   companyOptions.value = [];
-  queryParams.value.finaTypeId = undefined;
+  queryParams.value.finaTypeIds = [];
   feeTypeOptions.value = [];
   if (val) {
     if (val === 9999) {
@@ -665,6 +696,31 @@ onMounted(async () => {
     border: 1px solid #edf2f7;
     flex-wrap: wrap;
     gap: 4px 0;
+    position: relative;
+
+    .unit-setting {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-right: 24px;
+      padding-right: 24px;
+      border-right: 1px solid #edf2f7;
+      flex-shrink: 0;
+
+      .unit-label {
+        font-size: 13px;
+        color: #718096;
+        font-weight: 500;
+      }
+
+      .el-radio-group {
+        .el-radio-button__inner {
+          padding: 4px 10px;
+          font-size: 12px;
+          border-radius: 4px;
+        }
+      }
+    }
 
     .stat-item {
       display: flex;
@@ -697,11 +753,16 @@ onMounted(async () => {
         }
 
         .stat-value {
-          font-size: 20px;
+          font-size: 18px;
           font-weight: 700;
           color: #1a2332;
           font-variant-numeric: tabular-nums;
           letter-spacing: 0.3px;
+
+          .stat-unit {
+            font-size: 13px; // 比数值略小，但依然清晰
+            font-weight: 600; // 加粗，更醒目
+          }
         }
       }
 

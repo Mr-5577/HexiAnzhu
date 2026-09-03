@@ -5,14 +5,14 @@
         <div class="search-card">
             <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px" class="search-form">
                 <el-form-item label="业务板块" prop="segId">
-                    <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 180px" filterable
+                    <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 180px"
                         @change="changeSeg">
                         <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
                     </el-select>
                 </el-form-item>
 
-                <el-form-item label="项目名称" prop="projId">
-                    <el-cascader v-model="queryParams.projId" :options="projectData" :collapse-tags="true"
+                <el-form-item label="项目名称" prop="projIds">
+                    <el-cascader v-model="queryParams.projIds" :options="projectData" :collapse-tags="true"
                         :collapse-tags-tooltip="true" :max-collapse-tags="1" :show-all-levels="false" :props="{
                             expandTrigger: 'hover',
                             emitPath: false,
@@ -30,8 +30,8 @@
                         style="width: 220px" />
                 </el-form-item>
 
-                <el-form-item label="支付公司" prop="compId">
-                    <el-select v-model="queryParams.compId" placeholder="请选择公司" clearable filterable
+                <el-form-item label="支付公司" prop="payCompId">
+                    <el-select v-model="queryParams.payCompId" placeholder="请选择公司" clearable filterable
                         style="width: 200px">
                         <el-option v-for="item in companyOptions" :key="item.id" :label="item.compName"
                             :value="item.id" />
@@ -108,8 +108,8 @@ const router = useRouter();
 const queryParams = ref({
     reqNo: undefined,
     segId: undefined,
-    projId: [],
-    compId: undefined,
+    projIds: [],
+    payCompId: undefined,
     payDate: [],
     finaOrgId: undefined,
 });
@@ -153,7 +153,7 @@ const columns: TableColumnItem[] = [
     { prop: "finaTypeName", label: "费用类型", width: 100 },
     { prop: "finaSubName", label: "科目", width: 120 },
     { prop: "payWayName", label: "支付方式", width: 100 },
-    { prop: "payCompName", label: "支付公司", width: 150 },
+    { prop: "compName", label: "支付公司", width: 150 },
     { prop: "bankName", label: "收款方开户行", width: 150 },
     { prop: "accountName", label: "收款方账户名", width: 150 },
     { prop: "bankAccount", label: "收款方账号", width: 150 },
@@ -292,8 +292,8 @@ const selectedDefaultSeg = () => {
 }
 // 板块切换
 const changeSeg = (val: number) => {
-    queryParams.value.projId = [];        // 清空项目
-    queryParams.value.compId = undefined;
+    queryParams.value.projIds = [];        // 清空项目
+    queryParams.value.payCompId = undefined;
     companyOptions.value = [];
     queryParams.value.finaOrgId = undefined;
     orgOptions.value = [];
@@ -343,8 +343,8 @@ const initQueryParams = () => {
             console.log("解析路由参数成功", routeData);
             if (routeData) {
                 queryParams.value.segId = routeData.segId;
-                queryParams.value.projId = [routeData.projId];
-                queryParams.value.compId = routeData.compId;
+                queryParams.value.projIds = [routeData.projId];
+                queryParams.value.payCompId = routeData.compId;
                 queryParams.value.reqNo = routeData.reqNo;
                 // 加载地产板块的公司
                 getCompanyList(routeData.segId);
