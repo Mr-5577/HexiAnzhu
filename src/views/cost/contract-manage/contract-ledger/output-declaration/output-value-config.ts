@@ -1,10 +1,13 @@
 import { computed, type ComputedRef, type Ref } from "vue";
 import type { EditableColumn } from "@/components/base/editable-table.vue";
 import type { NavCard } from "@/composables/use-form-layout";
-import { AddProcessSrcEnum, invoiceStatusEnum } from "@/constants/contract-manage/enums";
+import {
+  AddProcessSrcEnum,
+  invoiceStatusEnum,
+} from "@/constants/contract-manage/enums";
 import { getEnumLabel, getOptionsLabelById } from "@/utils/enum";
 import { useUserStore } from "@/stores/user-store";
-
+import { dateUtil } from "@/utils/date-util";
 
 const userStore = useUserStore();
 // 是否是超管角色
@@ -12,7 +15,7 @@ const isSuperAdmin = computed(() => {
   return userStore.roleList?.some((role: any) => role.isSuper);
 });
 /** 悬浮定位栏配置 */
-  // —— 悬浮定位栏（仅用于界面风格，不影响逻辑）——
+// —— 悬浮定位栏（仅用于界面风格，不影响逻辑）——
 export const NAV_CARDS: NavCard[] = [
   { id: "card-base", icon: "📋", label: "合同信息" },
   { id: "card-prod", icon: "📊", label: "产值信息" },
@@ -86,7 +89,7 @@ export const materialColumns: any = computed<EditableColumn[]>(() => [
     editType: "number",
     // thousandSeparator: true,
     showOverflowTooltip: false,
-    formatType:"#,##0.00",
+    formatType: "#,##0.00",
     width: 120,
   },
   {
@@ -96,7 +99,7 @@ export const materialColumns: any = computed<EditableColumn[]>(() => [
     editType: "number",
     // thousandSeparator: true,
     showOverflowTooltip: false,
-    formatType:"#,##0.00",
+    formatType: "#,##0.00",
     width: 150,
   },
   {
@@ -106,7 +109,7 @@ export const materialColumns: any = computed<EditableColumn[]>(() => [
     editType: "number",
     // thousandSeparator: true,
     showOverflowTooltip: false,
-    formatType:"#,##0.00",
+    formatType: "#,##0.00",
     width: 100,
   },
   {
@@ -114,9 +117,9 @@ export const materialColumns: any = computed<EditableColumn[]>(() => [
     label: "本次申报产值",
     editable: true,
     editType: "number",
-   // thousandSeparator: true,
+    // thousandSeparator: true,
     showOverflowTooltip: false,
-    formatType:"#,##0.00",
+    formatType: "#,##0.00",
     width: 140,
   },
   // {
@@ -136,7 +139,7 @@ export const materialColumns: any = computed<EditableColumn[]>(() => [
     editType: "number",
     // thousandSeparator: true,
     showOverflowTooltip: false,
-    formatType:"#,##0.00",
+    formatType: "#,##0.00",
     width: 140,
   },
   {
@@ -191,8 +194,6 @@ export const materialColumns: any = computed<EditableColumn[]>(() => [
   },
 ]);
 
-
-
 export const materialMinorColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {
@@ -216,7 +217,7 @@ export const materialMinorColumns = computed<EditableColumn[]>(() => [
     editType: "number",
     // thousandSeparator: true,
     showOverflowTooltip: false,
-    formatType:"#,##0.00",
+    formatType: "#,##0.00",
     width: 150,
   },
   // {
@@ -234,9 +235,9 @@ export const materialMinorColumns = computed<EditableColumn[]>(() => [
     label: "本次申报产值",
     editable: true,
     editType: "number",
-   // thousandSeparator: true,
+    // thousandSeparator: true,
     showOverflowTooltip: false,
-    formatType:"#,##0.00",
+    formatType: "#,##0.00",
     width: 150,
   },
   // {
@@ -256,7 +257,7 @@ export const materialMinorColumns = computed<EditableColumn[]>(() => [
     editType: "number",
     // thousandSeparator: true,
     showOverflowTooltip: false,
-    formatType:"#,##0.00",
+    formatType: "#,##0.00",
     width: 150,
   },
   {
@@ -326,10 +327,9 @@ export const materialMinorColumns = computed<EditableColumn[]>(() => [
   },
 ]);
 
-
 //非甲供材
 interface ProdColumnOptions {
-  paymentTypeOptions: Ref<any[]>;  // 项目选项（响应式）
+  paymentTypeOptions: Ref<any[]>; // 项目选项（响应式）
 }
 
 export const createProdColumns = (options: ProdColumnOptions) => {
@@ -348,7 +348,8 @@ export const createProdColumns = (options: ProdColumnOptions) => {
       optionValueField: "id",
       options: paymentTypeOptions.value || [],
       width: 100,
-      formatter: (row:any)=> (getOptionsLabelById(paymentTypeOptions.value,row.payTypeId)),
+      formatter: (row: any) =>
+        getOptionsLabelById(paymentTypeOptions.value, row.payTypeId),
     },
     {
       prop: "payRate",
@@ -379,7 +380,7 @@ export const createProdColumns = (options: ProdColumnOptions) => {
       label: "本次申请产值",
       editable: true,
       editType: "number",
-     // thousandSeparator: true,
+      // thousandSeparator: true,
       showOverflowTooltip: false,
       //formatType:"#,##0.00",
       width: 120,
@@ -448,4 +449,47 @@ export const createProdColumns = (options: ProdColumnOptions) => {
     //   fixed: "right",
     // },
   ]);
-}
+};
+
+// ----- 增强日期解析 -----
+export const parseDateInput = (input) => {
+  if (input === undefined || input === null || input === "") return null;
+  const str = String(input).trim();
+  if (!str) return null;
+
+  // 1. Excel 日期序列号（整数，约 1000~100000）
+  const num = Number(str);
+  if (!isNaN(num) && Number.isInteger(num) && num > 1000 && num < 100000) {
+    const d = new Date((num - 25569) * 86400 * 1000);
+    if (!isNaN(d.getTime())) {
+      const y = d.getUTCFullYear();
+      const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+      const day = String(d.getUTCDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    }
+  }
+  // 2. 先尝试标准化分隔符（将 / 替换为 -），统一为横杠处理
+  let normalized = str.replace(/\//g, "-");
+
+  // 2. 尝试多种常见格式
+  const formats = [
+    "YYYY-MM-DD",
+    "YYYY-M-D",
+    "YYYY/MM/DD",
+    "YYYY/M/D",
+    "YYYY年MM月DD日",
+    "YYYY年M月D日",
+  ];
+  // 移除 formats 中重复项，保留首次出现
+  const uniqueFormats = [...new Set(formats)];
+  for (const fmt of uniqueFormats) {
+    const d = dateUtil(normalized, fmt);
+    if (d.isValid()) return d.format("YYYY-MM-DD");
+  }
+
+  // 3. 兜底：让 dateUtil 自动解析
+  const d = dateUtil(str);
+  if (d.isValid()) return d.format("YYYY-MM-DD");
+
+  return null; // 无法解析
+};

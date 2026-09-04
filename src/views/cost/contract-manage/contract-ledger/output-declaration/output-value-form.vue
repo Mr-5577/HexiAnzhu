@@ -428,7 +428,7 @@ import { formType } from "@/types/form/form-types";
 import { dateUtil } from "@/utils/date-util";
 import { outputDeclarationApi } from "@/api/cost/contract-manage/output-declaration-api";
 import ChooseMaterialValDialog from "./choose-martrial-val-dialog.vue";
-import { createProdColumns, materialColumns, materialMinorColumns, NAV_CARDS } from "./output-value-config";
+import { createProdColumns, materialColumns, materialMinorColumns, NAV_CARDS, parseDateInput } from "./output-value-config";
 import { useFormLayout } from "@/composables/use-form-layout";
 import FormCard from "@/components/base/base-form-card.vue";
 import PickInput from "@/components/base/base-pick-input.vue";
@@ -2015,10 +2015,13 @@ const compareAndFill = (tableList, importList) => {
       // 施工期间、计划付款期间是日期处理
       if (field === 'payDate' || field === 'buildPeriod') {
         // 先判断是否为空值
-        if (raw === undefined || raw === null || raw === '') return;
-        const d = dateUtil(raw);
-        if (!d.isValid()) return;
-        val = d.format("YYYY-MM-DD");
+        // if (raw === undefined || raw === null || raw === '') return;
+        // const d = dateUtil(raw);
+        // if (!d.isValid()) return;
+        // val = d.format("YYYY-MM-DD");
+        const parsed = parseDateInput(raw);
+        if (parsed === null) return; // 解析失败则跳过该字段
+        val = parsed;
       } else {
         const num = Number(raw);
         if (isNaN(num)) return;

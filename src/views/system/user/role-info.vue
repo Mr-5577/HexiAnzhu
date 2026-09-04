@@ -19,7 +19,12 @@ const userStore = useUserStore();
 
 const userRoles = computed(() => userStore.roleList);
 
-const colors = ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399', '#9B59B6', '#1ABC9C', '#3498DB'];
+const colors = [
+  '#6B7B8D', // 灰蓝
+  '#7F8C8D', // 灰绿
+  '#6C8B8B', // 灰青
+  '#9A8B7A', // 灰棕
+];
 
 const getColor = (role: any) => {
     if (role.isSuper) return '#F56C6C';
