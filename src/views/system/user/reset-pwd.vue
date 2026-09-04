@@ -115,7 +115,7 @@ const handleSubmit = async () => {
   try {
     saveLoading.value = true;
     const params = {
-      username: userInfo.value.empNo,
+      username: userInfo.value.userName,
       oldPassword: md5(formData.value.oldPassword),
       password: md5(formData.value.password),
     };
