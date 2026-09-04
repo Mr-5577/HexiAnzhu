@@ -92,7 +92,7 @@ const columns: EditableColumn[] = [
     editable: true,
     editType: "input",
     placeholder: "请输入合同编号",
-    disabled: (row: any) => row.id === 1,
+    disabled: false,
   },
   {
     field: "contractName",
