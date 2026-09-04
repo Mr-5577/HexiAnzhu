@@ -98,9 +98,9 @@ export interface HeaderTipConfig {
  */
 export interface EditableColumn {
     /** 字段名，对应数据中的键 */
-    field?: string;
+    prop?: string;
     /** 表头标题 */
-    title?: string;
+    label?: string;
     /** 列宽度（px） */
     width?: number | string;
     /** 最小宽度（px） */
@@ -119,8 +119,8 @@ export interface EditableColumn {
         header?: string; // 表头插槽名
         edit?: string; // 编辑状态插槽名
     };
-    /** 列类型：checkbox（多选）| seq（序号）| radio（单选） */
-    type?: "checkbox" | "seq" | "radio";
+    /** 列类型：checkbox（多选）| index（序号）| radio（单选） */
+    type?: "checkbox" | "index" | "radio";
     /** 是否为树形节点列（显示展开箭头） */
     treeNode?: boolean;
     /** 表头提示配置 */
@@ -586,7 +586,7 @@ const getEditRender = (col: EditableColumn): any => {
                     step: col.step ? col.step : 1, // 数字间隔
                     type: 'float',
                     digits: 2, // 小数位数
-                    min: col.min ?? 0,
+                    min: col.min,
                     max: col.max,
                 },
             };
@@ -685,13 +685,13 @@ const convertColumn = (col: EditableColumn): any => {
             fixed: col.fixed,
         };
     }
-    if (col.type === "seq") {
+    if (col.type === "index") {
         return {
             type: "seq",
             width: col.width || 60,
             align: col.align || "center",
             fixed: col.fixed,
-            title: col.title || "序号",
+            title: col.label || "序号",
         };
     }
     if (col.type === "radio") {
@@ -704,8 +704,8 @@ const convertColumn = (col: EditableColumn): any => {
     }
 
     const baseCol: any = {
-        field: col.field,
-        title: col.title,
+        field: col.prop,
+        title: col.label,
         width: col.width,
         minWidth: col.minWidth,
         align: col.align || "center",
@@ -724,10 +724,10 @@ const convertColumn = (col: EditableColumn): any => {
     }
 
     // 如果配置了 headerTip，使用自定义表头渲染
-    if (col.headerTip && col.title) {
+    if (col.headerTip && col.label) {
         // 如果用户已经自定义了 slots.header，则不覆盖
         if (!baseCol.slots.header) {
-            baseCol.slots.header = createHeaderWithTip(col.title, col.headerTip);
+            baseCol.slots.header = createHeaderWithTip(col.label, col.headerTip);
         }
     }
 
@@ -811,7 +811,7 @@ const defaultFooterMethod = ({ data }: { data: any[] }) => {
 
     // 找到第一个可作为合计标签的列
     const labelColumnIndex = leafColumns.findIndex(
-        (col) => col.type && ["checkbox", "seq", "radio"].includes(col.type || ""),
+        (col) => col.type && ["checkbox", "index", "radio"].includes(col.type || ""),
     );
 
     // 按列顺序生成合计值
@@ -828,7 +828,7 @@ const defaultFooterMethod = ({ data }: { data: any[] }) => {
         // 提取数值
         // 使用 BigNumber 提取数值（避免精度丢失）
         const bnValues = data
-            .map((row) => toBig(row[col.field] ?? 0))
+            .map((row) => toBig(row[col.prop] ?? 0))
             .filter((bn) => bn.isFinite() && !bn.isNaN());
 
         let result: BigNumber;
@@ -937,7 +937,7 @@ const findColumnByField = (
     field: string
 ): EditableColumn | undefined => {
     for (const col of columns) {
-        if (col.field === field) {
+        if (col.prop === field) {
             return col;
         }
         if (col.children) {
@@ -953,16 +953,16 @@ const findColumnByField = (
 const handleCellClick = (params: any) => {
     // 根据点击列的 field 匹配原始列配置
     const field = params.column.field;
+    let col: EditableColumn | undefined;
     if (field) {
-        const col = findColumnByField(props.columns, field);
+        col = findColumnByField(props.columns, field);
         if (col?.clickable && typeof col.onClick === 'function') {
             col.onClick(params.row, col);
         }
     }
-    // 继续触发全局事件，供父组件监听
     emit("cell-click", {
         row: params.row,
-        column: params.column,
+        column: col || params.column, // ✅ 优先传递原始列，找不到时兜底
         event: params.event,
     });
 };
@@ -1226,7 +1226,7 @@ watch(
             //   可点击单元格样式
             .clickable-cell {
                 cursor: pointer;
-                color: #1890ff;
+                color: #1890ff !important;
 
                 &:hover {
                     text-decoration: underline;

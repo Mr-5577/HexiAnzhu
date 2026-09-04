@@ -231,15 +231,15 @@ const projectData = computed(() => {
 })
 
 const columns: any = [
-    { type: 'seq', title: '序号', fixed: 'left', },
-    { field: 'projName', title: '项目名称', width: 150, fixed: 'left', },
+    { type: 'index', title: '序号', fixed: 'left', },
+    { prop: 'projName', label: '项目名称', width: 150, fixed: 'left', },
     {
-        title: '基准版',
+        label: '基准版',
         children: [
-            { field: 'baseVersionNo', title: '版本号', minWidth: 140 },
-            { field: 'baseArea', title: '建筑面积(㎡)', minWidth: 110, formatter: (v) => formatThousandWithPlaces(v) },
+            { prop: 'baseVersionNo', label: '版本号', minWidth: 140 },
+            { prop: 'baseArea', label: '建筑面积(㎡)', minWidth: 110, formatter: (v) => formatThousandWithPlaces(v) },
             {
-                field: 'baseJianAnCost', title: '建安成本(万元)', minWidth: 130, showSummary: true,
+                prop: 'baseJianAnCost', label: '建安成本(万元)', minWidth: 130, showSummary: true,
                 // 表头提示
                 headerTip: {
                     content: '不含示范区、预留费',
@@ -248,12 +248,12 @@ const columns: any = [
                 },
                 formatter: (v) => formatThousandWithPlaces(v)
             },
-            { field: 'baseShiFanCost', title: '示范区(万元)', minWidth: 120, formatter: (v) => formatThousandWithPlaces(v) },
-            { field: 'baseYuLiuCost', title: '预留费用(万元)', minWidth: 120, formatter: (v) => formatThousandWithPlaces(v) },
+            { prop: 'baseShiFanCost', label: '示范区(万元)', minWidth: 120, formatter: (v) => formatThousandWithPlaces(v) },
+            { prop: 'baseYuLiuCost', label: '预留费用(万元)', minWidth: 120, formatter: (v) => formatThousandWithPlaces(v) },
             {
                 // 小计列=建安成本+示范区+预留费用
-                field: 'baseSubtotal',
-                title: '小计(万元)',
+                prop: 'baseSubtotal',
+                label: '小计(万元)',
                 minWidth: 120,
                 headerTip: {
                     content: '建安成本+示范区+预留费用',
@@ -263,20 +263,20 @@ const columns: any = [
                 formatter: (v) => formatThousandWithPlaces(v),
             },
             {
-                field: 'basePricePerSqm',
-                title: '建筑单方(元/㎡)',
+                prop: 'basePricePerSqm',
+                label: '建筑单方(元/㎡)',
                 minWidth: 120,
                 formatter: (v) => formatThousandWithPlaces(v),
             },
         ],
     },
     {
-        title: '目标版',
+        label: '目标版',
         children: [
-            { field: 'targetVersionNo', title: '版本号', minWidth: 140 },
-            { field: 'targetArea', title: '建筑面积(㎡)', minWidth: 110, formatter: (v) => formatThousandWithPlaces(v) },
+            { prop: 'targetVersionNo', label: '版本号', minWidth: 140 },
+            { prop: 'targetArea', label: '建筑面积(㎡)', minWidth: 110, formatter: (v) => formatThousandWithPlaces(v) },
             {
-                field: 'targetJianAnCost', title: '建安成本(万元)', minWidth: 130,
+                prop: 'targetJianAnCost', label: '建安成本(万元)', minWidth: 130,
                 headerTip: {
                     content: '不含示范区、预留费',
                     icon: 'QuestionFilled',
@@ -284,12 +284,12 @@ const columns: any = [
                 },
                 formatter: (v) => formatThousandWithPlaces(v)
             },
-            { field: 'targetShiFanCost', title: '示范区(万元)', minWidth: 120, formatter: (v) => formatThousandWithPlaces(v) },
-            { field: 'targetYuLiuCost', title: '预留费用(万元)', minWidth: 120, formatter: (v) => formatThousandWithPlaces(v) },
+            { prop: 'targetShiFanCost', label: '示范区(万元)', minWidth: 120, formatter: (v) => formatThousandWithPlaces(v) },
+            { prop: 'targetYuLiuCost', label: '预留费用(万元)', minWidth: 120, formatter: (v) => formatThousandWithPlaces(v) },
             {
                 // 小计列=建安成本+示范区+预留费用
-                field: 'targetSubtotal',
-                title: '小计(万元)',
+                prop: 'targetSubtotal',
+                label: '小计(万元)',
                 minWidth: 120,
                 headerTip: {
                     content: '建安成本+示范区+预留费用',
@@ -299,20 +299,20 @@ const columns: any = [
                 formatter: (v) => formatThousandWithPlaces(v),
             },
             {
-                field: 'targetPricePerSqm',
-                title: '建筑单方(元/㎡)',
+                prop: 'targetPricePerSqm',
+                label: '建筑单方(元/㎡)',
                 minWidth: 150,
                 formatter: (v) => formatThousandWithPlaces(v),
             },
         ],
     },
     {
-        title: '差额',
+        label: '差额',
         children: [
             {
                 // 成本差异=目标版小计-基准版小计
-                field: 'diffJianAnCost',
-                title: '成本差异(万元)',
+                prop: 'diffJianAnCost',
+                label: '成本差异(万元)',
                 minWidth: 130,
                 headerTip: {
                     content: '成本差异=目标版小计-基准版小计',
@@ -323,8 +323,8 @@ const columns: any = [
             },
             {
                 // 单方差异=目标版建筑单方-基准版建筑单方
-                field: 'diffPricePerSqm',
-                title: '单方差异(元/㎡)',
+                prop: 'diffPricePerSqm',
+                label: '单方差异(元/㎡)',
                 minWidth: 140,
                 headerTip: {
                     content: '单方差异=目标版建筑单方-基准版建筑单方',

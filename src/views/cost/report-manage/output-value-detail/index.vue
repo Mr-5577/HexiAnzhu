@@ -111,20 +111,20 @@ const projectData = computed(() => {
 });
 
 const columns: any = [
-    { type: "seq", width: 60, title: "序号" },
-    { field: 'receiptNo', title: '产值单据号', minWidth: 140 },
-    { field: 'title', title: '标题', minWidth: 150 },
-    { field: 'projName', title: '项目', minWidth: 120 },
-    { field: 'segName', title: '板块', width: 90 },
-    { field: 'conSysNo', title: '合同编号', minWidth: 130 },
-    { field: 'conName', title: '合同名称', minWidth: 150 },
-    { field: 'supName', title: '供应商名称', minWidth: 130 },
-    { field: 'conTypeName', title: '合同分类', minWidth: 120 },
-    { field: 'declaredProdAmt', title: '申报产值', width: 120, showSummary: true, },
-    { field: 'declaredPayAmt', title: '申报应付', width: 120, showSummary: true, },
-    { field: 'costProdAmt', title: '成本确认产值', width: 130, showSummary: true, },
-    { field: 'costPayAmt', title: '成本确认应付', width: 130, showSummary: true, },
-    { field: 'unlockPayAmt', title: '解锁应付', width: 120, showSummary: true, },
+    { type: "index", label: "序号", width: 60 },
+    { prop: 'receiptNo', label: '产值单据号', minWidth: 140 },
+    { prop: 'title', label: '标题', minWidth: 150 },
+    { prop: 'projName', label: '项目', minWidth: 120 },
+    { prop: 'segName', label: '板块', width: 90 },
+    { prop: 'conSysNo', label: '合同编号', minWidth: 130 },
+    { prop: 'conName', label: '合同名称', minWidth: 150 },
+    { prop: 'supName', label: '供应商名称', minWidth: 130 },
+    { prop: 'conTypeName', label: '合同分类', minWidth: 120 },
+    { prop: 'declaredProdAmt', label: '申报产值', width: 120, showSummary: true, },
+    { prop: 'declaredPayAmt', label: '申报应付', width: 120, showSummary: true, },
+    { prop: 'costProdAmt', label: '成本确认产值', width: 130, showSummary: true, },
+    { prop: 'costPayAmt', label: '成本确认应付', width: 130, showSummary: true, },
+    { prop: 'unlockPayAmt', label: '解锁应付', width: 120, showSummary: true, },
 ];
 
 const changeSeg = (val: number) => {

@@ -34,10 +34,19 @@
                 </el-form-item>
 
                 <el-form-item label="目标成本版本" prop="costMid">
-                    <el-select v-model="queryParams.costMid" placeholder="请选择版本" clearable style="width: 200px">
+                    <!-- <el-select v-model="queryParams.costMid" placeholder="请选择版本" clearable style="width: 200px">
                         <el-option v-for="item in costVersionOptions" :key="item.id" :label="item.versionNo"
                             :value="item.id" />
-                    </el-select>
+                    </el-select> -->
+
+                    <el-input v-model="queryParams.versionNo" placeholder="请选择版本" readonly style="width: 200px"
+                        @click="costMDialogVisible = true">
+                        <template #suffix>
+                            <el-icon style="cursor: pointer;" v-if="queryParams.versionNo" @click.stop="clearVersion">
+                                <CircleClose />
+                            </el-icon>
+                        </template>
+                    </el-input>
                 </el-form-item>
 
                 <el-form-item class="action-buttons">
@@ -91,12 +100,14 @@
         </div>
         <!-- 明细弹窗 -->
         <detail-dialog v-model="dialogVisible" :params="currentRow" />
+        <!-- 选择目标成本版本 -->
+        <ChooseCostMDialog v-model="costMDialogVisible" :projId="queryParams?.projId" @select="getSelectData" />
     </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
-import { Search, Refresh } from '@element-plus/icons-vue'
+import { Search, Refresh, CircleClose } from '@element-plus/icons-vue'
 import VxeEditableTable from '@/components/base/vxe-editable-table.vue'
 import { projectAreaApi } from '@/api/cost/master-data/project-area-api'
 import { reportManageApi } from '@/api/cost/contract-manage/report-manage-api'
@@ -107,6 +118,7 @@ import { ElMessage } from 'element-plus'
 import { buildTreeFromList, warnEnum } from './tree-helper'
 import { getEnumColor } from '@/utils/enum'
 import DetailDialog from './detail-dialog.vue'
+import ChooseCostMDialog from '@/components/business/choose-costM-dialog.vue'
 
 defineOptions({ name: 'target-cost-execution-analysis' })
 
@@ -134,7 +146,9 @@ const queryParams = ref({
     projName: undefined,
     prodIds: [],
     costMid: undefined,
+    versionNo: undefined,
 })
+const costMDialogVisible = ref(false)
 
 const projectCascaderRef = ref()
 const vxeTableRef = ref<InstanceType<typeof VxeEditableTable>>()
@@ -213,48 +227,48 @@ const updateMaxDepth = () => {
 
 const columns: any = [
     {
-        field: 'subCode',
-        title: '科目编码',
+        prop: 'subCode',
+        label: '科目编码',
         width: 90,
         fixed: 'left',
     },
     {
-        field: 'subName',
-        title: '成本科目',
+        prop: 'subName',
+        label: '成本科目',
         width: 240,
         fixed: 'left',
         align: 'left',
         treeNode: true,
     },
     {
-        field: 'warn',
-        title: '预警状态',
+        prop: 'warn',
+        label: '预警状态',
         width: 80,
         slots: { default: "warn" },
     },
     {
-        title: '目标成本',
+        label: '目标成本',
         children: [
             {
-                field: 'costAmt',
-                title: '含税',
+                prop: 'costAmt',
+                label: '含税',
                 minWidth: 100,
                 formatter: (value) => formatThousandWithPlaces(value),
             },
             {
-                field: 'costExclAmt',
-                title: '不含税',
+                prop: 'costExclAmt',
+                label: '不含税',
                 minWidth: 100,
                 formatter: (value) => formatThousandWithPlaces(value),
             },
         ],
     },
     {
-        title: '已发生',
+        label: '已发生',
         children: [
             {
-                field: 'dynAmt',
-                title: '含税',
+                prop: 'dynAmt',
+                label: '含税',
                 minWidth: 100,
                 formatter: (value) => formatThousandWithPlaces(value),
                 clickable: true, // 点击单元格触发 onClick 事件
@@ -270,33 +284,33 @@ const columns: any = [
                 },
             },
             {
-                field: 'dynExclAmt',
-                title: '不含税',
+                prop: 'dynExclAmt',
+                label: '不含税',
                 minWidth: 100,
                 formatter: (value) => formatThousandWithPlaces(value),
             },
         ],
     },
     {
-        title: '未发生',
+        label: '未发生',
         children: [
             {
-                field: 'notDynAmt',
-                title: '含税',
+                prop: 'notDynAmt',
+                label: '含税',
                 minWidth: 100,
                 formatter: (value) => formatThousandWithPlaces(value)
             },
             {
-                field: 'notDynExclAmt',
-                title: '不含税',
+                prop: 'notDynExclAmt',
+                label: '不含税',
                 minWidth: 100,
                 formatter: (value) => formatThousandWithPlaces(value),
             },
         ],
     },
     {
-        field: 'occurRate',
-        title: '发生率',
+        prop: 'occurRate',
+        label: '发生率',
         width: 100,
         formatter: (value) => formatPercent(value, 2),
     },
@@ -339,9 +353,11 @@ const getCostVersionList = async (projId: number) => {
             const costVerList = res.data || [];
             costVersionOptions.value = costVerList
             // 默认选中生效版本
-            // if (costVerList.length) {
-            //     queryParams.value.costMid = costVerList.find(item => item.isEnabled)?.id
-            // }
+            if (costVerList.length) {
+                const enabledCostVer = costVerList.find(item => item.isEnabled)
+                queryParams.value.costMid = enabledCostVer?.id
+                queryParams.value.versionNo = enabledCostVer?.versionNo
+            }
         }
     } catch (error) {
         throw error;
@@ -406,7 +422,8 @@ const handleProjectChange = async (val: number) => {
     // 清除产品业态和目标成本版本的选中值
     queryParams.value.prodIds = []
     productOptions.value = []
-    queryParams.value.costMid = null
+    queryParams.value.costMid = undefined
+    queryParams.value.versionNo = undefined
     costVersionOptions.value = []
 
     await getProductList(val)
@@ -474,6 +491,20 @@ const getDataList = async () => {
         tableLoading.value = false;
     }
 };
+const clearVersion = () => {
+    queryParams.value.costMid = undefined
+    queryParams.value.versionNo = undefined
+    // 关闭弹窗
+    // costMDialogVisible.value = false;
+};
+const getSelectData = (data: any) => {
+    console.log("选中的数据:", data);
+    if (data && data.length) {
+        const [firstData] = data
+        queryParams.value.costMid = firstData?.id
+        queryParams.value.versionNo = firstData?.versionNo
+    }
+}
 
 onMounted(async () => {
     await getProjectOptions()
