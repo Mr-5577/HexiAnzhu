@@ -26,7 +26,7 @@
                 </el-form-item>
 
                 <el-form-item label="产品业态" prop="prodIds">
-                    <el-select v-model="queryParams.prodIds" placeholder="请选择产品业态" multiple collapse-tags
+                    <el-select v-model="queryParams.prodIds" placeholder="请选择产品业态" multiple collapse-tags clearable
                         style="width: 200px">
                         <el-option v-for="item in productOptions" :key="item.id" :label="item.prodName"
                             :value="item.id" />

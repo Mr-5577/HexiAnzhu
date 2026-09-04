@@ -145,11 +145,11 @@ import ViewDialog from "./view-dialog.vue";
 import { payRegisterApi } from "@/api/cost/payment-manage/payment-register-api.ts";
 import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
 import { costBillStatusEnum } from "@/constants/cost/enums.ts";
-import { exportExcel } from '@/utils/export-excel.ts';
 import { useMenuStore } from "@/stores/menu-store";
 import { formatThousandWithPlaces } from "@/utils/big-number.ts";
 import { PERMISSIONS } from "@/constants/permission.ts";
 import { ReqTypeEnum } from "@/constants/contract-manage/enums.ts";
+import { exportExcelWithStyle } from "@/utils/export-excel.ts";
 
 defineOptions({ name: "payment-register" });
 
@@ -342,39 +342,69 @@ const handleExport = async () => {
     const res = await payRegisterApi.getPayLedgerMain(params);
     if (res.code === 200) {
       let list = res.data || [];
-      list.forEach((item: any) => {
-        item.isLocked = item.isLocked ? "已入账" : "未入账";
-        item.flowStatus = getEnumLabel(costBillStatusEnum, item.flowStatus);
-        item.bizItemName = bizITypeMapping[item.bizType] || item.bizItemName;
-      });
-      const headerMap = {
-        flowTitle: "标题",
-        projName: "项目名称",
-        segName: "业务板块",
-        compName: "费用所属公司",
-        itemName: "合同/立项名称",
-        itemNo: "合同/立项单号",
-        bizItemName: "单据类型",
-        supName: "供应商",
-        reqNo: "付款单号",
-        reqDesc: "付款申请说明",
-        belongMonth: "费用归属期间",
-        finaTypeName: "费用类型",
-        allocDetail: "科目名称",
-        payableAmt: "请款金额",
-        paidAmt: "支付金额",
-        payStatus: "付款状态",
-        applyUserName: "申请人",
-        maxPayDate: "最近支付日期",
-        applyDate: "申请日期",
-        flowStatus: "审批流程",
-        isLocked: "是否入账",
-      }
-      exportExcel({
-        data: list,
-        headerMap: headerMap,
-        fileName: '实付登记列表'
-      });
+      // 构建导出列配置（单级表头，无 children）
+      const exportColumns = [
+        { label: '标题', prop: 'flowTitle', width: 200 },
+        { label: '项目名称', prop: 'projName', width: 120 },
+        { label: '业务板块', prop: 'segName', width: 90 },
+        { label: '费用所属公司', prop: 'compName', width: 180 },
+        { label: '合同/立项名称', prop: 'itemName', width: 150 },
+        { label: '合同/立项单号', prop: 'itemNo', width: 200 },
+        {
+          label: '单据类型',
+          prop: 'bizItemName',
+          formatter: (row: any) => bizITypeMapping[row.bizType] || row.bizItemName,
+          width: 150,
+        },
+        { label: '供应商', prop: 'supName', width: 150 },
+        { label: '付款单号', prop: 'reqNo', width: 200 },
+        { label: '付款申请说明', prop: 'reqDesc', width: 200 },
+        { label: '费用归属期间', prop: 'belongMonth', width: 110 },
+        { label: '费用类型', prop: 'finaTypeName', width: 120 },
+        {
+          label: '请款金额',
+          prop: 'payableAmt',
+          formatter: (row: any) => formatThousandWithPlaces(row.payableAmt || 0),
+          width: 120,
+        },
+        {
+          label: '支付金额',
+          prop: 'paidAmt',
+          formatter: (row: any) => formatThousandWithPlaces(row.paidAmt || 0),
+          width: 120,
+        },
+        { label: '付款状态', prop: 'payStatus', width: 100 },
+        { label: '申请人', prop: 'applyUserName', width: 90 },
+        { label: '最近支付日期', prop: 'maxPayDate', width: 100 },
+        { label: '申请日期', prop: 'applyDate', width: 100 },
+        {
+          label: '审批流程',
+          prop: 'flowStatus',
+          formatter: (row: any) => getEnumLabel(costBillStatusEnum, row.flowStatus),
+          width: 100,
+        },
+        {
+          label: '是否入账',
+          prop: 'isLocked',
+          formatter: (row: any) => (row.isLocked ? '已入账' : '未入账'),
+          width: 90,
+        },
+      ];
+
+      await exportExcelWithStyle(
+        list,
+        exportColumns,
+        '实付登记列表',
+        {
+          includeIndex: false,   // 是否添加序号列
+          headerBgColor: 'FFD3D3D3',
+          fontName: '微软雅黑',
+          headerFontSize: 10,
+          bodyFontSize: 10,
+        }
+      );
+
+      ElMessage.success('导出成功');
     }
   } catch (error) {
 

@@ -104,13 +104,13 @@ import { ElMessage } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
-import { exportExcel } from "@/utils/export-excel";
 import { formatThousandWithPlaces } from "@/utils/big-number";
 import { useMDStore } from "@/stores/md-store";
 import { ConPropertyEnum, PayTypeEnum } from "@/constants/contract-manage/enums";
 import EnumSelect from "@/components/base/base-enum-select.vue";
 import { reportManageApi } from "@/api/cost/contract-manage/report-manage-api";
 import mdApi from "@/api/system/md-api";
+import { exportExcelWithStyle } from "@/utils/export-excel";
 
 defineOptions({ name: "contract-overview" });
 
@@ -156,7 +156,7 @@ const projectData = computed(() => {
     }
 });
 
-const columns: TableColumnItem[] = [
+const columns:any = [
     { type: "index", label: "序号", width: 60, fixed: "left" },
     { prop: "segName", label: "业务板块", width: 80, fixed: "left" },
     { prop: "projName", label: "项目名称", width: 120, fixed: "left" },
@@ -439,61 +439,38 @@ const handlePaginationChange = (params: any) => {
     pageSize.value = params.pageSize;
 };
 
+// 导出
 const handleExport = async () => {
     try {
         exportLoading.value = true;
+
+        // 1. 获取全部数据（已包含 isExport: true）
         const params = buildParams();
-        const res = await reportManageApi.getExecutionReport({ ...params, isExport: true });
-        if (res.code === 200) {
-            const list = res.data || [];
-            const headerMap = {
-                segName: "业务板块",
-                projName: "项目名称",
-                conName: "合同名称",
-                conSysNo: "合同编号",
-                supName: "供应商名称",
-                conProperty: "合同类型",
-                conTypeName: "合同分类",
-                conTypeOwner: "合同分类归属",
-                payMethod: "产值确认方式",
-                companyName: "甲方签约公司",
-                agentName: "甲方经办人",
-                signDate: "签订日期",
-                pbAmt: "应交履约保证金",
-                pbRecvAmt: "已交履约保证金",
-                pbRefundAmt: "已退履约保证金",
-                taxRate: "税率",
-                needSettle: "是否需办结算",
-                signAmt: "合同签约金额",
-                addAmt: "补充合同金额",
-                changeAmt: "变更金额",
-                visaAmt: "签证金额",
-                estConAmt: "系统预估合同金额",
-                settleAmt: "结算金额",
-                prodAmt: "产值金额",
-                payAmt: "应付金额",
-                unlockPayAmt: "解锁应付金额",
-                reqAmt: "请款金额",
-                prepayReqAmt: "其中预付款请款金额",
-                dedAmt: "款项调整金额",
-                factReqAmt: "实际请款金额",
-                paidAmt: "已付金额",
-                reqOweAmt: "请款欠款金额",
-                payOweAmt: "应付欠款金额",
-                invcAmt: "开票金额(含税)",
-                invcNotTaxAmt: "开票金额(不含税)",
-                reqInvOweAmt: "请款欠票额",
-                payInvOweAmt: "应付欠票额",
-                paidInvOweAmt: "已付欠票额"
-            };
-            exportExcel({
-                data: list,
-                headerMap: headerMap,
-                fileName: '合同执行概览'
-            });
+        const res = await reportManageApi.getExecutionReport({ ...params });
+        if (res.code !== 200) {
+            ElMessage.error('导出数据获取失败');
+            return;
         }
+        const list = res.data || [];
+
+        // 直接传递页面定义的 columns（含 children），并自动添加序号
+        await exportExcelWithStyle(
+            list,
+            columns, // 注意：columns 中包含 type: 'index' 无 prop，会被忽略，所以 includeIndex 会补充序号
+            '合同执行概览',
+            {
+                includeIndex: true,   // 自动添加序号列
+                headerBgColor: 'FFD3D3D3',
+                fontName: '微软雅黑',
+                headerFontSize: 10,
+                bodyFontSize: 10,
+            }
+        );
+
+        ElMessage.success('导出成功');
     } catch (error) {
-        console.error("导出失败:", error);
+        console.error('导出失败:', error);
+        ElMessage.error('导出失败，请重试');
     } finally {
         exportLoading.value = false;
     }
