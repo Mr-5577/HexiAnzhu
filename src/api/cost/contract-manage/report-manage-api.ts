@@ -11,6 +11,18 @@ export const reportManageApi = {
   getExecutionReport: (data: ContractExecutionQueryParam) => {
     return http.post("/con/executionReport", data);
   },
+  /** 导出 合同执行概览 */
+  exportExecutionReport: (
+    data: ContractExecutionQueryParam,
+    filename: string = "合同执行概览.xlsx",
+  ) => {
+    return http.exportFile(
+      "/con/executionReport",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
+    );
+  },
   /** 请款执行概览-主报表 */
   getReportMain: (data: PaymentOverviewQueryParam) => {
     return http.post("/pay/report/main", data);

@@ -156,7 +156,7 @@ const projectData = computed(() => {
     }
 });
 
-const columns:any = [
+const columns: any = [
     { type: "index", label: "序号", width: 60, fixed: "left" },
     { prop: "segName", label: "业务板块", width: 80, fixed: "left" },
     { prop: "projName", label: "项目名称", width: 120, fixed: "left" },
@@ -438,43 +438,59 @@ const handlePaginationChange = (params: any) => {
     currentPage.value = params.currentPage;
     pageSize.value = params.pageSize;
 };
-
-// 导出
+// 接口导出
 const handleExport = async () => {
     try {
         exportLoading.value = true;
-
-        // 1. 获取全部数据（已包含 isExport: true）
         const params = buildParams();
-        const res = await reportManageApi.getExecutionReport({ ...params });
-        if (res.code !== 200) {
-            ElMessage.error('导出数据获取失败');
-            return;
+        const fileBlob = await reportManageApi.exportExecutionReport({ ...params, isExport: true });
+        if (!fileBlob || fileBlob.size === 0) {
+            ElMessage.warning("导出文件为空，请检查数据");
+        } else {
+            ElMessage.success("导出成功！");
         }
-        const list = res.data || [];
-
-        // 直接传递页面定义的 columns（含 children），并自动添加序号
-        await exportExcelWithStyle(
-            list,
-            columns, // 注意：columns 中包含 type: 'index' 无 prop，会被忽略，所以 includeIndex 会补充序号
-            '合同执行概览',
-            {
-                includeIndex: true,   // 自动添加序号列
-                headerBgColor: 'FFD3D3D3',
-                fontName: '微软雅黑',
-                headerFontSize: 10,
-                bodyFontSize: 10,
-            }
-        );
-
-        ElMessage.success('导出成功');
     } catch (error) {
-        console.error('导出失败:', error);
-        ElMessage.error('导出失败，请重试');
+        console.error("导出失败:", error);
     } finally {
         exportLoading.value = false;
     }
-};
+}
+// 前端导出
+// const handleExport = async () => {
+//     try {
+//         exportLoading.value = true;
+
+//         // 1. 获取全部数据（已包含 isExport: true）
+//         const params = buildParams();
+//         const res = await reportManageApi.getExecutionReport({ ...params });
+//         if (res.code !== 200) {
+//             ElMessage.error('导出数据获取失败');
+//             return;
+//         }
+//         const list = res.data || [];
+
+//         // 直接传递页面定义的 columns（含 children），并自动添加序号
+//         await exportExcelWithStyle(
+//             list,
+//             columns, // 注意：columns 中包含 type: 'index' 无 prop，会被忽略，所以 includeIndex 会补充序号
+//             '合同执行概览',
+//             {
+//                 includeIndex: true,   // 自动添加序号列
+//                 headerBgColor: 'FFD3D3D3',
+//                 fontName: '微软雅黑',
+//                 headerFontSize: 10,
+//                 bodyFontSize: 10,
+//             }
+//         );
+
+//         ElMessage.success('导出成功');
+//     } catch (error) {
+//         console.error('导出失败:', error);
+//         ElMessage.error('导出失败，请重试');
+//     } finally {
+//         exportLoading.value = false;
+//     }
+// };
 // 获取业务板块
 const getSegOptions = async () => {
     try {

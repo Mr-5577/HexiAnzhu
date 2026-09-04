@@ -91,6 +91,7 @@ export async function exportExcelWithStyle(
     formatter?: (row: any, index?: number) => any;
     width?: number;
     path: string[]; // 从顶层表头到当前列的路径，如 ['合同基本信息', '供应商名称']
+    pathLen: number; // 新增，缓存路径长度
   }[] = [];
 
   /**
@@ -113,6 +114,7 @@ export async function exportExcelWithStyle(
             formatter: col.formatter,
             width: col.width || col.minWidth,
             path: currentPath,
+            pathLen: currentPath.length,
           });
         }
       }
@@ -131,6 +133,7 @@ export async function exportExcelWithStyle(
         formatter: (_row: any, index: number) => index + 1,
         width: 60,
         path: [indexLabel], // 单独一层表头
+        pathLen: 1,
       },
       ...leafColumns,
     ];
@@ -213,6 +216,18 @@ export async function exportExcelWithStyle(
   // 根据 mergeRanges 执行合并，注意 ExcelJS 行/列从 1 开始
   mergeRanges.forEach(({ row, startCol, endCol }) => {
     worksheet.mergeCells(row + 1, startCol + 1, row + 1, endCol + 1);
+  });
+
+  // 垂直合并
+  leafColumns.forEach((leaf, colIdx) => {
+    const pathLen = leaf.pathLen;
+    if (pathLen < maxDepth) {
+      const startRow = pathLen;     // 最后一级内容所在行（从1开始）
+      const endRow = maxDepth;
+      if (startRow <= endRow) {
+        worksheet.mergeCells(startRow, colIdx + 1, endRow, colIdx + 1);
+      }
+    }
   });
 
   // ---------- 8. 设置表头样式 ----------
