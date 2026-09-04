@@ -1172,12 +1172,12 @@ watch(
         height: 100%;
 
         .vxe-table {
-            .vxe-header {
+            .vxe-table--header-wrapper {
                 background-color: #f8f8f9;
 
-                .vxe-header-column {
+                .vxe-header--column {
                     .vxe-cell {
-                        color: #515a6e;
+                        color: #515a6e !important;
                         font-weight: 600;
                         font-size: 13px;
                     }
@@ -1192,7 +1192,7 @@ watch(
                         .header-tip-icon {
                             display: inline-flex !important;
                             align-items: center;
-                            color: #909399;
+                            color: #414242;
                             font-size: 14px;
                             cursor: help;
                             transition: color 0.2s;
@@ -1205,21 +1205,20 @@ watch(
                 }
             }
 
-            .vxe-body {
-                .vxe-body-row {
+            .vxe-table--body-wrapper {
+                .vxe-body--row {
                     &.row--current {
                         background-color: #e0ecfc !important;
                     }
 
                     &:hover {
-                        .vxe-body--row {
-                            background-color: #f0f5ff !important;
-                        }
+                        background-color: #f0f5ff !important;
                     }
 
-                    .vxe-body-column {
+                    //   单元格样式
+                    .vxe-body--column {
                         font-size: 13px;
-                        color: #606266;
+                        color: #4c4d4e;
                     }
                 }
             }
