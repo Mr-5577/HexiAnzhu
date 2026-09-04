@@ -119,9 +119,9 @@
 
         <!-- 表格卡片 -->
         <div class="table-card">
-            <base-table :columns="columns" :tableData="paginatedData" :loading="tableLoading" :rowKey="'uuid'"
-                :total="total" :current-page="currentPage" :page-size="pageSize"
-                @pagination-change="handlePaginationChange" class="custom-table" />
+            <vxe-editable-table ref="vxeTableRef" v-model="paginatedData" :columns="columns" :rowKey="'id'"
+                :loading="tableLoading" :readonly="true" :pagination="true" :total="total" :page-size="pageSize"
+                :current-page="currentPage" @pagination-change="handlePaginationChange" />
         </div>
     </div>
 </template>
@@ -129,13 +129,13 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, nextTick } from "vue";
 import { Calendar, Document, Files, TrendCharts, Money, Search, Refresh, Download } from '@element-plus/icons-vue';
-import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 import { BigNumber, formatThousandWithPlaces, toBig } from "@/utils/big-number";
 import dayjs from "dayjs";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import { reportManageApi } from "@/api/cost/contract-manage/report-manage-api";
 import { ElMessage } from "element-plus";
+import VxeEditableTable from '@/components/base/vxe-editable-table.vue'
 
 defineOptions({ name: "project-output" });
 

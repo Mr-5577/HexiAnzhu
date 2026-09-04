@@ -88,7 +88,7 @@
       <!-- 可编辑表格：只有叶子节点可编辑 -->
       <editable-table ref="editableTableRef" row-key="id" height="350px" v-model="editableSubjectData"
         :columns="subjectColumns" :pagination="false" :highlight-current-row="false" :show-summary="false"
-        :compact-empty="true" :editable="true" :default-expand-level="1" :on-save="handleSave" :key="tableKey">
+        :compact-empty="true" :editable="true" :default-expand-level="6" :on-save="handleSave" :key="tableKey">
         <template #actions="{ row }" v-if="!isView">
           <el-button v-if="row.isLeaf" type="danger" link @click="handleDeleteNode(row)">
             删除
