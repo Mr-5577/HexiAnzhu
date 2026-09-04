@@ -15,7 +15,7 @@
       </div>
       <div class="user-info">
         <div class="user-name">{{ userStore?.userInfo?.empName }}</div>
-        <el-popover title="" :teleported="false" placement="bottom-end">
+        <el-popover title="" :teleported="false" placement="bottom-end" :width="160">
           <template #reference>
             <el-avatar shape="circle" :size="30"
               src="https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png" />
@@ -32,7 +32,7 @@
                 <el-icon>
                   <Switch />
                 </el-icon>
-                <span>切换账号</span>
+                <span>切换子账号</span>
               </div>
               <div class="dropdown-item" @click="logout">
                 <el-icon>
@@ -132,7 +132,7 @@ const handleSwitch = async () => {
       }
     }
   } catch (error) {
-
+    console.error("获取其他账号失败:", error);
   }
 }
 const selectAccount = async (account: any) => {
@@ -141,10 +141,10 @@ const selectAccount = async (account: any) => {
     // const token = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxNTE5NjY1NDMxMCIsIm9hVXNlcklkIjoiMTIyNjEzMjYxMDk2MTI0NDI0NCIsInVzZXJJZCI6MTUsInVzZXJuYW1lIjoiMTUxOTY2NTQzMTAiLCJpYXQiOjE3ODY2Njk3NjYsImV4cCI6MTc4Njc1NjE2Nn0.7tZOfRUYllVwg7gGqVSr1YLUO-RFYIP_Gyy55C0FvEc'
     ElMessage.success("切换账号成功，即将刷新获取账号数据！");
     const token = account.token;
-    // 重置所有持久化的 Store（关键步骤）
-    resetAllStores();
     localStorage.clear();
     sessionStorage.clear();
+    // 重置所有持久化的 Store（关键步骤）
+    resetAllStores();
     resetData(); // 重置共享数据
     localStorage.setItem("token", token);
     setTimeout(() => {
@@ -182,17 +182,10 @@ const handleProfile = () => {
 // 重置全部带有缓存标识的仓库
 const resetAllStores = () => {
   // 重置 userStore
-  userStore.userInfo = null;
-  userStore.token = "";
-  userStore.isFullScreen = false;
-  userStore.stateTag = "";
-  userStore.isQueryFast = true;
-  userStore.empNo = "";
+  userStore.reset();
 
   // 重置 tagsStore
-  tagsStore.visitedViews = [];
-  tagsStore.activeTag = "";
-  tagsStore.historyStack = [];
+  tagsStore.reset();
 };
 const logout = () => {
   ElMessageBox.confirm("确定要退出当前系统吗？", "退出", {
@@ -216,10 +209,7 @@ const logout = () => {
             resetData(); // 重置共享数据
             done(); // 关闭弹窗
             setTimeout(() => {
-              // 跳转到登录页并刷新
-              router.push("/login").then(() => {
-                window.location.reload();
-              });
+              window.location.replace("/login");
             }, 1000);
           } else {
             ElMessage.error("退出失败");
@@ -355,7 +345,7 @@ const logout = () => {
 
       .user-dropdown {
         padding: 4px 0;
-        min-width: 120px;
+        min-width: 130px;
 
         .dropdown-item {
           display: flex;

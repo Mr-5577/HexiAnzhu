@@ -321,6 +321,12 @@ export const useTagsStore = defineStore(
       return true;
     };
 
+    const reset = () => {
+      visitedViews.value = [];
+      activeTag.value = "";
+      historyStack.value = [];
+    };
+
     return {
       visitedViews, // 所有已访问的标签
       activeTag, // 当前激活的标签
@@ -343,6 +349,7 @@ export const useTagsStore = defineStore(
       isMultiOpenPage, // 获取页面是否支持多开
       handleMultiOpenView, // 处理多开页面
       handleNormalView, // 处理普通页面
+      reset, // 重置
     };
   },
   {

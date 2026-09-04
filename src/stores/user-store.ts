@@ -21,6 +21,7 @@ interface UserInfo {
   mobile: string; // 手机号
   email: string; // 邮箱
   sort: number; // 排序号
+  userName: string; // 用户名
 }
 
 export const useUserStore = defineStore(
@@ -63,6 +64,16 @@ export const useUserStore = defineStore(
     const setRoleList = (data: any) => {
       roleList.value = data;
     };
+    //  reset 方法
+    const reset = () => {
+      userInfo.value = null;
+      token.value = "";
+      isFullScreen.value = false;
+      stateTag.value = "";
+      isQueryFast.value = true;
+      empNo.value = "";
+      roleList.value = [];
+    };
 
     return {
       // 数据
@@ -83,6 +94,7 @@ export const useUserStore = defineStore(
       setQueryFast,
       setEmpNo,
       setRoleList,
+      reset,
     };
   },
   {
