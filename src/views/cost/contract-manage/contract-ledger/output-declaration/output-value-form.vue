@@ -1793,18 +1793,18 @@ const handleSubmit = async () => {
       ctrlAmt = signAmt.plus(addAmt);
     }
     
-    // 甲供材 不校验，非甲供材才校验
+    // 甲供材 不校验, 非甲供材才校验，payMethod：1=按进度确认(非甲供材)，2=按材料到货确认(甲供材)
     if (formData.value.payMethod === 1) {
       if (ctrlAmt.isLessThan(totalProdVal)) {
         ElMessage.error("期末累计产值金额已超合同金额！不可提交！");
         return false;
       }
+      if (ctrlAmt.isLessThan(totalPayVal)) {
+        ElMessage.error("期末累计应付金额已超合同金额！不可提交！");
+        return false;
+      }
     }
 
-    if (ctrlAmt.isLessThan(totalPayVal)) {
-      ElMessage.error("期末累计应付金额已超合同金额！不可提交！");
-      return false;
-    }
 
     submitLoading.value = true;
     await syncProdValPeriod();
