@@ -56,13 +56,13 @@
                 </el-form-item>
 
                 <el-form-item class="action-buttons">
-                    <el-button type="primary" @click="handleSearch" class="btn-search">
+                    <el-button type="primary" @click="handleSearch" class="btn-search" :loading="submitLoading">
                         <el-icon>
                             <Search />
                         </el-icon>
                         搜索
                     </el-button>
-                    <el-button @click="handleReset" class="btn-reset">
+                    <el-button @click="handleReset" class="btn-reset" :loading="submitLoading">
                         <el-icon>
                             <Refresh />
                         </el-icon>
@@ -80,9 +80,9 @@
 
         <!-- 表格卡片 -->
         <div class="table-card">
-            <base-table :columns="columns" :tableData="paginatedData" :loading="tableLoading" :rowKey="'id'"
-                :total="total" :current-page="currentPage" :page-size="pageSize"
-                @pagination-change="handlePaginationChange" class="custom-table" />
+            <vxe-editable-table ref="vxeTableRef" v-model="paginatedData" :columns="columns" :rowKey="'id'"
+                :loading="tableLoading" :readonly="true" :pagination="true" :total="total" :page-size="pageSize"
+                :current-page="currentPage" @pagination-change="handlePaginationChange" />
         </div>
     </div>
 </template>
@@ -99,6 +99,7 @@ import { reportManageApi } from "@/api/cost/contract-manage/report-manage-api";
 import { ElMessage } from "element-plus";
 import { buildTree } from "@/utils/tree";
 import { useRoute, useRouter } from "vue-router";
+import { formatThousandWithPlaces } from "@/utils/big-number";
 
 defineOptions({ name: "payment-detail" });
 
@@ -112,6 +113,7 @@ const queryParams = ref({
     payCompId: undefined,
     payDate: [],
     finaOrgId: undefined,
+    conId: undefined,
 });
 
 const segOptions = ref([]);
@@ -138,6 +140,7 @@ const tableData = ref([]);
 const currentPage = ref(1);
 const pageSize = ref(20);
 const total = ref(0);
+const submitLoading = ref(false);
 const exportLoading = ref(false);
 
 const columns: TableColumnItem[] = [
@@ -145,7 +148,8 @@ const columns: TableColumnItem[] = [
     { prop: "reqNo", label: "请款单号", width: 150, fixed: "left" },
     { prop: "segName", label: "业务板块", width: 80, fixed: "left" },
     { prop: "projName", label: "项目名称", width: 120, fixed: "left" },
-    { prop: "payAmt", label: "支付金额", width: 120 },
+    { prop: "reqAmt", label: "请款金额", width: 120, formatter: (v) => formatThousandWithPlaces(v) },
+    { prop: "payAmt", label: "支付金额", width: 120, formatter: (v) => formatThousandWithPlaces(v) },
     { prop: "lastPayDate", label: "支付日期", width: 100 },
     { prop: "reqDesc", label: "摘要", width: 200 },
     { prop: "applyUser", label: "申请人", width: 90 },
@@ -171,7 +175,8 @@ const buildParams = () => {
     let segIdList = []
     if (segId) {
         if (segId == 9999) {
-            segIdList = segOptions.value.map((item) => item.id).filter((vi) => vi != 9999);
+            // 全部传空数组
+            segIdList = [];
         } else {
             segIdList = [segId];
         }
@@ -188,6 +193,7 @@ const buildParams = () => {
 // 获取列表数据
 const getDataList = async () => {
     try {
+        submitLoading.value = true;
         tableLoading.value = true;
         const params = buildParams();
         const res = await reportManageApi.getReportSub({ ...params });
@@ -199,6 +205,7 @@ const getDataList = async () => {
     } catch (error) {
         console.error("获取请款执行概览列表失败:", error);
     } finally {
+        submitLoading.value = false;
         tableLoading.value = false;
     }
 };
@@ -346,6 +353,7 @@ const initQueryParams = () => {
                 queryParams.value.projIds = [routeData.projId];
                 queryParams.value.payCompId = routeData.compId;
                 queryParams.value.reqNo = routeData.reqNo;
+                queryParams.value.conId = routeData?.conId;
                 // 加载地产板块的公司
                 getCompanyList(routeData.segId);
                 // 加载地产板块的费用组织
@@ -484,11 +492,6 @@ onMounted(async () => {
         display: flex;
         flex-direction: column;
         overflow: hidden;
-
-        .custom-table {
-            flex: 1;
-            min-height: 0;
-        }
     }
 
     // ===== 响应式适配 =====

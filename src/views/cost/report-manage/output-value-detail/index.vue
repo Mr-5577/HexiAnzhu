@@ -1,4 +1,4 @@
-<!-- 产值明细表 -->
+<!-- 产值申报明细表 -->
 <template>
     <div class="output-value-detail-wrapper">
         <!-- 查询卡片 -->
@@ -23,42 +23,48 @@
                             multiple: true,
                         }" placeholder="请选择项目" style="width: 220px" clearable filterable collapse-tags />
                 </el-form-item>
-                <el-form-item label="合同编号" prop="supName">
-                    <el-input v-model="queryParams.supName" placeholder="请输入合同编号" clearable style="width: 220px" />
+                <el-form-item label="合同编号" prop="conSysNo">
+                    <el-input v-model="queryParams.conSysNo" placeholder="请输入合同编号" clearable style="width: 220px" />
                 </el-form-item>
-                <el-form-item label="合同名称" prop="supName">
-                    <el-input v-model="queryParams.supName" placeholder="请输入合同名称" clearable style="width: 220px" />
+                <el-form-item label="合同名称" prop="conName">
+                    <el-input v-model="queryParams.conName" placeholder="请输入合同名称" clearable style="width: 220px" />
                 </el-form-item>
                 <el-form-item label="供应商名称" prop="supName">
                     <el-input v-model="queryParams.supName" placeholder="请输入供应商名称" clearable style="width: 220px" />
                 </el-form-item>
-                <el-form-item label="申报期间" prop="declaredDate">
-                    <el-date-picker v-model="queryParams.declaredDate" value-format="YYYY-MM" type="monthrange"
+                <el-form-item label="申报期间" prop="reqDate">
+                    <el-date-picker v-model="queryParams.reqDate" value-format="YYYY-MM" type="monthrange"
                         range-separator="至" start-placeholder="开始月份" end-placeholder="结束月份" style="width: 220px" />
                 </el-form-item>
-                <el-form-item label="施工期间" prop="constructionDate">
-                    <el-date-picker v-model="queryParams.constructionDate" value-format="YYYY-MM" type="monthrange"
+                <el-form-item label="施工期间" prop="buildPeriod">
+                    <el-date-picker v-model="queryParams.buildPeriod" value-format="YYYY-MM" type="monthrange"
                         range-separator="至" start-placeholder="开始月份" end-placeholder="结束月份" style="width: 220px" />
                 </el-form-item>
-                <el-form-item label="产值期间" prop="outputDate">
-                    <el-date-picker v-model="queryParams.outputDate" value-format="YYYY-MM" type="monthrange"
+                <el-form-item label="产值期间" prop="prodValPeriod">
+                    <el-date-picker v-model="queryParams.prodValPeriod" value-format="YYYY-MM" type="monthrange"
                         range-separator="至" start-placeholder="开始月份" end-placeholder="结束月份" style="width: 220px" />
                 </el-form-item>
-                <el-form-item label="解锁期间" prop="unlockDate">
-                    <el-date-picker v-model="queryParams.unlockDate" value-format="YYYY-MM" type="monthrange"
+                <el-form-item label="解锁期间" prop="payDate">
+                    <el-date-picker v-model="queryParams.payDate" value-format="YYYY-MM" type="monthrange"
                         range-separator="至" start-placeholder="开始月份" end-placeholder="结束月份" style="width: 220px" />
                 </el-form-item>
 
                 <el-form-item>
-                    <el-button type="primary" @click="handleSearch">搜索</el-button>
-                    <el-button @click="handleReset">重置</el-button>
+                    <el-button type="primary" @click="handleSearch" :loading="submitLoading">搜索</el-button>
+                    <el-button @click="handleReset" :loading="submitLoading">重置</el-button>
+                    <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain>
+                        <el-icon>
+                            <Download />
+                        </el-icon>
+                        导出
+                    </el-button>
                 </el-form-item>
             </el-form>
         </div>
 
         <!-- 表格卡片 -->
         <div class="table-card">
-            <vxe-editable-table ref="vxeTableRef" v-model="tableData" :columns="columns" :rowKey="'id'"
+            <vxe-editable-table ref="vxeTableRef" v-model="paginatedData" :columns="columns" :rowKey="'id'"
                 :loading="tableLoading" :readonly="true" :show-footer="true" :pagination="true" :total="total"
                 :page-size="pageSize" :current-page="currentPage" @pagination-change="handlePageChange">
             </vxe-editable-table>
@@ -70,30 +76,39 @@
 import { ref, onMounted, computed } from "vue";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
-import VxeEditableTable from '@/components/base/vxe-editable-table.vue'
+import { reportManageApi } from "@/api/cost/contract-manage/report-manage-api";
+import { formatThousandWithPlaces } from "@/utils/big-number";
+import { useRoute, useRouter } from "vue-router";
+import { ElMessage } from "element-plus";
+import dayjs from "dayjs";
 
 defineOptions({ name: "output-value-detail" });
 
-// ============ 查询参数 ============
+const route = useRoute();
+const router = useRouter();
+
 const queryParams = ref({
     segId: undefined,
     projIdList: [], // 项目ID列表
     conSysNo: undefined, // 合同编号
     conName: undefined, // 合同名称
     supName: undefined, // 供应商名称
-    declaredDate: [], // 申报期间
-    constructionDate: [], // 施工期间
-    outputDate: [], // 产值期间
-    unlockDate: [], // 解锁期间
+    reqDate: [], // 申报期间
+    buildPeriod: [], // 施工期间
+    prodValPeriod: [], // 产值期间
+    payDate: [], // 解锁期间
+    conId: undefined, // 合同ID
 });
 
-const projectOptions = ref<any[]>([]);
-const segOptions = ref<any[]>([]);
+const projectOptions = ref([]);
+const segOptions = ref([]);
 const tableLoading = ref(false);
 const tableData = ref([]);
 const currentPage = ref(1);
 const pageSize = ref(20);
 const total = ref(0);
+const submitLoading = ref(false);
+const exportLoading = ref(false);
 
 // 计算项目数据（根据板块过滤）
 const projectData = computed(() => {
@@ -110,21 +125,27 @@ const projectData = computed(() => {
     }
 });
 
+const paginatedData = computed(() => {
+    const start = (currentPage.value - 1) * pageSize.value;
+    const end = start + pageSize.value;
+    return tableData.value.slice(start, end);
+});
+
 const columns: any = [
     { type: "index", label: "序号", width: 60 },
-    { prop: 'receiptNo', label: '产值单据号', minWidth: 140 },
-    { prop: 'title', label: '标题', minWidth: 150 },
+    { prop: 'prodBillNo', label: '产值单据号', minWidth: 140 },
+    { prop: 'bizTitle', label: '标题', minWidth: 150 },
     { prop: 'projName', label: '项目', minWidth: 120 },
     { prop: 'segName', label: '板块', width: 90 },
     { prop: 'conSysNo', label: '合同编号', minWidth: 130 },
     { prop: 'conName', label: '合同名称', minWidth: 150 },
-    { prop: 'supName', label: '供应商名称', minWidth: 130 },
+    { prop: 'supName', label: '供应商名称', minWidth: 150 },
     { prop: 'conTypeName', label: '合同分类', minWidth: 120 },
-    { prop: 'declaredProdAmt', label: '申报产值', width: 120, showSummary: true, },
-    { prop: 'declaredPayAmt', label: '申报应付', width: 120, showSummary: true, },
-    { prop: 'costProdAmt', label: '成本确认产值', width: 130, showSummary: true, },
-    { prop: 'costPayAmt', label: '成本确认应付', width: 130, showSummary: true, },
-    { prop: 'unlockPayAmt', label: '解锁应付', width: 120, showSummary: true, },
+    { prop: 'applyProdVal', label: '申报产值', width: 120, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
+    { prop: 'applyPayAmt', label: '申报应付', width: 120, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
+    { prop: 'costProdVal', label: '成本确认产值', width: 120, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
+    { prop: 'costPayAmt', label: '成本确认应付', width: 120, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
+    { prop: 'unlockPayAmt', label: '解锁应付', width: 120, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
 ];
 
 const changeSeg = (val: number) => {
@@ -134,6 +155,7 @@ const changeSeg = (val: number) => {
 const handleSearch = () => {
     currentPage.value = 1;
     pageSize.value = 20;
+    getDataList();
 };
 
 const handleReset = () => {
@@ -142,8 +164,10 @@ const handleReset = () => {
     Object.keys(queryParams.value).forEach((key) => {
         queryParams.value[key] = Array.isArray(queryParams.value[key]) ? [] : undefined;
     });
+    router.replace({ path: route.path, query: {} })
     // 默认选中第一个板块
     selectedDefaultSeg();
+    handleSearch();
 };
 const handlePageChange = (params: {
     currentPage: number;
@@ -174,7 +198,7 @@ const getSegOptions = async () => {
 };
 
 // 设置默认选中第一个业务归属
-const selectedDefaultSeg = () => {
+const selectedDefaultSeg = async () => {
     if (segOptions.value && segOptions.value.length > 0) {
         const firstSeg = segOptions.value[0];
         if (firstSeg) {
@@ -195,10 +219,92 @@ const getProjectOptions = async () => {
         console.error("获取项目列表失败:", error);
     }
 };
+const buildParams = () => {
+    const { segId, reqDate, buildPeriod, prodValPeriod, payDate, ...rest } = queryParams.value;
+    let segIdList = []
+    if (segId) {
+        if (segId == 9999) {
+            // 全部传空数组
+            segIdList = [];
+        } else {
+            segIdList = [segId];
+        }
+    }
+
+    const params = {
+        ...rest,
+        segIdList: segIdList,
+        payDateStart: payDate?.[0] ? dayjs(payDate?.[0]).startOf('month').format('YYYY-MM-DD') : undefined,
+        payDateEnd: payDate?.[1] ? dayjs(payDate?.[1]).endOf('month').format('YYYY-MM-DD') : undefined,
+        reqDateStart: reqDate?.[0] ? dayjs(reqDate?.[0]).startOf('month').format('YYYY-MM-DD') : undefined,
+        reqDateEnd: reqDate?.[1] ? dayjs(reqDate?.[1]).endOf('month').format('YYYY-MM-DD') : undefined,
+        buildPeriodStart: buildPeriod?.[0] ? dayjs(buildPeriod?.[0]).startOf('month').format('YYYY-MM-DD') : undefined,
+        buildPeriodEnd: buildPeriod?.[1] ? dayjs(buildPeriod?.[1]).endOf('month').format('YYYY-MM-DD') : undefined,
+        prodValPeriodStart: prodValPeriod?.[0] ? dayjs(prodValPeriod?.[0]).startOf('month').format('YYYY-MM-DD') : undefined,
+        prodValPeriodEnd: prodValPeriod?.[1] ? dayjs(prodValPeriod?.[1]).endOf('month').format('YYYY-MM-DD') : undefined,
+    };
+    return params;
+}
+const getDataList = async () => {
+    try {
+        submitLoading.value = true;
+        tableLoading.value = true;
+        const params = buildParams();
+        const res = await reportManageApi.getProdValDetailReport(params);
+        if (res.code === 200) {
+            const list = res.data || [];
+            tableData.value = list;
+            total.value = list.length;
+        }
+    } catch (error) {
+        console.error("获取项目产值列表失败:", error);
+    } finally {
+        submitLoading.value = false;
+        tableLoading.value = false;
+    }
+}
+const handleExport = async () => {
+    try {
+        exportLoading.value = true;
+        const params = buildParams();
+        const fileBlob = await reportManageApi.exportProdValDetailReport({ ...params, isExport: true });
+        if (!fileBlob || fileBlob.size === 0) {
+            ElMessage.warning("导出文件为空，请检查数据");
+        } else {
+            ElMessage.success("导出成功！");
+        }
+    } catch (error) {
+        console.error("导出失败:", error);
+    } finally {
+        exportLoading.value = false;
+    }
+};
+// 处理查询参数
+const initQueryParams = async () => {
+    console.log("解析路由参数", route.query);
+    if (route.query.data) {
+        try {
+            const routeData = JSON.parse(route.query.data as string);
+            console.log("解析路由参数成功", routeData);
+            if (routeData) {
+                queryParams.value.segId = routeData.segId;
+                queryParams.value.projIdList = routeData.projId ? [routeData.projId] : [];
+                queryParams.value.conId = routeData?.conId;
+            }
+        } catch (error) {
+            console.error("解析路由参数失败，使用默认值", error);
+        }
+    } else {
+        // 没有路由参数，默认
+        selectedDefaultSeg();
+    }
+};
 
 onMounted(async () => {
     await Promise.all([getProjectOptions(), getSegOptions()]);
-    selectedDefaultSeg();
+    await selectedDefaultSeg();
+    await initQueryParams();
+    getDataList();
 });
 </script>
 

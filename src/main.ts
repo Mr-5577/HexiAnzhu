@@ -24,6 +24,7 @@ VxeTable.setup({
 import App from "./App.vue";
 // 基础表格组件
 import BaseTable from "@/components/base/base-table.vue";
+import VxeEditableTable from '@/components/base/vxe-editable-table.vue'
 // 项目树组件
 import ProjectTreeSelector from "@/components/business/project-tree-selector.vue";
 import SelectWithAll from "@/components/base/base-select-with-all.vue"; //下拉多选框
@@ -56,6 +57,7 @@ app.use(VxePcUI) // 注册 vxe-pc-ui
 setupPermission(app);
 // 全局注册 BaseTable 组件
 app.component("BaseTable", BaseTable);
+app.component("VxeEditableTable", VxeEditableTable);
 app.component("ProjectTreeSelector", ProjectTreeSelector);
 app.component("SelectWithAll", SelectWithAll);
 app.component("BuildingPlaceholder", BuildingPlaceholder);

@@ -94,13 +94,13 @@
         </el-form-item>
 
         <el-form-item class="action-buttons">
-          <el-button type="primary" @click="handleSearch" class="btn-search">
+          <el-button type="primary" @click="handleSearch" class="btn-search" :loading="submitLoading">
             <el-icon>
               <Search />
             </el-icon>
             搜索
           </el-button>
-          <el-button @click="handleReset" class="btn-reset">
+          <el-button @click="handleReset" class="btn-reset" :loading="submitLoading">
             <el-icon>
               <Refresh />
             </el-icon>
@@ -185,9 +185,9 @@
 
     <!-- 表格卡片 -->
     <div class="table-card">
-      <base-table :columns="columns" :tableData="paginatedData" :loading="tableLoading" :rowKey="'id'" :total="total"
-        :current-page="currentPage" :page-size="pageSize" @pagination-change="handlePaginationChange"
-        class="custom-table" @cell-event="handleCellEventClick" />
+      <vxe-editable-table ref="vxeTableRef" v-model="paginatedData" :columns="columns" :rowKey="'id'"
+        :loading="tableLoading" :readonly="true" :pagination="true" :total="total" :page-size="pageSize"
+        :current-page="currentPage" @pagination-change="handlePaginationChange" />
     </div>
   </div>
 </template>
@@ -195,7 +195,6 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from "vue";
 import { Search, Refresh, Download, Money, Edit, Document, Check, Clock } from '@element-plus/icons-vue';
-import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import { BigNumber, bigSum, formatThousandWithPlaces, toBig } from "@/utils/big-number";
@@ -251,6 +250,7 @@ const tableData = ref([]);
 const currentPage = ref(1);
 const pageSize = ref(20);
 const total = ref(0);
+const submitLoading = ref(false);
 const exportLoading = ref(false);
 const unitMode = ref<'元' | '万元'>('万元');
 const statistics = ref({
@@ -260,7 +260,7 @@ const statistics = ref({
   totalPaidAmt: 0,
   totalUnpaidAmt: 0,
 });
-const columns: TableColumnItem[] = [
+const columns: any = [
   { type: "index", label: "序号", width: 60, fixed: "left" },
   { prop: "reqNo", label: "请款单号", width: 150, fixed: "left" },
   { prop: "reqTitle", label: "请款标题", width: 180, fixed: "left" },
@@ -282,48 +282,52 @@ const columns: TableColumnItem[] = [
     prop: "reqAmt",
     label: "请款金额",
     width: 100,
-    formatter: (row) => formatThousandWithPlaces(row.reqAmt || 0),
+    formatter: (v) => formatThousandWithPlaces(v),
   },
   {
     prop: "dedAmt",
     label: "其中抵房款",
     width: 110,
-    formatter: (row) => formatThousandWithPlaces(row.dedAmt || 0),
+    formatter: (v) => formatThousandWithPlaces(v),
   },
   {
     prop: "changeAmt",
     label: "款项调整金额",
     width: 120,
-    formatter: (row) => formatThousandWithPlaces(row.changeAmt || 0),
+    formatter: (v) => formatThousandWithPlaces(v),
   },
   {
     prop: "factReqAmt",
     label: "实际请款金额",
     width: 120,
-    formatter: (row) => formatThousandWithPlaces(row.factReqAmt || 0),
-    clickable: true, // 允许触发单元格事件
-    clickEvent: "factReqAmt-click", // 事件名称
+    formatter: (v) => formatThousandWithPlaces(v),
+    clickable: true, // 点击单元格触发 onClick 事件
+    onClick: (data) => {
+      handleCellEventClick(data)
+    },
   },
   {
     prop: "paidAmt",
     label: "已付金额(累计)",
     width: 130,
-    formatter: (row) => formatThousandWithPlaces(row.paidAmt || 0),
-    clickable: true, // 允许触发单元格事件
-    clickEvent: "paidAmt-click", // 事件名称
+    formatter: (v) => formatThousandWithPlaces(v),
+    clickable: true, // 点击单元格触发 onClick 事件
+    onClick: (data) => {
+      handleCellEventClick(data)
+    },
   },
   {
     prop: "monthPaidAmt",
     label: "统计月支付",
     width: 110,
-    formatter: (row) => formatThousandWithPlaces(row.monthPaidAmt || 0),
+    formatter: (v) => formatThousandWithPlaces(v),
   },
   { prop: "lastPayDate", label: "最近支付时间", width: 160 },
   {
     prop: "unpaidAmt",
     label: "未付金额",
     width: 120,
-    formatter: (row) => formatThousandWithPlaces(row.unpaidAmt || 0),
+    formatter: (v) => formatThousandWithPlaces(v),
   },
   { prop: "auditStatusName", label: "审核状态", width: 90 },
   { prop: "payStatusName", label: "支付状态", width: 90 },
@@ -389,9 +393,9 @@ const buildParams = () => {
   let segIdList = []
   const { belongMonth, applyDate, segId, ...rest } = queryParams.value;
   if (segId) {
-    // 如果板块选择全部，则获取所有板块的id去掉9999
     if (segId == 9999) {
-      segIdList = segOptions.value.map((item) => item.id).filter((vi) => vi != 9999);
+      // 全部传空数组
+      segIdList = [];
     } else {
       segIdList = [segId];
     }
@@ -409,6 +413,7 @@ const buildParams = () => {
 // 获取列表数据
 const getDataList = async () => {
   try {
+    submitLoading.value = true;
     tableLoading.value = true;
     const params = buildParams();
     const res = await reportManageApi.getReportMain({ ...params });
@@ -422,6 +427,7 @@ const getDataList = async () => {
   } catch (error) {
     console.error("获取请款执行概览列表失败:", error);
   } finally {
+    submitLoading.value = false;
     tableLoading.value = false;
   }
 };
@@ -470,15 +476,14 @@ const handleExport = async () => {
     exportLoading.value = false;
   }
 };
-// 单元格点击点击
-const handleCellEventClick = (data: any) => {
-  const { eventName, row } = data;
-  if (eventName === "factReqAmt-click" || eventName === "paidAmt-click") {
+// 单元格点击查看某个请款单的明细
+const handleCellEventClick = (row: any) => {
+  if (row) {
     const timestamp = new Date().getTime();
     const params = {
       segId: row.segId,
       projId: row.projId,
-      compId: row.compId,
+      // compId: row.compId,
       reqNo: row.reqNo,
     };
     router.push({
@@ -489,7 +494,7 @@ const handleCellEventClick = (data: any) => {
       },
     });
   }
-};
+}
 
 // 项目数据
 const getProjectOptions = async () => {

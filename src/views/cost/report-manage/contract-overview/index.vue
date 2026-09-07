@@ -90,9 +90,9 @@
 
         <!-- 表格卡片 -->
         <div class="table-card">
-            <base-table :columns="columns" :tableData="paginatedData" :loading="tableLoading" :rowKey="'id'"
-                :total="total" :current-page="currentPage" :page-size="pageSize"
-                @pagination-change="handlePaginationChange" class="custom-table" />
+            <vxe-editable-table ref="vxeTableRef" v-model="paginatedData" :columns="columns" :rowKey="'id'"
+                :loading="tableLoading" :readonly="true" :pagination="true" :total="total" :page-size="pageSize"
+                :current-page="currentPage" @pagination-change="handlePaginationChange" />
         </div>
     </div>
 </template>
@@ -101,7 +101,6 @@
 import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
-import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import { formatThousandWithPlaces } from "@/utils/big-number";
@@ -185,25 +184,27 @@ const columns: any = [
                 prop: "taxRate",
                 label: "税率",
                 width: 80,
-                formatter: (row) => row.taxRate ? `${row.taxRate}%` : "-",
+                formatter: (v, row) => {
+                    return v ? `${v}%` : "-"
+                },
             },
             {
                 prop: "pbAmt",
                 label: "应交履约保证金",
                 width: 120,
-                formatter: (row) => formatThousandWithPlaces(row.pbAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
             },
             {
                 prop: "pbRecvAmt",
                 label: "已交履约保证金",
                 width: 120,
-                formatter: (row) => formatThousandWithPlaces(row.pbRecvAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
             },
             {
                 prop: "pbRefundAmt",
                 label: "已退履约保证金",
                 width: 120,
-                formatter: (row) => formatThousandWithPlaces(row.pbRefundAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
             },
             { prop: "needSettle", label: "是否需办结算", width: 110 },
         ],
@@ -215,31 +216,31 @@ const columns: any = [
                 prop: "signAmt",
                 label: "合同签约金额",
                 width: 120,
-                formatter: (row) => formatThousandWithPlaces(row.signAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
             },
             {
                 prop: "addAmt",
                 label: "补充合同金额",
                 width: 120,
-                formatter: (row) => formatThousandWithPlaces(row.addAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
             },
             {
                 prop: "changeAmt",
                 label: "变更金额",
                 width: 100,
-                formatter: (row) => formatThousandWithPlaces(row.changeAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
             },
             {
                 prop: "visaAmt",
                 label: "签证金额",
                 width: 100,
-                formatter: (row) => formatThousandWithPlaces(row.visaAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
             },
             {
                 prop: "estConAmt",
                 label: "系统预估合同金额",
                 width: 160,
-                formatter: (row) => formatThousandWithPlaces(row.estConAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
                 headerTip: {
                     icon: "QuestionFilled",
                     content: "合同+补充+变更+签证的金额",
@@ -251,7 +252,7 @@ const columns: any = [
                 prop: "settleAmt",
                 label: "结算金额",
                 width: 110,
-                formatter: (row) => formatThousandWithPlaces(row.settleAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
             },
         ],
     },
@@ -262,61 +263,83 @@ const columns: any = [
                 prop: "prodAmt",
                 label: "产值金额",
                 width: 100,
-                formatter: (row) => formatThousandWithPlaces(row.prodAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
+                clickable: true, // 点击单元格触发 onClick 事件
+                onClick: (data) => {
+                    handleCellEventClick(data)
+                },
             },
             {
                 prop: "payAmt",
                 label: "应付金额",
                 width: 100,
-                formatter: (row) => formatThousandWithPlaces(row.payAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
+                clickable: true, // 点击单元格触发 onClick 事件
+                onClick: (data) => {
+                    handleCellEventClick(data)
+                },
             },
             {
                 prop: "unlockPayAmt",
                 label: "解锁应付金额",
                 width: 120,
-                formatter: (row) => formatThousandWithPlaces(row.unlockPayAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
+                clickable: true, // 点击单元格触发 onClick 事件
+                onClick: (data) => {
+                    handleCellEventClick(data)
+                },
             },
             {
                 prop: "reqAmt",
                 label: "请款金额",
                 width: 100,
-                formatter: (row) => formatThousandWithPlaces(row.reqAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
             },
             {
                 prop: "prepayReqAmt",
                 label: "其中预付款请款金额",
                 width: 140,
-                formatter: (row) => formatThousandWithPlaces(row.prepayReqAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
             },
             {
                 prop: "dedAmt",
                 label: "款项调整金额",
                 width: 120,
-                formatter: (row) => formatThousandWithPlaces(row.dedAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
             },
             {
                 prop: "factReqAmt",
                 label: "实际请款金额",
                 width: 120,
-                formatter: (row) => formatThousandWithPlaces(row.factReqAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
+                clickable: true, // 点击单元格触发 onClick 事件
+                onClick: (data) => {
+                    // 查看请款明细
+                    handleCellPaymentDetail(data)
+                },
             },
             {
                 prop: "paidAmt",
                 label: "已付金额",
                 width: 100,
-                formatter: (row) => formatThousandWithPlaces(row.paidAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
+                clickable: true, // 点击单元格触发 onClick 事件
+                onClick: (data) => {
+                    // 查看请款明细
+                    handleCellPaymentDetail(data)
+                },
             },
             {
                 prop: "reqOweAmt",
                 label: "请款欠款金额",
                 width: 120,
-                formatter: (row) => formatThousandWithPlaces(row.reqOweAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
             },
             {
                 prop: "payOweAmt",
                 label: "应付欠款金额",
                 width: 120,
-                formatter: (row) => formatThousandWithPlaces(row.payOweAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
             },
         ],
     },
@@ -327,31 +350,31 @@ const columns: any = [
                 prop: "invcAmt",
                 label: "开票金额(含税)",
                 width: 120,
-                formatter: (row) => formatThousandWithPlaces(row.invcAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
             },
             {
                 prop: "invcNotTaxAmt",
                 label: "开票金额(不含税)",
                 width: 140,
-                formatter: (row) => formatThousandWithPlaces(row.invcNotTaxAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
             },
             {
                 prop: "reqInvOweAmt",
                 label: "请款欠票额",
                 width: 120,
-                formatter: (row) => formatThousandWithPlaces(row.reqInvOweAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
             },
             {
                 prop: "payInvOweAmt",
                 label: "应付欠票额",
                 width: 120,
-                formatter: (row) => formatThousandWithPlaces(row.payInvOweAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
             },
             {
                 prop: "paidInvOweAmt",
                 label: "已付欠票额",
                 width: 120,
-                formatter: (row) => formatThousandWithPlaces(row.paidInvOweAmt || 0),
+                formatter: (v) => formatThousandWithPlaces(v),
             },
         ],
     },
@@ -363,11 +386,49 @@ const paginatedData = computed(() => {
     return tableData.value.slice(start, end);
 });
 
+// 单元格点击点击查看产值明细
+const handleCellEventClick = (row: any) => {
+    if (row) {
+        const timestamp = new Date().getTime();
+        const params = {
+            segId: row.segId,
+            projId: row.projId,
+            conId: row.conId,
+        };
+        router.push({
+            path: "/report/output-detail",
+            query: {
+                data: JSON.stringify(params),
+                _t: timestamp.toString(),
+            },
+        });
+    }
+}
+// 单元格点击查看某个合同的请款明细
+const handleCellPaymentDetail = (row: any) => {
+    if (row) {
+        const timestamp = new Date().getTime();
+        const params = {
+            segId: row.segId,
+            projId: row.projId,
+            conId: row.conId,
+        };
+        router.push({
+            path: "/report/pay-detail",
+            query: {
+                data: JSON.stringify(params),
+                _t: timestamp.toString(),
+            },
+        });
+    }
+}
+
 const buildParams = () => {
     let segIdList = []
     if (queryParams.value.segId) {
         if (queryParams.value.segId == 9999) {
-            segIdList = segOptions.value.map((item) => item.id).filter((vi) => vi != 9999);
+            // 全部传空数组
+            segIdList = [];
         } else {
             segIdList = [queryParams.value.segId];
         }
@@ -703,11 +764,6 @@ onMounted(async () => {
         display: flex;
         flex-direction: column;
         overflow: hidden;
-
-        .custom-table {
-            flex: 1;
-            min-height: 0;
-        }
     }
 
     // ===== 响应式适配 =====

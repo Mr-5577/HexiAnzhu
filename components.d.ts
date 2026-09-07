@@ -26,6 +26,7 @@ declare module 'vue' {
     ChooseBidAwardItemDialog: typeof import('./src/components/business/choose-bid-award-item-dialog.vue')['default']
     ChooseContractDialog: typeof import('./src/components/business/choose-contract-dialog.vue')['default']
     ChooseCostChangeDialog: typeof import('./src/components/business/choose-cost-change-dialog.vue')['default']
+    ChooseCostMDialog: typeof import('./src/components/business/choose-costM-dialog.vue')['default']
     ChooseCostVisaDialog: typeof import('./src/components/business/choose-cost-visa-dialog.vue')['default']
     ChooseEmployee: typeof import('./src/components/business/choose-employee.vue')['default']
     ChooseSupplierDialog: typeof import('./src/components/business/choose-supplier-dialog.vue')['default']

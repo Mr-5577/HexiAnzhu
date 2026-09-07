@@ -1,4 +1,4 @@
-<!-- 项目产值表 -->
+<!-- 产值申报概览 -->
 <template>
     <div class="project-output-wrapper">
         <!-- 查询卡片 -->
@@ -36,13 +36,13 @@
                 </el-form-item>
 
                 <el-form-item class="action-buttons">
-                    <el-button type="primary" @click="handleSearch" class="btn-search">
+                    <el-button type="primary" @click="handleSearch" class="btn-search" :loading="submitLoading">
                         <el-icon>
                             <Search />
                         </el-icon>
                         搜索
                     </el-button>
-                    <el-button @click="handleReset" class="btn-reset">
+                    <el-button @click="handleReset" class="btn-reset" :loading="submitLoading">
                         <el-icon>
                             <Refresh />
                         </el-icon>
@@ -130,12 +130,11 @@
 import { ref, onMounted, computed, nextTick } from "vue";
 import { Calendar, Document, Files, TrendCharts, Money, Search, Refresh, Download } from '@element-plus/icons-vue';
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
-import { BigNumber, formatThousandWithPlaces, toBig } from "@/utils/big-number";
+import { BigNumber, formatThousandWithPlaces, roundToTwo, toBig } from "@/utils/big-number";
 import dayjs from "dayjs";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import { reportManageApi } from "@/api/cost/contract-manage/report-manage-api";
 import { ElMessage } from "element-plus";
-import VxeEditableTable from '@/components/base/vxe-editable-table.vue'
 
 defineOptions({ name: "project-output" });
 
@@ -154,6 +153,7 @@ const tableData = ref([]);
 const currentPage = ref(1);
 const pageSize = ref(20);
 const total = ref(0);
+const submitLoading = ref(false);
 const exportLoading = ref(false);
 
 const statistics = computed(() => {
@@ -215,12 +215,12 @@ const columns: any = computed(() => {
         { prop: "supName", label: "供应商", width: 150, fixed: "left" },
         { prop: "conName", label: "合同名称", width: 180, fixed: "left" },
         { prop: "conSysNo", label: "合同编号", width: 150 },
-        { prop: "taxRate", label: "税率", width: 80, formatter: (row) => row.taxRate ? `${row.taxRate}%` : '-' },
+        { prop: "taxRate", label: "税率", width: 80, formatter: (value) => value ? `${value}%` : '-' },
         {
             prop: "conAmt",
             label: `合同金额(${unit})`,
-            width: 120,
-            formatter: (row) => formatThousandWithPlaces(row.conAmt, decimalPlaces),
+            width: 130,
+            formatter: (value) => formatThousandWithPlaces(value, decimalPlaces), // 格式化金额
             headerTip: {
                 icon: "QuestionFilled",
                 content: "合同金额= 签约金额+补充金额",
@@ -230,31 +230,33 @@ const columns: any = computed(() => {
         },
         {
             prop: "completeRatio",
-            label: `累计完成比例%`,
-            width: 150,
+            label: `累计完成比例`,
+            width: 120,
             headerTip: {
                 icon: "QuestionFilled",
                 content: "累计产值/(签约+补充)",
                 placement: "top",
                 width: "200px",
             },
+            // 四舍五入并且增加百分符号%
+            formatter: (value) => `${roundToTwo(value)}%`,
         },
         {
             prop: "lastMonthProdVal",
             label: `截止上月累计产值(${unit})`,
-            width: 180,
-            formatter: (row) => formatThousandWithPlaces(row.lastMonthProdVal, decimalPlaces),
+            width: 160,
+            formatter: (value) => formatThousandWithPlaces(value, decimalPlaces), // 格式化金额
         },
         {
             prop: "curMonthProdVal",
             label: `本月产值(${unit})`,
             width: 120,
-            formatter: (row) => formatThousandWithPlaces(row.curMonthProdVal, decimalPlaces),
+            formatter: (value) => formatThousandWithPlaces(value, decimalPlaces), // 格式化金额
         },
         {
             prop: "curMonthProdCnt",
             label: `本月产值(份数)`,
-            width: 140,
+            width: 130,
             headerTip: {
                 icon: "QuestionFilled",
                 content: "产值审批完成的单据数",
@@ -265,20 +267,20 @@ const columns: any = computed(() => {
         {
             prop: "curMonthTotalProdVal",
             label: `至本月累计产值(${unit})`,
-            width: 170,
-            formatter: (row) => formatThousandWithPlaces(row.curMonthTotalProdVal, decimalPlaces),
+            width: 150,
+            formatter: (value) => formatThousandWithPlaces(value, decimalPlaces), // 格式化金额
         },
         {
             prop: "settleAmt",
             label: `结算金额(${unit})`,
-            width: 140,
-            formatter: (row) => formatThousandWithPlaces(row.settleAmt, decimalPlaces),
+            width: 110,
+            formatter: (value) => formatThousandWithPlaces(value, decimalPlaces), // 格式化金额
         },
         {
             prop: "latestProdVal",
             label: `最新合同产值(${unit})`,
-            width: 150,
-            formatter: (row) => formatThousandWithPlaces(row.latestProdVal, decimalPlaces),
+            width: 140,
+            formatter: (value) => formatThousandWithPlaces(value, decimalPlaces), // 格式化金额
         },
     ]
 });
@@ -369,9 +371,9 @@ const buildParams = () => {
     let segIdList = []
     const { segId, ...rest } = queryParams.value;
     if (segId) {
-        // 如果板块选择全部，则获取所有板块的id去掉9999
         if (segId == 9999) {
-            segIdList = segOptions.value.map((item) => item.id).filter((vi) => vi != 9999);
+            // 全部传空数组
+            segIdList = [];
         } else {
             segIdList = [segId];
         }
@@ -385,6 +387,7 @@ const buildParams = () => {
 // 获取列表数据
 const getDataList = async () => {
     try {
+        submitLoading.value = true;
         tableLoading.value = true;
         const params = buildParams();
         const res = await reportManageApi.getProdValReport(params);
@@ -396,6 +399,7 @@ const getDataList = async () => {
     } catch (error) {
         console.error("获取项目产值列表失败:", error);
     } finally {
+        submitLoading.value = false;
         tableLoading.value = false;
     }
 };

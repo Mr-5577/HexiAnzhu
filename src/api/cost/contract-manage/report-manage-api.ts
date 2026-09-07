@@ -71,6 +71,22 @@ export const reportManageApi = {
       "post",
     );
   },
+  /** 产值申报概览-明细 */
+  getProdValDetailReport: (data: any) => {
+    return http.post("/con/prodValDetailReport", data);
+  },
+  /** 导出-产值申报明细 */
+  exportProdValDetailReport: (
+    data: any,
+    filename: string = "产值申报明细.xlsx",
+  ) => {
+    return http.exportFile(
+      "/con/prodValDetailReport",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
+    );
+  },
   /** 目标成本对比分析 */
   getTargetCostAnalyze: (data: any) => {
     return http.post("/cost/report/targetCostAnalyze", data);
