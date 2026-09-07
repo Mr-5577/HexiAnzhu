@@ -54,7 +54,7 @@ const generateData = (count: number) => {
     supplier: suppliers[i % suppliers.length],
     amount: Math.round((Math.random() * 500000 + 50000) / 100) * 100,
     payStatus: statuses[i % statuses.length],
-    createDate: '2026-08-12',
+    createDate: '2026-08-01',
   }));
 };
 
@@ -132,7 +132,7 @@ const columns: EditableColumn[] = [
     title: "申请日期",
     width: 120,
     editable: true,
-    editType: "date",
+    editType: "month",
     placeholder: "请选择日期",
   },
 ];
