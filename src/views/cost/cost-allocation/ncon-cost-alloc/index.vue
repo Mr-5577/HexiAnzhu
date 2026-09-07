@@ -56,18 +56,20 @@
 
       <!-- 项目、楼栋基本信息 -->
       <div class="card-info">
-        <div class="info-item">
-          <span class="info-label">项目名称：</span>
-          <span class="info-value">{{ pageParams.projName || "" }}</span>
-        </div>
-        <div class="info-item">
-          <span class="info-label">事项名称：</span>
-          <span class="info-value">{{ pageParams.displayName || "" }}</span>
-        </div>
-        <div class="info-item tax-rate">
-          <span class="info-label">税率(%)：</span>
-          <el-input-number v-model="compositeTaxRate" :precision="2" :min="0" :max="100" :controls="false"
-            style="width: 100px" :disabled="isView" />
+        <div class="info-row">
+          <div class="info-item">
+            <span class="info-label">项目名称：</span>
+            <span class="info-value">{{ pageParams.projName || "" }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">事项名称：</span>
+            <span class="info-value">{{ pageParams.displayName || "" }}</span>
+          </div>
+          <div class="info-item tax-rate">
+            <span class="info-label">税率(%)：</span>
+            <el-input-number v-model="compositeTaxRate" :precision="2" :min="0" :max="100" :controls="false"
+              style="width: 100px" :disabled="isView" />
+          </div>
         </div>
         <div class="info-row">
           <div class="info-item half">
@@ -1900,17 +1902,14 @@ defineExpose({
   margin-top: 16px;
   z-index: 20;
 }
-
 .card-info {
   background: #ffffff;
   border-radius: 8px;
   padding: 0.5rem 1rem;
   border: 1px solid #e8edf4;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: nowrap;
-  min-width: 0;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .info-row {
@@ -1922,44 +1921,25 @@ defineExpose({
   min-width: 0;
 }
 
+/* 上面一行：项目名称、合同名称、合同编号、综合税率 */
+.info-row:first-child .info-item {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+
 .info-item {
   display: flex;
   align-items: center;
-  flex-shrink: 0;
+  min-width: 0;
   gap: 0.3rem;
-  white-space: nowrap;
 }
 
-/* 项目名称固定宽度 */
-.info-item:first-child {
-  flex: 0 0 180px;
-  min-width: 260px;
-}
-
-/* 事项名称固定宽度 */
-.info-item:nth-child(2) {
-  flex: 0 0 160px;
-  min-width: 260px;
-}
-
-/* 税率固定宽度 */
-.info-item.tax-rate {
-  flex: 0 0 180px;
-  min-width: 100px;
-}
-
-/* 楼栋自适应剩余空间 */
-.info-item.building-item {
-  flex: 1 1 auto;
-  min-width: 100px;
-  max-width: 100%;
-  overflow: hidden;
-}
-
-/* 业态固定宽度 */
-.info-item:last-child {
-  flex: 0 0 140px;
-  min-width: 100px;
+.info-item-tax {
+  .info-value {
+    color: #2563eb;
+    font-weight: 700;
+  }
 }
 
 .info-label {
@@ -1976,6 +1956,9 @@ defineExpose({
   font-size: 0.88rem;
   min-width: 0;
   flex: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .ellipsis {
