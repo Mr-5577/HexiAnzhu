@@ -78,7 +78,8 @@
                         </el-icon>
                         重置
                     </el-button>
-                    <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain>
+                    <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain
+                        :disabled="!menuStore.hasExactPermission(PERMISSIONS.CON_OVERVIEW_EXPORT)">
                         <el-icon>
                             <Download />
                         </el-icon>
@@ -110,11 +111,14 @@ import EnumSelect from "@/components/base/base-enum-select.vue";
 import { reportManageApi } from "@/api/cost/contract-manage/report-manage-api";
 import mdApi from "@/api/system/md-api";
 import { exportExcelWithStyle } from "@/utils/export-excel";
+import { useMenuStore } from "@/stores/menu-store";
+import { PERMISSIONS } from "@/constants/permission";
 
 defineOptions({ name: "contract-overview" });
 
 const router = useRouter();
 const mdStore = useMDStore();
+const menuStore = useMenuStore();
 
 // ============ 查询参数 ============
 const queryParams = ref({

@@ -106,7 +106,8 @@
             </el-icon>
             重置
           </el-button>
-          <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain>
+          <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain
+            :disabled="!menuStore.hasExactPermission(PERMISSIONS.PAY_OVERVIEW_EXPORT)">
             <el-icon>
               <Download />
             </el-icon>
@@ -204,10 +205,13 @@ import { reportManageApi } from "@/api/cost/contract-manage/report-manage-api";
 import { ElMessage } from "element-plus";
 import { buildTree } from "@/utils/tree";
 import { useRoute, useRouter } from "vue-router";
+import { PERMISSIONS } from "@/constants/permission";
+import { useMenuStore } from "@/stores/menu-store";
 
 defineOptions({ name: "payment-overview" });
 
 const router = useRouter();
+const menuStore = useMenuStore();
 
 const queryParams = ref({
   segId: undefined,

@@ -52,7 +52,8 @@
                 <el-form-item>
                     <el-button type="primary" @click="handleSearch" :loading="submitLoading">搜索</el-button>
                     <el-button @click="handleReset" :loading="submitLoading">重置</el-button>
-                    <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain>
+                    <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain
+                        :disabled="!menuStore.hasExactPermission(PERMISSIONS.OUTPUT_DETAIL_EXPORT)">
                         <el-icon>
                             <Download />
                         </el-icon>
@@ -81,11 +82,14 @@ import { formatThousandWithPlaces } from "@/utils/big-number";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage } from "element-plus";
 import dayjs from "dayjs";
+import { PERMISSIONS } from "@/constants/permission";
+import { useMenuStore } from "@/stores/menu-store";
 
 defineOptions({ name: "output-value-detail" });
 
 const route = useRoute();
 const router = useRouter();
+const menuStore = useMenuStore();
 
 const queryParams = ref({
     segId: undefined,
@@ -109,6 +113,16 @@ const pageSize = ref(20);
 const total = ref(0);
 const submitLoading = ref(false);
 const exportLoading = ref(false);
+
+// 保存初始查询参数快照（不包含 conId）
+const initialFilters = ref<any>({});
+
+// 辅助：获取当前查询参数的深拷贝副本（排除 conId）
+const getSnapshot = (params: any) => {
+    // 使用 JSON 序列化/反序列化实现深拷贝，简单可靠
+    const { conId, ...rest } = params;
+    return JSON.parse(JSON.stringify(rest));
+};
 
 // 计算项目数据（根据板块过滤）
 const projectData = computed(() => {
@@ -155,6 +169,14 @@ const changeSeg = (val: number) => {
 const handleSearch = () => {
     currentPage.value = 1;
     pageSize.value = 20;
+
+    // 比较当前条件与初始快照是否一致
+    const currentSnapshot = getSnapshot(queryParams.value);
+    if (JSON.stringify(currentSnapshot) !== JSON.stringify(initialFilters.value)) {
+        // 条件已变化 → 清除隐藏的 conId
+        queryParams.value.conId = undefined;
+    }
+
     getDataList();
 };
 
@@ -282,7 +304,7 @@ const handleExport = async () => {
 // 处理查询参数
 const initQueryParams = async () => {
     console.log("解析路由参数", route.query);
-    if (route.query.data) {
+    if (route.query?.data) {
         try {
             const routeData = JSON.parse(route.query.data as string);
             console.log("解析路由参数成功", routeData);
@@ -298,6 +320,8 @@ const initQueryParams = async () => {
         // 没有路由参数，默认
         selectedDefaultSeg();
     }
+    // 保存初始快照（在完成所有默认值赋值之后）
+    initialFilters.value = getSnapshot(queryParams.value);
 };
 
 onMounted(async () => {

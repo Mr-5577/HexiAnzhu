@@ -48,7 +48,8 @@
                         </el-icon>
                         重置
                     </el-button>
-                    <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain>
+                    <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain
+                        :disabled="!menuStore.hasExactPermission(PERMISSIONS.PROJECT_OUTPUT_EXPORT)">
                         <el-icon>
                             <Download />
                         </el-icon>
@@ -135,8 +136,12 @@ import dayjs from "dayjs";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import { reportManageApi } from "@/api/cost/contract-manage/report-manage-api";
 import { ElMessage } from "element-plus";
+import { PERMISSIONS } from "@/constants/permission";
+import { useMenuStore } from "@/stores/menu-store";
 
 defineOptions({ name: "project-output" });
+
+const menuStore = useMenuStore();
 
 const queryParams = ref({
     segId: undefined,

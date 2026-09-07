@@ -68,7 +68,8 @@
                         </el-icon>
                         重置
                     </el-button>
-                    <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain>
+                    <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain
+                        :disabled="!menuStore.hasExactPermission(PERMISSIONS.PAY_DETAIL_EXPORT)">
                         <el-icon>
                             <Download />
                         </el-icon>
@@ -100,11 +101,14 @@ import { ElMessage } from "element-plus";
 import { buildTree } from "@/utils/tree";
 import { useRoute, useRouter } from "vue-router";
 import { formatThousandWithPlaces } from "@/utils/big-number";
+import { PERMISSIONS } from "@/constants/permission";
+import { useMenuStore } from "@/stores/menu-store";
 
 defineOptions({ name: "payment-detail" });
 
 const route = useRoute();
 const router = useRouter();
+const menuStore = useMenuStore();
 
 const queryParams = ref({
     reqNo: undefined,
@@ -120,6 +124,16 @@ const segOptions = ref([]);
 const projectOptions = ref([]);
 const companyOptions = ref([]);
 const orgOptions = ref([]);
+
+// 保存初始查询参数快照（不包含 conId）
+const initialFilters = ref<any>({});
+
+// 辅助：获取当前查询参数的深拷贝副本（排除 conId）
+const getSnapshot = (params: any) => {
+    // 使用 JSON 序列化/反序列化实现深拷贝，简单可靠
+    const { conId, ...rest } = params;
+    return JSON.parse(JSON.stringify(rest));
+};
 
 const projectData = computed(() => {
     const segId = queryParams.value.segId;
@@ -213,6 +227,14 @@ const getDataList = async () => {
 const handleSearch = () => {
     currentPage.value = 1;
     pageSize.value = 20;
+
+    // 比较当前条件与初始快照是否一致
+    const currentSnapshot = getSnapshot(queryParams.value);
+    if (JSON.stringify(currentSnapshot) !== JSON.stringify(initialFilters.value)) {
+        // 条件已变化 → 清除隐藏的 conId
+        queryParams.value.conId = undefined;
+    }
+
     getDataList();
 };
 
@@ -344,7 +366,7 @@ const getFinaOrgListBySegId = async (segId: number) => {
 // 处理查询参数
 const initQueryParams = () => {
     // 如果有路由参数，使用路由参数
-    if (route.query.data) {
+    if (route.query?.data) {
         try {
             const routeData = JSON.parse(route.query.data as string);
             console.log("解析路由参数成功", routeData);
