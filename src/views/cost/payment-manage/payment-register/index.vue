@@ -177,7 +177,7 @@ const queryParams = ref({
   payStatus: "未支付", // 未支付  部分支付  全部支付
   isLocked: undefined,
   wfTitle: undefined,
-  reqType: undefined,
+  reqType: 0,
 });
 const projectOptions = ref([]); // 项目列表
 const segOptions = ref([]); // 业务板块列表
@@ -318,6 +318,8 @@ const handleReset = () => {
   queryParams.value.wfStatus = [40]; // 0=草稿, 10=审批中, 40=已审批, 80=作废, 99=其他
   // 默认查询未支付
   // queryParams.value.payStatus = "未支付";
+  // 请款类型默认请款
+  queryParams.value.reqType = 0
   getDataList();
 };
 const changeWfStatus = (val) => {
