@@ -1792,11 +1792,15 @@ const handleSubmit = async () => {
     } else {
       ctrlAmt = signAmt.plus(addAmt);
     }
-
-    if (ctrlAmt.isLessThan(totalProdVal)) {
-      ElMessage.error("期末累计产值金额已超合同金额！不可提交！");
-      return false;
+    
+    // 甲供材 不校验，非甲供材才校验
+    if (formData.value.payMethod === 1) {
+      if (ctrlAmt.isLessThan(totalProdVal)) {
+        ElMessage.error("期末累计产值金额已超合同金额！不可提交！");
+        return false;
+      }
     }
+
     if (ctrlAmt.isLessThan(totalPayVal)) {
       ElMessage.error("期末累计应付金额已超合同金额！不可提交！");
       return false;
