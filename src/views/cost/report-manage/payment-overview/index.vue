@@ -2,120 +2,124 @@
 <template>
   <div class="payment-overview-wrapper">
     <!-- 查询卡片 -->
-    <div class="search-card">
-      <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="80px" class="search-form">
-        <el-form-item label="业务板块" prop="segId">
-          <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px" @change="changeSeg">
-            <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
-          </el-select>
-        </el-form-item>
+    <BaseSearchCard>
+      <template #form>
+        <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="86px" class="search-form">
+          <el-form-item label="业务板块" prop="segId">
+            <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px" @change="changeSeg">
+              <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
+            </el-select>
+          </el-form-item>
 
-        <el-form-item label="项目名称" prop="projIds">
-          <el-cascader v-model="queryParams.projIds" :options="projectData" :collapse-tags="true"
-            :collapse-tags-tooltip="true" :max-collapse-tags="1" :show-all-levels="false" :props="{
-              expandTrigger: 'hover',
-              emitPath: false,
-              checkStrictly: false,
-              value: 'orgId',
-              label: 'orgName',
-              children: 'children',
-              multiple: true,
-            }" placeholder="请选择项目" style="width: 220px" clearable filterable />
-        </el-form-item>
+          <el-form-item label="项目名称" prop="projIds">
+            <el-cascader v-model="queryParams.projIds" :options="projectData" :collapse-tags="true"
+              :collapse-tags-tooltip="true" :max-collapse-tags="1" :show-all-levels="false" :props="{
+                expandTrigger: 'hover',
+                emitPath: false,
+                checkStrictly: false,
+                value: 'orgId',
+                label: 'orgName',
+                children: 'children',
+                multiple: true,
+              }" placeholder="请选择项目" style="width: 220px" clearable filterable />
+          </el-form-item>
 
-        <el-form-item label="支付公司" prop="payCompId">
-          <el-select v-model="queryParams.payCompId" placeholder="请选择公司" clearable filterable style="width: 220px">
-            <el-option v-for="item in companyOptions" :key="item.id" :label="item.compName" :value="item.id" />
-          </el-select>
-        </el-form-item>
+          <el-form-item label="支付公司" prop="payCompId">
+            <el-select v-model="queryParams.payCompId" placeholder="请选择公司" clearable filterable style="width: 220px">
+              <el-option v-for="item in companyOptions" :key="item.id" :label="item.compName" :value="item.id" />
+            </el-select>
+          </el-form-item>
 
-        <el-form-item label="请款单号" prop="reqNo">
-          <el-input v-model="queryParams.reqNo" placeholder="请输入请款单号" clearable style="width: 220px" />
-        </el-form-item>
+          <!-- <el-form-item label="请款单号" prop="reqNo">
+            <el-input v-model="queryParams.reqNo" placeholder="请输入请款单号" clearable style="width: 220px" />
+          </el-form-item> -->
 
-        <el-form-item label="归属月份" prop="belongMonth">
-          <el-date-picker v-model="queryParams.belongMonth" type="monthrange" range-separator="至" value-format="YYYY-MM"
-            start-placeholder="开始月份" end-placeholder="结束月份" style="width: 220px" />
-        </el-form-item>
+          <el-form-item label="归属月份" prop="belongMonth">
+            <el-date-picker v-model="queryParams.belongMonth" type="monthrange" range-separator="至"
+              value-format="YYYY-MM" start-placeholder="开始月份" end-placeholder="结束月份" style="width: 220px" />
+          </el-form-item>
 
-        <el-form-item label="收款方" prop="payeeName">
-          <el-input v-model="queryParams.payeeName" placeholder="请输入收款方" clearable style="width: 220px" />
-        </el-form-item>
+          <!-- <el-form-item label="收款方" prop="payeeName">
+            <el-input v-model="queryParams.payeeName" placeholder="请输入收款方" clearable style="width: 220px" />
+          </el-form-item> -->
 
-        <el-form-item label="申请人" prop="applyUserId">
-          <ChooseEmployee v-model="queryParams.applyUserId" :show-all-levels="false" placeholder="请选择" :width="220"
-            clearable filterable />
-        </el-form-item>
+          <!-- <el-form-item label="申请人" prop="applyUserId">
+            <ChooseEmployee v-model="queryParams.applyUserId" :show-all-levels="false" placeholder="请选择" :width="220"
+              clearable filterable />
+          </el-form-item> -->
 
-        <el-form-item label="申请日期" prop="applyDate">
-          <el-date-picker v-model="queryParams.applyDate" type="daterange" range-separator="至" value-format="YYYY-MM-DD"
-            start-placeholder="开始日期" end-placeholder="结束日期" style="width: 220px" />
-        </el-form-item>
+          <el-form-item label="申请日期" prop="applyDate">
+            <el-date-picker v-model="queryParams.applyDate" type="daterange" range-separator="至"
+              value-format="YYYY-MM-DD" start-placeholder="开始日期" end-placeholder="结束日期" style="width: 220px" />
+          </el-form-item>
 
-        <el-form-item label="审批状态" prop="wfStatus">
-          <el-select v-model="queryParams.wfStatus" multiple placeholder="请选择审批状态" style="width: 220px">
-            <!-- <el-option label="草稿" :value="0" /> -->
-            <el-option label="审批中" :value="10" />
-            <el-option label="已审批" :value="40" />
-            <!-- <el-option label="作废" :value="80" /> -->
-          </el-select>
-        </el-form-item>
+          <el-form-item label="审批状态" prop="wfStatus">
+            <el-select v-model="queryParams.wfStatus" multiple placeholder="请选择审批状态" style="width: 220px">
+              <!-- <el-option label="草稿" :value="0" /> -->
+              <el-option label="审批中" :value="10" />
+              <el-option label="已审批" :value="40" />
+              <!-- <el-option label="作废" :value="80" /> -->
+            </el-select>
+          </el-form-item>
 
-        <el-form-item label="入账状态" prop="isLocked">
-          <el-select v-model="queryParams.isLocked" placeholder="请选择入账状态" style="width: 220px" clearable>
-            <el-option label="已入账" :value="true" />
-            <el-option label="未入账" :value="false" />
-          </el-select>
-        </el-form-item>
+          <el-form-item label="入账状态" prop="isLocked">
+            <el-select v-model="queryParams.isLocked" placeholder="请选择入账状态" style="width: 220px" clearable>
+              <el-option label="已入账" :value="true" />
+              <el-option label="未入账" :value="false" />
+            </el-select>
+          </el-form-item>
 
-        <el-form-item label="支付状态" prop="payStatus">
-          <el-select v-model="queryParams.payStatus" placeholder="请选择支付状态" style="width: 220px" clearable>
-            <el-option label="未支付" value="未支付" />
-            <el-option label="部分支付" value="部分支付" />
-            <el-option label="全部支付" value="全部支付" />
-          </el-select>
-        </el-form-item>
+          <el-form-item label="支付状态" prop="payStatus">
+            <el-select v-model="queryParams.payStatus" placeholder="请选择支付状态" style="width: 220px" clearable>
+              <el-option label="未支付" value="未支付" />
+              <el-option label="部分支付" value="部分支付" />
+              <el-option label="全部支付" value="全部支付" />
+            </el-select>
+          </el-form-item>
 
-        <el-form-item label="支付统计月" prop="statMonth">
-          <el-date-picker v-model="queryParams.statMonth" type="month" value-format="YYYY-MM" placeholder="请选择支付统计月"
-            style="width: 220px" />
-        </el-form-item>
-        <el-form-item label="费用类型" prop="finaTypeIds">
-          <el-cascader v-model="queryParams.finaTypeIds" :options="feeTypeOptions" :collapse-tags="true"
-            :collapse-tags-tooltip="true" :max-collapse-tags="1" :show-all-levels="false" :props="{
-              expandTrigger: 'hover',
-              emitPath: false,
-              checkStrictly: false,
-              value: 'id',
-              label: 'finaTypeName',
-              children: 'children',
-              multiple: true,
-            }" placeholder="请选择费用类型" style="width: 220px" filterable clearable />
-        </el-form-item>
+          <el-form-item label="支付统计月" prop="statMonth">
+            <el-date-picker v-model="queryParams.statMonth" type="month" value-format="YYYY-MM" placeholder="请选择支付统计月"
+              style="width: 220px" />
+          </el-form-item>
+          <el-form-item label="费用类型" prop="finaTypeIds">
+            <el-cascader v-model="queryParams.finaTypeIds" :options="feeTypeOptions" :collapse-tags="true"
+              :collapse-tags-tooltip="true" :max-collapse-tags="1" :show-all-levels="false" :props="{
+                expandTrigger: 'hover',
+                emitPath: false,
+                checkStrictly: false,
+                value: 'id',
+                label: 'finaTypeName',
+                children: 'children',
+                multiple: true,
+              }" placeholder="请选择费用类型" style="width: 220px" filterable clearable />
+          </el-form-item>
+        </el-form>
+      </template>
+      <template #actions>
+        <el-input v-model="queryParams.keyWord" placeholder="请输入请款单号、标题、申请人、合同/事项名称、合同/事项编号、供应商名称、收款方" clearable
+          style="width:630px" />
+        <el-button type="primary" @click="handleSearch" class="btn-search" :loading="submitLoading">
+          <el-icon>
+            <Search />
+          </el-icon>
+          搜索
+        </el-button>
+        <el-button @click="handleReset" class="btn-reset" :loading="submitLoading">
+          <el-icon>
+            <Refresh />
+          </el-icon>
+          重置
+        </el-button>
+        <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain
+          :disabled="!menuStore.hasExactPermission(PERMISSIONS.PAY_OVERVIEW_EXPORT)">
+          <el-icon>
+            <Download />
+          </el-icon>
+          导出
+        </el-button>
 
-        <el-form-item class="action-buttons">
-          <el-button type="primary" @click="handleSearch" class="btn-search" :loading="submitLoading">
-            <el-icon>
-              <Search />
-            </el-icon>
-            搜索
-          </el-button>
-          <el-button @click="handleReset" class="btn-reset" :loading="submitLoading">
-            <el-icon>
-              <Refresh />
-            </el-icon>
-            重置
-          </el-button>
-          <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain
-            :disabled="!menuStore.hasExactPermission(PERMISSIONS.PAY_OVERVIEW_EXPORT)">
-            <el-icon>
-              <Download />
-            </el-icon>
-            导出
-          </el-button>
-        </el-form-item>
-      </el-form>
-    </div>
+      </template>
+    </BaseSearchCard>
 
     <!-- 统计卡片 -->
     <div class="statistics-card">
@@ -207,6 +211,7 @@ import { buildTree } from "@/utils/tree";
 import { useRoute, useRouter } from "vue-router";
 import { PERMISSIONS } from "@/constants/permission";
 import { useMenuStore } from "@/stores/menu-store";
+import BaseSearchCard from "@/components/base/base-search-card.vue";
 
 defineOptions({ name: "payment-overview" });
 
@@ -217,9 +222,9 @@ const queryParams = ref({
   segId: undefined,
   projIds: [],
   payCompId: undefined,
-  reqNo: undefined,
+  // reqNo: undefined,
   belongMonth: [],
-  payeeName: undefined,
+  // payeeName: undefined,
   applyUserId: undefined,
   applyDate: [],
   wfStatus: [40], // 默认查询已审批通过的请款单
@@ -228,6 +233,7 @@ const queryParams = ref({
   // statMonth: dayjs().format("YYYY-MM"),
   statMonth: undefined,
   finaTypeIds: [],
+  keyWord: undefined,
 });
 
 const segOptions = ref([]);
@@ -487,8 +493,9 @@ const handleCellEventClick = (row: any) => {
     const params = {
       segId: row.segId,
       projId: row.projId,
-      // compId: row.compId,
-      reqNo: row.reqNo,
+      // reqNo: row.reqNo,
+      bizType: row.bizType,
+      billId: row.billId,
     };
     router.push({
       path: "/report/pay-detail",
@@ -603,95 +610,6 @@ onMounted(async () => {
   background: #f5f7fa;
   overflow-y: auto;
 
-  // ===== 查询卡片 =====
-  .search-card {
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 18px 24px 12px 24px;
-    margin-bottom: 16px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
-    flex-shrink: 0;
-    border: 1px solid #edf2f7;
-
-    .search-form {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 4px 0;
-
-      :deep(.el-form-item) {
-        margin-bottom: 8px;
-        margin-right: 16px;
-
-        .el-form-item__label {
-          font-size: 13px;
-          color: #4a5568;
-          font-weight: 500;
-          padding-right: 8px;
-        }
-      }
-
-      :deep(.el-input__wrapper),
-      :deep(.el-select .el-input__wrapper),
-      :deep(.el-cascader .el-input__wrapper),
-      :deep(.el-date-editor .el-input__wrapper) {
-        border-radius: 8px;
-        box-shadow: 0 0 0 1px #e2e8f0 inset;
-        transition: box-shadow 0.2s;
-
-        &:hover {
-          box-shadow: 0 0 0 1px #b7c0d0 inset;
-        }
-
-        &.is-focus {
-          box-shadow: 0 0 0 2px rgba(79, 110, 247, 0.25), 0 0 0 1px #4f6ef7 inset !important;
-        }
-      }
-
-      // 强制 el-cascader 多选保持单行，不被撑高
-      :deep(.el-cascader) {
-
-        // 1. 限制输入框整体高度，并禁止换行
-        .el-input__wrapper {
-          flex-wrap: nowrap !important;
-          overflow: hidden !important;
-          height: 32px !important; // 与默认高度保持一致
-          min-height: 32px !important;
-          align-items: center !important;
-        }
-
-        // 2. 核心：让 tags 容器也不换行，并裁剪溢出
-        .el-cascader__tags {
-          flex-wrap: nowrap !important;
-          overflow: hidden !important;
-          flex: 1 1 auto !important;
-          min-width: 0 !important; // 防止 flex 溢出父容器
-          height: 100% !important; // 继承父容器高度
-          align-items: center !important;
-
-          // 3. 对单个标签做文字溢出省略（可选）
-          .el-tag {
-            flex-shrink: 0 !important; // 防止标签被压缩变形
-            max-width: 100px; // 限制单个标签宽度，避免占用太多空间
-            height: 22px !important; // 与默认 tag 高度一致
-            line-height: 22px !important;
-
-            .el-tag__content {
-              overflow: hidden;
-              text-overflow: ellipsis;
-              white-space: nowrap;
-            }
-          }
-
-          // 4. “+N” 折叠标签也保持同行
-          .el-tag--info {
-            flex-shrink: 0 !important;
-          }
-        }
-      }
-    }
-  }
-
   // ===== 统计卡片 =====
   .statistics-card {
     display: flex;
@@ -699,7 +617,7 @@ onMounted(async () => {
     background: #ffffff;
     border-radius: 12px;
     padding: 14px 24px;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
     flex-shrink: 0;
     border: 1px solid #edf2f7;
@@ -839,7 +757,7 @@ onMounted(async () => {
     min-height: 0;
     background: #ffffff;
     border-radius: 12px;
-    padding: 15px 15px 8px 15px;
+    // padding: 15px 15px 8px 15px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
     border: 1px solid #edf2f7;
     display: flex;

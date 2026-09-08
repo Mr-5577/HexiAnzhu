@@ -2,92 +2,94 @@
 <template>
     <div class="contract-overview-wrapper">
         <!-- 查询卡片 -->
-        <div class="search-card">
-            <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px" class="search-form">
-                <el-form-item label="业务板块" prop="segId">
-                    <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px"
-                        @change="changeSeg">
-                        <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
-                    </el-select>
-                </el-form-item>
+        <BaseSearchCard>
+            <template #form>
+                <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="86px" class="search-form">
+                    <el-form-item label="业务板块" prop="segId">
+                        <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px"
+                            @change="changeSeg">
+                            <el-option v-for="item in segOptions" :key="item.id" :label="item.segName"
+                                :value="item.id" />
+                        </el-select>
+                    </el-form-item>
 
-                <el-form-item label="项目名称" prop="projIdList">
-                    <el-cascader v-model="queryParams.projIdList" :options="projectData" :collapse-tags-tooltip="true"
-                        :show-all-levels="false" :props="{
-                            expandTrigger: 'hover',
-                            emitPath: false,
-                            checkStrictly: false,
-                            value: 'orgId',
-                            label: 'orgName',
-                            children: 'children',
-                            multiple: true,
-                        }" placeholder="请选择项目" style="width: 220px" clearable filterable collapse-tags />
-                </el-form-item>
+                    <el-form-item label="项目名称" prop="projIdList">
+                        <el-cascader v-model="queryParams.projIdList" :options="projectData"
+                            :collapse-tags-tooltip="true" :show-all-levels="false" :props="{
+                                expandTrigger: 'hover',
+                                emitPath: false,
+                                checkStrictly: false,
+                                value: 'orgId',
+                                label: 'orgName',
+                                children: 'children',
+                                multiple: true,
+                            }" placeholder="请选择项目" style="width: 220px" clearable filterable collapse-tags />
+                    </el-form-item>
 
-                <el-form-item label="签约日期" prop="signDate">
-                    <el-date-picker v-model="queryParams.signDate" type="daterange" range-separator="至"
-                        value-format="YYYY-MM-DD" start-placeholder="开始日期" end-placeholder="结束日期"
-                        style="width: 220px" />
-                </el-form-item>
+                    <el-form-item label="签约日期" prop="signDate">
+                        <el-date-picker v-model="queryParams.signDate" type="daterange" range-separator="至"
+                            value-format="YYYY-MM-DD" start-placeholder="开始日期" end-placeholder="结束日期"
+                            style="width: 220px" />
+                    </el-form-item>
 
-                <el-form-item label="甲方签约公司" prop="companyId">
-                    <el-select v-model="queryParams.companyId" placeholder="请选择公司" clearable filterable
-                        style="width: 220px">
-                        <el-option v-for="item in companyOptions" :key="item.id" :label="item.compName"
-                            :value="item.id" />
-                    </el-select>
-                </el-form-item>
+                    <!-- <el-form-item label="甲方签约公司" prop="companyId">
+                        <el-select v-model="queryParams.companyId" placeholder="请选择公司" clearable filterable
+                            style="width: 220px">
+                            <el-option v-for="item in companyOptions" :key="item.id" :label="item.compName"
+                                :value="item.id" />
+                        </el-select>
+                    </el-form-item> -->
 
-                <el-form-item label="供应商名称" prop="supName">
-                    <el-input v-model="queryParams.supName" placeholder="请输入供应商名称" clearable style="width: 220px" />
-                </el-form-item>
+                    <!-- <el-form-item label="供应商名称" prop="supName">
+                        <el-input v-model="queryParams.supName" placeholder="请输入供应商名称" clearable style="width: 220px" />
+                    </el-form-item> -->
 
-                <el-form-item label="合同类型" prop="conProperty">
-                    <EnumSelect v-model="queryParams.conProperty" :options="ConPropertyEnum" clearable
-                        placeholder="请选择合同类型" :width="'220px'" />
-                </el-form-item>
+                    <el-form-item label="合同类型" prop="conProperty">
+                        <EnumSelect v-model="queryParams.conProperty" :options="ConPropertyEnum" clearable
+                            placeholder="请选择合同类型" :width="'220px'" />
+                    </el-form-item>
 
-                <el-form-item label="合同分类" prop="conTypeIdList">
-                    <el-cascader v-model="queryParams.conTypeIdList" :show-all-levels="false"
-                        :collapse-tags-tooltip="true" :options="conCategoryOptions" :props="{
-                            expandTrigger: 'hover',
-                            emitPath: false,
-                            checkStrictly: false,
-                            value: 'id',
-                            label: 'conTypeName',
-                            children: 'children',
-                            multiple: true,
-                        }" placeholder="请选择合同分类" style="width: 220px" clearable filterable collapse-tags />
-                </el-form-item>
+                    <el-form-item label="合同分类" prop="conTypeIdList">
+                        <el-cascader v-model="queryParams.conTypeIdList" :show-all-levels="false"
+                            :collapse-tags-tooltip="true" :options="conCategoryOptions" :props="{
+                                expandTrigger: 'hover',
+                                emitPath: false,
+                                checkStrictly: false,
+                                value: 'id',
+                                label: 'conTypeName',
+                                children: 'children',
+                                multiple: true,
+                            }" placeholder="请选择合同分类" style="width: 220px" clearable filterable collapse-tags />
+                    </el-form-item>
 
-                <el-form-item label="产值确认方式" prop="payMethod">
-                    <EnumSelect v-model="queryParams.payMethod" :options="PayTypeEnum" clearable placeholder="请选择产值确认方式"
-                        :width="'220px'" />
-                </el-form-item>
-
-                <el-form-item class="action-buttons">
-                    <el-button type="primary" @click="handleSearch" class="btn-search" :loading="submitLoading">
-                        <el-icon>
-                            <Search />
-                        </el-icon>
-                        搜索
-                    </el-button>
-                    <el-button @click="handleReset" class="btn-reset" :loading="submitLoading">
-                        <el-icon>
-                            <Refresh />
-                        </el-icon>
-                        重置
-                    </el-button>
-                    <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain
-                        :disabled="!menuStore.hasExactPermission(PERMISSIONS.CON_OVERVIEW_EXPORT)">
-                        <el-icon>
-                            <Download />
-                        </el-icon>
-                        导出
-                    </el-button>
-                </el-form-item>
-            </el-form>
-        </div>
+                    <el-form-item label="产值确认方式" prop="payMethod">
+                        <EnumSelect v-model="queryParams.payMethod" :options="PayTypeEnum" clearable
+                            placeholder="请选择产值确认方式" :width="'220px'" />
+                    </el-form-item>
+                </el-form>
+            </template>
+            <!-- 操作栏插槽：关键字输入框 + 按钮 -->
+            <template #actions>
+                <el-input v-model="queryParams.keyWord" placeholder="请输入合同名称、合同编号、供应商名称、甲方签约公司、甲方经办人" clearable
+                    style="width:630px" />
+                <el-button type="primary" :loading="submitLoading" @click="handleSearch">
+                    <el-icon>
+                        <Search />
+                    </el-icon> 搜索
+                </el-button>
+                <el-button :loading="submitLoading" @click="handleReset">
+                    <el-icon>
+                        <Refresh />
+                    </el-icon> 重置
+                </el-button>
+                <el-button type="primary" plain :loading="exportLoading" @click="handleExport"
+                    :disabled="!menuStore.hasExactPermission(PERMISSIONS.CON_OVERVIEW_EXPORT)">
+                    <el-icon>
+                        <Download />
+                    </el-icon> 导出
+                </el-button>
+            </template>
+        </BaseSearchCard>
 
         <!-- 表格卡片 -->
         <div class="table-card">
@@ -108,6 +110,7 @@ import { formatThousandWithPlaces } from "@/utils/big-number";
 import { useMDStore } from "@/stores/md-store";
 import { ConPropertyEnum, PayTypeEnum } from "@/constants/contract-manage/enums";
 import EnumSelect from "@/components/base/base-enum-select.vue";
+import BaseSearchCard from "@/components/base/base-search-card.vue";
 import { reportManageApi } from "@/api/cost/contract-manage/report-manage-api";
 import mdApi from "@/api/system/md-api";
 import { exportExcelWithStyle } from "@/utils/export-excel";
@@ -126,10 +129,11 @@ const queryParams = ref({
     projIdList: [],      // 项目ID列表（多选级联）
     signDate: [],      // 签约日期范围 [开始, 结束]
     companyId: undefined,      // 甲方签约公司
-    supName: undefined,          // 供应商名称
+    // supName: undefined,          // 供应商名称
     conProperty: undefined,      // 合同类型
     conTypeIdList: undefined,       // 合同分类（多选级联）
     payMethod: undefined,        // 产值确认方式
+    keyWord: undefined,        // 关键字
 });
 
 const projectOptions = ref([]);
@@ -428,25 +432,21 @@ const handleCellPaymentDetail = (row: any) => {
 }
 
 const buildParams = () => {
+    const { segId, signDate, ...rest } = queryParams.value;
     let segIdList = []
-    if (queryParams.value.segId) {
-        if (queryParams.value.segId == 9999) {
+    if (segId) {
+        if (segId == 9999) {
             // 全部传空数组
             segIdList = [];
         } else {
-            segIdList = [queryParams.value.segId];
+            segIdList = [segId];
         }
     }
     const params = {
+        ...rest,
         segIdList: segIdList,
-        projIdList: queryParams.value.projIdList,
-        signDateStart: queryParams.value.signDate?.[0],
-        signDateEnd: queryParams.value.signDate?.[1],
-        companyId: queryParams.value.companyId,
-        supName: queryParams.value.supName,
-        conProperty: queryParams.value.conProperty,
-        conTypeIdList: queryParams.value.conTypeIdList,
-        payMethod: queryParams.value.payMethod,
+        signDateStart: signDate?.[0],
+        signDateEnd: signDate?.[1],
     };
     return params;
 }
@@ -643,126 +643,12 @@ onMounted(async () => {
     overflow-y: auto;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 
-    // ===== 查询卡片 =====
-    .search-card {
-        background: #ffffff;
-        border-radius: 12px;
-        padding: 18px 24px 12px 24px;
-        margin-bottom: 16px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
-        flex-shrink: 0;
-        border: 1px solid #edf2f7;
-
-        .search-form {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 4px 0;
-
-            :deep(.el-form-item) {
-                margin-bottom: 8px;
-                margin-right: 16px;
-
-                .el-form-item__label {
-                    font-size: 13px;
-                    color: #4a5568;
-                    font-weight: 500;
-                    padding-right: 8px;
-                }
-            }
-
-            :deep(.el-input__wrapper),
-            :deep(.el-select .el-input__wrapper),
-            :deep(.el-cascader .el-input__wrapper),
-            :deep(.el-date-editor .el-input__wrapper) {
-                border-radius: 8px;
-                box-shadow: 0 0 0 1px #e2e8f0 inset;
-                transition: box-shadow 0.2s;
-
-                &:hover {
-                    box-shadow: 0 0 0 1px #b7c0d0 inset;
-                }
-
-                &.is-focus {
-                    box-shadow: 0 0 0 2px rgba(79, 110, 247, 0.25), 0 0 0 1px #4f6ef7 inset !important;
-                }
-            }
-
-            :deep(.enum-select .el-input__wrapper) {
-                border-radius: 8px;
-                box-shadow: 0 0 0 1px #e2e8f0 inset;
-                transition: box-shadow 0.2s;
-
-                &:hover {
-                    box-shadow: 0 0 0 1px #b7c0d0 inset;
-                }
-
-                &.is-focus {
-                    box-shadow: 0 0 0 2px rgba(79, 110, 247, 0.25), 0 0 0 1px #4f6ef7 inset !important;
-                }
-            }
-
-            .action-buttons {
-                margin-left: auto;
-                display: flex;
-                gap: 6px;
-
-                :deep(.el-form-item__content) {
-                    display: flex;
-                    gap: 8px;
-                }
-            }
-
-            // 强制 el-cascader 多选保持单行，不被撑高
-            :deep(.el-cascader) {
-
-                // 1. 限制输入框整体高度，并禁止换行
-                .el-input__wrapper {
-                    flex-wrap: nowrap !important;
-                    overflow: hidden !important;
-                    height: 32px !important; // 与默认高度保持一致
-                    min-height: 32px !important;
-                    align-items: center !important;
-                }
-
-                // 2. 核心：让 tags 容器也不换行，并裁剪溢出
-                .el-cascader__tags {
-                    flex-wrap: nowrap !important;
-                    overflow: hidden !important;
-                    flex: 1 1 auto !important;
-                    min-width: 0 !important; // 防止 flex 溢出父容器
-                    height: 100% !important; // 继承父容器高度
-                    align-items: center !important;
-
-                    // 3. 对单个标签做文字溢出省略（可选）
-                    .el-tag {
-                        flex-shrink: 0 !important; // 防止标签被压缩变形
-                        max-width: 100px; // 限制单个标签宽度，避免占用太多空间
-                        height: 22px !important; // 与默认 tag 高度一致
-                        line-height: 22px !important;
-
-                        .el-tag__content {
-                            overflow: hidden;
-                            text-overflow: ellipsis;
-                            white-space: nowrap;
-                        }
-                    }
-
-                    // 4. “+N” 折叠标签也保持同行
-                    .el-tag--info {
-                        flex-shrink: 0 !important;
-                    }
-                }
-            }
-        }
-    }
-
     .table-card {
         flex: 1;
         min-height: 0;
         background: #ffffff;
         border-radius: 12px;
-        padding: 15px 15px 8px 15px;
+        // padding: 15px 15px 8px 15px;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
         border: 1px solid #edf2f7;
         display: flex;

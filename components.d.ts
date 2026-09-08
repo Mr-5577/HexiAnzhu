@@ -17,6 +17,7 @@ declare module 'vue' {
     BaseFormCard: typeof import('./src/components/base/base-form-card.vue')['default']
     BaseModal: typeof import('./src/components/base/base-modal.vue')['default']
     BasePickInput: typeof import('./src/components/base/base-pick-input.vue')['default']
+    BaseSearchCard: typeof import('./src/components/base/base-search-card.vue')['default']
     BaseSelectWithAll: typeof import('./src/components/base/base-select-with-all.vue')['default']
     BaseTable: typeof import('./src/components/base/base-table.vue')['default']
     BaseUpload: typeof import('./src/components/base/base-upload.vue')['default']

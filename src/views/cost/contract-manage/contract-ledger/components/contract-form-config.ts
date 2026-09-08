@@ -149,6 +149,12 @@ export const createPayrateColumns = (
       editType: "number",
       precision: 0,
       showOverflowTooltip: false,
+      headerTip: {
+        icon: "QuestionFilled",
+        content: "合同约定支付周期",
+        placement: "top",
+        width: "200px",
+      },
     },
     {
       label: "操作",

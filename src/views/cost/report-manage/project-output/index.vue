@@ -2,62 +2,68 @@
 <template>
     <div class="project-output-wrapper">
         <!-- 查询卡片 -->
-        <div class="search-card">
-            <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="80px" class="search-form">
-                <el-form-item label="业务归属" prop="segId">
-                    <el-select v-model="queryParams.segId" placeholder="请选择业务板块" :clearable="false" style="width: 150px"
-                        @change="handleSegChange">
-                        <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
-                    </el-select>
-                </el-form-item>
+        <BaseSearchCard :showExpandButton="false">
+            <template #form>
+                <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="86px" class="search-form">
+                    <el-form-item label="业务归属" prop="segId">
+                        <el-select v-model="queryParams.segId" placeholder="请选择业务板块" :clearable="false"
+                            style="width: 220px" @change="handleSegChange">
+                            <el-option v-for="item in segOptions" :key="item.id" :label="item.segName"
+                                :value="item.id" />
+                        </el-select>
+                    </el-form-item>
 
-                <el-form-item label="项目名称" prop="projId">
-                    <el-cascader v-model="queryParams.projId" :options="projectData" :show-all-levels="false" :props="{
-                        expandTrigger: 'hover',
-                        emitPath: false,
-                        checkStrictly: false,
-                        value: 'orgId',
-                        label: 'orgName',
-                        children: 'children',
-                    }" placeholder="请选择项目" style="width: 200px" :clearable="false" filterable @change="handleSearch" />
-                </el-form-item>
+                    <el-form-item label="项目名称" prop="projId">
+                        <el-cascader v-model="queryParams.projId" :options="projectData" :show-all-levels="false"
+                            :props="{
+                                expandTrigger: 'hover',
+                                emitPath: false,
+                                checkStrictly: false,
+                                value: 'orgId',
+                                label: 'orgName',
+                                children: 'children',
+                            }" placeholder="请选择项目" style="width: 220px" :clearable="false" filterable
+                            @change="handleSearch" />
+                    </el-form-item>
 
-                <el-form-item label="截止月份" prop="endMonth">
-                    <el-date-picker v-model="queryParams.endMonth" type="month" value-format="YYYY-MM"
-                        placeholder="请选择截止月份" :clearable="false" style="width: 150px" @change="handleSearch" />
-                </el-form-item>
+                    <el-form-item label="截止月份" prop="endMonth">
+                        <el-date-picker v-model="queryParams.endMonth" type="month" value-format="YYYY-MM"
+                            placeholder="请选择截止月份" :clearable="false" style="width: 150px" @change="handleSearch" />
+                    </el-form-item>
 
-                <el-form-item label="单位" prop="unit">
-                    <el-select v-model="queryParams.unit" placeholder="请选择单位" :clearable="false" style="width: 120px"
-                        @change="handleSearch">
-                        <el-option label="万元" value="万元" />
-                        <el-option label="元" value="元" />
-                    </el-select>
-                </el-form-item>
+                    <el-form-item label="单位" prop="unit">
+                        <el-select v-model="queryParams.unit" placeholder="请选择单位" :clearable="false"
+                            style="width: 150px" @change="handleSearch">
+                            <el-option label="万元" value="万元" />
+                            <el-option label="元" value="元" />
+                        </el-select>
+                    </el-form-item>
+                </el-form>
+            </template>
+            <template #actions>
+                <el-input v-model="queryParams.keyWord" placeholder="请输入供应商、合同名称、合同编号" clearable style="width: 630px" />
+                <el-button type="primary" @click="handleSearch" class="btn-search" :loading="submitLoading">
+                    <el-icon>
+                        <Search />
+                    </el-icon>
+                    搜索
+                </el-button>
+                <el-button @click="handleReset" class="btn-reset" :loading="submitLoading">
+                    <el-icon>
+                        <Refresh />
+                    </el-icon>
+                    重置
+                </el-button>
+                <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain
+                    :disabled="!menuStore.hasExactPermission(PERMISSIONS.PROJECT_OUTPUT_EXPORT)">
+                    <el-icon>
+                        <Download />
+                    </el-icon>
+                    导出
+                </el-button>
 
-                <el-form-item class="action-buttons">
-                    <el-button type="primary" @click="handleSearch" class="btn-search" :loading="submitLoading">
-                        <el-icon>
-                            <Search />
-                        </el-icon>
-                        搜索
-                    </el-button>
-                    <el-button @click="handleReset" class="btn-reset" :loading="submitLoading">
-                        <el-icon>
-                            <Refresh />
-                        </el-icon>
-                        重置
-                    </el-button>
-                    <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain
-                        :disabled="!menuStore.hasExactPermission(PERMISSIONS.PROJECT_OUTPUT_EXPORT)">
-                        <el-icon>
-                            <Download />
-                        </el-icon>
-                        导出
-                    </el-button>
-                </el-form-item>
-            </el-form>
-        </div>
+            </template>
+        </BaseSearchCard>
 
         <!-- 统计卡片 -->
         <div class="statistics-card">
@@ -138,6 +144,7 @@ import { reportManageApi } from "@/api/cost/contract-manage/report-manage-api";
 import { ElMessage } from "element-plus";
 import { PERMISSIONS } from "@/constants/permission";
 import { useMenuStore } from "@/stores/menu-store";
+import BaseSearchCard from "@/components/base/base-search-card.vue";
 
 defineOptions({ name: "project-output" });
 
@@ -148,6 +155,7 @@ const queryParams = ref({
     projId: undefined,
     endMonth: dayjs().format("YYYY-MM"),
     unit: '元',
+    keyWord: undefined,
 });
 
 const projectOptions = ref([]);
@@ -425,6 +433,7 @@ const handleReset = () => {
     queryParams.value.endMonth = dayjs().format("YYYY-MM");
     // 3. 单位 → 万元
     queryParams.value.unit = '元';
+    queryParams.value.keyWord = undefined;
     // 最后刷新表格
     getDataList();
 
@@ -474,53 +483,6 @@ onMounted(async () => {
     box-sizing: border-box;
     background: #f5f7fa;
     overflow-y: auto;
-
-    // ===== 查询卡片 =====
-    .search-card {
-        background: #ffffff;
-        border-radius: 12px;
-        padding: 18px 24px 12px 24px;
-        margin-bottom: 16px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
-        flex-shrink: 0;
-        border: 1px solid #edf2f7;
-
-        .search-form {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 4px 0;
-
-            :deep(.el-form-item) {
-                margin-bottom: 8px;
-                margin-right: 16px;
-
-                .el-form-item__label {
-                    font-size: 13px;
-                    color: #4a5568;
-                    font-weight: 500;
-                    padding-right: 8px;
-                }
-            }
-
-            :deep(.el-input__wrapper),
-            :deep(.el-select .el-input__wrapper),
-            :deep(.el-cascader .el-input__wrapper),
-            :deep(.el-date-editor .el-input__wrapper) {
-                border-radius: 8px;
-                box-shadow: 0 0 0 1px #e2e8f0 inset;
-                transition: box-shadow 0.2s;
-
-                &:hover {
-                    box-shadow: 0 0 0 1px #b7c0d0 inset;
-                }
-
-                &.is-focus {
-                    box-shadow: 0 0 0 2px rgba(79, 110, 247, 0.25), 0 0 0 1px #4f6ef7 inset !important;
-                }
-            }
-        }
-    }
 
     // ===== 统计卡片 =====
     .statistics-card {
@@ -646,7 +608,7 @@ onMounted(async () => {
         min-height: 0;
         background: #ffffff;
         border-radius: 12px;
-        padding: 15px 15px 8px 15px;
+        // padding: 15px 15px 8px 15px;
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
         border: 1px solid #edf2f7;
         display: flex;

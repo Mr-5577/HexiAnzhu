@@ -2,66 +2,70 @@
 <template>
     <div class="output-value-detail-wrapper">
         <!-- 查询卡片 -->
-        <div class="search-card">
-            <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="80px" class="search-form">
-                <el-form-item label="业务板块" prop="segId">
-                    <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px"
-                        @change="changeSeg">
-                        <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
-                    </el-select>
-                </el-form-item>
+        <BaseSearchCard>
+            <template #form>
+                <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="86px" class="search-form">
+                    <el-form-item label="业务板块" prop="segId">
+                        <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px"
+                            @change="changeSeg">
+                            <el-option v-for="item in segOptions" :key="item.id" :label="item.segName"
+                                :value="item.id" />
+                        </el-select>
+                    </el-form-item>
 
-                <el-form-item label="项目名称" prop="projIdList">
-                    <el-cascader v-model="queryParams.projIdList" :options="projectData" :collapse-tags-tooltip="true"
-                        :show-all-levels="false" :props="{
-                            expandTrigger: 'hover',
-                            emitPath: false,
-                            checkStrictly: false,
-                            value: 'orgId',
-                            label: 'orgName',
-                            children: 'children',
-                            multiple: true,
-                        }" placeholder="请选择项目" style="width: 220px" clearable filterable collapse-tags />
-                </el-form-item>
-                <el-form-item label="合同编号" prop="conSysNo">
-                    <el-input v-model="queryParams.conSysNo" placeholder="请输入合同编号" clearable style="width: 220px" />
-                </el-form-item>
-                <el-form-item label="合同名称" prop="conName">
-                    <el-input v-model="queryParams.conName" placeholder="请输入合同名称" clearable style="width: 220px" />
-                </el-form-item>
-                <el-form-item label="供应商名称" prop="supName">
-                    <el-input v-model="queryParams.supName" placeholder="请输入供应商名称" clearable style="width: 220px" />
-                </el-form-item>
-                <el-form-item label="申报期间" prop="reqDate">
-                    <el-date-picker v-model="queryParams.reqDate" value-format="YYYY-MM" type="monthrange"
-                        range-separator="至" start-placeholder="开始月份" end-placeholder="结束月份" style="width: 220px" />
-                </el-form-item>
-                <el-form-item label="施工期间" prop="buildPeriod">
-                    <el-date-picker v-model="queryParams.buildPeriod" value-format="YYYY-MM" type="monthrange"
-                        range-separator="至" start-placeholder="开始月份" end-placeholder="结束月份" style="width: 220px" />
-                </el-form-item>
-                <el-form-item label="产值期间" prop="prodValPeriod">
-                    <el-date-picker v-model="queryParams.prodValPeriod" value-format="YYYY-MM" type="monthrange"
-                        range-separator="至" start-placeholder="开始月份" end-placeholder="结束月份" style="width: 220px" />
-                </el-form-item>
-                <el-form-item label="解锁期间" prop="payDate">
-                    <el-date-picker v-model="queryParams.payDate" value-format="YYYY-MM" type="monthrange"
-                        range-separator="至" start-placeholder="开始月份" end-placeholder="结束月份" style="width: 220px" />
-                </el-form-item>
-
-                <el-form-item>
-                    <el-button type="primary" @click="handleSearch" :loading="submitLoading">搜索</el-button>
-                    <el-button @click="handleReset" :loading="submitLoading">重置</el-button>
-                    <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain
-                        :disabled="!menuStore.hasExactPermission(PERMISSIONS.OUTPUT_DETAIL_EXPORT)">
-                        <el-icon>
-                            <Download />
-                        </el-icon>
-                        导出
-                    </el-button>
-                </el-form-item>
-            </el-form>
-        </div>
+                    <el-form-item label="项目名称" prop="projIdList">
+                        <el-cascader v-model="queryParams.projIdList" :options="projectData"
+                            :collapse-tags-tooltip="true" :show-all-levels="false" :props="{
+                                expandTrigger: 'hover',
+                                emitPath: false,
+                                checkStrictly: false,
+                                value: 'orgId',
+                                label: 'orgName',
+                                children: 'children',
+                                multiple: true,
+                            }" placeholder="请选择项目" style="width: 220px" clearable filterable collapse-tags />
+                    </el-form-item>
+                    <!-- <el-form-item label="合同编号" prop="conSysNo">
+                        <el-input v-model="queryParams.conSysNo" placeholder="请输入合同编号" clearable style="width: 220px" />
+                    </el-form-item> -->
+                    <!-- <el-form-item label="合同名称" prop="conName">
+                        <el-input v-model="queryParams.conName" placeholder="请输入合同名称" clearable style="width: 220px" />
+                    </el-form-item> -->
+                    <!-- <el-form-item label="供应商名称" prop="supName">
+                        <el-input v-model="queryParams.supName" placeholder="请输入供应商名称" clearable style="width: 220px" />
+                    </el-form-item> -->
+                    <el-form-item label="申报期间" prop="reqDate">
+                        <el-date-picker v-model="queryParams.reqDate" value-format="YYYY-MM" type="monthrange"
+                            range-separator="至" start-placeholder="开始月份" end-placeholder="结束月份" style="width: 220px" />
+                    </el-form-item>
+                    <el-form-item label="施工期间" prop="buildPeriod">
+                        <el-date-picker v-model="queryParams.buildPeriod" value-format="YYYY-MM" type="monthrange"
+                            range-separator="至" start-placeholder="开始月份" end-placeholder="结束月份" style="width: 220px" />
+                    </el-form-item>
+                    <el-form-item label="产值期间" prop="prodValPeriod">
+                        <el-date-picker v-model="queryParams.prodValPeriod" value-format="YYYY-MM" type="monthrange"
+                            range-separator="至" start-placeholder="开始月份" end-placeholder="结束月份" style="width: 220px" />
+                    </el-form-item>
+                    <el-form-item label="解锁期间" prop="payDate">
+                        <el-date-picker v-model="queryParams.payDate" value-format="YYYY-MM" type="monthrange"
+                            range-separator="至" start-placeholder="开始月份" end-placeholder="结束月份" style="width: 220px" />
+                    </el-form-item>
+                </el-form>
+            </template>
+            <template #actions>
+                <el-input v-model="queryParams.keyWord" placeholder="请输入合同名称、合同编号、供应商名称、产值单据号、单据标题" clearable
+                    style="width: 630px" />
+                <el-button type="primary" @click="handleSearch" :loading="submitLoading">搜索</el-button>
+                <el-button @click="handleReset" :loading="submitLoading">重置</el-button>
+                <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain
+                    :disabled="!menuStore.hasExactPermission(PERMISSIONS.OUTPUT_DETAIL_EXPORT)">
+                    <el-icon>
+                        <Download />
+                    </el-icon>
+                    导出
+                </el-button>
+            </template>
+        </BaseSearchCard>
 
         <!-- 表格卡片 -->
         <div class="table-card">
@@ -84,6 +88,7 @@ import { ElMessage } from "element-plus";
 import dayjs from "dayjs";
 import { PERMISSIONS } from "@/constants/permission";
 import { useMenuStore } from "@/stores/menu-store";
+import BaseSearchCard from "@/components/base/base-search-card.vue";
 
 defineOptions({ name: "output-value-detail" });
 
@@ -94,14 +99,15 @@ const menuStore = useMenuStore();
 const queryParams = ref({
     segId: undefined,
     projIdList: [], // 项目ID列表
-    conSysNo: undefined, // 合同编号
-    conName: undefined, // 合同名称
-    supName: undefined, // 供应商名称
+    // conSysNo: undefined, // 合同编号
+    // conName: undefined, // 合同名称
+    // supName: undefined, // 供应商名称
     reqDate: [], // 申报期间
     buildPeriod: [], // 施工期间
     prodValPeriod: [], // 产值期间
     payDate: [], // 解锁期间
     conId: undefined, // 合同ID
+    keyWord: undefined, // 关键字
 });
 
 const projectOptions = ref([]);
@@ -362,88 +368,6 @@ onMounted(async () => {
     background: #f5f7fa;
     overflow-y: auto;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-
-    .search-card {
-        background: #ffffff;
-        border-radius: 12px;
-        padding: 18px 24px 12px 24px;
-        margin-bottom: 16px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
-        flex-shrink: 0;
-        border: 1px solid #edf2f7;
-
-        .search-form {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 4px 0;
-
-            :deep(.el-form-item) {
-                margin-bottom: 8px;
-                margin-right: 16px;
-
-                .el-form-item__label {
-                    font-size: 13px;
-                    color: #4a5568;
-                    font-weight: 500;
-                    padding-right: 8px;
-                }
-            }
-
-            :deep(.el-input__wrapper),
-            :deep(.el-select .el-input__wrapper),
-            :deep(.el-cascader .el-input__wrapper) {
-                border-radius: 8px;
-                box-shadow: 0 0 0 1px #e2e8f0 inset;
-                transition: box-shadow 0.2s;
-
-                &:hover {
-                    box-shadow: 0 0 0 1px #b7c0d0 inset;
-                }
-
-                &.is-focus {
-                    box-shadow: 0 0 0 2px rgba(79, 110, 247, 0.25), 0 0 0 1px #4f6ef7 inset !important;
-                }
-            }
-
-            // 强制 el-cascader 多选保持单行
-            :deep(.el-cascader) {
-                .el-input__wrapper {
-                    flex-wrap: nowrap !important;
-                    overflow: hidden !important;
-                    height: 32px !important;
-                    min-height: 32px !important;
-                    align-items: center !important;
-                }
-
-                .el-cascader__tags {
-                    flex-wrap: nowrap !important;
-                    overflow: hidden !important;
-                    flex: 1 1 auto !important;
-                    min-width: 0 !important;
-                    height: 100% !important;
-                    align-items: center !important;
-
-                    .el-tag {
-                        flex-shrink: 0 !important;
-                        max-width: 100px;
-                        height: 22px !important;
-                        line-height: 22px !important;
-
-                        .el-tag__content {
-                            overflow: hidden;
-                            text-overflow: ellipsis;
-                            white-space: nowrap;
-                        }
-                    }
-
-                    .el-tag--info {
-                        flex-shrink: 0 !important;
-                    }
-                }
-            }
-        }
-    }
 
     .table-card {
         flex: 1;

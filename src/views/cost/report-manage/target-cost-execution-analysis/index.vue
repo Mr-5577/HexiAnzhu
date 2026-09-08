@@ -191,6 +191,10 @@ const projectData = computed(() => {
 // ---------- 展开层级变更 ----------
 const handleExpandLevel = (level: number) => {
     if (!vxeTableRef.value) return
+    if (!tableData.value.length) {
+        ElMessage.warning('暂无数据')
+        return
+    }
     expandLevel.value = level
     if (level === 999) {
         vxeTableRef.value.expandAll()

@@ -12,7 +12,7 @@
         <base-upload
           v-model:file-list="annexFileList"
           :limit="99"
-          :multiple="true"
+          :multiple="false"
           :showIcon="true"
           :showTip="true"
           :maxSize="20"
