@@ -4,8 +4,8 @@
         <!-- 查询卡片 -->
         <div class="search-card">
             <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px" class="search-form">
-                <el-form-item label="业务归属" prop="segNo">
-                    <el-select v-model="queryParams.segNo" placeholder="请选择业务板块" :clearable="false" style="width: 220px"
+                <el-form-item label="业务归属" prop="seg">
+                    <el-select v-model="queryParams.seg" placeholder="请选择业务板块" :clearable="false" style="width: 220px"
                         @change="handleSegChange">
                         <el-option v-for="item in segOptions" :key="item.value" :label="item.label"
                             :value="item.value" />
@@ -60,12 +60,12 @@
                 </el-form-item>
 
                 <el-form-item class="action-buttons">
-                    <el-button type="primary" @click="handleSearch" class="btn-search">
+                    <el-button type="primary" @click="handleSearch" class="btn-search" :loading="submitLoading">
                         <el-icon>
                             <Search />
                         </el-icon> 搜索
                     </el-button>
-                    <el-button @click="handleReset" class="btn-reset">
+                    <el-button @click="handleReset" class="btn-reset" :loading="submitLoading">
                         <el-icon>
                             <Refresh />
                         </el-icon> 重置
@@ -81,14 +81,13 @@
         </div>
 
         <!-- 统计卡片组件 -->
-        <TargetCostStatistics :data="statistics" />
-
+        <!-- <TargetCostStatistics :data="statistics" /> -->
 
         <!-- 表格区域 -->
         <div class="content-placeholder">
             <vxe-editable-table ref="vxeTableRef" v-model="tableData" :columns="columns" :rowKey="'id'"
-                :loading="tableLoading" :readonly="true" :pagination="false" :total="total" :page-size="pageSize"
-                :current-page="currentPage" />
+                :loading="tableLoading" :readonly="true" :show-footer="true" :pagination="false" :total="total"
+                :page-size="pageSize" :current-page="currentPage" />
         </div>
     </div>
 </template>
@@ -108,7 +107,7 @@ import { ElMessage } from 'element-plus'
 defineOptions({ name: 'target-cost-comparison-analysis' })
 
 const queryParams = ref({
-    segNo: 'ALL',     // 业务归属
+    seg: 'ALL',     // 业务归属
     projIds: [],  // 项目ID
     basePeriodDate: [],   // 基准版期间
     targetPeriodDate: [], // 目标版期间
@@ -141,6 +140,7 @@ const tableData = ref([])
 const currentPage = ref(1);
 const pageSize = ref(20);
 const total = ref(0);
+const submitLoading = ref(false)
 const exportLoading = ref(false)
 
 // ---------- 统计卡片数据 ----------
@@ -215,9 +215,9 @@ const calcStatistics = (data: any[]) => {
 
 // ---------- 计算属性：根据板块过滤项目树 ----------
 const projectData = computed(() => {
-    const segNo = queryParams.value.segNo
-    if (!segNo) return []
-    switch (segNo) {
+    const seg = queryParams.value.seg
+    if (!seg) return []
+    switch (seg) {
         // 全部和地产板块，显示地产板块下的项目
         case 'ALL':
         case 'DC':
@@ -236,8 +236,8 @@ const columns: any = [
     {
         label: '基准版',
         children: [
-            { prop: 'baseVersionNo', label: '版本号', minWidth: 140 },
-            { prop: 'baseArea', label: '建筑面积(㎡)', minWidth: 110, formatter: (v) => formatThousandWithPlaces(v) },
+            { prop: 'baseVersionNo', label: '版本号', minWidth: 140, formatter: (v) => v ? v : '-' },
+            { prop: 'baseArea', label: '建筑面积(㎡)', minWidth: 100, formatter: (v) => formatThousandWithPlaces(v) },
             {
                 prop: 'baseJianAnCost', label: '建安成本(万元)', minWidth: 130, showSummary: true,
                 // 表头提示
@@ -248,24 +248,26 @@ const columns: any = [
                 },
                 formatter: (v) => formatThousandWithPlaces(v)
             },
-            { prop: 'baseShiFanCost', label: '示范区(万元)', minWidth: 120, formatter: (v) => formatThousandWithPlaces(v) },
-            { prop: 'baseYuLiuCost', label: '预留费用(万元)', minWidth: 120, formatter: (v) => formatThousandWithPlaces(v) },
+            { prop: 'baseShiFanCost', label: '示范区(万元)', minWidth: 100, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
+            { prop: 'baseYuLiuCost', label: '预留费用(万元)', minWidth: 110, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
             {
                 // 小计列=建安成本+示范区+预留费用
                 prop: 'baseSubtotal',
                 label: '小计(万元)',
-                minWidth: 120,
+                minWidth: 100,
                 headerTip: {
                     content: '建安成本+示范区+预留费用',
                     icon: 'QuestionFilled',
                     placement: 'top',
-                },
+                }, 
+                showSummary: true,
                 formatter: (v) => formatThousandWithPlaces(v),
             },
             {
                 prop: 'basePricePerSqm',
                 label: '建筑单方(元/㎡)',
-                minWidth: 120,
+                minWidth: 110, 
+                showSummary: true,
                 formatter: (v) => formatThousandWithPlaces(v),
             },
         ],
@@ -273,10 +275,11 @@ const columns: any = [
     {
         label: '目标版',
         children: [
-            { prop: 'targetVersionNo', label: '版本号', minWidth: 140 },
-            { prop: 'targetArea', label: '建筑面积(㎡)', minWidth: 110, formatter: (v) => formatThousandWithPlaces(v) },
+            { prop: 'targetVersionNo', label: '版本号', minWidth: 140, formatter: (v) => v ? v : '-' },
+            { prop: 'targetArea', label: '建筑面积(㎡)', minWidth: 100, formatter: (v) => formatThousandWithPlaces(v) },
             {
                 prop: 'targetJianAnCost', label: '建安成本(万元)', minWidth: 130,
+                showSummary: true,
                 headerTip: {
                     content: '不含示范区、预留费',
                     icon: 'QuestionFilled',
@@ -284,13 +287,14 @@ const columns: any = [
                 },
                 formatter: (v) => formatThousandWithPlaces(v)
             },
-            { prop: 'targetShiFanCost', label: '示范区(万元)', minWidth: 120, formatter: (v) => formatThousandWithPlaces(v) },
-            { prop: 'targetYuLiuCost', label: '预留费用(万元)', minWidth: 120, formatter: (v) => formatThousandWithPlaces(v) },
+            { prop: 'targetShiFanCost', label: '示范区(万元)', minWidth: 100, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
+            { prop: 'targetYuLiuCost', label: '预留费用(万元)', minWidth: 110, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
             {
                 // 小计列=建安成本+示范区+预留费用
                 prop: 'targetSubtotal',
                 label: '小计(万元)',
-                minWidth: 120,
+                minWidth: 110,
+                showSummary: true,
                 headerTip: {
                     content: '建安成本+示范区+预留费用',
                     icon: 'QuestionFilled',
@@ -301,7 +305,8 @@ const columns: any = [
             {
                 prop: 'targetPricePerSqm',
                 label: '建筑单方(元/㎡)',
-                minWidth: 150,
+                minWidth: 110,
+                showSummary: true,
                 formatter: (v) => formatThousandWithPlaces(v),
             },
         ],
@@ -319,18 +324,20 @@ const columns: any = [
                     icon: 'QuestionFilled',
                     placement: 'top',
                 },
+                showSummary: true,
                 formatter: (v) => formatThousandWithPlaces(v),
             },
             {
                 // 单方差异=目标版建筑单方-基准版建筑单方
                 prop: 'diffPricePerSqm',
                 label: '单方差异(元/㎡)',
-                minWidth: 140,
+                minWidth: 130,
                 headerTip: {
                     content: '单方差异=目标版建筑单方-基准版建筑单方',
                     icon: 'QuestionFilled',
                     placement: 'top',
                 },
+                showSummary: true,
                 formatter: (v) => formatThousandWithPlaces(v),
             },
         ],
@@ -374,7 +381,7 @@ const handleSearch = () => {
 // ---------- 重置 ----------
 const handleReset = () => {
     queryParams.value = {
-        segNo: 'ALL',
+        seg: 'ALL',
         projIds: [],
         basePeriodDate: [],
         targetPeriodDate: [],
@@ -398,6 +405,7 @@ const buildParams = () => {
 // ---------- 获取列表数据 ----------
 const getDataList = async () => {
     try {
+        submitLoading.value = true;
         tableLoading.value = true
         const params = buildParams()
         const res = await reportManageApi.getTargetCostAnalyze(params)
@@ -410,6 +418,7 @@ const getDataList = async () => {
     } catch (error) {
         console.error('获取对比分析数据失败:', error)
     } finally {
+        submitLoading.value = false;
         tableLoading.value = false
     }
 }

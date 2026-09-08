@@ -60,7 +60,7 @@
                 <el-icon>
                     <TrendCharts />
                 </el-icon>
-                <span>差额</span>
+                <span>差额汇总</span>
             </div>
             <div class="stat-items">
                 <div v-for="item in diffItems" :key="item.key" class="stat-item stat-item-diff">
@@ -72,7 +72,7 @@
                     <div class="stat-content">
                         <span class="stat-label">{{ item.label }}</span>
                         <span class="stat-value">{{ formatThousandWithPlaces(data[item.key]) }}</span>
-                        <span class="stat-unit">万元</span>
+                        <span class="stat-unit">{{ item.unit }}</span>
                     </div>
                 </div>
             </div>
@@ -127,8 +127,8 @@ const targetItems = computed(() => [
 ])
 
 const diffItems = computed(() => [
-    { key: 'diffJianAnCost', label: '成本差异', icon: TrendCharts },
-    { key: 'diffPricePerSqm', label: '单方差异', icon: DataAnalysis },
+    { key: 'diffJianAnCost', label: '成本差异', icon: TrendCharts, unit: '万元' },
+    { key: 'diffPricePerSqm', label: '单方差异', icon: DataAnalysis, unit: '' },
 ])
 </script>
 

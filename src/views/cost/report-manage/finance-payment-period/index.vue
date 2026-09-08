@@ -1,6 +1,6 @@
-<!-- 目标成本执行分析 -->
+<!-- 财务支付分析-期间维度 -->
 <template>
-    <div class="target-cost-execution-analysis-wrapper">
+    <div class="finance-payment-period-wrapper">
         <!-- 查询卡片 -->
         <div class="search-card">
             <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px" class="search-form">
@@ -25,38 +25,14 @@
                         @change="handleProjectChange" />
                 </el-form-item>
 
-                <el-form-item label="产品业态" prop="prodIds">
-                    <el-select v-model="queryParams.prodIds" placeholder="请选择产品业态" multiple collapse-tags clearable
-                        style="width: 200px">
-                        <el-option v-for="item in productOptions" :key="item.id" :label="item.prodName"
-                            :value="item.id" />
-                    </el-select>
-                </el-form-item>
-
-                <el-form-item label="目标成本版本" prop="costMid">
-                    <!-- <el-select v-model="queryParams.costMid" placeholder="请选择版本" clearable style="width: 200px">
-                        <el-option v-for="item in costVersionOptions" :key="item.id" :label="item.versionNo"
-                            :value="item.id" />
-                    </el-select> -->
-
-                    <el-input v-model="queryParams.versionNo" placeholder="请选择版本" readonly style="width: 200px"
-                        @click="costMDialogVisible = true">
-                        <template #suffix>
-                            <el-icon style="cursor: pointer;" v-if="queryParams.versionNo" @click.stop="clearVersion">
-                                <CircleClose />
-                            </el-icon>
-                        </template>
-                    </el-input>
-                </el-form-item>
-
                 <el-form-item class="action-buttons">
-                    <el-button type="primary" @click="handleSearch" class="btn-search" :loading="submitLoading">
+                    <el-button type="primary" @click="handleSearch" class="btn-search">
                         <el-icon>
                             <Search />
                         </el-icon>
                         搜索
                     </el-button>
-                    <el-button @click="handleReset" class="btn-reset" :loading="submitLoading">
+                    <el-button @click="handleReset" class="btn-reset">
                         <el-icon>
                             <Refresh />
                         </el-icon>
@@ -92,16 +68,8 @@
 
             <vxe-editable-table ref="vxeTableRef" v-model="tableData" :columns="columns" :rowKey="'id'"
                 :loading="tableLoading" :treeConfig="treeConfig" :readonly="true" :pagination="false">
-                <!-- 状态标签 -->
-                <template #warn="{ row }">
-                    <span class="status-dot" :style="{ backgroundColor: getEnumColor(warnEnum, row.warn) }"></span>
-                </template>
             </vxe-editable-table>
         </div>
-        <!-- 明细弹窗 -->
-        <detail-dialog v-model="dialogVisible" :params="currentRow" />
-        <!-- 选择目标成本版本 -->
-        <ChooseCostMDialog v-model="costMDialogVisible" :projId="queryParams?.projId" @select="getSelectData" />
     </div>
 </template>
 
@@ -115,12 +83,9 @@ import { productTypeApi } from '@/api/cost/master-data/product-type-api'
 import { goalCostApi } from '@/api/cost/cost-setting/goal-cost-api'
 import { formatPercent, formatThousandWithPlaces } from '@/utils/big-number'
 import { ElMessage } from 'element-plus'
-import { getEnumColor } from '@/utils/enum'
-import DetailDialog from './detail-dialog.vue'
-import ChooseCostMDialog from '@/components/business/choose-costM-dialog.vue'
-import { buildTreeFromList, calcMaxDepth, warnEnum } from '@/utils/report-util.ts'
+import { calcMaxDepth } from '@/utils/report-util'
 
-defineOptions({ name: 'target-cost-execution-analysis' })
+defineOptions({ name: 'finance-payment-period' })
 
 // ---------- 树形配置 ----------
 const treeConfig = {
@@ -144,11 +109,7 @@ const queryParams = ref({
     seg: undefined,
     projId: undefined,
     projName: undefined,
-    prodIds: [],
-    costMid: undefined,
-    versionNo: undefined,
 })
-const costMDialogVisible = ref(false)
 
 const projectCascaderRef = ref()
 const vxeTableRef = ref<InstanceType<typeof VxeEditableTable>>()
@@ -158,16 +119,11 @@ const segOptions = ref([
     { value: 'JZ', label: '建筑' },
 ])
 const projectOptions = ref([])
-const productOptions = ref([])
-const costVersionOptions = ref([])
 const maxDepth = ref(0)
 const expandLevel = ref(1)
 const tableData = ref([])
 const tableLoading = ref(false)
-const submitLoading = ref(false)
 const exportLoading = ref(false)
-const dialogVisible = ref(false)
-const currentRow = ref(null)
 
 // ---------- 计算属性：根据板块过滤项目树 ----------
 const projectData = computed(() => {
@@ -222,85 +178,11 @@ const columns: any = [
     },
     {
         prop: 'subName',
-        label: '成本科目',
+        label: '科目名称',
         width: 240,
         fixed: 'left',
         align: 'left',
         treeNode: true,
-    },
-    {
-        prop: 'warn',
-        label: '预警状态',
-        width: 80,
-        slots: { default: "warn" },
-    },
-    {
-        label: '目标成本',
-        children: [
-            {
-                prop: 'costAmt',
-                label: '含税',
-                minWidth: 100,
-                formatter: (value) => formatThousandWithPlaces(value),
-            },
-            {
-                prop: 'costExclAmt',
-                label: '不含税',
-                minWidth: 100,
-                formatter: (value) => formatThousandWithPlaces(value),
-            },
-        ],
-    },
-    {
-        label: '已发生',
-        children: [
-            {
-                prop: 'dynAmt',
-                label: '含税',
-                minWidth: 100,
-                formatter: (value) => formatThousandWithPlaces(value),
-                clickable: true, // 点击单元格触发 onClick 事件
-                onClick: (data) => {
-                    console.log("点击了已发生数据:", data);
-                    const { children, ...rest } = data
-                    const newParams = {
-                        ...queryParams.value,
-                        ...rest,
-                    }
-                    currentRow.value = newParams
-                    dialogVisible.value = true; // 打开弹窗
-                },
-            },
-            {
-                prop: 'dynExclAmt',
-                label: '不含税',
-                minWidth: 100,
-                formatter: (value) => formatThousandWithPlaces(value),
-            },
-        ],
-    },
-    {
-        label: '未发生',
-        children: [
-            {
-                prop: 'notDynAmt',
-                label: '含税',
-                minWidth: 100,
-                formatter: (value) => formatThousandWithPlaces(value)
-            },
-            {
-                prop: 'notDynExclAmt',
-                label: '不含税',
-                minWidth: 100,
-                formatter: (value) => formatThousandWithPlaces(value),
-            },
-        ],
-    },
-    {
-        prop: 'occurRate',
-        label: '发生率',
-        width: 100,
-        formatter: (value) => formatPercent(value, 2),
     },
 ]
 
@@ -315,42 +197,6 @@ const getProjectOptions = async () => {
         console.error('获取项目列表失败:', error)
     }
 }
-// 获取项目产品类型
-const getProductList = async (projId: number) => {
-    if (!projId) return
-    try {
-        const res = await productTypeApi.getProductProjList({
-            projId: projId,
-            withDetail: true,
-        });
-        if (res.code === 200) {
-            productOptions.value = res.data || [];
-            // 默认全选
-            queryParams.value.prodIds = productOptions.value.map(item => item.id)
-        }
-    } catch (error) {
-        throw error;
-    }
-};
-// --------- 获取目标成本版本列表 ----------
-const getCostVersionList = async (projId: number) => {
-    if (!projId) return
-    try {
-        const res = await goalCostApi.getProjectCostMList({ projId: projId });
-        if (res.code === 200) {
-            const costVerList = res.data || [];
-            costVersionOptions.value = costVerList
-            // 默认选中生效版本
-            if (costVerList.length) {
-                const enabledCostVer = costVerList.find(item => item.isEnabled)
-                queryParams.value.costMid = enabledCostVer?.id
-                queryParams.value.versionNo = enabledCostVer?.versionNo
-            }
-        }
-    } catch (error) {
-        throw error;
-    }
-};
 
 // ---------- 递归查找树中第一个叶子节点（项目） ----------
 const findFirstProjectId = (tree: any[]) => {
@@ -374,10 +220,6 @@ const updateFirstProject = async () => {
         const { orgId, orgName } = firstProj
         queryParams.value.projId = orgId
         queryParams.value.projName = orgName
-        // 查询项目下的产品类型
-        await getProductList(orgId as number)
-        // 查询项目下的目标成本版本
-        await getCostVersionList(orgId as number)
     }
 }
 
@@ -407,15 +249,6 @@ const handleProjectChange = async (val: number) => {
             queryParams.value.projName = node.label
         }
     }
-    // 清除产品业态和目标成本版本的选中值
-    queryParams.value.prodIds = []
-    productOptions.value = []
-    queryParams.value.costMid = undefined
-    queryParams.value.versionNo = undefined
-    costVersionOptions.value = []
-
-    await getProductList(val)
-    await getCostVersionList(val)
     await nextTick()
     handleSearch()
 }
@@ -427,13 +260,6 @@ const handleSearch = () => {
 
 // ---------- 重置 ----------
 const handleReset = async () => {
-    Object.keys(queryParams.value).forEach((key) => {
-        if (Array.isArray(queryParams.value[key])) {
-            queryParams.value[key] = [];
-        } else {
-            queryParams.value[key] = undefined;
-        }
-    });
     await selectedDefaultSeg()
     handleSearch()
 }
@@ -459,7 +285,6 @@ const handleExport = async () => {
 // 获取列表数据
 const getDataList = async () => {
     try {
-        submitLoading.value = true;
         tableLoading.value = true;
         const params = {
             ...queryParams.value,
@@ -469,8 +294,8 @@ const getDataList = async () => {
         if (res.code === 200) {
             const list = res.data || [];
             // 转换为树形结构
-            const treeData = buildTreeFromList(list, 'subCode', 'children');
-            tableData.value = treeData;
+            // const treeData = buildTreeFromList(list, 'subCode', 'children');
+            // tableData.value = treeData;
 
             // 数据加载完成后，计算深度并默认展开第1级
             await nextTick()
@@ -484,24 +309,9 @@ const getDataList = async () => {
     } catch (error) {
         console.error("获取列表失败:", error);
     } finally {
-        submitLoading.value = false;
         tableLoading.value = false;
     }
 };
-const clearVersion = () => {
-    queryParams.value.costMid = undefined
-    queryParams.value.versionNo = undefined
-    // 关闭弹窗
-    // costMDialogVisible.value = false;
-};
-const getSelectData = (data: any) => {
-    console.log("选中的数据:", data);
-    if (data && data.length) {
-        const [firstData] = data
-        queryParams.value.costMid = firstData?.id
-        queryParams.value.versionNo = firstData?.versionNo
-    }
-}
 
 onMounted(async () => {
     await getProjectOptions()
@@ -511,7 +321,7 @@ onMounted(async () => {
 </script>
 
 <style lang="scss" scoped>
-.target-cost-execution-analysis-wrapper {
+.finance-payment-period-wrapper {
     height: 100%;
     min-height: 0;
     width: 100%;
