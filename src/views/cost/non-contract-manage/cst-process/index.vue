@@ -18,9 +18,12 @@
         }" placeholder="请选择项目" style="width: 220px" clearable />
       </el-form-item>
 
-
       <el-form-item label="事项名称" prop="processName">
         <el-input v-model="queryParams.processName" placeholder="请输入事项名称" clearable style="width: 220px" />
+      </el-form-item>
+
+            <el-form-item label="单据编号" prop="bizNo">
+        <el-input v-model="queryParams.bizNo" placeholder="请输入事项名称" clearable style="width: 220px" />
       </el-form-item>
 
       <el-form-item label="审批状态" prop="status">
@@ -105,6 +108,7 @@ const queryParams = ref({
   projId: undefined,
   segId: undefined,
   processName: "",
+  bizNo: "",
   status: undefined,
   createId: undefined,
   time: [],
@@ -126,7 +130,7 @@ const columns: TableColumnItem[] = [
   { prop: "bizTitle", label: "标题", width: 200 },
   { prop: "projName", label: "项目名称", width: 140 },
   // { prop: "finaTypeName", label: "费用类型", width: 140 },
-  // { prop: "processNo", label: "事项编号", width: 140 },
+  { prop: "processNo", label: "单据编号", width: 140 },
   { prop: "processName", label: "事项名称", width: 160 },
   { prop: "processAmt", label: "事项计划金额", width: 140, formatter: (row) => formatThousandWithPlaces(row.processAmt || 0) },
   { prop: "createName", label: "创建人", width: 120 },
@@ -161,6 +165,7 @@ const getDataList = async () => {
       processName: queryParams.value.processName,
       status: queryParams.value.status,
       createId: queryParams.value.createId,
+      bizNo: queryParams.value.bizNo,
       createDateStart: queryParams.value.time?.[0] || "",
       createDateEnd: queryParams.value.time?.[1] || "",
     };
@@ -194,6 +199,7 @@ const handleReset = () => {
     projId: undefined,
     segId: undefined,
     processName: "",
+    bizNo: "",
     status: undefined,
     createId: undefined,
     time: [],
