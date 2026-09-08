@@ -65,6 +65,13 @@ export const PERMISSIONS = {
   PAY_LEDGER_REG: "payment-ledger:register", // 付款台账-登记
   PAY_LEDGER_ENTRY: "payment-ledger:entry", // 付款台账-录入
 
+  // 报表管理
+  CON_OVERVIEW_EXPORT: "contract-overview:export", // 合同执行概览-导出
+  PAY_OVERVIEW_EXPORT: "payment-overview:export", // 请款执行概览-导出
+  PAY_DETAIL_EXPORT: "payment-detail:export", // 请款执行明细-导出
+  PROJECT_OUTPUT_EXPORT: "project-output:export", // 产值申报概览-导出
+  OUTPUT_DETAIL_EXPORT: "output-detail:export", // 产值申报明细-导出
+
   // 系统角色权限
   DEPT_PERM_EDIT: "department-permissions:edit", // 部门权限-编辑
   PROJ_PERM_EDIT: "project-permissions:edit", // 项目权限-编辑
