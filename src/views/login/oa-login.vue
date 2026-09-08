@@ -373,7 +373,6 @@ const handleRouteParams = async () => {
     errorMessage.value = "";
 
     const query = route.query;
-    const isMock = getQueryParam(query.isMock) === "true";
     const requestId = getQueryParam(query.requestId);
     const oaUserId = getQueryParam(query.oaUserId);
     const timestamp = getQueryParam(query.timestamp);
@@ -388,11 +387,7 @@ const handleRouteParams = async () => {
       oaUserId,
       timestamp,
       signature,
-      isMock,
       bizKeyId,
-      bizItemCode: getQueryParam(query.bizItemCode),
-      billId: getQueryParam(query.billId),
-      bizId: getQueryParam(query.bizId),
       subBizCode,
       mode,
     });

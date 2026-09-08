@@ -51,10 +51,6 @@ export const config = {
   get enableDebug(): boolean {
     return import.meta.env.VITE_ENABLE_DEBUG === "true";
   },
-
-  get enableMock(): boolean {
-    return import.meta.env.VITE_ENABLE_MOCK === "true";
-  },
 };
 
 // ================================ 工具函数 ===============================
@@ -82,7 +78,6 @@ export const getCurrentMode = (): string => config.mode;
 
 // 功能开关
 export const isDebugEnabled = (): boolean => config.enableDebug;
-export const isMockEnabled = (): boolean => config.enableMock;
 
 // 环境描述
 export const getEnvironmentName = (): string => {
