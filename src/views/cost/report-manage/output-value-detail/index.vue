@@ -241,11 +241,28 @@ const getProjectOptions = async () => {
         console.error("获取项目列表失败:", error);
     }
 };
+/**
+ * 日期范围格式化辅助函数
+ * @param dates 日期范围数组
+ * @param type 类型（start: 起始日期，end: 结束日期）
+ */
+const formatDateRange = (dates, type) => {
+    if (!dates || !Array.isArray(dates) || dates.length < 2) return undefined;
+    const [start, end] = dates;
+    if (type === 'start') {
+        return start ? dayjs(start).startOf('month').format('YYYY-MM-DD') : undefined;
+    }
+    if (type === 'end') {
+        return end ? dayjs(end).endOf('month').format('YYYY-MM-DD') : undefined;
+    }
+    return undefined;
+};
 const buildParams = () => {
     const { segId, reqDate, buildPeriod, prodValPeriod, payDate, ...rest } = queryParams.value;
     let segIdList = []
     if (segId) {
         if (segId == 9999) {
+            // segIdList = segOptions.value.map((item) => item.id).filter((vi) => vi != 9999);
             // 全部传空数组
             segIdList = [];
         } else {
@@ -256,14 +273,14 @@ const buildParams = () => {
     const params = {
         ...rest,
         segIdList: segIdList,
-        payDateStart: payDate?.[0] ? dayjs(payDate?.[0]).startOf('month').format('YYYY-MM-DD') : undefined,
-        payDateEnd: payDate?.[1] ? dayjs(payDate?.[1]).endOf('month').format('YYYY-MM-DD') : undefined,
-        reqDateStart: reqDate?.[0] ? dayjs(reqDate?.[0]).startOf('month').format('YYYY-MM-DD') : undefined,
-        reqDateEnd: reqDate?.[1] ? dayjs(reqDate?.[1]).endOf('month').format('YYYY-MM-DD') : undefined,
-        buildPeriodStart: buildPeriod?.[0] ? dayjs(buildPeriod?.[0]).startOf('month').format('YYYY-MM-DD') : undefined,
-        buildPeriodEnd: buildPeriod?.[1] ? dayjs(buildPeriod?.[1]).endOf('month').format('YYYY-MM-DD') : undefined,
-        prodValPeriodStart: prodValPeriod?.[0] ? dayjs(prodValPeriod?.[0]).startOf('month').format('YYYY-MM-DD') : undefined,
-        prodValPeriodEnd: prodValPeriod?.[1] ? dayjs(prodValPeriod?.[1]).endOf('month').format('YYYY-MM-DD') : undefined,
+        payDateStart: formatDateRange(payDate, 'start'),
+        payDateEnd: formatDateRange(payDate, 'end'),
+        reqDateStart: formatDateRange(reqDate, 'start'),
+        reqDateEnd: formatDateRange(reqDate, 'end'),
+        buildPeriodStart: formatDateRange(buildPeriod, 'start'),
+        buildPeriodEnd: formatDateRange(buildPeriod, 'end'),
+        prodValPeriodStart: formatDateRange(prodValPeriod, 'start'),
+        prodValPeriodEnd: formatDateRange(prodValPeriod, 'end'),
     };
     return params;
 }
