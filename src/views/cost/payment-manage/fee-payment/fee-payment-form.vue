@@ -832,7 +832,7 @@ const getAnnexFileList = async (fileList: any) => {
 // 批量识别发票
 const batchInvoiceRecognition = async (invoiceDataList: any[]) => {
   const recognitionPromises = invoiceDataList.map(async (item) => {
-    return await invoiceRecognition(item.id, item.annexName);
+    return await invoiceRecognition(item.id, item.annexName); // 发票识别请求
   });
 
   try {
@@ -881,7 +881,7 @@ const invoiceRecognition = async (annexId: number, annexName: string) => {
     const res = await commonApi.recognizeAndCheckInvoice({ annexId: annexId });
     console.log("识别结果", res);
     if (res.code === 200 && res.data) {
-      const { finalData, isRepeat } = res.data;
+      const { checkData, finalData, recognizeData, isRepeat } = res.data;
       if (finalData) {
         let detailListData = [];
         if (finalData.InvoiceProducts && finalData.InvoiceProducts.length > 0) {
@@ -914,8 +914,8 @@ const invoiceRecognition = async (annexId: number, annexName: string) => {
           isValid: finalData.InvoiceValidate == 1 ? true : false,
           isRepeat: isRepeat || false,
           validateMsg: finalData.ValidateMsg,
-          ocrRes: finalData.OCRRes || "",
-          validateRes: finalData.ValidateRes || "",
+          ocrRes: recognizeData ? JSON.stringify(recognizeData) : "",
+          validateRes: checkData ? JSON.stringify(checkData) : "",
           status:
             finalData.InvoiceValidate == 1
               ? 1

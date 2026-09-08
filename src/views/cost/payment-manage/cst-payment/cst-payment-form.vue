@@ -913,7 +913,7 @@ const getAnnexFileList = async (fileList: any) => {
       position: "top-right",
     });
     try {
-      await batchInvoiceRecognition(fileList);
+      await batchInvoiceRecognition(fileList); // 批量识别发票
       // 关闭通知并显示成功
       notify.close();
       ElNotification({
@@ -930,10 +930,10 @@ const getAnnexFileList = async (fileList: any) => {
     }
   }
 };
-
+// 批量识别发票
 const batchInvoiceRecognition = async (invoiceDataList: any[]) => {
   const recognitionPromises = invoiceDataList.map(async (item) => {
-    return await invoiceRecognition(item.id, item.annexName);
+    return await invoiceRecognition(item.id, item.annexName); // 发票识别请求
   });
 
   try {
@@ -1008,7 +1008,7 @@ const batchInvoiceRecognition = async (invoiceDataList: any[]) => {
     invoiceMTable.value = [...invoiceMTable.value, ...fallbackData];
   }
 };
-
+// 发票识别请求
 const invoiceRecognition = async (annexId: number, annexName: string) => {
   try {
     const res = await commonApi.recognizeAndCheckInvoice({ annexId: annexId });
