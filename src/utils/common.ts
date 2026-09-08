@@ -340,6 +340,50 @@ export const safeSubtract = (
  * @returns 标准化后的编码字符串
  */
 export const normalizeCode = (code: any): string => {
-  if (code == null) return '';
-  return String(code).replace(/^0+(?=\d)/, '');
+  if (code == null) return "";
+  return String(code).replace(/^0+(?=\d)/, "");
+};
+
+/**
+ * 通过 fetch + Blob 方式下载文件（强制下载，不预览）
+ * 前提：目标服务器允许跨域（即响应头包含 Access-Control-Allow-Origin）
+ *
+ * @param url - 文件地址
+ * @param fileName - 自定义文件名（可选，若不传则尝试从 URL 中提取）
+ * @returns Promise<boolean> - 下载是否成功
+ */
+export const downloadByUrl = async (
+  url: string,
+  fileName?: string,
+): Promise<boolean> => {
+  try {
+    const response = await fetch(url, { mode: "cors" });
+    if (!response.ok) {
+      throw new Error(`下载失败（HTTP ${response.status}）`);
+    }
+
+    // 获取文件名：优先级 参数 > URL 最后一段
+    let finalName = fileName;
+    if (!finalName) {
+      // 解码 URL 最后一段作为文件名
+      finalName =
+        decodeURIComponent(url.substring(url.lastIndexOf("/") + 1)) ||
+        "download";
+    }
+
+    const blob = await response.blob();
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = finalName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    // 延迟释放内存，确保下载已触发
+    setTimeout(() => URL.revokeObjectURL(link.href), 150);
+    return true;
+  } catch (error) {
+    console.error("文件下载失败:", error);
+    return false;
+  }
 };

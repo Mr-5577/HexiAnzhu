@@ -74,6 +74,7 @@ import { commonApi } from "@/api/cost/common-api.ts";
 import { buildFileUrl } from "@/utils/file-path-util.ts";
 import { useMenuStore } from "@/stores/menu-store";
 import { PERMISSIONS } from "@/constants/permission.ts";
+import { downloadByUrl } from "@/utils/common.ts";
 
 defineOptions({ name: "attachment" });
 
@@ -159,41 +160,45 @@ const handleUpload = () => {
 };
 
 // 查看附件
-const handleView = async (row: ContractAnnex) => {
+const handleView = async (row: any) => {
   console.log("查看附件:", row);
-  if (!row.annexId) {
-    ElMessage.warning("当前附件无直链，无法预览");
-    return;
+  if (row.annexUrl) {
+    window.open(row.annexUrl, "_blank");
   }
-  try {
-    const res = await commonApi.getFileList({ annexId: row.annexId });
-    if (res.code === 200 && res.data) {
-      const file = res.data[0];
-      if (file && file.annexPath) {
-        const url = buildFileUrl(file.annexPath);
-        window.open(url, "_blank");
+  if (row.annexId) {
+    try {
+      const res = await commonApi.getFileList({ annexId: row.annexId });
+      if (res.code === 200 && res.data) {
+        const file = res.data[0];
+        if (file && file.annexPath) {
+          const url = buildFileUrl(file.annexPath);
+          window.open(url, "_blank");
+        }
       }
+    } catch (error) {
+      console.error("预览失败:", error);
     }
-  } catch (error) {
-    console.error("预览失败:", error);
   }
 };
-
 // 下载附件
-const handleDownload = async (row: ContractAnnex) => {
+const handleDownload = async (row: any) => {
+  console.log("下载附件:", row);
   if (downloading.value) return
-  if (!row.annexId) {
-    ElMessage.warning("当前附件无直链，无法下载");
-    return;
-  }
-  try {
+  if (row.annexUrl) {
     downloading.value = true
-    await commonApi.downloadAnnex({ annexId: row.annexId });
-    await new Promise((resolve) => setTimeout(resolve, 3000));
-  } catch (error) {
-    console.error("预览失败:", error);
-  } finally {
+    await downloadByUrl(row.annexUrl, row.annexName)
     downloading.value = false
+  }
+  if (row.annexId) {
+    try {
+      downloading.value = true
+      await commonApi.downloadAnnex({ annexId: row.annexId });
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+    } catch (error) {
+      console.error("预览失败:", error);
+    } finally {
+      downloading.value = false
+    }
   }
 };
 
