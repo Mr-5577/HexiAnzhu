@@ -4,7 +4,7 @@
         <!-- 查询卡片 -->
         <BaseSearchCard>
             <template #form>
-                <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="86px" class="search-form">
+                <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px" class="search-form">
                     <el-form-item label="业务板块" prop="segId">
                         <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px"
                             @change="changeSeg">
@@ -54,7 +54,7 @@
             </template>
             <template #actions>
                 <el-input v-model="queryParams.keyWord" placeholder="请输入合同名称、合同编号、供应商名称、产值单据号、单据标题" clearable
-                    style="width: 630px" />
+                    style="width:636px;margin-right: auto;" />
                 <el-button type="primary" @click="handleSearch" :loading="submitLoading">搜索</el-button>
                 <el-button @click="handleReset" :loading="submitLoading">重置</el-button>
                 <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain

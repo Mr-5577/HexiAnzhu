@@ -60,9 +60,6 @@
             </el-form>
         </div>
 
-        <!-- 统计卡片 -->
-        <statistics-info></statistics-info>
-
         <!-- 表格卡片 -->
         <div class="table-card">
             <vxe-editable-table ref="vxeTableRef" v-model="paginatedData" :columns="columns" :rowKey="'id'"
@@ -81,7 +78,6 @@ import dayjs from "dayjs";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import { reportManageApi } from "@/api/cost/contract-manage/report-manage-api";
 import { ElMessage } from "element-plus";
-import StatisticsInfo from "./statistics-Info.vue";
 
 defineOptions({ name: "target-cost-payment-analysis" });
 

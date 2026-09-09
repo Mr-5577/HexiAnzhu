@@ -71,6 +71,8 @@ const toggleExpand = () => { isExpand.value = !isExpand.value; };
                     color: #4a5568;
                     font-weight: 500;
                     padding-right: 8px;
+                    display: flex;
+                    justify-content: flex-start;
                 }
             }
 
@@ -149,8 +151,10 @@ const toggleExpand = () => { isExpand.value = !isExpand.value; };
         display: flex;
         align-items: center;
         flex-wrap: nowrap;
+        justify-content: flex-end;
         gap: 12px;
         padding-top: 6px;
+        padding-right: 26px;
 
         .btn-toggle {
             //   margin-left: auto;

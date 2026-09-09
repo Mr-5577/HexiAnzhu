@@ -4,7 +4,7 @@
         <!-- 查询卡片 -->
         <BaseSearchCard>
             <template #form>
-                <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="86px" class="search-form">
+                <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px" class="search-form">
                     <el-form-item label="业务板块" prop="segId">
                         <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px"
                             @change="changeSeg">
@@ -66,12 +66,17 @@
                         <EnumSelect v-model="queryParams.payMethod" :options="PayTypeEnum" clearable
                             placeholder="请选择产值确认方式" :width="'220px'" />
                     </el-form-item>
+
+                    <el-form-item label="合同状态" prop="conStatusList">
+                        <EnumSelect v-model="queryParams.conStatusList" :options="conStatusList" clearable multiple
+                            placeholder="请选择合同状态" :width="'220px'" />
+                    </el-form-item>
                 </el-form>
             </template>
             <!-- 操作栏插槽：关键字输入框 + 按钮 -->
             <template #actions>
                 <el-input v-model="queryParams.keyWord" placeholder="请输入合同名称、合同编号、供应商名称、甲方签约公司、甲方经办人" clearable
-                    style="width:630px" />
+                    style="width:636px;margin-right: auto;" />
                 <el-button type="primary" :loading="submitLoading" @click="handleSearch">
                     <el-icon>
                         <Search />
@@ -108,7 +113,7 @@ import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import { formatThousandWithPlaces } from "@/utils/big-number";
 import { useMDStore } from "@/stores/md-store";
-import { ConPropertyEnum, PayTypeEnum } from "@/constants/contract-manage/enums";
+import { ConPropertyEnum, ConStatusEnum, PayTypeEnum } from "@/constants/contract-manage/enums";
 import EnumSelect from "@/components/base/base-enum-select.vue";
 import BaseSearchCard from "@/components/base/base-search-card.vue";
 import { reportManageApi } from "@/api/cost/contract-manage/report-manage-api";
@@ -133,6 +138,7 @@ const queryParams = ref({
     conProperty: undefined,      // 合同类型
     conTypeIdList: undefined,       // 合同分类（多选级联）
     payMethod: undefined,        // 产值确认方式
+    conStatusList: [40],        // 合同状态,默认已审批40
     keyWord: undefined,        // 关键字
 });
 
@@ -149,6 +155,9 @@ const total = ref(0);
 const submitLoading = ref(false);
 const exportLoading = ref(false);
 
+const conStatusList = computed(() => {
+    return ConStatusEnum.filter((item) => item.value != 0);
+})
 const projectData = computed(() => {
     const segId = queryParams.value.segId;
     if (segId) {
@@ -169,6 +178,7 @@ const columns: any = [
     { prop: "projName", label: "项目名称", width: 120, fixed: "left" },
     { prop: "conName", label: "合同名称", width: 150, fixed: "left" },
     { prop: "conSysNo", label: "合同编号", width: 150, fixed: "left" },
+    { prop: "conStatusName", label: "合同状态", width: 90, fixed: "left" },
     {
         label: "合同基本信息",
         children: [
@@ -493,7 +503,13 @@ const handleReset = () => {
     currentPage.value = 1;
     pageSize.value = 20;
     Object.keys(queryParams.value).forEach((key) => {
-        queryParams.value[key] = Array.isArray(queryParams.value[key]) ? [] : undefined;
+        if (key === "conStatusList") {
+            queryParams.value[key] = [40]
+        } else if (Array.isArray(queryParams.value[key])) {
+            queryParams.value[key] = [];
+        } else {
+            queryParams.value[key] = undefined;
+        }
     });
     selectedDefaultSeg();
     getDataList();
