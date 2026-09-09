@@ -35,7 +35,7 @@
             <span>{{ refreshing ? "搜索中" : "搜索" }}</span>
           </el-button>
           <el-button @click="handleReset">重置</el-button>
-          <el-button type="primary" class="add-btn" @click="handleAdd">
+          <el-button type="primary" class="add-btn" @click="handleAdd" :loading="addLoading">
             <el-icon>
               <Plus />
             </el-icon>
@@ -97,6 +97,7 @@ import { useUserStore } from "@/stores/user-store";
 import { ReqTypeEnum } from "@/constants/contract-manage/enums";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";
+import { attachmentApi } from "@/api/cost/contract-manage/attachment-api";
 
 defineOptions({ name: "payment-application" });
 
@@ -107,6 +108,7 @@ const props = defineProps<{
 
 const router = useRouter();
 const tableLoading = ref(false);
+const addLoading = ref(false);
 const currentPage = ref<number>(1);
 const pageSize = ref<number>(20);
 const total = ref<number>(0);
@@ -181,143 +183,6 @@ const tableColumns: TableColumnItem[] = [
     width: 90,
     align: "center",
   },
-  // {
-  //   prop: "signAmt",
-  //   label: "合同签约金额",
-  //   width: 140,
-  //   formatter: (row: HConPayment) => row.signAmt?.toFixed(2) || "0.00",
-  // },
-  // {
-  //   prop: "addAmt",
-  //   label: "补充合同金额",
-  //   width: 140,
-  //   formatter: (row: HConPayment) => row.addAmt?.toFixed(2) || "0.00",
-  // },
-  // {
-  //   prop: "sumChangeAmt",
-  //   label: "累计变更签证",
-  //   width: 140,
-  //   formatter: (row: HConPayment) => row.sumChangeAmt?.toFixed(2) || "0.00",
-  // },
-  // {
-  //   prop: "preSettleAmt",
-  //   label: "预结算合同金额",
-  //   width: 150,
-  //   formatter: (row: HConPayment) => row.preSettleAmt?.toFixed(2) || "0.00",
-  // },
-  // {
-  //   prop: "sumProdVal",
-  //   label: "累计产值",
-  //   width: 140,
-  //   formatter: (row: HConPayment) => row.sumProdVal?.toFixed(2) || "0.00",
-  // },
-  // {
-  //   prop: "sumPayAmt",
-  //   label: "累计应付",
-  //   width: 140,
-  //   formatter: (row: HConPayment) => row.sumPayAmt?.toFixed(2) || "0.00",
-  // },
-  // {
-  //   prop: "sumAppyAmt",
-  //   label: "累计请款",
-  //   width: 140,
-  //   formatter: (row: HConPayment) => row.sumAppyAmt?.toFixed(2) || "0.00",
-  // },
-  // {
-  //   prop: "sumPaidAmt",
-  //   label: "累计实付",
-  //   width: 140,
-  //   formatter: (row: HConPayment) => row.sumPaidAmt?.toFixed(2) || "0.00",
-  // },
-  // {
-  //   prop: "sumOwedAmt",
-  //   label: "累计欠款",
-  //   width: 140,
-  //   formatter: (row: HConPayment) => row.sumOwedAmt?.toFixed(2) || "0.00",
-  // },
-  // {
-  //   prop: "leavePayAmt",
-  //   label: "剩余应付金额",
-  //   width: 140,
-  //   formatter: (row: HConPayment) => row.leavePayAmt?.toFixed(2) || "0.00",
-  // },
-  // {
-  //   prop: "payOutRate",
-  //   label: "应付占产值比(%)",
-  //   width: 150,
-  //   formatter: (row: HConPayment) => row.payOutRate?.toFixed(2) || "0.00",
-  // },
-  // {
-  //   prop: "paidPayRate",
-  //   label: "实付占应付比(%)",
-  //   width: 150,
-  //   formatter: (row: HConPayment) => row.paidPayRate?.toFixed(2) || "0.00",
-  // },
-  // {
-  //   prop: "paidOutRate",
-  //   label: "实付占产值比(%)",
-  //   width: 150,
-  //   formatter: (row: HConPayment) => row.paidOutRate?.toFixed(2) || "0.00",
-  // },
-  // {
-  //   prop: "pbAmount",
-  //   label: "转履约保证金",
-  //   width: 140,
-  //   formatter: (row: HConPayment) => row.pbAmount?.toFixed(2) || "0.00",
-  // },
-  // {
-  //   prop: "changeAmt",
-  //   label: "奖罚总金额(扣款)",
-  //   width: 160,
-  //   formatter: (row: HConPayment) => row.changeAmt?.toFixed(2) || "0.00",
-  // },
-  // {
-  //   prop: "invRecAmt",
-  //   label: "应收发票金额",
-  //   width: 140,
-  //   formatter: (row: HConPayment) => row.invRecAmt?.toFixed(2) || "0.00",
-  // },
-  // {
-  //   prop: "invRcvdAmt",
-  //   label: "已收发票",
-  //   width: 140,
-  //   formatter: (row: HConPayment) => row.invRcvdAmt?.toFixed(2) || "0.00",
-  // },
-  // {
-  //   prop: "invOweAmt",
-  //   label: "欠票金额",
-  //   width: 140,
-  //   formatter: (row: HConPayment) => row.invOweAmt?.toFixed(2) || "0.00",
-  // },
-  // {
-  //   prop: "isModifyAcc",
-  //   label: "修改收款账号",
-  //   width: 130,
-  //   formatter: (row: HConPayment) => (row.isModifyAcc === 1 ? "是" : "否"),
-  // },
-  // {
-  //   prop: "bankName",
-  //   label: "收款开户行",
-  //   width: 150,
-  //   showOverflowTooltip: true,
-  // },
-  // {
-  //   prop: "accountName",
-  //   label: "收款账户名",
-  //   width: 150,
-  //   showOverflowTooltip: true,
-  // },
-  // {
-  //   prop: "bankAccount",
-  //   label: "收款账号",
-  //   width: 160,
-  //   showOverflowTooltip: true,
-  // },
-  // {
-  //   prop: "modifyAccAnnex",
-  //   label: "修改凭证附件",
-  //   width: 130,
-  // },
   { slot: "status", label: "审批状态", minWidth: 90 },
   { prop: "createName", label: "创建人", minWidth: 90 },
   { prop: "createDate", label: "创建时间", minWidth: 150 },
@@ -381,25 +246,56 @@ const handleRefresh = () => {
 };
 
 // 新增
-const handleAdd = () => {
-  router.push({
-    path: "/con/payment-application/add",
-    query: {
-      projId: props.projId, // 项目ID
-      conId: props.conId, // 合同ID
-    },
-  });
+const handleAdd = async () => {
+  // 校验是否有签署文件，如果没有签署文件，则先上传签署文件
+  if (addLoading.value) return;
+  try {
+    addLoading.value = true;
+    const res = await attachmentApi.getAnnexList({ conId: props.conId });
+    if (res.code === 200) {
+      const list = res.data || [];
+      const hasSignFile = list.some((item: any) => item.annexType == 1);
+      if (!hasSignFile) {
+        ElMessage.warning("签署文件缺失，请联系合同管理员上传!");
+        return;
+      }
+      router.push({
+        path: "/con/payment-application/add",
+        query: {
+          projId: props.projId, // 项目ID
+          conId: props.conId, // 合同ID
+        },
+      });
+    }
+  } catch (error) {
+    console.error("获取附件失败:", error);
+  } finally {
+    addLoading.value = false;
+  }
 };
 // 编辑
 const handleEdit = async ({ id }) => {
-  router.push({
-    path: "/con/payment-application/edit",
-    query: {
-      projId: props.projId, // 项目ID
-      conId: props.conId, // 合同ID
-      paymentId: id, // 付款申请ID
-    },
-  });
+  try {
+    const res = await attachmentApi.getAnnexList({ conId: props.conId });
+    if (res.code === 200) {
+      const list = res.data || [];
+      const hasSignFile = list.some((item: any) => item.annexType == 1);
+      if (!hasSignFile) {
+        ElMessage.warning("签署文件缺失，请联系合同管理员上传!");
+        return;
+      }
+      router.push({
+        path: "/con/payment-application/edit",
+        query: {
+          projId: props.projId, // 项目ID
+          conId: props.conId, // 合同ID
+          paymentId: id, // 付款申请ID
+        },
+      });
+    }
+  } catch (error) {
+    console.error("获取附件失败:", error);
+  }
 };
 
 // 详情
