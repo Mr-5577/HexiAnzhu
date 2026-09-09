@@ -50,11 +50,18 @@
                         <el-date-picker v-model="queryParams.payDate" value-format="YYYY-MM" type="monthrange"
                             range-separator="至" start-placeholder="开始月份" end-placeholder="结束月份" style="width: 220px" />
                     </el-form-item>
+                    <el-form-item label="单位" prop="unit">
+                        <el-select v-model="queryParams.unit" placeholder="请选择单位" :clearable="false"
+                            style="width: 150px" @change="handleSearch">
+                            <el-option label="万元" value="万元" />
+                            <el-option label="元" value="元" />
+                        </el-select>
+                    </el-form-item>
                 </el-form>
             </template>
             <template #actions>
                 <el-input v-model="queryParams.keyWord" placeholder="请输入合同名称、合同编号、供应商名称、产值单据号、单据标题" clearable
-                    style="width:636px;margin-right: auto;" />
+                    style="width:636px" />
                 <el-button type="primary" @click="handleSearch" :loading="submitLoading">搜索</el-button>
                 <el-button @click="handleReset" :loading="submitLoading">重置</el-button>
                 <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain
@@ -106,6 +113,7 @@ const queryParams = ref({
     buildPeriod: [], // 施工期间
     prodValPeriod: [], // 产值期间
     payDate: [], // 解锁期间
+    unit: "万元", // 单位
     conId: undefined, // 合同ID
     keyWord: undefined, // 关键字
 });
@@ -150,23 +158,26 @@ const paginatedData = computed(() => {
     const end = start + pageSize.value;
     return tableData.value.slice(start, end);
 });
-
-const columns: any = [
-    { type: "index", label: "序号", width: 60 },
-    { prop: 'prodBillNo', label: '产值单据号', minWidth: 140 },
-    { prop: 'bizTitle', label: '标题', minWidth: 150 },
-    { prop: 'projName', label: '项目', minWidth: 120 },
-    { prop: 'segName', label: '板块', width: 90 },
-    { prop: 'conSysNo', label: '合同编号', minWidth: 130 },
-    { prop: 'conName', label: '合同名称', minWidth: 150 },
-    { prop: 'supName', label: '供应商名称', minWidth: 150 },
-    { prop: 'conTypeName', label: '合同分类', minWidth: 120 },
-    { prop: 'applyProdVal', label: '申报产值', width: 120, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
-    { prop: 'applyPayAmt', label: '申报应付', width: 120, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
-    { prop: 'costProdVal', label: '成本确认产值', width: 120, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
-    { prop: 'costPayAmt', label: '成本确认应付', width: 120, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
-    { prop: 'unlockPayAmt', label: '解锁应付', width: 120, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
-];
+const columns: any = computed(() => {
+    const unit = queryParams.value.unit; // 获取单位
+    const decimalPlaces = unit === '万元' ? 4 : 2; // 根据单位设置小数位数
+    return [
+        { type: "index", label: "序号", width: 60 },
+        { prop: 'prodBillNo', label: '产值单据号', minWidth: 140 },
+        { prop: 'bizTitle', label: '标题', minWidth: 150 },
+        { prop: 'projName', label: '项目', minWidth: 120 },
+        { prop: 'segName', label: '板块', width: 90 },
+        { prop: 'conSysNo', label: '合同编号', minWidth: 130 },
+        { prop: 'conName', label: '合同名称', minWidth: 150 },
+        { prop: 'supName', label: '供应商名称', minWidth: 150 },
+        { prop: 'conTypeName', label: '合同分类', minWidth: 120 },
+        { prop: 'applyProdVal', label: `申报产值(${unit})`, width: 120, showSummary: true, decimalPlaces: decimalPlaces, formatter: (v) => formatThousandWithPlaces(v, decimalPlaces) },
+        { prop: 'applyPayAmt', label: `申报应付(${unit})`, width: 120, showSummary: true, decimalPlaces: decimalPlaces, formatter: (v) => formatThousandWithPlaces(v, decimalPlaces) },
+        { prop: 'costProdVal', label: `成本确认产值(${unit})`, width: 130, showSummary: true, decimalPlaces: decimalPlaces, formatter: (v) => formatThousandWithPlaces(v, decimalPlaces) },
+        { prop: 'costPayAmt', label: `成本确认应付(${unit})`, width: 130, showSummary: true, decimalPlaces: decimalPlaces, formatter: (v) => formatThousandWithPlaces(v, decimalPlaces) },
+        { prop: 'unlockPayAmt', label: `解锁应付(${unit})`, width: 120, showSummary: true, decimalPlaces: decimalPlaces, formatter: (v) => formatThousandWithPlaces(v, decimalPlaces) },
+    ];
+})
 
 const changeSeg = (val: number) => {
     queryParams.value.projIdList = [];
@@ -192,6 +203,7 @@ const handleReset = () => {
     Object.keys(queryParams.value).forEach((key) => {
         queryParams.value[key] = Array.isArray(queryParams.value[key]) ? [] : undefined;
     });
+    queryParams.value.unit = "万元";
     router.replace({ path: route.path, query: {} })
     // 默认选中第一个板块
     selectedDefaultSeg();
@@ -335,6 +347,7 @@ const initQueryParams = async () => {
                 queryParams.value.segId = routeData.segId;
                 queryParams.value.projIdList = routeData.projId ? [routeData.projId] : [];
                 queryParams.value.conId = routeData?.conId;
+                queryParams.value.unit = routeData?.unit;
             }
         } catch (error) {
             console.error("解析路由参数失败，使用默认值", error);

@@ -44,11 +44,6 @@
                         <el-input v-model="queryParams.supName" placeholder="请输入供应商名称" clearable style="width: 220px" />
                     </el-form-item> -->
 
-                    <el-form-item label="合同类型" prop="conProperty">
-                        <EnumSelect v-model="queryParams.conProperty" :options="ConPropertyEnum" clearable
-                            placeholder="请选择合同类型" :width="'220px'" />
-                    </el-form-item>
-
                     <el-form-item label="合同分类" prop="conTypeIdList">
                         <el-cascader v-model="queryParams.conTypeIdList" :show-all-levels="false"
                             :collapse-tags-tooltip="true" :options="conCategoryOptions" :props="{
@@ -59,7 +54,13 @@
                                 label: 'conTypeName',
                                 children: 'children',
                                 multiple: true,
-                            }" placeholder="请选择合同分类" style="width: 220px" clearable filterable collapse-tags />
+                            }" placeholder="请选择合同分类" style="width: 220px" clearable filterable
+                            collapse-tags />
+                    </el-form-item>
+
+                    <el-form-item label="合同类型" prop="conProperty">
+                        <EnumSelect v-model="queryParams.conProperty" :options="ConPropertyEnum" clearable
+                            placeholder="请选择合同类型" :width="'220px'" />
                     </el-form-item>
 
                     <el-form-item label="产值确认方式" prop="payMethod">
@@ -76,7 +77,7 @@
             <!-- 操作栏插槽：关键字输入框 + 按钮 -->
             <template #actions>
                 <el-input v-model="queryParams.keyWord" placeholder="请输入合同名称、合同编号、供应商名称、甲方签约公司、甲方经办人" clearable
-                    style="width:636px;margin-right: auto;" />
+                    style="width:636px" />
                 <el-button type="primary" :loading="submitLoading" @click="handleSearch">
                     <el-icon>
                         <Search />
@@ -138,7 +139,7 @@ const queryParams = ref({
     conProperty: undefined,      // 合同类型
     conTypeIdList: undefined,       // 合同分类（多选级联）
     payMethod: undefined,        // 产值确认方式
-    conStatusList: [40],        // 合同状态,默认已审批40
+    conStatusList: [40, 60],        // 合同状态,默认已审批40，已结算60
     keyWord: undefined,        // 关键字
 });
 
@@ -504,7 +505,7 @@ const handleReset = () => {
     pageSize.value = 20;
     Object.keys(queryParams.value).forEach((key) => {
         if (key === "conStatusList") {
-            queryParams.value[key] = [40]
+            queryParams.value[key] = [40, 60]
         } else if (Array.isArray(queryParams.value[key])) {
             queryParams.value[key] = [];
         } else {

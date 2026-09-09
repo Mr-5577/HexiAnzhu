@@ -151,7 +151,7 @@ const toggleExpand = () => { isExpand.value = !isExpand.value; };
         display: flex;
         align-items: center;
         flex-wrap: nowrap;
-        justify-content: flex-end;
+        justify-content: flex-start;
         gap: 12px;
         padding-top: 6px;
         padding-right: 26px;

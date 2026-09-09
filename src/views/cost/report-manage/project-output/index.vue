@@ -13,7 +13,7 @@
                         </el-select>
                     </el-form-item>
 
-                    <el-form-item label="项目名称" prop="projId">
+                    <el-form-item label="项目名称" prop="projId" required>
                         <el-cascader v-model="queryParams.projId" :options="projectData" :show-all-levels="false"
                             :props="{
                                 expandTrigger: 'hover',
@@ -41,7 +41,7 @@
                 </el-form>
             </template>
             <template #actions>
-                <el-input v-model="queryParams.keyWord" placeholder="请输入供应商、合同名称、合同编号" clearable style="width:636px;margin-right: auto;" />
+                <el-input v-model="queryParams.keyWord" placeholder="请输入供应商、合同名称、合同编号" clearable style="width:636px" />
                 <el-button type="primary" @click="handleSearch" class="btn-search" :loading="submitLoading">
                     <el-icon>
                         <Search />
@@ -144,17 +144,19 @@ import { reportManageApi } from "@/api/cost/contract-manage/report-manage-api";
 import { ElMessage } from "element-plus";
 import { PERMISSIONS } from "@/constants/permission";
 import { useMenuStore } from "@/stores/menu-store";
+import { useRoute, useRouter } from "vue-router";
 import BaseSearchCard from "@/components/base/base-search-card.vue";
 
 defineOptions({ name: "project-output" });
 
 const menuStore = useMenuStore();
+const router = useRouter();
 
 const queryParams = ref({
     segId: undefined,
     projId: undefined,
     endMonth: dayjs().format("YYYY-MM"),
-    unit: '元',
+    unit: '万元',
     keyWord: undefined,
 });
 
@@ -265,6 +267,10 @@ const columns: any = computed(() => {
             label: `本月产值(${unit})`,
             width: 120,
             formatter: (value) => formatThousandWithPlaces(value, decimalPlaces), // 格式化金额
+            clickable: true, // 点击单元格触发 onClick 事件
+            onClick: (data) => {
+                handleCellEventClick(data);
+            },
         },
         {
             prop: "curMonthProdCnt",
@@ -282,6 +288,10 @@ const columns: any = computed(() => {
             label: `至本月累计产值(${unit})`,
             width: 150,
             formatter: (value) => formatThousandWithPlaces(value, decimalPlaces), // 格式化金额
+            clickable: true, // 点击单元格触发 onClick 事件
+            onClick: (data) => {
+                handleCellEventClick(data);
+            },
         },
         {
             prop: "settleAmt",
@@ -297,7 +307,24 @@ const columns: any = computed(() => {
         },
     ]
 });
-
+const handleCellEventClick = (row: any) => {
+    if (row) {
+        const timestamp = new Date().getTime();
+        const params = {
+            segId: row.segId,
+            projId: row.projId,
+            conId: row.conId,
+            unit: queryParams.value.unit,
+        };
+        router.push({
+            path: "/report/output-detail",
+            query: {
+                data: JSON.stringify(params),
+                _t: timestamp.toString(),
+            },
+        });
+    }
+}
 // 获取项目数据
 const getProjectOptions = async () => {
     try {
@@ -337,13 +364,14 @@ const selectedDefaultSeg = () => {
         if (firstSeg) {
             queryParams.value.segId = firstSeg.id;
             // 切换板块后，自动选中该板块下的第一个项目
-            updateFirstProject();
+            // updateFirstProject();
         }
     }
 }
 const handleSegChange = async (val: number) => {
+    queryParams.value.projId = undefined;
     // 切换板块后自动选中该板块下的第一个项目
-    updateFirstProject();
+    // updateFirstProject();
     await nextTick();
     handleSearch();
 };
@@ -399,6 +427,13 @@ const buildParams = () => {
 }
 // 获取列表数据
 const getDataList = async () => {
+    if (!queryParams.value.projId) {
+        tableData.value = [];
+        total.value = 0;
+        ElMessage.warning("请先选择项目");
+        return
+    }
+    if (submitLoading.value) return;
     try {
         submitLoading.value = true;
         tableLoading.value = true;
@@ -432,7 +467,7 @@ const handleReset = () => {
     // 2. 截止月份 → 当前月
     queryParams.value.endMonth = dayjs().format("YYYY-MM");
     // 3. 单位 → 万元
-    queryParams.value.unit = '元';
+    queryParams.value.unit = '万元';
     queryParams.value.keyWord = undefined;
     // 最后刷新表格
     getDataList();
@@ -445,6 +480,13 @@ const handlePaginationChange = (params: any) => {
 };
 
 const handleExport = async () => {
+    if (!queryParams.value.projId) {
+        tableData.value = [];
+        total.value = 0;
+        ElMessage.warning("请先选择项目");
+        return
+    }
+    if (exportLoading.value) return;
     try {
         exportLoading.value = true;
         const params = buildParams();

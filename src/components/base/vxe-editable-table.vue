@@ -178,6 +178,8 @@ export interface EditableColumn {
     dict?: string;
     /** 是否显示在汇总行（简化开关，默认对数值列求和） */
     showSummary?: boolean;
+    /** 汇总合计保留的小数位数 */
+    decimalPlaces?: number;
     /** 合计配置（高级用法，可指定类型和自定义函数） */
     summary?: {
         /** 合计类型：sum | avg | count | custom */
@@ -882,7 +884,7 @@ const defaultFooterMethod = ({ data }: { data: any[] }) => {
 
         // 默认格式化：千分位 + 两位小数（若为整数则保留两位小数）
         // 如果希望不同格式，请在列配置中使用 summary.formatter 覆盖
-        return formatThousandWithPlaces(result.toNumber(), 2);
+        return formatThousandWithPlaces(result.toNumber(), col.decimalPlaces || 2);
     });
 
     return [sumRow]; // 返回二维数组，支持多行合计

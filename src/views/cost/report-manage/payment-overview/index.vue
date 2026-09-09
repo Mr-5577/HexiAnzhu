@@ -97,7 +97,7 @@
       </template>
       <template #actions>
         <el-input v-model="queryParams.keyWord" placeholder="请输入请款单号、标题、申请人、合同/事项名称、合同/事项编号、供应商名称、收款方" clearable
-          style="width:636px;margin-right: auto;" />
+          style="width:636px" />
         <el-button type="primary" @click="handleSearch" class="btn-search" :loading="submitLoading">
           <el-icon>
             <Search />
