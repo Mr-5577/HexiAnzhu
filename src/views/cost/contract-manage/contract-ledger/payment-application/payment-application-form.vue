@@ -290,7 +290,7 @@
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="请款类型" prop="reqType" required>
-                <el-select v-model="formData.reqType" placeholder="请选择" style="width: 100%">
+                <el-select v-model="formData.reqType" placeholder="请选择" style="width: 100%" @change="changeReqType">
                   <el-option v-for="item in ReqTypeEnum" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
               </el-form-item>
@@ -499,16 +499,16 @@
 
         </FormCard>
 
-        <!-- ====== 卡片：付款方式 ====== -->
-        <FormCard id="card-payway" v-show="!isOffsetByInvoice" icon="📜" title="付款方式"
+        <!-- ====== 卡片：请款明细 ====== -->
+        <FormCard id="card-payway" icon="📜" title="请款明细"
           v-model:collapsed="collapsedCards.payway">
           <div style="display: flex; justify-content: flex-end; margin-bottom: 8px">
             <el-button type="primary" size="small" :disabled="payWayTable.length == 0" @click="handleFinanceAlloc"
               v-if="!isAdd && menuStore.hasExactPermission(PERMISSIONS.FINA_ALLOC_CON_PAY)">
               财务分摊
             </el-button>
-            <el-button type="primary" size="small" @click="addPayWay" v-if="!(isReadonly)">
-              新增支付方式
+            <el-button type="primary" size="small" @click="addPayWay" v-if="!isReadonly && !isOffsetByInvoice">
+              新增请款明细
             </el-button>
           </div>
           <template v-if="isReadonly">
@@ -521,7 +521,7 @@
               :columns="payWayColumns" :pagination="false" :highlight-current-row="false" :show-summary="false"
               :compactEmpty="true" :editable="true" :on-save="handlePayWaySave">
               <template #actions="{ row }">
-                <el-button link type="danger" @click="deletePayWay(row)">
+                <el-button link type="danger" @click="deletePayWay(row)" v-if="!isOffsetByInvoice">
                   删除
                 </el-button>
               </template>
@@ -920,9 +920,26 @@ const financeColumns = createFinanceColumns({
   projectOptions,
   subjectOptions,
 });
-const payWayColumns = createPayWayColumns({
+const basePayWayColumns = createPayWayColumns({
   payWayOptions,
 });
+const payWayColumns = computed(() => {
+  const base = basePayWayColumns.value;
+  // 当选择的是来票冲账时
+  if (isOffsetByInvoice.value) {
+    return base.map(col => ({
+      ...col,
+      // 只有 'payDesc' 列可编辑，其他列不可编辑
+      disabled: col.prop === 'payDesc' ? false : true
+    }));
+  }
+  return base;
+});
+// 切换 请款类型时置空请款明细列表并自动新增一行数据
+const changeReqType = (val) => {
+  payWayTable.value = [];
+  addPayWay(); // 新增一行
+}
 const dedColumns = createDedColumns({
   dedTypeOptions,
 });
@@ -1109,7 +1126,7 @@ const oweInvoiceAmt = computed(() => {
   return receivable.minus(received).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 });
 
-// 5. 付款方式付款金额合计
+// 5. 请款明细付款金额合计
 const totalPayAmt = computed(() => {
   let total = new BigNumber(0);
   payWayTable.value.forEach((item) => {
@@ -1680,7 +1697,7 @@ const handleUploadSuccess = (file: any) => {
 };
 
 // ============================================================
-// 事件处理：付款方式 / 财务分摊
+// 事件处理：请款明细 / 财务分摊
 // ============================================================
 const getFinaList = (data) => {
   console.log("获取的财务分摊数据", data);
@@ -1698,7 +1715,7 @@ const handleFinanceAlloc = () => {
   if (payWayTable.value.length > 0) {
     financeAllocVisible.value = true;
   } else {
-    ElMessage.error("请先添加付款方式");
+    ElMessage.error("请先添加请款明细");
   }
 };
 const addPayWay = () => {
@@ -1706,7 +1723,8 @@ const addPayWay = () => {
     uuid: uuidv4(),
     id: undefined,
     conBillId: undefined,
-    payWayId: undefined, // 付款方式
+    payDesc: undefined, // 摘要
+    payWayId: 2066, // 付款方式，2066：转账  2071：账扣
     payAmt: 0, // 付款金额
     dedRoomAmt: 0, // 其中抵房金额
   };
@@ -1716,7 +1734,7 @@ const deletePayWay = (row) => {
   payWayTable.value = payWayTable.value.filter((item) => item.uuid !== row.uuid);
 };
 
-// 付款方式编辑保存回调：付款方式非“转账”时清空抵房金额
+// 请款明细编辑保存回调：付款方式非“转账”时清空抵房金额
 const handlePayWaySave = ({ row, column }: { row: any; column: string }) => {
   if (column === "payWayId" && row.payWayId !== 2066) {
     row.dedRoomAmt = 0;
@@ -2257,6 +2275,7 @@ const formRules = computed(() => {
     reqAmt: moneyRule("请款总金额"),
     conTyeName: requiredRule("合同分类"),
     isRise: requiredRule("是否提高支付比例"),
+    isLastPay: requiredRule("是否最后一笔支付"),
     bankAccount: requiredInputRule("银行账号"),
   };
   if (!isOffsetByInvoice.value) {
@@ -2270,13 +2289,25 @@ const canApplySettle = computed(() => {
   return formData.value.needSettle === true && formData.value.conStatus !== 60;
 });
 
-// 提交前校验：扣款明细 / 付款方式 / 收款账号 / 付款合计=实际请款
+// 提交前校验：扣款明细 / 请款明细 / 收款账号 / 付款合计=实际请款
 const validateDetailTables = (): boolean => {
   if (isOffsetByInvoice.value && invoiceMTable.value.length === 0) {
     ElMessage.error("请上传发票！");
     return false;
   }
 
+  // 先校验所有请款明细的摘要必填（无论哪种模式）
+  if (payWayTable.value.length === 0) {
+    ElMessage.error("请至少添加一种请款明细");
+    return false;
+  }
+  for (const row of payWayTable.value) {
+    if (!row.payDesc) {
+      ElMessage.error("请款明细摘要必填");
+      return false;
+    }
+  }
+  
   if (isOffsetByInvoice.value) return true;
 
   for (const row of dedTable.value) {
@@ -2293,19 +2324,29 @@ const validateDetailTables = (): boolean => {
   }
 
   if (payWayTable.value.length === 0) {
-    ElMessage.error("请至少添加一种付款方式");
+    ElMessage.error("请至少添加一种请款明细");
     return false;
   }
   for (const row of payWayTable.value) {
-    if (!row.payWayId || row.payAmt === undefined || row.payAmt === null || row.payAmt === 0) {
-      ElMessage.error("付款方式：每一行必须填写 付款方式 与 付款金额");
+
+    // 摘要必填（所有模式）
+    if (!row.payDesc) {
+      ElMessage.error("请款明细摘要必填");
       return false;
     }
-    if (row.payWayId === 2066 && row.payAmt < row.dedRoomAmt) {
-      ElMessage.error("付款方式：抵房金额不能大于付款金额！");
-      return false;
+
+    // 非来票冲账模式：必须填写付款方式与金额
+    if (!isOffsetByInvoice.value) {
+      if (!row.payWayId || row.payAmt === undefined || row.payAmt === null || row.payAmt === 0) {
+        ElMessage.error("请款明细：每一行必须填写 付款方式 与 付款金额");
+        return false;
+      }
+      if (row.payWayId === 2066 && row.payAmt < row.dedRoomAmt) {
+        ElMessage.error("请款明细：抵房金额不能大于付款金额！");
+        return false;
+      }
     }
-    row.payDesc = formData.value.conName + formData.value.belongMonth + getOptionsLabelById(payWayOptions.value, formData.value.payTypeId);
+    // row.payDesc = formData.value.conName + formData.value.belongMonth + getOptionsLabelById(payWayOptions.value, formData.value.payTypeId);
     row.bankName = formData.value.bankName;
     row.accountName = formData.value.accountName;
     row.bankAccount = formData.value.bankAccount;
@@ -2315,7 +2356,7 @@ const validateDetailTables = (): boolean => {
   const actualAmt = toBig(actualReqAmt.value);
   if (!totalPay.isEqualTo(actualAmt)) {
     ElMessage.error(
-      `付款方式金额合计（${totalPay.decimalPlaces(2).toString()}）必须等于实际请款金额（${actualAmt.decimalPlaces(2).toString()}）`,
+      `请款明细金额合计（${totalPay.decimalPlaces(2).toString()}）必须等于实际请款金额（${actualAmt.decimalPlaces(2).toString()}）`,
     );
     return false;
   }
@@ -2429,7 +2470,7 @@ const buildSubmitParams = () => {
     billDeds: !isOffsetByInvoice.value ? dedTable.value : [],
     invoiceMs: invoiceMTable.value,
     // invoiceDs: detailList.value,
-    payWays: !isOffsetByInvoice.value ? payWayTable.value : [],
+    payWays: payWayTable.value || [],
     paySubs: !isOffsetByInvoice.value ? financeTable.value : [],
     annexList: baseFileList.value || [],
   };
@@ -2438,12 +2479,23 @@ const buildSubmitParams = () => {
 const handleFormDataSave = async () => {
   submitLoading.value = true;
   try {
-    await formRef.value.validateField(["bizTitle", "projId", "conId", "belongMonth", "finaTypeId", "payTypeId"]);
+    await formRef.value.validateField(["bizTitle", "projId", "conId", "belongMonth", "finaTypeId", "payTypeId", "isLastPay"]);
     if (canApplySettle.value === false && (formData.value.payTypeId === 2064 || formData.value.payTypeId === 2065)) {
       ElMessage.error("该合同尚未结算，不可请结算款和质保金！");
       return;
     }
+    // 先校验所有请款明细的摘要必填（无论哪种模式）
+    if (payWayTable.value.length) {
+      for (const row of payWayTable.value) {
+        if (!row.payDesc) {
+          ElMessage.error("请款明细摘要必填");
+          return false;
+        }
+      }
+    }
+
     const params = buildSubmitParams();
+    console.log("params", params);
     const res = await paymentRequestApi.editPay(params);
     if (res.code === 200 && res.data) {
       formData.value.id = res.data;
@@ -2482,8 +2534,8 @@ const handleFormDataSubmit = async () => {
     }
 
     const params = buildSubmitParams();
+    console.log("params", params);
     const res = await paymentRequestApi.submitPay(params);
-
     if (res.code === 200) {
       ElMessage.success("提交成功,已发起审批！");
       const redirectRes = await commonApi.generateRedirectUrl({
@@ -2615,7 +2667,7 @@ watch(
   () => calcFields(),
 );
 
-// 实际请款金额变化：同步展示字段；付款方式仅一行时联动其付款金额
+// 实际请款金额变化：同步展示字段；请款明细仅一行时联动其付款金额
 watch(actualReqAmt, (val) => {
   if (isReadonly.value) return;
   if (!isDetail.value) {

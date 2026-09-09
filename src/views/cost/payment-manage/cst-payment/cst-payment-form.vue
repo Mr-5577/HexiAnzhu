@@ -1,4 +1,4 @@
-<!-- 建安支付 表单 -->
+<!-- 非合同请款 表单 -->
 <template>
   <div class="basic-form-content">
     <BillHeader :title="'非合同请款审批'" :contract-no="billData.bizNo || ''" :submitter="formData.userName || ''"
@@ -53,7 +53,7 @@
           <el-row :gutter="24">
             <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
               <el-form-item label="事项说明">
-                <el-input v-model="cstProcessData.remark" type="textarea" :rows="1" placeholder="" readonly disabled />
+                <el-input v-model="cstProcessData.remark" type="textarea" :rows="2" placeholder="" readonly disabled />
               </el-form-item>
             </el-col>
           </el-row>
@@ -81,9 +81,9 @@
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="请款类型" prop="reqType" required>
-                <el-select v-model="formData.reqType" placeholder="请选择" style="width: 100%" :disabled="isReadonly">
-                  <el-option label="正常请款" :value="0" />
-                  <el-option label="来票冲账" :value="1" />
+                <el-select v-model="formData.reqType" placeholder="请选择" style="width: 100%" :disabled="isReadonly"
+                  @change="changeReqType">
+                  <el-option v-for="item in ReqTypeEnum" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
               </el-form-item>
             </el-col>
@@ -146,7 +146,7 @@
         </div>
 
         <!-- 扣款事项明细 -->
-        <div class="item-card" v-if="showDeductionAndPayWay">
+        <div class="item-card" v-if="!isOffsetByInvoice">
           <div class="section-title">款项调整</div>
           <template v-if="isReadonly">
             <base-table ref="dedTableRef" :columns="dedDetailColumns" :table-data="dedTable" :row-key="'uuid'"
@@ -176,16 +176,16 @@
           </div>
         </div>
 
-        <!-- 付款方式 -->
-        <div class="item-card" v-if="showDeductionAndPayWay">
-          <div class="section-title">支付方式</div>
+        <!-- 请款明细 -->
+        <div class="item-card">
+          <div class="section-title">请款明细</div>
           <div style="display: flex; justify-content: flex-end; margin-bottom: 8px">
             <el-button type="primary" size="small" :disabled="payWayTable.length == 0" @click="handleFinanceAlloc"
-              v-if="!isAdd && menuStore.hasExactPermission(PERMISSIONS.FINA_ALLOC_NCON_CST)">
+              v-if="!isAdd && menuStore.hasExactPermission(PERMISSIONS.FINA_ALLOC_NCON_CST) && !isOffsetByInvoice">
               财务分摊
             </el-button>
-            <el-button type="primary" size="small" @click="addPayWay" v-if="!isDetail">
-              新增支付方式
+            <el-button type="primary" size="small" @click="addPayWay" v-if="!isDetail && !isOffsetByInvoice">
+              新增请款明细
             </el-button>
           </div>
           <template v-if="isReadonly">
@@ -198,7 +198,7 @@
               :columns="payWayColumns" :pagination="false" :highlight-current-row="false" :show-summary="false"
               :compactEmpty="true" :editable="true" :on-save="handlePayWaySave">
               <template #actions="{ row }">
-                <el-button link type="danger" @click="deletePayWay(row)">
+                <el-button link type="danger" @click="deletePayWay(row)" v-if="!isOffsetByInvoice">
                   删除
                 </el-button>
               </template>
@@ -325,7 +325,7 @@ import { v4 as uuidv4 } from "uuid";
 import { useRouter } from "vue-router";
 import { useUserStore } from "@/stores/user-store";
 import { useTagsStore } from "@/stores/tags-store";
-import { invoiceStatusEnum } from "@/constants/contract-manage/enums";
+import { invoiceStatusEnum, ReqTypeEnum } from "@/constants/contract-manage/enums";
 import BaseUpload from "@/components/base/base-upload.vue";
 import InvoiceDetailDialog from "@/components/business/invoice-detail-dialog.vue";
 import { commonApi } from "@/api/cost/common-api";
@@ -413,7 +413,7 @@ const billData = ref({
   bizTitle: "",
   bizNo: "",
   status: 0,
-  bizItemCode: "NCON_CST", // 业务类型编码, NCON_PROC-非合同立项；NCON_CST-非合同建安支付； NCON_FEE-非合同费用支付
+  bizItemCode: "NCON_CST", // 业务类型编码, NCON_PROC-非合同立项；NCON_CST-非合同非合同请款； NCON_FEE-非合同费用支付
 });
 const paymentData = ref({
   id: undefined,
@@ -436,7 +436,7 @@ const initFormData = () => ({
   nconBillId: undefined,
   belongMonth: dateUtil().format("YYYY-MM"),
   finaTypeId: undefined,
-  reqType: 0,
+  reqType: 0, // 请款类型，0-正常请款，1-来票冲账
   isLastRec: 0,
   reqAmt: 0,
   factReqAmt: 0,
@@ -503,7 +503,7 @@ const { getDictList, getDictTree, loadDicts } = useDict(
 // 选择项目
 const changeProject = async (value: number) => {
   // 清空关联立项信息（无论是否选择项目）,
-  // 清空了关联立项信息也需要清除费用类型数据，建安支付的费用类型是通过关联立项带出的
+  // 清空了关联立项信息也需要清除费用类型数据，非合同请款的费用类型是通过关联立项带出的
   cstProcessData.value = {
     id: undefined,
     processName: undefined,
@@ -603,13 +603,13 @@ const handleDemandSelect = async (data) => {
     payWayTable.value = [];
     invoiceMTable.value = [];
     formData.value.reqAmt = 0; // 清空本次请款金额
-    // 默认添加一条支付方式
+    // 默认添加一条请款明细
     addPayWay();
   }
 };
 // 更新立项金额
 const refreshProcess = async () => {
-  if(!cstProcessData.value.id) return
+  if (!cstProcessData.value.id) return
   try {
     const res = await cstPaymentApi.getAccumByProcessId({
       processId: cstProcessData.value.id,
@@ -1211,8 +1211,17 @@ const payWayDetailColumns = [
   { prop: "dedRoomAmt", label: "其中抵房金额", minWidth: 120 },
 ];
 
-const payWayColumns = computed<EditableColumn[]>(() => [
+const basePayWayColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
+  {
+    prop: "payDesc",
+    label: "摘要",
+    editable: true,
+    editType: "input",
+    minWidth: 200,
+    required: true,
+    showOverflowTooltip: false,
+  },
   {
     prop: "payWayId",
     label: "付款方式",
@@ -1265,20 +1274,43 @@ const payWayColumns = computed<EditableColumn[]>(() => [
     showOverflowTooltip: false,
   },
   {
-    prop: "payDesc",
-    label: "事项说明",
-    editable: true,
-    editType: "input",
-    minWidth: 200,
-    showOverflowTooltip: false,
-  },
-  {
     label: "操作",
     slot: "actions",
     fixed: "right",
     width: 100,
   },
 ]);
+// 动态列：来票冲账时只有摘要可编辑
+const payWayColumns = computed<EditableColumn[]>(() => {
+  const base = basePayWayColumns.value;
+  if (isOffsetByInvoice.value) {
+    return base.map(col => ({
+      ...col,
+      // 只有 payDesc 列可编辑，其他列禁用
+      disabled: col.prop === 'payDesc' ? false : true
+    }));
+  }
+  return base;
+});
+// 新增用户切换处理函数
+const changeReqType = (newVal: number) => {
+  // 只读状态不处理
+  if (isReadonly.value) return;
+
+  if (newVal === 1) {
+    // 来票冲账：清空扣款事项，请款明细保留一条
+    dedTable.value = [];
+    payWayTable.value = [];
+    addPayWay();
+    if (isEdit.value) {
+      formData.value.isLastRec = paymentData.value.isLastRec ? 1 : 0;
+    }
+  } else {
+    // 正常请款：清空后新增一条
+    payWayTable.value = [];
+    addPayWay();
+  }
+};
 const getFinaList = (data) => {
   console.log("获取的财务分摊数据", data);
   payWayTable.value = data || [];
@@ -1295,7 +1327,7 @@ const handleFinanceAlloc = () => {
   if (payWayTable.value.length > 0) {
     financeAllocVisible.value = true;
   } else {
-    ElMessage.error("请先添加付款方式");
+    ElMessage.error("请先添加请款明细");
   }
 };
 const addPayWay = () => {
@@ -1310,7 +1342,8 @@ const addPayWay = () => {
     bankAccount: "",
     payAmt: 0,
     dedRoomAmt: 0,
-    payDesc: cstProcessData.value.processName || "",
+    // payDesc: cstProcessData.value.processName || "",
+    payDesc: "",
   };
   payWayTable.value = [...payWayTable.value, newRowData];
 };
@@ -1535,20 +1568,18 @@ const buildSaveParams = () => {
     }
   });
 
-  const payWays = isCreditInvoice
-    ? []
-    : payWayTable.value.map((item) => ({
-      id: item.id,
-      srcType: item.srcType,
-      nconBillId: item.nconBillId,
-      payWayId: item.payWayId || "",
-      payAmt: item.payAmt || 0,
-      dedRoomAmt: item.dedRoomAmt || 0,
-      payDesc: item.payDesc || "",
-      bankName: item.bankName || "",
-      accountName: item.accountName || "",
-      bankAccount: item.bankAccount || "",
-    }));
+  const payWays = payWayTable.value.map((item) => ({
+    id: item.id,
+    srcType: item.srcType,
+    nconBillId: item.nconBillId,
+    payWayId: item.payWayId || "",
+    payAmt: item.payAmt || 0,
+    dedRoomAmt: item.dedRoomAmt || 0,
+    payDesc: item.payDesc || "",
+    bankName: item.bankName || "",
+    accountName: item.accountName || "",
+    bankAccount: item.bankAccount || "",
+  }));
 
   let cstM = null;
   if (cstMData.value?.allocDs && cstMData.value.allocDs?.length > 0) {
@@ -1583,11 +1614,18 @@ const goBack = () => {
 
 // ===== 修改：使用 toBig 替代 toDecimal =====
 const validateData = () => {
-  // 如果是来票冲账，跳过款项调整和支付方式的校验，但是发票登记必填一条数据
-  if (formData.value.reqType === 1) {
+  // 如果是来票冲账，跳过款项调整和请款明细的校验，但是发票登记必填一条数据
+  if (isOffsetByInvoice.value) {
     if (!invoiceMTable.value || invoiceMTable.value.length === 0) {
       ElMessage.error("来票冲账必须填写至少一条发票登记信息");
       return false;
+    }
+    // 摘要必填校验
+    for (const item of payWayTable.value) {
+      if (!item.payDesc) {
+        ElMessage.error("请填写支付摘要");
+        return false;
+      }
     }
     return true;
   }
@@ -1610,20 +1648,20 @@ const validateData = () => {
     }
   }
 
-  // 校验支付方式金额合计必须等于实际请款金额
+  // 校验请款明细金额合计必须等于实际请款金额
   const totalPay = toBig(totalPayAmt.value);
   const actualAmt = toBig(actualReqAmt.value);
   if (!totalPay.isEqualTo(actualAmt)) {
     ElMessage.error(
-      `支付方式付款金额合计(${totalPay.decimalPlaces(2).toString()})必须等于实际请款金额(${actualAmt.decimalPlaces(2).toString()})`,
+      `请款明细付款金额合计(${totalPay.decimalPlaces(2).toString()})必须等于实际请款金额(${actualAmt.decimalPlaces(2).toString()})`,
     );
     return false;
   }
 
-  // 校验支付方式
+  // 校验请款明细
   for (const item of payWayTable.value) {
     if (!item.payDesc) {
-      ElMessage.error("请填写支付摘要");
+      ElMessage.error("请填写请款明细摘要");
       return false;
     }
     if (!item.payWayId) {
@@ -1684,7 +1722,7 @@ const getProcessData = async () => {
 
 const handleSave = async () => {
   if (submitLoading.value) return
-  paymentFormRef.value.validate(async (valid: boolean) => {
+  await paymentFormRef.value.validate(async (valid: boolean) => {
     if (!valid) {
       ElMessage.error("请检查表单！");
       return;
@@ -1866,7 +1904,7 @@ const oweInvoiceAmt = computed(() => {
   return receivable.minus(received).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 });
 
-// 5. 支付方式付款金额合计
+// 5. 请款明细付款金额合计
 const totalPayAmt = computed(() => {
   let total = new BigNumber(0);
   payWayTable.value.forEach((item) => {
@@ -1875,10 +1913,8 @@ const totalPayAmt = computed(() => {
   return total.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 });
 
-// 判断是否显示款项调整和支付方式模块（来票冲账时不显示）
-const showDeductionAndPayWay = computed(() => {
-  return formData.value.reqType !== 1; // 1 为来票冲账
-});
+/** 是否「来票冲账」 1：来票冲账  0：请款 */
+const isOffsetByInvoice = computed(() => formData.value.reqType === 1);
 
 // ===== 修改：使用 toBig 替代 toDecimal =====
 // 监听实际请款金额变化，更新表单字段
@@ -1902,7 +1938,7 @@ watch(
   { immediate: true },
 );
 
-// 监听实际请款金额变化，如果只有一条支付方式则自动更新付款金额，付款金额=实际请款金额
+// 监听实际请款金额变化，如果只有一条请款明细则自动更新付款金额，付款金额=实际请款金额
 watch(
   actualReqAmt,
   (newVal) => {
@@ -1912,27 +1948,6 @@ watch(
     }
   },
   { immediate: true },
-);
-
-// 监听请款类型变化
-watch(
-  () => formData.value.reqType,
-  (newVal) => {
-    if (newVal == 1) {
-      // 选择来票冲账：清空款项调整和支付方式数据
-      dedTable.value = [];
-      payWayTable.value = [];
-      if (isEdit.value) {
-        // 编辑模式下，请款类型选择来票冲账时，是否最后一笔默认为上一次的值
-        formData.value.isLastRec = paymentData.value.isLastRec ? 1 : 0;
-      }
-    } else {
-      // 正常请款：如果没有支付方式，默认添加一条
-      if (payWayTable.value.length === 0) {
-        addPayWay();
-      }
-    }
-  },
 );
 
 onMounted(async () => {

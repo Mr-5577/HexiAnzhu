@@ -41,9 +41,8 @@
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="请款类型" prop="reqType" required>
                 <el-select v-model="formData.reqType" placeholder="请选择" style="width: 100%"
-                  :disabled="isDetail || !!billData.status">
-                  <el-option label="正常请款" :value="0" />
-                  <el-option label="来票冲账" :value="1" />
+                  :disabled="isDetail || !!billData.status" @change="changeReqType">
+                  <el-option v-for="item in ReqTypeEnum" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
               </el-form-item>
             </el-col>
@@ -78,7 +77,7 @@
         </div>
 
         <!-- 扣款事项明细 -->
-        <div class="item-card" v-if="showDeductionAndPayWay">
+        <div class="item-card" v-if="!isOffsetByInvoice">
           <div class="section-title">款项调整</div>
           <template v-if="isDetail || !!billData.status">
             <base-table ref="dedTableRef" :columns="dedDetailColumns" :table-data="dedTable" :row-key="'uuid'"
@@ -108,16 +107,16 @@
           </div>
         </div>
 
-        <!-- 支付方式 -->
-        <div class="item-card" v-if="showDeductionAndPayWay">
-          <div class="section-title">支付方式</div>
+        <!-- 请款明细 -->
+        <div class="item-card">
+          <div class="section-title">请款明细</div>
           <div style="display: flex; justify-content: flex-end; margin-bottom: 8px">
             <el-button type="primary" size="small" :disabled="payWayTable.length == 0" @click="handleFinanceAlloc"
-              v-if="!isAdd && menuStore.hasExactPermission(PERMISSIONS.FINA_ALLOC_NCON_FEE)">
+              v-if="!isAdd && menuStore.hasExactPermission(PERMISSIONS.FINA_ALLOC_NCON_FEE) && !isOffsetByInvoice">
               财务分摊
             </el-button>
-            <el-button type="primary" size="small" @click="addPayWay" v-if="!isDetail">
-              新增支付方式
+            <el-button type="primary" size="small" @click="addPayWay" v-if="!isDetail && !isOffsetByInvoice">
+              新增请款明细
             </el-button>
           </div>
           <template v-if="isDetail || !!billData.status">
@@ -130,7 +129,7 @@
               :columns="payWayColumns" :pagination="false" :highlight-current-row="false" :show-summary="false"
               :compactEmpty="true" :editable="true" :on-save="handlePayWaySave">
               <template #actions="{ row }">
-                <el-button link type="danger" @click="deletePayWay(row)">
+                <el-button link type="danger" @click="deletePayWay(row)" v-if="!isOffsetByInvoice">
                   删除
                 </el-button>
               </template>
@@ -244,6 +243,7 @@ import { useTagsStore } from "@/stores/tags-store";
 import {
   conBillStatusEnum,
   invoiceStatusEnum,
+  ReqTypeEnum,
 } from "@/constants/contract-manage/enums";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
 import BaseUpload from "@/components/base/base-upload.vue";
@@ -462,7 +462,7 @@ const oweInvoiceAmt = computed(() => {
   return receivable.minus(received).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 });
 
-// 5. 支付方式付款金额合计
+// 5. 请款明细付款金额合计
 // ===== 修改：使用 toBig 替代 toDecimal =====
 const totalPayAmt = computed(() => {
   let total = new BigNumber(0);
@@ -493,7 +493,7 @@ watch(
   { immediate: true },
 );
 
-// 监听实际请款金额变化，如果只有一条支付方式则自动更新付款金额
+// 监听实际请款金额变化，如果只有一条请款明细则自动更新付款金额
 watch(
   actualReqAmt,
   (newVal) => {
@@ -503,23 +503,6 @@ watch(
     }
   },
   { immediate: true },
-);
-
-// 监听请款类型变化
-watch(
-  () => formData.value.reqType,
-  (newVal) => {
-    if (newVal === 1) {
-      // 来票冲账：清空款项调整和支付方式数据
-      dedTable.value = [];
-      payWayTable.value = [];
-    } else {
-      // 正常请款：如果没有支付方式，默认添加一条
-      if (payWayTable.value.length === 0) {
-        addPayWay();
-      }
-    }
-  },
 );
 
 // ==================== 扣款事项 ====================
@@ -1073,7 +1056,7 @@ const payWayDetailColumns: any = [
   { prop: "dedRoomAmt", label: "其中抵房金额", minWidth: 120 },
 ];
 
-const payWayColumns = computed<EditableColumn[]>(() => [
+const basePayWayColumns = computed<EditableColumn[]>(() => [
   { type: "index", label: "序号", width: 60, editable: false },
   {
     prop: "payDesc",
@@ -1081,6 +1064,7 @@ const payWayColumns = computed<EditableColumn[]>(() => [
     editable: true,
     editType: "input",
     minWidth: 200,
+    required: true,
     showOverflowTooltip: false,
   },
   {
@@ -1141,6 +1125,32 @@ const payWayColumns = computed<EditableColumn[]>(() => [
     width: 100,
   },
 ]);
+// 动态列：来票冲账时只有摘要可编辑
+const payWayColumns = computed<EditableColumn[]>(() => {
+  const base = basePayWayColumns.value;
+  if (isOffsetByInvoice.value) {
+    return base.map(col => ({
+      ...col,
+      disabled: col.prop === 'payDesc' ? false : true
+    }));
+  }
+  return base;
+});
+
+const changeReqType = (newVal: number) => {
+  if (isDetail.value) return;
+
+  if (newVal === 1) {
+    // 来票冲账：清空扣款事项和请款明细，新增一条
+    dedTable.value = [];
+    payWayTable.value = [];
+    addPayWay();
+  } else {
+    // 正常请款：清空请款明细，新增一条
+    payWayTable.value = [];
+    addPayWay();
+  }
+};
 
 const getFinaList = (data) => {
   console.log("获取的财务分摊数据", data);
@@ -1378,21 +1388,19 @@ const buildSaveParams = () => {
     }
   });
 
-  const payWays = isCreditInvoice
-    ? []
-    : payWayTable.value.map((item) => ({
-      id: item.id,
-      srcType: item.srcType,
-      nconBillId: item.nconBillId,
-      payWayId: item.payWayId || "",
-      payAmt: item.payAmt || 0,
-      dedRoomAmt: item.dedRoomAmt || 0,
-      payDesc: item.payDesc || "",
-      bankName: item.bankName || "",
-      accountName: item.accountName || "",
-      bankAccount: item.bankAccount || "",
-      finaDs: item?.finaDs || [], // 财务分摊
-    }));
+  const payWays = payWayTable.value.map((item) => ({
+    id: item.id,
+    srcType: item.srcType,
+    nconBillId: item.nconBillId,
+    payWayId: item.payWayId || "",
+    payAmt: item.payAmt || 0,
+    dedRoomAmt: item.dedRoomAmt || 0,
+    payDesc: item.payDesc || "",
+    bankName: item.bankName || "",
+    accountName: item.accountName || "",
+    bankAccount: item.bankAccount || "",
+    finaDs: item?.finaDs || [], // 财务分摊
+  }));
 
   return {
     bill: bill,
@@ -1407,13 +1415,21 @@ const buildSaveParams = () => {
 // ==================== 校验数据 ====================
 // ===== 修改：使用 toBig 替代 toDecimal =====
 const validateData = () => {
-  // 如果是来票冲账，跳过款项调整和支付方式的校验，但是发票登记必填一条数据
-  if (formData.value.reqType === 1) {
+  // 如果是来票冲账，跳过款项调整和请款明细的校验，但是发票登记必填一条数据
+  if (isOffsetByInvoice.value) {
     // 只校验其他必要字段（如关联立项等）
     if (!invoiceMTable.value || invoiceMTable.value.length === 0) {
       ElMessage.error("来票冲账必须填写至少一条发票登记信息");
       return false;
     }
+
+    for (const item of payWayTable.value) {
+      if (!item.payDesc) {
+        ElMessage.error("请填写支付摘要");
+        return false;
+      }
+    }
+
     return true;
   }
 
@@ -1435,17 +1451,17 @@ const validateData = () => {
     }
   }
 
-  // 校验支付方式金额合计必须等于实际请款金额
+  // 校验请款明细金额合计必须等于实际请款金额
   const totalPay = toBig(totalPayAmt.value);
   const actualAmt = toBig(actualReqAmt.value);
   if (!totalPay.isEqualTo(actualAmt)) {
     ElMessage.error(
-      `支付方式付款金额合计(${totalPay.decimalPlaces(2).toString()})必须等于实际请款金额(${actualAmt.decimalPlaces(2).toString()})`,
+      `请款明细付款金额合计(${totalPay.decimalPlaces(2).toString()})必须等于实际请款金额(${actualAmt.decimalPlaces(2).toString()})`,
     );
     return false;
   }
 
-  // 校验支付方式
+  // 校验请款明细
   for (const item of payWayTable.value) {
     if (!item.payDesc) {
       ElMessage.error("请填写支付摘要");
@@ -1493,7 +1509,7 @@ const getDetailTotal = (finaDs: any[]): number => {
   });
   return total.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 };
-// 校验支付方式明细金额是否等于主数据金额
+// 校验请款明细明细金额是否等于主数据金额
 // ===== 修改：使用 toBig 替代 toDecimal =====
 const validatePayDetail = () => {
   for (const row of payWayTable.value) {
@@ -1651,11 +1667,8 @@ const initDictData = async () => {
 const handleAllocationDetail = () => {
   costAllocationDialogVisible.value = true;
 };
-
-// 判断是否显示款项调整和支付方式模块（来票冲账时不显示）
-const showDeductionAndPayWay = computed(() => {
-  return formData.value.reqType !== 1; // 1 为来票冲账
-});
+/** 是否「来票冲账」 1：来票冲账  0：请款 */
+const isOffsetByInvoice = computed(() => formData.value.reqType === 1);
 
 onMounted(async () => {
   await initDictData();
