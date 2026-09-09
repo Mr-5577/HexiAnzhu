@@ -174,6 +174,8 @@ export interface TableColumnItem<T = any> {
   };
   /** 是否显示合计行 */
   showSummary?: boolean;
+  /** 是否为必填列，表头显示红色星号 */
+  required?: boolean;
   /** 选择列专用：判断该行是否可选，优先级高于 disabledField */
   selectable?: (row: T, index: number) => boolean;
   /** 选择列专用：根据行数据的字段名判断是否可选，值为 true 表示不可选 */
@@ -667,9 +669,16 @@ const TableColumn = {
               return headerSlotFunc(scope);
             }
           }
+          // 构建带星号的 label 节点
+          const labelNode = h('span', { class: 'header-label' }, [
+            column.required ? h('span', { style: { color: 'red', marginRight: '4px' } }, '*') : null,
+            column.label || '',
+          ]);
+
           // 如果有表头提示配置
           if (column.headerTip) {
             return h("div", { class: "header-with-tip" }, [
+              labelNode,
               h("span", { class: "header-label" }, column.label || ""),
               h(
                 resolveComponent("el-tooltip"),
@@ -696,7 +705,8 @@ const TableColumn = {
             ]);
           }
           // 默认表头
-          return h("span", column.label || "");
+          // return h("span", column.label || "");
+          return labelNode;
         },
         // 单元格内容
         default: (scope: any) => {
