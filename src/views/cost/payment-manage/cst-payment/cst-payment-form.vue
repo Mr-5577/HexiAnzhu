@@ -1719,14 +1719,28 @@ const getProcessData = async () => {
     return false;
   }
 };
+// ---- 校验失败后：滚动到第一个错误项并聚焦对应控件 ----
+const focusFirstError = (invalidFields?: Record<string, any>) => {
+  const firstProp = Object.keys(invalidFields ?? {})[0];
+  if (!firstProp) return;
+  const formInst = paymentFormRef.value as any;
+  const field = formInst?.fields?.find((f: any) => f.prop === firstProp);
+  const el = field?.$el as HTMLElement | undefined;
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  nextTick(() => {
+    const focusable = el.querySelector<HTMLElement>(
+      'input:not([type="hidden"]), textarea, .el-select__wrapper, .el-date-editor input, [tabindex]',
+    );
+    focusable?.focus({ preventScroll: true });
+  });
+};
 
 const handleSave = async () => {
   if (submitLoading.value) return
-  await paymentFormRef.value.validate(async (valid: boolean) => {
-    if (!valid) {
-      ElMessage.error("请检查表单！");
-      return;
-    }
+  try {
+    // 校验表单
+    await paymentFormRef.value.validate();
     if (!cstProcessData.value.id) {
       ElMessage.error("请选择关联立项！");
       return;
@@ -1752,15 +1766,15 @@ const handleSave = async () => {
     } finally {
       submitLoading.value = false;
     }
-  });
+  } catch (error) {
+    focusFirstError(error as Record<string, any>);
+    return;
+  }
 };
 
 const handleSubmit = async () => {
-  paymentFormRef.value.validate(async (valid: boolean) => {
-    if (!valid) {
-      ElMessage.error("请检查表单！");
-      return;
-    }
+  try {
+    await paymentFormRef.value.validate();
     if (!cstProcessData.value.id) {
       ElMessage.error("请选择关联立项！");
       return;
@@ -1794,7 +1808,10 @@ const handleSubmit = async () => {
     } finally {
       submitLoading.value = false;
     }
-  });
+  } catch (error) {
+    focusFirstError(error as Record<string, any>);
+    return;
+  }
 };
 
 const handleDelete = async () => {

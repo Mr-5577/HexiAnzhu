@@ -16,7 +16,7 @@
           :project-options="projectOptions" @project-change="changeProject" />
 
         <!-- 报销事项 -->
-        <div class="item-card">
+        <div class="item-card" ref="feeInfoCardRef">
           <div class="section-title">报销事项</div>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
@@ -77,7 +77,7 @@
         </div>
 
         <!-- 扣款事项明细 -->
-        <div class="item-card" v-if="!isOffsetByInvoice">
+        <div class="item-card" ref="dedCardRef" v-if="!isOffsetByInvoice">
           <div class="section-title">款项调整</div>
           <template v-if="isDetail || !!billData.status">
             <base-table ref="dedTableRef" :columns="dedDetailColumns" :table-data="dedTable" :row-key="'uuid'"
@@ -108,7 +108,7 @@
         </div>
 
         <!-- 请款明细 -->
-        <div class="item-card">
+        <div class="item-card" ref="payWayCardRef">
           <div class="section-title">请款明细</div>
           <div style="display: flex; justify-content: flex-end; margin-bottom: 8px">
             <el-button type="primary" size="small" :disabled="payWayTable.length == 0" @click="handleFinanceAlloc"
@@ -145,7 +145,7 @@
         </div>
 
         <!-- 发票登记 -->
-        <div class="item-card">
+        <div class="item-card" ref="invoiceCardRef">
           <div class="section-title">发票登记</div>
           <template v-if="isDetail || !!billData.status">
             <base-table ref="invoiceMTableRef" :columns="invoiceMDetailColumns" :table-data="invoiceMTable"
@@ -232,7 +232,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed, useTemplateRef, watch } from "vue";
+import { ref, onMounted, computed, useTemplateRef, watch, nextTick } from "vue";
 import { ElMessage, ElMessageBox, ElNotification } from "element-plus";
 import EditableTable from "@/components/base/editable-table.vue";
 import { EditableColumn } from "@/components/base/editable-table.vue";
@@ -291,6 +291,12 @@ const mode = ref<"add" | "edit" | "detail">(props.mode);
 const isDetail = computed(() => mode.value === "detail");
 const isEdit = computed(() => mode.value === "edit");
 const isAdd = computed(() => mode.value === "add");
+
+// ========== 卡片 DOM 引用（定位用） ==========
+const feeInfoCardRef = ref<HTMLElement | null>(null);
+const dedCardRef = ref<HTMLElement | null>(null);
+const payWayCardRef = ref<HTMLElement | null>(null);
+const invoiceCardRef = ref<HTMLElement | null>(null);
 
 const payTypeOptions = ref([]);
 const dedTypeOptions = ref([]);
@@ -1420,12 +1426,14 @@ const validateData = () => {
     // 只校验其他必要字段（如关联立项等）
     if (!invoiceMTable.value || invoiceMTable.value.length === 0) {
       ElMessage.error("来票冲账必须填写至少一条发票登记信息");
+      invoiceCardRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return false;
     }
 
     for (const item of payWayTable.value) {
       if (!item.payDesc) {
         ElMessage.error("请填写支付摘要");
+        payWayCardRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return false;
       }
     }
@@ -1438,14 +1446,17 @@ const validateData = () => {
     for (const item of dedTable.value) {
       if (!item.dedName || item.dedName.trim() === "") {
         ElMessage.error("事项名称为必填项，请完善后提交");
+        dedCardRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return false;
       }
       if (!item.dedTypeId) {
         ElMessage.error("调整类型为必填项，请完善后提交");
+        dedCardRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return false;
       }
       if (!item.dedAmt || toBig(item.dedAmt).isZero()) {
         ElMessage.error("金额不能为0，请完善后提交");
+        dedCardRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return false;
       }
     }
@@ -1458,6 +1469,7 @@ const validateData = () => {
     ElMessage.error(
       `请款明细付款金额合计(${totalPay.decimalPlaces(2).toString()})必须等于实际请款金额(${actualAmt.decimalPlaces(2).toString()})`,
     );
+    payWayCardRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     return false;
   }
 
@@ -1465,26 +1477,32 @@ const validateData = () => {
   for (const item of payWayTable.value) {
     if (!item.payDesc) {
       ElMessage.error("请填写支付摘要");
+      payWayCardRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return false;
     }
     if (!item.payWayId) {
       ElMessage.error("请选择付款方式");
+      payWayCardRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return false;
     }
     if (!item.payAmt || toBig(item.payAmt).isLessThanOrEqualTo(0)) {
       ElMessage.error("付款金额必须大于0");
+      payWayCardRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return false;
     }
     if (!item.bankName) {
       ElMessage.error("请填写收款开户行");
+      payWayCardRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return false;
     }
     if (!item.accountName) {
       ElMessage.error("请填写收款账户名");
+      payWayCardRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return false;
     }
     if (!item.bankAccount) {
       ElMessage.error("请填写收款账号");
+      payWayCardRef.value?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return false;
     }
   }
@@ -1534,14 +1552,28 @@ const goBack = () => {
   router.go(-1);
 };
 
+// ---- 校验失败后滚动到第一个错误项并聚焦 ----
+const focusFirstError = (invalidFields?: Record<string, any>) => {
+  const firstProp = Object.keys(invalidFields ?? {})[0];
+  if (!firstProp) return;
+  const formInst = feePaymentFormRef.value as any;
+  const field = formInst?.fields?.find((f: any) => f.prop === firstProp);
+  const el = field?.$el as HTMLElement | undefined;
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  nextTick(() => {
+    const focusable = el.querySelector<HTMLElement>(
+      'input:not([type="hidden"]), textarea, .el-select__wrapper, .el-date-editor input, [tabindex]',
+    );
+    focusable?.focus({ preventScroll: true });
+  });
+};
+
 // ==================== 保存 ====================
 const handleSave = async () => {
   if (submitLoading.value) return;
-  feePaymentFormRef.value?.validate(async (valid: boolean) => {
-    if (!valid) {
-      ElMessage.error("请检查表单！");
-      return;
-    }
+  try {
+    await feePaymentFormRef.value?.validate();
     if (!validateData()) {
       return;
     }
@@ -1559,16 +1591,16 @@ const handleSave = async () => {
     } finally {
       submitLoading.value = false;
     }
-  });
+  } catch (error) {
+    focusFirstError(error as Record<string, any>);
+    return;
+  }
 };
 
 // ==================== 提交 ====================
 const handleSubmit = async () => {
-  feePaymentFormRef.value?.validate(async (valid: boolean) => {
-    if (!valid) {
-      ElMessage.error("请检查表单！");
-      return;
-    }
+  try {
+    await feePaymentFormRef.value?.validate();
     if (!validateData()) {
       return;
     }
@@ -1595,7 +1627,10 @@ const handleSubmit = async () => {
     } finally {
       submitLoading.value = false;
     }
-  });
+  } catch (error) {
+    focusFirstError(error as Record<string, any>);
+    return;
+  }
 };
 
 // ==================== 删除 ====================
