@@ -35,19 +35,19 @@
       </div>
       <div class="tree-container">
         <!-- 使用 v-if 确保有数据再渲染 -->
-        <el-tree
-          v-if="treeData && treeData.length"
-          ref="treeRef"
-          style="max-width: 600px"
-          :data="treeData"
-          :props="defaultProps"
-          show-checkbox
-          node-key="id"
-          :check-strictly="true"
-          :default-expanded-keys="[]"
-          :default-checked-keys="initCheckedKeys"
-          @check="handleCheck"
-        />
+        <div style="padding-bottom: 50px;" v-if="treeData && treeData.length">
+          <el-tree
+            ref="treeRef"
+            :data="treeData"
+            :props="defaultProps"
+            show-checkbox
+            node-key="id"
+            :check-strictly="true"
+            :default-expanded-keys="[]"
+            :default-checked-keys="initCheckedKeys"
+            @check="handleCheck"
+          />
+        </div>
         <el-empty description="暂无数据" v-else />
       </div>
     </div>
@@ -573,6 +573,7 @@ onMounted(() => {});
     display: flex;
     flex-direction: column;
     flex: 1;
+    overflow: hidden;
     min-height: 0;
 
     :deep(.el-loading-mask) {
@@ -598,6 +599,7 @@ onMounted(() => {});
   .tree-container {
     flex: 1;
     overflow: auto;
+    min-height: 0;
     padding: 10px;
     background: #fff;
     border-radius: 4px;
