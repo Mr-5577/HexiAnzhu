@@ -57,11 +57,15 @@ export const FileSourceEnum = [
   { value: 1, label: "手工上传" },
 ] as const;
 
+/** 合同类型 */
+export const AnnexConTypeEnum = [
+  { value: 'CON', label: "主合同" },
+  { value: 'ADD', label: "补充合同" },
+] as const;
 /** 合同附件类型 */
 export const AnnexTypeEnum = [
   { value: 0, label: "电子文档" },
-  { value: 1, label: "扫描件" },
-  { value: 2, label: "签署文件" },
+  { value: 1, label: "签署文件" },
 ] as const;
 
 /** 补充合同类型 */

@@ -10,6 +10,7 @@ import {
 export const supplementContractApi = {
   /** 查询补充合同列表 */
   getSupplementContractList: (data: {
+    conId?: number;
     addName?: string;
     companyId?: number;
   }) => {

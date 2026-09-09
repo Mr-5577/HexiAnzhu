@@ -28,6 +28,9 @@
       </div>
       <base-table :columns="tableColumns" :tableData="tableData" :loading="tableLoading" :rowKey="'id'" :height="'100%'"
         :pagination="false">
+        <template #linkConType="{ row }">
+          <span>{{ getEnumLabel(AnnexConTypeEnum, row?.linkConType) }}</span>
+        </template>
         <template #annexType="{ row }">
           <span>{{ getEnumLabel(AnnexTypeEnum, row?.annexType) }}</span>
         </template>
@@ -69,7 +72,7 @@ import AddAttachmentDialog from "./add-attachment-dialog.vue";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";
 import { getEnumLabel } from "@/utils/enum";
-import { FileSourceEnum, AnnexTypeEnum } from "@/constants/contract-manage/enums.ts";
+import { FileSourceEnum, AnnexTypeEnum, AnnexConTypeEnum } from "@/constants/contract-manage/enums.ts";
 import { commonApi } from "@/api/cost/common-api.ts";
 import { buildFileUrl } from "@/utils/file-path-util.ts";
 import { useMenuStore } from "@/stores/menu-store";
@@ -91,8 +94,10 @@ const downloading = ref(false);
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
-  { slot: "annexType", label: "附件类型", width: 150 },
-  { prop: "annexName", label: "附件名称" },
+  { slot: "linkConType", label: "合同类型", width: 100 },
+  { prop: "linkConNo", label: "关联合同编号", width: 150 },
+  { slot: "annexType", label: "附件类型", width: 130 },
+  { prop: "annexName", label: "附件名称", minWidth: 200 },
   { slot: "annexSrc", label: "附件来源", width: 150 },
   { prop: "createDate", label: "上传时间", width: 180 },
   {
