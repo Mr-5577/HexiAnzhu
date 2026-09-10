@@ -15,7 +15,7 @@
           :project-options="projectOptions" @project-change="changeProject" />
 
         <!-- ====== 卡片2：主合同信息 ====== -->
-        <FormCard id="card-main" icon="📄" title="主合同信息" v-model:collapsed="collapsedCards.basic">
+        <FormCard id="card-main" icon="📄" title="主合同信息" v-model:collapsed="collapsedCards.main">
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item label="主合同名称" prop="mainConId">
@@ -76,7 +76,7 @@
         </FormCard>
 
         <!-- ====== 卡片3：补充信息 ====== -->
-        <FormCard id="card-add" icon="📄" title="补充合同信息" v-model:collapsed="collapsedCards.basic">
+        <FormCard id="card-add" icon="📄" title="补充合同信息" v-model:collapsed="collapsedCards.add">
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item label="补充合同名称" prop="addName" required>
@@ -119,7 +119,7 @@
         </FormCard>
 
         <!-- ====== 卡片4：签约信息 ====== -->
-        <FormCard id="card-sign" icon="📄" title="签约信息" v-model:collapsed="collapsedCards.basic">
+        <FormCard id="card-sign" icon="📄" title="签约信息" v-model:collapsed="collapsedCards.sign">
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="是否需要用印" prop="needSeal" required>
@@ -919,6 +919,7 @@ const buildSubmitParams = () => {
       compId: formData.value.companyId,
       compName: formData.value.compName,
       flowId: formData.value.flowId,
+      conId: props.conId,
     },
     conAdd: {
       id: formData.value.id,
