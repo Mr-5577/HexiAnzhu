@@ -3,16 +3,16 @@
   <div class="basic-form-content">
     <BillHeader :title="'费用报销审批'" :contract-no="billData.bizNo || ''" :submitter="formData.userName || ''"
       :submit-time="formData.createDate || ''" :status="billData.status" :show-status="true"
-      :button-loading="submitLoading" :save-disabled="isDetail || !!billData.status"
-      :submit-disabled="isDetail || !!billData.status" :delete-disabled="isDetail || isAdd || !!billData.status"
-      :void-disabled="isDetail || isAdd || !!billData.status" :view-disabled="isAdd" @save="handleSave"
-      @submit="handleSubmit" @delete="handleDelete" @void="handleCancel" @viewFlow="handleViewProcess">
+      :button-loading="submitLoading" :save-disabled="isReadonly" :submit-disabled="isReadonly"
+      :delete-disabled="isDetail || isAdd || !!billData.status" :void-disabled="isDetail || isAdd || !!billData.status"
+      :view-disabled="isAdd" @save="handleSave" @submit="handleSubmit" @delete="handleDelete" @void="handleCancel"
+      @viewFlow="handleViewProcess">
     </BillHeader>
 
     <div class="form-scroll-area">
       <el-form ref="feePaymentFormRef" :model="formData" :rules="formRules" label-width="120px" class="adapt-form">
         <!-- 基本信息 -->
-        <BillInfo v-model="formData" :status="billData?.status || 0" :disabled="isDetail || !!billData.status"
+        <BillInfo v-model="formData" :status="billData?.status || 0" :disabled="isReadonly"
           :project-options="projectOptions" @project-change="changeProject" />
 
         <!-- 报销事项 -->
@@ -22,7 +22,7 @@
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="归属月份" prop="belongMonth" required>
                 <el-date-picker v-model="formData.belongMonth" type="month" value-format="YYYY-MM-DD"
-                  placeholder="请选择归属月份" :disabled="isDetail || !!billData.status" />
+                  placeholder="请选择归属月份" :disabled="isReadonly" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
@@ -34,14 +34,14 @@
                   value: 'id',
                   label: 'finaTypeName',
                   children: 'children',
-                }" placeholder="请选择费用类型" style="width: 100%" filterable :disabled="isDetail || !!billData.status" />
+                }" placeholder="请选择费用类型" style="width: 100%" filterable :disabled="isReadonly" />
               </el-form-item>
             </el-col>
 
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="请款类型" prop="reqType" required>
-                <el-select v-model="formData.reqType" placeholder="请选择" style="width: 100%"
-                  :disabled="isDetail || !!billData.status" @change="changeReqType">
+                <el-select v-model="formData.reqType" placeholder="请选择" style="width: 100%" :disabled="isReadonly"
+                  @change="changeReqType">
                   <el-option v-for="item in ReqTypeEnum" :key="item.value" :label="item.label" :value="item.value" />
                 </el-select>
               </el-form-item>
@@ -50,7 +50,7 @@
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="请款金额" prop="reqAmt" required>
                 <el-input-number v-model="formData.reqAmt" :precision="2" :controls="false" style="width: 100%"
-                  :disabled="isDetail || !!billData.status" />
+                  :disabled="isReadonly" />
               </el-form-item>
             </el-col>
           </el-row>
@@ -61,7 +61,7 @@
                   v-model="formData.processNo"
                   placeholder="付款单号"
                   style="width: 100%"
-                  :disabled="isDetail || !!billData.status"
+                  :disabled="isReadonly"
                 />
               </el-form-item>
             </el-col> -->
@@ -70,7 +70,7 @@
             <el-col :xs="24" :sm="24" :md="24" :lg="24" :xl="24">
               <el-form-item label="请款说明" prop="reqDesc">
                 <el-input v-model="formData.reqDesc" type="textarea" :rows="3" maxlength="500" show-word-limit
-                  placeholder="请输入" :disabled="isDetail || !!billData.status" />
+                  placeholder="请输入" :disabled="isReadonly" />
               </el-form-item>
             </el-col>
           </el-row>
@@ -79,7 +79,7 @@
         <!-- 扣款事项明细 -->
         <div class="item-card" ref="dedCardRef" v-if="!isOffsetByInvoice">
           <div class="section-title">款项调整</div>
-          <template v-if="isDetail || !!billData.status">
+          <template v-if="isReadonly">
             <base-table ref="dedTableRef" :columns="dedDetailColumns" :table-data="dedTable" :row-key="'uuid'"
               :pagination="false" :show-toolbar="false" :show-action-bar="false" :height="'200px'">
             </base-table>
@@ -119,7 +119,7 @@
               新增请款明细
             </el-button>
           </div>
-          <template v-if="isDetail || !!billData.status">
+          <template v-if="isReadonly">
             <base-table ref="payWayTableRef" :columns="payWayDetailColumns" :table-data="payWayTable" :row-key="'uuid'"
               :pagination="false" :show-toolbar="false" :show-action-bar="false" :height="'200px'">
             </base-table>
@@ -147,7 +147,7 @@
         <!-- 发票登记 -->
         <div class="item-card" ref="invoiceCardRef">
           <div class="section-title">发票登记</div>
-          <template v-if="isDetail || !!billData.status">
+          <template v-if="isReadonly">
             <base-table ref="invoiceMTableRef" :columns="invoiceMDetailColumns" :table-data="invoiceMTable"
               :row-key="'uuid'" :pagination="false" :show-toolbar="false" :show-action-bar="false" :height="'200px'">
               <template #annexName="{ row }">
@@ -210,8 +210,8 @@
           <div class="section-title">相关附件</div>
           <el-form-item label="上传附件">
             <base-upload v-model:file-list="annexFileList" :limit="9" :multiple="false" :showIcon="true" :showTip="true"
-              :maxSize="20" :unrestricted="true" :accept="''" button-text="选择文件" size="default"
-              :disabled="isDetail || !!billData.status" @success="handleFileSuccess" />
+              :maxSize="20" :unrestricted="true" :accept="''" button-text="选择文件" size="default" :disabled="isReadonly"
+              @success="handleFileSuccess" />
           </el-form-item>
         </div>
       </el-form>
@@ -222,7 +222,7 @@
 
     <!-- 发票明细 弹窗 -->
     <invoice-detail-dialog ref="invoiceDetailDialogRef" v-model="dialogVisible" :detailList="detailList"
-      :disabled="isDetail || !!billData.status" @success="handleInvoiceDetailSuccess" />
+      :disabled="isReadonly" @success="handleInvoiceDetailSuccess" />
 
     <!-- 财务分摊  :dialogMode="isDetail ? 'view' : 'edit'" -->
     <FinanceAllocationDialog ref="financeAllocationDialogRef" v-model="financeAllocVisible" :bizBillId="billData?.id"
@@ -308,12 +308,22 @@ const uploadVisibleDialog = ref(false);
 
 const payTypeOptions = computed(() => {
   const list = getDictList(dictMapping.payType);
-  if(isOffsetByInvoice.value) {
+  if (isOffsetByInvoice.value) {
     return list
   } else {
     // 过滤掉冲账选项
     return list.filter((item) => item.id != 2112);
   }
+});
+
+const isReadonly = computed(() => {
+  // 超管保留编辑权限
+  if (isSuperAdmin.value) return false;
+  return isDetail.value || !!billData.value.status
+});
+// 是否是超管角色
+const isSuperAdmin = computed(() => {
+  return userStore.roleList?.some((role: any) => role.isSuper);
 });
 
 const billData = ref({
@@ -1153,7 +1163,9 @@ const payWayColumns = computed<EditableColumn[]>(() => {
 });
 
 const changeReqType = (newVal: number) => {
-  if (isDetail.value) return;
+  if (!isSuperAdmin.value) {
+    if (isDetail.value) return;
+  };
 
   if (newVal === 1) {
     // 来票冲账：清空扣款事项和请款明细，新增一条
