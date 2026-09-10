@@ -679,7 +679,7 @@ const TableColumn = {
           if (column.headerTip) {
             return h("div", { class: "header-with-tip" }, [
               labelNode,
-              h("span", { class: "header-label" }, column.label || ""),
+              // h("span", { class: "header-label" }, column.label || ""),
               h(
                 resolveComponent("el-tooltip"),
                 {

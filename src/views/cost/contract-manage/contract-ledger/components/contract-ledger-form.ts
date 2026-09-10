@@ -1010,10 +1010,10 @@ export function useContractForm(
         return false;
       }
 
-      if (!item.payIntvl || item.payIntvl < 0) {
-        ElMessage.error(`支付比例明细列表第${rowNum}行：支付周期必须填写`);
-        return false;
-      }
+      // if (!item.payIntvl || item.payIntvl < 0) {
+      //   ElMessage.error(`支付比例明细列表第${rowNum}行：支付周期必须填写`);
+      //   return false;
+      // }
     }
 
     // 检查重复的款项类型
