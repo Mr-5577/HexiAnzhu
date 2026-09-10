@@ -376,7 +376,6 @@ const isDetail = computed(() => mode.value === "detail");
 const isEdit = computed(() => mode.value === "edit");
 const isAdd = computed(() => mode.value === "add");
 
-const payTypeOptions = ref([]);
 const dedTypeOptions = ref([]);
 const cstProcessList = ref([]);
 const paymentFormRef = ref();
@@ -386,6 +385,16 @@ const feeTypeFlatOptions = ref([]);
 const annexFileList = ref([]);
 const uploadVisibleDialog = ref(false);
 const financeAllocVisible = ref(false); // 财务分摊弹窗
+const payTypeOptions = computed(() => {
+  const list = getDictList(dictMapping.payType);
+  if(isOffsetByInvoice.value) {
+    return list
+  } else {
+    // 过滤掉冲账选项
+    return list.filter((item) => item.id != 2112);
+  }
+});
+
 // 成本分摊明细数据
 const cstMData = ref({
   id: undefined,
@@ -1336,7 +1345,8 @@ const addPayWay = () => {
     id: undefined,
     srcType: "NCON_CST",
     nconBillId: undefined,
-    payWayId: 2066, // 默认为“转账”
+    // 付款方式，2066：转账  2071：账扣  2112:冲账
+    payWayId: isOffsetByInvoice.value ? 2112 : undefined, // 请款类型为来票冲账时，支付方式默认为冲账
     bankName: "",
     accountName: "",
     bankAccount: "",
@@ -1885,7 +1895,6 @@ const handleFileSuccess = (file: any) => {
 
 const initDictData = async () => {
   await loadDicts();
-  payTypeOptions.value = getDictList(dictMapping.payType);
   dedTypeOptions.value = getDictList(dictMapping.dedType);
 };
 

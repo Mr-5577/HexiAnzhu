@@ -193,7 +193,11 @@ const { getDictList, loadDicts } = useDict([dictMapping.payType], {
   treeDictCodes: [],
 });
 // 付款方式
-const payTypeOptions = computed(() => getDictList(dictMapping.payType));
+const payTypeOptions = computed(() => {
+  const list = getDictList(dictMapping.payType);
+  // 过滤掉冲账选项
+  return list.filter((item) => item.id != 2112);
+});
 
 // 计算支付金额（所有行的本次支付金额累加）
 const calcTotalPayAmt = () => {

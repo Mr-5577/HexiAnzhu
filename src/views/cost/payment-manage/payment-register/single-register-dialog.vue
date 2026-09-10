@@ -141,7 +141,11 @@ const { getDictList, loadDicts } = useDict([dictMapping.payType], {
   treeDictCodes: [],
 });
 // 支付方式
-const payTypeOptions = computed(() => getDictList(dictMapping.payType));
+const payTypeOptions = computed(() => {
+  const list = getDictList(dictMapping.payType);
+  // 过滤掉冲账选项
+  return list.filter((item) => item.id != 2112);
+});
 
 // 表单数据（仅保留全局信息）
 const formData = ref({

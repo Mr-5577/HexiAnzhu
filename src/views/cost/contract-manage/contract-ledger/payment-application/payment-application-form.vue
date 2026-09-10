@@ -806,14 +806,24 @@ const flowBaseData = ref<any>(null);
 // ============================================================
 const projectOptions = ref([]);
 const subjectOptions = ref([]);
-const conTypeOptions = ref<any[]>([]);
-const paymentTypeOptions = ref<any[]>([]);
-const dedTypeOptions = ref<any[]>([]);
-const payWayOptions = ref<any[]>([]);
+const conTypeOptions = ref([]);
+const paymentTypeOptions = ref([]);
+const dedTypeOptions = ref([]);
 const feeTypeOptions = ref([]);
+// 支付方式
+const payWayOptions = computed(() => {
+  const list = getDictList(dictMapping.payType);
+  if(isOffsetByInvoice.value) {
+    return list
+  } else {
+    // 过滤掉冲账选项
+    return list.filter((item) => item.id != 2112);
+  }
+});
+
 // 费用组织 / 费用科目（随项目变化刷新）
-const finaOrgOptions = ref<any[]>([]);
-const finaSubOptions = ref<any[]>([]);
+const finaOrgOptions = ref([]);
+const finaSubOptions = ref([]);
 
 // 合同分类是否属于建安
 const conTypeIsJianAn = ref(false);
@@ -1164,8 +1174,8 @@ const needForceRise = computed(() => {
   return (req + payable > unlock) && formData.value.payTypeId !== ADVANCE_PAY_TYPE; // 建安类 且 请款总额+累计已请款 > 已解锁
 });
 
-/** 是否「来票冲账」：此时仅保留发票登记，其余明细/收款账号全部隐藏，校验一并放开 */
-const isOffsetByInvoice = computed(() => formData.value.reqType != 0);
+/** 是否「来票冲账」 1：来票冲账  0：请款  此时仅保留发票登记，其余明细/收款账号全部隐藏，校验一并放开 */
+const isOffsetByInvoice = computed(() => formData.value.reqType == 1);
 
 // ============================================================
 // 工具函数
@@ -1724,7 +1734,8 @@ const addPayWay = () => {
     id: undefined,
     conBillId: undefined,
     payDesc: undefined, // 摘要
-    payWayId: 2066, // 付款方式，2066：转账  2071：账扣
+    // payWayId: 2066, // 付款方式，2066：转账  2071：账扣  2112:冲账
+    payWayId: isOffsetByInvoice.value ? 2112 : undefined, // 请款类型为来票冲账时，支付方式默认为冲账
     payAmt: 0, // 付款金额
     dedRoomAmt: 0, // 其中抵房金额
   };
@@ -1770,7 +1781,6 @@ const initDictData = async () => {
   await loadDicts();
   paymentTypeOptions.value = getDictList(dictMapping.paymentType); // 款项类型
   dedTypeOptions.value = getDictList(dictMapping.dedType);
-  payWayOptions.value = getDictList(dictMapping.payType); // 支付方式
 };
 
 // 获取项目列表

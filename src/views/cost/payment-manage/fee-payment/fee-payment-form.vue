@@ -298,7 +298,6 @@ const dedCardRef = ref<HTMLElement | null>(null);
 const payWayCardRef = ref<HTMLElement | null>(null);
 const invoiceCardRef = ref<HTMLElement | null>(null);
 
-const payTypeOptions = ref([]);
 const dedTypeOptions = ref([]);
 const feePaymentFormRef = ref();
 const submitLoading = ref(false);
@@ -306,6 +305,16 @@ const annexFileList = ref([]);
 const feeTypeOptions = ref([]);
 const feeTypeFlatOptions = ref([]);
 const uploadVisibleDialog = ref(false);
+
+const payTypeOptions = computed(() => {
+  const list = getDictList(dictMapping.payType);
+  if(isOffsetByInvoice.value) {
+    return list
+  } else {
+    // 过滤掉冲账选项
+    return list.filter((item) => item.id != 2112);
+  }
+});
 
 const billData = ref({
   id: undefined,
@@ -338,7 +347,7 @@ const initFormData = () => ({
   nconBillId: undefined,
   belongMonth: dateUtil().format("YYYY-MM"),
   finaTypeId: undefined,
-  reqType: 0,
+  reqType: 0, // 请款类型,默认请款==> 0:请款,1:来票冲账
   processNo: "",
   reqAmt: 0,
   factReqAmt: 0,
@@ -1183,7 +1192,8 @@ const addPayWay = () => {
     id: undefined,
     srcType: "NCON_FEE",
     nconBillId: undefined,
-    payWayId: undefined,
+    // 付款方式，2066：转账  2071：账扣  2112:冲账
+    payWayId: isOffsetByInvoice.value ? 2112 : undefined, // 请款类型为来票冲账时，支付方式默认为冲账
     bankName: "",
     accountName: "",
     bankAccount: "",
@@ -1695,7 +1705,6 @@ const handleFileSuccess = (file: any) => {
 // ==================== 初始化数据字典 ====================
 const initDictData = async () => {
   await loadDicts();
-  payTypeOptions.value = getDictList(dictMapping.payType);
   dedTypeOptions.value = getDictList(dictMapping.dedType);
 };
 // 分摊详情

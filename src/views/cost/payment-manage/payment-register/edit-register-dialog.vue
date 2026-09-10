@@ -118,7 +118,11 @@ const mdStore = useMDStore();
 const { getDictList, loadDicts } = useDict([dictMapping.payType], {
   treeDictCodes: [],
 });
-const payTypeOptions = computed(() => getDictList(dictMapping.payType));
+const payTypeOptions = computed(() => {
+  const list = getDictList(dictMapping.payType);
+  // 过滤掉冲账选项
+  return list.filter((item) => item.id != 2112);
+});
 
 // 这里的金额是未付金额 + 本次点击的登记明细的金额，因为本次点击的登记明细编辑时，需要显示未付金额 + 本次点击的登记明细的金额
 const totalAmount = computed(() => {
