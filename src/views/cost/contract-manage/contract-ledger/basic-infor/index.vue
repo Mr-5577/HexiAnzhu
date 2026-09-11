@@ -874,6 +874,7 @@ const loadContractDetail = async () => {
   try {
     const res = await contractLedgerApi.getContractLedgerById({
       id: conId.value,
+      isWithArch: true, // 获得归档数据
     });
     if (res.code === 200 && res.data) {
       const {
@@ -883,7 +884,13 @@ const loadContractDetail = async () => {
         billPaynodes = [],
         billPayrates = [],
         billPrices = [],
+        prices = [], // 已归档的价税明细
+        payrates = [], // 已归档的支付比例
       } = res.data;
+      // 已归档时需要取已归档的价税明细和支付比例
+      const pricesList = conMain.conStatus == 40 ? prices : billPrices;
+      const payratesList = conMain.conStatus == 40 ? payrates : billPayrates;
+
       formData.value = parseContractData(conMain, conMainExt);
       materialTable.value = billMaterials.map((item: any) => ({
         ...item,
@@ -893,11 +900,11 @@ const loadContractDetail = async () => {
         ...item,
         uuid: uuidv4(),
       }));
-      payrateTable.value = billPayrates.map((item: any) => ({
+      payrateTable.value = payratesList.map((item: any) => ({
         ...item,
         uuid: uuidv4(),
       }));
-      priceTable.value = billPrices.map((item: any) => ({
+      priceTable.value = pricesList.map((item: any) => ({
         ...item,
         uuid: uuidv4(),
       }));
