@@ -65,7 +65,8 @@
                     </el-icon>
                     重置
                 </el-button>
-                <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain>
+                <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain
+                    :disabled="!menuStore.hasExactPermission(PERMISSIONS.FIN_PAY_ANALYSIS_EXPORT)">
                     <el-icon>
                         <Download />
                     </el-icon>
@@ -116,10 +117,13 @@ import BaseSearchCard from "@/components/base/base-search-card.vue";
 import { buildTreeFromFlatList } from "../utils/finance-target-pay-analysis.ts";
 import { calcMaxDepth, levelMap, segEnum } from '../utils/common.ts'
 import { useRoute, useRouter } from "vue-router";
+import { PERMISSIONS } from "@/constants/permission.ts";
+import { useMenuStore } from "@/stores/menu-store";
 
 defineOptions({ name: "target-cost-payment-analysis" });
 
 const router = useRouter();
+const menuStore = useMenuStore();
 
 // ---------- 树形配置 ----------
 const treeConfig = {
@@ -195,8 +199,8 @@ const columns: any = [
                 minWidth: 120,
                 formatter: (value: any) => formatThousandWithPlaces(value),
                 clickable: true, // 点击单元格触发 onClick 事件
-                onClick: (data) => {
-                    handleCellEventClick(data);
+                onClick: (row, column) => {
+                    handleCellEventClick(row, column);
                 },
             },
             {
@@ -205,8 +209,8 @@ const columns: any = [
                 minWidth: 120,
                 formatter: (value: any) => formatThousandWithPlaces(value),
                 clickable: true, // 点击单元格触发 onClick 事件
-                onClick: (data) => {
-                    handleCellEventClick(data);
+                onClick: (row, column) => {
+                    handleCellEventClick(row, column);
                 },
             },
             {
@@ -278,8 +282,8 @@ const columns: any = [
     },
 ];
 // 跳转到请款执行明细表
-const handleCellEventClick = (row) => {
-    console.log("点击单元格事件:", row);
+const handleCellEventClick = (row, column) => {
+    console.log("点击单元格事件:", row, column);
     if (row) {
         const timestamp = new Date().getTime();
         let segId = 9999;
@@ -296,7 +300,8 @@ const handleCellEventClick = (row) => {
             segId: segId,
             projId: queryParams.value.projId,
             subId: row.subId,
-            endDate: endDate,
+            applyDate: column.prop === 'factReqAmt' ? endDate : null, // 请款日期
+            payDate: column.prop === 'paidAmt' ? endDate : null, // 支付日期
         };
         router.push({
             path: "/report/pay-detail",

@@ -178,6 +178,6 @@ export const getLabel = <T extends { value: number | string; label: string }>(
 // ============================================================
 // 业务常量（款项类型，需与合同台账 payTypeId 保持一致）
 // ============================================================
+export const ADVANCE_PAY_TYPE = 2061; // 预付款
 export const PROGRESS_PAY_TYPE = 2062; // 进度款
 export const ACCEPT_PAY_TYPE = 2063; // 验收款
-export const ADVANCE_PAY_TYPE = 2061; // 预付款

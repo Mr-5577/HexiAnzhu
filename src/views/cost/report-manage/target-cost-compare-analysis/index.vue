@@ -72,7 +72,8 @@
                         <Refresh />
                     </el-icon> 重置
                 </el-button>
-                <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain>
+                <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain
+                    :disabled="!menuStore.hasExactPermission(PERMISSIONS.COMPARE_ANALYSIS_EXPORT)">
                     <el-icon>
                         <Download />
                     </el-icon>
@@ -106,8 +107,12 @@ import TargetCostStatistics from './target-cost-statistics.vue'
 import { ElMessage } from 'element-plus'
 import BaseSearchCard from "@/components/base/base-search-card.vue";
 import { segEnum } from '../utils/common.ts'
+import { useMenuStore } from "@/stores/menu-store";
+import { PERMISSIONS } from '@/constants/permission.ts'
 
 defineOptions({ name: 'target-cost-comparison-analysis' })
+
+const menuStore = useMenuStore();
 
 const queryParams = ref({
     seg: 'ALL',     // 业务归属

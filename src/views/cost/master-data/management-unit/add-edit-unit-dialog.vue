@@ -133,6 +133,9 @@ const validateCode = (_rule: any, value: string, callback: any) => {
 const formRules: FormRules = {
   mguName: [{ required: true, message: "请输入分部名称", trigger: "blur" }],
   segId: [{ required: true, message: "请选择业务板块", trigger: "blur" }],
+  mguShortname: [
+    { required: true, message: "请输入分部简称", trigger: "blur" },
+  ],
   mguNo: [
     { required: true, message: "请输入分部编码", trigger: "blur" },
     { validator: validateCode, trigger: ["blur", "change"] },

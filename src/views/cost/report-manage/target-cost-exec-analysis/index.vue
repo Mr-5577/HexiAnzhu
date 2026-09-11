@@ -65,7 +65,8 @@
                     </el-icon>
                     重置
                 </el-button>
-                <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain>
+                <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain
+                    :disabled="!menuStore.hasExactPermission(PERMISSIONS.EXEC_ANALYSIS_EXPORT)">
                     <el-icon>
                         <Download />
                     </el-icon>
@@ -123,8 +124,12 @@ import ChooseCostMDialog from '@/components/business/choose-costM-dialog.vue'
 import BaseSearchCard from "@/components/base/base-search-card.vue";
 import { buildTreeFromList } from '../utils/target-cost-exec-analysis.ts'
 import { calcMaxDepth, levelMap, warnEnum, segEnum } from '../utils/common.ts'
+import { useMenuStore } from "@/stores/menu-store";
+import { PERMISSIONS } from '@/constants/permission.ts'
 
 defineOptions({ name: 'target-cost-execution-analysis' })
+
+const menuStore = useMenuStore();
 
 // ---------- 树形配置 ----------
 const treeConfig = {

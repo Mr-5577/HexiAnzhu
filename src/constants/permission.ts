@@ -71,6 +71,12 @@ export const PERMISSIONS = {
   PAY_DETAIL_EXPORT: "payment-detail:export", // 请款执行明细-导出
   PROJECT_OUTPUT_EXPORT: "project-output:export", // 产值申报概览-导出
   OUTPUT_DETAIL_EXPORT: "output-detail:export", // 产值申报明细-导出
+  EXEC_ANALYSIS_EXPORT: "exec-analysis:export", // 目标成本执行分析-导出
+  COMPARE_ANALYSIS_EXPORT: "compare-analysis:export", // 目标成本对比分析-导出
+  FIN_PAY_ANALYSIS_EXPORT: "fin-pay-analysis:export", // 财务成本支付分析-导出
+  PERIOD_PAY_EXPORT: "period-pay:export", // 财务支付分析(期间)-导出
+  PROJECT_PAY_EXPORT: "project-pay:export", // 财务支付分析(项目)-导出
+  SUP_PERFORM_EXPORT: "sup-perform:export", // 供应商履约支付-导出
 
   // 系统角色权限
   DEPT_PERM_EDIT: "department-permissions:edit", // 部门权限-编辑

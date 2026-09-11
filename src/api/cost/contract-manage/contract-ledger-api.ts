@@ -13,7 +13,7 @@ export const contractLedgerApi = {
     return http.formPost("/con/main/list", data);
   },
   /** 编辑/查看合同 */
-  getContractLedgerById: (data: { id: number; isWithFlow?: boolean }) => {
+  getContractLedgerById: (data: { id: number; isWithFlow?: boolean; isWithArch?: boolean}) => {
     return http.formPost("/con/main/get", data);
   },
   /** 录入合同 */

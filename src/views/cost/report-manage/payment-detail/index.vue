@@ -26,6 +26,11 @@
                             }" placeholder="请选择项目" style="width: 220px" clearable filterable />
                     </el-form-item>
 
+                    <el-form-item label="请款日期" prop="applyDate">
+                        <el-date-picker v-model="queryParams.applyDate" type="daterange" range-separator="至"
+                            value-format="YYYY-MM-DD" start-placeholder="开始日期" end-placeholder="结束日期"
+                            style="width: 220px" />
+                    </el-form-item>
                     <el-form-item label="支付日期" prop="payDate">
                         <el-date-picker v-model="queryParams.payDate" type="daterange" range-separator="至"
                             value-format="YYYY-MM-DD" start-placeholder="开始日期" end-placeholder="结束日期"
@@ -133,6 +138,7 @@ const queryParams = ref({
     segId: undefined,
     projIds: [],
     payCompId: undefined,
+    applyDate: [],
     payDate: [],
     finaOrgId: undefined,
     conId: undefined,
@@ -186,7 +192,7 @@ const columns: TableColumnItem[] = [
     { prop: "segName", label: "业务板块", width: 80, fixed: "left" },
     { prop: "projName", label: "项目名称", width: 120, fixed: "left" },
     { prop: "reqAmt", label: "请款金额", width: 120, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
-    { prop: "payAmt", label: "支付金额", width: 120, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
+    { prop: "paidAmt", label: "支付金额", width: 120, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
     { prop: "lastPayDate", label: "支付日期", width: 100 },
     { prop: "reqDesc", label: "摘要", width: 200 },
     { prop: "applyUser", label: "申请人", width: 90 },
@@ -208,7 +214,7 @@ const paginatedData = computed(() => {
 });
 
 const buildParams = () => {
-    const { payDate, segId, ...rest } = queryParams.value;
+    const { applyDate, payDate, segId, ...rest } = queryParams.value;
     let segIdList = []
     if (segId) {
         if (segId == 9999) {
@@ -221,6 +227,8 @@ const buildParams = () => {
     const params = {
         ...rest,
         segIds: segIdList,
+        reqDateStart: applyDate?.[0],
+        reqDateEnd: applyDate?.[1],
         payDateStart: payDate?.[0],
         payDateEnd: payDate?.[1],
 
@@ -420,9 +428,13 @@ const initQueryParams = () => {
                 queryParams.value.billId = routeData?.billId;
                 queryParams.value.finaSubId = routeData?.subId;
 
-                if (routeData?.endDate) {
-                    // 这里处理是财务成本支付分析页面跳转过来
-                    queryParams.value.payDate = ['2000-01-01', routeData?.endDate]
+                if (routeData?.payDate) {
+                    // 这里处理是财务成本支付分析页面点击支付金额跳转过来
+                    queryParams.value.payDate = ['2000-01-01', routeData.payDate]
+                }
+                if (routeData?.applyDate) {
+                    // 这里处理是财务成本支付分析页面点击支付金额跳转过来
+                    queryParams.value.applyDate = ['2000-01-01', routeData.applyDate]
                 }
                 // 根据路由参数设置默认板块
                 const segId = routeData.segId == 9999 ? 2 : routeData.segId;
