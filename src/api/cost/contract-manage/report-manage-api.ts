@@ -135,4 +135,69 @@ export const reportManageApi = {
       "post",
     );
   },
+
+  /** 财务支付分析-项目维度 */
+  getFinaProject: (data: any) => {
+    return http.post("/pay/report/finaProject", data);
+  },
+  /** 导出 财务支付分析-项目维度 */
+  exportFinaProject: (
+    data: any,
+    filename: string = "财务支付分析(项目).xlsx",
+  ) => {
+    return http.exportFile(
+      "/pay/report/finaProject",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
+    );
+  },
+  /** 财务支付分析-期间维度 */
+  getFinaPeriod: (data: any) => {
+    return http.post("/pay/report/finaPeriod", data);
+  },
+  /** 导出 财务支付分析-期间维度 */
+  exportFinaPeriod: (
+    data: any,
+    filename: string = "财务支付分析(期间).xlsx",
+  ) => {
+    return http.exportFile(
+      "/pay/report/finaPeriod",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
+    );
+  },
+  /** 财务目标成本支付分析 */
+  getFinaTargetCost: (data: any) => {
+    return http.post("/pay/report/finaTargetCost", data);
+  },
+  /** 导出 财务目标成本支付分析 */
+  exportFinaTargetCost: (
+    data: any,
+    filename: string = "财务目标成本支付分析.xlsx",
+  ) => {
+    return http.exportFile(
+      "/pay/report/finaTargetCost",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
+    );
+  },
+  /** 供应商履约及支付分析报表 */
+  getSupPerformReport: (data: any) => {
+    return http.post("/con/supPerformReport", data);
+  },
+  /** 导出 供应商履约及支付分析报表 */
+  exportSupPerformReport: (
+    data: any,
+    filename: string = "供应商履约及支付分析报表.xlsx",
+  ) => {
+    return http.exportFile(
+      "/con/supPerformReport",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
+    );
+  },
 };

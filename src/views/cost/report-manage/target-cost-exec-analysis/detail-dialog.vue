@@ -82,7 +82,7 @@ const nonConCostAllocDialogVisible = ref(false);
 // 表格列配置
 const tableColumns: any = [
     { type: 'index', title: '序号' },
-    { prop: "bizTypeName", label: "单据类型", width: 130 },
+    { prop: "bizTypeName", label: "单据类型", width: 100 },
     { prop: "bizTitle", label: "单据名称" },
     {
         prop: "billAmt", label: "单据金额", width: 130,

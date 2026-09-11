@@ -2,63 +2,90 @@
 <template>
     <div class="finance-payment-period-wrapper">
         <!-- 查询卡片 -->
-        <div class="search-card">
-            <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px" class="search-form">
-                <el-form-item label="业务归属" prop="seg">
-                    <el-select v-model="queryParams.seg" placeholder="请选择业务板块" :clearable="false" style="width: 150px"
-                        @change="handleSegChange">
-                        <el-option v-for="item in segOptions" :key="item.value" :label="item.label"
-                            :value="item.value" />
-                    </el-select>
-                </el-form-item>
+        <BaseSearchCard>
+            <template #form>
+                <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px" class="search-form">
+                    <el-form-item label="业务板块" prop="segId">
+                        <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px"
+                            @change="handleSegChange">
+                            <el-option v-for="item in segOptions" :key="item.id" :label="item.segName"
+                                :value="item.id" />
+                        </el-select>
+                    </el-form-item>
 
-                <el-form-item label="项目名称" prop="projId">
-                    <el-cascader ref="projectCascaderRef" v-model="queryParams.projId" :options="projectData"
-                        :show-all-levels="false" :props="{
-                            expandTrigger: 'hover',
-                            emitPath: false,
-                            checkStrictly: false,
-                            value: 'orgId',
-                            label: 'orgName',
-                            children: 'children',
-                        }" placeholder="请选择项目" style="width: 200px" :clearable="false" filterable
-                        @change="handleProjectChange" />
-                </el-form-item>
+                    <el-form-item label="项目名称" prop="projIds">
+                        <el-cascader v-model="queryParams.projIds" :options="projectData" :collapse-tags="true"
+                            :collapse-tags-tooltip="true" :max-collapse-tags="1" :show-all-levels="false" :props="{
+                                expandTrigger: 'hover',
+                                emitPath: false,
+                                checkStrictly: false,
+                                value: 'orgId',
+                                label: 'orgName',
+                                children: 'children',
+                                multiple: true,
+                            }" placeholder="请选择项目" style="width: 220px" clearable filterable />
+                    </el-form-item>
 
-                <el-form-item class="action-buttons">
-                    <el-button type="primary" @click="handleSearch" class="btn-search">
-                        <el-icon>
-                            <Search />
-                        </el-icon>
-                        搜索
-                    </el-button>
-                    <el-button @click="handleReset" class="btn-reset">
-                        <el-icon>
-                            <Refresh />
-                        </el-icon>
-                        重置
-                    </el-button>
-                    <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain>
-                        <el-icon>
-                            <Download />
-                        </el-icon>
-                        导出
-                    </el-button>
-                </el-form-item>
-            </el-form>
-        </div>
+                    <el-form-item label="付款期间" prop="payDate">
+                        <el-date-picker v-model="queryParams.payDate" value-format="YYYY-MM" type="monthrange"
+                            range-separator="至" start-placeholder="开始月份" end-placeholder="结束月份" style="width: 220px" />
+                    </el-form-item>
+
+                    <el-form-item label="支付公司" prop="payCompId">
+                        <el-select v-model="queryParams.payCompId" placeholder="请选择公司" clearable filterable
+                            style="width: 220px">
+                            <el-option v-for="item in companyOptions" :key="item.id" :label="item.compName"
+                                :value="item.id" />
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="单位" prop="unit">
+                        <el-select v-model="queryParams.unit" placeholder="请选择单位" :clearable="false"
+                            style="width: 150px" @change="handleSearch">
+                            <el-option label="万元" value="万元" />
+                            <el-option label="元" value="元" />
+                        </el-select>
+                    </el-form-item>
+                </el-form>
+            </template>
+            <template #actions>
+                <el-button type="primary" @click="handleSearch" class="btn-search">
+                    <el-icon>
+                        <Search />
+                    </el-icon>
+                    搜索
+                </el-button>
+                <el-button @click="handleReset" class="btn-reset">
+                    <el-icon>
+                        <Refresh />
+                    </el-icon>
+                    重置
+                </el-button>
+                <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain>
+                    <el-icon>
+                        <Download />
+                    </el-icon>
+                    导出
+                </el-button>
+            </template>
+        </BaseSearchCard>
+
+        <!-- 统计卡片 -->
+        <statistics-info :summary="summaryData" :unit="queryParams.unit"></statistics-info>
 
         <div class="content-placeholder">
             <div class="demo-controls">
+                <div class="unit-badge">
+                    <el-icon>
+                        <Money />
+                    </el-icon>
+                    <span>单位：{{ queryParams.unit }}</span>
+                </div>
                 <span class="control-label">科目层级</span>
                 <div class="level-btn-group">
                     <el-button size="small" :type="expandLevel === 999 ? 'primary' : ''"
-                        @click="handleExpandLevel(999)">
-                        全部展开
-                    </el-button>
-                    <el-button size="small" :type="expandLevel === 0 ? 'primary' : ''" @click="handleExpandLevel(0)">
-                        全部收起
-                    </el-button>
+                        @click="handleExpandLevel(999)">全部展开</el-button>
+                    <el-button size="small" :type="expandLevel === 0 ? 'primary' : ''"
+                        @click="handleExpandLevel(0)">全部收起</el-button>
                     <el-button v-for="level in maxDepth" :key="level" size="small"
                         :type="expandLevel === level ? 'primary' : ''" @click="handleExpandLevel(level)">
                         {{ levelMap[level] || level + '级' }}
@@ -75,15 +102,18 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
-import { Search, Refresh, CircleClose } from '@element-plus/icons-vue'
+import { Search, Refresh, Download } from '@element-plus/icons-vue'
 import VxeEditableTable from '@/components/base/vxe-editable-table.vue'
 import { projectAreaApi } from '@/api/cost/master-data/project-area-api'
+import { dictionaryApi } from '@/api/cost/master-data/dictionary-api'
 import { reportManageApi } from '@/api/cost/contract-manage/report-manage-api'
-import { productTypeApi } from '@/api/cost/master-data/product-type-api'
-import { goalCostApi } from '@/api/cost/cost-setting/goal-cost-api'
 import { formatPercent, formatThousandWithPlaces } from '@/utils/big-number'
 import { ElMessage } from 'element-plus'
-import { calcMaxDepth } from '@/utils/report-util'
+import dayjs from "dayjs";
+import { calcMaxDepth, getSummaryData, levelMap } from '../utils/common.ts'
+import StatisticsInfo from "../components/finan-pay-statistics-card.vue";
+import mdApi from '@/api/system/md-api.ts'
+import { buildTreeAndFillData } from '../utils/finance-payment-period.ts'
 
 defineOptions({ name: 'finance-payment-period' })
 
@@ -94,53 +124,42 @@ const treeConfig = {
     expandAll: false,
     accordion: false,
 }
-const levelMap: Record<number, string> = {
-    1: '一级科目',
-    2: '二级科目',
-    3: '三级科目',
-    4: '四级科目',
-    5: '五级科目',
-    6: '六级科目',
-    7: '七级科目',
-    8: '八级科目',
-}
 
 const queryParams = ref({
-    seg: undefined,
-    projId: undefined,
-    projName: undefined,
+    segId: undefined,
+    projIds: [],
+    payDate: [],
+    payCompId: undefined,
+    unit: '万元',
 })
 
-const projectCascaderRef = ref()
 const vxeTableRef = ref<InstanceType<typeof VxeEditableTable>>()
-const segOptions = ref([
-    { value: 'ALL', label: '全部' },
-    { value: 'DC', label: '地产' },
-    { value: 'JZ', label: '建筑' },
-])
-const projectOptions = ref([])
+const segOptions = ref([])      // 存储板块列表（含"全部"）
+const projectOptions = ref([])  // 全部项目树
+const companyOptions = ref([])  // 当前板块下的公司
 const maxDepth = ref(0)
 const expandLevel = ref(1)
 const tableData = ref([])
+const headerList = ref([])
 const tableLoading = ref(false)
 const exportLoading = ref(false)
+const summaryData = ref({
+    all: '0',
+    land: '0',
+    engineering: '0',
+    expense: '0',
+    expenseDetails: [],
+})
 
 // ---------- 计算属性：根据板块过滤项目树 ----------
 const projectData = computed(() => {
-    const seg = queryParams.value.seg
-    if (!seg) return []
-    switch (seg) {
-        // 全部取地产项目
-        case 'ALL':
-            return projectOptions.value.filter((item) => item.orgId === 2) || []
-        // 地产项目
-        case 'DC':
-            return projectOptions.value.filter((item) => item.orgId === 2) || []
-        // 建筑项目
-        case 'JZ':
-            return projectOptions.value.filter((item) => item.orgId === 7) || []
-        default:
-            return [];
+    const segId = queryParams.value.segId
+    if (!segId) return []
+    if (segId === 9999) {
+        // "全部" → 返回地产板块（orgId=2）的项目
+        return projectOptions.value.filter((item) => item.orgId === 2) || []
+    } else {
+        return projectOptions.value.filter((item) => item.orgId === segId) || []
     }
 })
 
@@ -157,11 +176,9 @@ const handleExpandLevel = (level: number) => {
     }
 }
 
-// ---------- 更新最大深度 ----------
 const updateMaxDepth = () => {
     const depth = calcMaxDepth(tableData.value)
-    maxDepth.value = Math.max(0, depth)  // 确保非负
-    // 如果当前选中的层级大于最大深度，修正为1
+    maxDepth.value = Math.max(0, depth)
     if (expandLevel.value > maxDepth.value && maxDepth.value > 0) {
         expandLevel.value = 1
     } else if (maxDepth.value === 0) {
@@ -169,24 +186,46 @@ const updateMaxDepth = () => {
     }
 }
 
-const columns: any = [
-    {
-        prop: 'subCode',
-        label: '科目编码',
-        width: 90,
-        fixed: 'left',
-    },
-    {
-        prop: 'subName',
-        label: '科目名称',
-        width: 240,
-        fixed: 'left',
-        align: 'left',
-        treeNode: true,
-    },
-]
+// 动态构建 columns
+const columns: any = computed(() => {
+    // 固定列：科目编码、科目名称
+    const fixedCols = [
+        { prop: 'sub_code', label: '科目编码', width: 120, fixed: 'left' },
+        { prop: 'sub_name', label: '科目名称', width: 200, fixed: 'left', align: 'left', treeNode: true },
+        { prop: 'total', label: '汇总', width: 130, formatter: (val) => formatThousandWithPlaces(val), },
+    ];
 
-// ---------- 获取项目数据 ----------
+    // 动态月份列
+    const monthCols = headerList.value.map((month) => ({
+        prop: month,                    // 列属性名，如 '2026-01'
+        label: month,                   // 列头显示，如 '2026-01'
+        minWidth: 120,
+        formatter: (val) => formatThousandWithPlaces(val),
+    }));
+
+    return [...fixedCols, ...monthCols];
+});
+
+// ---------- 获取业务板块（含"全部"） ----------
+const getSegOptions = async () => {
+    try {
+        const res = await dictionaryApi.getsegmentList({ isAuth: true })
+        if (res.code === 200 && res.data) {
+            const list = res.data || []
+            const hasDiChan = list.some(item => item.id === 2)
+            const hasJianZhu = list.some(item => item.id === 7)
+            if (hasDiChan && hasJianZhu) {
+                segOptions.value = [{ id: 9999, segName: '全部' }, ...list]
+            } else {
+                segOptions.value = list
+            }
+        }
+    } catch (error) {
+        console.error('获取业务板块列表失败:', error)
+    }
+}
+
+// ---------- 获取项目树 ----------
 const getProjectOptions = async () => {
     try {
         const res = await projectAreaApi.getSegMguProjList()
@@ -198,59 +237,42 @@ const getProjectOptions = async () => {
     }
 }
 
-// ---------- 递归查找树中第一个叶子节点（项目） ----------
-const findFirstProjectId = (tree: any[]) => {
-    if (!tree || tree.length === 0) return undefined
-    for (const node of tree) {
-        if (node.children && node.children.length > 0) {
-            const found = findFirstProjectId(node.children)
-            if (found) return found
-        } else {
-            return node
+// ---------- 获取板块下的公司 ----------
+const getCompanyList = async (segId: number) => {
+    try {
+        // 如果是"全部"，加载地产板块的公司
+        const targetSegId = segId === 9999 ? 2 : segId
+        const res = await mdApi.getProjCompanyList({ segId: targetSegId })
+        if (res.code === 200) {
+            companyOptions.value = res.data || []
         }
-    }
-    return undefined
-}
-
-// ---------- 更新当前板块下的第一个项目 ----------
-const updateFirstProject = async () => {
-    const firstProj = findFirstProjectId(projectData.value)
-    console.log("当前板块下的第一个项目:", firstProj)
-    if (firstProj) {
-        const { orgId, orgName } = firstProj
-        queryParams.value.projId = orgId
-        queryParams.value.projName = orgName
+    } catch (error) {
+        console.error('获取公司列表失败:', error)
     }
 }
 
-// ---------- 设置默认选中第一个板块和项目 ----------
-const selectedDefaultSeg = async () => {
-    if (segOptions.value.length) {
-        const firstSeg = segOptions.value[0]
-        if (firstSeg) {
-            queryParams.value.seg = firstSeg.value
-            await updateFirstProject()
+// ---------- 设置默认选中第一个板块 ----------
+const setDefaultSeg = () => {
+    if (segOptions.value && segOptions.value.length > 0) {
+        const first = segOptions.value[0]
+        if (first) {
+            queryParams.value.segId = first.id
+            handleSegChange(first.id)
         }
     }
 }
 
-// ---------- 板块变更事件 ----------
+// ---------- 板块变更 ----------
 const handleSegChange = async (val: number) => {
-    await updateFirstProject()
-    await nextTick()
-    handleSearch()
-}
-const handleProjectChange = async (val: number) => {
+    // 清空项目多选
+    queryParams.value.projIds = []
+    // 清空支付公司
+    queryParams.value.payCompId = undefined
+    companyOptions.value = []
+    // 加载公司列表
     if (val) {
-        console.log("选中的项目ID:", val, projectCascaderRef.value.getCheckedNodes());
-        const checkedNodes = projectCascaderRef.value.getCheckedNodes()
-        if (checkedNodes.length) {
-            const node = checkedNodes[0]
-            queryParams.value.projName = node.label
-        }
+        await getCompanyList(val)
     }
-    await nextTick()
-    handleSearch()
 }
 
 // ---------- 搜索 ----------
@@ -260,44 +282,89 @@ const handleSearch = () => {
 
 // ---------- 重置 ----------
 const handleReset = async () => {
-    await selectedDefaultSeg()
+    queryParams.value.projIds = []
+    queryParams.value.payCompId = undefined
+    queryParams.value.payDate = []
+    queryParams.value.unit = '万元'
+    setDefaultSeg()
+    // 等待板块切换完成后再搜索
+    await nextTick()
     handleSearch()
 }
+
+// ---------- 导出 ----------
 const handleExport = async () => {
     try {
-        exportLoading.value = true;
-        const params = {
-            ...queryParams.value,
-            level: 99
-        }
-        const fileBlob = await reportManageApi.exportDynamicReport({ ...params, isExport: true });
+        exportLoading.value = true
+        const params = buildParams()
+        const fileBlob = await reportManageApi.exportFinaPeriod({ ...params, isExport: true })
         if (!fileBlob || fileBlob.size === 0) {
-            ElMessage.warning("导出文件为空，请检查数据");
+            ElMessage.warning('导出文件为空，请检查数据')
         } else {
-            ElMessage.success("导出成功！");
+            ElMessage.success('导出成功！')
         }
     } catch (error) {
-        console.error("导出失败:", error);
+        console.error('导出失败:', error)
     } finally {
-        exportLoading.value = false;
+        exportLoading.value = false
     }
 }
-// 获取列表数据
+/**
+ * 日期范围格式化辅助函数
+ * @param dates 日期范围数组
+ * @param type 类型（start: 起始日期，end: 结束日期）
+ */
+const formatDateRange = (dates, type) => {
+    if (!dates || !Array.isArray(dates) || dates.length < 2) return undefined;
+    const [start, end] = dates;
+    if (type === 'start') {
+        return start ? dayjs(start).startOf('month').format('YYYY-MM-DD') : undefined;
+    }
+    if (type === 'end') {
+        return end ? dayjs(end).endOf('month').format('YYYY-MM-DD') : undefined;
+    }
+    return undefined;
+};
+// ---------- 构建查询参数 ----------
+const buildParams = () => {
+    const { segId, payDate, ...rest } = queryParams.value
+    // 处理 segId：如果是 9999（全部），传 undefined 或不传，后端可能做特殊处理，这里传空数组表示全部
+    let segIds = []
+    if (segId) {
+        if (segId === 9999) {
+            segIds = [] // 全部
+        } else {
+            segIds = [segId]
+        }
+    }
+    return {
+        ...rest,
+        segIds,
+        payDateStart: formatDateRange(payDate, 'start'),
+        payDateEnd: formatDateRange(payDate, 'end'),
+        level: 99,
+    }
+}
+
+// ---------- 获取列表数据 ----------
 const getDataList = async () => {
     try {
-        tableLoading.value = true;
-        const params = {
-            ...queryParams.value,
-            level: 99
-        }
-        const res = await reportManageApi.getDynamicReport(params);
-        if (res.code === 200) {
-            const list = res.data || [];
-            // 转换为树形结构
-            // const treeData = buildTreeFromList(list, 'subCode', 'children');
-            // tableData.value = treeData;
-
-            // 数据加载完成后，计算深度并默认展开第1级
+        tableLoading.value = true
+        const params = buildParams()
+        const res = await reportManageApi.getFinaPeriod(params)
+        if (res.code === 200 && res.data) {
+            console.log('res.data', res.data)
+            const { header, rows } = res.data;
+            // 保存 header 用于生成 columns
+            headerList.value = header;
+            // 转换为树形结构并填充数据
+            const treeData = buildTreeAndFillData(header, rows);
+            console.log('treeData', treeData)
+            tableData.value = treeData;
+            // 获取统计数据
+            const summyData = getSummaryData(treeData)
+            console.log('summyData', summyData)
+            summaryData.value = summyData
             await nextTick()
             updateMaxDepth()
             if (maxDepth.value > 0) {
@@ -307,15 +374,17 @@ const getDataList = async () => {
             }
         }
     } catch (error) {
-        console.error("获取列表失败:", error);
+        console.error('获取列表失败:', error)
     } finally {
-        tableLoading.value = false;
+        tableLoading.value = false
     }
-};
+}
 
+// ---------- 初始化 ----------
 onMounted(async () => {
+    await getSegOptions()
     await getProjectOptions()
-    await selectedDefaultSeg()
+    setDefaultSeg()
     await getDataList()
 })
 </script>
@@ -332,61 +401,6 @@ onMounted(async () => {
     box-sizing: border-box;
     background: #f5f7fa;
     overflow-y: auto;
-
-    .search-card {
-        background: #ffffff;
-        border-radius: 12px;
-        padding: 18px 24px 12px 24px;
-        margin-bottom: 16px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
-        flex-shrink: 0;
-        border: 1px solid #edf2f7;
-
-        .search-form {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 4px 0;
-
-            :deep(.el-form-item) {
-                margin-bottom: 8px;
-                margin-right: 16px;
-
-                .el-form-item__label {
-                    font-size: 13px;
-                    color: #4a5568;
-                    font-weight: 500;
-                    padding-right: 8px;
-                }
-            }
-
-            :deep(.el-input__wrapper),
-            :deep(.el-select .el-input__wrapper),
-            :deep(.el-cascader .el-input__wrapper) {
-                border-radius: 8px;
-                box-shadow: 0 0 0 1px #e2e8f0 inset;
-                transition: box-shadow 0.2s;
-
-                &:hover {
-                    box-shadow: 0 0 0 1px #b7c0d0 inset;
-                }
-
-                &.is-focus {
-                    box-shadow: 0 0 0 2px rgba(79, 110, 247, 0.25), 0 0 0 1px #4f6ef7 inset !important;
-                }
-            }
-
-            .action-buttons {
-                display: flex;
-                gap: 8px;
-
-                .btn-search,
-                .btn-reset {
-                    border-radius: 8px;
-                }
-            }
-        }
-    }
 
     .content-placeholder {
         display: flex;
@@ -411,8 +425,31 @@ onMounted(async () => {
         align-items: center;
         gap: 12px;
         flex-shrink: 0;
-        padding: 15px 20px 0;
+        padding: 15px 15px 0;
         background: #fafbfc;
+        position: relative;
+
+        .unit-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #b26a00; // 深琥珀，字清晰
+            background: #fff7e6; // 极浅暖黄
+            border: 1px solid #ffd591; // 柔和橙边
+            border-radius: 14px;
+            white-space: nowrap;
+            user-select: none;
+            position: absolute;
+            right: 15px;
+            top: 15px;
+
+            .el-icon {
+                font-size: 14px;
+            }
+        }
 
         .control-label {
             font-size: 14px;

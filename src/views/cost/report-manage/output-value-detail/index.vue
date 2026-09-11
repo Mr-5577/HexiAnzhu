@@ -347,7 +347,7 @@ const initQueryParams = async () => {
                 queryParams.value.segId = routeData.segId;
                 queryParams.value.projIdList = routeData.projId ? [routeData.projId] : [];
                 queryParams.value.conId = routeData?.conId;
-                queryParams.value.unit = routeData?.unit;
+                queryParams.value.unit = routeData?.unit || '元';
             }
         } catch (error) {
             console.error("解析路由参数失败，使用默认值", error);

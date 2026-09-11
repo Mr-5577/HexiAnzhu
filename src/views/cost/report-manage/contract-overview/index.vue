@@ -54,8 +54,7 @@
                                 label: 'conTypeName',
                                 children: 'children',
                                 multiple: true,
-                            }" placeholder="请选择合同分类" style="width: 220px" clearable filterable
-                            collapse-tags />
+                            }" placeholder="请选择合同分类" style="width: 220px" clearable filterable collapse-tags />
                     </el-form-item>
 
                     <el-form-item label="合同类型" prop="conProperty">
@@ -129,7 +128,7 @@ const router = useRouter();
 const mdStore = useMDStore();
 const menuStore = useMenuStore();
 
-// ============ 查询参数 ============
+//  查询参数 
 const queryParams = ref({
     segId: undefined,
     projIdList: [],      // 项目ID列表（多选级联）

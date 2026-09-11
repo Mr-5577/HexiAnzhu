@@ -168,12 +168,4 @@ const toggleExpand = () => { isExpand.value = !isExpand.value; };
     }
 }
 
-// 响应式
-@media screen and (max-width: 1200px) {
-    .search-card .search-actions .btn-toggle {
-        margin-left: 0;
-        width: 100%;
-        justify-content: flex-end;
-    }
-}
 </style>

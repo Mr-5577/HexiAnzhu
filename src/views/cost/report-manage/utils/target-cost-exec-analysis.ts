@@ -45,28 +45,3 @@ export function buildTreeFromList<T extends Record<string, any>>(
 
   return roots;
 }
-
-/**
- * 计算树形数据最大深度
- * @param data 树形数据（根节点数组）
- * @param depth 当前深度，默认为 0
- * @returns 树形数据最大深度
- */
-export const calcMaxDepth = (data: any[], depth: number = 0): number => {
-  if (!data || data.length === 0) return depth - 1;
-  let max = depth;
-  for (const node of data) {
-    if (node.children && node.children.length > 0) {
-      const childDepth = calcMaxDepth(node.children, depth + 1);
-      max = Math.max(max, childDepth);
-    }
-  }
-  return max;
-};
-
-/** 预警枚举 */
-export const warnEnum = [
-  { label: "红色预警", value: 0, type: "danger", color: "#FF0000" },
-  { label: "黄色预警", value: 1, type: "warning", color: "#E6A23C" },
-  { label: "绿色预警", value: 2, type: "success", color: "#67C23A" },
-];

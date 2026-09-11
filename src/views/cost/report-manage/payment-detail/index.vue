@@ -56,6 +56,20 @@
                     <!-- <el-form-item label="请款单号" prop="reqNo">
                         <el-input v-model="queryParams.reqNo" placeholder="请输入请款单号" clearable style="width: 220px" />
                     </el-form-item> -->
+
+                    <el-form-item label="科目名称" prop="finaSubId">
+                        <el-cascader v-model="queryParams.finaSubId" :options="subjectOptions" :show-all-levels="false"
+                            :props="{
+                                expandTrigger: 'hover',
+                                emitPath: false,
+                                checkStrictly: false,
+                                value: 'id',
+                                label: 'subName',
+                                children: 'children',
+                                multiple: false,
+                            }" placeholder="请选择科目" style="width: 220px" clearable filterable />
+                    </el-form-item>
+
                 </el-form>
             </template>
             <template #actions>
@@ -85,8 +99,8 @@
         <!-- 表格卡片 -->
         <div class="table-card">
             <vxe-editable-table ref="vxeTableRef" v-model="paginatedData" :columns="columns" :rowKey="'id'"
-                :loading="tableLoading" :readonly="true" :pagination="true" :total="total" :page-size="pageSize"
-                :current-page="currentPage" @pagination-change="handlePaginationChange" />
+                :loading="tableLoading" :readonly="true" :show-footer="true" :pagination="true" :total="total"
+                :page-size="pageSize" :current-page="currentPage" @pagination-change="handlePaginationChange" />
         </div>
     </div>
 </template>
@@ -124,6 +138,7 @@ const queryParams = ref({
     conId: undefined,
     bizType: undefined,
     billId: undefined,
+    finaSubId: undefined,
     keyWord: undefined,
 });
 
@@ -131,6 +146,7 @@ const segOptions = ref([]);
 const projectOptions = ref([]);
 const companyOptions = ref([]);
 const orgOptions = ref([]);
+const subjectOptions = ref([]);
 
 // 保存初始查询参数快照（不包含 conId）
 const initialFilters = ref<any>({});
@@ -169,8 +185,8 @@ const columns: TableColumnItem[] = [
     { prop: "reqNo", label: "请款单号", width: 150, fixed: "left" },
     { prop: "segName", label: "业务板块", width: 80, fixed: "left" },
     { prop: "projName", label: "项目名称", width: 120, fixed: "left" },
-    { prop: "reqAmt", label: "请款金额", width: 120, formatter: (v) => formatThousandWithPlaces(v) },
-    { prop: "payAmt", label: "支付金额", width: 120, formatter: (v) => formatThousandWithPlaces(v) },
+    { prop: "reqAmt", label: "请款金额", width: 120, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
+    { prop: "payAmt", label: "支付金额", width: 120, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
     { prop: "lastPayDate", label: "支付日期", width: 100 },
     { prop: "reqDesc", label: "摘要", width: 200 },
     { prop: "applyUser", label: "申请人", width: 90 },
@@ -297,6 +313,20 @@ const getProjectOptions = async () => {
         console.error("获取项目列表失败:", error);
     }
 };
+// 获取业务板块下的费用科目
+const getFinaSubjectListBySegId = async (segId: number) => {
+    if (!segId) return;
+    try {
+        const res = await dictionaryApi.getFinaSubjectList({ segId: segId });
+        if (res.code === 200) {
+            const list = res.data || [];
+            const subTreeData: any = buildTree(list);
+            subjectOptions.value = subTreeData || [];
+        }
+    } catch (error) {
+        console.error("获取项目列表失败:", error);
+    }
+};
 const getSegOptions = async () => {
     try {
         const res = await dictionaryApi.getsegmentList({ isAuth: true });
@@ -341,9 +371,12 @@ const changeSeg = async (val: number) => {
             await getCompanyList(2);
             // 加载地产板块的费用组织
             await getFinaOrgListBySegId(2);
+            // 加载地产板块的费用科目
+            await getFinaSubjectListBySegId(2);
         } else {
             await getCompanyList(val);
             await getFinaOrgListBySegId(val);
+            await getFinaSubjectListBySegId(val);
         }
     }
 };
@@ -385,10 +418,20 @@ const initQueryParams = () => {
                 queryParams.value.conId = routeData?.conId;
                 queryParams.value.bizType = routeData?.bizType;
                 queryParams.value.billId = routeData?.billId;
-                // 加载地产板块的公司
-                getCompanyList(routeData.segId);
-                // 加载地产板块的费用组织
-                getFinaOrgListBySegId(routeData.segId);
+                queryParams.value.finaSubId = routeData?.subId;
+
+                if (routeData?.endDate) {
+                    // 这里处理是财务成本支付分析页面跳转过来
+                    queryParams.value.payDate = ['2000-01-01', routeData?.endDate]
+                }
+                // 根据路由参数设置默认板块
+                const segId = routeData.segId == 9999 ? 2 : routeData.segId;
+                // 加载板块下的公司
+                getCompanyList(segId);
+                // 加载板块下的费用组织
+                getFinaOrgListBySegId(segId);
+                // 加载板块下的费用科目
+                getFinaSubjectListBySegId(segId);
             }
         } catch (error) {
             console.error("解析路由参数失败，使用默认值", error);

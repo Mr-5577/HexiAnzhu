@@ -2,83 +2,84 @@
 <template>
     <div class="target-cost-comparison-analysis-wrapper">
         <!-- 查询卡片 -->
-        <div class="search-card">
-            <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px" class="search-form">
-                <el-form-item label="业务归属" prop="seg">
-                    <el-select v-model="queryParams.seg" placeholder="请选择业务板块" :clearable="false" style="width: 220px"
-                        @change="handleSegChange">
-                        <el-option v-for="item in segOptions" :key="item.value" :label="item.label"
-                            :value="item.value" />
-                    </el-select>
-                </el-form-item>
+        <BaseSearchCard>
+            <template #form>
+                <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px" class="search-form">
+                    <el-form-item label="业务归属" prop="seg">
+                        <el-select v-model="queryParams.seg" placeholder="请选择业务板块" :clearable="false"
+                            style="width: 220px" @change="handleSegChange">
+                            <el-option v-for="item in segEnum" :key="item.value" :label="item.label"
+                                :value="item.value" />
+                        </el-select>
+                    </el-form-item>
 
-                <el-form-item label="项目名称" prop="projIds">
-                    <el-cascader v-model="queryParams.projIds" :options="projectData" :collapse-tags="true"
-                        :collapse-tags-tooltip="true" :max-collapse-tags="1" :show-all-levels="false" :props="{
-                            expandTrigger: 'hover',
-                            emitPath: false,
-                            checkStrictly: false,
-                            value: 'orgId',
-                            label: 'orgName',
-                            children: 'children',
-                            multiple: true,
-                        }" placeholder="请选择项目" style="width: 220px" clearable filterable
-                        @change="handleProjectChange" />
-                </el-form-item>
-                <el-form-item label="基准版期间" prop="basePeriodDate">
-                    <el-date-picker v-model="queryParams.basePeriodDate" type="daterange" range-separator="至"
-                        value-format="YYYY-MM-DD" start-placeholder="开始日期" end-placeholder="结束日期"
-                        style="width: 220px" />
-                </el-form-item>
-                <el-form-item label="目标版期间" prop="targetPeriodDate">
-                    <el-date-picker v-model="queryParams.targetPeriodDate" type="daterange" range-separator="至"
-                        value-format="YYYY-MM-DD" start-placeholder="开始日期" end-placeholder="结束日期"
-                        style="width: 220px" />
-                </el-form-item>
-                <el-form-item label="金额类型" prop="amountType">
-                    <el-select v-model="queryParams.amountType" placeholder="请选择类型" :clearable="false"
-                        style="width: 220px" @change="handleSearch">
-                        <el-option label="含税" value="TAX" />
-                        <el-option label="不含税" value="EXCL" />
-                    </el-select>
-                </el-form-item>
-                <el-form-item label="基准版类型" prop="baseVersionType">
-                    <el-select v-model="queryParams.baseVersionType" placeholder="请选择类型" :clearable="true"
-                        style="width: 220px" @change="handleSearch">
-                        <el-option v-for="item in verTypeOptions" :key="item.value" :label="item.label"
-                            :value="item.value" />
+                    <el-form-item label="项目名称" prop="projIds">
+                        <el-cascader v-model="queryParams.projIds" :options="projectData" :collapse-tags="true"
+                            :collapse-tags-tooltip="true" :max-collapse-tags="1" :show-all-levels="false" :props="{
+                                expandTrigger: 'hover',
+                                emitPath: false,
+                                checkStrictly: false,
+                                value: 'orgId',
+                                label: 'orgName',
+                                children: 'children',
+                                multiple: true,
+                            }" placeholder="请选择项目" style="width: 220px" clearable filterable
+                            @change="handleProjectChange" />
+                    </el-form-item>
+                    <el-form-item label="基准版期间" prop="basePeriodDate">
+                        <el-date-picker v-model="queryParams.basePeriodDate" type="daterange" range-separator="至"
+                            value-format="YYYY-MM-DD" start-placeholder="开始日期" end-placeholder="结束日期"
+                            style="width: 220px" />
+                    </el-form-item>
+                    <el-form-item label="目标版期间" prop="targetPeriodDate">
+                        <el-date-picker v-model="queryParams.targetPeriodDate" type="daterange" range-separator="至"
+                            value-format="YYYY-MM-DD" start-placeholder="开始日期" end-placeholder="结束日期"
+                            style="width: 220px" />
+                    </el-form-item>
+                    <el-form-item label="金额类型" prop="amountType">
+                        <el-select v-model="queryParams.amountType" placeholder="请选择类型" :clearable="false"
+                            style="width: 220px" @change="handleSearch">
+                            <el-option label="含税" value="TAX" />
+                            <el-option label="不含税" value="EXCL" />
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="基准版类型" prop="baseVersionType">
+                        <el-select v-model="queryParams.baseVersionType" placeholder="请选择类型" :clearable="true"
+                            style="width: 220px" @change="handleSearch">
+                            <el-option v-for="item in verTypeOptions" :key="item.value" :label="item.label"
+                                :value="item.value" />
 
-                    </el-select>
-                </el-form-item>
-                <el-form-item label="目标版类型" prop="targetVersionType">
-                    <el-select v-model="queryParams.targetVersionType" placeholder="请选择类型" :clearable="true"
-                        style="width: 220px" @change="handleSearch">
-                        <el-option v-for="item in verTypeOptions" :key="item.value" :label="item.label"
-                            :value="item.value" />
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="目标版类型" prop="targetVersionType">
+                        <el-select v-model="queryParams.targetVersionType" placeholder="请选择类型" :clearable="true"
+                            style="width: 220px" @change="handleSearch">
+                            <el-option v-for="item in verTypeOptions" :key="item.value" :label="item.label"
+                                :value="item.value" />
 
-                    </el-select>
-                </el-form-item>
-
-                <el-form-item class="action-buttons">
-                    <el-button type="primary" @click="handleSearch" class="btn-search" :loading="submitLoading">
-                        <el-icon>
-                            <Search />
-                        </el-icon> 搜索
-                    </el-button>
-                    <el-button @click="handleReset" class="btn-reset" :loading="submitLoading">
-                        <el-icon>
-                            <Refresh />
-                        </el-icon> 重置
-                    </el-button>
-                    <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain>
-                        <el-icon>
-                            <Download />
-                        </el-icon>
-                        导出
-                    </el-button>
-                </el-form-item>
-            </el-form>
-        </div>
+                        </el-select>
+                    </el-form-item>
+                </el-form>
+            </template>
+            <template #actions>
+                <el-button type="primary" @click="handleSearch" class="btn-search" :loading="submitLoading">
+                    <el-icon>
+                        <Search />
+                    </el-icon> 搜索
+                </el-button>
+                <el-button @click="handleReset" class="btn-reset" :loading="submitLoading">
+                    <el-icon>
+                        <Refresh />
+                    </el-icon> 重置
+                </el-button>
+                <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain>
+                    <el-icon>
+                        <Download />
+                    </el-icon>
+                    导出
+                </el-button>
+            </template>
+        </BaseSearchCard>
 
         <!-- 统计卡片组件 -->
         <!-- <TargetCostStatistics :data="statistics" /> -->
@@ -103,6 +104,8 @@ import { useDict } from '@/composables/use-dict'
 import { dictMapping } from '@/utils/dict-mapping'
 import TargetCostStatistics from './target-cost-statistics.vue'
 import { ElMessage } from 'element-plus'
+import BaseSearchCard from "@/components/base/base-search-card.vue";
+import { segEnum } from '../utils/common.ts'
 
 defineOptions({ name: 'target-cost-comparison-analysis' })
 
@@ -117,11 +120,6 @@ const queryParams = ref({
 })
 
 const vxeTableRef = ref<InstanceType<typeof VxeEditableTable>>()
-const segOptions = ref([
-    { value: 'ALL', label: '全部' },
-    { value: 'DC', label: '地产' },
-    { value: 'JZ', label: '建筑' },
-])
 // 目标成本版本类型
 // const verTypeOptions = computed(() => {
 //     const dictList = getDictList(dictMapping.goalCostVersionType) || []
@@ -259,14 +257,14 @@ const columns: any = [
                     content: '建安成本+示范区+预留费用',
                     icon: 'QuestionFilled',
                     placement: 'top',
-                }, 
+                },
                 showSummary: true,
                 formatter: (v) => formatThousandWithPlaces(v),
             },
             {
                 prop: 'basePricePerSqm',
                 label: '建筑单方(元/㎡)',
-                minWidth: 110, 
+                minWidth: 110,
                 showSummary: true,
                 formatter: (v) => formatThousandWithPlaces(v),
             },
@@ -459,94 +457,6 @@ onMounted(async () => {
     box-sizing: border-box;
     background: #f5f7fa;
     overflow-y: auto;
-
-    .search-card {
-        background: #ffffff;
-        border-radius: 12px;
-        padding: 18px 24px 12px 24px;
-        margin-bottom: 16px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
-        flex-shrink: 0;
-        border: 1px solid #edf2f7;
-
-        .search-form {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 4px 0;
-
-            :deep(.el-form-item) {
-                margin-bottom: 8px;
-                margin-right: 16px;
-
-                .el-form-item__label {
-                    font-size: 13px;
-                    color: #4a5568;
-                    font-weight: 500;
-                    padding-right: 8px;
-                }
-            }
-
-            :deep(.el-input__wrapper),
-            :deep(.el-select .el-input__wrapper),
-            :deep(.el-cascader .el-input__wrapper),
-            :deep(.el-date-editor .el-input__wrapper) {
-                border-radius: 8px;
-                box-shadow: 0 0 0 1px #e2e8f0 inset;
-                transition: box-shadow 0.2s;
-
-                &:hover {
-                    box-shadow: 0 0 0 1px #b7c0d0 inset;
-                }
-
-                &.is-focus {
-                    box-shadow: 0 0 0 2px rgba(79, 110, 247, 0.25), 0 0 0 1px #4f6ef7 inset !important;
-                }
-            }
-
-            // 强制 el-cascader 多选保持单行，不被撑高
-            :deep(.el-cascader) {
-
-                // 1. 限制输入框整体高度，并禁止换行
-                .el-input__wrapper {
-                    flex-wrap: nowrap !important;
-                    overflow: hidden !important;
-                    height: 32px !important; // 与默认高度保持一致
-                    min-height: 32px !important;
-                    align-items: center !important;
-                }
-
-                // 2. 核心：让 tags 容器也不换行，并裁剪溢出
-                .el-cascader__tags {
-                    flex-wrap: nowrap !important;
-                    overflow: hidden !important;
-                    flex: 1 1 auto !important;
-                    min-width: 0 !important; // 防止 flex 溢出父容器
-                    height: 100% !important; // 继承父容器高度
-                    align-items: center !important;
-
-                    // 3. 对单个标签做文字溢出省略（可选）
-                    .el-tag {
-                        flex-shrink: 0 !important; // 防止标签被压缩变形
-                        max-width: 100px; // 限制单个标签宽度，避免占用太多空间
-                        height: 22px !important; // 与默认 tag 高度一致
-                        line-height: 22px !important;
-
-                        .el-tag__content {
-                            overflow: hidden;
-                            text-overflow: ellipsis;
-                            white-space: nowrap;
-                        }
-                    }
-
-                    // 4. “+N” 折叠标签也保持同行
-                    .el-tag--info {
-                        flex-shrink: 0 !important;
-                    }
-                }
-            }
-        }
-    }
 
     .content-placeholder {
         display: flex;

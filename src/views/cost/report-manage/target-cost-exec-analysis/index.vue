@@ -2,75 +2,77 @@
 <template>
     <div class="target-cost-execution-analysis-wrapper">
         <!-- 查询卡片 -->
-        <div class="search-card">
-            <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px" class="search-form">
-                <el-form-item label="业务归属" prop="seg">
-                    <el-select v-model="queryParams.seg" placeholder="请选择业务板块" :clearable="false" style="width: 150px"
-                        @change="handleSegChange">
-                        <el-option v-for="item in segOptions" :key="item.value" :label="item.label"
-                            :value="item.value" />
-                    </el-select>
-                </el-form-item>
+        <BaseSearchCard>
+            <template #form>
+                <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px" class="search-form">
+                    <el-form-item label="业务归属" prop="seg">
+                        <el-select v-model="queryParams.seg" placeholder="请选择业务板块" :clearable="false"
+                            style="width: 220px" @change="handleSegChange">
+                            <el-option v-for="item in segEnum" :key="item.value" :label="item.label"
+                                :value="item.value" />
+                        </el-select>
+                    </el-form-item>
 
-                <el-form-item label="项目名称" prop="projId">
-                    <el-cascader ref="projectCascaderRef" v-model="queryParams.projId" :options="projectData"
-                        :show-all-levels="false" :props="{
-                            expandTrigger: 'hover',
-                            emitPath: false,
-                            checkStrictly: false,
-                            value: 'orgId',
-                            label: 'orgName',
-                            children: 'children',
-                        }" placeholder="请选择项目" style="width: 200px" :clearable="false" filterable
-                        @change="handleProjectChange" />
-                </el-form-item>
+                    <el-form-item label="项目名称" prop="projId">
+                        <el-cascader ref="projectCascaderRef" v-model="queryParams.projId" :options="projectData"
+                            :show-all-levels="false" :props="{
+                                expandTrigger: 'hover',
+                                emitPath: false,
+                                checkStrictly: false,
+                                value: 'orgId',
+                                label: 'orgName',
+                                children: 'children',
+                            }" placeholder="请选择项目" style="width: 220px" :clearable="false" filterable
+                            @change="handleProjectChange" />
+                    </el-form-item>
 
-                <el-form-item label="产品业态" prop="prodIds">
-                    <el-select v-model="queryParams.prodIds" placeholder="请选择产品业态" multiple collapse-tags clearable
-                        style="width: 200px">
-                        <el-option v-for="item in productOptions" :key="item.id" :label="item.prodName"
-                            :value="item.id" />
-                    </el-select>
-                </el-form-item>
+                    <el-form-item label="产品业态" prop="prodIds">
+                        <el-select v-model="queryParams.prodIds" placeholder="请选择产品业态" multiple collapse-tags clearable
+                            style="width: 220px">
+                            <el-option v-for="item in productOptions" :key="item.id" :label="item.prodName"
+                                :value="item.id" />
+                        </el-select>
+                    </el-form-item>
 
-                <el-form-item label="目标成本版本" prop="costMid">
-                    <!-- <el-select v-model="queryParams.costMid" placeholder="请选择版本" clearable style="width: 200px">
-                        <el-option v-for="item in costVersionOptions" :key="item.id" :label="item.versionNo"
-                            :value="item.id" />
-                    </el-select> -->
+                    <el-form-item label="目标成本版本" prop="costMid">
+                        <!-- <el-select v-model="queryParams.costMid" placeholder="请选择版本" clearable style="width: 220px">
+                            <el-option v-for="item in costVersionOptions" :key="item.id" :label="item.versionNo"
+                                :value="item.id" />
+                        </el-select> -->
 
-                    <el-input v-model="queryParams.versionNo" placeholder="请选择版本" readonly style="width: 200px"
-                        @click="costMDialogVisible = true">
-                        <template #suffix>
-                            <el-icon style="cursor: pointer;" v-if="queryParams.versionNo" @click.stop="clearVersion">
-                                <CircleClose />
-                            </el-icon>
-                        </template>
-                    </el-input>
-                </el-form-item>
-
-                <el-form-item class="action-buttons">
-                    <el-button type="primary" @click="handleSearch" class="btn-search" :loading="submitLoading">
-                        <el-icon>
-                            <Search />
-                        </el-icon>
-                        搜索
-                    </el-button>
-                    <el-button @click="handleReset" class="btn-reset" :loading="submitLoading">
-                        <el-icon>
-                            <Refresh />
-                        </el-icon>
-                        重置
-                    </el-button>
-                    <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain>
-                        <el-icon>
-                            <Download />
-                        </el-icon>
-                        导出
-                    </el-button>
-                </el-form-item>
-            </el-form>
-        </div>
+                        <el-input v-model="queryParams.versionNo" placeholder="请选择版本" readonly style="width: 220px"
+                            @click="handleChooseVersion">
+                            <template #suffix>
+                                <el-icon style="cursor: pointer;" v-if="queryParams.versionNo"
+                                    @click.stop="clearVersion">
+                                    <CircleClose />
+                                </el-icon>
+                            </template>
+                        </el-input>
+                    </el-form-item>
+                </el-form>
+            </template>
+            <template #actions>
+                <el-button type="primary" @click="handleSearch" class="btn-search" :loading="submitLoading">
+                    <el-icon>
+                        <Search />
+                    </el-icon>
+                    搜索
+                </el-button>
+                <el-button @click="handleReset" class="btn-reset" :loading="submitLoading">
+                    <el-icon>
+                        <Refresh />
+                    </el-icon>
+                    重置
+                </el-button>
+                <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain>
+                    <el-icon>
+                        <Download />
+                    </el-icon>
+                    导出
+                </el-button>
+            </template>
+        </BaseSearchCard>
 
         <div class="content-placeholder">
             <div class="demo-controls">
@@ -118,7 +120,9 @@ import { ElMessage } from 'element-plus'
 import { getEnumColor } from '@/utils/enum'
 import DetailDialog from './detail-dialog.vue'
 import ChooseCostMDialog from '@/components/business/choose-costM-dialog.vue'
-import { buildTreeFromList, calcMaxDepth, warnEnum } from '@/utils/report-util.ts'
+import BaseSearchCard from "@/components/base/base-search-card.vue";
+import { buildTreeFromList } from '../utils/target-cost-exec-analysis.ts'
+import { calcMaxDepth, levelMap, warnEnum, segEnum } from '../utils/common.ts'
 
 defineOptions({ name: 'target-cost-execution-analysis' })
 
@@ -128,16 +132,6 @@ const treeConfig = {
     hasChildrenField: 'hasChildren',
     expandAll: false,
     accordion: false,
-}
-const levelMap: Record<number, string> = {
-    1: '一级科目',
-    2: '二级科目',
-    3: '三级科目',
-    4: '四级科目',
-    5: '五级科目',
-    6: '六级科目',
-    7: '七级科目',
-    8: '八级科目',
 }
 
 const queryParams = ref({
@@ -152,11 +146,6 @@ const costMDialogVisible = ref(false)
 
 const projectCascaderRef = ref()
 const vxeTableRef = ref<InstanceType<typeof VxeEditableTable>>()
-const segOptions = ref([
-    { value: 'ALL', label: '全部' },
-    { value: 'DC', label: '地产' },
-    { value: 'JZ', label: '建筑' },
-])
 const projectOptions = ref([])
 const productOptions = ref([])
 const costVersionOptions = ref([])
@@ -305,6 +294,11 @@ const columns: any = [
         label: '发生率',
         width: 100,
         formatter: (value) => formatPercent(value, 2),
+        headerTip: {
+            icon: "QuestionFilled",
+            content: "发生率=已发生不含税÷目标不含税",
+            placement: "top",
+        },
     },
 ]
 
@@ -387,18 +381,27 @@ const updateFirstProject = async () => {
 
 // ---------- 设置默认选中第一个板块和项目 ----------
 const selectedDefaultSeg = async () => {
-    if (segOptions.value.length) {
-        const firstSeg = segOptions.value[0]
+    if (segEnum.length) {
+        const firstSeg = segEnum[0]
         if (firstSeg) {
             queryParams.value.seg = firstSeg.value
-            await updateFirstProject()
+            // await updateFirstProject()
         }
     }
 }
 
 // ---------- 板块变更事件 ----------
 const handleSegChange = async (val: number) => {
-    await updateFirstProject()
+    queryParams.value.projId = undefined
+    queryParams.value.projName = undefined
+    // 清除产品业态和目标成本版本的选中值
+    queryParams.value.prodIds = []
+    productOptions.value = []
+    queryParams.value.costMid = undefined
+    queryParams.value.versionNo = undefined
+    costVersionOptions.value = []
+
+    // await updateFirstProject()
     await nextTick()
     handleSearch()
 }
@@ -444,11 +447,9 @@ const handleReset = async () => {
 const handleExport = async () => {
     try {
         exportLoading.value = true;
-        const params = {
-            ...queryParams.value,
-            level: 99
-        }
-        const fileBlob = await reportManageApi.exportDynamicReport({ ...params, isExport: true });
+        const { projName, ...rest } = queryParams.value
+        const params = { ...rest, level: 99, isExport: true }
+        const fileBlob = await reportManageApi.exportDynamicReport(params);
         if (!fileBlob || fileBlob.size === 0) {
             ElMessage.warning("导出文件为空，请检查数据");
         } else {
@@ -462,13 +463,16 @@ const handleExport = async () => {
 }
 // 获取列表数据
 const getDataList = async () => {
+    tableData.value = [];
+    if (!queryParams.value.projId) {
+        ElMessage.warning("请先选择项目");
+        return
+    }
     try {
         submitLoading.value = true;
         tableLoading.value = true;
-        const params = {
-            ...queryParams.value,
-            level: 99
-        }
+        const { projName, ...rest } = queryParams.value
+        const params = { ...rest, level: 99 }
         const res = await reportManageApi.getDynamicReport(params);
         if (res.code === 200) {
             const list = res.data || [];
@@ -492,6 +496,13 @@ const getDataList = async () => {
         tableLoading.value = false;
     }
 };
+const handleChooseVersion = () => {
+    if (!queryParams.value.projId) {
+        ElMessage.warning("请先选择项目");
+        return
+    }
+    costMDialogVisible.value = true
+}
 const clearVersion = () => {
     queryParams.value.costMid = undefined
     queryParams.value.versionNo = undefined
@@ -526,61 +537,6 @@ onMounted(async () => {
     box-sizing: border-box;
     background: #f5f7fa;
     overflow-y: auto;
-
-    .search-card {
-        background: #ffffff;
-        border-radius: 12px;
-        padding: 18px 24px 12px 24px;
-        margin-bottom: 16px;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
-        flex-shrink: 0;
-        border: 1px solid #edf2f7;
-
-        .search-form {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 4px 0;
-
-            :deep(.el-form-item) {
-                margin-bottom: 8px;
-                margin-right: 16px;
-
-                .el-form-item__label {
-                    font-size: 13px;
-                    color: #4a5568;
-                    font-weight: 500;
-                    padding-right: 8px;
-                }
-            }
-
-            :deep(.el-input__wrapper),
-            :deep(.el-select .el-input__wrapper),
-            :deep(.el-cascader .el-input__wrapper) {
-                border-radius: 8px;
-                box-shadow: 0 0 0 1px #e2e8f0 inset;
-                transition: box-shadow 0.2s;
-
-                &:hover {
-                    box-shadow: 0 0 0 1px #b7c0d0 inset;
-                }
-
-                &.is-focus {
-                    box-shadow: 0 0 0 2px rgba(79, 110, 247, 0.25), 0 0 0 1px #4f6ef7 inset !important;
-                }
-            }
-
-            .action-buttons {
-                display: flex;
-                gap: 8px;
-
-                .btn-search,
-                .btn-reset {
-                    border-radius: 8px;
-                }
-            }
-        }
-    }
 
     .content-placeholder {
         display: flex;
