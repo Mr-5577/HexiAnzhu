@@ -464,6 +464,10 @@ export function useContractForm(
   // ---- 供应商选择 ----
   const supplierDialogVisible = ref(false);
   const openSupplierDialog = () => {
+    if (isSuperAdmin.value) {
+      supplierDialogVisible.value = true;
+      return;
+    }
     if (isDetailMode.value) return;
     supplierDialogVisible.value = true;
   };
@@ -506,7 +510,7 @@ export function useContractForm(
   // ---- 招标事项选择 ----
   const awardItemDialogVisible = ref(false);
   const openAwardItemDialog = () => {
-    if (isDetailMode.value) return;
+    if (!isSuperAdmin.value && isDetailMode.value) return;
     if (formData.value.projId) {
       awardItemDialogVisible.value = true;
     } else {
@@ -1054,7 +1058,7 @@ export function useContractForm(
   // ---- 提交 ----
   const handleSubmit = async () => {
     if (submitLoading.value) return;
-    if (isDetailMode.value) return;
+    if (!isSuperAdmin.value && isDetailMode.value) return;
     if (!formRef.value) return;
     try {
       await formRef.value.validate();
