@@ -1578,18 +1578,41 @@ const buildSaveParams = () => {
     }
   });
 
-  const payWays = payWayTable.value.map((item) => ({
-    id: item.id,
-    srcType: item.srcType,
-    nconBillId: item.nconBillId,
-    payWayId: item.payWayId || "",
-    payAmt: item.payAmt || 0,
-    dedRoomAmt: item.dedRoomAmt || 0,
-    payDesc: item.payDesc || "",
-    bankName: item.bankName || "",
-    accountName: item.accountName || "",
-    bankAccount: item.bankAccount || "",
-  }));
+  // 请款明细
+  const payWays = payWayTable.value.map((item) => {
+    let finaDs = item?.finaDs || [];
+
+    // 如果存在财务分摊明细，校验财务分摊金额合计是否等于付款金额，不等则全部置 0
+    if (finaDs.length > 0) {
+      let detailTotal = new BigNumber(0);
+      finaDs.forEach((d) => {
+        detailTotal = detailTotal.plus(toBig(d.finaSubAmt || 0));
+      });
+
+      const detailAmt = detailTotal
+        .decimalPlaces(2, BigNumber.ROUND_HALF_UP);
+      const payAmt = toBig(item.payAmt || 0)
+        .decimalPlaces(2, BigNumber.ROUND_HALF_UP);
+
+      if (!detailAmt.isEqualTo(payAmt)) {
+        finaDs = finaDs.map((d) => ({ ...d, finaSubAmt: 0 }));
+      }
+    }
+
+    return {
+      id: item.id,
+      srcType: item.srcType,
+      nconBillId: item.nconBillId,
+      payWayId: item.payWayId || "",
+      payAmt: item.payAmt || 0,
+      dedRoomAmt: item.dedRoomAmt || 0,
+      payDesc: item.payDesc || "",
+      bankName: item.bankName || "",
+      accountName: item.accountName || "",
+      bankAccount: item.bankAccount || "",
+      finaDs: finaDs, // 财务分摊
+    };
+  });
 
   let cstM = null;
   if (cstMData.value?.allocDs && cstMData.value.allocDs?.length > 0) {
@@ -1606,7 +1629,6 @@ const buildSaveParams = () => {
     deds: deds.length > 0 ? deds : [],
     invoiceMs: invoiceMs.length > 0 ? invoiceMs : [],
     payWays: payWays.length > 0 ? payWays : [],
-    finaDs: [], // 财务分摊
     annexList: annexFileList.value || [],
     cstM: cstM, // 成本分摊
   };

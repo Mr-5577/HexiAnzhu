@@ -1416,19 +1416,41 @@ const buildSaveParams = () => {
     }
   });
 
-  const payWays = payWayTable.value.map((item) => ({
-    id: item.id,
-    srcType: item.srcType,
-    nconBillId: item.nconBillId,
-    payWayId: item.payWayId || "",
-    payAmt: item.payAmt || 0,
-    dedRoomAmt: item.dedRoomAmt || 0,
-    payDesc: item.payDesc || "",
-    bankName: item.bankName || "",
-    accountName: item.accountName || "",
-    bankAccount: item.bankAccount || "",
-    finaDs: item?.finaDs || [], // 财务分摊
-  }));
+  // 请款明细
+  const payWays = payWayTable.value.map((item) => {
+    let finaDs = item?.finaDs || [];
+
+    // 如果存在财务分摊明细，校验财务分摊金额合计是否等于付款金额，不等则全部置 0
+    if (finaDs.length > 0) {
+      let detailTotal = new BigNumber(0);
+      finaDs.forEach((d) => {
+        detailTotal = detailTotal.plus(toBig(d.finaSubAmt || 0));
+      });
+
+      const detailAmt = detailTotal
+        .decimalPlaces(2, BigNumber.ROUND_HALF_UP);
+      const payAmt = toBig(item.payAmt || 0)
+        .decimalPlaces(2, BigNumber.ROUND_HALF_UP);
+
+      if (!detailAmt.isEqualTo(payAmt)) {
+        finaDs = finaDs.map((d) => ({ ...d, finaSubAmt: 0 }));
+      }
+    }
+
+    return {
+      id: item.id,
+      srcType: item.srcType,
+      nconBillId: item.nconBillId,
+      payWayId: item.payWayId || "",
+      payAmt: item.payAmt || 0,
+      dedRoomAmt: item.dedRoomAmt || 0,
+      payDesc: item.payDesc || "",
+      bankName: item.bankName || "",
+      accountName: item.accountName || "",
+      bankAccount: item.bankAccount || "",
+      finaDs: finaDs, // 财务分摊
+    };
+  });
 
   return {
     bill: bill,
@@ -1549,14 +1571,13 @@ const getDetailTotal = (finaDs: any[]): number => {
   });
   return total.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 };
-// 校验请款明细明细金额是否等于主数据金额
-// ===== 修改：使用 toBig 替代 toDecimal =====
+// 校验请款明细明细每一行的付款金额与财务分摊金额是否相等
 const validatePayDetail = () => {
   for (const row of payWayTable.value) {
     const diff = toBig(getDiffAmount(row));
     if (!diff.isZero()) {
       ElMessage.warning(
-        `报销事项 "${row.payDesc || ""}" 存在差额，请检查明细金额`,
+        `请款明细 "${row.payDesc || ""}" 的付款金额与财务分摊金额存在差额，请检查财务分摊明细`,
       );
       return false; // ✅ 立即终止
     }
@@ -1599,11 +1620,13 @@ const handleSave = async () => {
     if (!validateData()) {
       return;
     }
-    if (!validatePayDetail()) {
-      return;
-    }
+    // 校验请款明细列表每一行的请款金额是否和财务分摊金额相等
+    // if (!validatePayDetail()) {
+    //   return;
+    // }
     submitLoading.value = true;
     const params = buildSaveParams();
+    console.log("save", params);
     try {
       const res = await feePaymentApi.saveFeePayment(params);
       if (res.code === 200 && res.data) {
@@ -1626,9 +1649,10 @@ const handleSubmit = async () => {
     if (!validateData()) {
       return;
     }
-    if (!validatePayDetail()) {
-      return;
-    }
+    // 校验请款明细列表每一行的请款金额是否和财务分摊金额相等
+    // if (!validatePayDetail()) {
+    //   return;
+    // }
     submitLoading.value = true;
     const params = buildSaveParams();
     try {
