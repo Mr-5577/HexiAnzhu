@@ -421,7 +421,7 @@ import type { EditableColumn } from "@/components/base/editable-table.vue";
 import BillHeader from "@/components/business/bill-components/bill-header.vue";
 import BillInfo from "@/components/business/bill-components/bill-info.vue";
 import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api";
-import { ACCEPT_PAY_TYPE, PayTypeEnum, PROGRESS_PAY_TYPE } from "@/constants/contract-manage/enums";
+import { ACCEPT_PAY_TYPE, ADVANCE_PAY_TYPE, PayTypeEnum, PROGRESS_PAY_TYPE } from "@/constants/contract-manage/enums";
 import { buildFileUrl } from "@/utils/file-path-util";
 import { cumulativeDataApi } from "@/api/cost/contract-manage/cumulative-data-api";
 import { formType } from "@/types/form/form-types";
@@ -1330,21 +1330,57 @@ const getConPayTypeData = async (inputConId) => {
     const res = await contractLedgerApi.getContractPayRateList({ conId: inputConId });
     if (res.code === 200 && res.data) {
       nonSelfSupplyTable.value = [];
-      const hasItem = res.data.some((item) => item.payTypeId === PROGRESS_PAY_TYPE);
-      res.data.forEach((item) => {
+      const list = res.data || [];
+      // 是否有进度款
+      const hasProgress = list?.some((item) => item.payTypeId === PROGRESS_PAY_TYPE);
+
+      // 预付款比例（用于与进度款/验收款累加）
+      const advanceItem = list.find((item) => item.payTypeId === ADVANCE_PAY_TYPE);
+      const advanceRate = toBig(advanceItem?.payRate ?? 0);
+
+      list.forEach((item) => {
+        // 仅处理进度款、验收款
         if (item.payTypeId === PROGRESS_PAY_TYPE || item.payTypeId === ACCEPT_PAY_TYPE) {
           // 2062-进度 2063-验收
           addNonSelfSupply();
           const lastIndex = nonSelfSupplyTable.value.length - 1;
-          nonSelfSupplyTable.value[lastIndex].payTypeId = item.payTypeId;
-          nonSelfSupplyTable.value[lastIndex].payRate = item.payRate;
-          nonSelfSupplyTable.value[lastIndex].isCtrl = item.isCtrl;
-          nonSelfSupplyTable.value[lastIndex].payIntvl = item.payIntvl;
-          nonSelfSupplyTable.value[lastIndex].payDate = addMonths(currentMonth(), item.payIntvl);
+          const row = nonSelfSupplyTable.value[lastIndex];
+          row.payTypeId = item.payTypeId;
+          // row.payRate = item.payRate; // 应付比例
+          row.isCtrl = item.isCtrl;
+          row.payIntvl = item.payIntvl;
+          row.payDate = addMonths(currentMonth(), item.payIntvl);
+          // 应付比例
+          const baseRate = toBig(item.payRate ?? 0);
+
           if (item.payTypeId === PROGRESS_PAY_TYPE) {
-            nonSelfSupplyTable.value[lastIndex].hasVal = true;
-          } else if (item.payTypeId === ACCEPT_PAY_TYPE && !hasItem) {
-            nonSelfSupplyTable.value[lastIndex].hasVal = true;
+            row.hasVal = true;
+
+            // 有进度款场景 - 进度款行
+            // 应付比例 = 预付款比例 + 进度款比例；承载产值
+            row.payRate = advanceRate
+              .plus(baseRate)
+              .decimalPlaces(2, BigNumber.ROUND_HALF_UP)
+              .toNumber();
+          } else if (item.payTypeId === ACCEPT_PAY_TYPE) {
+            if (hasProgress) {
+              row.hasVal = false;
+
+              // 有进度款场景 - 验收款行：只能录应付，不能录产值
+              // 应付比例维持合同原验收款比例
+              row.payRate = baseRate
+                .decimalPlaces(2, BigNumber.ROUND_HALF_UP)
+                .toNumber();
+            } else {
+              row.hasVal = true;
+
+              // 无进度款场景 - 验收款行：承载产值
+              // 应付比例 = 预付款比例 + 验收款比例
+              row.payRate = advanceRate
+                .plus(baseRate)
+                .decimalPlaces(2, BigNumber.ROUND_HALF_UP)
+                .toNumber();
+            }
           }
         }
       });
@@ -1792,7 +1828,7 @@ const handleSubmit = async () => {
     } else {
       ctrlAmt = signAmt.plus(addAmt);
     }
-    
+
     // 甲供材 不校验, 非甲供材才校验，payMethod：1=按进度确认(非甲供材)，2=按材料到货确认(甲供材)
     if (formData.value.payMethod === 1) {
       if (ctrlAmt.isLessThan(totalProdVal)) {
@@ -2232,7 +2268,7 @@ onMounted(() => {
 .adapt-form {
   width: 100%;
   margin: 0 auto;
-
+  
   .item-card {
     background: #ffffff;
     border-radius: 8px;

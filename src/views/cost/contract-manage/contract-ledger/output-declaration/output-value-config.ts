@@ -355,9 +355,15 @@ export const createProdColumns = (options: ProdColumnOptions) => {
       prop: "payRate",
       label: "应付比例(%)",
       editable: false,
-      width: 90,
+      width: 120,
       // formatType:"d%",
       // formatter: (row: any) => formatPercent(row.payRate),
+      headerTip: {
+        icon: "QuestionFilled",
+        content: "合同有进度款：进度款应付比例=预付比例+进度比例；无进度款只有验收款：应付比例=预付比例+验收比例",
+        placement: "top",
+        width: "200px",
+      },
     },
     {
       prop: "isCtrl",
