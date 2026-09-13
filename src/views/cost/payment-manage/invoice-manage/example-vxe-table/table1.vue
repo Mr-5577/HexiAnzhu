@@ -11,6 +11,8 @@
       :show-toolbar="true"
       :pagination="false"
       :show-footer="true"
+      :virtual-scroll="true"
+      :virtual-threshold="20"
       @data-change="handleDataChange"
       @selection-change="handleSelectionChange"
       @refresh="handleRefresh"

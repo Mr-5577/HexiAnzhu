@@ -355,6 +355,12 @@ interface Props {
     expandAll?: boolean;
     /** 是否手风琴模式（同时只能展开一个节点） */
     accordion?: boolean;
+    /** 是否将扁平数据转为树形（大数据量 + 虚拟滚动时必须为 true） */
+    transform?: boolean;
+    /** 扁平数据下的父节点字段名，默认 'parentId'（transform=true 时生效） */
+    parentField?: string;
+    /** 扁平数据下的节点 id 字段名，默认 'id'（transform=true 时生效） */
+    rowField?: string;
   };
 
   // ===== 合计行 =====
@@ -393,6 +399,15 @@ interface Props {
     newValue: any;
     oldValue: any;
   }) => Promise<void> | void;
+
+  // ===== 合并单元格 =====
+  /** 合并单元格方法，透传给 vxe-grid 的 span-method */
+  spanMethod?: (params: {
+    row: any;
+    rowIndex: number;
+    column: any;
+    columnIndex: number;
+  }) => { rowspan: number; colspan: number } | void;
 }
 
 /**
@@ -455,12 +470,19 @@ const props = withDefaults(defineProps<Props>(), {
   showToolbar: false,
   height: undefined,
   maxHeight: undefined,
-  treeConfig: () => ({
-    childrenField: "children",
-    hasChildrenField: "hasChildren",
-    expandAll: false,
-    accordion: false,
-  }),
+  /**
+   * 树形数据配置：
+   * {
+   *  childrenField: 子节点的字段名，默认 'children'
+   *  hasChildrenField: 是否有子节点的字段名，默认 'hasChildren'
+   *  expandAll: 是否默认展开所有节点
+   *  accordion: 是否手风琴模式（同时只能展开一个节点）
+   *  transform: 是否将扁平数据转为树形（大数据量 + 虚拟滚动时必须为 true）
+   *  parentField: 扁平数据下的父节点字段名，默认 'parentId'（transform=true 时生效）
+   *  rowField: 扁平数据下的节点 id 字段名，默认 'id'（transform=true 时生效）
+   * }
+   */
+  treeConfig: () => undefined,
   resizable: true,
   dictData: () => ({}),
   editTrigger: "click",
@@ -553,13 +575,48 @@ const rowConfig = computed(() => ({
  * hasChildrenField: 是否有子节点的字段名
  * expandAll: 是否默认展开所有节点
  * accordion: 是否手风琴模式
+ *
+ * 重要：
+ * 当启用虚拟滚动（virtual-y）时，vxe-table 要求数据必须是「扁平 + parentField」，
+ * 并通过 tree-config.transform=true 让 vxe 自己构建树形关系。
+ * 因此无论是否开启虚拟滚动，只要外部传入了 transform 相关配置，都走 transform 模式。
  */
-const treeConfig = computed(() => ({
-  childrenField: props.treeConfig?.childrenField || "children",
-  hasChildrenField: props.treeConfig?.hasChildrenField || "hasChildren",
-  expandAll: props.treeConfig?.expandAll || false,
-  accordion: props.treeConfig?.accordion || false,
-}));
+const treeConfig = computed(() => {
+  const cfg = props.treeConfig;
+  // 未传入 treeConfig → 非树形数据，不传配置
+  if (!cfg) return undefined;
+  // 扁平结构转树 + 虚拟滚动
+  if (props.virtualScroll && cfg.transform) {
+    return {
+      transform: cfg.transform, // 扁平数据转树形并开启虚拟滚动
+      parentField: cfg.parentField || "parentId",
+      rowField: cfg.rowField || "id",
+      childrenField: cfg.childrenField || "children",
+      hasChildrenField: cfg.hasChildrenField || "hasChildren",
+      expandAll: cfg.expandAll || false,
+      accordion: cfg.accordion || false,
+    };
+  }
+
+  // 嵌套树形数据
+  // 注意：vxe 要求虚拟滚动时必须是 transform 模式，所以这里如果同时开启会报错
+  // 需要给用户警告或者强制 transform
+  if (props.virtualScroll) {
+    console.warn(
+      "[editable-table-vxe] 树形数据 + 虚拟滚动必须使用 transform=true，" +
+        "当前 transform=false，已自动忽略 tree-config。建议改为扁平数据 + transform 模式。",
+    );
+    return undefined;
+  }
+
+  // 嵌套树形数据（无虚拟滚动）
+  return {
+    childrenField: cfg.childrenField || "children",
+    hasChildrenField: cfg.hasChildrenField || "hasChildren",
+    expandAll: cfg.expandAll || false,
+    accordion: cfg.accordion || false,
+  };
+});
 
 /**
  * 列配置
@@ -646,6 +703,8 @@ const gridOptions = computed<VxeGridProps>(() => ({
       : props.footerMethod || defaultFooterMethod,
   // 👇 合并默认合计行样式，外部可覆盖
   footerRowConfig: props.footerRowConfig,
+  // 👇 把合并方法传给 vxe-grid
+  spanMethod: props.spanMethod as any,
 }));
 
 // ============================================================================
@@ -1456,6 +1515,7 @@ watch(
 
       .vxe-table--body-wrapper {
         .vxe-body--row {
+          height: 28px !important;
           &.row--current {
             background-color: #e0ecfc !important;
           }
@@ -1467,8 +1527,17 @@ watch(
           }
           //   单元格样式
           .vxe-body--column {
+            height: 28px !important;
             font-size: 14px;
             color: #4c4d4e;
+          }
+        }
+        .vxe-body--column {
+          height: 28px !important;
+          .vxe-cell {
+            height: 100% !important;
+            min-height: 28px !important;
+            max-height: 28px !important;
           }
         }
       }

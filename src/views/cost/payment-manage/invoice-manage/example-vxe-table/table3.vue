@@ -1,7 +1,7 @@
 <!-- 示例3：树形表格（修正版） -->
 <template>
   <div class="demo-page">
-    <h3>🌳 项目树形结构</h3>
+    <h3>🌳 项目树形结构（无虚拟滚动）</h3>
     <div style="margin-bottom: 12px">
       <el-button size="small" @click="expandAll">展开全部</el-button>
       <el-button size="small" @click="collapseAll">收起全部</el-button>
@@ -19,8 +19,6 @@
       :show-toolbar="true"
       :pagination="false"
       :height="'500px'"
-      :virtual-scroll="true"
-      :virtual-threshold="20"
       :tree-config="{
         childrenField: 'children', // ✅ 使用 childrenField（v4 语法）
         expandAll: false,
