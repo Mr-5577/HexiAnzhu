@@ -176,10 +176,10 @@ export const formatPercent = (
 
   // 乘以100得到百分比数值
   const percent = num.times(100);
-  
+
   // 如果为0，返回指定显示
   if (percent.eq(0)) {
-    return '0';
+    return "0";
   }
   // 使用 formatThousandWithPlaces 格式化（自带千分位）
   const formatted = formatThousandWithPlaces(percent.toNumber(), decimalPlaces);
@@ -389,6 +389,18 @@ export const bigDivNum = (a: any, b: any): number => {
 export const roundToTwo = (value: any): number => {
   return toBig(value).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 };
+/**
+ * 四舍五入到四位小数（返回数字）
+ */
+export const roundToFour = (value: any): number => {
+  return toBig(value).decimalPlaces(4, BigNumber.ROUND_HALF_UP).toNumber();
+};
+
+/**
+ * 按指定小数位数四舍五入（ROUND_HALF_UP），返回 number
+ */
+export const roundBy = (value: any, decimal: number): number =>
+  toBig(value).decimalPlaces(decimal, BigNumber.ROUND_HALF_UP).toNumber();
 
 // ============================================
 // 八、导出 BigNumber 类
