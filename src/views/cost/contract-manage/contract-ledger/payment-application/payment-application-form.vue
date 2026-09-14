@@ -455,7 +455,7 @@
           <el-row :gutter="24" v-show="showBankAnnex">
             <el-form-item label="修改凭证附件">
               <base-upload v-model:file-list="bankFileList" :limit="1" :multiple="false" :showIcon="true"
-                :showTip="true" :maxSize="20" :unrestricted="true" :accept="''" button-text="选择文件"
+                :showTip="true" :maxSize="200" :unrestricted="true" :accept="''" button-text="选择文件"
                 :disabled="isReadonly" @success="handleBankUploadSuccess" />
             </el-form-item>
             <!-- <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
@@ -623,7 +623,7 @@
         <FormCard id="card-annex" icon="📎" title="相关附件" v-model:collapsed="collapsedCards.annex">
           <el-form-item label="相关附件">
             <base-upload v-model:file-list="baseFileList" :limit="9" :multiple="false" :showIcon="true" :showTip="true"
-              :maxSize="20" :unrestricted="true" :accept="''" button-text="选择文件" size="default" :disabled="isReadonly"
+              :maxSize="200" :unrestricted="true" :accept="''" button-text="选择文件" size="default" :disabled="isReadonly"
               @success="handleUploadSuccess" />
           </el-form-item>
         </FormCard>
