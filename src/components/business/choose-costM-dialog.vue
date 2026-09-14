@@ -111,7 +111,9 @@ const getDataList = async () => {
     const query = { ...queryParams.value, projId: props.projId };
     const res = await goalCostApi.getProjectCostMList(query);
     if (res.code === 200) {
-      tableData.value = res.data || [];
+      const list = res.data || [];
+      // 只取已审批的数据
+      tableData.value = list.filter((item) => item.status === 40);
       total.value = tableData.value.length;
     }
   } catch (error) {
