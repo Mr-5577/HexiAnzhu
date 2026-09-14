@@ -157,7 +157,7 @@ import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import {  buildSubjectTree, buildTree, convertToTree } from "@/utils/tree";
 import { allocRuleEnum } from "@/constants/master-data/enums";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
-import { bigSumNum, roundToTwo, formatThousandWithPlaces } from "@/utils/big-number.ts";
+import { bigSumNum, roundToFour, formatThousandWithPlaces } from "@/utils/big-number.ts";
 
 defineOptions({ name: "cost-detail-list" });
 
@@ -400,12 +400,12 @@ const aggregateVisible = (node: any): any => {
     if (!isLeafVisibleByFilter(node)) return null;
     const t = emptyVisibleTotals();
     productOptions.value.forEach((p: any) => {
-      const ca = roundToTwo(node[`costAmt_${p.id}`] || 0);
-      const ce = roundToTwo(node[`costExclAmt_${p.id}`] || 0);
+      const ca = roundToFour(node[`costAmt_${p.id}`] || 0);
+      const ce = roundToFour(node[`costExclAmt_${p.id}`] || 0);
       t[`costAmt_${p.id}`] = ca;
       t[`costExclAmt_${p.id}`] = ce;
-      t.totalCostAmt = roundToTwo(t.totalCostAmt + ca);
-      t.totalCostExclAmt = roundToTwo(t.totalCostExclAmt + ce);
+      t.totalCostAmt = roundToFour(t.totalCostAmt + ca);
+      t.totalCostExclAmt = roundToFour(t.totalCostExclAmt + ce);
     });
     return t;
   }
@@ -417,11 +417,11 @@ const aggregateVisible = (node: any): any => {
     if (sub) {
       anyVisible = true;
       productOptions.value.forEach((p: any) => {
-        merged[`costAmt_${p.id}`] = roundToTwo(merged[`costAmt_${p.id}`] + sub[`costAmt_${p.id}`]);
-        merged[`costExclAmt_${p.id}`] = roundToTwo(merged[`costExclAmt_${p.id}`] + sub[`costExclAmt_${p.id}`]);
+        merged[`costAmt_${p.id}`] = roundToFour(merged[`costAmt_${p.id}`] + sub[`costAmt_${p.id}`]);
+        merged[`costExclAmt_${p.id}`] = roundToFour(merged[`costExclAmt_${p.id}`] + sub[`costExclAmt_${p.id}`]);
       });
-      merged.totalCostAmt = roundToTwo(merged.totalCostAmt + sub.totalCostAmt);
-      merged.totalCostExclAmt = roundToTwo(merged.totalCostExclAmt + sub.totalCostExclAmt);
+      merged.totalCostAmt = roundToFour(merged.totalCostAmt + sub.totalCostAmt);
+      merged.totalCostExclAmt = roundToFour(merged.totalCostExclAmt + sub.totalCostExclAmt);
     }
   });
   return anyVisible ? merged : null;
@@ -728,20 +728,19 @@ const calculateNodeTotal = (node: any): any => {
     }
   }
 
-  // 使用 roundToTwo 四舍五入保留两位小数
   const roundedProductTotals = {};
   productOptions.value.forEach((product) => {
     roundedProductTotals[`costAmt_${product.id}`] =
-      roundToTwo(productTotals[`costAmt_${product.id}`]);
+      roundToFour(productTotals[`costAmt_${product.id}`]);
     roundedProductTotals[`costExclAmt_${product.id}`] =
-      roundToTwo(productTotals[`costExclAmt_${product.id}`]);
+      roundToFour(productTotals[`costExclAmt_${product.id}`]);
   });
 
   return {
     ...node,
     ...roundedProductTotals, // 【关键】各业态汇总值也写入节点
-    totalCostAmt: roundToTwo(totalCostAmt),
-    totalCostExclAmt: roundToTwo(totalCostExclAmt),
+    totalCostAmt: roundToFour(totalCostAmt),
+    totalCostExclAmt: roundToFour(totalCostExclAmt),
   };
 };
 
@@ -1309,9 +1308,9 @@ const fillDetailDataToTable = (detailData: any[]) => {
           
           if (detail) {
             hasData = true;
-            // 金额处理：确保是数字，使用 roundToTwo
-            newNode[`costAmt_${prod.id}`] = roundToTwo(detail.costAmt);
-            newNode[`costExclAmt_${prod.id}`] = roundToTwo(detail.costExclAmt);
+            // 金额处理：确保是数字
+            newNode[`costAmt_${prod.id}`] = roundToFour(detail.costAmt);
+            newNode[`costExclAmt_${prod.id}`] = roundToFour(detail.costExclAmt);
             newNode[`detailId_${prod.id}`] = detail.id;
             newNode.costMid = detail.costMid || props.costMid;
           }
