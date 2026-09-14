@@ -27,6 +27,10 @@
         </div>
       </div>
       <div class="header-actions">
+        <!-- 超级管理员归档按钮 -->
+        <el-button type="primary" @click="handleArchiving" v-if="isSuperAdmin">
+          归档
+        </el-button>
         <!-- 保存按钮 -->
         <el-button
           class="btn-save"
@@ -102,6 +106,7 @@
 import { conBillStatusEnum } from "@/constants/contract-manage/enums";
 import { getEnumItem, getEnumLabel } from "@/utils/enum";
 import { computed } from "vue";
+import { useUserStore } from "@/stores/user-store";
 
 export interface ContractHeaderProps {
   /** 标题 */
@@ -146,6 +151,8 @@ const props = withDefaults(defineProps<ContractHeaderProps>(), {
 });
 
 const emit = defineEmits<{
+  /** 归档事件 */
+  (e: "archiving"): void;
   /** 保存事件 */
   (e: "save"): void;
   /** 提交事件 */
@@ -157,6 +164,13 @@ const emit = defineEmits<{
   /** 查看流程事件 */
   (e: "viewFlow"): void;
 }>();
+
+const userStore = useUserStore();
+
+// 是否是超管角色
+const isSuperAdmin = computed(() => {
+  return userStore.roleList?.some((role: any) => role.isSuper);
+});
 
 /** 状态文本 - 使用枚举工具函数获取 */
 const statusText = computed(() => {
@@ -174,6 +188,7 @@ const statusClass = computed(() => {
   return `status-${statusType.value}`;
 });
 
+const handleArchiving = () => emit("archiving");
 const handleSave = () => emit("save");
 const handleSubmit = () => emit("submit");
 const handleDelete = () => emit("delete");

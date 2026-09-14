@@ -59,4 +59,8 @@ export const contractLedgerApi = {
   getSubConLiteInfo: (data: { billId: number }) => {
     return http.formPost("/con/bill/subBizId", data);
   },
+  /** 测试环境超级管理员归档操作 */
+  oaWorkflowCallBackTest: (data: any) => {
+    return http.formPost("/workflow/oaWorkflowCallBackTest", data);
+  },
 };

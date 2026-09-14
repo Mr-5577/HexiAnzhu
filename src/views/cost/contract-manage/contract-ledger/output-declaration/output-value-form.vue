@@ -6,7 +6,7 @@
       :button-loading="submitLoading" :save-disabled="isReadonly" :submit-disabled="isReadonly"
       :delete-disabled="isDetail || isAdd || !!billData.status" :void-disabled="isDetail || isAdd || !!billData.status"
       :view-disabled="isAdd" @save="handleSave" @submit="handleSubmit" @delete="handleDelete" @void="handleCancel"
-      @viewFlow="handleViewProcess">
+      @viewFlow="handleViewProcess" @archiving="handleArchiving">
     </BillHeader>
     <div class="form-scroll-area">
       <el-form ref="formRef" :model="formData" :rules="formRules" :disabled="isReadonly || loadingForm"
@@ -976,6 +976,7 @@ const handleMaterialSelect = async (data) => {
   if (data && data.length > 0) {
     const list = data || [];
     if (formData.value.selfSupplyType === 1) {
+      // 甲供材-主材
       list.forEach((item) => {
         const exists = materialTable.value.some((recd) => recd.srcKeyId === item.keyid);
         if (!exists) {
@@ -1005,6 +1006,7 @@ const handleMaterialSelect = async (data) => {
         }
       });
     } else {
+      // 甲供材-零星
       list.forEach((item) => {
         const exists = materialMinorTable.value.some((recd) => recd.srcKeyId === item.keyid);
         if (!exists) {
@@ -1915,6 +1917,30 @@ const handleViewProcess = async () => {
     ElMessage.warning("暂无流程信息");
   }
 };
+
+const handleArchiving = async() => {
+  if(isAdd.value) {
+    ElMessage.warning("请先保存再归档！");
+    return;
+  }
+  try {
+    const params = {
+      bizItemCode: formType.CON_PROD,
+      bizNo: billData.value.bizNo,
+      segId: formData.value.segId,
+      deptId: flowBaseData.value.deptId,
+      projId: formData.value.projId,
+      bizId: formData.value.id,
+      wfTitle: billData.value.bizTitle,
+    }
+    const res = await contractLedgerApi.oaWorkflowCallBackTest(params);
+    if(res.code === 200) {
+      ElMessage.success("归档成功！");
+    }
+  } catch (error) {
+    console.error("归档失败:", error);
+  }
+}
 
 // ============================================================
 // 16. 附件上传回调
