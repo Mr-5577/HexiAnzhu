@@ -61,7 +61,8 @@
                     </el-icon>
                     重置
                 </el-button>
-                <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain>
+                <el-button type="primary" :loading="exportLoading" @click="handleExport" class="btn-export" plain
+                    :disabled="!menuStore.hasExactPermission(PERMISSIONS.PROJECT_PAY_EXPORT)">
                     <el-icon>
                         <Download />
                     </el-icon>
@@ -113,9 +114,12 @@ import { calcMaxDepth, getSummaryData, levelMap } from '../utils/common.ts'
 import StatisticsInfo from "../components/finan-pay-statistics-card.vue";
 import mdApi from '@/api/system/md-api.ts'
 import { buildProjectTree } from '../utils/finance-payment-project.ts'
+import { useMenuStore } from "@/stores/menu-store";
+import { PERMISSIONS } from '@/constants/permission.ts'
 
 defineOptions({ name: 'finance-payment-project' })
 
+const menuStore = useMenuStore();
 // ---------- 树形配置 ----------
 const treeConfig = {
     childrenField: 'children',

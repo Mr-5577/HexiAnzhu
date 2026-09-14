@@ -104,8 +104,9 @@
         <!-- 表格卡片 -->
         <div class="table-card">
             <vxe-editable-table ref="vxeTableRef" v-model="paginatedData" :columns="columns" :rowKey="'id'"
-                :loading="tableLoading" :readonly="true" :show-footer="true" :pagination="true" :total="total"
-                :page-size="pageSize" :current-page="currentPage" @pagination-change="handlePaginationChange" />
+                :loading="tableLoading" :readonly="true" :show-footer="true" :footer-source-data="tableData"
+                :pagination="true" :total="total" :page-size="pageSize" :current-page="currentPage"
+                @pagination-change="handlePaginationChange" />
         </div>
     </div>
 </template>

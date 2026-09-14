@@ -263,6 +263,8 @@ interface Props {
     footerMethod?: (params: { data: any[] }) => any[][];
     /** 合计行数据（直接传入，与 footerMethod 二选一，优先级更高） */
     footerData?: any[][];
+    /** 合计行的数据源（用于前端分页场景，基于全量数据计算合计），不传则使用当前表格数据 */
+    footerSourceData?: any[];
     /** 合计行样式（固定/浮动等） */
     footerRowConfig?: { className?: string; style?: any };
 
@@ -364,6 +366,7 @@ const props = withDefaults(defineProps<Props>(), {
     showFooter: false,
     footerMethod: undefined,
     footerData: () => [],
+    footerSourceData: undefined,
     footerRowConfig: () => ({}),
 });
 
@@ -882,6 +885,9 @@ const getAllLeafColumns = (cols: EditableColumn[]): EditableColumn[] => {
  * 注意：合计行仅对叶子列（没有 children 的列）生效，多级表头会自动展平。
  */
 const defaultFooterMethod = ({ data }: { data: any[] }) => {
+    // ✅ 优先使用外部传入的全量数据源（适配前端分页），未传则用当前页数据
+    const calcData = props.footerSourceData ?? data;
+
     const leafColumns = getAllLeafColumns(props.columns);
 
     // 找到第一个可作为合计标签的列
@@ -902,7 +908,7 @@ const defaultFooterMethod = ({ data }: { data: any[] }) => {
 
         // 提取数值
         // 使用 BigNumber 提取数值（避免精度丢失）
-        const bnValues = data
+        const bnValues = calcData
             .map((row) => toBig(row[col.prop] ?? 0))
             .filter((bn) => bn.isFinite() && !bn.isNaN());
 
