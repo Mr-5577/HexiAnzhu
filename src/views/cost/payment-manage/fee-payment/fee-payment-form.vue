@@ -454,7 +454,6 @@ const payWayTable = ref([]);
 // ==================== 计算逻辑 ====================
 
 // 1. 实际请款金额 = 请款金额 + 扣款金额汇总
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const actualReqAmt = computed(() => {
   const reqAmt = toBig(formData.value.reqAmt || 0);
   let totalDedAmt = new BigNumber(0);
@@ -465,7 +464,6 @@ const actualReqAmt = computed(() => {
 });
 
 // 2. 已收发票金额 = 发票列表发票总金额汇总
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const receivedInvoiceAmt = computed(() => {
   let total = new BigNumber(0);
   invoiceMTable.value.forEach((item) => {
@@ -480,7 +478,6 @@ const receivableInvoiceAmt = computed(() => {
 });
 
 // 4. 欠票金额 = 应收发票金额 - 已收发票金额
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const oweInvoiceAmt = computed(() => {
   const receivable = toBig(receivableInvoiceAmt.value);
   const received = toBig(receivedInvoiceAmt.value);
@@ -488,7 +485,6 @@ const oweInvoiceAmt = computed(() => {
 });
 
 // 5. 请款明细付款金额合计
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const totalPayAmt = computed(() => {
   let total = new BigNumber(0);
   payWayTable.value.forEach((item) => {
@@ -498,7 +494,6 @@ const totalPayAmt = computed(() => {
 });
 
 // ==================== Watch 监听 ====================
-// ===== 修改：使用 toBig 替代 toDecimal =====
 watch(
   actualReqAmt,
   (newVal) => {
@@ -616,7 +611,6 @@ const updateDedRow = (rowIndex: number, data: any) => {
   dedTable.value = newData;
 };
 
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const handleDedSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
   if (column === "dedTypeId") {
     updateDedRow(rowIndex, { dedTypeId: newValue, dedAmt: 0 });
@@ -1227,7 +1221,6 @@ const updatePayWayRow = (rowIndex: number, data: any) => {
   payWayTable.value = newData;
 };
 
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const handlePayWaySave = async (data) => {
   const { row, column, newValue, oldValue, rowIndex } = data;
   // 修改"其中抵房金额"不能大于付款金额
@@ -1463,7 +1456,6 @@ const buildSaveParams = () => {
 };
 
 // ==================== 校验数据 ====================
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const validateData = () => {
   // 如果是来票冲账，跳过款项调整和请款明细的校验，但是发票登记必填一条数据
   if (isOffsetByInvoice.value) {
@@ -1554,7 +1546,6 @@ const validateData = () => {
   return true;
 };
 // 获取差额（主表金额 - 明细合计）
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const getDiffAmount = (row: any): number => {
   const mainAmount = toBig(row.payAmt || 0);
   if (!row.finaDs || row.finaDs.length === 0) return 0;
@@ -1562,7 +1553,6 @@ const getDiffAmount = (row: any): number => {
   return mainAmount.minus(detailTotal).decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 };
 // 获取明细合计
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const getDetailTotal = (finaDs: any[]): number => {
   if (!finaDs || finaDs.length === 0) return 0;
   let total = new BigNumber(0);

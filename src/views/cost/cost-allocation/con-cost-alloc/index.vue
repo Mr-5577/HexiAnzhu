@@ -590,7 +590,6 @@ const handleViewAlloc = async () => {
 /**
  * 计算单次分摊预警状态
  */
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const getWarnSubAlloc = async (params: any) => {
   if (!pageParams.value.projId) return;
   try {
@@ -641,7 +640,6 @@ const getWarnSubAlloc = async (params: any) => {
  * @param apiDataList 接口返回的预警数据列表（只包含部分科目）
  * @returns 更新后的完整数据
  */
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const mergeTreeDetailData = (currentData: any[], apiDataList: any[]) => {
   if (!currentData?.length || !apiDataList?.length) {
     return currentData;
@@ -1200,7 +1198,6 @@ const generateColumns = (products) => {
 /**
  * 合并树形科目与业态明细数据
  */
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const mergeTreeWithDetailApiData = (treeData, prodList) => {
   const leafSubjects = getLeafSubjects(treeData);
 
@@ -1428,7 +1425,6 @@ const deleteNodeFromTree = (treeData: any[], nodeId: number): any[] => {
  * 汇总科目金额（只处理 subjectAmt 和 subjectAmtExcl）
  * 用于编辑科目金额时调用
  */
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const summarizeSubjectAmt = (treeData) => {
   // 深拷贝数据
   const cloneData = JSON.parse(JSON.stringify(treeData));
@@ -1464,7 +1460,6 @@ const summarizeSubjectAmt = (treeData) => {
  * 完整汇总（业态金额 + 科目金额）
  * 用于编辑业态金额时调用
  */
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const summarizeTree = (treeData, productList) => {
   const productIds = productList.map((item) => item.prodId);
   // 深拷贝数据
@@ -1535,7 +1530,6 @@ const summarizeTree = (treeData, productList) => {
  */
 let saveTimer = null;
 
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const handleSave = async (data: any) => {
   const { row, column, newValue, oldValue, rowIndex } = data;
 
@@ -1591,7 +1585,6 @@ const autoAllocation = async () => {
     const paramsObj: any = buildSubmitParams(editableSubjectData.value);
     console.log("自动分摊接口参数", paramsObj)
     // 过滤掉科目金额不含税为0的数据
-    // ===== 修改：使用 toBig 替代 toDecimal =====
     const filterData = paramsObj.subList?.filter((item) => toBig(item.allocAmt).isGreaterThan(0));
     // 主合同取bizId,子合同取currSubConBizId,因为子合同从OA进入这个页面传递的bizId是合同ID
     // const currentBizId = bizType === 'CON_MAIN' ? bizId : currSubConBizId.value
@@ -1696,7 +1689,6 @@ const buildSubmitParams = (treeData: any[]) => {
   };
 };
 // 确认时校验
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const validateTable = () => {
   if (!editableSubjectData.value?.length) {
     ElMessage.warning("没有可分摊的数据，请先选择科目并填写分摊金额");
@@ -1754,7 +1746,6 @@ const validateTable = () => {
  * @param leafNodes - 叶子节点数组
  * @returns 校验结果
  */
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const validateLeafNodesStrict = (leafNodes: any[]) => {
   const errors: any[] = [];
 
@@ -1857,7 +1848,6 @@ const convertTreeDataToRows = (treeData: any[], products: any[]): any[] => {
   return rows;
 };
 // 后期确认参数
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const getSubmitData = async () => {
   const leafSubjects = getLeafSubjects(editableSubjectData.value);
   const subList = leafSubjects.map((item) => {

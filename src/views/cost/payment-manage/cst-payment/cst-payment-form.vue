@@ -1370,7 +1370,6 @@ const updatePayWayRow = (rowIndex: number, data: any) => {
   payWayTable.value = newData;
 };
 
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const handlePayWaySave = async (data) => {
   const { row, column, newValue, oldValue, rowIndex } = data;
   // 修改"其中抵房金额"不能大于付款金额
@@ -1497,7 +1496,6 @@ const backfillData = async (data) => {
   }
 };
 
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const buildSaveParams = () => {
   let bill = {
     ...billData.value,
@@ -1644,7 +1642,6 @@ const goBack = () => {
   router.go(-1);
 };
 
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const validateData = () => {
   // 如果是来票冲账，跳过款项调整和请款明细的校验，但是发票登记必填一条数据
   if (isOffsetByInvoice.value) {
@@ -1920,7 +1917,6 @@ const initDictData = async () => {
   dedTypeOptions.value = getDictList(dictMapping.dedType);
 };
 
-// ===== 修改：使用 toBig 替代 toDecimal =====
 // 1. 实际请款金额 = 本次请款金额 + 扣款金额汇总
 const actualReqAmt = computed(() => {
   const reqAmt = toBig(formData.value.reqAmt || 0);
@@ -1964,7 +1960,6 @@ const totalPayAmt = computed(() => {
 /** 是否「来票冲账」 1：来票冲账  0：请款 */
 const isOffsetByInvoice = computed(() => formData.value.reqType === 1);
 
-// ===== 修改：使用 toBig 替代 toDecimal =====
 // 监听实际请款金额变化，更新表单字段
 watch(
   actualReqAmt,

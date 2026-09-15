@@ -32,66 +32,32 @@
           归档
         </el-button>
         <!-- 保存按钮 -->
-        <el-button
-          class="btn-save"
-          type="primary"
-          icon="DocumentAdd"
-          :loading="buttonLoading"
-          :disabled="saveDisabled"
-          @click="handleSave"
-        >
+        <el-button class="btn-save" type="primary" icon="DocumentAdd" :loading="buttonLoading" :disabled="saveDisabled"
+          @click="handleSave">
           保存
         </el-button>
 
         <!-- 提交按钮 -->
-        <el-button
-          class="btn-submit"
-          type="success"
-          plain
-          icon="Promotion"
-          :loading="buttonLoading"
-          :disabled="submitDisabled"
-          @click="handleSubmit"
-        >
+        <el-button class="btn-submit" type="success" plain icon="Promotion" :loading="buttonLoading"
+          :disabled="submitDisabled" @click="handleSubmit">
           提交
         </el-button>
 
         <!-- 删除按钮 -->
-        <el-button
-          class="btn-delete"
-          type="danger"
-          plain
-          icon="Delete"
-          :loading="buttonLoading"
-          :disabled="deleteDisabled"
-          @click="handleDelete"
-        >
+        <el-button class="btn-delete" type="danger" plain icon="Delete" :loading="buttonLoading"
+          :disabled="deleteDisabled" @click="handleDelete">
           删除
         </el-button>
 
         <!-- 作废按钮 -->
-        <el-button
-          class="btn-void"
-          type="warning"
-          plain
-          icon="Remove"
-          :loading="buttonLoading"
-          :disabled="voidDisabled"
-          @click="handleVoid"
-        >
+        <el-button class="btn-void" type="warning" plain icon="Remove" :loading="buttonLoading" :disabled="voidDisabled"
+          @click="handleVoid">
           作废
         </el-button>
 
         <!-- 查看流程 -->
-        <el-button
-          class="btn-flow"
-          type="info"
-          plain
-          icon="View"
-          :loading="buttonLoading"
-          :disabled="viewDisabled"
-          @click="handleViewFlow"
-        >
+        <el-button class="btn-flow" type="info" plain icon="View" :loading="buttonLoading" :disabled="viewDisabled"
+          @click="handleViewFlow">
           查看流程
         </el-button>
 
@@ -107,6 +73,7 @@ import { conBillStatusEnum } from "@/constants/contract-manage/enums";
 import { getEnumItem, getEnumLabel } from "@/utils/enum";
 import { computed } from "vue";
 import { useUserStore } from "@/stores/user-store";
+import { getEnvironmentName } from "@/utils/config";
 
 export interface ContractHeaderProps {
   /** 标题 */
@@ -169,7 +136,9 @@ const userStore = useUserStore();
 
 // 是否是超管角色
 const isSuperAdmin = computed(() => {
-  return userStore.roleList?.some((role: any) => role.isSuper);
+  const isTest = getEnvironmentName() === "test";
+  const isSuper = userStore.roleList?.some((role: any) => role.isSuper);
+  return isTest && isSuper;
 });
 
 /** 状态文本 - 使用枚举工具函数获取 */

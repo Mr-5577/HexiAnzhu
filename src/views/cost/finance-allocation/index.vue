@@ -150,7 +150,6 @@ const getDetailTotal = (finaDs: any[]): number => {
   return total.decimalPlaces(2, BigNumber.ROUND_HALF_UP).toNumber();
 };
 // 获取差额（主表金额 - 明细合计）
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const getDiffAmount = (row: any): number => {
   const mainAmount = toBig(row.payAmt || 0);
   const detailTotal = toBig(getDetailTotal(row.finaDs));
@@ -158,7 +157,6 @@ const getDiffAmount = (row: any): number => {
 };
 
 // 格式化金额（保留两位小数，带千分位）
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const formatMoney = (value: number): string => {
   const dec = toBig(value);
   const parts = dec.toFixed(2).split('.');
@@ -359,7 +357,6 @@ const validateDetailRow = (
 };
 
 // 校验数据是否通过
-// ===== 修改：使用 toBig 替代 toDecimal，isEqualTo 替代 equals =====
 const validateData = () => {
   // 先校验所有明细是否填写完整
   for (const row of mainTableData.value) {
@@ -386,7 +383,6 @@ const validateData = () => {
   return true;
 };
 // 校验拆分明细是否已支付，有regPayAmtSum字段并且值大于0表示已支付
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const validateDetails = (data: any[]) => {
   const safeData = data ?? [];
   const errors: string[] = [];
@@ -410,7 +406,6 @@ const validateDetails = (data: any[]) => {
   return { valid: !errors.length, msg: errors.join('；') };
 };
 // 提交确认支付
-// ===== 修改：使用 toBig 替代 toDecimal，decimalPlaces 替代 toDecimalPlaces =====
 const handleSubmit = async () => {
   console.log("提交数据:", mainTableData.value);
   // 验拆分明细是否已支付，有regPayAmtSum字段并且值大于0表示已支付
@@ -506,7 +501,6 @@ const getFinaSubjectListBySegId = async (segId: number) => {
   }
 };
 // 处理合同支付财务分摊数据
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const processConData = (list) => {
   console.log("处理合同支付分摊数据", list);
   if (list && list.length > 0) {
@@ -547,7 +541,6 @@ const processConData = (list) => {
   }
 };
 // 处理非合同请款、费用报销财务分摊数据
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const processNconData = (list) => {
   console.log("处理非合同财务分摊数据", list);
   if (list && list.length > 0) {

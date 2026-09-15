@@ -549,7 +549,6 @@ const handleViewAlloc = async () => {
 /**
  * 计算单次分摊预警状态
  */
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const getWarnSubAlloc = async (params: any) => {
   if (!pageParams.value.projId) return;
   try {
@@ -767,7 +766,6 @@ const initPage = async () => {
 /**
  * 加载OA打开的分摊数据
  */
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const loadAllocationData = async () => {
   try {
     console.log("OA打开页面参数:", route.query, isView.value);
@@ -1004,7 +1002,6 @@ const generateColumns = (products) => {
 /**
  * 合并树形科目与业态明细数据
  */
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const mergeTreeWithDetailApiData = (treeData, prodList) => {
   // 1. 获取叶子节点
   const leafSubjects = getLeafSubjects(treeData);
@@ -1243,7 +1240,6 @@ const deleteNodeFromTree = (treeData: any[], nodeId: number): any[] => {
  * 汇总科目金额（只处理 subjectAmt 和 subjectAmtExcl）
  * 用于编辑科目金额时调用
  */
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const summarizeSubjectAmt = (treeData) => {
   // 深拷贝数据
   const cloneData = JSON.parse(JSON.stringify(treeData));
@@ -1279,7 +1275,6 @@ const summarizeSubjectAmt = (treeData) => {
  * 完整汇总（业态金额 + 科目金额）
  * 用于编辑业态金额时调用
  */
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const summarizeTree = (treeData, productList) => {
   const productIds = productList.map((item) => item.prodId);
   // 深拷贝数据
@@ -1350,7 +1345,6 @@ const summarizeTree = (treeData, productList) => {
  */
 let saveTimer = null;
 
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const handleSave = async (data: any) => {
   const { row, column, newValue, oldValue, rowIndex } = data;
 
@@ -1503,7 +1497,6 @@ const buildSubmitParams = (treeData: any[]) => {
   };
 };
 // 确认时校验
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const validateTable = () => {
   if (!editableSubjectData.value?.length) {
     ElMessage.warning("没有可分摊的数据，请先选择科目并填写分摊金额");
@@ -1557,7 +1550,6 @@ const validateTable = () => {
  * @param leafNodes - 叶子节点数组
  * @returns 校验结果
  */
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const validateLeafNodesStrict = (leafNodes: any[]) => {
   const errors: any[] = [];
 
@@ -1660,7 +1652,6 @@ const convertTreeDataToRows = (treeData: any[], products: any[]): any[] => {
   return rows;
 };
 // 后期确认参数
-// ===== 修改：使用 toBig 替代 toDecimal =====
 const getSubmitData = async () => {
   const leafSubjects = getLeafSubjects(editableSubjectData.value);
   const subList = leafSubjects.map((item) => {
