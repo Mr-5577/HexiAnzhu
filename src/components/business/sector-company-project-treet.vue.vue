@@ -190,6 +190,8 @@ defineExpose({
 <style lang="scss" scoped>
 .sector-company-project-component {
   width: 248px;
+  height: 100%; // 明确撑满父容器
+  min-height: 0; // 关键：让内部 flex 能收缩
   flex-shrink: 0;
   background: #fff;
   border-radius: 8px;
@@ -225,6 +227,7 @@ defineExpose({
   .tree-wrapper {
     flex: 1;
     overflow: auto;
+    min-height: 0; // 关键：overflow 才真正生效
     padding: 10px;
     box-sizing: border-box;
 

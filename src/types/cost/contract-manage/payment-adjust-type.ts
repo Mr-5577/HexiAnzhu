@@ -51,18 +51,6 @@ export interface DedInfo {
   dedDesc?: string;
 }
 /**
- * 新增/编辑 合同奖惩参数
- */
-export interface ContractDedParams {
-  /** 主键ID（编辑时必填） */
-  id?: number;
-  /** 合同ID */
-  conId: number;
-  /** 奖惩信息 */
-  rec: DedInfo;
-}
-
-/**
  * 合同奖惩审批参数
  */
 export interface ContractDedApproveParams {

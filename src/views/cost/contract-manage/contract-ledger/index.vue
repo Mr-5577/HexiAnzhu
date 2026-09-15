@@ -2,10 +2,7 @@
 <template>
   <div class="contract-ledger-page">
     <!-- 板块-公司-项目 -->
-    <sector-company-project-treet
-      ref="sectorCompanyProjectTreetRef"
-      @select="handleProjectSelect"
-    />
+    <sector-company-project-treet ref="sectorCompanyProjectTreetRef" @select="handleProjectSelect" />
 
     <div class="right-content" v-if="selectedData">
       <conTable :selectedData="selectedData" />
@@ -38,7 +35,7 @@ const handleProjectSelect = (data: ProjectTreeNode) => {
   }
 };
 
-onMounted(() => {});
+onMounted(() => { });
 </script>
 
 <style lang="scss" scoped>
@@ -50,6 +47,8 @@ onMounted(() => {});
   padding: 10px;
   box-sizing: border-box;
   background: #f0f2f6;
+  min-height: 0; // 关键：允许被 flex 父级压缩
+  overflow: hidden; // 关键：内容溢出不再撑高容器
 
   .right-content {
     flex: 1;
@@ -60,6 +59,7 @@ onMounted(() => {});
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    min-width: 0;
 
     &.empty {
       justify-content: center;

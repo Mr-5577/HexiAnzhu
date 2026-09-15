@@ -121,11 +121,6 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
     (e: 'cardClick', type: string): void
 }>()
-
-// ---------- 工具函数 ----------
-const formatNumber = (val: number): string => {
-    return formatThousandWithPlaces(val ?? 0, 2)
-}
 </script>
 
 <style lang="scss" scoped>

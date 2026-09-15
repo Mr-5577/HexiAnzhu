@@ -73,11 +73,3 @@ export interface EngineeringPrice {
   /** 审计审核意见 */
   auditOpinion?: string;
 }
-/**
- * 新增/编辑工程核价 - 表单数据
- */
-export interface ContractAuditPriceFormData {
-  /** 合同ID */
-  conId: number;
-  auditPrice: EngineeringPrice;
-}

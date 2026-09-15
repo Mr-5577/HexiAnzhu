@@ -19,7 +19,7 @@
             <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
               <el-form-item label="主合同名称" prop="mainConId">
                 <PickInput v-model="formData.mainConName" placeholder="请选择主合同" :readonly="isReadonly"
-                  v-model:model-value-id="formData.mainConId" @pick="openMainConDialog" />
+                  v-model:model-value-id="formData.mainConId" @pick="openMainConDialog" @clear="clearMainCon" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
@@ -119,6 +119,8 @@ import EnumSelect from "@/components/base/base-enum-select.vue";
 import BillHeader from "@/components/business/bill-components/bill-header.vue";
 import BillInfo from "@/components/business/bill-components/bill-info.vue";
 import ChooseContractDialog from "@/components/business/choose-contract-dialog.vue";
+import { ConPropertyEnum } from "@/constants/contract-manage/enums";
+import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api";
 
 defineOptions({ name: "payment-adjust-form" });
 
@@ -183,12 +185,8 @@ const initFormData = () => ({
   mainConId: "", // 合同ID
   conTypeId: "", // 合同类型
   supName: "", // 供应商名称
-  proProf: "", // 生产专业
   conProperty: "", // 合同类别
   conAmt: 0, // 合同金额
-  conSignDate: "", // 合同签订日期
-  conEffectDate: "", // 合同生效日期
-  conEndDate: "", // 合同终止日期
   // =======================款项调整==========================
   adjustType: "", // 调整大类
   adjustSubType: "", // 调整小类
@@ -198,8 +196,8 @@ const initFormData = () => ({
   segId: undefined,
   segName: "",
   segNo: "",
-  deptName: "",
-  mguName: "",
+  deptName: userStore.userInfo?.deptName,
+  mguName: userStore.userInfo?.mguName,
   projId: undefined,
   projName: "",
   compId: "",
@@ -213,7 +211,6 @@ const submitLoading = ref(false);
 const formRef = ref<FormInstance>();
 const projectOptions = ref([]);
 const tempFileList = ref([]);
-const ConPropertyEnum = ref([]);
 const mainConDialogVisible = ref(false);
 
 // 表单校验规则
@@ -221,12 +218,34 @@ const formRules: FormRules = {
   title: [{ required: true, message: "请输入标题", trigger: "blur" }],
   segId: [{ required: true, message: "请选择业务板块", trigger: "change" }],
   projId: [{ required: true, message: "请选择项目", trigger: "change" }],
+  conId: [{ required: true, message: "请选择主合同", trigger: "change" }],
+  conProperty: [{ required: true, message: "请选择合同类型", trigger: "change" }],
+  supName: [{ required: true, message: "请选择供应商", trigger: "change" }],
 };
 
 // 选择项目
-const changeProject = (value: number) => {
-  console.log(value);
+const changeProject = async (value: number) => {
   if (value) {
+    const res = await projectAreaApi.getInfoByProjId({ id: value });
+    if (res.code === 200 && res.data) {
+      const { compName, compId, segId, segName, segNo } = res.data;
+      formData.value.compId = compId || "";
+      formData.value.compName = compName || "";
+      formData.value.segId = segId || "";
+      formData.value.segName = segName || "";
+      formData.value.segNo = segNo || "";
+    }
+  }
+};
+// 获取项目数据
+const getProjectOptions = async () => {
+  try {
+    const res = await projectAreaApi.getSegMguProjList();
+    if (res.code === 200) {
+      projectOptions.value = res.data || [];
+    }
+  } catch (error) {
+    console.error("获取项目列表失败:", error);
   }
 };
 // 附件上传成功
@@ -236,12 +255,54 @@ const handleUploadSuccess = (fileList: any) => {
 };
 const openMainConDialog = () => {
   if (isDetail.value) return;
+  if (!formData.value.projId) {
+    ElMessage.warning(`请先选择项目！`);
+    return;
+  }
   mainConDialogVisible.value = true;
 };
 const handleMainConSelect = (data) => {
   console.log("选择合同", data);
+  if (data && data.length > 0) {
+    let newData = data || [];
+    getConMainData(newData[0].id);
+  }
 };
 
+// 获取主合同信息
+const getConMainData = async (inConId) => {
+  if (!inConId) return;
+  if (inConId === formData.value.mainConId) return;
+  try {
+    const res = await contractLedgerApi.getContractLedgerById({
+      id: inConId,
+    });
+    if (res.code === 200 && res.data) {
+      const { conMain } = res.data;
+
+      formData.value.segId = conMain.segId;
+      formData.value.segName = conMain.segName;
+      formData.value.segNo = conMain.segNo;
+      formData.value.compName = conMain.companyName;
+      formData.value.projId = conMain.projId;
+      formData.value.mainConName = conMain.conName;
+      formData.value.mainConId = conMain.id;
+
+      formData.value.conTypeId = conMain.conTypeId;
+      formData.value.conProperty = conMain.conProperty;
+      formData.value.supName = conMain.supName;
+    }
+  } catch (error) {
+    console.error("获取合同信息失败:", error);
+  }
+};
+const clearMainCon = () => {
+  formData.value.mainConName = undefined;
+  formData.value.mainConId = undefined;
+  formData.value.conTypeId = undefined;
+  formData.value.conProperty = undefined;
+  formData.value.supName = undefined;
+}
 // 加载详情（编辑/详情模式）
 const loadDetail = async () => {
   if (!dedId.value) return;
@@ -275,6 +336,7 @@ const handleViewProcess = async () => {
 const initData = async () => {
   formData.value.userName = userStore.userInfo?.empName || "";
   formData.value.createDate = dateUtil().format("YYYY-MM-DD");
+  getProjectOptions();
   if (isAdd.value) {
     initFormData();
   } else {

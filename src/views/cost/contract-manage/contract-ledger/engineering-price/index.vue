@@ -87,9 +87,7 @@ const getDataList = async () => {
   try {
     tableLoading.value = true;
     tableData.value = [];
-    const res = await engineeringPriceApi.getAuditPriceList({
-      conId: props.conId,
-    });
+    const res = await engineeringPriceApi.getAuditPriceList(props.conId);
     if (res.code === 200) {
       tableData.value = res.data;
     }
