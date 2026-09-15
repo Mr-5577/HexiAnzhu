@@ -1,28 +1,31 @@
 import { http } from "@/axios/service";
-import { ContractDedParams, DedInfo } from "@/types/cost/contract-manage/payment-adjust-type";
 
 /**
  * 款项调整(合同奖罚) 相关接口
  */
 export const paymentAdjustApi = {
-  /** 查询合同奖罚列表 */
+  /** 查询合同奖罚列表-合同ID */
   getDedList: (data: { conId: number }) => {
     return http.formPost("/con/ded/list", data);
   },
   /** 查询单个合同奖罚 */
-  getDedDetail: (data: { id: number }) => {
-    return http.formPost("/con/ded/get", data);
+  getDedDetail: (id: number) => {
+    return http.post(`/con/ded/get?id=${id}`);
   },
-  /** 新增合同奖罚 */
-  addDed: (data: ContractDedParams) => {
-    return http.post("/con/ded/add", data);
+  /** 保存合同奖罚（新增/修改） */
+  saveDed: (data: any) => {
+    return http.post("/con/ded/save", data);
   },
-  /** 编辑合同奖罚 */
-  editDed: (data: DedInfo) => {
-    return http.post("/con/ded/edit", data);
+  /** 保存并提交合同奖罚审批 */
+  submitDed: (data: any) => {
+    return http.post("/con/ded/submit", data);
   },
   /** 删除合同奖罚 */
   delDed: (data: { id: number }) => {
     return http.formPost("/con/ded/del", data);
+  },
+  /** 作废合同奖罚 */
+  voidDed: (data: { id: number }) => {
+    return http.formPost("/con/ded/void", data);
   },
 };

@@ -1466,8 +1466,8 @@ watch(
 
 // 滚动条美化
 .table-wrapper ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
 }
 
 .table-wrapper ::-webkit-scrollbar-thumb {
@@ -1481,14 +1481,5 @@ watch(
 
 .table-wrapper ::-webkit-scrollbar-track {
     background: transparent;
-}
-
-@media (max-width: 768px) {
-    .toolbar {
-        flex-direction: column;
-        align-items: stretch;
-        height: auto;
-        gap: 8px;
-    }
 }
 </style>
