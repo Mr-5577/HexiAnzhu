@@ -18,8 +18,9 @@
           <div class="section-title">合同概要</div>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
-              <el-form-item label="合同名称" prop="conName">
-                <el-input v-model="formData.conName" placeholder="合同名称" disabled style="width: 100%" />
+              <el-form-item label="主合同名称" prop="mainConId">
+                <PickInput v-model="formData.mainConName" placeholder="请选择主合同" :readonly="isReadonly"
+                  v-model:model-value-id="formData.mainConId" @pick="openMainConDialog" @clear="clearMainCon" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
@@ -28,24 +29,19 @@
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="档案编号" prop="conPhyNo">
-                <el-input v-model="formData.conPhyNo" placeholder="合同档案编号" disabled style="width: 100%" />
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row :gutter="24">
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="供应商名称" prop="supName">
-                <el-input v-model="formData.supName" placeholder="供应商名称" disabled style="width: 100%" />
-              </el-form-item>
-            </el-col>
-
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="合同金额" prop="conAmt">
                 <el-input-number v-model="formData.conAmt" :min="0" :precision="2" :controls="false" placeholder="合同金额"
                   disabled style="width: 100%" />
               </el-form-item>
             </el-col>
+          </el-row>
+          <el-row :gutter="24">
+            <el-col :xs="24" :sm="12" :md="12" :lg="12" :xl="12">
+              <el-form-item label="供应商名称" prop="supName" required>
+                <el-input v-model="formData.supName" clearable placeholder="" disabled />
+              </el-form-item>
+            </el-col>
+
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="计价方式" prop="conProperty">
                 <el-input v-model="formData.conProperty" placeholder="计价方式" disabled style="width: 100%" />
@@ -57,13 +53,12 @@
               </el-form-item>
             </el-col>
           </el-row>
-          <el-row :gutter="24">
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="合同分类" prop="conSignDate">
-                <el-input v-model="formData.conSignDate" placeholder="合同分类" disabled style="width: 100%" />
-              </el-form-item>
-            </el-col>
-          </el-row>
+          <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
+            <el-form-item prop="conTypeId" label="合同分类" required>
+              <ConTypeSelector v-model="formData.conTypeId" :show-all-levels="false" placeholder="" style="width: 100%"
+                :width="'100%'" clearable filterable disabled />
+            </el-form-item>
+          </el-col>
         </div>
 
         <!-- 申报内容 -->
@@ -158,6 +153,10 @@
         </div>
       </el-form>
     </div>
+
+    <!-- 选择合同弹窗 -->
+    <choose-contract-dialog ref="contractDialogRef" v-model="mainConDialogVisible" :selectionMode="'single'"
+      :projId=formData.projId @select="handleMainConSelect" />
   </div>
 </template>
 
@@ -172,6 +171,9 @@ import { engineeringPriceApi } from "@/api/cost/contract-manage/engineering-pric
 import BaseUpload from "@/components/base/base-upload.vue";
 import BillHeader from "@/components/business/bill-components/bill-header.vue";
 import BillInfo from "@/components/business/bill-components/bill-info.vue";
+import PickInput from "@/components/base/base-pick-input.vue";
+import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api";
+import { dateUtil } from "@/utils/date-util";
 
 defineOptions({ name: "special-matter-form" });
 
@@ -228,7 +230,7 @@ const flowListData = ref({
 
 
 // 初始化表单数据
-const getInitFormData = () => ({
+const initFormData = () => ({
   // 工程核价字段
   id: null as number | null,
   conBillId: null,
@@ -244,8 +246,11 @@ const getInitFormData = () => ({
   status: 0,
   // 合同概要字段
   conName: "",
+  mainConName: "",
+  mainConId: "",
   conSysNo: "",
   conPhyNo: "",
+  conTypeId: "",
   supName: "",
   proProf: "",
   conProperty: "",
@@ -256,8 +261,8 @@ const getInitFormData = () => ({
   segId: undefined,
   segName: "",
   segNo: "",
-  deptName: "",
-  mguName: "",
+  deptName: userStore.userInfo?.deptName,
+  mguName: userStore.userInfo?.mguName,
   projId: undefined,
   projName: "",
   compId: "",
@@ -266,12 +271,13 @@ const getInitFormData = () => ({
   createDate: "",
 });
 
-const formData = ref(getInitFormData());
+const formData = ref(initFormData());
 const submitLoading = ref(false);
 const formRef = ref<FormInstance>();
 const segOptions = ref([]);
 const projectOptions = ref([]);
 const tempFileList = ref([]);
+const mainConDialogVisible = ref(false);
 
 // 计算成本审减金额 = 成本审核金额 - 申报金额
 const calcCostingCutAmt = () => {
@@ -341,8 +347,18 @@ const initOptions = async () => {
 };
 
 // 选择项目
-const changeProject = (value: number) => {
-  console.log(value);
+const changeProject = async (value: number) => {
+  if (value) {
+    const res = await projectAreaApi.getInfoByProjId({ id: value });
+    if (res.code === 200 && res.data) {
+      const { compName, compId, segId, segName, segNo } = res.data;
+      formData.value.compId = compId || "";
+      formData.value.compName = compName || "";
+      formData.value.segId = segId || "";
+      formData.value.segName = segName || "";
+      formData.value.segNo = segNo || "";
+    }
+  }
 };
 
 // 附件上传成功
@@ -351,13 +367,62 @@ const handleUploadSuccess = (fileList: any) => {
   console.log("文件列表", tempFileList.value);
 };
 
+const openMainConDialog = () => {
+  if (isDetail.value) return;
+  if (!formData.value.projId) {
+    ElMessage.warning(`请先选择项目！`);
+    return;
+  }
+  mainConDialogVisible.value = true;
+};
+const handleMainConSelect = (data) => {
+  console.log("选择合同", data);
+  if (data && data.length > 0) {
+    let newData = data || [];
+    getConMainData(newData[0].id);
+  }
+};
+
+// 获取主合同信息
+const getConMainData = async (inConId) => {
+  if (!inConId) return;
+  if (inConId === formData.value.mainConId) return;
+  try {
+    const res = await contractLedgerApi.getContractLedgerById({
+      id: inConId,
+    });
+    if (res.code === 200 && res.data) {
+      const { conMain } = res.data;
+
+      formData.value.segId = conMain.segId;
+      formData.value.segName = conMain.segName;
+      formData.value.segNo = conMain.segNo;
+      formData.value.compName = conMain.companyName;
+      formData.value.projId = conMain.projId;
+      formData.value.mainConName = conMain.conName;
+      formData.value.mainConId = conMain.id;
+
+      formData.value.conTypeId = conMain.conTypeId;
+      formData.value.conProperty = conMain.conProperty;
+      formData.value.supName = conMain.supName;
+    }
+  } catch (error) {
+    console.error("获取合同信息失败:", error);
+  }
+};
+const clearMainCon = () => {
+  formData.value.mainConName = undefined;
+  formData.value.mainConId = undefined;
+  formData.value.conTypeId = undefined;
+  formData.value.conProperty = undefined;
+  formData.value.supName = undefined;
+}
+
 // 加载详情（编辑/详情模式）
 const loadDetail = async () => {
   if (!auditPriceId.value) return;
   try {
-    const res = await engineeringPriceApi.getAuditPriceDetail({
-      id: auditPriceId.value,
-    });
+    const res = await engineeringPriceApi.getAuditPriceDetail(auditPriceId.value);
     if (res.code === 200 && res.data) {
       const data = res.data;
       // 填充表单数据
@@ -425,20 +490,20 @@ const handleSubmit = async () => {
     };
 
     let res;
-    if (isEdit.value && formData.value.id) {
-      res = await engineeringPriceApi.editAuditPrice(params);
-    } else {
-      const submitParams = {
-        conId: props.conId,
-        auditPrice: params,
-      };
-      res = await engineeringPriceApi.addAuditPrice(submitParams);
-    }
+    // if (isEdit.value && formData.value.id) {
+    //   res = await engineeringPriceApi.editAuditPrice(params);
+    // } else {
+    //   const submitParams = {
+    //     conId: props.conId,
+    //     auditPrice: params,
+    //   };
+    //   res = await engineeringPriceApi.addAuditPrice(submitParams);
+    // }
 
-    if (res.code === 200) {
-      ElMessage.success(isEdit.value ? "修改成功" : "新增成功");
-      emit("success", res.data);
-    }
+    // if (res.code === 200) {
+    //   ElMessage.success(isEdit.value ? "修改成功" : "新增成功");
+    //   emit("success", res.data);
+    // }
   } catch (error) {
     console.error("表单验证失败:", error);
   } finally {
@@ -457,13 +522,10 @@ const handleViewProcess = () => { };
 
 // 初始化数据
 const initData = async () => {
+  formData.value.userName = userStore.userInfo?.empName || "";
+  formData.value.createDate = dateUtil().format("YYYY-MM-DD");
   await initOptions();
   if (isAdd.value) {
-    formData.value = getInitFormData();
-    // 设置默认提交人信息
-    if (userStore.userInfo) {
-      //   formData.value.submiterName = userStore.userInfo.userName || "";
-    }
   } else {
     if (auditPriceId.value) {
       await loadDetail();

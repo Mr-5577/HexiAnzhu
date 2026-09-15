@@ -338,7 +338,6 @@ const initData = async () => {
   formData.value.createDate = dateUtil().format("YYYY-MM-DD");
   getProjectOptions();
   if (isAdd.value) {
-    initFormData();
   } else {
     if (dedId.value) {
       await loadDetail();
