@@ -1,88 +1,17 @@
 <!-- 特殊事项 -->
 <template>
   <div class="basic-form-content">
-    <div class="form-header">
-      <div class="header-title">特殊事项审批</div>
-      <div class="header-btn">
-        <el-button type="primary" icon="DocumentAdd" :loading="submitLoading" @click="handleSubmit">
-          保存
-        </el-button>
-        <el-button type="success" plain icon="Promotion"> 提交 </el-button>
-        <el-button type="danger" plain icon="Delete"> 删除 </el-button>
-        <el-button type="warning" plain icon="Remove"> 作废 </el-button>
-        <el-button type="info" plain icon="View"> 查看流程 </el-button>
-      </div>
-    </div>
+    <BillHeader :title="'款项调整审批'" :contract-no="billData.bizNo || ''" :submitter="formData.userName || ''"
+      :submit-time="formData.createDate || ''" :status="billData.status || 0" :show-status="true"
+      :button-loading="submitLoading" :save-disabled="isReadonly" :submit-disabled="isReadonly"
+      :delete-disabled="isDetail || isAdd || !!billData.status" :void-disabled="isDetail || isAdd || !!billData.status"
+      :view-disabled="isAdd" @save="handleSave" @submit="handleSubmit" @delete="handleDelete" @void="handleCancel"
+      @viewFlow="handleViewProcess" />
+
     <div class="form-scroll-area">
       <el-form ref="formRef" :model="formData" :rules="formRules" label-width="120px" class="adapt-form">
-        <div class="item-card">
-          <el-row :gutter="24">
-            <el-col :xs="24" :sm="12" :md="12" :lg="18" :xl="18">
-              <el-form-item label="标题" prop="title">
-                <el-input v-model="formData.title" clearable :disabled="isDetail" placeholder="请输入标题" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="审批状态" prop="approvalStatus">
-                <el-input v-model="formData.approvalStatus" clearable :disabled="isDetail" placeholder="审批状态" />
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row :gutter="24">
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="业务板块" prop="segId" required>
-                <el-select v-model="formData.segId" placeholder="请选择业务板块" style="width: 100%" :disabled="isDetail">
-                  <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
-                </el-select>
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="板块编码" prop="segCode">
-                <el-input v-model="formData.segCode" clearable :disabled="isDetail" placeholder="板块编码" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="部门" prop="departmentName">
-                <el-input v-model="formData.departmentName" clearable :disabled="isDetail" placeholder="部门" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="分部" prop="branchName">
-                <el-input v-model="formData.branchName" clearable :disabled="isDetail" placeholder="分部" />
-              </el-form-item>
-            </el-col>
-          </el-row>
-          <el-row :gutter="24">
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="所属项目" prop="projId" required>
-                <el-cascader ref="projCascaderRef" v-model="formData.projId" :options="projectOptions"
-                  :show-all-levels="false" :props="{
-                    expandTrigger: 'hover',
-                    emitPath: false,
-                    checkStrictly: false,
-                    value: 'orgId',
-                    label: 'orgName',
-                    children: 'children',
-                  }" placeholder="请选择项目" style="width: 100%" clearable :disabled="isDetail" @change="changeProject" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="项目所属公司" prop="companyName">
-                <el-input v-model="formData.companyName" clearable placeholder="项目所属公司" disabled />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="提交人" prop="submiterName">
-                <el-input v-model="formData.submiterName" clearable :disabled="isDetail" placeholder="提交人" />
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
-              <el-form-item label="提交时间" prop="submiterDate">
-                <el-input v-model="formData.submiterDate" clearable :disabled="isDetail" placeholder="提交时间" />
-              </el-form-item>
-            </el-col>
-          </el-row>
-        </div>
+        <BillInfo v-model="formData" :status="billData?.status || 0" :disabled="isDetail || !!billData.status"
+          :project-options="projectOptions" @project-change="changeProject" />
 
         <!-- 合同概要 -->
         <div class="item-card">
@@ -178,6 +107,8 @@ import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 import { commonApi } from "@/api/cost/common-api";
 import BaseUpload from "@/components/base/base-upload.vue";
+import BillHeader from "@/components/business/bill-components/bill-header.vue";
+import BillInfo from "@/components/business/bill-components/bill-info.vue";
 
 defineOptions({ name: "special-matter-form" });
 
@@ -208,13 +139,31 @@ const isDetail = computed(() => mode.value === "detail");
 const isEdit = computed(() => mode.value === "edit");
 const isAdd = computed(() => mode.value === "add");
 
-// 使用 useTemplateRef 获取模板引用
-const projCascaderRef = useTemplateRef("projCascaderRef");
+const isReadonly = computed(
+  () => isDetail.value || !!billData.value.status,
+);
+
+const billData = ref({
+  id: undefined,
+  bizTitle: "",
+  bizNo: "",
+  status: 0,
+  bizItemCode: '',
+  flowId: null,
+  conId: null,
+  createName: "",
+  createDate: "",
+});
+const flowBaseData = ref(null);
+const flowListData = ref({
+  bizItemCode: "",
+  wfFlowId: null,
+  wfStatus: 0,
+  wfTitle: "",
+});
 
 const initFormData = () => ({
   id: undefined,
-  segId: undefined,
-  projId: undefined,
   processNo: undefined,
   processName: "",
   processAmt: 0,
@@ -234,15 +183,18 @@ const initFormData = () => ({
   conEffectDate: "", // 合同生效日期
   conEndDate: "", // 合同终止日期
   // =======================其他==========================
-  title: "",
-  approvalStatus: undefined,
-  segCode: "",
-  departmentName: "",
-  branchName: "",
-  companyName: "",
-  submiterName: "",
-  submiterDate: "",
-  expenseType: "",
+  bizTitle: "",
+  segId: undefined,
+  segName: "",
+  segNo: "",
+  deptName: "",
+  mguName: "",
+  projId: undefined,
+  projName: "",
+  compId: "",
+  compName: "",
+  userName: "",
+  createDate: "",
 });
 // 表单数据
 const formData = ref(initFormData());
@@ -343,7 +295,9 @@ const loadDetail = async () => {
   try {
   } catch (error) { }
 };
-
+const handleSave = async () => {
+  console.log("保存");
+}
 // 提交表单
 const handleSubmit = async () => {
   console.log("提交表单", formData.value);
@@ -351,22 +305,20 @@ const handleSubmit = async () => {
   if (!formRef.value) return;
   try {
     await formRef.value.validate();
-    const params = {};
-    let res;
-    if (isAdd.value) {
-      //   res = await cstProcessApi.addCstProcess(params);
-    } else if (isEdit.value) {
-      //   res = await cstProcessApi.editCstProcess(params);
-    }
-    if (res.code === 200) {
-      ElMessage.success("操作成功");
-      emit("success", true);
-    }
   } catch (error) {
   } finally {
     submitLoading.value = false;
   }
 };
+const handleDelete = async () => {
+  console.log("删除");
+}
+const handleCancel = async () => {
+  console.log("作废");
+}
+const handleViewProcess = async () => {
+  console.log("查看流程");
+}
 
 const initData = async () => {
   await initOptions();
@@ -395,53 +347,6 @@ onMounted(() => {
   border-radius: 8px;
   overflow: hidden;
   padding: 0;
-}
-
-.form-header {
-  width: 100%;
-  background: #ffffff;
-  padding: 16px 24px 12px 24px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  flex-shrink: 0;
-  border-bottom: 1px solid #e4e7ed;
-
-  .header-title {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 8px 0;
-    box-sizing: border-box;
-    font-size: 20px;
-    font-weight: 700;
-    color: #1d2129;
-    letter-spacing: 0.5px;
-  }
-
-  .header-btn {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-    flex-wrap: wrap;
-    padding: 4px 0;
-
-    .el-button {
-      border-radius: 6px;
-      font-weight: 500;
-      transition: all 0.25s ease;
-
-      &:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-      }
-
-      &:active {
-        transform: translateY(0px);
-      }
-    }
-  }
 }
 
 .form-scroll-area {
