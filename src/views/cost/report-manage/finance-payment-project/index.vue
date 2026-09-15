@@ -31,6 +31,14 @@
                             range-separator="至" start-placeholder="开始月份" end-placeholder="结束月份" style="width: 220px" />
                     </el-form-item>
 
+                    <!-- <el-form-item label="单位" prop="unit">
+                        <el-select v-model="queryParams.unit" placeholder="请选择单位" :clearable="false"
+                            style="width: 220px" @change="handleSearch">
+                            <el-option label="万元" value="万元" />
+                            <el-option label="元" value="元" />
+                        </el-select>
+                    </el-form-item> -->
+
                     <el-form-item label="支付公司" prop="payCompId">
                         <el-select v-model="queryParams.payCompId" placeholder="请选择公司" clearable filterable
                             style="width: 220px">
@@ -39,13 +47,6 @@
                         </el-select>
                     </el-form-item>
 
-                    <el-form-item label="单位" prop="unit">
-                        <el-select v-model="queryParams.unit" placeholder="请选择单位" :clearable="false"
-                            style="width: 150px" @change="handleSearch">
-                            <el-option label="万元" value="万元" />
-                            <el-option label="元" value="元" />
-                        </el-select>
-                    </el-form-item>
                 </el-form>
             </template>
             <template #actions>
@@ -76,12 +77,12 @@
 
         <div class="content-placeholder">
             <div class="demo-controls">
-                <div class="unit-badge">
+                <!-- <div class="unit-badge">
                     <el-icon>
                         <Money />
                     </el-icon>
                     <span>单位：{{ queryParams.unit }}</span>
-                </div>
+                </div> -->
                 <span class="control-label">科目层级</span>
                 <div class="level-btn-group">
                     <el-button size="small" :type="expandLevel === 999 ? 'primary' : ''"
@@ -92,6 +93,16 @@
                         :type="expandLevel === level ? 'primary' : ''" @click="handleExpandLevel(level)">
                         {{ levelMap[level] || level + '级' }}
                     </el-button>
+                </div>
+
+                <!-- 单位切换 -->
+                <div class="unit-switch">
+                    <span class="unit-label">单位</span>
+                    <el-radio-group v-model="queryParams.unit" size="small" text-color="#fff" fill="#4096cc"
+                        @change="handleSearch">
+                        <el-radio-button value="万元">万元</el-radio-button>
+                        <el-radio-button value="元">元</el-radio-button>
+                    </el-radio-group>
                 </div>
             </div>
 
@@ -153,6 +164,12 @@ const summaryData = ref({
     expenseDetails: [],
 })
 
+// 根据单位保留小数位数
+const deci = computed(() => {
+    const unit = queryParams.value.unit; // 获取单位
+    return unit === '万元' ? 4 : 2; // 根据单位设置小数位数
+})
+
 // ---------- 项目列元数据 ----------
 // 存储 header 信息，用于生成动态列
 const projectHeader = shallowRef<{ proj_id: number; proj_name: string; mgu_name: string }[]>([])
@@ -174,7 +191,7 @@ const dynamicColumns: any = computed(() => {
     const fixedCols = [
         { prop: 'sub_code', label: '科目编码', width: 120, fixed: 'left' },
         { prop: 'sub_name', label: '科目名称', width: 200, fixed: 'left', align: 'left', treeNode: true },
-        { prop: 'total', label: '集团', minWidth: 130, formatter: (val: any) => formatThousandWithPlaces(val) },
+        { prop: 'total', label: '集团', minWidth: 130, formatter: (val: any) => formatThousandWithPlaces(val, deci.value) },
     ]
 
     // 动态项目列：根据 projectHeader 生成
@@ -187,7 +204,7 @@ const dynamicColumns: any = computed(() => {
     //         prop: field,
     //         label: label,
     //         minWidth: 130,
-    //         formatter: (val: any) => formatThousandWithPlaces(val),
+    //         formatter: (val: any) => formatThousandWithPlaces(val,deci.value),
     //     }
     // })
 
@@ -208,7 +225,7 @@ const dynamicColumns: any = computed(() => {
             prop: `proj_${item.proj_id}`,     // 字段名：proj_31
             label: item.proj_name,            // 二级表头：和喜域峰名邸
             minWidth: 130,
-            formatter: (val: any) => formatThousandWithPlaces(val),
+            formatter: (val: any) => formatThousandWithPlaces(val, deci.value),
         })),
     }))
 
@@ -372,7 +389,7 @@ const getDataList = async () => {
             console.log('treeData', treeData)
             tableData.value = treeData
             // 获取统计数据
-            const summyData = getSummaryData(treeData)
+            const summyData = getSummaryData(treeData, deci.value)
             console.log('summyData', summyData)
             summaryData.value = summyData
             await nextTick()
@@ -474,6 +491,25 @@ onMounted(async () => {
             align-items: center;
             gap: 6px;
             flex-wrap: wrap;
+        }
+
+        .unit-switch {
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+
+            .unit-label {
+                font-size: 14px;
+                font-weight: 500;
+                color: #4a5568;
+                user-select: none;
+            }
+
+            :deep(.el-radio-button__inner) {
+                padding: 5px 14px;
+                font-size: 13px;
+            }
         }
     }
 }

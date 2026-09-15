@@ -46,6 +46,14 @@
                         </el-select>
                     </el-form-item>
 
+                    <!-- <el-form-item label="单位" prop="unit">
+                        <el-select v-model="queryParams.unit" placeholder="请选择单位" :clearable="false"
+                            style="width: 150px" @change="handleSearch">
+                            <el-option label="万元" value="万元" />
+                            <el-option label="元" value="元" />
+                        </el-select>
+                    </el-form-item> -->
+
                     <el-form-item label="截止月份" prop="statMonth">
                         <el-date-picker v-model="queryParams.statMonth" type="month" value-format="YYYY-MM"
                             placeholder="请选择截止月份" :clearable="false" style="width: 150px" @change="handleSearch" />
@@ -78,6 +86,12 @@
         <!-- 表格卡片 -->
         <div class="table-card">
             <div class="demo-controls">
+                <!-- <div class="unit-badge">
+                    <el-icon>
+                        <Money />
+                    </el-icon>
+                    <span>单位：{{ queryParams.unit }}</span>
+                </div> -->
                 <span class="control-label">科目层级</span>
                 <div class="level-btn-group">
                     <el-button size="small" :type="expandLevel === 999 ? 'primary' : ''"
@@ -92,10 +106,21 @@
                         {{ levelMap[level] || level + '级' }}
                     </el-button>
                 </div>
+
+                <!-- 单位切换 -->
+                <div class="unit-switch">
+                    <span class="unit-label">单位</span>
+                    <el-radio-group v-model="queryParams.unit" size="small" text-color="#fff" fill="#4096cc"
+                        @change="handleSearch">
+                        <el-radio-button value="万元">万元</el-radio-button>
+                        <el-radio-button value="元">元</el-radio-button>
+                    </el-radio-group>
+                </div>
             </div>
 
             <vxe-editable-table ref="vxeTableRef" v-model="tableData" :columns="columns" :rowKey="'id'"
-                :treeConfig="treeConfig" :loading="tableLoading" :readonly="true" :pagination="false" />
+                :treeConfig="treeConfig" :loading="tableLoading" :readonly="true" :pagination="false"
+                :footer-data="footerData" :show-footer="true" />
         </div>
 
         <!-- 选择目标成本版本弹窗 -->
@@ -109,7 +134,7 @@ import { Search, Refresh, Download, CircleClose } from '@element-plus/icons-vue'
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 import { reportManageApi } from "@/api/cost/contract-manage/report-manage-api";
 import { goalCostApi } from "@/api/cost/cost-setting/goal-cost-api";
-import { formatPercent, formatThousandWithPlaces } from "@/utils/big-number";
+import { bigSum, formatPercent, formatThousandWithPlaces, roundToTwo } from "@/utils/big-number";
 import { ElMessage } from "element-plus";
 import ChooseCostMDialog from '@/components/business/choose-costM-dialog.vue';
 import dayjs from "dayjs";
@@ -140,6 +165,7 @@ const queryParams = ref({
     versionNo: undefined,        // 版本号（显示用）
     costMid: undefined,          // 目标成本版本ID（实际传参用）
     amountType: 'TAX',           // 金额类型：TAX-含税, EXCL-不含税
+    unit: '万元',
     statMonth: dayjs().format("YYYY-MM"), // 截止月份
 });
 
@@ -156,6 +182,35 @@ const exportLoading = ref(false);
 
 const maxDepth = ref(0);
 const expandLevel = ref(1);
+
+// 根据单位保留小数位数
+const deci = computed(() => {
+    const unit = queryParams.value.unit; // 获取单位
+    return unit === '万元' ? 4 : 2; // 根据单位设置小数位数
+})
+
+// 自定义合计行数据
+const footerData = computed(() => {
+    const r = tableData.value
+
+    const f = (k: string) => {
+        // 每项先四舍五入到 2 位，再用 BigNumber 精确求和
+        const total = bigSum(r.map((x) => roundToTwo(x[k])))
+        return formatThousandWithPlaces(total.toNumber(), deci.value)
+    }
+    return [[
+        '合计',                    // subCode
+        '',                 // subName
+        f('targetAmt'),
+        f('factReqAmt'),
+        f('paidAmt'),
+        f('unpaidAmt'),
+        f('paidDiffAmt'),
+        '',                    // paidRate 比率不算合计
+        f('unpaidDiffAmt'),
+        '',                    // unpaidRate 比率不算合计
+    ]]
+})
 
 //  计算属性：根据板块过滤项目树 
 const projectData = computed(() => {
@@ -174,113 +229,115 @@ const projectData = computed(() => {
     }
 });
 
-const columns: any = [
-    { prop: "subCode", label: "财务科目编码", width: 100, fixed: "left" },
-    {
-        prop: "subName",
-        label: "财务科目名称",
-        minWidth: 200,
-        fixed: "left",
-        align: 'left',
-        treeNode: true,
-    },
-    {
-        prop: "targetAmt",
-        label: "目标成本金额",
-        minWidth: 120,
-        formatter: (value: any) => formatThousandWithPlaces(value),
-    },
-    {
-        label: "请款及支付",
-        children: [
-            {
-                prop: "factReqAmt",
-                label: "实际请款金额",
-                minWidth: 120,
-                formatter: (value: any) => formatThousandWithPlaces(value),
-                clickable: true, // 点击单元格触发 onClick 事件
-                onClick: (row, column) => {
-                    handleCellEventClick(row, column);
+const columns: any = computed(() => {
+    return [
+        { prop: "subCode", label: "财务科目编码", width: 100, fixed: "left" },
+        {
+            prop: "subName",
+            label: "财务科目名称",
+            minWidth: 200,
+            fixed: "left",
+            align: 'left',
+            treeNode: true,
+        },
+        {
+            prop: "targetAmt",
+            label: "目标成本金额",
+            minWidth: 130,
+            formatter: (value: any) => formatThousandWithPlaces(value, deci.value),
+        },
+        {
+            label: "请款及支付",
+            children: [
+                {
+                    prop: "factReqAmt",
+                    label: "实际请款金额",
+                    minWidth: 130,
+                    formatter: (value: any) => formatThousandWithPlaces(value, deci.value),
+                    clickable: true, // 点击单元格触发 onClick 事件
+                    onClick: (row, column) => {
+                        handleCellEventClick(row, column);
+                    },
                 },
-            },
-            {
-                prop: "paidAmt",
-                label: "已支付金额",
-                minWidth: 120,
-                formatter: (value: any) => formatThousandWithPlaces(value),
-                clickable: true, // 点击单元格触发 onClick 事件
-                onClick: (row, column) => {
-                    handleCellEventClick(row, column);
+                {
+                    prop: "paidAmt",
+                    label: "已支付金额",
+                    minWidth: 130,
+                    formatter: (value: any) => formatThousandWithPlaces(value, deci.value),
+                    clickable: true, // 点击单元格触发 onClick 事件
+                    onClick: (row, column) => {
+                        handleCellEventClick(row, column);
+                    },
                 },
-            },
-            {
-                prop: "unpaidAmt",
-                label: "未支付金额",
-                minWidth: 120,
-                formatter: (value: any) => formatThousandWithPlaces(value),
-                headerTip: {
-                    icon: "QuestionFilled",
-                    content: "未支付金额=实际请款金额−已支付金额",
-                    placement: "top",
-                    width: "200px",
+                {
+                    prop: "unpaidAmt",
+                    label: "未支付金额",
+                    minWidth: 120,
+                    formatter: (value: any) => formatThousandWithPlaces(value, deci.value),
+                    headerTip: {
+                        icon: "QuestionFilled",
+                        content: "未支付金额=实际请款金额−已支付金额",
+                        placement: "top",
+                        width: "200px",
+                    },
                 },
-            },
-        ],
-    },
-    {
-        label: "目标成本对比",
-        children: [
-            {
-                prop: "paidDiffAmt",
-                label: "目标成本与已付差异",
-                minWidth: 160,
-                formatter: (value: any) => formatThousandWithPlaces(value),
-                headerTip: {
-                    icon: "QuestionFilled",
-                    content: "目标成本与已付差异=目标成本金额−已支付金额",
-                    placement: "top",
-                    width: "200px",
+            ],
+        },
+        {
+            label: "目标成本对比",
+            children: [
+                {
+                    prop: "paidDiffAmt",
+                    label: "目标成本与已付差异",
+                    minWidth: 160,
+                    formatter: (value: any) => formatThousandWithPlaces(value, deci.value),
+                    headerTip: {
+                        icon: "QuestionFilled",
+                        content: "目标成本与已付差异=目标成本金额−已支付金额",
+                        placement: "top",
+                        width: "200px",
+                    },
                 },
-            },
-            {
-                prop: "paidRate",
-                label: "已付占目标成本比例",
-                minWidth: 160,
-                headerTip: {
-                    icon: "QuestionFilled",
-                    content: "已付占目标成本比例=已支付金额÷目标成本金额",
-                    placement: "top",
-                    width: "200px",
+                {
+                    prop: "paidRate",
+                    label: "已付占目标成本比例",
+                    minWidth: 160,
+                    headerTip: {
+                        icon: "QuestionFilled",
+                        content: "已付占目标成本比例=已支付金额÷目标成本金额",
+                        placement: "top",
+                        width: "200px",
+                    },
+                    formatter: (value) => formatPercent(value, 2),
                 },
-                formatter: (value) => formatPercent(value, 2),
-            },
-            {
-                prop: "unpaidDiffAmt",
-                label: "目标成本与未付差异",
-                minWidth: 160,
-                formatter: (value: any) => formatThousandWithPlaces(value),
-                headerTip: {
-                    icon: "QuestionFilled",
-                    content: "目标成本与未付差异=目标成本金额−未支付金额",
-                    placement: "top",
-                    width: "200px",
+                {
+                    prop: "unpaidDiffAmt",
+                    label: "目标成本与未付差异",
+                    minWidth: 160,
+                    formatter: (value: any) => formatThousandWithPlaces(value, deci.value),
+                    headerTip: {
+                        icon: "QuestionFilled",
+                        content: "目标成本与未付差异=目标成本金额−未支付金额",
+                        placement: "top",
+                        width: "200px",
+                    },
                 },
-            },
-            {
-                prop: "unpaidRate",
-                label: "未付占目标成本比例",
-                minWidth: 160,
-                headerTip: {
-                    icon: "QuestionFilled",
-                    content: "未付占目标成本比例=未支付金额÷目标成本金额",
-                    placement: "top",
-                    width: "200px",
+                {
+                    prop: "unpaidRate",
+                    label: "未付占目标成本比例",
+                    minWidth: 160,
+                    headerTip: {
+                        icon: "QuestionFilled",
+                        content: "未付占目标成本比例=未支付金额÷目标成本金额",
+                        placement: "top",
+                        width: "200px",
+                    },
+                    formatter: (value) => formatPercent(value, 2),
                 },
-                formatter: (value) => formatPercent(value, 2),
-            },
-        ],
-    },
-];
+            ],
+        },
+    ];
+})
 // 跳转到请款执行明细表
 const handleCellEventClick = (row, column) => {
     console.log("点击单元格事件:", row, column);
@@ -313,13 +370,14 @@ const handleCellEventClick = (row, column) => {
     }
 }
 const buildParams = () => {
-    const { seg, projId, costMid, amountType, statMonth } = queryParams.value;
+    const { seg, projId, costMid, amountType, statMonth, unit } = queryParams.value;
     return {
         seg,
         projId: projId || undefined,
         costMid,
         amountType,
         statMonth,
+        unit
     };
 };
 
@@ -398,6 +456,7 @@ const handleReset = async () => {
     queryParams.value.versionNo = undefined;
     queryParams.value.costMid = undefined;
     queryParams.value.amountType = 'TAX';
+    queryParams.value.unit = '万元';
     queryParams.value.statMonth = dayjs().format("YYYY-MM");
     // 恢复默认板块
     setDefaultSeg();
@@ -557,6 +616,29 @@ onMounted(async () => {
             flex-shrink: 0;
             padding: 15px 20px 0;
             background: #fafbfc;
+            position: relative;
+
+            .unit-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                padding: 4px 12px;
+                font-size: 13px;
+                font-weight: 500;
+                color: #b26a00; // 深琥珀，字清晰
+                background: #fff7e6; // 极浅暖黄
+                border: 1px solid #ffd591; // 柔和橙边
+                border-radius: 14px;
+                white-space: nowrap;
+                user-select: none;
+                position: absolute;
+                right: 15px;
+                top: 15px;
+
+                .el-icon {
+                    font-size: 14px;
+                }
+            }
 
             .control-label {
                 font-size: 14px;
@@ -571,6 +653,25 @@ onMounted(async () => {
                 align-items: center;
                 gap: 6px;
                 flex-wrap: wrap;
+            }
+
+            .unit-switch {
+                margin-left: auto;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+
+                .unit-label {
+                    font-size: 14px;
+                    font-weight: 500;
+                    color: #4a5568;
+                    user-select: none;
+                }
+
+                :deep(.el-radio-button__inner) {
+                    padding: 5px 14px;
+                    font-size: 13px;
+                }
             }
         }
 

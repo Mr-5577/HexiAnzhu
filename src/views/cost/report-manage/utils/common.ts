@@ -1,9 +1,10 @@
 import {
   toBig,
   bigSumNum,
-  roundToTwo,
+  roundBy,
   formatThousandWithPlaces,
 } from "@/utils/big-number";
+import dayjs from "dayjs";
 
 /**
  * 计算树形数据最大深度
@@ -52,9 +53,10 @@ export const segEnum = [
 /**
  * 汇总顶层金额分类
  * @param treeData 顶层节点数组
- * @returns 四个统计卡片数据（金额已千分位格式化，保留 2 位小数）
+ * @param decimal 保留小数位数
+ * @returns 四个统计卡片数据
  */
-export function getSummaryData(treeData: any[]) {
+export function getSummaryData(treeData: any[], decimal: number = 2) {
   const landList: number[] = []; // 土地成本
   const engineeringList: number[] = []; // 工程成本
   const expenseList: number[] = []; // 费用成本
@@ -102,19 +104,22 @@ export function getSummaryData(treeData: any[]) {
         if (MERGE_TO_210.includes(code)) {
           const existing = expenseDetailMap.get(OTHER_CODE);
           if (existing) {
-            existing.total = roundToTwo(toBig(existing.total).plus(total));
+            existing.total = roundBy(
+              toBig(existing.total).plus(total),
+              decimal,
+            );
           } else {
             expenseDetailMap.set(OTHER_CODE, {
               sub_name: OTHER_NAME,
               sub_code: OTHER_CODE,
-              total: roundToTwo(total),
+              total: roundBy(total, decimal),
             });
           }
         } else {
           expenseDetailMap.set(code, {
             sub_name: node.sub_name,
             sub_code: node.sub_code,
-            total: roundToTwo(total),
+            total: roundBy(total, decimal),
           });
         }
         break;
@@ -128,19 +133,37 @@ export function getSummaryData(treeData: any[]) {
       sub_name: item.sub_name,
       sub_code: item.sub_code,
       // 明细金额也格式化
-      total: formatThousandWithPlaces(item.total, 2),
+      total: formatThousandWithPlaces(item.total, decimal),
     }));
 
-  const land = roundToTwo(bigSumNum(landList));
-  const engineering = roundToTwo(bigSumNum(engineeringList));
-  const expense = roundToTwo(bigSumNum(expenseList));
-  const all = roundToTwo(toBig(land).plus(engineering).plus(expense));
+  const land = roundBy(bigSumNum(landList), decimal);
+  const engineering = roundBy(bigSumNum(engineeringList), decimal);
+  const expense = roundBy(bigSumNum(expenseList), decimal);
+  const all = roundBy(toBig(land).plus(engineering).plus(expense), decimal);
 
   return {
-    all: formatThousandWithPlaces(all, 2), // 全部金额（土地 + 工程 + 费用）
-    land: formatThousandWithPlaces(land, 2), // 土地类
-    engineering: formatThousandWithPlaces(engineering, 2), // 工程类
-    expense: formatThousandWithPlaces(expense, 2), // 费用类
+    all: formatThousandWithPlaces(all, decimal), // 全部金额（土地 + 工程 + 费用）
+    land: formatThousandWithPlaces(land, decimal), // 土地类
+    engineering: formatThousandWithPlaces(engineering, decimal), // 工程类
+    expense: formatThousandWithPlaces(expense, decimal), // 费用类
     expenseDetails, // 费用类明细（209/211 已合并到 210，金额已格式化）
   };
 }
+
+
+/**
+ * 日期范围格式化辅助函数
+ * @param dates 日期范围数组
+ * @param type 类型（start: 起始日期，end: 结束日期）
+ */
+export const formatDateRange = (dates, type) => {
+    if (!dates || !Array.isArray(dates) || dates.length < 2) return undefined;
+    const [start, end] = dates;
+    if (type === 'start') {
+        return start ? dayjs(start).startOf('month').format('YYYY-MM-DD') : undefined;
+    }
+    if (type === 'end') {
+        return end ? dayjs(end).endOf('month').format('YYYY-MM-DD') : undefined;
+    }
+    return undefined;
+};

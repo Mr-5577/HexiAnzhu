@@ -78,10 +78,12 @@ const toggleExpand = () => { isExpand.value = !isExpand.value; };
 
             // 统一输入框、下拉、级联、日期选择器样式
             .el-input__wrapper,
+            .el-select__wrapper,
+            .el-input .el-select__wrapper,
             .el-select .el-input__wrapper,
             .el-cascader .el-input__wrapper,
             .el-date-editor .el-input__wrapper {
-                border-radius: 8px;
+                border-radius: 6px;
                 box-shadow: 0 0 0 1px #e2e8f0 inset;
                 transition: box-shadow 0.2s;
 

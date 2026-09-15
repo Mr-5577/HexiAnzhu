@@ -123,14 +123,14 @@ export function buildTreeAndFillData(
       if (node.children && node.children.length > 0) {
         sumParentAmounts(node.children);
         // 使用 BigNumber 汇总子节点
-        const total = new BigNumber(0);
+        let total = new BigNumber(0);
         header.forEach((month) => {
           let sum = new BigNumber(0);
           node.children.forEach((child) => {
             sum = sum.plus(toBig(child[month] || 0));
           });
           node[month] = sum.toNumber();
-          total.plus(sum);
+          total = total.plus(sum);
         });
         node.total = total.toNumber();
       }

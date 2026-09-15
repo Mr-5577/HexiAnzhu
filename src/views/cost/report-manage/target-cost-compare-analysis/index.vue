@@ -120,8 +120,8 @@ const queryParams = ref({
     basePeriodDate: [],   // 基准版期间
     targetPeriodDate: [], // 目标版期间
     amountType: 'EXCL',   // 金额类型：含税(TAX) / 不含税(EXCL)
-    baseVersionType: undefined, // 基准版类型
-    targetVersionType: undefined, // 目标版类型
+    baseVersionType: '最新', // 基准版类型
+    targetVersionType: '上一版', // 目标版类型
 })
 
 const vxeTableRef = ref<InstanceType<typeof VxeEditableTable>>()
@@ -242,7 +242,7 @@ const columns: any = [
             { prop: 'baseVersionNo', label: '版本号', minWidth: 140, formatter: (v) => v ? v : '-' },
             { prop: 'baseArea', label: '建筑面积(㎡)', minWidth: 100, formatter: (v) => formatThousandWithPlaces(v) },
             {
-                prop: 'baseJianAnCost', label: '建安成本(万元)', minWidth: 130, showSummary: true,
+                prop: 'baseJianAnCost', label: '建安成本(万元)', minWidth: 140, showSummary: true,
                 // 表头提示
                 headerTip: {
                     content: '不含示范区、预留费',
@@ -251,13 +251,13 @@ const columns: any = [
                 },
                 formatter: (v) => formatThousandWithPlaces(v)
             },
-            { prop: 'baseShiFanCost', label: '示范区(万元)', minWidth: 100, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
-            { prop: 'baseYuLiuCost', label: '预留费用(万元)', minWidth: 110, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
+            { prop: 'baseShiFanCost', label: '示范区(万元)', minWidth: 120, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
+            { prop: 'baseYuLiuCost', label: '预留费用(万元)', minWidth: 120, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
             {
                 // 小计列=建安成本+示范区+预留费用
                 prop: 'baseSubtotal',
                 label: '小计(万元)',
-                minWidth: 100,
+                minWidth: 120,
                 headerTip: {
                     content: '建安成本+示范区+预留费用',
                     icon: 'QuestionFilled',
@@ -281,7 +281,7 @@ const columns: any = [
             { prop: 'targetVersionNo', label: '版本号', minWidth: 140, formatter: (v) => v ? v : '-' },
             { prop: 'targetArea', label: '建筑面积(㎡)', minWidth: 100, formatter: (v) => formatThousandWithPlaces(v) },
             {
-                prop: 'targetJianAnCost', label: '建安成本(万元)', minWidth: 130,
+                prop: 'targetJianAnCost', label: '建安成本(万元)', minWidth: 140,
                 showSummary: true,
                 headerTip: {
                     content: '不含示范区、预留费',
@@ -290,13 +290,13 @@ const columns: any = [
                 },
                 formatter: (v) => formatThousandWithPlaces(v)
             },
-            { prop: 'targetShiFanCost', label: '示范区(万元)', minWidth: 100, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
-            { prop: 'targetYuLiuCost', label: '预留费用(万元)', minWidth: 110, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
+            { prop: 'targetShiFanCost', label: '示范区(万元)', minWidth: 120, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
+            { prop: 'targetYuLiuCost', label: '预留费用(万元)', minWidth: 120, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
             {
                 // 小计列=建安成本+示范区+预留费用
                 prop: 'targetSubtotal',
                 label: '小计(万元)',
-                minWidth: 110,
+                minWidth: 120,
                 showSummary: true,
                 headerTip: {
                     content: '建安成本+示范区+预留费用',
@@ -389,8 +389,8 @@ const handleReset = () => {
         basePeriodDate: [],
         targetPeriodDate: [],
         amountType: 'EXCL',
-        baseVersionType: undefined,
-        targetVersionType: undefined,
+        baseVersionType: '最新',
+        targetVersionType: '上一版',
     }
     handleSearch()
 }

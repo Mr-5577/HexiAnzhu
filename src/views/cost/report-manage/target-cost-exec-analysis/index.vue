@@ -75,6 +75,8 @@
             </template>
         </BaseSearchCard>
 
+        <ExecStatistics :data="tableData"></ExecStatistics>
+
         <div class="content-placeholder">
             <div class="demo-controls">
                 <span class="control-label">科目层级</span>
@@ -98,6 +100,11 @@
                 <!-- 状态标签 -->
                 <template #warn="{ row }">
                     <span class="status-dot" :style="{ backgroundColor: getEnumColor(warnEnum, row.warn) }"></span>
+                </template>
+                <!-- 已发生含税金额 -->
+                <template #dynAmt="{ row }">
+                    <el-button type="primary" link @click="openDetailDialog(row)" :disabled="row.children?.length">{{
+                        formatThousandWithPlaces(row.dynAmt) }}</el-button>
                 </template>
             </vxe-editable-table>
         </div>
@@ -126,6 +133,7 @@ import { buildTreeFromList } from '../utils/target-cost-exec-analysis.ts'
 import { calcMaxDepth, levelMap, warnEnum, segEnum } from '../utils/common.ts'
 import { useMenuStore } from "@/stores/menu-store";
 import { PERMISSIONS } from '@/constants/permission.ts'
+import ExecStatistics from './exec-statistics.vue'
 
 defineOptions({ name: 'target-cost-execution-analysis' })
 
@@ -256,18 +264,8 @@ const columns: any = [
                 prop: 'dynAmt',
                 label: '含税',
                 minWidth: 100,
+                slots: { default: "dynAmt" },
                 formatter: (value) => formatThousandWithPlaces(value),
-                clickable: true, // 点击单元格触发 onClick 事件
-                onClick: (data) => {
-                    console.log("点击了已发生数据:", data);
-                    const { children, ...rest } = data
-                    const newParams = {
-                        ...queryParams.value,
-                        ...rest,
-                    }
-                    currentRow.value = newParams
-                    dialogVisible.value = true; // 打开弹窗
-                },
             },
             {
                 prop: 'dynExclAmt',
@@ -306,7 +304,19 @@ const columns: any = [
         },
     },
 ]
-
+const openDetailDialog = (row: any) => {
+    const { children, ...rest } = row
+    if (children && children.length > 0) {
+        ElMessage.warning('请先展开子节点')
+        return
+    }
+    const newParams = {
+        ...queryParams.value,
+        ...rest,
+    }
+    currentRow.value = newParams
+    dialogVisible.value = true; // 打开弹窗
+}
 // ---------- 获取项目数据 ----------
 const getProjectOptions = async () => {
     try {
