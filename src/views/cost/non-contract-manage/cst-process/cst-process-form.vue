@@ -54,11 +54,9 @@
         </div>
 
         <!-- 成本分摊  费用类型所属大类为建安类，并且是编辑/查看时显示  :visible="isShowCostAllocation && formData.processAmt > 0" -->
-        <CostAllocationCard v-if="menuStore.hasExactPermission(PERMISSIONS.COST_ALLOC_NCON_PROC)" :visible="isShowCostAllocation"
-          :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'NCON_PROC'"
-          :projId="formData.projId" :projName="formData.projName" :displayName="formData.processName"
-          :allocAmt="formData.processAmt" :bizBillId="processData.nconBillId" :cstMData="cstMData"
-          @selectData="getSelectCostAllocation" />
+        <NconCostAllocationCard v-if="menuStore.hasExactPermission(PERMISSIONS.COST_ALLOC_NCON_PROC)"
+          :visible="isShowCostAllocation" :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn"
+          :bizType="'NCON_PROC'" :bizBillId="processData.nconBillId" @selectData="getSelectCostAllocation" />
 
         <!-- 相关附件 -->
         <div class="item-card">
@@ -94,7 +92,7 @@ import { dateUtil } from "@/utils/date-util";
 import { buildTree } from "@/utils/tree";
 import BillHeader from "@/components/business/bill-components/bill-header.vue";
 import BillInfo from "@/components/business/bill-components/bill-info.vue";
-import CostAllocationCard from "@/views/cost/cost-allocation/ncon-cost-alloc/ncon-cost-alloc-card.vue";
+import NconCostAllocationCard from "@/views/cost/cost-allocation/ncon-cost-alloc/ncon-cost-alloc-card.vue";
 import { useMenuStore } from "@/stores/menu-store";
 import { PERMISSIONS } from "@/constants/permission";
 
@@ -228,6 +226,9 @@ const formRules: FormRules = {
 
 // 费用类型所属大类是不是建安类
 const isShowCostAllocation = computed(() => {
+  // 新增不显示成本分摊
+  if(isAdd.value) return false;
+  
   // 如果没有选择费用类型，直接返回 false
   if (!formData.value.finaTypeId) return false;
   // 找到选择的费用类型

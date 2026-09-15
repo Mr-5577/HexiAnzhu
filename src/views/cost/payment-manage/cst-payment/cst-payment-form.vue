@@ -275,11 +275,9 @@
         </div>
 
         <!-- 成本分摊 费用类型所属大类为建安类并且请款类型为正常请款0时显示 :visible="isShowCostAllocation && formData.reqType == 0"  -->
-        <CostAllocationCard v-if="menuStore.hasExactPermission(PERMISSIONS.COST_ALLOC_NCON_CST)"
+        <NconCostAllocationCard v-if="menuStore.hasExactPermission(PERMISSIONS.COST_ALLOC_NCON_CST)"
           :visible="isShowCostAllocation" :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn"
-          :bizType="'NCON_CST'" :projId="formData.projId" :projName="formData.projName"
-          :displayName="cstProcessData.processName" :allocAmt="actualReqAmt" :bizBillId="paymentData.nconBillId"
-          :cstMData="cstMData" @selectData="getSelectCostAllocation" />
+          :bizType="'NCON_CST'" :bizBillId="paymentData.nconBillId" @selectData="getSelectCostAllocation" />
 
         <!-- 相关附件 -->
         <div class="item-card">
@@ -344,7 +342,7 @@ import UploadInvoiceDialog from "@/components/business/upload-invoice-dialog.vue
 import { buildTree } from "@/utils/tree.ts";
 import BillHeader from "@/components/business/bill-components/bill-header.vue";
 import BillInfo from "@/components/business/bill-components/bill-info.vue";
-import CostAllocationCard from "@/views/cost/cost-allocation/ncon-cost-alloc/ncon-cost-alloc-card.vue";
+import NconCostAllocationCard from "@/views/cost/cost-allocation/ncon-cost-alloc/ncon-cost-alloc-card.vue";
 import FinanceAllocationDialog from "@/views/cost/finance-allocation/finance-allocation-dialog.vue";
 import { useMenuStore } from "@/stores/menu-store";
 import { toBig, formatDecimal, BigNumber } from "@/utils/big-number.ts";
@@ -387,7 +385,7 @@ const uploadVisibleDialog = ref(false);
 const financeAllocVisible = ref(false); // 财务分摊弹窗
 const payTypeOptions = computed(() => {
   const list = getDictList(dictMapping.payType);
-  if(isOffsetByInvoice.value) {
+  if (isOffsetByInvoice.value) {
     return list
   } else {
     // 过滤掉冲账选项
@@ -480,6 +478,9 @@ const isSuperAdmin = computed(() => {
 
 // 费用类型所属大类是不是建安类
 const isShowCostAllocation = computed(() => {
+  // 新增不显示成本分摊
+  if(isAdd.value) return false;
+  
   // 如果没有选择费用类型，直接返回 false
   if (!formData.value.finaTypeId) return false;
   // 找到选择的费用类型
@@ -491,7 +492,7 @@ const isShowCostAllocation = computed(() => {
   const largeData = feeTypeFlatOptions.value.find(
     (item) => item.id === targetData.pid,
   );
-  // 如果大类存在且 finaTypeCode === '03'（建安类），则显示成本分摊
+  // 如果大类存在且 finaTypeCode === '03'（建安类），显示成本分摊
   return !!(largeData && largeData.finaTypeCode === "03");
 });
 const getSelectCostAllocation = (data: any) => {

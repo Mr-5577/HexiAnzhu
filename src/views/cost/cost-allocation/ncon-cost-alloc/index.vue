@@ -170,26 +170,14 @@ import { feePaymentApi } from "@/api/cost/non-contract-manage/fee-payment-api.ts
 import { toBig, formatDecimal, BigNumber } from "@/utils/big-number.ts";
 
 interface Props {
-  projId?: number; // 项目ID
-  projName?: string; // 项目名称
-  displayName?: string; // 事项名称
   bizType?: string; // 业务类型
-  allocAmt?: number; // 分摊金额(含税)
-  allocExclAmt?: number; // 分摊金额(不含税)
   isDialogMode?: boolean; // 是否为弹窗模式
-  cstMData?: any; // 弹窗传参
   dialogMode?: string;
   bizBillId?: number;
 }
 const props = withDefaults(defineProps<Props>(), {
-  projId: undefined,
-  projName: "",
-  displayName: "",
   bizType: "",
-  allocAmt: 0,
-  allocExclAmt: 0,
   isDialogMode: false, // 页面模式，默认非弹窗模式
-  cstMData: null,
   dialogMode: "", // 弹窗模式， view  edit
   bizBillId: undefined,
 });
@@ -733,31 +721,7 @@ const processPopupData = async (cstList: any) => {
  * 弹窗打开初始化
  */
 const initPage = async () => {
-  // 解析参数，业务弹窗打开
-  pageParams.value = {
-    projId: props.projId,
-    projName: props.projName || "",
-    displayName: props.displayName || "",
-    bizType: props.bizType || "",
-    billId: undefined,
-    bizKeyId: undefined,
-    allocAmt: props.allocAmt || 0,
-    allocExclAmt: props.allocExclAmt || 0,
-  };
-  console.log("分摊弹窗参数:", pageParams.value);
-  // 获取项目产品类型列表
-  // await Promise.all([
-  //   getBusiSegList(),
-  //   getProductList(),
-  //   getBuildingListByProjId(),
-  // ]);
-  // 弹窗模式则是从erp系统打开弹窗操作，否则就是OA单独引用分摊页面
-  // if (props?.cstMData && props.cstMData?.allocDs?.length > 0) {
-  //   const detaiList = props.cstMData?.allocDs || [];
-  //   processPopupData(detaiList);
-  // }
-
-  // erp打开也能修改
+  // erp打开修改
   bizType = props.bizType;
   billId = props.bizBillId;
   loadAllocationData();
@@ -1709,9 +1673,7 @@ const getSubmitData = async () => {
 onMounted(async () => {
   // 弹窗模式时初始化
   if (isDialogMode.value) {
-    if (props.projId) {
-      await initPage();
-    }
+    await initPage();
   } else {
     // OA打开
     await loadAllocationData();
@@ -1893,6 +1855,7 @@ defineExpose({
   margin-top: 16px;
   z-index: 20;
 }
+
 .card-info {
   background: #ffffff;
   border-radius: 8px;

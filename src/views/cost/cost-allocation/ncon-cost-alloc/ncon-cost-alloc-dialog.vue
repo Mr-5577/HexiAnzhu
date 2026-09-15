@@ -3,9 +3,8 @@
   <base-modal v-model="dialogVisible" title="成本分摊" width="1500px" :top="'8vh'" :confirm-loading="confirmLoading"
     :confirm-text="'确定'" :showConfirmButton="props.dialogMode != 'view'" :showCancelButton="props.dialogMode != 'view'"
     @confirm="handleConfirm" @close="handleClose">
-    <NconCostAlloc ref="costAllocationRef" :projId="props.projId" :projName="props.projName" :bizBillId="bizBillId"
-      :displayName="props.displayName" :bizType="props.bizType" :allocAmt="props.allocAmt" :cstMData="props.cstMData"
-      :isDialogMode="true" :dialogMode="props.dialogMode"></NconCostAlloc>
+    <NconCostAlloc ref="costAllocationRef" :bizBillId="bizBillId" :bizType="props.bizType" :isDialogMode="true"
+      :dialogMode="props.dialogMode"></NconCostAlloc>
   </base-modal>
 </template>
 
@@ -16,24 +15,14 @@ import NconCostAlloc from "./index.vue";
 
 interface Props {
   modelValue: boolean;
-  projId?: number;
-  projName?: string;
-  displayName?: string;
   bizType?: string;
-  allocAmt?: number;
-  cstMData?: any;
   dialogMode?: string;
   bizBillId?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
-  projId: undefined,
-  projName: "",
-  displayName: "",
   bizType: undefined,
-  allocAmt: 0,
-  cstMData: null,
   dialogMode: "view", // 弹窗模式，默认为查看模式 view  edit
   bizBillId: undefined,
 });

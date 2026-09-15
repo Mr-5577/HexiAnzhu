@@ -29,8 +29,7 @@
     </el-row>
 
     <!-- 分摊详情弹窗 -->
-    <NconCostAllocDialog v-model="dialogVisible" :projId="props.projId" :projName="props.projName" :bizBillId="bizBillId"
-      :displayName="props.displayName" :bizType="props.bizType" :allocAmt="props.allocAmt" :cstMData="props.cstMData"
+    <NconCostAllocDialog v-model="dialogVisible" :bizBillId="bizBillId" :bizType="props.bizType"
       :dialogMode="props.dialogMode" @select="getData" />
   </div>
 </template>
@@ -38,7 +37,6 @@
 <script setup lang="ts">
 import { ref, computed, toRefs } from "vue";
 import NconCostAllocDialog from "./ncon-cost-alloc-dialog.vue";
-import { ElMessage } from "element-plus";
 import {
   allocStatusEnum,
   allocWarnEnum,
@@ -54,18 +52,10 @@ interface Props {
   allocationStatus?: number;
   /** 预警状态 */
   warningStatus?: number;
-  /** 项目ID */
-  projId: number | undefined;
-  projName?: string;
-  displayName?: string;
   /** 业务单据ID */
   bizBillId?: number | undefined;
   /** 业务类型 */
   bizType?: string;
-  /** 成本金额 */
-  allocAmt?: number;
-  /** 成本分摊数据 */
-  cstMData?: any;
   /** 弹窗模式 */
   dialogMode?: string;
 }
@@ -74,13 +64,8 @@ const props = withDefaults(defineProps<Props>(), {
   visible: true,
   allocationStatus: undefined,
   warningStatus: undefined,
-  projId: undefined,
-  projName: undefined,
-  displayName: undefined,
   bizBillId: undefined,
   bizType: undefined,
-  allocAmt: 0,
-  cstMData: null,
   dialogMode: "edit", // 弹窗模式，默认为查看模式 view  edit
 });
 
@@ -96,12 +81,7 @@ const getData = (dataList: any) => {
 };
 // 处理分摊详情按钮点击
 const handleDetail = () => {
-  // 如果有传入项目ID，则打开内部弹窗
-  if (props.projId) {
-    dialogVisible.value = true;
-  } else {
-    ElMessage.warning("请先选择项目");
-  }
+  dialogVisible.value = true;
   // 触发外部事件，让父组件自行处理
   emit("detail-click");
 };
