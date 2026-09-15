@@ -1,85 +1,94 @@
 <!-- 非合同请款 列表 -->
 <template>
   <div class="cst-payment-wrapper">
-    <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px">
-      <el-form-item label="标题" prop="bizTitle">
-        <el-input v-model="queryParams.bizTitle" placeholder="请输入标题" clearable style="width: 220px" />
-      </el-form-item>
-      <el-form-item label="付款单号" prop="bizNo">
-        <el-input v-model="queryParams.bizNo" placeholder="请输入单号" clearable style="width: 220px" />
-      </el-form-item>
-      <el-form-item label="业务板块" prop="segId">
-        <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px">
-          <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
-        </el-select>
-      </el-form-item>
+    <BaseSearchCard>
+      <template #form>
+        <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px">
+          <el-form-item label="业务板块" prop="segId">
+            <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px">
+              <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
+            </el-select>
+          </el-form-item>
 
-      <el-form-item label="项目名称" prop="projId">
-        <el-cascader v-model="queryParams.projId" :options="projectOptions" :show-all-levels="false" :props="{
-          expandTrigger: 'hover',
-          emitPath: false,
-          checkStrictly: false,
-          value: 'orgId',
-          label: 'orgName',
-          children: 'children',
-        }" placeholder="请选择项目" style="width: 220px" clearable />
-      </el-form-item>
+          <el-form-item label="项目名称" prop="projId">
+            <el-cascader v-model="queryParams.projId" :options="projectOptions" :show-all-levels="false" :props="{
+              expandTrigger: 'hover',
+              emitPath: false,
+              checkStrictly: false,
+              value: 'orgId',
+              label: 'orgName',
+              children: 'children',
+            }" placeholder="请选择项目" style="width: 220px" clearable />
+          </el-form-item>
 
-      <el-form-item label="审批状态" prop="status">
-        <el-select v-model="queryParams.status" placeholder="请选择状态" clearable style="width: 220px">
-          <el-option v-for="item in conBillStatusEnum" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="创建人" prop="createId">
-        <el-cascader ref="projCascaderRef" v-model="queryParams.createId" :options="empTreeData"
-          :show-all-levels="false" :props="{
-            expandTrigger: 'click',
-            emitPath: false,
-            checkStrictly: false,
-            value: 'orgId',
-            label: 'orgName',
-            children: 'children',
-            // 通过 leaf 属性标识哪些是叶子节点（可选的）
-            leaf: (data) => {
-              // dataType: 0 表示人员，即叶子节点
-              return data.dataType === 0;
-            },
-          }" placeholder="请选择" style="width: 220px" clearable filterable />
-      </el-form-item>
-      <el-form-item label="创建日期" prop="time">
-        <el-date-picker v-model="queryParams.time" type="daterange" range-separator="至" value-format="YYYY-MM-DD"
-          start-placeholder="开始日期" end-placeholder="结束日期" style="width: 220px" />
-      </el-form-item>
+          <el-form-item label="审批状态" prop="status">
+            <el-select v-model="queryParams.status" placeholder="请选择状态" clearable style="width: 220px">
+              <el-option v-for="item in conBillStatusEnum" :key="item.value" :label="item.label" :value="item.value" />
+            </el-select>
+          </el-form-item>
 
-      <el-form-item>
+          <el-form-item label="创建日期" prop="time">
+            <el-date-picker v-model="queryParams.time" type="daterange" range-separator="至" value-format="YYYY-MM-DD"
+              start-placeholder="开始日期" end-placeholder="结束日期" style="width: 220px" />
+          </el-form-item>
+
+          <!-- <el-form-item label="标题" prop="bizTitle">
+            <el-input v-model="queryParams.bizTitle" placeholder="请输入标题" clearable style="width: 220px" />
+          </el-form-item>
+          <el-form-item label="付款单号" prop="bizNo">
+            <el-input v-model="queryParams.bizNo" placeholder="请输入单号" clearable style="width: 220px" />
+          </el-form-item>
+          <el-form-item label="创建人" prop="createId">
+            <el-cascader ref="projCascaderRef" v-model="queryParams.createId" :options="empTreeData"
+              :show-all-levels="false" :props="{
+                expandTrigger: 'click',
+                emitPath: false,
+                checkStrictly: false,
+                value: 'orgId',
+                label: 'orgName',
+                children: 'children',
+                // 通过 leaf 属性标识哪些是叶子节点（可选的）
+                leaf: (data) => {
+                  // dataType: 0 表示人员，即叶子节点
+                  return data.dataType === 0;
+                },
+              }" placeholder="请选择" style="width: 220px" clearable filterable />
+          </el-form-item> -->
+
+        </el-form>
+      </template>
+      <template #actions>
+        <el-input v-model="queryParams.keyWord" placeholder="请输入标题、付款单号、创建人" clearable style="width:636px" />
         <el-button type="primary" @click="handleSearch"> 搜索 </el-button>
         <el-button @click="handleReset">重置</el-button>
         <el-button type="primary" @click="handleAdd">新增</el-button>
-      </el-form-item>
-    </el-form>
-
-    <base-table :columns="columns" :tableData="paginatedData" :loading="tableLoading" :rowKey="'id'" :total="total"
-      :current-page="currentPage" :page-size="pageSize" @pagination-change="handlePaginationChange">
-      <template #status="{ row }">
-        <el-tag size="small" :type="getEnumType(conBillStatusEnum, row?.status || 0)">
-          {{ getEnumLabel(conBillStatusEnum, row?.status || 0) }}
-        </el-tag>
       </template>
+    </BaseSearchCard>
 
-      <template #actions="{ row }">
-        <el-button type="primary" link @click="handleEdit(row)"
-          :disabled="row.status != 0 || row.createId !== userStore.userInfo.mdUserId">
-          编辑
-        </el-button>
-        <el-button type="danger" link @click="handleDelete(row)"
-          :disabled="row.status != 0 || row.createId !== userStore.userInfo.mdUserId">
-          删除
-        </el-button>
-        <el-button type="primary" link @click="handleDetail(row)">
-          详情
-        </el-button>
-      </template>
-    </base-table>
+    <div class="table-wrapper">
+      <base-table :columns="columns" :tableData="paginatedData" :loading="tableLoading" :rowKey="'id'" :total="total"
+        :current-page="currentPage" :page-size="pageSize" @pagination-change="handlePaginationChange">
+        <template #status="{ row }">
+          <el-tag size="small" :type="getEnumType(conBillStatusEnum, row?.status || 0)">
+            {{ getEnumLabel(conBillStatusEnum, row?.status || 0) }}
+          </el-tag>
+        </template>
+
+        <template #actions="{ row }">
+          <el-button type="primary" link @click="handleEdit(row)"
+            :disabled="row.status != 0 || row.createId !== userStore.userInfo.mdUserId">
+            编辑
+          </el-button>
+          <el-button type="danger" link @click="handleDelete(row)"
+            :disabled="row.status != 0 || row.createId !== userStore.userInfo.mdUserId">
+            删除
+          </el-button>
+          <el-button type="primary" link @click="handleDetail(row)">
+            详情
+          </el-button>
+        </template>
+      </base-table>
+    </div>
   </div>
 </template>
 
@@ -97,6 +106,7 @@ import { conBillStatusEnum } from "@/constants/contract-manage/enums";
 import { roleApi } from "@/api/system/role-api";
 import { useUserStore } from "@/stores/user-store";
 import { formatThousandWithPlaces } from "@/utils/big-number";
+import BaseSearchCard from "@/components/base/base-search-card.vue";
 
 defineOptions({ name: "cst-payment" });
 
@@ -111,6 +121,7 @@ const queryParams = ref({
   bizNo: undefined,
   bizTitle: undefined,
   time: [],
+  keyWord: undefined,
 });
 // 业务板块
 const segOptions = ref([]);
@@ -166,6 +177,7 @@ const getDataList = async () => {
       bizNo: queryParams.value.bizNo,
       createDateStart: queryParams.value.time?.[0] || "",
       createDateEnd: queryParams.value.time?.[1] || "",
+      keyWord: queryParams.value.keyWord,
     };
     const res = await cstPaymentApi.getCstPaymentList(params);
     if (res.code === 200) {
@@ -188,13 +200,14 @@ const handleSearch = () => {
 
 const handleReset = () => {
   queryParams.value = {
-    projId: undefined,
     segId: undefined,
+    projId: undefined,
     status: undefined,
     createId: undefined,
-    bizTitle: undefined,
     bizNo: undefined,
+    bizTitle: undefined,
     time: [],
+    keyWord: undefined,
   };
   getDataList();
 };
@@ -286,6 +299,18 @@ onMounted(async () => {
   flex: 1;
   padding: 15px;
   box-sizing: border-box;
-  background: #fff;
+  // background: #fff;
+
+  .table-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    padding: 12px 12px;
+    box-sizing: border-box;
+  }
 }
 </style>

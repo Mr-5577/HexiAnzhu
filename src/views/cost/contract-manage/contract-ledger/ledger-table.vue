@@ -1,50 +1,57 @@
 <!-- 合同台账列表 -->
 <template>
   <div class="ledger-table-wrapper">
-    <el-form :model="queryParams" ref="queryRef" :inline="true">
-      <el-form-item label="合同名称" prop="conName">
-        <el-input v-model="queryParams.conName" placeholder="请输入合同名称" clearable style="width: 180px" />
-      </el-form-item>
-      <el-form-item label="供应商名称" prop="supName">
-        <el-input v-model="queryParams.supName" placeholder="请输入供应商名称" clearable style="width: 180px" />
-      </el-form-item>
-      <el-form-item label="合同编号" prop="conSysNo">
-        <el-input v-model="queryParams.conSysNo" placeholder="请输入合同编号" clearable style="width: 180px" />
-      </el-form-item>
-      <el-form-item label="关联编号" prop="bizNo">
-        <el-input v-model="queryParams.bizNo" placeholder="请输入关联编号" clearable style="width: 180px" />
-      </el-form-item>
-      <el-form-item label="合同分类" prop="conTypeId">
-        <ConTypeSelector v-model="queryParams.conTypeId" placeholder="请选择合同分类" style="width: 180px" :multiple="false"
-          clearable filterable />
-      </el-form-item>
-      <el-form-item label="合同状态" prop="conStatus">
-        <el-select v-model="queryParams.conStatus" placeholder="请选择合同状态" clearable style="width: 180px">
-          <el-option v-for="item in ConStatusEnum" :key="item.value" :label="item.label" :value="item.value" />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="产值确认方式" prop="payMethod">
-        <EnumSelect v-model="queryParams.payMethod" :options="PayTypeEnum" clearable placeholder="请选择产值确认方式"
-          :width="'180px'" />
-      </el-form-item>
-      <el-form-item label="经办人" prop="agentId">
-        <ChooseEmployee v-model="queryParams.agentId" :show-all-levels="false" placeholder="请选择" style="width: 180px"
-          clearable filterable />
-      </el-form-item>
-      <el-form-item label="创建人" prop="createId">
-        <ChooseEmployee v-model="queryParams.createId" :show-all-levels="false" placeholder="请选择" style="width: 180px"
-          clearable filterable />
-      </el-form-item>
-      <el-form-item label="创建时间" prop="time">
-        <el-date-picker v-model="queryParams.time" type="daterange" range-separator="-" start-placeholder="开始日期"
-          end-placeholder="结束日期" format="YYYY-MM-DD" value-format="YYYY-MM-DD" style="width: 220px" clearable />
-      </el-form-item>
-      <el-form-item>
+    <BaseSearchCard>
+      <template #form>
+        <el-form :model="queryParams" ref="queryRef" label-width="90px" :inline="true">
+          <el-form-item label="合同分类" prop="conTypeId">
+            <ConTypeSelector v-model="queryParams.conTypeId" placeholder="请选择合同分类" style="width: 180px"
+              :multiple="false" clearable filterable />
+          </el-form-item>
+          <el-form-item label="合同状态" prop="conStatus">
+            <el-select v-model="queryParams.conStatus" placeholder="请选择合同状态" clearable style="width: 180px">
+              <el-option v-for="item in ConStatusEnum" :key="item.value" :label="item.label" :value="item.value" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="产值确认方式" prop="payMethod">
+            <EnumSelect v-model="queryParams.payMethod" :options="PayTypeEnum" clearable placeholder="请选择产值确认方式"
+              :width="'180px'" />
+          </el-form-item>
+          <el-form-item label="创建时间" prop="time">
+            <el-date-picker v-model="queryParams.time" type="daterange" range-separator="-" start-placeholder="开始日期"
+              end-placeholder="结束日期" format="YYYY-MM-DD" value-format="YYYY-MM-DD" style="width: 220px" clearable />
+          </el-form-item>
+
+          <!-- <el-form-item label="合同名称" prop="conName">
+            <el-input v-model="queryParams.conName" placeholder="请输入合同名称" clearable style="width: 180px" />
+          </el-form-item>
+          <el-form-item label="供应商名称" prop="supName">
+            <el-input v-model="queryParams.supName" placeholder="请输入供应商名称" clearable style="width: 180px" />
+          </el-form-item>
+          <el-form-item label="合同编号" prop="conSysNo">
+            <el-input v-model="queryParams.conSysNo" placeholder="请输入合同编号" clearable style="width: 180px" />
+          </el-form-item>
+          <el-form-item label="关联编号" prop="bizNo">
+            <el-input v-model="queryParams.bizNo" placeholder="请输入关联编号" clearable style="width: 180px" />
+          </el-form-item>
+          <el-form-item label="经办人" prop="agentId">
+            <ChooseEmployee v-model="queryParams.agentId" :show-all-levels="false" placeholder="请选择"
+              style="width: 180px" clearable filterable />
+          </el-form-item>
+          <el-form-item label="创建人" prop="createId">
+            <ChooseEmployee v-model="queryParams.createId" :show-all-levels="false" placeholder="请选择"
+              style="width: 180px" clearable filterable />
+          </el-form-item> -->
+        </el-form>
+      </template>
+      <template #actions>
+        <el-input v-model="queryParams.keyWord" placeholder="请输入合同名称、合同编号、供应商名称、关联编号、经办人、创建人" clearable
+          style="width:556px" />
         <el-button type="primary" @click="handleSearch"> 搜索 </el-button>
         <el-button @click="handleReset">重置</el-button>
         <el-button type="primary" @click="handleAdd">新增</el-button>
-      </el-form-item>
-    </el-form>
+      </template>
+    </BaseSearchCard>
 
     <base-table :columns="columns" :tableData="tableData" :loading="tableLoading" :rowKey="'id'" :total="total"
       :current-page="currentPage" :page-size="pageSize" @pagination-change="handlePaginationChange">
@@ -87,7 +94,6 @@ import { computed, ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { useRouter } from "vue-router";
-import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 import { largeScreenApi } from "@/api/sales/large-screen-api";
 import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api";
@@ -95,18 +101,15 @@ import {
   ConPropertyEnum,
   PriceTypeEnum,
   ConStatusEnum,
-  getLabel,
   PayTypeEnum,
 } from "@/constants/contract-manage/enums";
 import { getEnumLabel, getEnumType } from "@/utils/enum";
 import { conBillStatusEnum } from "@/constants/contract-manage/enums.ts"
-import {
-  HConMain,
-  HConMainQuery,
-} from "@/types/cost/contract-manage/contract-ledger-type";
+import { HConMain } from "@/types/cost/contract-manage/contract-ledger-type";
 import { useUserStore } from "@/stores/user-store";
 import ConTypeSelector from "@/components/business/con-type-selector.vue";
 import EnumSelect from "@/components/base/base-enum-select.vue";
+import BaseSearchCard from "@/components/base/base-search-card.vue";
 
 defineOptions({ name: "contract-ledger-table" });
 
@@ -132,15 +135,16 @@ const queryParams = ref({
   projMguId: undefined,
   conStatus: undefined,
   projId: undefined,
-  conName: "",
-  supName: "",
+  conName: undefined,
+  supName: undefined,
   conTypeId: undefined,
   agentId: undefined,
   createId: undefined,
-  conSysNo: "",
-  bizNo: "",
+  conSysNo: undefined,
+  bizNo: undefined,
   payMethod: undefined,
   time: [],
+  keyWord: undefined,
 });
 // 项目列表
 const projectOptions = ref([]);
@@ -202,6 +206,7 @@ const getDataList = async () => {
       conSysNo: queryParams.value.conSysNo,
       bizNo: queryParams.value.bizNo,
       payMethod: queryParams.value.payMethod,
+      keyWord: queryParams.value.keyWord,
       ...params,
       createDateStart: startDate,
       createDateEnd: endDate,
@@ -241,14 +246,15 @@ const handleReset = () => {
     projMguId: undefined,
     conStatus: undefined,
     projId: undefined,
-    conName: "",
-    supName: "",
+    conName: undefined,
+    supName: undefined,
     conTypeId: undefined,
     agentId: undefined,
     createId: undefined,
-    conSysNo: "",
-    bizNo: "",
+    conSysNo: undefined,
+    bizNo: undefined,
     payMethod: undefined,
+    keyWord: undefined,
     time: [],
   };
   resetPagination();
