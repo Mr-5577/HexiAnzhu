@@ -1168,10 +1168,11 @@ function collectFeeTypeIds(nodes: any[], acc: any[] = []) {
 
 const needForceRise = computed(() => {
   if (!conTypeIsJianAn.value) return false;
-  const req = Number(formData.value.reqAmt) || 0;
-  const payable = Number(formData.value.sumAppyAmt) || 0;
-  const unlock = Number(formData.value.unlockAmt) || 0;
-  return (req + payable > unlock) && formData.value.payTypeId !== ADVANCE_PAY_TYPE; // 建安类 且 请款总额+累计已请款 > 已解锁
+  const req = toBig(formData.value.reqAmt ?? 0);
+  const payable = toBig(formData.value.sumAppyAmt ?? 0);
+  const unlock = toBig(formData.value.unlockAmt ?? 0);
+  // 建安类 且 请款总额 + 累计已请款 > 已解锁
+  return req.plus(payable).isGreaterThan(unlock) && formData.value.payTypeId !== ADVANCE_PAY_TYPE;
 });
 
 /** 是否「来票冲账」 1：来票冲账  0：请款  此时仅保留发票登记，其余明细/收款账号全部隐藏，校验一并放开 */
@@ -1331,7 +1332,6 @@ const handleDeleteDed = (row) => {
 };
 
 const handleDedSave = async ({ row, column, newValue, oldValue, rowIndex }) => {
-  ;
   if (column === "dedTypeId") {
     const targetData = dedTypeOptions.value?.find((item) => item.id == newValue);
     if (targetData) {
@@ -2351,7 +2351,7 @@ const validateDetailTables = (): boolean => {
         ElMessage.error("请款明细：每一行必须填写 付款方式 与 付款金额");
         return false;
       }
-      if (row.payWayId === 2066 && row.payAmt < row.dedRoomAmt) {
+      if (row.payWayId === 2066 && toBig(row.payAmt ?? 0).isLessThan(toBig(row.dedRoomAmt ?? 0))) {
         ElMessage.error("请款明细：抵房金额不能大于付款金额！");
         return false;
       }
