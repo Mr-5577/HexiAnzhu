@@ -3,10 +3,8 @@
   <base-modal v-model="dialogVisible" title="成本分摊" width="1500px" :top="'8vh'" :confirm-loading="confirmLoading"
     :confirm-text="'确定'" :showConfirmButton="props.dialogMode != 'view'" :showCancelButton="props.dialogMode != 'view'"
     @confirm="handleConfirm" @close="handleClose">
-    <ConCostAlloc ref="costAllocationRef" :projId="props.projId" :projName="props.projName"
-      :displayName="props.displayName" :bizType="props.bizType" :allocAmt="props.allocAmt" :cstMData="props.cstMData"
-      :isDialogMode="true" :dialogMode="props.dialogMode" :bizBillId="props.bizBillId" :conId="props.conId"
-      :bizKeyId="props.bizKeyId">
+    <ConCostAlloc ref="costAllocationRef" :bizType="props.bizType" :isDialogMode="true" :dialogMode="props.dialogMode"
+      :bizBillId="props.bizBillId" :bizKeyId="props.bizKeyId">
     </ConCostAlloc>
   </base-modal>
 </template>
@@ -18,28 +16,16 @@ import ConCostAlloc from "./index.vue";
 
 interface Props {
   modelValue: boolean;
-  projId?: number;
-  projName?: string;
-  displayName?: string;
   bizType?: string;
   bizBillId?: number;
-  conId?: number;
-  allocAmt?: number;
-  cstMData?: any;
   dialogMode?: string;
   bizKeyId?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
-  projId: undefined,
-  projName: "",
-  displayName: "",
   bizType: undefined,
   bizBillId: undefined,
-  conId: undefined,
-  allocAmt: 0,
-  cstMData: null,
   dialogMode: "edit", // 弹窗模式，默认为查看模式 view  edit
   bizKeyId: 0,
 });

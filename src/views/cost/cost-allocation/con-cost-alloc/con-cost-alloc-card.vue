@@ -29,9 +29,8 @@
     </el-row>
 
     <!-- 分摊详情弹窗 -->
-    <ConCostAllocDialog v-model="dialogVisible" :projId="props.projId" :projName="props.projName"
-      :displayName="props.displayName" :bizType="props.bizType" :allocAmt="props.allocAmt" :bizBillId="props.bizBillId"
-      :conId="props.conId" :cstMData="props.cstMData" :dialogMode="props.dialogMode" @select="getData" />
+    <ConCostAllocDialog v-model="dialogVisible" :bizType="props.bizType" :bizBillId="props.bizBillId"
+      :dialogMode="props.dialogMode" @select="getData" />
   </div>
 </template>
 
@@ -54,19 +53,10 @@ interface Props {
   allocationStatus?: number;
   /** 预警状态 */
   warningStatus?: number;
-  /** 项目ID */
-  projId: number | undefined;
-  projName?: string;
-  displayName?: string;
   /** 业务单据ID */
   bizBillId?: number | undefined;
-  conId?: number | undefined;
   /** 业务类型 */
   bizType?: string;
-  /** 成本金额 */
-  allocAmt?: number;
-  /** 成本分摊数据 */
-  cstMData?: any;
   /** 弹窗模式，查看模式view  编辑模式edit */
   dialogMode?: string;
 }
@@ -75,14 +65,8 @@ const props = withDefaults(defineProps<Props>(), {
   visible: true,
   allocationStatus: undefined,
   warningStatus: undefined,
-  projId: undefined,
-  projName: undefined,
-  displayName: undefined,
   bizBillId: undefined,
-  conId: undefined,
   bizType: undefined,
-  allocAmt: 0,
-  cstMData: null,
   dialogMode: "edit", // 弹窗模式， view  edit
 });
 
@@ -98,13 +82,7 @@ const getData = (data: any) => {
 };
 // 处理分摊详情按钮点击
 const handleDetail = () => {
-  console.log("handleDetail", props);
-  // 如果有传入项目ID，则打开内部弹窗
-  if (props.projId) {
-    dialogVisible.value = true;
-  } else {
-    ElMessage.warning("请先选择项目");
-  }
+  dialogVisible.value = true;
   // 触发外部事件，让父组件自行处理
   emit("detail-click");
 };

@@ -186,32 +186,16 @@ import { outputDeclarationApi } from "@/api/cost/contract-manage/output-declarat
 import { toBig, formatDecimal, BigNumber } from "@/utils/big-number.ts";
 
 interface Props {
-  projId?: number; // 项目ID
-  projName?: string; // 项目名称
-  displayName?: string; // 事项名称
   bizType?: string; // 业务类型
-  allocAmt?: number; // 分摊金额(含税)
-  allocExclAmt?: number; // 分摊金额(不含税)
   isDialogMode?: boolean; // 是否为弹窗模式
-  cstMData?: any; // 弹窗传参
   dialogMode?: string;
   bizBillId?: number;
-  conId?: number;
-  bizKeyId?: number;
 }
 const props = withDefaults(defineProps<Props>(), {
-  projId: undefined,
-  projName: "",
-  displayName: "",
   bizType: "",
-  allocAmt: 0,
-  allocExclAmt: 0,
   isDialogMode: false, // 页面模式，默认非弹窗模式
-  cstMData: null,
   dialogMode: "", // 弹窗模式， view  edit
   bizBillId: undefined,
-  conId: undefined,
-  bizKeyId: 0,
 });
 
 const emit = defineEmits<{
@@ -1906,7 +1890,7 @@ onMounted(async () => {
   if (isDialogMode.value) {
     billId = props.bizBillId;
     bizType = props.bizType;
-    bizKeyId = props.bizKeyId;
+    bizKeyId = 0;
     await loadAllocationData();
   } else {
     // OA打开

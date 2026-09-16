@@ -237,11 +237,9 @@
         </FormCard>
       </el-form>
       <!-- 成本分摊  :visible="!isAdd && isJianAn" -->
-      <ConCostAllocCard v-if="menuStore.hasExactPermission(PERMISSIONS.COST_ALLOC_CON_ADD)" style="margin-top: 15px;" :visible="!isAdd && isJianAn" :cstMData="cstMData"
-        :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'CON_ADD'"
-        :projId="formData.projId" :projName="conMainData?.projName" :displayName="formData.addName"
-        :allocAmt="priceTaxData.totalPriceTax" :bizBillId="billData.id" :conId="conMainData?.id"
-        @selectData="getSelectCostAlloc" />
+       <ConCostAllocCard v-if="menuStore.hasExactPermission(PERMISSIONS.COST_ALLOC_CON_ADD)" style="margin-top: 15px;"
+        :visible="!isAdd && isJianAn" :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn"
+        :bizType="'CON_ADD'" :bizBillId="billData.id" @selectData="getSelectCostAlloc" />
     </div>
 
     <!-- ============ 悬浮定位栏 ============ -->
@@ -377,9 +375,15 @@ const cstMData = ref({
   allocDs: [], // 分摊明细
 });
 
-const isReadonly = computed(
-  () => isDetail.value || !!billData.value.status,
-);
+// 是否是超管角色
+const isSuperAdmin = computed(() => {
+  return userStore.roleList?.some((role: any) => role.isSuper);
+});
+const isReadonly = computed(() => {
+  // 超管保留编辑权限
+  if (isSuperAdmin.value) return false;
+  return isDetail.value || !!billData.value.status
+});
 
 // ===================== 下拉 / 字典数据 =====================
 const projectOptions = ref([]);
@@ -1005,8 +1009,9 @@ const handleFormDataSubmit = async () => {
       return;
     }
 
-    if (formData.value.addSysNo === "")
+    if (formData.value.addSysNo === "") {
       await createConNo();
+    }
     const params = buildSubmitParams()
     let res;
     res = await supplementContractApi.submitSupplementContract(params);

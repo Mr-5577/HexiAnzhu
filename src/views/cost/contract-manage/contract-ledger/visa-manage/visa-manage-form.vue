@@ -407,10 +407,9 @@
       </el-form>
       
       <!-- 成本分摊 :visible="!isAdd" -->
-      <ConCostAllocCard v-if="menuStore.hasExactPermission(PERMISSIONS.COST_ALLOC_CON_QZ)" style="margin-top: 15px;" :visible="!isAdd" :cstMData="cstMData"
-        :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn" :bizType="'CON_QZ'"
-        :projId="formData.projId" :projName="formData?.projName" :displayName="formData.changeName"
-        :allocAmt="formData.visaApplyAmt" :bizBillId="billData.id" :conId="conMainData?.id" @selectData="getSelectCostAlloc" />
+      <ConCostAllocCard v-if="menuStore.hasExactPermission(PERMISSIONS.COST_ALLOC_CON_QZ)" style="margin-top: 15px;"
+        :visible="!isAdd" :allocation-status="cstMData.allocStatus" :warning-status="cstMData.allocWarn"
+        :bizType="'CON_QZ'" :bizBillId="billData.id" @selectData="getSelectCostAlloc" />
     </div>
   </div>
 

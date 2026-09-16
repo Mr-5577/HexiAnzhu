@@ -4,7 +4,12 @@
     <BaseSearchCard>
       <template #form>
         <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px">
-          <el-form-item label="项目" prop="projId">
+          <el-form-item label="业务板块" prop="segId">
+            <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px" clearable>
+              <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="项目名称" prop="projId">
             <el-cascader v-model="queryParams.projId" :options="projectOptions" :show-all-levels="false" :props="{
               expandTrigger: 'hover',
               emitPath: false,
@@ -13,11 +18,6 @@
               label: 'orgName',
               children: 'children',
             }" placeholder="请选择项目" style="width: 220px" clearable filterable />
-          </el-form-item>
-          <el-form-item label="业务板块" prop="segId">
-            <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px" clearable>
-              <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
-            </el-select>
           </el-form-item>
           <el-form-item label="费用归属期间" prop="belongMonth">
             <el-date-picker v-model="queryParams.belongMonth" type="month" value-format="YYYY-MM" placeholder="费用归属期间"

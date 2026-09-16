@@ -26,13 +26,11 @@
             </vxe-editable-table>
         </div>
         <!-- 合同成本分摊弹窗 -->
-        <ConCostAllocDialog v-model="conCostAllocDialogVisible" :projId="props?.params?.projId"
-            :projName="props?.params?.projName" :bizType="currentData?.bizType" :bizBillId="currentData?.bizBillId"
-            :dialogMode="'edit'" />
+        <ConCostAllocDialog v-model="conCostAllocDialogVisible" :bizType="currentData?.bizType"
+            :bizBillId="currentData?.bizBillId" :dialogMode="'edit'" />
         <!-- 非合同成本分摊弹窗 -->
-        <NconCostAllocDialog v-model="nonConCostAllocDialogVisible" :projId="props?.params?.projId"
-            :projName="props?.params?.projName" :bizBillId="currentData?.bizBillId" :bizType="currentData.bizType"
-            :dialogMode="'edit'" />
+        <NconCostAllocDialog v-model="nonConCostAllocDialogVisible" :bizBillId="currentData?.bizBillId"
+            :bizType="currentData.bizType" :dialogMode="'edit'" />
     </base-modal>
 </template>
 

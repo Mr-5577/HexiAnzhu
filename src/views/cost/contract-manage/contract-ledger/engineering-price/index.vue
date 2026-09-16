@@ -28,9 +28,6 @@
         <el-button type="primary" link> 审批 </el-button>
       </template>
     </base-table>
-
-    <!-- 新增/编辑 工程核价弹窗 -->
-    <add-edit-price-dialog v-model="dialogVisible" :conId="props.conId" :editData="editData" @success="handleRefresh" />
   </div>
 </template>
 
@@ -44,7 +41,6 @@ import {
   EngineeringPrice,
 } from "@/types/cost/contract-manage/engineering-price-type.ts";
 import { engineeringPriceApi } from "@/api/cost/contract-manage/engineering-price-api.ts";
-import AddEditPriceDialog from "./add-edit-price-dialog.vue";
 
 defineOptions({ name: "engineering-price" });
 

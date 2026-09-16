@@ -379,10 +379,9 @@
 
       <!-- 成本分摊  合同产值只有甲供材才有成本分摊 -->
       <ConCostAllocCard v-if="menuStore.hasExactPermission(PERMISSIONS.COST_ALLOC_CON_PROD)" style="margin-top: 15px;"
-        :visible="!isAdd && formData.isSelfSupply" :cstMData="cstMData" :allocation-status="cstMData.allocStatus"
-        :warning-status="cstMData.allocWarn" :bizType="'CON_PROD'" :projId="formData.projId"
-        :projName="formData?.projName" :displayName="formData.conName" :allocAmt="formData.applyProdVal"
-        :bizBillId="billData.id" :conId="conMainData?.id" @selectData="getSelectCostAlloc" />
+        :visible="!isAdd && formData.isSelfSupply" :allocation-status="cstMData.allocStatus"
+        :warning-status="cstMData.allocWarn" :bizType="'CON_PROD'" :bizBillId="billData.id"
+        @selectData="getSelectCostAlloc" />
     </div>
 
     <!-- 隐藏的上传组件 -->

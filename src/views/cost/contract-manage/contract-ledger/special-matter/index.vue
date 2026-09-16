@@ -29,10 +29,6 @@
         </el-button>
       </template>
     </base-table>
-
-    <!-- 新增/编辑 特殊事项弹窗 -->
-    <add-edit-special-dialog v-model="dialogVisible" :conId="props.conId" :editData="editData"
-      @success="handleRefresh" />
   </div>
 </template>
 
@@ -41,7 +37,6 @@ import { ref, watch, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
-import AddEditSpecialDialog from "./add-edit-special-dialog.vue";
 import { ContractSpecial } from "@/types/cost/contract-manage/special-matter-type.ts";
 import { specialMatterApi } from "@/api/cost/contract-manage/special-matter-api.ts";
 
@@ -103,12 +98,12 @@ const getDataList = async () => {
   try {
     tableLoading.value = true;
     tableData.value = [];
-    const res = await specialMatterApi.getSpecialList({
-      conId: props.conId,
-    });
-    if (res.code === 200) {
-      tableData.value = res.data;
-    }
+    // const res = await specialMatterApi.getSpecialList({
+    //   conId: props.conId,
+    // });
+    // if (res.code === 200) {
+    //   tableData.value = res.data;
+    // }
   } catch (error) {
     console.error("获取工程核价列表失败:", error);
   } finally {
@@ -119,15 +114,15 @@ const getDataList = async () => {
 const handleDelete = (row) => {
   ElMessageBox.confirm("确定删除该数据吗？", "提示", { type: "warning" })
     .then(async () => {
-      try {
-        const res = await specialMatterApi.delSpecial({ id: row.id });
-        if (res.code === 200) {
-          ElMessage.success("删除成功");
-          getDataList();
-        }
-      } catch (error) {
-        console.error("删除失败:", error);
-      }
+      // try {
+      //   const res = await specialMatterApi.delSpecial(row.id);
+      //   if (res.code === 200) {
+      //     ElMessage.success("删除成功");
+      //     getDataList();
+      //   }
+      // } catch (error) {
+      //   console.error("删除失败:", error);
+      // }
     })
     .catch(() => { });
 };

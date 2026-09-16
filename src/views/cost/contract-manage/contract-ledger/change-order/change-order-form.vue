@@ -138,10 +138,8 @@
       </el-form>
 
       <!-- 分摊详情弹窗 -->
-      <ConCostAllocDialog v-if="dialogVisible" v-model="dialogVisible" :projId="currentRowAlloc?.cstM?.projId"
-        :projName="currentRowAlloc?.cstM?.projName" :conId="currentRowAlloc?.conId" :bizBillId="currentRowAlloc?.cstM
-          ?.bizBillId" :displayName="currentRowAlloc?.conName" :bizType="formType.CON_CHANGE"
-        :allocAmt="currentRowAlloc?.cstM?.allocAmt" :cstMData="currentRowAlloc?.cstM" :bizKeyId="currentRowAlloc?.cstM?.bizKeyId" @select="getData" />
+      <ConCostAllocDialog v-if="dialogVisible" v-model="dialogVisible" :bizBillId="currentRowAlloc?.cstM?.bizBillId"
+        :bizType="formType.CON_CHANGE" :bizKeyId="currentRowAlloc?.cstM?.bizKeyId" @select="getData" />
     </div>
 
     <!-- ============ 选择合同 弹窗 ============ -->
