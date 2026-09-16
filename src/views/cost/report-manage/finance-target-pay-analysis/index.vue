@@ -1,4 +1,4 @@
-<!-- 财务目标成本支付分析 -->
+<!-- 财务成本对比分析 -->
 <template>
     <div class="target-cost-payment-analysis-wrapper">
         <!-- 查询卡片 -->
@@ -134,7 +134,7 @@ import { Search, Refresh, Download, CircleClose } from '@element-plus/icons-vue'
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 import { reportManageApi } from "@/api/cost/contract-manage/report-manage-api";
 import { goalCostApi } from "@/api/cost/cost-setting/goal-cost-api";
-import { bigSum, formatPercent, formatThousandWithPlaces, roundToTwo } from "@/utils/big-number";
+import { bigSum, formatPercent, formatThousandWithPlaces, roundBy } from "@/utils/big-number";
 import { ElMessage } from "element-plus";
 import ChooseCostMDialog from '@/components/business/choose-costM-dialog.vue';
 import dayjs from "dayjs";
@@ -194,8 +194,8 @@ const footerData = computed(() => {
     const r = tableData.value
 
     const f = (k: string) => {
-        // 每项先四舍五入到 2 位，再用 BigNumber 精确求和
-        const total = bigSum(r.map((x) => roundToTwo(x[k])))
+        // 每项用 BigNumber 精确求和
+        const total = bigSum(r.map((x) => roundBy(x[k], deci.value)))
         return formatThousandWithPlaces(total.toNumber(), deci.value)
     }
     return [[
@@ -254,10 +254,6 @@ const columns: any = computed(() => {
                     label: "实际请款金额",
                     minWidth: 130,
                     formatter: (value: any) => formatThousandWithPlaces(value, deci.value),
-                    clickable: true, // 点击单元格触发 onClick 事件
-                    onClick: (row, column) => {
-                        handleCellEventClick(row, column);
-                    },
                 },
                 {
                     prop: "paidAmt",
@@ -357,8 +353,8 @@ const handleCellEventClick = (row, column) => {
             segId: segId,
             projId: queryParams.value.projId,
             subId: row.subId,
-            applyDate: column.prop === 'factReqAmt' ? endDate : null, // 请款日期
-            payDate: column.prop === 'paidAmt' ? endDate : null, // 支付日期
+            payDate: endDate, // 支付日期
+            wfStatus: 40, // 已审批
         };
         router.push({
             path: "/report/pay-detail",

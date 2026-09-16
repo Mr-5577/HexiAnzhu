@@ -75,6 +75,14 @@
                             }" placeholder="请选择科目" style="width: 220px" clearable filterable />
                     </el-form-item>
 
+                    <el-form-item label="审批状态" prop="wfStatus">
+                        <el-select v-model="queryParams.wfStatus" multiple placeholder="请选择审批状态" clearable
+                            style="width: 220px">
+                            <el-option v-for="item in reportEnum" :key="item.value" :label="item.label"
+                                :value="item.value" />
+                        </el-select>
+                    </el-form-item>
+
                 </el-form>
             </template>
             <template #actions>
@@ -106,7 +114,14 @@
             <vxe-editable-table ref="vxeTableRef" v-model="paginatedData" :columns="columns" :rowKey="'id'"
                 :loading="tableLoading" :readonly="true" :show-footer="true" :footer-source-data="tableData"
                 :pagination="true" :total="total" :page-size="pageSize" :current-page="currentPage"
-                @pagination-change="handlePaginationChange" />
+                @pagination-change="handlePaginationChange">
+                <!-- 状态 -->
+                <template #status="{ row }">
+                    <el-tag size="small" :type="getEnumType(reportStatusEnum, row?.status || 0)">
+                        {{ getEnumLabel(reportStatusEnum, row?.status || 0) }}
+                    </el-tag>
+                </template>
+            </vxe-editable-table>
         </div>
     </div>
 </template>
@@ -127,6 +142,8 @@ import { formatThousandWithPlaces } from "@/utils/big-number";
 import { PERMISSIONS } from "@/constants/permission";
 import { useMenuStore } from "@/stores/menu-store";
 import BaseSearchCard from "@/components/base/base-search-card.vue";
+import { reportStatusEnum } from "../utils/common";
+import { getEnumLabel, getEnumType } from "@/utils/enum";
 
 defineOptions({ name: "payment-detail" });
 
@@ -147,6 +164,7 @@ const queryParams = ref({
     billId: undefined,
     finaSubId: undefined,
     keyWord: undefined,
+    wfStatus: [40],
 });
 
 const segOptions = ref([]);
@@ -165,6 +183,9 @@ const getSnapshot = (params: any) => {
     return JSON.parse(JSON.stringify(rest));
 };
 
+const reportEnum = computed(() => {
+    return reportStatusEnum.filter((item) => item.value == 10 || item.value == 40);
+})
 const projectData = computed(() => {
     const segId = queryParams.value.segId;
     if (segId) {
@@ -192,8 +213,24 @@ const columns: TableColumnItem[] = [
     { prop: "reqNo", label: "请款单号", width: 150, fixed: "left" },
     { prop: "segName", label: "业务板块", width: 80, fixed: "left" },
     { prop: "projName", label: "项目名称", width: 120, fixed: "left" },
-    { prop: "reqAmt", label: "请款金额", width: 120, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
-    { prop: "paidAmt", label: "支付金额", width: 120, showSummary: true, formatter: (v) => formatThousandWithPlaces(v) },
+    {
+        prop: "reqAmt", label: "请款金额", width: 130, showSummary: true, formatter: (v) => formatThousandWithPlaces(v),
+        headerTip: {
+            icon: "QuestionFilled",
+            content: "请款单据实际请款金额",
+            placement: "top",
+            width: "200px",
+        },
+    },
+    {
+        prop: "paidAmt", label: "支付金额", width: 120, showSummary: true, formatter: (v) => formatThousandWithPlaces(v),
+        headerTip: {
+            icon: "QuestionFilled",
+            content: "实付登记每笔金额",
+            placement: "top",
+            width: "200px",
+        },
+    },
     { prop: "lastPayDate", label: "支付日期", width: 100 },
     { prop: "reqDesc", label: "摘要", width: 200 },
     { prop: "applyUser", label: "申请人", width: 90 },
@@ -205,7 +242,7 @@ const columns: TableColumnItem[] = [
     { prop: "bankName", label: "收款方开户行", width: 150 },
     { prop: "accountName", label: "收款方账户名", width: 150 },
     { prop: "bankAccount", label: "收款方账号", width: 150 },
-
+    { prop: "status", label: "审批状态", width: 100, slots: { default: "status" } },
 ];
 
 const paginatedData = computed(() => {
@@ -276,7 +313,9 @@ const handleReset = () => {
     currentPage.value = 1;
     pageSize.value = 20;
     Object.keys(queryParams.value).forEach((key) => {
-        if (key === "statMonth") {
+        if (key === "wfStatus") {
+            queryParams.value[key] = [40];
+        } else if (key === "statMonth") {
             queryParams.value[key] = dayjs().format("YYYY-MM");
         } else if (Array.isArray(queryParams.value[key])) {
             queryParams.value[key] = [];
@@ -422,6 +461,7 @@ const initQueryParams = () => {
             const routeData = JSON.parse(route.query.data as string);
             console.log("解析路由参数成功", routeData);
             if (routeData) {
+                queryParams.value.wfStatus = []
                 queryParams.value.segId = routeData.segId;
                 queryParams.value.projIds = [routeData.projId];
                 queryParams.value.conId = routeData?.conId;
@@ -432,10 +472,8 @@ const initQueryParams = () => {
                 if (routeData?.payDate) {
                     // 这里处理是财务成本支付分析页面点击支付金额跳转过来
                     queryParams.value.payDate = ['2000-01-01', routeData.payDate]
-                }
-                if (routeData?.applyDate) {
-                    // 这里处理是财务成本支付分析页面点击支付金额跳转过来
-                    queryParams.value.applyDate = ['2000-01-01', routeData.applyDate]
+                    const wfStatus = Number(routeData.wfStatus);
+                    queryParams.value.wfStatus = [wfStatus]
                 }
                 // 根据路由参数设置默认板块
                 const segId = routeData.segId == 9999 ? 2 : routeData.segId;

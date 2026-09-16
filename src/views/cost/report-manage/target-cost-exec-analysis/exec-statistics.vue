@@ -1,12 +1,7 @@
 <template>
   <div class="summary-card-wrapper" v-if="list.length">
-    <div
-      v-for="(item, index) in list"
-      :key="item.subId ?? item.id ?? index"
-      class="summary-card-item"
-      :class="getThemeClass(index)"
-      @click="emit('cardClick', item, index)"
-    >
+    <div v-for="(item, index) in list" :key="item.subId ?? item.id ?? index" class="summary-card-item"
+      :class="getThemeClass(index)" @click="emit('cardClick', item, index)">
       <!-- 图标 -->
       <div class="item-icon">
         <el-icon>
@@ -22,8 +17,8 @@
         </div>
 
         <div class="item-value-wrapper">
-          <div class="item-value">含税：{{ formatThousandWithPlaces(item.costAmt) }}</div>
-          <div class="item-value">不含税：{{ formatThousandWithPlaces(item.costExclAmt) }}</div>
+          <div class="item-value">含税：{{ formatThousandWithPlaces(item.costAmt, deci) }}</div>
+          <div class="item-value">不含税：{{ formatThousandWithPlaces(item.costExclAmt, deci) }}</div>
         </div>
       </div>
     </div>
@@ -31,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { formatThousandWithPlaces } from '@/utils/big-number'
+import { BigNumber, formatThousandWithPlaces } from '@/utils/big-number'
 import {
   Money,
   Location,
@@ -69,7 +64,7 @@ interface Props {
 // ---------- Props ----------
 const props = withDefaults(defineProps<Props>(), {
   data: () => [],
-  unit: '元',
+  unit: '万元',
   showSubCode: false,
 })
 
@@ -78,10 +73,23 @@ const emit = defineEmits<{
   (e: 'cardClick', item: CostItem, index: number): void
 }>()
 
+const deci = computed(() => (props.unit === '万元' ? 4 : 2))
 // ---------- 列表过滤（只展示顶级科目，过滤空项）----------
-const list = computed<CostItem[]>(() =>
-  (props.data || []).filter((item) => item && item.subName)
-)
+const list = computed<CostItem[]>(() => {
+  const items = (props.data || []).filter((item) => item && item.subName)
+  if (!items.length) return []
+
+  const total = items.reduce(
+    (acc, cur) => {
+      acc.costAmt = new BigNumber(acc.costAmt).plus(cur.costAmt || 0).toNumber()
+      acc.costExclAmt = new BigNumber(acc.costExclAmt).plus(cur.costExclAmt || 0).toNumber()
+      return acc
+    },
+    { subName: '合计', costAmt: 0, costExclAmt: 0, subId: '__total__' } as CostItem
+  )
+
+  return [total, ...items]
+})
 
 // ---------- 主题 / 图标循环 ----------
 const THEME_CLASSES = [

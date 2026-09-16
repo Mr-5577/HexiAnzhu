@@ -56,7 +56,7 @@ withDefaults(defineProps<{
     display: flex;
     flex-wrap: nowrap; // 关键：一行展示
     align-items: stretch;
-    gap: 10px;
+    gap: 6px;
     margin-bottom: 12px;
     width: 100%;
     overflow-x: auto; // 极端窄屏时允许横向滚动，而不是换行
@@ -75,8 +75,8 @@ withDefaults(defineProps<{
     min-width: 0; // 关键：允许压缩，内容不撑开
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 10px;
+    gap: 6px;
+    padding: 8px 8px;
     background: #ffffff;
     border-radius: 10px;
     border: 1px solid transparent;

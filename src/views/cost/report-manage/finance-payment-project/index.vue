@@ -386,7 +386,6 @@ const getDataList = async () => {
             projectHeader.value = header || []
             // 构建树形数据
             const treeData = buildProjectTree(header, rows)
-            console.log('treeData', treeData)
             tableData.value = treeData
             // 获取统计数据
             const summyData = getSummaryData(treeData, deci.value)

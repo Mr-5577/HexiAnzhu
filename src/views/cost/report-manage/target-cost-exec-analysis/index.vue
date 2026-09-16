@@ -75,7 +75,7 @@
             </template>
         </BaseSearchCard>
 
-        <ExecStatistics :data="tableData"></ExecStatistics>
+        <ExecStatistics :data="tableData" :unit="queryParams.unit"></ExecStatistics>
 
         <div class="content-placeholder">
             <div class="demo-controls">
@@ -93,6 +93,16 @@
                         {{ levelMap[level] || level + '级' }}
                     </el-button>
                 </div>
+
+                <!-- 单位切换 -->
+                <div class="unit-switch">
+                    <span class="unit-label">单位</span>
+                    <el-radio-group v-model="queryParams.unit" size="small" text-color="#fff" fill="#4096cc"
+                        @change="handleSearch">
+                        <el-radio-button value="万元">万元</el-radio-button>
+                        <el-radio-button value="元">元</el-radio-button>
+                    </el-radio-group>
+                </div>
             </div>
 
             <vxe-editable-table ref="vxeTableRef" v-model="tableData" :columns="columns" :rowKey="'id'"
@@ -103,7 +113,7 @@
                 </template>
                 <!-- 已发生含税金额 -->
                 <template #dynAmt="{ row }">
-                    <el-button type="primary" link @click="openDetailDialog(row)" :disabled="row.children?.length">{{
+                    <el-button type="primary" link @click="openDetailDialog(row)" :disabled="!!row.children?.length">{{
                         formatThousandWithPlaces(row.dynAmt) }}</el-button>
                 </template>
             </vxe-editable-table>
@@ -154,6 +164,7 @@ const queryParams = ref({
     prodIds: [],
     costMid: undefined,
     versionNo: undefined,
+    unit: '万元',
 })
 const costMDialogVisible = ref(false)
 
@@ -219,91 +230,95 @@ const updateMaxDepth = () => {
     }
 }
 
-const columns: any = [
-    {
-        prop: 'subCode',
-        label: '科目编码',
-        width: 90,
-        fixed: 'left',
-    },
-    {
-        prop: 'subName',
-        label: '成本科目',
-        width: 240,
-        fixed: 'left',
-        align: 'left',
-        treeNode: true,
-    },
-    {
-        prop: 'warn',
-        label: '预警状态',
-        width: 80,
-        slots: { default: "warn" },
-    },
-    {
-        label: '目标成本',
-        children: [
-            {
-                prop: 'costAmt',
-                label: '含税',
-                minWidth: 100,
-                formatter: (value) => formatThousandWithPlaces(value),
-            },
-            {
-                prop: 'costExclAmt',
-                label: '不含税',
-                minWidth: 100,
-                formatter: (value) => formatThousandWithPlaces(value),
-            },
-        ],
-    },
-    {
-        label: '已发生',
-        children: [
-            {
-                prop: 'dynAmt',
-                label: '含税',
-                minWidth: 100,
-                slots: { default: "dynAmt" },
-                formatter: (value) => formatThousandWithPlaces(value),
-            },
-            {
-                prop: 'dynExclAmt',
-                label: '不含税',
-                minWidth: 100,
-                formatter: (value) => formatThousandWithPlaces(value),
-            },
-        ],
-    },
-    {
-        label: '未发生',
-        children: [
-            {
-                prop: 'notDynAmt',
-                label: '含税',
-                minWidth: 100,
-                formatter: (value) => formatThousandWithPlaces(value)
-            },
-            {
-                prop: 'notDynExclAmt',
-                label: '不含税',
-                minWidth: 100,
-                formatter: (value) => formatThousandWithPlaces(value),
-            },
-        ],
-    },
-    {
-        prop: 'occurRate',
-        label: '发生率',
-        width: 100,
-        formatter: (value) => formatPercent(value, 2),
-        headerTip: {
-            icon: "QuestionFilled",
-            content: "发生率=已发生不含税÷目标不含税",
-            placement: "top",
+const columns: any = computed(() => {
+    const unit = queryParams.value.unit || '万元'
+    const deci = unit === '万元' ? 4 : 2
+    return [
+        {
+            prop: 'subCode',
+            label: '科目编码',
+            width: 90,
+            fixed: 'left',
         },
-    },
-]
+        {
+            prop: 'subName',
+            label: '成本科目',
+            width: 240,
+            fixed: 'left',
+            align: 'left',
+            treeNode: true,
+        },
+        {
+            prop: 'warn',
+            label: '预警状态',
+            width: 80,
+            slots: { default: "warn" },
+        },
+        {
+            label: '目标成本',
+            children: [
+                {
+                    prop: 'costAmt',
+                    label: '含税',
+                    minWidth: 100,
+                    formatter: (value) => formatThousandWithPlaces(value, deci),
+                },
+                {
+                    prop: 'costExclAmt',
+                    label: '不含税',
+                    minWidth: 100,
+                    formatter: (value) => formatThousandWithPlaces(value, deci),
+                },
+            ],
+        },
+        {
+            label: '已发生',
+            children: [
+                {
+                    prop: 'dynAmt',
+                    label: '含税',
+                    minWidth: 100,
+                    slots: { default: "dynAmt" },
+                    formatter: (value) => formatThousandWithPlaces(value, deci),
+                },
+                {
+                    prop: 'dynExclAmt',
+                    label: '不含税',
+                    minWidth: 100,
+                    formatter: (value) => formatThousandWithPlaces(value, deci),
+                },
+            ],
+        },
+        {
+            label: '未发生',
+            children: [
+                {
+                    prop: 'notDynAmt',
+                    label: '含税',
+                    minWidth: 100,
+                    formatter: (value) => formatThousandWithPlaces(value, deci)
+                },
+                {
+                    prop: 'notDynExclAmt',
+                    label: '不含税',
+                    minWidth: 100,
+                    formatter: (value) => formatThousandWithPlaces(value, deci),
+                },
+            ],
+        },
+        {
+            prop: 'occurRate',
+            label: '发生率',
+            width: 100,
+            formatter: (value) => formatPercent(value, 2),
+            headerTip: {
+                icon: "QuestionFilled",
+                content: "发生率=已发生不含税÷目标不含税",
+                placement: "top",
+            },
+        },
+    ]
+})
 const openDetailDialog = (row: any) => {
     const { children, ...rest } = row
     if (children && children.length > 0) {
@@ -456,6 +471,7 @@ const handleReset = async () => {
             queryParams.value[key] = undefined;
         }
     });
+    queryParams.value.unit = '万元'
     await selectedDefaultSeg()
     handleSearch()
 }
@@ -578,6 +594,7 @@ onMounted(async () => {
         flex-shrink: 0;
         padding: 15px 20px 0;
         background: #fafbfc;
+        position: relative;
 
         .control-label {
             font-size: 14px;
@@ -592,6 +609,25 @@ onMounted(async () => {
             align-items: center;
             gap: 6px;
             flex-wrap: wrap;
+        }
+
+        .unit-switch {
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+
+            .unit-label {
+                font-size: 14px;
+                font-weight: 500;
+                color: #4a5568;
+                user-select: none;
+            }
+
+            :deep(.el-radio-button__inner) {
+                padding: 5px 14px;
+                font-size: 13px;
+            }
         }
     }
 }

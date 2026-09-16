@@ -55,10 +55,7 @@
 
           <el-form-item label="审批状态" prop="wfStatus">
             <el-select v-model="queryParams.wfStatus" multiple placeholder="请选择审批状态" style="width: 220px">
-              <!-- <el-option label="草稿" :value="0" /> -->
-              <el-option label="审批中" :value="10" />
-              <el-option label="已审批" :value="40" />
-              <!-- <el-option label="作废" :value="80" /> -->
+              <el-option v-for="item in reportEnum" :key="item.value" :label="item.label" :value="item.value" />
             </el-select>
           </el-form-item>
 
@@ -192,7 +189,8 @@
     <div class="table-card">
       <vxe-editable-table ref="vxeTableRef" v-model="paginatedData" :columns="columns" :rowKey="'id'"
         :loading="tableLoading" :readonly="true" :pagination="true" :total="total" :page-size="pageSize"
-        :current-page="currentPage" @pagination-change="handlePaginationChange" />
+        :current-page="currentPage" @pagination-change="handlePaginationChange">
+      </vxe-editable-table>
     </div>
   </div>
 </template>
@@ -212,6 +210,7 @@ import { useRoute, useRouter } from "vue-router";
 import { PERMISSIONS } from "@/constants/permission";
 import { useMenuStore } from "@/stores/menu-store";
 import BaseSearchCard from "@/components/base/base-search-card.vue";
+import { reportStatusEnum } from "../utils/common";
 
 defineOptions({ name: "payment-overview" });
 
@@ -240,6 +239,10 @@ const segOptions = ref([]);
 const projectOptions = ref([]);
 const companyOptions = ref([]);
 const feeTypeOptions = ref([]);
+
+const reportEnum = computed(() => {
+  return reportStatusEnum.filter((item) => item.value == 10 || item.value == 40);
+})
 
 const projectData = computed(() => {
   const segId = queryParams.value.segId;
@@ -339,7 +342,7 @@ const columns: any = [
     width: 120,
     formatter: (v) => formatThousandWithPlaces(v),
   },
-  { prop: "auditStatusName", label: "审核状态", width: 90 },
+  { prop: "auditStatusName", label: "审批状态", width: 90 },
   { prop: "payStatusName", label: "支付状态", width: 90 },
   { prop: "confirmStatusName", label: "入账状态", width: 90 },
 ];

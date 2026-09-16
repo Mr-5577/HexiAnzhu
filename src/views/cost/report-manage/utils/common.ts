@@ -51,6 +51,16 @@ export const segEnum = [
   { value: "JZ", label: "建筑" },
 ];
 /**
+ * 审批状态 枚举
+ */
+export const reportStatusEnum = [
+  { value: 0, label: "草稿", type: "info" },
+  { value: 10, label: "审批中", type: "primary" },
+  { value: 40, label: "已审批", type: "success" },
+  { value: 80, label: "作废", type: "warning" },
+  { value: 99, label: "其他", type: "info" },
+];
+/**
  * 汇总顶层金额分类
  * @param treeData 顶层节点数组
  * @param decimal 保留小数位数
@@ -64,7 +74,7 @@ export function getSummaryData(treeData: any[], decimal: number = 2) {
   // 需要合并到「210 其他支出」的编码
   const MERGE_TO_210 = ["209", "210", "211"];
   const OTHER_CODE = "210";
-  const OTHER_NAME = "其他支出";
+  const OTHER_NAME = "其他";
 
   // 费用类明细：用 Map 以 sub_code 去重合并
   const expenseDetailMap = new Map<
@@ -77,17 +87,15 @@ export function getSummaryData(treeData: any[], decimal: number = 2) {
     const total = toBig(node.total);
 
     switch (code) {
-      case "102":
-        // 102 房屋退款：跳过
-        break;
       case "201":
         landList.push(total.toNumber());
         break;
       case "202":
         engineeringList.push(total.toNumber());
         break;
-      // 203:销售费用 204:管理费用 205:税费 206:财务费用
+      // 102:房屋退款 203:销售费用 204:管理费用 205:税费 206:财务费用
       // 207:总公司咨询费 208:物业管理费 209:非正常支出 210:其他支出 211:外部往来
+      case "102":
       case "203":
       case "204":
       case "205":

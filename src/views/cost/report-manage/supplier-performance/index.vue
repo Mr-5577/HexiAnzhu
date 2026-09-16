@@ -30,6 +30,11 @@
                         <el-input v-model="queryParams.supName" placeholder="请输入供应商名称" clearable style="width: 220px" />
                     </el-form-item>
 
+                    <el-form-item label="合同状态" prop="conStatusList">
+                        <EnumSelect v-model="queryParams.conStatusList" :options="conStatusList" clearable multiple
+                            placeholder="请选择合同状态" :width="'220px'" />
+                    </el-form-item>
+
                     <!-- <el-form-item label="单位" prop="unit">
                         <el-select v-model="queryParams.unit" placeholder="请选择单位" :clearable="false"
                             style="width: 220px" @change="handleSearch">
@@ -109,7 +114,7 @@ import {
     CreditCard, Warning, BellFilled,
     Document as DocumentIcon,
 } from '@element-plus/icons-vue'
-import dayjs from "dayjs";
+import EnumSelect from "@/components/base/base-enum-select.vue";
 import VxeEditableTable from '@/components/base/vxe-editable-table.vue'
 import { projectAreaApi } from '@/api/cost/master-data/project-area-api'
 import { dictionaryApi } from '@/api/cost/master-data/dictionary-api'
@@ -122,6 +127,7 @@ import { buildSupPerformTree } from '../utils/supplier-performance'
 import { PERMISSIONS } from '@/constants/permission.ts';
 import { useMenuStore } from "@/stores/menu-store";
 import { formatDateRange } from '../utils/common.ts';
+import { ConStatusEnum } from '@/constants/contract-manage/enums.ts';
 
 defineOptions({ name: 'supplier-performance' })
 
@@ -143,6 +149,7 @@ const queryParams = ref({
     projIdList: [],
     supName: '',
     signMonth: [],
+    conStatusList: [40, 60], // 合同状态,默认已审批40，已结算60
     unit: '万元',
 })
 
@@ -159,6 +166,9 @@ const expandLevel = ref(999); // 展开层级
 // 合同编号 / 合同名称：逐行展示
 const PER_ROW_FIELDS = ['conSysNo', 'conName'];
 
+const conStatusList = computed(() => {
+    return ConStatusEnum.filter((item) => item.value != 0);
+})
 
 // 根据单位保留小数位数
 const deci = computed(() => {
@@ -206,7 +216,14 @@ const tableColumns: any = computed(() => {
                 { prop: 'addAmt', label: `补充合同(${unit})`, minWidth: 120, formatter: (v) => formatThousandWithPlaces(v, deci.value) },
                 { prop: 'changeAmt', label: `变更(${unit})`, minWidth: 120, formatter: (v) => formatThousandWithPlaces(v, deci.value) },
                 { prop: 'visaAmt', label: `签证(${unit})`, minWidth: 120, formatter: (v) => formatThousandWithPlaces(v, deci.value) },
-                { prop: 'estConAmt', label: `系统预结算(${unit})`, minWidth: 120, formatter: (v) => formatThousandWithPlaces(v, deci.value) },
+                {
+                    prop: 'estConAmt', label: `系统预估合同金额(${unit})`, minWidth: 180, formatter: (v) => formatThousandWithPlaces(v, deci.value), headerTip: {
+                        icon: "QuestionFilled",
+                        content: "系统预估合同金额说明：已结算：等于金额结算；未结算：等于合同+补充+变更",
+                        placement: "top",
+                        width: "200px",
+                    },
+                },
                 { prop: 'settleAmt', label: `结算金额(${unit})`, minWidth: 120, formatter: (v) => formatThousandWithPlaces(v, deci.value) },
             ],
         },
@@ -320,6 +337,8 @@ const handleReset = async () => {
     queryParams.value.supName = ''
     queryParams.value.signMonth = []
     queryParams.value.unit = '万元'
+    queryParams.value.conStatusList = [40, 60] // 合同状态,默认已审批40，已结算60
+
     setDefaultSeg()
     await nextTick()
     handleSearch()

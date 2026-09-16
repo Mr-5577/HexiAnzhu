@@ -358,17 +358,14 @@ const getDataList = async () => {
         const params = buildParams()
         const res = await reportManageApi.getFinaPeriod(params)
         if (res.code === 200 && res.data) {
-            console.log('res.data', res.data)
             const { header, rows } = res.data;
             // 保存 header 用于生成 columns
             headerList.value = header;
             // 转换为树形结构并填充数据
             const treeData = buildTreeAndFillData(header, rows);
-            console.log('treeData', treeData)
             tableData.value = treeData;
             // 获取统计数据
             const summyData = getSummaryData(treeData, deci.value)
-            console.log('summyData', summyData)
             summaryData.value = summyData
             await nextTick()
             updateMaxDepth()
