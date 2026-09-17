@@ -1543,11 +1543,7 @@ const validateProdTables = async () => {
           return false;
         }
         // 拆开：月份比较 + 金额判断
-        if (!toBig(row.prodVal || 0).isZero() || !toBig(row.payAmt || 0).isZero()) {
-          ElMessage.error("本次申报产值、本次申报应付不能为0！");
-          return false;
-        }
-        if (dayjs(row.payDate).startOf("month").isBefore(dayjs(row.prodValPeriod).startOf("month"))) {
+        if (dayjs(row.payDate).startOf("month").isBefore(dayjs(row.prodValPeriod).startOf("month")) && (!toBig(row.prodVal || 0).isZero() || !toBig(row.payAmt || 0).isZero())) {
           ElMessage.error("计划付款期间不能早于产值期间！");
           return false;
         }
