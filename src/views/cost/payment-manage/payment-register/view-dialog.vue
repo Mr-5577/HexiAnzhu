@@ -73,13 +73,11 @@ import { useMenuStore } from "@/stores/menu-store";
 interface Props {
   modelValue: boolean;
   currentRow?: any;
-  queryParams?: any;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
   currentRow: null,
-  queryParams: null,
 });
 
 const emit = defineEmits<{
@@ -234,7 +232,6 @@ const handleClose = () => {
 // 获取付款台账子记录
 // ===== 修改：先四舍五入再计算未付金额 =====
 const getPayLedgerSubData = async () => {
-  if (!props.queryParams) return;
   try {
     const params = {
       bizBillId: props.currentRow.bizBillId,

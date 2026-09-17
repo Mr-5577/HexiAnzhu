@@ -131,13 +131,11 @@
     </div>
 
     <!-- 批量付款登记 弹窗 -->
-    <BatchRegisterDialog v-model="batchDialog" :currentRow="currentRow" :queryParams="queryParams"
-      @success="getDataList" />
+    <BatchRegisterDialog v-model="batchDialog" :currentRow="currentRow" @success="getDataList" />
     <!-- 单项登记 弹窗 -->
-    <SingleRegisterDialog v-model="singleDialog" :currentRow="currentRow" :queryParams="queryParams"
-      @success="getDataList" />
+    <SingleRegisterDialog v-model="singleDialog" :currentRow="currentRow" @success="getDataList" />
     <!-- 查看弹窗 -->
-    <ViewDialog v-model="viewDialog" :currentRow="currentRow" :queryParams="queryParams" @success="getDataList" />
+    <ViewDialog v-model="viewDialog" :currentRow="currentRow" @success="getDataList" />
   </div>
 </template>
 

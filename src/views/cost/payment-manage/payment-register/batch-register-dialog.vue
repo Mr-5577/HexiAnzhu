@@ -111,13 +111,11 @@ import { roundToTwo } from "@/utils/big-number";
 interface Props {
   modelValue: boolean;
   currentRow?: any;
-  queryParams?: any;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
   currentRow: null,
-  queryParams: null,
 });
 
 const emit = defineEmits<{
@@ -332,16 +330,8 @@ const getCompanyListByProjId = async () => {
 };
 // 获取明细数据
 const getDetailList = async () => {
-  console.log("查询参数", props.queryParams);
-  if (!props.queryParams) return;
-  const { applyDate, ...rest } = props.queryParams;
   try {
     const params = {
-      ...rest,
-      reqDateStart: rest?.applyDate?.[0],
-      reqDateEnd: rest?.applyDate?.[1],
-      payDateStart: rest?.payDate?.[0],
-      payDateEnd: rest?.payDate?.[1],
       bizBillId: props.currentRow.bizBillId,
       bizType: props.currentRow.bizType,
     };
