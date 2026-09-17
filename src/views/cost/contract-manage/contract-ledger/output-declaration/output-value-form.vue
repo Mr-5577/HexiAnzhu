@@ -172,17 +172,6 @@
         <FormCard id="card-con" icon="📋" title="合同产值" v-model:collapsed="collapsedCards.con">
           <!-- 非甲供材  产值申报方式：按进度确认 -> 显示非甲供材  -->
           <div class="detail-table" v-if="formData.payMethod == 1">
-            <!-- <div class="header-content">
-              <span class="header-title">产值明细（非甲供材）</span>
-              <el-button
-                type="primary"
-                size="small"
-                :disabled="isReadonly"
-                @click="addNonSelfSupply"
-              >
-                新增明细
-              </el-button>
-            </div> -->
             <editable-table ref="nonSelfSupplyRef" :row-key="'uuid'" :height="'200px'" v-model="nonSelfSupplyTable"
               :columns="prodColumns" :pagination="false" :highlight-current-row="false" :show-summary="true"
               :summary-method="nonSelfSupplySummary" :compactEmpty="true" :on-save="handleNonSelfSupplySave">
@@ -442,6 +431,7 @@ import { DynamicScroller } from "vue-virtual-scroller";
 import "vue-virtual-scroller/dist/vue-virtual-scroller.css";
 import { PERMISSIONS } from "@/constants/permission.ts";
 import * as XLSX from 'xlsx';
+import dayjs from "dayjs";
 
 defineOptions({ name: "output-value-approval-form" });
 
@@ -1552,10 +1542,12 @@ const validateProdTables = async () => {
           ElMessage.error("进度款行的施工期间、产值期间、计划付款期间均不能为空！");
           return false;
         }
-        if (
-          row.payDate < row.prodValPeriod &&
-          (!toBig(row.prodVal || 0).isZero() || !toBig(row.payAmt || 0).isZero())
-        ) {
+        // 拆开：月份比较 + 金额判断
+        if (!toBig(row.prodVal || 0).isZero() || !toBig(row.payAmt || 0).isZero()) {
+          ElMessage.error("本次申报产值、本次申报应付不能为0！");
+          return false;
+        }
+        if (dayjs(row.payDate).startOf("month").isBefore(dayjs(row.prodValPeriod).startOf("month"))) {
           ElMessage.error("计划付款期间不能早于产值期间！");
           return false;
         }
@@ -1583,8 +1575,9 @@ const validateProdTables = async () => {
           ElMessage.error("验收款行的施工期间、产值期间、计划付款期间均不能为空！");
           return false;
         }
+        // 拆开：月份比较 + 金额判断
         if (
-          row.payDate < row.prodValPeriod &&
+          dayjs(row.payDate).startOf("month").isBefore(dayjs(row.prodValPeriod).startOf("month")) &&
           (!toBig(row.prodVal || 0).isZero() || !toBig(row.payAmt || 0).isZero())
         ) {
           ElMessage.error("计划付款期间不能早于产值期间！");
@@ -1917,8 +1910,8 @@ const handleViewProcess = async () => {
   }
 };
 
-const handleArchiving = async() => {
-  if(isAdd.value) {
+const handleArchiving = async () => {
+  if (isAdd.value) {
     ElMessage.warning("请先保存再归档！");
     return;
   }
@@ -1933,7 +1926,7 @@ const handleArchiving = async() => {
       wfTitle: billData.value.bizTitle,
     }
     const res = await contractLedgerApi.oaWorkflowCallBackTest(params);
-    if(res.code === 200) {
+    if (res.code === 200) {
       ElMessage.success("归档成功！");
     }
   } catch (error) {
@@ -2293,7 +2286,7 @@ onMounted(() => {
 .adapt-form {
   width: 100%;
   margin: 0 auto;
-  
+
   .item-card {
     background: #ffffff;
     border-radius: 8px;

@@ -1244,6 +1244,7 @@ const createConNo = async () => {
     if (conRes.code === 200) {
       formData.value.addSysNo = conRes.data;
       formData.value.addPhyNo = conRes.data;
+      billData.value.bizNo = conRes.data;
     }
   } catch (error) {
     console.error("生成合同编号失败:", error);

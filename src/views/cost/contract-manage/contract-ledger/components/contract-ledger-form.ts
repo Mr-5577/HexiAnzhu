@@ -642,6 +642,7 @@ export function useContractForm(
       if (conRes.code === 200) {
         formData.value.conSysNo = conRes.data;
         formData.value.conPhyNo = conRes.data;
+        billData.value.bizNo = conRes.data;
       }
     } catch (error) {
       console.error("生成合同编号失败:", error);
@@ -1073,7 +1074,9 @@ export function useContractForm(
       }
 
       submitLoading.value = true;
-      if (formData.value.conSysNo === "") await createConNo();
+      if (formData.value.conSysNo === "") {
+        await createConNo()
+      };
       const params = buildSubmitParams();
       let res;
       res = await contractLedgerApi.submitContractLedger(params);
