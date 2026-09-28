@@ -8,10 +8,12 @@ import zhCn from "element-plus/es/locale/lang/zh-cn";
 
 // ===== 引入 vxe-table 和 vxe-pc-ui =====
 import VxeTable from 'vxe-table'
-import VxePcUI from 'vxe-pc-ui'
+import VxePcUI, { VxeUI } from 'vxe-pc-ui'
 import 'vxe-table/lib/style.css'
 import 'vxe-pc-ui/lib/style.css'
-
+VxeUI.setConfig({
+  zIndex: 3000, // 根据项目实际 z-index 情况调整，建议大于弹窗层级
+})
 VxeTable.setup({
   table: {
     // 表头单元格高度(全局)
