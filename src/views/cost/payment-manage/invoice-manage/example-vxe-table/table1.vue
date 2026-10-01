@@ -1,13 +1,14 @@
 <!-- 示例1：基础表格 -->
 <template>
   <div class="demo-page">
-    <h3>📋 合同列表（基础编辑）</h3>
+    <h3 @click="readonly = !readonly">📋 合同列表（基础编辑）</h3>
     <editable-table-vxe
       v-model="tableData"
       :columns="columns"
       row-key="id"
       :border="true"
       :stripe="true"
+      :readonly="readonly"
       :show-toolbar="true"
       :pagination="false"
       :show-footer="true"
@@ -32,6 +33,8 @@ import { ref } from "vue";
 import { ElMessage } from "element-plus";
 import EditableTableVxe from "@/components/base/vxe-editable-table.vue";
 import type { EditableColumn } from "@/components/base/vxe-editable-table.vue";
+
+const readonly = ref(false);
 
 // ===== 静态数据 =====
 const tableData = ref([
@@ -109,7 +112,7 @@ const columns: EditableColumn[] = [
     field: "supplier",
     title: "供应商",
     width: 180,
-    editable: false,
+    editable: false, // 整列不可编辑
     editType: "input",
     placeholder: "请输入供应商名称",
   },

@@ -91,6 +91,7 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     'SectorCompanyProjectTreet.vue': typeof import('./src/components/business/sector-company-project-treet.vue.vue')['default']
     SummaryBar: typeof import('./src/components/business/summary-bar.vue')['default']
+    TableActions: typeof import('./src/components/base/table-actions.vue')['default']
     UploadInvoiceDialog: typeof import('./src/components/business/upload-invoice-dialog.vue')['default']
     UrbanProjectTree: typeof import('./src/components/business/urban-project-tree.vue')['default']
     VxeEditableTable: typeof import('./src/components/base/vxe-editable-table.vue')['default']

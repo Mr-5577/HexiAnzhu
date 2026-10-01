@@ -17,9 +17,9 @@ VxeUI.setConfig({
 VxeTable.setup({
   table: {
     // 表头单元格高度(全局)
-    headerCellConfig: { height: 28 },
+    headerCellConfig: { height: 30 },
     // 单元格高度(全局)
-    cellConfig: { height: 28 }
+    cellConfig: { height: 30 }
   }
 })
 

@@ -229,6 +229,7 @@ const handleBatchDelete = () => {
 };
 
 const handleExport = () => {
+  console.log("导出数据：", filteredData.value);
   ElMessage.success("导出成功");
 };
 </script>
