@@ -1,101 +1,88 @@
 <!-- 合同台账列表 -->
 <template>
   <div class="ledger-table-wrapper">
-    <el-form :model="queryParams" ref="queryRef" :inline="true">
-      <el-form-item label="业务板块" prop="segId">
-        <el-select
-          v-model="queryParams.segId"
-          placeholder="请选择业务板块"
-          clearable
-          style="width: 180px"
-        >
-          <el-option
-            v-for="item in segOptions"
-            :key="item.id"
-            :label="item.segName"
-            :value="item.id"
-          />
-        </el-select>
-      </el-form-item>
-      <!-- <el-form-item label="项目" prop="projId">
-        <el-cascader
-          v-model="queryParams.projId"
-          :options="projectOptions"
-          :show-all-levels="false"
-          :props="{
-            expandTrigger: 'hover',
-            emitPath: false,
-            checkStrictly: false,
-            value: 'orgId',
-            label: 'orgName',
-            children: 'children',
-          }"
-          placeholder="请选择项目"
-          style="width: 180px"
-          clearable
-        />
-      </el-form-item> -->
-      <el-form-item label="合同名称" prop="conName">
-        <el-input
-          v-model="queryParams.conName"
-          placeholder="请输入合同名称"
-          clearable
-          style="width: 180px"
-        />
-      </el-form-item>
-      <el-form-item label="合同状态" prop="conStatus">
-        <el-select
-          v-model="queryParams.conStatus"
-          placeholder="请选择合同状态"
-          clearable
-          style="width: 180px"
-        >
-          <el-option
-            v-for="item in ConStatusEnum"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item>
+    <BaseSearchCard>
+      <template #form>
+        <el-form :model="queryParams" ref="queryRef" label-width="90px" :inline="true">
+          <el-form-item label="合同分类" prop="conTypeId">
+            <ConTypeSelector v-model="queryParams.conTypeId" placeholder="请选择合同分类" style="width: 180px"
+              :multiple="false" clearable filterable />
+          </el-form-item>
+          <el-form-item label="合同状态" prop="conStatus">
+            <el-select v-model="queryParams.conStatus" placeholder="请选择合同状态" clearable style="width: 180px">
+              <el-option v-for="item in ConStatusEnum" :key="item.value" :label="item.label" :value="item.value" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="产值确认方式" prop="payMethod">
+            <EnumSelect v-model="queryParams.payMethod" :options="PayTypeEnum" clearable placeholder="请选择产值确认方式"
+              :width="'180px'" />
+          </el-form-item>
+          <el-form-item label="创建时间" prop="time">
+            <el-date-picker v-model="queryParams.time" type="daterange" range-separator="-" start-placeholder="开始日期"
+              end-placeholder="结束日期" format="YYYY-MM-DD" value-format="YYYY-MM-DD" style="width: 220px" clearable />
+          </el-form-item>
+
+          <!-- <el-form-item label="合同名称" prop="conName">
+            <el-input v-model="queryParams.conName" placeholder="请输入合同名称" clearable style="width: 180px" />
+          </el-form-item>
+          <el-form-item label="供应商名称" prop="supName">
+            <el-input v-model="queryParams.supName" placeholder="请输入供应商名称" clearable style="width: 180px" />
+          </el-form-item>
+          <el-form-item label="合同编号" prop="conSysNo">
+            <el-input v-model="queryParams.conSysNo" placeholder="请输入合同编号" clearable style="width: 180px" />
+          </el-form-item>
+          <el-form-item label="关联编号" prop="bizNo">
+            <el-input v-model="queryParams.bizNo" placeholder="请输入关联编号" clearable style="width: 180px" />
+          </el-form-item>
+          <el-form-item label="经办人" prop="agentId">
+            <ChooseEmployee v-model="queryParams.agentId" :show-all-levels="false" placeholder="请选择"
+              style="width: 180px" clearable filterable />
+          </el-form-item>
+          <el-form-item label="创建人" prop="createId">
+            <ChooseEmployee v-model="queryParams.createId" :show-all-levels="false" placeholder="请选择"
+              style="width: 180px" clearable filterable />
+          </el-form-item> -->
+        </el-form>
+      </template>
+      <template #actions>
+        <el-input v-model="queryParams.keyWord" placeholder="请输入合同名称、合同编号、供应商名称、关联编号、经办人、创建人" clearable
+          style="width:556px" />
         <el-button type="primary" @click="handleSearch"> 搜索 </el-button>
         <el-button @click="handleReset">重置</el-button>
         <el-button type="primary" @click="handleAdd">新增</el-button>
-      </el-form-item>
-    </el-form>
+      </template>
+    </BaseSearchCard>
 
-    <base-table
-      :columns="columns"
-      :tableData="tableData"
-      :loading="tableLoading"
-      :rowKey="'id'"
-      :pagination="false"
-    >
+    <base-table :columns="columns" :tableData="tableData" :loading="tableLoading" :rowKey="'id'" :total="total"
+      :current-page="currentPage" :page-size="pageSize" @pagination-change="handlePaginationChange">
       <template #conProperty="{ row }">
-        {{ getLabel(ConPropertyEnum, row.conProperty) }}
+        <span>{{ getEnumLabel(ConPropertyEnum, row?.conProperty || 0) }}</span>
       </template>
       <template #priceType="{ row }">
-        {{ getLabel(PriceTypeEnum, row.priceType) }}
+        <span>{{ getEnumLabel(PriceTypeEnum, row?.priceType) }}</span>
       </template>
       <template #conStatus="{ row }">
-        {{ getLabel(ConStatusEnum, row.conStatus) }}
+        <el-tag size="small" :type="getEnumType(conBillStatusEnum, row?.conStatus || 0)">
+          {{ getEnumLabel(conBillStatusEnum, row?.conStatus || 0) }}
+        </el-tag>
       </template>
+
       <template #actions="{ row }">
-        <!-- 草稿状态才可以编辑,0-草稿 5-审批中 10-已审批 20-已结算 30-已作废 -->
-        <el-button
-          type="primary"
-          link
-          @click="handleEdit(row)"
-          :disabled="row.conStatus !== 0"
-        >
+        <!-- 外部常驻按钮 -->
+        <el-button type="primary" link @click="handleEdit(row)"
+          :disabled="row.conStatus !== 0 || row.createId !== userStore.userInfo.mdUserId">
           编辑
         </el-button>
-        <el-button type="danger" link @click="handleDelete(row)">
-          删除
-        </el-button>
         <el-button type="primary" link @click="handleDetail(row)">
-          详情
+          合同详情
+        </el-button>
+        <el-button type="primary" link @click="handleBookDetail(row)"
+          :disabled="row.conStatus === 0 || row.conStatus === 10 || row.conStatus === null">
+          台账详情
+        </el-button>
+        <el-button type="danger" link @click="handleDelete(row)"
+          :disabled="row.conStatus !== 0 || row.createId !== userStore.userInfo.mdUserId">
+          删除
         </el-button>
       </template>
     </base-table>
@@ -103,11 +90,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { useRouter } from "vue-router";
-import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 import { largeScreenApi } from "@/api/sales/large-screen-api";
 import { contractLedgerApi } from "@/api/cost/contract-manage/contract-ledger-api";
@@ -115,17 +101,20 @@ import {
   ConPropertyEnum,
   PriceTypeEnum,
   ConStatusEnum,
-  getLabel,
+  PayTypeEnum,
 } from "@/constants/contract-manage/enums";
-import {
-  HConMain,
-  HConMainQuery,
-} from "@/types/cost/contract-manage/contract-ledger-type";
+import { getEnumLabel, getEnumType } from "@/utils/enum";
+import { conBillStatusEnum } from "@/constants/contract-manage/enums.ts"
+import { HConMain } from "@/types/cost/contract-manage/contract-ledger-type";
+import { useUserStore } from "@/stores/user-store";
+import ConTypeSelector from "@/components/business/con-type-selector.vue";
+import EnumSelect from "@/components/base/base-enum-select.vue";
+import BaseSearchCard from "@/components/base/base-search-card.vue";
 
 defineOptions({ name: "contract-ledger-table" });
 
 const props = defineProps<{
-  projectId: number | null;
+  selectedData: any | null;
 }>();
 
 const emit = defineEmits<{
@@ -135,78 +124,140 @@ const emit = defineEmits<{
 const router = useRouter();
 
 const tableLoading = ref(false);
+const currentPage = ref<number>(1);
+const pageSize = ref<number>(20);
+const total = ref<number>(0);
 const tableData = ref([]);
+const userStore = useUserStore();
 
-const queryParams = ref<HConMainQuery>({
-  segId: undefined,
+const queryParams = ref({
+  projSegId: undefined,
+  projMguId: undefined,
   conStatus: undefined,
   projId: undefined,
-  conName: "",
+  conName: undefined,
+  supName: undefined,
+  conTypeId: undefined,
+  agentId: undefined,
+  createId: undefined,
+  conSysNo: undefined,
+  bizNo: undefined,
+  payMethod: undefined,
+  time: [],
+  keyWord: undefined,
 });
-// 业务板块
-const segOptions = ref([]);
 // 项目列表
 const projectOptions = ref([]);
 
 const columns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "segId", label: "业务板块", width: 150 },
-  { prop: "projId", label: "项目名称", width: 200 },
-  { prop: "conTypeId", label: "合同分类", width: 150 },
-  { prop: "conSysNo", label: "合同编号", minWidth: 220 },
-  { prop: "conName", label: "合同名称", width: 150 },
-  { slot: "conProperty", label: "合同类型", width: 150 },
-  { prop: "supId", label: "供应商名称", minWidth: 150 },
-  { prop: "signAmt", label: "签约金额(含税)", minWidth: 150 },
-  { prop: "signExclAmt", label: "签约金额(不含税)", minWidth: 150 },
-  { prop: "settleAmt", label: "结算金额", minWidth: 150 },
-  { slot: "priceType", label: "计价方式", minWidth: 150 },
+  { prop: "segName", label: "业务板块", width: 90 },
+  { prop: "projName", label: "项目名称", width: 150 },
+  { prop: "conTypeName", label: "合同分类", width: 150 },
+  { prop: "conSysNo", label: "合同编号", minWidth: 150 },
+  { prop: "conName", label: "合同名称", width: 250 },
+  { slot: "conProperty", label: "合同类型", width: 90 },
+  { prop: "companyName", label: "签约公司", minWidth: 200 },
+  { prop: "supName", label: "供应商名称", minWidth: 200 },
+  { prop: "signAmt", label: "签约金额(含税)", minWidth: 120, formatType: "#,##0.00" },
+  { prop: "signExclAmt", label: "签约金额(不含税)", minWidth: 120, formatType: "#,##0.00" },
+  { prop: "taxAmt", label: "税额", minWidth: 100, formatType: "#,##0.00" },
+  { prop: "taxRate", label: "税率", minWidth: 90, formatType: "d%" },
+  { prop: "bldNames", label: "楼栋范围", minWidth: 90 },
+  { slot: "priceType", label: "计价方式", minWidth: 100 },
   { prop: "signDate", label: "签订日期", minWidth: 120 },
   { prop: "effectiveDate", label: "生效日期", minWidth: 120 },
   { prop: "expiryDate", label: "到期日期", minWidth: 120 },
-  { slot: "conStatus", label: "合同状态", minWidth: 120 },
+  { slot: "conStatus", label: "合同状态", minWidth: 100 },
+  { prop: "agentName", label: "经办人", minWidth: 100 },
+  { prop: "createName", label: "创建人", minWidth: 100 },
+  { prop: "createDate", label: "创建时间", minWidth: 120 },
   {
     label: "操作",
     prop: "actions",
-    width: 200,
+    width: 260,
     slot: "actions",
     fixed: "right",
   },
 ];
+
 // 获取列表数据
 const getDataList = async () => {
-  if (!props.projectId) {
+  if (!props.selectedData) {
     return;
   }
+  const { orgId, dataType } = props.selectedData;
+  const params = {
+    projSegId: dataType === 4 ? orgId : undefined, // 板块
+    projMguId: dataType === 3 ? orgId : undefined, // 公司
+    projId: dataType === 1 ? orgId : undefined, // 项目
+  };
   try {
     tableLoading.value = true;
     tableData.value = [];
-    const params = {
-      ...queryParams.value,
-      projId: props.projectId,
+    const [startDate, endDate] = queryParams.value.time || [];
+    const query = {
+      conName: queryParams.value.conName,
+      supName: queryParams.value.supName,
+      conStatus: queryParams.value.conStatus,
+      createId: queryParams.value.createId,
+      agentId: queryParams.value.agentId,
+      conTypeId: queryParams.value.conTypeId,
+      conSysNo: queryParams.value.conSysNo,
+      bizNo: queryParams.value.bizNo,
+      payMethod: queryParams.value.payMethod,
+      keyWord: queryParams.value.keyWord,
+      ...params,
+      createDateStart: startDate,
+      createDateEnd: endDate,
+      pageNum: currentPage.value,
+      pageSize: pageSize.value,
     };
-    const res = await contractLedgerApi.getContractLedgerList(params);
-    if (res.code === 200) {
-      tableData.value = res.data || [];
+
+    const res = await contractLedgerApi.getContractLedgerList(query);
+
+    if (res.code === 200 && res.data) {
+      const { records } = res.data;
+      tableData.value = records || [];
+      total.value = res.data?.total || 0;
     }
   } catch (error) {
-    console.error("获取招标需求列表失败:", error);
+    console.error("查询合同信息失败:", error);
   } finally {
     tableLoading.value = false;
   }
 };
-
-const handleSearch = () => {
+const handlePaginationChange = (params: any) => {
+  currentPage.value = params.currentPage;
+  pageSize.value = params.pageSize;
   getDataList();
 };
-
+const handleSearch = () => {
+  resetPagination();
+  getDataList();
+};
+const resetPagination = () => {
+  currentPage.value = 1;
+  pageSize.value = 20;
+}
 const handleReset = () => {
   queryParams.value = {
-    segId: undefined,
+    projSegId: undefined,
+    projMguId: undefined,
     conStatus: undefined,
     projId: undefined,
-    conName: "",
+    conName: undefined,
+    supName: undefined,
+    conTypeId: undefined,
+    agentId: undefined,
+    createId: undefined,
+    conSysNo: undefined,
+    bizNo: undefined,
+    payMethod: undefined,
+    keyWord: undefined,
+    time: [],
   };
+  resetPagination();
   getDataList();
 };
 // 新增合同台账
@@ -218,7 +269,7 @@ const handleAdd = () => {
     },
   });
 };
-// 编辑合同台账
+// 编辑合同
 const handleEdit = (row: HConMain) => {
   router.push({
     path: "/con/contract-ledger/edit",
@@ -227,13 +278,27 @@ const handleEdit = (row: HConMain) => {
     },
   });
 };
-// 台账详情
+
+// 查看合同
 const handleDetail = (row: HConMain) => {
   router.push({
     path: "/con/contract-ledger/detail",
     query: {
       conId: row.id,
-      projId: props.projectId,
+      mode: "detail"
+    },
+  });
+};
+
+
+// 台账详情
+const handleBookDetail = (row: HConMain) => {
+  router.push({
+    path: "/con/contract-ledger/main",
+    query: {
+      conId: row.id,
+      projId: row.projId,
+      conName: row.conName,
       tab: "basic",
     },
   });
@@ -250,20 +315,9 @@ const handleDelete = (row: HConMain) => {
         getDataList();
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 
-// 获取业务板块列表
-const getSegOptions = async () => {
-  try {
-    const res = await dictionaryApi.getsegmentList();
-    if (res.code === 200) {
-      segOptions.value = res.data || [];
-    }
-  } catch (error) {
-    console.error("获取业务板块列表失败:", error);
-  }
-};
 // 获取项目列表
 const getProjectOptions = async () => {
   try {
@@ -278,10 +332,12 @@ const getProjectOptions = async () => {
 };
 
 watch(
-  () => props.projectId,
+  () => props.selectedData,
   (val) => {
     if (val) {
-      getSegOptions();
+      currentPage.value = 1;
+      pageSize.value = 20;
+      total.value = 0;
       getProjectOptions();
       getDataList();
     }

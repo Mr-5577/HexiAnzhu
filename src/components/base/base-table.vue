@@ -26,14 +26,18 @@
           <!-- 列设置 -->
           <el-tooltip content="列设置">
             <el-button size="small" @click="handleColumnSetting">
-              <el-icon><Setting /></el-icon>
+              <el-icon>
+                <Setting />
+              </el-icon>
             </el-button>
           </el-tooltip>
 
           <!-- 刷新 -->
           <el-tooltip content="刷新">
             <el-button size="small" @click="handleRefresh" :loading="loading">
-              <el-icon><Refresh /></el-icon>
+              <el-icon>
+                <Refresh />
+              </el-icon>
             </el-button>
           </el-tooltip>
         </slot>
@@ -42,44 +46,21 @@
 
     <!-- 表格部分 -->
     <div class="table-wrapper" :style="tableWrapperStyle">
-      <el-table
-        ref="tableRef"
-        :row-key="rowKey"
-        v-bind="getTableProps"
-        :data="tableData"
-        v-loading="loading"
-        :show-summary="showSummary"
-        :summary-method="props.summaryMethod || defaultSummaryMethod"
-        :default-expand-all="isExpandAll"
-        :row-class-name="getRowClassName"
-        element-loading-text="数据加载中..."
-        element-loading-background="rgba(255, 255, 255, 0.8)"
-        @selection-change="handleSelectionChange"
-        @sort-change="handleSortChange"
-        @row-click="handleRowClick"
-      >
+      <el-table ref="tableRef" :row-key="rowKey" v-bind="getTableProps" :data="tableData" v-loading="loading"
+        :show-summary="showSummary" :summary-method="props.summaryMethod || defaultSummaryMethod"
+        :default-expand-all="isExpandAll" :row-class-name="getRowClassName" element-loading-text="数据加载中..."
+        element-loading-background="rgba(255, 255, 255, 0.8)" @selection-change="handleSelectionChange"
+        @sort-change="handleSortChange" @row-click="handleRowClick">
         <!-- 递归渲染多级表头 -->
-        <template
-          v-for="(item, index) in visibleColumns"
-          :key="item.prop ?? item.type ?? index"
-        >
-          <component
-            :is="TableColumn"
-            :column="item"
-            :slots="$slots"
-            :dict-data="dictData"
-            @cell-click="handleTableCellClick"
-            @cell-event="handleTableCellEvent"
-          />
+        <template v-for="(item, index) in visibleColumns" :key="item.prop ?? item.type ?? index">
+          <component :is="TableColumn" :column="item" :slots="$slots" :dict-data="dictData"
+            @cell-click="handleTableCellClick" @cell-event="handleTableCellEvent" />
         </template>
 
         <!-- 空状态 -->
         <template #empty>
-          <div
-            :class="
-              compactEmpty ? 'empty-container compact' : 'empty-container'
-            "
-          >
+          <div :class="compactEmpty ? 'empty-container compact' : 'empty-container'
+            ">
             <slot name="empty">
               <el-empty description="暂无数据" />
             </slot>
@@ -90,17 +71,9 @@
 
     <!-- 分页部分 -->
     <div class="pagination" v-if="pagination">
-      <el-pagination
-        :size="'small'"
-        :current-page="currentPage"
-        :page-size="pageSize"
-        :page-sizes="pageSizes"
-        :total="total"
-        :layout="paginationLayout"
-        :background="paginationBackground"
-        @size-change="handlePageSizeChange"
-        @current-change="handleCurrentChange"
-      />
+      <el-pagination :size="'small'" :current-page="currentPage" :page-size="pageSize" :page-sizes="pageSizes"
+        :total="total" :layout="paginationLayout" :background="paginationBackground" @size-change="handlePageSizeChange"
+        @current-change="handleCurrentChange" />
     </div>
   </div>
 </template>
@@ -157,7 +130,7 @@ export interface TableColumnItem<T = any> {
   /** 表头显示的文本内容 */
   label?: string;
   /** 列类型：selection（多选列）、index（序号列）、expand（可展开列）、action（操作列） */
-  type?: "selection" | "index" | "expand" | "action";
+  type?: "selection" | "index" | "expand" | "action" | 'string';
   /** 列宽度，支持像素(px)或百分比(%) */
   width?: string | number;
   /** 列最小宽度，支持像素(px)或百分比(%) */
@@ -201,10 +174,14 @@ export interface TableColumnItem<T = any> {
   };
   /** 是否显示合计行 */
   showSummary?: boolean;
+  /** 是否为必填列，表头显示红色星号 */
+  required?: boolean;
   /** 选择列专用：判断该行是否可选，优先级高于 disabledField */
   selectable?: (row: T, index: number) => boolean;
   /** 选择列专用：根据行数据的字段名判断是否可选，值为 true 表示不可选 */
   disabledField?: string;
+  /** 格式化类型 */
+  formatType?: 'd%' | '100*d%' | '0.00%' | '#,##0.00%' | 'fixed2' | 'thousand' | '0.00' | '#,##0.00';
   /** 操作列配置：按钮列表（仅当 type 为 'action' 时生效） */
   actions?: TableActionItem<T>[];
   /** 其他自定义属性 */
@@ -225,7 +202,7 @@ export interface DictData {
 // 定义组件属性
 interface Props<T = any> {
   /** 列配置数组，定义表格的列结构、表头、属性和行为 */
-  columns: TableColumnItem<T>[];
+  columns: TableColumnItem<T>[] | any[];
   /** 表格数据数组，每行数据对应一个对象 */
   tableData: T[];
   /** 行数据的唯一标识字段，用于行选择和展开状态跟踪，默认为 'id' */
@@ -326,6 +303,58 @@ interface Emits {
   ): void;
 }
 
+// ============ 根据 formatType 格式化值 ============
+const formatValueByType = (value: any, formatType: string): string => {
+  // 处理空值
+  if (value === null || value === undefined || value === '') return '-';
+
+  const num = Number(value);
+  if (isNaN(num)) return String(value);
+
+  switch (formatType) {
+    case 'd%':
+      // 整数百分比：13 → 13%
+      return `${Math.floor(num)}%`;
+
+    case '0.00%':
+      // 保留原始小数位数百分比：0.131234 → 0.131234%
+      return `${num}%`;
+
+    case '#,##0.00%':
+      // 千分位两位小数百分比：12345.678 → 12,345.68%
+      const percentage = num * 100;
+      const formatted = percentage.toLocaleString('zh-CN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+      return `${formatted}%`;
+
+    case 'fixed2':
+    case '0.00':
+      // 固定保留两位小数：13.4567 → 13.46
+      return num.toFixed(2);
+
+    case 'thousand':
+      // 千分位格式化，保留原始小数位数
+      return num.toLocaleString('zh-CN', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 20,
+      });
+
+    case '#,##0.00':
+      // 千分位固定保留两位小数：1234567.89 → 1,234,567.89
+      return num.toLocaleString('zh-CN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      });
+
+    case '100*d%':
+      // 整数百分比：13 → 13%
+      return `${Math.floor(num * 100)}%`;
+    default:
+      return String(value);
+  }
+};
 // ============ 递归列组件 ============
 
 // 递归列组件的 Props
@@ -582,9 +611,9 @@ const TableColumn = {
               expandSlot
                 ? expandSlot(scope)
                 : h(
-                    "span",
-                    `Expand content for ${scope.row.id || scope.$index}`,
-                  ),
+                  "span",
+                  `Expand content for ${scope.row.id || scope.$index}`,
+                ),
           },
         );
       }
@@ -640,10 +669,17 @@ const TableColumn = {
               return headerSlotFunc(scope);
             }
           }
+          // 构建带星号的 label 节点
+          const labelNode = h('span', { class: 'header-label' }, [
+            column.required ? h('span', { style: { color: 'red', marginRight: '4px' } }, '*') : null,
+            column.label || '',
+          ]);
+
           // 如果有表头提示配置
           if (column.headerTip) {
             return h("div", { class: "header-with-tip" }, [
-              h("span", { class: "header-label" }, column.label || ""),
+              labelNode,
+              // h("span", { class: "header-label" }, column.label || ""),
               h(
                 resolveComponent("el-tooltip"),
                 {
@@ -669,7 +705,8 @@ const TableColumn = {
             ]);
           }
           // 默认表头
-          return h("span", column.label || "");
+          // return h("span", column.label || "");
+          return labelNode;
         },
         // 单元格内容
         default: (scope: any) => {
@@ -694,7 +731,12 @@ const TableColumn = {
             contentValue = column.formatter(scope.row, column, scope.$index);
           } else if (column.dict) {
             contentValue = getDictLabel(column.dict, scope.row[column.prop!]);
+          } else if (column.formatType) {
+            // 3. 使用 formatType 格式化（新增逻辑）
+            const rawValue = scope.row[column.prop!];
+            contentValue = formatValueByType(rawValue, column.formatType);
           } else {
+            // 4. 显示原始值
             contentValue = scope.row[column.prop!];
           }
 
@@ -985,8 +1027,14 @@ const defaultSummaryMethod = ({
       const numValue = formatNumber(value, 2);
       sum += numValue;
     });
-    // 格式化显示（使用 formatMoneyDisplay）
-    sums[index] = formatNumberDisplay(sum, 2);
+
+    // 根据列的 formatType 格式化合计值
+    if (colConfig?.formatType) {
+      sums[index] = formatValueByType(sum, colConfig.formatType);
+    } else {
+      // 默认使用金额格式化
+      sums[index] = formatNumberDisplay(sum, 2);
+    }
   });
   return sums;
 };
@@ -1159,10 +1207,12 @@ defineExpose({
   padding-bottom: 5px;
   box-sizing: border-box;
 }
+
 .action-bar {
   margin-bottom: 10px;
   flex-shrink: 0;
 }
+
 .toolbar {
   height: 28px;
   display: flex;
@@ -1173,15 +1223,18 @@ defineExpose({
   gap: 8px;
   flex-shrink: 0;
 }
+
 .toolbar .left {
   display: flex;
   align-items: center;
   gap: 12px;
 }
+
 .toolbar .right {
   display: flex;
   align-items: center;
 }
+
 .batch-actions {
   display: flex;
   align-items: center;
@@ -1190,33 +1243,43 @@ defineExpose({
   background-color: #f0f9ff;
   border-radius: 4px;
 }
+
 .selected-count {
   font-size: 14px;
   color: #409eff;
 }
+
 .table-wrapper {
   flex: 1;
-  min-height: 180px;
+  min-height: 150px;
+
   :deep(.el-table) {
     .el-table__header-wrapper {
       background-color: #f8f8f9 !important;
+
       .el-table__header {
         background-color: #f8f8f9 !important;
+
         .el-table__cell {
           padding: 0; // 调整内边距来控制高度
+
           // 固定内容区高度，确保行高一致
           .cell {
             height: 28px;
             line-height: 28px;
           }
         }
+
         thead {
           background-color: #f8f8f9 !important;
+
           tr {
             background-color: #f8f8f9 !important;
+
             th {
               background-color: #f8f8f9 !important;
               color: #515a6e !important;
+
               .cell {
                 color: #515a6e !important;
               }
@@ -1225,18 +1288,22 @@ defineExpose({
         }
       }
     }
+
     .el-table__body {
       .el-table__cell {
         padding: 0; // 调整内边距来控制高度
+
         // 固定内容区高度，确保行高一致
         .cell {
           height: 28px;
           line-height: 28px;
         }
+
         // 可点击单元格样式
         .clickable-cell {
           cursor: pointer;
           color: #1890ff;
+
           &:hover {
             text-decoration: underline;
           }
@@ -1245,7 +1312,7 @@ defineExpose({
 
       // 添加点击行高亮样式
       .current-row {
-        & > .el-table__cell {
+        &>.el-table__cell {
           background-color: #e0ecfc !important;
         }
       }
@@ -1253,43 +1320,176 @@ defineExpose({
       // 鼠标悬停效果
       .el-table__row {
         &:hover {
-          & > .el-table__cell {
+          &>.el-table__cell {
             background-color: #f0f5ff !important;
           }
         }
       }
     }
+
     // 表格空数据时的高度调整
     .el-table__empty-block {
       height: 100% !important;
     }
   }
+
+  // 新调整的table列表的样式=======开始
+  :deep(.el-table) {
+    border-radius: 8px;
+    font-size: 14px;
+
+    .el-table__header-wrapper {
+      th.el-table__cell {
+        background-color: #f7f8fa;
+        // color: #4a5568;
+        // font-weight: 600;
+        font-size: 14px;
+        border-bottom: 1px solid #edf2f7;
+        // padding: 12px 0;
+
+        .cell {
+          // padding: 0 12px;
+        }
+      }
+    }
+
+    .el-table__body-wrapper {
+      tr.el-table__row {
+        transition: background 0.15s;
+
+        td.el-table__cell {
+          border-bottom: 1px solid #f0f2f5;
+          // padding: 10px 0;
+          // color: #2d3748;
+
+          .cell {
+            // padding: 0 12px;
+          }
+        }
+
+        &:hover td.el-table__cell {
+          background-color: #f7fafc;
+        }
+
+        &:nth-child(even) td.el-table__cell {
+          background-color: #fafbfc;
+        }
+
+        &:nth-child(even):hover td.el-table__cell {
+          background-color: #f7fafc;
+        }
+      }
+    }
+  }
+
+  :deep(.el-table__empty-block) {
+    padding: 40px 0;
+    color: #a0aec0;
+    font-size: 14px;
+  }
+
+  // 新调整的table列表的样式=======结束
 }
+
 .pagination {
   display: flex;
   justify-content: flex-end;
   margin-top: 10px;
   flex-shrink: 0;
-  :deep(.el-pager) {
-    .is-active {
-      background: linear-gradient(135deg, #05456e 0%, #4096cc 100%);
+
+  // 穿透修改 el-pagination 样式
+  :deep(.el-pagination) {
+    background: #fff;
+    padding: 4px 4px;
+    box-sizing: border-box;
+    border-radius: 6px;
+    // 可加轻微边框或阴影
+    // border: 1px solid #e2e8f0;
+    // box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+
+    // 上一页、下一页按钮
+    .btn-prev,
+    .btn-next {
+      border-radius: 4px;
+      border: 1px solid #dcdfe6;
+      background: #fff;
+      margin: 0 2px;
+      transition: all 0.2s;
+
+      &:hover:not(.is-disabled):not([disabled]) {
+        color: #409eff;
+        border-color: #409eff;
+        background: #ecf5ff;
+      }
+
+      &.is-disabled,
+      &[disabled] {
+        opacity: 0.9;
+        cursor: not-allowed;
+      }
+    }
+
+    // 页码列表容器
+    .el-pager {
+      display: flex;
+      gap: 4px; // 按钮间距
+
+      li {
+        border-radius: 4px;
+        border: 1px solid transparent;
+        transition: all 0.2s;
+        text-align: center;
+        cursor: pointer;
+
+        &:hover:not(.is-active):not(.more) {
+          background: #f0f5ff;
+          color: #409eff;
+          border-color: #c6e2ff;
+        }
+
+        &.is-active {
+          background: linear-gradient(135deg, #05456e 0%, #4096cc 100%);
+          color: #fff;
+          box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+          border-color: transparent;
+          cursor: default;
+        }
+
+        // 省略号（more）样式
+        &.more {
+          border: none;
+          background: transparent;
+          cursor: pointer;
+          color: #606266;
+
+          &:hover {
+            color: #409eff;
+          }
+        }
+      }
     }
   }
 }
+
 .empty-container {
   padding: 40px 0;
+
   // 紧凑型空状态样式，适用于小高度容器（如弹窗内的表格）
   &.compact {
     padding: 8px 0;
+
     :deep(.el-empty) {
+
       // padding: 8px 0;
       .el-empty__image {
         width: 60px;
         height: 60px;
         margin-bottom: 4px;
       }
+
       .el-empty__description {
         margin-top: 4px;
+
         p {
           font-size: 12px;
           line-height: 1.2;
@@ -1298,13 +1498,16 @@ defineExpose({
     }
   }
 }
+
 /* 调整合计行高度 */
 .pro-table-container {
   :deep(.el-table) {
     .el-table__footer-wrapper {
+
       // 调整整个合计行区域的高度
       .el-table__cell {
         padding: 0; // 调整内边距来控制高度
+
         .cell {
           line-height: 1.5; // 调整行高
           min-height: 32px; // 最小高度
@@ -1339,6 +1542,7 @@ defineExpose({
     flex-direction: column;
     align-items: stretch;
   }
+
   .toolbar .left,
   .toolbar .right {
     justify-content: space-between;

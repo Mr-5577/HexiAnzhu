@@ -5,224 +5,178 @@ import type {
 } from "@/types/system/menu-type";
 
 /**
- * 提取模块数据（用于header显示）
+ * 提取模块数据（用于顶部导航）
  */
 export function extractModules(menuData: BackendMenuItem[]): ModuleItem[] {
   return menuData
-    .filter((item) => item.type === "module")
+    .filter((item) => item.menuType === 0) // menuType: 0 表示模块
     .map((module) => ({
       id: module.id,
       name: module.name,
-      title: module.meta.title,
-      icon: module.meta.icon,
-      sort: module.sort,
+      title: module.meta?.title || module.title || "",
+      icon: module.meta?.icon || module.icon || "",
+      sort: module.sort || 0,
     }))
     .sort((a, b) => a.sort - b.sort);
 }
 
 /**
- * 提取所有菜单数据（用于生成路由和侧边栏）
- */
-export function extractAllMenus(
-  menuData: BackendMenuItem[]
-): BackendMenuItem[] {
-  const allMenus: BackendMenuItem[] = [];
-
-  const extractMenus = (items: BackendMenuItem[]) => {
-    items.forEach((item) => {
-      if (item.type === "menu") {
-        allMenus.push(item);
-      }
-      if (item.children) {
-        extractMenus(item.children);
-      }
-    });
-  };
-
-  menuData.forEach((module) => {
-    if (module.children) {
-      extractMenus(module.children);
-    }
-  });
-
-  return allMenus;
-}
-
-/**
- * 根据模块ID获取该模块下的侧边栏菜单
+ * 根据模块 ID 获取侧边栏菜单
  */
 export function getSidebarMenuByModule(
   menuData: BackendMenuItem[],
-  moduleId: number
+  moduleId: number,
 ): SidebarMenuItem[] {
-  // console.log("根据模块ID获取该模块下的侧边栏菜单", menuData, moduleId);
   const module = menuData.find(
-    (item) => item.id === moduleId && item.type === "module"
+    (item) => item.id === moduleId && item.menuType === 0,
   );
   if (!module || !module.children) return [];
 
-  return transformMenuToSidebar(module.children);
+  return transformToSidebarMenu(module.children);
 }
 
 /**
- * 将菜单数据转换为侧边栏格式,过滤掉isVisible为false的菜单
+ * 递归转换菜单数据为侧边栏格式
+ * 只处理 menuType === 1 的菜单项，过滤掉按钮 (menuType === 2)
+ * 注意：如果子菜单全部不可见，该菜单项不显示子菜单箭头
  */
-function transformMenuToSidebar(
-  menuData: BackendMenuItem[]
-): SidebarMenuItem[] {
-  const buildMenuItems = (items: BackendMenuItem[]): SidebarMenuItem[] => {
-    const result: SidebarMenuItem[] = [];
-    items.forEach((item) => {
-      // 过滤掉不显示的菜单(比如详情页面等等)
-      // if (item.meta.isVisible) {
-      //   return;
-      // }
+function transformToSidebarMenu(items: BackendMenuItem[]): SidebarMenuItem[] {
+  const result: SidebarMenuItem[] = [];
 
-      const currentPath = item.path
-        ? item.path.startsWith("/")
-          ? item.path
-          : `/${item.path}`
-        : undefined;
+  for (const item of items) {
+    // 跳过按钮类型
+    if (item.menuType === 2) continue;
 
-      const menuItem: SidebarMenuItem = {
-        index: currentPath || `menu-${item.id}`,
-        title: item.meta.title,
-        path: currentPath,
-        icon: item.meta.icon,
-        name: item.name,
-        isVisible: item.meta.isVisible || false,
-      };
+    const menuItem: SidebarMenuItem = {
+      index: item.path
+        ? `/${item.path.replace(/^\/+/, "")}`
+        : `menu-${item.id}`,
+      title: item.meta?.title || item.title || "",
+      name: item.name,
+      path: item.path ? `/${item.path.replace(/^\/+/, "")}` : undefined,
+      icon: item.meta?.icon || item.icon || "",
+      isVisible: item.isVisible ?? item.meta?.isVisible ?? true,
+    };
 
-      // 如果有子菜单，递归处理
-      if (item.children && item.children.length > 0) {
-        menuItem.children = buildMenuItems(item.children);
+    // 递归处理子菜单
+    if (item.children && item.children.length > 0) {
+      const childMenus = transformToSidebarMenu(item.children);
+      // 只保留有可见子菜单的项，或者子菜单本身可见的项
+      const visibleChildren = childMenus.filter(
+        (child) => child.isVisible !== false,
+      );
+      if (visibleChildren.length > 0) {
+        menuItem.children = visibleChildren;
+      } else {
+        // 如果没有可见的子菜单，不设置 children，避免显示箭头
+        delete menuItem.children;
       }
+    }
 
-      result.push(menuItem);
-    });
-    return result;
-  };
-  // console.log("buildMenuItems(menuData)", buildMenuItems(menuData));
-  return buildMenuItems(menuData);
+    result.push(menuItem);
+  }
+
+  return result;
 }
 
 /**
  * 获取模块下的第一个可跳转路由路径
+ * 深度优先遍历，返回第一个有 component 且可见的叶子节点
  */
 export function getFirstRoutePath(
   menuData: BackendMenuItem[],
-  moduleId: number
+  moduleId: number,
 ): string | null {
   const module = menuData.find(
-    (item) => item.id === moduleId && item.type === "module"
+    (item) => item.id === moduleId && item.menuType === 0,
   );
-  if (!module || !module.children) return null;
 
-  // 递归查找第一个有path的菜单项
-  const findFirstPath = (items: BackendMenuItem[]): string | null => {
+  if (!module || !module.children) {
+    console.warn(`[getFirstRoutePath] 未找到模块 ID: ${moduleId}`);
+    return null;
+  }
+
+  // 深度优先遍历
+  const dfs = (items: BackendMenuItem[]): BackendMenuItem | null => {
     for (const item of items) {
-      if (item.path && item.type === "menu") {
-        // return `/${item.path}`;
-        // 直接返回完整路径
-        return item.path.startsWith("/") ? item.path : `/${item.path}`;
-      }
+      // 跳过按钮和不可见的项
+      if (item.menuType === 2 || item.isVisible === false) continue;
+
+      // 优先遍历子菜单（深度优先）
       if (item.children && item.children.length > 0) {
-        const path = findFirstPath(item.children);
-        if (path) return path;
+        const found = dfs(item.children);
+        if (found) return found;
+      }
+
+      // 如果当前项有 component 和 path，返回它
+      // 注意：这里会在遍历完所有子菜单后执行
+      // 意味着：如果子菜单有可见页面，会先返回子菜单的；否则返回当前项
+      if (item.component && item.path) {
+        return item;
       }
     }
     return null;
   };
 
-  return findFirstPath(module.children);
+  const result = dfs(module.children);
+
+  if (result) {
+    const fullPath = result.path.startsWith("/")
+      ? result.path
+      : `/${result.path}`;
+    console.log(`[getFirstRoutePath] 找到路径: ${fullPath} (${result.title})`);
+    return fullPath;
+  }
+
+  console.warn(`[getFirstRoutePath] 模块 ${module.title} 下没有可访问的页面`);
+  return null;
 }
 
 /**
- * @name 把菜单数据转换为需要的格式
- * @param originalData 源数据
- * @returns
+ * 转换原始菜单数据为前端格式
  */
-export function transformMenuDataExact(originalData: any) {
-  if (originalData && originalData.length == 0) return [];
-  // 先找到所有可见的顶级模块 menuType:0模块 1菜单 2按钮  isVisible:是否可见  true可见 false不可见
+export function transformMenuDataExact(originalData: any[]): BackendMenuItem[] {
+  if (!originalData || originalData.length === 0) return [];
+
+  // 只处理 menuType === 0 且可见的顶级模块
   const topModules = originalData.filter(
-    (node: any) => node.menuType === 0 && node.isVisible
+    (node: any) => node.menuType === 0 && node.isVisible !== false,
   );
 
-  const result: any = [];
+  const result: BackendMenuItem[] = [];
+
   topModules.forEach((module: any) => {
-    // 构建模块节点
-    const moduleNode = {
+    const moduleNode: any = {
       id: module.id,
-      pid: module.pid,
-      type: "module",
+      menuType: 0,
       name: module.name,
-      sort: module.sort,
+      title: module.title,
+      icon: module.icon,
+      sort: module.sort || 0,
+      pid: module.pid || 0,
       parentId: 0,
+      isVisible: module.isVisible !== false,
+      isKeepAlive: module.isKeepAlive || false,
+      isMultiOpen: module.isMultiOpen || false,
+      isControl: module.isControl || false,
+      isDel: module.isDel || false,
+      createId: module.createId || 0,
       meta: {
         title: module.title,
         icon: module.icon,
+        isKeepAlive: module.isKeepAlive || false,
+        isMultiOpen: module.isMultiOpen || false,
+        isControl: module.isControl || false,
+        isVisible: module.isVisible !== false,
+        isDel: module.isDel || false,
+        createId: module.createId || 0,
       },
       children: [],
     };
 
-    // 处理模块的子节点
+    // 处理子菜单
     if (module.children && module.children.length > 0) {
-      // 递归处理子节点，但需要调整parentId指向
-      function processChildren(children: any, parentId: any, pid?: any) {
-        return children
-          .filter((child: any) => child.menuType === 1) // 只保留菜单类型
-          .map((child: any) => {
-            const childNode = {
-              id: child.id,
-              type: "menu",
-              pid: pid,
-              name: child.name,
-              path: child.path,
-              sort: child.sort,
-              parentId: parentId,
-              meta: {
-                title: child.title,
-                icon: child.icon,
-              },
-            };
-
-            // 添加component、isKeepAlive、isVisible、isMultiOpen
-            if (child.component) {
-              (childNode as any).component = child.component;
-            }
-            if (child.isKeepAlive) {
-              (childNode.meta as any).isKeepAlive = true;
-            }
-            if (child.isVisible) {
-              (childNode.meta as any).isVisible = true;
-            }
-            if (child.isMultiOpen) {
-              (childNode.meta as any).isMultiOpen = true;
-            }
-
-            // 递归处理子菜单
-            if (child.children && child.children.length > 0) {
-              const validGrandChildren = child.children.filter(
-                (gc: any) => gc.menuType === 1
-              );
-              if (validGrandChildren.length > 0) {
-                (childNode as any).children = processChildren(
-                  validGrandChildren,
-                  childNode.id
-                );
-              }
-            }
-
-            return childNode;
-          });
-      }
-
-      moduleNode.children = processChildren(
-        module.children,
-        moduleNode.id,
-        moduleNode.pid
-      );
+      moduleNode.children = processChildren(module.children, moduleNode.id);
     }
 
     result.push(moduleNode);
@@ -231,20 +185,74 @@ export function transformMenuDataExact(originalData: any) {
   return result;
 }
 
-// 从路由菜单数据中提取按钮权限
+/**
+ * 递归处理子菜单（只处理 menuType === 1 的菜单项）
+ */
+function processChildren(children: any[], parentId: number): BackendMenuItem[] {
+  return children
+    .filter((child: any) => child.menuType === 1) // 只保留菜单类型
+    .map((child: any) => {
+      const childNode: any = {
+        id: child.id,
+        menuType: 1,
+        name: child.name,
+        title: child.title,
+        icon: child.icon || "",
+        path: child.path || "",
+        component: child.component || "",
+        sort: child.sort || 0,
+        pid: child.pid || parentId,
+        parentId: parentId,
+        isVisible: child.isVisible !== false,
+        isKeepAlive: child.isKeepAlive || false,
+        isMultiOpen: child.isMultiOpen || false,
+        isControl: child.isControl || false,
+        isDel: child.isDel || false,
+        createId: child.createId || 0,
+        meta: {
+          title: child.title,
+          icon: child.icon || "",
+          isKeepAlive: child.isKeepAlive || false,
+          isMultiOpen: child.isMultiOpen || false,
+          isControl: child.isControl || false,
+          isVisible: child.isVisible !== false,
+          isDel: child.isDel || false,
+          createId: child.createId || 0,
+        },
+        children: [],
+      };
+
+      // 递归处理子菜单
+      if (child.children && child.children.length > 0) {
+        const grandChildren = child.children.filter(
+          (gc: any) => gc.menuType === 1,
+        );
+        if (grandChildren.length > 0) {
+          childNode.children = processChildren(grandChildren, childNode.id);
+        }
+      }
+
+      return childNode;
+    });
+}
+
+/**
+ * 提取按钮权限列表
+ */
 export function extractButtonPermissions(menuData: any[]): string[] {
   const permissions: string[] = [];
-  function traverse(menus: any[]) {
-    menus.forEach((menu) => {
-      if (menu.menuType === 2) {
-        // 按钮类型
-        permissions.push(menu.name);
+
+  function traverse(items: any[]) {
+    for (const item of items) {
+      if (item.menuType === 2) {
+        permissions.push(item.name);
       }
-      if (menu.children && menu.children.length > 0) {
-        traverse(menu.children);
+      if (item.children && item.children.length > 0) {
+        traverse(item.children);
       }
-    });
+    }
   }
+
   traverse(menuData);
   return permissions;
 }

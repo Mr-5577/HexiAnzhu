@@ -1,73 +1,19 @@
 <!-- 供应商入库审批 -->
 <template>
   <div class="basic-form-content">
-    <div class="form-header">
-      <div class="header-title">供应商入库审批</div>
-      <div class="header-btn">
-        <el-button
-          type="primary"
-          icon="DocumentAdd"
-          :loading="saveLoading"
-          @click="handleSave"
-        >
-          保存
-        </el-button>
-        <!-- 提交是保存并提交 -->
-        <el-button
-          type="success"
-          plain
-          icon="Promotion"
-          :loading="submitLoading"
-          @click="handleSubmit"
-        >
-          提交
-        </el-button>
-        <el-button
-          type="danger"
-          plain
-          icon="Delete"
-          @click="handleDelete"
-          disabled
-        >
-          删除
-        </el-button>
-        <el-button
-          type="warning"
-          plain
-          icon="Remove"
-          @click="handleCancel"
-          disabled
-        >
-          作废
-        </el-button>
-        <el-button
-          type="info"
-          plain
-          icon="View"
-          @click="handleViewProcess"
-          disabled
-        >
-          查看流程
-        </el-button>
-      </div>
-    </div>
+    <BillHeader :title="'供应商入库审批'" :contract-no="''" :submitter="formData.submitter || ''"
+      :submit-time="formData.submiterTime || ''" :status="0" :show-status="true" :button-loading="submitLoading"
+      :save-disabled="false" :submit-disabled="false" :delete-disabled="true" :void-disabled="true"
+      :view-disabled="true" @save="handleSave" @submit="handleSubmit" @delete="handleDelete" @void="handleCancel"
+      @viewFlow="handleViewProcess">
+    </BillHeader>
     <div class="form-scroll-area">
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="formRules"
-        label-width="120px"
-        class="adapt-form"
-      >
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="120px" class="adapt-form">
         <div class="item-card">
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="18" :xl="18">
               <el-form-item label="标题" prop="wfTitle" required>
-                <el-input
-                  v-model="formData.wfTitle"
-                  clearable
-                  placeholder="标题"
-                />
+                <el-input v-model="formData.wfTitle" clearable placeholder="标题" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
@@ -79,131 +25,69 @@
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="业务板块" prop="segId" required>
-                <el-select
-                  v-model="formData.segId"
-                  placeholder="请选择业务板块"
-                  style="width: 100%"
-                  @change="handleSeg"
-                >
-                  <el-option
-                    v-for="item in segOptions"
-                    :key="item.id"
-                    :label="item.segName"
-                    :value="item.id"
-                  />
-                </el-select>
+                <el-input v-model="formData.segName" disabled placeholder="业务板块" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="板块编码" prop="segNo">
-                <el-input
-                  v-model="formData.segNo"
-                  disabled
-                  placeholder="板块编码"
-                />
+                <el-input v-model="formData.segNo" disabled placeholder="板块编码" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="部门" prop="deptName">
-                <el-input
-                  v-model="formData.deptName"
-                  clearable
-                  placeholder="部门"
-                  disabled
-                />
+                <el-input v-model="formData.deptName" clearable placeholder="部门" disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="分部" prop="mguName">
-                <el-input
-                  v-model="formData.mguName"
-                  clearable
-                  placeholder="分部"
-                  disabled
-                />
+                <el-input v-model="formData.mguName" clearable placeholder="分部" disabled />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="24">
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="所属项目" prop="projId" required>
-                <el-cascader
-                  ref="projCascaderRef"
-                  v-model="formData.projId"
-                  :options="projectOptions"
-                  :show-all-levels="false"
-                  :props="{
+                <el-cascader ref="projCascaderRef" v-model="formData.projId" :options="projectOptions"
+                  :show-all-levels="false" :props="{
                     expandTrigger: 'hover',
                     emitPath: false,
                     checkStrictly: false,
                     value: 'orgId',
                     label: 'orgName',
                     children: 'children',
-                  }"
-                  placeholder="请选择项目"
-                  style="width: 100%"
-                  @change="changeProject"
-                />
+                  }" filterable placeholder="请选择项目" style="width: 100%" @change="changeProject" />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="项目所属公司" prop="compName">
-                <el-input
-                  v-model="formData.compName"
-                  placeholder="项目所属公司"
-                  disabled
-                />
+                <el-input v-model="formData.compName" placeholder="项目所属公司" disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="提交人" prop="submitter">
-                <el-input
-                  v-model="formData.submitter"
-                  clearable
-                  placeholder="提交人"
-                  disabled
-                />
+                <el-input v-model="formData.submitter" clearable placeholder="提交人" disabled />
               </el-form-item>
             </el-col>
             <el-col :xs="24" :sm="12" :md="12" :lg="6" :xl="6">
               <el-form-item label="提交时间" prop="submiterTime">
-                <el-date-picker
-                  v-model="formData.submiterTime"
-                  type="date"
-                  placeholder="提交时间"
-                  style="width: 100%"
-                  clearable
-                  value-format="YYYY-MM-DD"
-                  disabled
-                />
+                <el-date-picker v-model="formData.submiterTime" type="date" placeholder="提交时间" style="width: 100%"
+                  clearable value-format="YYYY-MM-DD" disabled />
               </el-form-item>
             </el-col>
           </el-row>
         </div>
         <div class="item-card">
-          <div
-            class="section-title"
-            @click="
-              () => {
-                console.log(tableList, validateSupplierData());
-              }
-            "
-          >
+          <div class="section-title" @click="
+            () => {
+              console.log(tableList, validateSupplierData());
+            }
+          ">
             准入单位名单
           </div>
           <div class=""></div>
-          <editable-table
-            ref="payWayTableRef"
-            :row-key="'id'"
-            :height="'300px'"
-            v-model="tableList"
-            :columns="tableColumns"
-            :pagination="false"
-            :highlight-current-row="false"
-            :show-summary="false"
-            :compactEmpty="true"
-            :editable="true"
-          >
+          <editable-table ref="payWayTableRef" :row-key="'id'" :height="'300px'" v-model="tableList"
+            :columns="tableColumns" :pagination="false" :highlight-current-row="false" :show-summary="false"
+            :compactEmpty="true" :editable="true">
             <template #actionBar>
               <div class="actionBar-buttons">
                 <el-button type="primary" size="small" @click="chooseSupplier">
@@ -215,12 +99,7 @@
             <template #inspectAnnexName="{ row, column, index, update }">
               <div class="inspect-cell">
                 <!-- 有附件显示链接 -->
-                <el-link
-                  v-if="row.inspectAnnexId"
-                  type="primary"
-                  :underline="'hover'"
-                  @click="handleViewAnnex(row)"
-                >
+                <el-link v-if="row.inspectAnnexId" type="primary" :underline="'hover'" @click="handleViewAnnex(row)">
                   {{ row.inspectAnnexName }}
                 </el-link>
                 <!-- 无附件显示占位 -->
@@ -232,25 +111,18 @@
                 <el-button link type="primary" @click="openUploadForRow(row)">
                   上传考察报告
                 </el-button>
+                <el-button type="danger" link @click="handleRemove(row)">
+                  删除
+                </el-button>
               </div>
             </template>
           </editable-table>
           <!-- 放在表格外面的上传组件（隐藏） -->
           <Teleport to="body">
             <div style="display: none" @click.stop @mousedown.stop>
-              <base-upload
-                ref="reportUploadRef"
-                key="invoice"
-                v-model:file-list="tempFileList"
-                :limit="1"
-                :multiple="false"
-                :showIcon="true"
-                :showTip="false"
-                button-text="选择文件"
-                size="default"
-                button-type="primary"
-                @success="handleUploadSuccess"
-              />
+              <base-upload ref="reportUploadRef" key="invoice" v-model:file-list="tempFileList" :limit="1"
+                :multiple="false" :showIcon="true" :showTip="false" button-text="选择文件" size="default"
+                button-type="primary" @success="handleUploadSuccess" />
             </div>
           </Teleport>
         </div>
@@ -258,12 +130,8 @@
     </div>
 
     <!-- 选择供应商弹窗 -->
-    <choose-supplier-dialog
-      ref="supplierDialogRef"
-      v-model="supplierDialogVisible"
-      :selectionMode="'multiple'"
-      @select="handleSupplierSelect"
-    />
+    <choose-supplier-dialog ref="supplierDialogRef" v-model="supplierDialogVisible" :selectionMode="'multiple'"
+      :supStatus="0" @select="handleSupplierSelect" />
   </div>
 </template>
 
@@ -285,6 +153,7 @@ import { useTagsStore } from "@/stores/tags-store";
 import { supTypeApi } from "@/api/cost/master-data/supplier-category-api";
 import { buildTree } from "@/utils/tree";
 import { buildFileUrl } from "@/utils/file-path-util";
+import BillHeader from "@/components/business/bill-components/bill-header.vue";
 
 defineOptions({ name: "supplier-inspection-add" });
 
@@ -336,10 +205,8 @@ const initFormData = () => ({
 });
 // 表单数据
 const formData = ref(initFormData());
-const saveLoading = ref(false);
 const submitLoading = ref(false);
 const formRef = ref<FormInstance>();
-const segOptions = ref([]);
 const projectOptions = ref([]);
 const tempFileList = ref([]);
 const currentUploadRow = ref(null);
@@ -385,7 +252,7 @@ const tableColumns = computed<EditableColumn[]>(() => [
   },
   {
     prop: "registeredAmount",
-    label: "注册资金",
+    label: "注册资金(万)",
     editable: false,
     width: 150,
   },
@@ -467,22 +334,11 @@ const handleSupplierSelect = async (data) => {
   }
 };
 
-// 获取业务板块列表
-const getSegOptions = async () => {
-  try {
-    const res = await dictionaryApi.getsegmentList();
-    if (res.code === 200) {
-      segOptions.value = res.data || [];
-    }
-  } catch (error) {
-    console.error("获取业务板块列表失败:", error);
-  }
-};
-
 // 获取项目列表
 const getProjectOptions = async () => {
   try {
-    const res = await projectAreaApi.getMguProjList();
+    // const res = await projectAreaApi.getMguProjList();
+    const res = await projectAreaApi.getSegMguProjList(); // 板块-公司-项目树形结构数据
     if (res.code === 200) {
       projectOptions.value = res.data || [];
     }
@@ -492,36 +348,18 @@ const getProjectOptions = async () => {
 };
 
 // 选择项目
-const changeProject = (value: number) => {
+const changeProject = async (value: number) => {
   if (value) {
-    // 通过模板引用获取节点数据
-    const checkedNodes = projCascaderRef.value?.getCheckedNodes();
-    if (checkedNodes && checkedNodes.length > 0) {
-      console.log("选中的项目数据:", checkedNodes);
-      const selectedNode = checkedNodes[0]; // 获取选中的项目ID
-      // 获取父级信息
-      const pathNodes = selectedNode.pathNodes || [];
-      if (pathNodes.length > 1) {
-        console.log("直接父节点：", pathNodes[pathNodes.length - 2]?.data);
-        console.log("根节点：", pathNodes[0]?.data);
-        console.log(
-          "所有父级：",
-          pathNodes.slice(0, -1).map((n) => n.data),
-        );
-        const parent = pathNodes[pathNodes.length - 2]?.data;
-        formData.value.compName = parent?.orgName || "";
-        formData.value.compId = parent?.orgId || "";
-      }
+    // 通过项目获取项目所属信息
+    const res = await projectAreaApi.getInfoByProjId({ id: value });
+    if (res.code === 200 && res.data) {
+      const { compName, compId, segId, segName, segNo } = res.data;
+      formData.value.compId = compId || "";
+      formData.value.compName = compName || "";
+      formData.value.segId = segId || "";
+      formData.value.segName = segName || "";
+      formData.value.segNo = segNo || "";
     }
-  }
-};
-const handleSeg = (value: number) => {
-  console.log("选中的业务板块数据:", value);
-  if (value) {
-    const target = segOptions.value.find((item: any) => item.id === value);
-    formData.value.segId = target?.id || "";
-    formData.value.segName = target?.segName || "";
-    formData.value.segNo = target?.segNo || "";
   }
 };
 // 生成业务编号
@@ -571,7 +409,7 @@ const handleSave = async () => {
   try {
     await formRef.value.validate();
     if (!validateSupplierData()) return;
-    saveLoading.value = true;
+    submitLoading.value = true;
     // 保存单据
     const params = {
       bill: {
@@ -591,7 +429,7 @@ const handleSave = async () => {
     ElMessage.success("保存成功！");
   } catch (error) {
   } finally {
-    saveLoading.value = false;
+    submitLoading.value = false;
   }
 };
 // 提交表单
@@ -684,6 +522,10 @@ const handleViewAnnex = async (row: any) => {
     ElMessage.error("查看附件失败，请稍后重试");
   }
 };
+
+const handleRemove = (row: any) => {
+  tableList.value = tableList.value.filter((item) => item.id !== row.id);
+}
 const openUploadForRow = (row: any) => {
   currentUploadRow.value = row;
   tempFileList.value = [];
@@ -722,7 +564,6 @@ const handleUploadSuccess = (file: any) => {
 // 初始化所有下拉选项
 const initOptions = async () => {
   await Promise.all([
-    getSegOptions(),
     getProjectOptions(),
     getSupplierTypeList(),
   ]);
@@ -738,6 +579,8 @@ const initData = async () => {
   await initOptions();
   formData.value = initFormData();
   formData.value.submitter = userStore.userInfo?.empName;
+  formData.value.deptName = userStore.userInfo?.deptName ?? "";
+  formData.value.mguName = userStore.userInfo?.mguName ?? "";
   formData.value.submiterTime = dateUtil().format("YYYY-MM-DD");
 };
 
@@ -757,52 +600,6 @@ onMounted(async () => {
   border-radius: 8px;
   overflow: hidden;
   padding: 0;
-}
-
-.form-header {
-  width: 100%;
-  background: #ffffff;
-  padding: 16px 24px 12px 24px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  flex-shrink: 0;
-  border-bottom: 1px solid #e4e7ed;
-
-  .header-title {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 8px 0;
-    box-sizing: border-box;
-    font-size: 20px;
-    font-weight: 700;
-    color: #1d2129;
-    letter-spacing: 0.5px;
-  }
-
-  .header-btn {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 8px;
-    flex-wrap: wrap;
-
-    .el-button {
-      border-radius: 6px;
-      font-weight: 500;
-      transition: all 0.25s ease;
-
-      &:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-      }
-
-      &:active {
-        transform: translateY(0px);
-      }
-    }
-  }
 }
 
 .form-scroll-area {
@@ -854,6 +651,7 @@ onMounted(async () => {
     top: 4px;
   }
 }
+
 .actionBar-buttons {
   display: flex;
   align-items: center;

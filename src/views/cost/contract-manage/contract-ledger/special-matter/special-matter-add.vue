@@ -1,11 +1,7 @@
 <!-- 新增 特殊事项 -->
 <template>
   <div class="special-matter-add-page">
-    <SpecialMatterForm
-      mode="add"
-      @success="handleSuccess"
-      @cancel="handleCancel"
-    />
+    <SpecialMatterForm mode="add" :conId="conId" />
   </div>
 </template>
 
@@ -13,18 +9,13 @@
 import { useRoute, useRouter } from "vue-router";
 import SpecialMatterForm from "./special-matter-form.vue";
 
+defineOptions({ name: "special-matter-add" });
+
 const route = useRoute();
 const router = useRouter();
 
-defineOptions({ name: "special-matter-add" });
+const conId = Number(route.query.conId); // 合同ID
 
-const handleSuccess = () => {
-  router.back();
-};
-
-const handleCancel = () => {
-  router.back();
-};
 </script>
 
 <style scoped lang="scss">

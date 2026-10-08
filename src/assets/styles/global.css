@@ -1,0 +1,89 @@
+:root {
+  /* 覆盖 Element Plus 默认字体变量 */
+  --el-font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+}
+
+html,
+body,
+#app {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+}
+
+/* 统一输入框、下拉、级联、日期选择器样式 */
+.el-input__wrapper,
+.el-select__wrapper,
+.el-input .el-select__wrapper,
+.el-select .el-input__wrapper,
+.el-cascader .el-input__wrapper,
+.el-date-editor .el-input__wrapper {
+  border-radius: 6px;
+  box-shadow: 0 0 0 1px #e2e8f0 inset;
+  transition: box-shadow 0.2s;
+
+  &:hover {
+    box-shadow: 0 0 0 1px #b7c0d0 inset;
+  }
+
+  &.is-focus {
+    box-shadow:
+      0 0 0 1px rgba(79, 110, 247, 0.25),
+      0 0 0 1px #4f6ef7 inset !important;
+  }
+}
+
+/* 特殊处理 EnumSelect（如果它内部也是 el-input） */
+.enum-select .el-input__wrapper {
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px #e2e8f0 inset;
+
+  &:hover {
+    box-shadow: 0 0 0 1px #b7c0d0 inset;
+  }
+
+  &.is-focus {
+    box-shadow:
+      0 0 0 2px rgba(79, 110, 247, 0.25),
+      0 0 0 1px #4f6ef7 inset !important;
+  }
+}
+
+/* 级联多选标签换行控制（保持单行） */
+.el-cascader {
+  .el-input__wrapper {
+    flex-wrap: nowrap !important;
+    overflow: hidden !important;
+    height: 32px !important;
+    min-height: 32px !important;
+    align-items: center !important;
+  }
+
+  .el-cascader__tags {
+    flex-wrap: nowrap !important;
+    overflow: hidden !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    height: 100% !important;
+    align-items: center !important;
+
+    .el-tag {
+      flex-shrink: 0 !important;
+      max-width: 100px;
+      height: 22px !important;
+      line-height: 22px !important;
+
+      .el-tag__content {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+
+    .el-tag--info {
+      flex-shrink: 0 !important;
+    }
+  }
+}

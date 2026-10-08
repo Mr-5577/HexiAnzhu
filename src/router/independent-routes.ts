@@ -1,13 +1,28 @@
+// 独立路由
 export const independentRoutes = [
   {
-    path: "/cost-allocation",
-    name: "costAllocation",
-    component: () => import("@/views/cost/cost-allocation/index.vue"),
+    // 非合同成本分摊
+    path: "/oa/ncon/cost-alloc",
+    name: "oa-ncon-costAlloc",
+    component: () =>
+      import("@/views/cost/cost-allocation/ncon-cost-alloc/index.vue"),
     meta: {
       title: "成本分摊",
       isKeepAlive: false,
     },
-  },{
+  },
+  {
+    // 合同成本分摊
+    path: "/oa/con/cost-alloc",
+    name: "oa-con-costAlloc",
+    component: () =>
+      import("@/views/cost/cost-allocation/con-cost-alloc/index.vue"),
+    meta: {
+      title: "成本分摊",
+      isKeepAlive: false,
+    },
+  },
+  {
     path: "/finance-allocation",
     name: "financeAllocation",
     component: () => import("@/views/cost/finance-allocation/index.vue"),
@@ -15,5 +30,185 @@ export const independentRoutes = [
       title: "财务分摊",
       isKeepAlive: false,
     },
-  }
+  },
+  {
+    path: "/oa/cost-detail",
+    name: "oa-cost-detail",
+    component: () =>
+      import("@/views/cost/cost-setting/goal-cost/components/cost-detail/oa-detail.vue"),
+    meta: {
+      title: "目标成本明细",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/bidding/bidding-detail",
+    name: "oa-bidding-detail",
+    component: () =>
+      import("@/views/cost/bidding/tender-matter/bidding-detail.vue"),
+    meta: {
+      title: "招标事项详情",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/bidding/bidding-demand/detail",
+    name: "oa-bidding-demand-detail",
+    component: () =>
+      import("@/views/cost/bidding/bidding-demand/bidding-demand-detail.vue"),
+    meta: {
+      title: "招标需求详情",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/bidding/tender-plan/detail",
+    name: "oa-tender-plan-detail",
+    component: () =>
+      import("@/views/cost/bidding/tender-matter/components/tender-plan/tender-plan-detail.vue"),
+    meta: {
+      title: "招标审批详情",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/bidding/reference-price/detail",
+    name: "oa-reference-price-detail",
+    component: () =>
+      import("@/views/cost/bidding/tender-matter/components/reference-price/reference-price-detail.vue"),
+    meta: {
+      title: "定标参考价详情",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/bidding/award-approval/detail",
+    name: "oa-award-approval-detail",
+    component: () =>
+      import("@/views/cost/bidding/tender-matter/components/award-approval/award-approval-detail.vue"),
+    meta: {
+      title: "定标审批详情",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/bidding/bid-bond-pay/detail",
+    name: "oa-bid-bond-pay-detail",
+    component: () =>
+      import("@/views/cost/bidding/tender-matter/components/bid-bond-pay/bid-bond-pay-detail.vue"),
+    meta: {
+      title: "保证金缴纳详情",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/bidding/bid-bond-refund/detail",
+    name: "oa-bid-bond-refund-detail",
+    component: () =>
+      import("@/views/cost/bidding/tender-matter/components/bid-bond-refund/bid-bond-refund-detail.vue"),
+    meta: {
+      title: "保证金退还详情",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/supplier/inspection/edit",
+    name: "oa-supplier-inspection-edit",
+    component: () =>
+      import("@/views/cost/supplier/supplier-inspection/supplier-inspection-edit.vue"),
+    meta: {
+      title: "供应商入库审批",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/ncon/cst-process",
+    name: "oa-ncon-cst-process",
+    component: () =>
+      import("@/views/cost/non-contract-manage/cst-process/oa-cst-process.vue"),
+    meta: {
+      title: "非合同立项审批",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/ncon/cst-payment",
+    name: "oa-ncon-cst-payment",
+    component: () =>
+      import("@/views/cost/payment-manage/cst-payment/oa-cst-payment.vue"),
+    meta: {
+      title: "非合同请款审批",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/ncon/fee-payment",
+    name: "oa-ncon-fee-payment",
+    component: () =>
+      import("@/views/cost/payment-manage/fee-payment/oa-fee-payment.vue"),
+    meta: {
+      title: "费用报销审批",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/con/contract-ledger",
+    name: "oa-con-contract-ledger",
+    component: () =>
+      import("@/views/cost/contract-manage/contract-ledger/components/oa-contract-ledger.vue"),
+    meta: {
+      title: "合同审批",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/supplement-contract",
+    name: "oa-supplement-contract",
+    component: () =>
+      import("@/views/cost/contract-manage/contract-ledger/supplement-contract/oa-supplement-contract.vue"),
+    meta: {
+      title: "补充合同审批",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/change-order",
+    name: "oa-change-order",
+    component: () =>
+      import("@/views/cost/contract-manage/contract-ledger/change-order/oa-change-order.vue"),
+    meta: {
+      title: "变更申请",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/visa-manage",
+    name: "oa-visa-manage",
+    component: () =>
+      import("@/views/cost/contract-manage/contract-ledger/visa-manage/oa-visa-manage.vue"),
+    meta: {
+      title: "签证审批",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/output-declaration",
+    name: "oa-output-declaration",
+    component: () =>
+      import("@/views/cost/contract-manage/contract-ledger/output-declaration/oa-output-declaration.vue"),
+    meta: {
+      title: "产值申报",
+      isKeepAlive: false,
+    },
+  },
+  {
+    path: "/oa/payment-application",
+    name: "oa-payment-application",
+    component: () =>
+      import("@/views/cost/contract-manage/contract-ledger/payment-application/oa-payment-application.vue"),
+    meta: {
+      title: "合同支付",
+      isKeepAlive: false,
+    },
+  },
 ];

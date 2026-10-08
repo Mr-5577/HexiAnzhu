@@ -22,7 +22,7 @@
             plain
             @click="handleAdd()"
             :disabled="
-              !menuStore.hasExactPermission('personnel-permissions:add')
+              !menuStore.hasExactPermission(PERMISSIONS.PERSON_PERM_ADD)
             "
           >
             新增
@@ -32,7 +32,7 @@
             size="small"
             plain
             :disabled="
-              !menuStore.hasExactPermission('personnel-permissions:del')
+              !menuStore.hasExactPermission(PERMISSIONS.PERSON_PERM_DEL)
             "
             @click="batchDelete()"
           >
@@ -49,7 +49,7 @@
             size="small"
             @click="handleDelete(scope.row)"
             :disabled="
-              !menuStore.hasExactPermission('personnel-permissions:del')
+              !menuStore.hasExactPermission(PERMISSIONS.PERSON_PERM_DEL)
             "
           >
             删除
@@ -76,6 +76,7 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import AddPersonnelPermissions from "./add-personnel-permissions.vue";
 import { useMenuStore } from "@/stores/menu-store";
+import { PERMISSIONS } from "@/constants/permission.ts";
 const menuStore = useMenuStore();
 
 interface Props {

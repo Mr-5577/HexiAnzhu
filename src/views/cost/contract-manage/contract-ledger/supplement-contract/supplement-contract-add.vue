@@ -3,9 +3,9 @@
   <div class="supplement-contract-add-page">
     <SupplementContractForm
       mode="add"
+      :proj-id="projId"
       :con-id="conId"
-      @success="handleSuccess"
-      @cancel="handleCancel"
+      :con-name="conName"
     />
   </div>
 </template>
@@ -21,14 +21,9 @@ defineOptions({ name: "supplement-contract-add" });
 
 // 从路由参数获取合同ID conId
 const conId = Number(route.query.conId);
+const projId = Number(route.query.projId);
+const conName = String(route.query.conName);
 
-const handleSuccess = () => {
-  router.back();
-};
-
-const handleCancel = () => {
-  router.back();
-};
 </script>
 
 <style scoped lang="scss">

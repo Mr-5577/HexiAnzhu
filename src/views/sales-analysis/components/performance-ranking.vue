@@ -108,7 +108,7 @@ const tableCache = ref({
 const tableHeight = ref("100%");
 
 // 添加防抖函数
-let resizeTimer: NodeJS.Timeout | null = null;
+let resizeTimer: any = null;
 
 // 获取正确的容器高度
 const updateTableHeight = () => {

@@ -3,93 +3,37 @@
   <div class="room-ledger-page">
     <el-form :model="queryParams" ref="queryRef" :inline="true">
       <el-form-item label="项目" prop="projIds">
-        <!-- <el-cascader
-          class="fixed-height-cascader"
-          :filterable="true"
-          v-model="queryParams.projIds"
-          placeholder="请选择"
-          :options="projectOptions"
-          :props="cascaderProps"
-          collapse-tags
-          collapse-tags-tooltip
-          clearable
-          :show-all-levels="false"
-          :max-collapse-tags="1"
-        ></el-cascader> -->
-        <project-tree-selector
-          v-model="queryParams.projIds"
-          :project-list="projectOptions"
-          placeholder="请选择项目"
-          width="220px"
-        ></project-tree-selector>
+        <project-tree-selector v-model="queryParams.projIds" :project-list="projectOptions" placeholder="请选择项目"
+          width="220px"></project-tree-selector>
       </el-form-item>
       <el-form-item label="业态" prop="productTypes">
-        <el-select
-          v-model="queryParams.productTypes"
-          placeholder="业态"
-          clearable
-          multiple
-          collapse-tags
-          style="width: 200px"
-        >
-          <el-option
-            v-for="item in productTypeList"
-            :key="item.id"
-            :label="item.productTypeName"
-            :value="item.id"
-          />
+        <el-select v-model="queryParams.productTypes" placeholder="业态" clearable multiple collapse-tags
+          style="width: 200px">
+          <el-option v-for="item in productTypeList" :key="item.id" :label="item.productTypeName" :value="item.id" />
         </el-select>
       </el-form-item>
       <el-form-item label="状态" prop="saleStatus">
-        <el-select
-          v-model="queryParams.saleStatus"
-          placeholder="状态"
-          clearable
-          multiple
-          collapse-tags
-          style="width: 200px"
-        >
-          <el-option
-            v-for="item in saleStatusList"
-            :key="item.id"
-            :label="item.saleStatusName"
-            :value="item.id"
-          />
+        <el-select v-model="queryParams.saleStatus" placeholder="状态" clearable multiple collapse-tags
+          style="width: 200px">
+          <el-option v-for="item in saleStatusList" :key="item.id" :label="item.saleStatusName" :value="item.id" />
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-button
-          type="primary"
-          icon="Search"
-          :loading="tableLoading"
-          @click="handleQuery"
-        >
+        <el-button type="primary" icon="Search" :loading="tableLoading" @click="handleQuery">
           搜索
         </el-button>
         <el-button icon="Refresh" :loading="tableLoading" @click="resetQuery">
           重置
         </el-button>
-        <el-button
-          type="primary"
-          icon="Download"
-          :loading="exportLoading"
-          :disabled="!menuStore.hasExactPermission('room-ledger:export')"
-          @click="handleExport"
-        >
+        <el-button type="primary" icon="Download" :loading="exportLoading"
+          :disabled="!menuStore.hasExactPermission(PERMISSIONS.ROOM_LEDGER_EXPORT)" @click="handleExport">
           导出
         </el-button>
       </el-form-item>
     </el-form>
-    <base-table
-      :rowKey="'uuid'"
-      :columns="roomLedgerColumns"
-      :tableData="paginatedData"
-      :loading="tableLoading"
-      :total="total"
-      :current-page="currentPage"
-      :page-size="pageSize"
-      @pagination-change="handlePaginationChange"
-    ></base-table>
+    <base-table :rowKey="'uuid'" :columns="roomLedgerColumns" :tableData="paginatedData" :loading="tableLoading"
+      :total="total" :current-page="currentPage" :page-size="pageSize"
+      @pagination-change="handlePaginationChange"></base-table>
   </div>
 </template>
 
@@ -104,6 +48,7 @@ import { v4 as uuidv4 } from "uuid";
 import { useMenuStore } from "@/stores/menu-store";
 const menuStore = useMenuStore();
 import pako from "pako";
+import { PERMISSIONS } from "@/constants/permission";
 
 // 组件name，需要和菜单配置里面的name一致
 defineOptions({ name: "room-ledger" });
@@ -120,20 +65,6 @@ const {
   getAllProductTypeIds,
   getAllSaleStatusIds,
 } = useSalesData();
-
-const cascaderProps = computed(() => ({
-  value: "id",
-  label: "projName",
-  multiple: true,
-  emitPath: false,
-  checkStrictly: true, // 可选：是否严格选择模式
-  expandTrigger: "hover", // 可选：展开方式
-  // 关键：根据 projType 设置 disabled
-  // disabled: (data: any, node: any) => {
-  //   // projType !== 1 的项目禁用
-  //   return data.projType !== 1;
-  // },
-}));
 
 // ref
 const queryParams = ref({
@@ -189,7 +120,7 @@ const getParams = () => ({
   current: currentPage.value,
   // size: pageSize.value,
   size: 99999,
-  isShowTel: menuStore.hasExactPermission("room-ledger:showTel"), // 控制电话是否显示
+  isShowTel: menuStore.hasExactPermission(PERMISSIONS.ROOM_LEDGER_SHOW_TEL), // 控制电话是否显示
 });
 // 获取列表
 const getTableList = async () => {
@@ -265,7 +196,7 @@ onMounted(() => {
 });
 
 // 清理
-onUnmounted(() => {});
+onUnmounted(() => { });
 </script>
 
 <style lang="scss" scoped>

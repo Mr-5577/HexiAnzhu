@@ -1,299 +1,44 @@
+<!-- 编辑合同台账 -->
 <template>
-  <div class="contract-ledger-detail">
-    <el-container>
-      <!-- 左侧菜单切换 -->
-      <el-aside width="220px" class="tab-sidebar">
-        <div class="menu-scroll-wrapper">
-          <div
-            v-for="item in menuItems"
-            :key="item.index"
-            class="menu-item"
-            :class="{ 'is-active': activeTab === item.index }"
-            @click="handleTabChange(item.index)"
-          >
-            <el-icon><component :is="item.icon" /></el-icon>
-            <span>{{ item.label }}</span>
-          </div>
-        </div>
-      </el-aside>
-
-      <el-main class="content-area">
-        <keep-alive>
-          <component
-            :is="currentComponent"
-            :key="activeTab"
-            :conId="conId"
-            :projId="projId"
-          />
-        </keep-alive>
-      </el-main>
-    </el-container>
+  <div class="contract-ledger-detail-page">
+    <ContractLedgerForm
+      mode="detail"
+      :con-id="conId"
+      @success="handleSuccess"
+      @cancel="handleCancel"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import {
-  ref,
-  computed,
-  watch,
-  markRaw,
-  onMounted,
-  type Component,
-  defineAsyncComponent,
-} from "vue";
-import { useRoute } from "vue-router";
-import * as Icons from "@element-plus/icons-vue";
+import { useRoute, useRouter } from "vue-router";
+import ContractLedgerForm from "./components/contract-ledger-form.vue";
+import type { FormMode } from "@/types/form/form-types.ts"; // 导入类型
+
+const route = useRoute();
+const router = useRouter();
 
 defineOptions({ name: "contract-ledger-detail" });
 
-// 菜单配置
-const menuItems = [
-  {
-    index: "basic",
-    icon: markRaw(Icons.Document),
-    label: "基本信息",
-    component: () => import("./basic-infor/index.vue"),
-  },
-  {
-    index: "attachment",
-    icon: markRaw(Icons.Paperclip),
-    label: "合同附件",
-    component: () => import("./attachment/index.vue"),
-  },
-  {
-    index: "paymentAccount",
-    icon: markRaw(Icons.CreditCard),
-    label: "收款账号",
-    component: () => import("./payment-account/index.vue"),
-  },
-  {
-    index: "supplementContract",
-    icon: markRaw(Icons.Calendar),
-    label: "补充合同",
-    component: () => import("./supplement-contract/index.vue"),
-  },
-  {
-    index: "changeOrder",
-    icon: markRaw(Icons.DocumentAdd),
-    label: "变更指令",
-    component: () => import("./change-order/index.vue"),
-  },
-  {
-    index: "visaManagement",
-    icon: markRaw(Icons.Postcard),
-    label: "签证管理",
-    component: () => import("./visa-manage/index.vue"),
-  },
-  {
-    index: "outputDeclaration",
-    icon: markRaw(Icons.Upload),
-    label: "产值申报",
-    component: () => import("./output-declaration/index.vue"),
-  },
-  {
-    index: "paymentAdjust",
-    icon: markRaw(Icons.EditPen),
-    label: "款项调整",
-    component: () => import("./payment-adjust/index.vue"),
-  },
-  {
-    index: "costAllocation",
-    icon: markRaw(Icons.DataAnalysis),
-    label: "成本分摊",
-    component: () => import("./cost-allocation/index.vue"),
-  },
-  // {
-  //   index: "disputeApproval",
-  //   icon: markRaw(Icons.Warning),
-  //   label: "争议审批",
-  //   component: () => import("./disput-approval/index.vue"),
-  // },
-  {
-    index: "specialMatter",
-    icon: markRaw(Icons.WarningFilled),
-    label: "特殊事项",
-    component: () => import("./special-matter/index.vue"),
-  },
-  {
-    index: "engineeringPrice",
-    icon: markRaw(Icons.PriceTag),
-    label: "工程核价",
-    component: () => import("./engineering-price/index.vue"),
-  },
-  // {
-  //   index: "documents",
-  //   icon: markRaw(Icons.Message),
-  //   label: "收文发文",
-  //   component: () => import("./documents/index.vue"),
-  // },
-  {
-    index: "paymentApplication",
-    icon: markRaw(Icons.Money),
-    label: "付款申请",
-    component: () => import("./payment-application/index.vue"),
-  },
-  {
-    index: "performanceBond",
-    icon: markRaw(Icons.Coin),
-    label: "履约保证金",
-    component: () => import("./performance-bond/index.vue"),
-  },
-  {
-    index: "contractPreSettle",
-    icon: markRaw(Icons.Lock),
-    label: "合同预结算",
-    component: () => import("./contract-preSettle/index.vue"),
-  },
-  {
-    index: "contractSettle",
-    icon: markRaw(Icons.Finished),
-    label: "合同结算",
-    component: () => import("./contract-settle/index.vue"),
-  },
-  {
-    index: "contractTermination",
-    icon: markRaw(Icons.CircleClose),
-    label: "合同解除",
-    component: () => import("./contract-void/index.vue"),
-  },
-];
+const modeParam = route.query.mode as string;
+const mode = (["add", "edit", "detail"].includes(modeParam)
+  ? modeParam
+  : "detail") as FormMode;
+const conId = Number(route.query.conId);
 
-// 动态组件映射--懒加载
-const componentMap = new Map<string, Component>();
-menuItems.forEach((item) => {
-  componentMap.set(item.index, defineAsyncComponent(item.component));
-});
-
-const route = useRoute();
-const activeTab = ref(""); // 默认显示基本信息 basic
-const conId = ref<number | null>(null); // 合同ID
-const projId = ref<number | null>(null); // 项目ID
-
-const currentComponent = computed(() => componentMap.get(activeTab.value));
-
-// 切换tab
-const handleTabChange = (tab: string) => {
-  activeTab.value = tab;
-
-  // 更新 URL 但不触发路由更新（仅在不同的时候修改，避免无谓的 history.replaceState）
-  try {
-    const url = new URL(window.location.href);
-    if (url.searchParams.get("tab") !== tab) {
-      url.searchParams.set("tab", tab);
-      window.history.replaceState({}, "", url.toString());
-    }
-  } catch (e) {}
+const handleSuccess = () => {
+  //router.back();
 };
 
-// 获取初始tab
-const getInitialTab = (): string => {
-  // 先从路由query获取
-  const tabFromQuery = route.query.tab as string;
-  if (tabFromQuery && menuItems.some((item) => item.index === tabFromQuery)) {
-    return tabFromQuery;
-  }
-  // 默认返回'basic'
-  return "basic";
+const handleCancel = () => {
+  //router.back();
 };
-
-// 同步路由参数
-const syncRouteState = () => {
-  console.log("同步路由参数:", route.query);
-  conId.value = route.query.conId ? Number(route.query.conId) : null;
-  projId.value = route.query.projId ? Number(route.query.projId) : null;
-
-  activeTab.value = getInitialTab();
-};
-
-// watch(() => [route.query.conId, route.query.projId], syncRouteState, {
-//   immediate: true,
-// });
-
-onMounted(() => {
-  syncRouteState();
-});
 </script>
+
 <style scoped lang="scss">
-.contract-ledger-detail {
+.contract-ledger-detail-page {
+  width: 100%;
   height: 100%;
-  background: #f0f2f6;
-
-  :deep(.el-container) {
-    height: 100%;
-  }
-
-  .tab-sidebar {
-    background: #ffffff;
-    border-right: 1px solid #e6e9f0;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.02);
-    overflow: hidden;
-
-    .menu-scroll-wrapper {
-      height: 100%;
-      overflow-y: auto;
-      padding: 10px 0;
-    }
-
-    .menu-item {
-      display: flex;
-      align-items: center;
-      height: 46px;
-      padding: 0 20px;
-      margin: 4px 12px;
-      border-radius: 10px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      color: #606266;
-
-      .el-icon {
-        margin-right: 12px;
-        font-size: 18px;
-      }
-
-      span {
-        font-size: 14px;
-      }
-
-      &:hover {
-        background: #f0f2f6;
-        color: #1e6fff;
-        font-weight: 500;
-      }
-
-      &.is-active {
-        background: #eef3ff;
-        color: #1e6fff;
-        font-weight: 600;
-      }
-    }
-  }
-
-  .content-area {
-    height: 100%;
-    background: #f0f2f6;
-    padding: 10px;
-    overflow-y: auto;
-  }
-}
-
-// 响应式适配
-@media (max-width: 768px) {
-  .tab-sidebar {
-    width: 72px !important;
-
-    .menu-item {
-      justify-content: center;
-      padding: 0 !important;
-
-      span {
-        display: none;
-      }
-
-      .el-icon {
-        margin-right: 0;
-        font-size: 22px;
-      }
-    }
-  }
+  background-color: #fff;
 }
 </style>

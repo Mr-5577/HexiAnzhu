@@ -31,7 +31,7 @@
           maxlength="50"
           show-word-limit
         />
-        <div class="form-tip">建议字母、数字、.和下划线，且必须以字母开头</div>
+        <!-- <div class="form-tip">建议字母、数字、.和下划线，且必须以字母开头</div> -->
       </el-form-item>
 
       <!-- <el-form-item prop="majorId" label="所属职能专业">
@@ -126,7 +126,7 @@ const formRules: FormRules = {
   conTypeName: [{ required: true, message: "请输入类别名称", trigger: "blur" }],
   conTypeCode: [
     { required: true, message: "请输入类别编码", trigger: "blur" },
-    { validator: validateCode, trigger: ["blur", "change"] },
+    // { validator: validateCode, trigger: ["blur", "change"] },
   ],
 };
 

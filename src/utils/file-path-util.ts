@@ -3,7 +3,7 @@
  */
 
 // 如果需要根据环境切换
-const ANNEX_BASE_URL = import.meta.env.VITE_ANNEX_BASE_URL || 'http://annex-test.hexianzhu.com:9090';
+const ANNEX_BASE_URL = import.meta.env.VITE_ANNEX_BASE_URL || 'http://annex.hexianzhu.com:9090';
 /**
  * 规范化文件路径：将反斜杠 \ 替换为正斜杠 /
  */

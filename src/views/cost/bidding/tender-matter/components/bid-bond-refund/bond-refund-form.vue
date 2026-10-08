@@ -247,6 +247,7 @@
     <choose-supplier-dialog
       ref="supplierDialogRef"
       v-model="supplierDialogVisible"
+      :supStatus="2"
       @select="handleSupplierSelect"
     />
 
@@ -771,7 +772,10 @@ const getBillDetail = async () => {
   if (!props.billId) return;
 
   try {
-    const res = await biddingManageApi.getBillInfo({ billId: props.billId });
+    const res = await biddingManageApi.getBillInfo({
+      billId: props.billId,
+      isWithFlow: true,
+    });
     if (res.code === 200 && res.data) {
       const { annexList, bill, flowBase, bondRefunds, tenderId, flowList } =
         res.data;
@@ -783,8 +787,8 @@ const getBillDetail = async () => {
       flowListData.value = { ...flowListData.value, ...flowList };
 
       formData.value.bizTitle = bill.bizTitle || "";
-      formData.value.deptName = flowBase.deptName || "";
-      formData.value.mguName = flowBase.mguName || "";
+      formData.value.deptName = flowBase?.deptName || "";
+      formData.value.mguName = flowBase?.mguName || "";
       formData.value.userName = bill.createName || "";
       formData.value.createDate = bill.createDate || "";
 
@@ -855,6 +859,7 @@ const validateForm = () => {
 
 // 保存
 const handleSave = async () => {
+  if(submitLoading.value) return
   // 调用验证
   if (!validateForm()) return;
   try {
@@ -905,6 +910,7 @@ const handleSave = async () => {
 };
 
 const handleSubmit = async () => {
+  if(submitLoading.value) return
   // 调用验证
   if (!validateForm()) return;
   try {
@@ -1035,6 +1041,8 @@ const initData = async () => {
   await initDictData();
   await getProjectOptions();
   formData.value.userName = userStore.userInfo?.empName || "";
+  formData.value.deptName = userStore.userInfo?.deptName ?? "";
+  formData.value.mguName = userStore.userInfo?.mguName ?? "";
   formData.value.createDate = dateUtil().format("YYYY-MM-DD");
 
   if (isAdd.value) {

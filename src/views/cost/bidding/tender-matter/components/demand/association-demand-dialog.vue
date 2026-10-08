@@ -52,10 +52,13 @@ import { dateUtil } from "@/utils/date-util";
 interface Props {
   /** 弹窗显示状态 */
   modelValue: boolean;
+  /** 当前事项所属项目ID */
+  projId?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
+  projId: undefined,
 });
 
 const emit = defineEmits<{
@@ -100,7 +103,10 @@ const columns: TableColumnItem[] = [
 const getDataList = async () => {
   try {
     tableLoading.value = true;
-    const res = await biddingManageApi.getDemandList(queryParams.value);
+    const res = await biddingManageApi.getDemandList({
+      ...queryParams.value,
+      projId: props.projId,
+    });
     if (res.code === 200) {
       tableData.value = res.data || [];
     }

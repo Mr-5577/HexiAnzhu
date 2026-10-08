@@ -1,12 +1,7 @@
 <!-- 编辑 款项调整 -->
 <template>
   <div class="payment-adjust-edit-page">
-    <PaymentAdjustForm
-      mode="edit"
-      :dedId="dedId"
-      @success="handleSuccess"
-      @cancel="handleCancel"
-    />
+    <PaymentAdjustForm mode="edit" :dedId="dedId" :conId="conId" />
   </div>
 </template>
 
@@ -20,14 +15,8 @@ const route = useRoute();
 const router = useRouter();
 
 const dedId = Number(route.query.dedId); // 奖罚/款项调整ID
+const conId = Number(route.query.conId); // 合同ID
 
-const handleSuccess = () => {
-  router.back();
-};
-
-const handleCancel = () => {
-  router.back();
-};
 </script>
 
 <style scoped lang="scss">

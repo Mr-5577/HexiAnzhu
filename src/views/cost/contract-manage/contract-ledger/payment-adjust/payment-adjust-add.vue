@@ -1,11 +1,7 @@
 <!-- 新增 款项调整 -->
 <template>
   <div class="payment-adjust-add-page">
-    <PaymentAdjustForm
-      mode="add"
-      @success="handleSuccess"
-      @cancel="handleCancel"
-    />
+    <PaymentAdjustForm mode="add" :conId="conId" />
   </div>
 </template>
 
@@ -17,14 +13,8 @@ defineOptions({ name: "payment-adjust-add" });
 
 const route = useRoute();
 const router = useRouter();
+const conId = Number(route.query.conId); // 合同ID
 
-const handleSuccess = () => {
-  router.back();
-};
-
-const handleCancel = () => {
-  router.back();
-};
 </script>
 
 <style scoped lang="scss">

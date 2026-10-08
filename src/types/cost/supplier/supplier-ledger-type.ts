@@ -145,6 +145,7 @@ export interface SupplierQueryParams {
   /** 供应商名称（模糊查询） */
   supName?: string;
   /** 供应商关联类型 */
+  uscCardNo?:string; //统一社会信用代码
   supLinkType?: number;
   /** 供应商主要服务类别ID */
   supTypeId?: number;

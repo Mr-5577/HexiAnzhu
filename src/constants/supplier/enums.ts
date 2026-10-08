@@ -15,9 +15,9 @@ export const supLinkEnum = [
  */
 export const supStatusEnum = [
   { value: 0, label: "草稿", type: "info" },
-  { value: 1, label: "已审批", type: "success" },
-  { value: 2, label: "黑名单", type: "danger" },
-  { value: 3, label: "作废", type: "warning" },
+  { value: 1, label: "审批中", type: "primary" },
+  { value: 2, label: "已审批", type: "success" },
+  { value: 3, label: "黑名单", type: "danger" },
 ] as const;
 /**
  * 供应商单据审批状态 枚举

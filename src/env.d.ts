@@ -34,7 +34,6 @@ interface ImportMetaEnv {
   
   // 功能开关
   readonly VITE_ENABLE_DEBUG: string
-  readonly VITE_ENABLE_MOCK: string
   
   // Vite 内置
   readonly MODE: string

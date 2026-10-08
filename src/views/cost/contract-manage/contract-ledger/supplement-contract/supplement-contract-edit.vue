@@ -5,8 +5,7 @@
       mode="edit"
       :con-id="conId"
       :add-id="addId"
-      @success="handleSuccess"
-      @cancel="handleCancel"
+      :proj-id="projId"
     />
   </div>
 </template>
@@ -22,14 +21,8 @@ defineOptions({ name: "supplement-contract-edit" });
 
 const conId = Number(route.query.conId);
 const addId = Number(route.query.addId);
+const projId = Number(route.query.projId);
 
-const handleSuccess = () => {
-  router.back();
-};
-
-const handleCancel = () => {
-  router.back();
-};
 </script>
 
 <style scoped lang="scss">

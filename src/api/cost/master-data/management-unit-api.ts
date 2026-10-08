@@ -92,4 +92,20 @@ export const manageunitApi = {
   getSegMguList: () => {
     return http.post("/mainData/manageunit/getSegMguList");
   },
+  /**
+   * 查询部门列表
+   * @param data
+   * @param data.id - 部门ID
+   * @param data.deptName - 部门名称
+   * @param data.deptNo - 部门编码
+   * @param data.mguId - 管理单元ID
+   */
+  getDeptList: (data?: {
+    id?: number;
+    deptName?: string;
+    deptNo?: string;
+    mguId?: number;
+  }) => {
+    return http.post("/mainData/dept/getList", data);
+  },
 };

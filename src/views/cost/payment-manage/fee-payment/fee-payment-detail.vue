@@ -1,0 +1,40 @@
+<!-- 详情 费用支付 -->
+<template>
+  <div class="fee-payment-detail-page">
+    <FeePaymentForm mode="detail" :feePaymentId="feePaymentId" @success="handleSuccess" @cancel="handleCancel" />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { useRoute, useRouter } from "vue-router";
+import FeePaymentForm from "./fee-payment-form.vue";
+
+const route = useRoute();
+const router = useRouter();
+
+defineOptions({ name: "fee-payment-detail" });
+
+const parseId = (val) => {
+  if (val === undefined || val === null || val === '') return null;
+  const num = Number(val);
+  return !isNaN(num) ? num : null;
+};
+
+const feePaymentId = parseId(route.query.feePaymentId) ?? parseId(route.query.bizId) ?? 0; // 费用支付ID
+
+const handleSuccess = () => {
+  // router.back();
+};
+
+const handleCancel = () => {
+  // router.back();
+};
+</script>
+
+<style scoped lang="scss">
+.fee-payment-detail-page {
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+}
+</style>

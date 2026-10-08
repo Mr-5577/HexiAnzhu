@@ -8,7 +8,7 @@
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number = 500,
-  immediate: boolean = false
+  immediate: boolean = false,
 ): (...args: Parameters<T>) => void {
   let timeout: ReturnType<typeof setTimeout> | null = null;
   let result: any;
@@ -42,7 +42,7 @@ export function debounce<T extends (...args: any[]) => any>(
  */
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
-  limit: number = 300
+  limit: number = 300,
 ): (...args: Parameters<T>) => void {
   let inThrottle: boolean = false;
   let lastResult: any;
@@ -83,7 +83,7 @@ export function deepClone<T>(obj: T, cache = new WeakMap()): T {
   // 处理数组
   if (obj instanceof Array) {
     const clonedArray = obj.map((item) =>
-      deepClone(item, cache)
+      deepClone(item, cache),
     ) as unknown as T;
     cache.set(obj as object, clonedArray);
     return clonedArray;
@@ -113,7 +113,7 @@ export function deepClone<T>(obj: T, cache = new WeakMap()): T {
  */
 export function objectToParams(
   obj: Record<string, any>,
-  encode: boolean = true
+  encode: boolean = true,
 ): string {
   const params = new URLSearchParams();
 
@@ -122,7 +122,7 @@ export function objectToParams(
       const stringValue = String(value);
       params.append(
         key,
-        encode ? encodeURIComponent(stringValue) : stringValue
+        encode ? encodeURIComponent(stringValue) : stringValue,
       );
     }
   }
@@ -223,7 +223,7 @@ export function unique<T>(array: T[], key?: string): T[] {
 export const formatNumber = (
   value: any,
   decimals: number = 2,
-  rounding: "round" | "floor" | "ceil" = "round"
+  rounding: "round" | "floor" | "ceil" = "round",
 ): number => {
   // 处理空值
   if (value === null || value === undefined || value === "") {
@@ -265,7 +265,7 @@ export const formatNumber = (
 export const formatNumberDisplay = (
   value: any,
   decimals: number = 2,
-  nullText: string = ""
+  nullText: string = "",
 ): string => {
   // 转成number类型
   const num = formatNumber(value, decimals);
@@ -299,4 +299,91 @@ const fallbackFormatDisplay = (num: number, decimals: number): string => {
   const [integerPart, decimalPart] = fixedNum.split(".");
   const formattedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   return decimals > 0 ? `${formattedInteger}.${decimalPart}` : formattedInteger;
+};
+
+/**
+ * 修复浮点数精度问题
+ * @param num 需要修复的数字
+ * @param decimals 保留的小数位数，默认2位
+ * @returns 修复后的数字
+ */
+export const fixFloat = (num: number, decimals: number = 2): number => {
+  return Number(num.toFixed(decimals));
+};
+
+/**
+ * 安全加法：避免浮点数精度问题
+ */
+export const safeAdd = (numbers: number[], decimals: number = 2): number => {
+  const factor = Math.pow(10, decimals);
+  const total = numbers.reduce((sum, num) => {
+    return sum + Math.round((num || 0) * factor);
+  }, 0);
+  return total / factor;
+};
+
+/**
+ * 安全减法
+ */
+export const safeSubtract = (
+  a: number,
+  b: number,
+  decimals: number = 2,
+): number => {
+  const factor = Math.pow(10, decimals);
+  return (Math.round(a * factor) - Math.round(b * factor)) / factor;
+};
+
+/**
+ * 标准化编码：去除前导零
+ * @param code 原始编码
+ * @returns 标准化后的编码字符串
+ */
+export const normalizeCode = (code: any): string => {
+  if (code == null) return "";
+  return String(code).replace(/^0+(?=\d)/, "");
+};
+
+/**
+ * 通过 fetch + Blob 方式下载文件（强制下载，不预览）
+ * 前提：目标服务器允许跨域（即响应头包含 Access-Control-Allow-Origin）
+ *
+ * @param url - 文件地址
+ * @param fileName - 自定义文件名（可选，若不传则尝试从 URL 中提取）
+ * @returns Promise<boolean> - 下载是否成功
+ */
+export const downloadByUrl = async (
+  url: string,
+  fileName?: string,
+): Promise<boolean> => {
+  try {
+    const response = await fetch(url, { mode: "cors" });
+    if (!response.ok) {
+      throw new Error(`下载失败（HTTP ${response.status}）`);
+    }
+
+    // 获取文件名：优先级 参数 > URL 最后一段
+    let finalName = fileName;
+    if (!finalName) {
+      // 解码 URL 最后一段作为文件名
+      finalName =
+        decodeURIComponent(url.substring(url.lastIndexOf("/") + 1)) ||
+        "download";
+    }
+
+    const blob = await response.blob();
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = finalName;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    // 延迟释放内存，确保下载已触发
+    setTimeout(() => URL.revokeObjectURL(link.href), 150);
+    return true;
+  } catch (error) {
+    console.error("文件下载失败:", error);
+    return false;
+  }
 };

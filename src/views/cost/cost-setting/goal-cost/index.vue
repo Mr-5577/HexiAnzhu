@@ -1,19 +1,14 @@
 <template>
   <div class="goal-cost-page">
     <!-- 板块-公司-项目 -->
-    <sector-company-project-treet
-      ref="sectorCompanyProjectTreetRef"
-      @select="handleProjectSelect"
-    />
+    <sector-company-project-treet ref="sectorCompanyProjectTreetRef" @select="handleProjectSelect"
+      @gain-org-id="getOrgId" />
 
     <div class="right-content" v-if="selectedData">
       <div class="detail-tab">
         <el-tabs v-model="activeTab">
           <el-tab-pane label="目标成本版本" name="version" style="height: 100%">
-            <cost-version
-              v-if="activeTab === 'version'"
-              :selectedData="selectedData"
-            />
+            <cost-version v-if="activeTab === 'version'" :selectedData="selectedData" :buildOrgIds="buildOrgIds" />
           </el-tab-pane>
         </el-tabs>
       </div>
@@ -27,23 +22,20 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from "vue";
-import UrbanProjectTree from "@/components/business/urban-project-tree.vue";
 import CostVersion from "./components/cost-version/index.vue";
-import CostDetail from "./components/cost-detail/index.vue";
 import { ProjectTreeNode } from "@/types/cost/master-data/project-area-type.ts";
 import SectorCompanyProjectTreet from "@/components/business/sector-company-project-treet.vue.vue";
 
 defineOptions({ name: "goal-cost" });
 
 // ref
-const urbanProjectTreeRef = ref();
-const selectedProjectId = ref<number | null>(null);
 const activeTab = ref("version");
 const selectedData = ref(null);
+const buildOrgIds = ref([]); // 建筑类型下全部的orgId集合
 
 // 处理选中
 const handleProjectSelect = (data: ProjectTreeNode) => {
-  console.log("选中的板块-公司、项目数据:", data);
+  // console.log("选中的板块-公司、项目数据:", data);
   if (data) {
     selectedData.value = data;
   } else {
@@ -51,8 +43,11 @@ const handleProjectSelect = (data: ProjectTreeNode) => {
     selectedData.value = null;
   }
 };
+const getOrgId = (data: any) => {
+  buildOrgIds.value = data || [];
+}
 
-onMounted(() => {});
+onMounted(() => { });
 </script>
 
 <style lang="scss" scoped>
@@ -85,12 +80,15 @@ onMounted(() => {});
       padding: 0 15px 15px;
       box-sizing: border-box;
       overflow: hidden;
+
       :deep(.el-tabs) {
         height: 100%;
         display: flex;
         flex-direction: column;
+
         .el-tabs__header {
           margin: 0 0 16px 0;
+
           .el-tabs__active-bar {
             background-color: #409eff;
           }

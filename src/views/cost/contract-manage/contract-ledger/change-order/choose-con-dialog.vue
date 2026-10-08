@@ -95,8 +95,8 @@ const selectedRows = ref([]);
 // 表格ref
 const tableRef = ref();
 
-// 查询参数
-const queryParams = ref<HConMainQuery>({
+// 查询参数（projMguId 等字段为可选过滤条件，用 Partial 避免类型强制要求）
+const queryParams = ref<Partial<HConMainQuery>>({
   conName: "",
   projId: props.projId,
 });
@@ -163,18 +163,25 @@ const resetState = () => {
 // 查询列表
 const getConList = async () => {
   try {
+    tableLoading.value = true;
     const res = await contractLedgerApi.getContractLedgerList({
       ...queryParams.value,
-    });
+    } as HConMainQuery);
     if (res.code === 200) {
       tableData.value = res.data || [];
       total.value = tableData.value.length;
     } else {
+      tableData.value = [];
+      total.value = 0;
       ElMessage.error(res.message || "加载合同列表失败");
     }
   } catch (error) {
     console.error("加载合同列表失败:", error);
+    tableData.value = [];
+    total.value = 0;
     ElMessage.error("加载合同列表失败");
+  } finally {
+    tableLoading.value = false;
   }
 };
 
@@ -184,19 +191,10 @@ const handleQuery = () => {
   getConList();
 };
 
-// 重置
-const handleReset = () => {
-  queryParams.value = {
-    conName: "",
-    projId: props.projId,
-  };
-  handleQuery();
-};
-
-// 分页改变
-const handlePaginationChange = (page: number, size: number) => {
-  currentPage.value = page;
-  pageSize.value = size;
+// 分页改变（base-table 的 pagination-change 事件返回 { pageSize, currentPage } 对象）
+const handlePaginationChange = (val: { pageSize: number; currentPage: number }) => {
+  currentPage.value = val.currentPage;
+  pageSize.value = val.pageSize;
   getConList();
 };
 
@@ -212,14 +210,15 @@ const handleConfirm = () => {
   }
   confirmLoading.value = true;
   emit("select", selectedRows.value);
+  // 弹窗关闭与 loading 复位交给 handleClose，避免同步复位导致 loading 不可见
   handleClose();
-  confirmLoading.value = false;
 };
 
 // 关闭弹窗
 const handleClose = () => {
   dialogVisible.value = false;
   selectedRows.value = [];
+  confirmLoading.value = false;
 };
 // 监听modelValue
 watch(

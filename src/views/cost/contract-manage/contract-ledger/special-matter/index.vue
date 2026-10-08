@@ -1,13 +1,10 @@
 <!-- 特殊事项 列表 -->
 <template>
   <div class="special-matter-wrapper">
-    <base-table
-      :columns="tableColumns"
-      :tableData="tableData"
-      :loading="tableLoading"
-      :rowKey="'id'"
-      :pagination="false"
-    >
+    <!-- 使用建设占位组件 -->
+    <BuildingPlaceholder v-if="true" />
+    <base-table v-else :columns="tableColumns" :tableData="tableData" :loading="tableLoading" :rowKey="'id'"
+      :pagination="false">
       <!-- 列表外操作栏 -->
       <template #actionBar>
         <div class="actionBar-buttons">
@@ -24,20 +21,14 @@
         <el-button type="primary" link @click="handleEdit(row)">
           编辑
         </el-button>
+         <el-button type="primary" link @click="handleDetail(row)">
+          详情
+        </el-button>
         <el-button type="danger" link @click="handleDelete(row)">
           删除
         </el-button>
-        <el-button type="primary" link> 审批 </el-button>
       </template>
     </base-table>
-
-    <!-- 新增/编辑 特殊事项弹窗 -->
-    <add-edit-special-dialog
-      v-model="dialogVisible"
-      :conId="props.conId"
-      :editData="editData"
-      @success="handleRefresh"
-    />
   </div>
 </template>
 
@@ -46,7 +37,6 @@ import { ref, watch, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
-import AddEditSpecialDialog from "./add-edit-special-dialog.vue";
 import { ContractSpecial } from "@/types/cost/contract-manage/special-matter-type.ts";
 import { specialMatterApi } from "@/api/cost/contract-manage/special-matter-api.ts";
 
@@ -108,12 +98,12 @@ const getDataList = async () => {
   try {
     tableLoading.value = true;
     tableData.value = [];
-    const res = await specialMatterApi.getSpecialList({
-      conId: props.conId,
-    });
-    if (res.code === 200) {
-      tableData.value = res.data;
-    }
+    // const res = await specialMatterApi.getSpecialList({
+    //   conId: props.conId,
+    // });
+    // if (res.code === 200) {
+    //   tableData.value = res.data;
+    // }
   } catch (error) {
     console.error("获取工程核价列表失败:", error);
   } finally {
@@ -124,17 +114,17 @@ const getDataList = async () => {
 const handleDelete = (row) => {
   ElMessageBox.confirm("确定删除该数据吗？", "提示", { type: "warning" })
     .then(async () => {
-      try {
-        const res = await specialMatterApi.delSpecial({ id: row.id });
-        if (res.code === 200) {
-          ElMessage.success("删除成功");
-          getDataList();
-        }
-      } catch (error) {
-        console.error("删除失败:", error);
-      }
+      // try {
+      //   const res = await specialMatterApi.delSpecial(row.id);
+      //   if (res.code === 200) {
+      //     ElMessage.success("删除成功");
+      //     getDataList();
+      //   }
+      // } catch (error) {
+      //   console.error("删除失败:", error);
+      // }
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 // 刷新按钮
 const handleRefresh = () => {
@@ -146,6 +136,7 @@ const handleAdd = () => {
   router.push({
     path: "/con/special-matter/add",
     query: {
+      conId: props.conId, // 合同ID
       t: Date.now(),
     },
   });
@@ -156,6 +147,17 @@ const handleEdit = ({ id }) => {
     path: "/con/special-matter/edit",
     query: {
       specialId: id, // 特殊事项ID
+      conId: props.conId, // 合同ID
+    },
+  });
+};
+// 详情
+const handleDetail = ({ id }) => {
+  router.push({
+    path: "/con/special-matter/detail",
+    query: {
+      specialId: id, // 特殊事项ID
+      conId: props.conId, // 合同ID
     },
   });
 };
@@ -187,6 +189,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+
   .actionBar-buttons {
     display: flex;
     align-items: center;

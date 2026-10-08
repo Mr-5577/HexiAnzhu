@@ -1,12 +1,7 @@
 <!-- 编辑 特殊事项 -->
 <template>
   <div class="special-matter-edit-page">
-    <SpecialMatterForm
-      mode="edit"
-      :specialId="specialId"
-      @success="handleSuccess"
-      @cancel="handleCancel"
-    />
+    <SpecialMatterForm mode="edit" :specialId="specialId" :conId="conId" />
   </div>
 </template>
 
@@ -20,14 +15,8 @@ const route = useRoute();
 const router = useRouter();
 
 const specialId = Number(route.query.specialId); // 特殊事项ID
+const conId = Number(route.query.conId); // 合同ID
 
-const handleSuccess = () => {
-  router.back();
-};
-
-const handleCancel = () => {
-  router.back();
-};
 </script>
 
 <style scoped lang="scss">

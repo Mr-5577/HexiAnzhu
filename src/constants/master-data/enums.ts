@@ -33,3 +33,12 @@ export const versionStatusEnum = [
   { value: 2, label: "失效", type: "warning" },
 ]
 
+/** 
+ * 是否 枚举
+ */
+export const YesOrNoStatusEnum = [
+  { value: false, label: "否", type: "warning" },
+  { value: true, label: "是", type: "success" },
+]
+
+

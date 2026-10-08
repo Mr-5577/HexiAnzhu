@@ -1,8 +1,4 @@
 import { http } from "@/axios/service";
-import {
-  ContractAuditPriceFormData,
-  EngineeringPrice,
-} from "@/types/cost/contract-manage/engineering-price-type";
 
 /**
  * 累计取数 相关接口

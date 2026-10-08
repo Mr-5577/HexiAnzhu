@@ -1,19 +1,13 @@
 <template>
   <div class="invoice-manage-page">
-    <div class="content">
+    <!-- 功能建设中占位 -->
+    <BuildingPlaceholder v-if="true" />
+    <div class="content" v-else>
       <el-tabs v-model="activeTab" @tab-change="changeTab">
-        <el-tab-pane
-          label="合同发票台账"
-          name="invoice-ledger"
-          style="height: 100%"
-        >
+        <el-tab-pane label="合同发票台账" name="invoice-ledger" style="height: 100%">
           <invoice-ledger v-show="activeTab === 'invoice-ledger'" />
         </el-tab-pane>
-        <el-tab-pane
-          label="发票核验明细"
-          name="invoice-verification"
-          style="height: 100%"
-        >
+        <el-tab-pane label="发票核验明细" name="invoice-verification" style="height: 100%">
           <invoice-verification v-show="activeTab === 'invoice-verification'" />
         </el-tab-pane>
       </el-tabs>
@@ -33,7 +27,7 @@ const activeTab = ref("invoice-ledger");
 const changeTab = (name: string) => {
   activeTab.value = name;
 };
-onMounted(() => {});
+onMounted(() => { });
 </script>
 
 <style lang="scss" scoped>
@@ -54,12 +48,15 @@ onMounted(() => {});
     overflow: hidden;
     padding: 0 15px 15px;
     box-sizing: border-box;
+
     :deep(.el-tabs) {
       height: 100%;
       display: flex;
       flex-direction: column;
+
       .el-tabs__header {
         margin: 0 0 16px 0;
+
         .el-tabs__active-bar {
           background-color: #409eff;
         }

@@ -1,0 +1,203 @@
+import { http } from "@/axios/service";
+import { ContractExecutionQueryParam } from "@/types/cost/report-manage/contract-overview";
+import { PaymentOverviewQueryParam } from "@/types/cost/report-manage/payment-overview";
+import { ProjectOutputQueryParam } from "@/types/cost/report-manage/project-output";
+
+/**
+ * 报表管理 相关接口
+ */
+export const reportManageApi = {
+  /** 合同执行概览-列表表 */
+  getExecutionReport: (data: ContractExecutionQueryParam) => {
+    return http.post("/con/executionReport", data);
+  },
+  /** 导出 合同执行概览 */
+  exportExecutionReport: (
+    data: ContractExecutionQueryParam,
+    filename: string = "合同执行概览.xlsx",
+  ) => {
+    return http.exportFile(
+      "/con/executionReport",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
+    );
+  },
+  /** 请款执行概览-主报表 */
+  getReportMain: (data: PaymentOverviewQueryParam) => {
+    return http.post("/pay/report/main", data);
+  },
+  /** 导出 请款执行概览-主报表 */
+  exportReportMain: (
+    data: PaymentOverviewQueryParam,
+    filename: string = "请款执行概览.xlsx",
+  ) => {
+    return http.exportFile(
+      "/pay/report/main",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
+    );
+  },
+  /** 请款执行概览-明细报表 */
+  getReportSub: (data: PaymentOverviewQueryParam) => {
+    return http.post("/pay/report/sub", data);
+  },
+  /** 导出 请款执行明细 */
+  exportReportSub: (
+    data: PaymentOverviewQueryParam,
+    filename: string = "请款执行明细.xlsx",
+  ) => {
+    return http.exportFile(
+      "/pay/report/sub",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
+    );
+  },
+  /** 产值申报概览报表 */
+  getProdValReport: (data: ProjectOutputQueryParam) => {
+    return http.post("/con/prodValReport", data);
+  },
+  /** 导出 产值申报概览报表 */
+  exportProdValReport: (
+    data: ProjectOutputQueryParam,
+    filename: string = "产值申报概览.xlsx",
+  ) => {
+    return http.exportFile(
+      "/con/prodValReport",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
+    );
+  },
+  /** 产值申报概览-明细 */
+  getProdValDetailReport: (data: any) => {
+    return http.post("/con/prodValDetailReport", data);
+  },
+  /** 导出-产值申报明细 */
+  exportProdValDetailReport: (
+    data: any,
+    filename: string = "产值申报明细.xlsx",
+  ) => {
+    return http.exportFile(
+      "/con/prodValDetailReport",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
+    );
+  },
+  /** 目标成本对比分析 */
+  getTargetCostAnalyze: (data: any) => {
+    return http.post("/cost/report/targetCostAnalyze", data);
+  },
+  /** 导出 目标成本对比分析 */
+  exportTargetCostAnalyze: (
+    data: any,
+    filename: string = "目标成本对比分析.xlsx",
+  ) => {
+    return http.exportFile(
+      "/cost/report/targetCostAnalyze",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
+    );
+  },
+  /** 目标成本执行概览 */
+  getDynamicReport: (data: any) => {
+    return http.post("/cost/report/dynamicReport", data);
+  },
+  /** 导出 目标成本执行概览 */
+  exportDynamicReport: (
+    data: any,
+    filename: string = "目标成本执行概览.xlsx",
+  ) => {
+    return http.exportFile(
+      "/cost/report/dynamicReport",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
+    );
+  },
+  /** 目标成本执行概览明细 */
+  getDynamicReportDetail: (data: any) => {
+    return http.post("/cost/report/dynamicReportDetail", data);
+  },
+  /** 导出 目标成本执行概览明细 */
+  exportDynamicReportDetail: (
+    data: any,
+    filename: string = "目标成本执行概览明细.xlsx",
+  ) => {
+    return http.exportFile(
+      "/cost/report/dynamicReportDetail",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
+    );
+  },
+
+  /** 财务支付分析-项目维度 */
+  getFinaProject: (data: any) => {
+    return http.post("/pay/report/finaProject", data);
+  },
+  /** 导出 财务支付分析-项目维度 */
+  exportFinaProject: (
+    data: any,
+    filename: string = "财务支付分析(项目).xlsx",
+  ) => {
+    return http.exportFile(
+      "/pay/report/finaProject",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
+    );
+  },
+  /** 财务支付分析-期间维度 */
+  getFinaPeriod: (data: any) => {
+    return http.post("/pay/report/finaPeriod", data);
+  },
+  /** 导出 财务支付分析-期间维度 */
+  exportFinaPeriod: (
+    data: any,
+    filename: string = "财务支付分析(期间).xlsx",
+  ) => {
+    return http.exportFile(
+      "/pay/report/finaPeriod",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
+    );
+  },
+  /** 财务目标成本支付分析 */
+  getFinaTargetCost: (data: any) => {
+    return http.post("/pay/report/finaTargetCost", data);
+  },
+  /** 导出 财务目标成本支付分析 */
+  exportFinaTargetCost: (
+    data: any,
+    filename: string = "财务目标成本支付分析.xlsx",
+  ) => {
+    return http.exportFile(
+      "/pay/report/finaTargetCost",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
+    );
+  },
+  /** 供应商履约及支付分析报表 */
+  getSupPerformReport: (data: any) => {
+    return http.post("/con/supPerformReport", data);
+  },
+  /** 导出 供应商履约及支付分析报表 */
+  exportSupPerformReport: (
+    data: any,
+    filename: string = "供应商履约及支付分析报表.xlsx",
+  ) => {
+    return http.exportFile(
+      "/con/supPerformReport",
+      data,
+      filename || "数据列表.xlsx",
+      "post",
+    );
+  },
+};

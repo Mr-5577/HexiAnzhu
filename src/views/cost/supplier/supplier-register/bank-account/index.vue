@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from "vue";
+import { ref, watch, computed, onMounted } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { SupplierBank } from "@/types/cost/supplier/supplier-ledger-type.ts";
 import AddEditBankDialog from "./add-edit-bank-dialog.vue";
@@ -149,17 +149,22 @@ const handleDelete = (row: SupplierBank) => {
     .catch(() => {});
 };
 
-watch(
-  () => props.supplierId,
-  (newVal) => {
-    if (newVal) {
-      getBankAccountList();
-    } else {
-      tableData.value = [];
-    }
-  },
-  { immediate: true },
-);
+// watch(
+//   () => props.supplierId,
+//   (newVal) => {
+//     if (newVal) {
+//       getBankAccountList();
+//     } else {
+//       tableData.value = [];
+//     }
+//   },
+//   { immediate: true },
+// );
+onMounted(() => {
+  if(props.supplierId) {
+    getBankAccountList();
+  }
+})
 </script>
 
 <style lang="scss" scoped>

@@ -133,11 +133,6 @@ const formRules: FormRules = {
   bankName: [{ required: true, message: "请输入开户银行", trigger: "blur" }],
   bankAccount: [
     { required: true, message: "请输入银行账号", trigger: "change" },
-    {
-      pattern: bankCardRegex,
-      message: "请输入正确的银行账号",
-      trigger: "blur",
-    },
   ],
 };
 

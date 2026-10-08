@@ -1,82 +1,147 @@
 <!-- 产值申报 列表 -->
 <template>
-  <div class="output-declaration-wrapper">
-    <base-table
-      :columns="tableColumns"
-      :tableData="tableData"
-      :loading="tableLoading"
-      :rowKey="'id'"
-      :pagination="false"
-    >
-      <!-- 列表外操作栏 -->
-      <template #actionBar>
-        <div class="actionBar-buttons">
-          <el-button
-            type="primary"
-            icon="Refresh"
-            :loading="tableLoading"
-            @click="handleRefresh"
-          >
-            刷新列表
+  <div class="output-application-wrapper">
+    <!-- <div class="pa-card">  -->
+    <!-- 顶部工具栏：标题 + 数量 + 刷新 -->
+    <div class="pa-toolbar">
+      <div class="pa-toolbar__title">
+        <span class="pa-toolbar__name">产值申报</span>
+        <el-tag size="small" type="info" effect="plain" round>
+          {{ tableData.length }} 个
+        </el-tag>
+      </div>
+    </div>
+
+    <!-- 筛选区域 -->
+    <div class="pa-filter">
+      <el-form :model="queryParams" ref="queryRef" :inline="true">
+        <el-form-item label="请款说明" prop="bizTitle">
+          <el-input v-model="queryParams.bizTitle" placeholder="请输入名称" clearable style="width: 200px" />
+        </el-form-item>
+        <el-form-item label="单据号" prop="bizNo">
+          <el-input v-model="queryParams.bizNo" placeholder="请输入单据号" clearable style="width: 200px" />
+        </el-form-item>
+        <el-form-item label="审批状态" prop="status">
+          <el-select v-model="queryParams.status" placeholder="请选择审批状态" style="width: 150px" clearable>
+            <el-option v-for="item in approvalStatusEnum" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" class="refresh-btn" :class="{ 'is-refreshing': refreshing }" :disabled="refreshing"
+            @click="handleRefresh">
+            <el-icon class="refresh-icon">
+              <Refresh />
+            </el-icon>
+            <span>{{ refreshing ? "搜索中" : "搜索" }}</span>
           </el-button>
-          <el-button type="primary" @click="handleAdd"> 新增 </el-button>
-        </div>
+          <el-button @click="handleReset">重置</el-button>
+          <el-button type="primary" class="add-btn" @click="handleAdd">
+            <el-icon>
+              <Plus />
+            </el-icon>
+            <span>新增</span>
+          </el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+
+    <base-table :columns="tableColumns" :tableData="paginatedData" :loading="tableLoading" :rowKey="'id'" :total="total"
+      :current-page="currentPage" :page-size="pageSize" @pagination-change="handlePaginationChange">
+      <template #status="{ row }">
+        <el-tag size="small" :type="getEnumType(approvalStatusEnum, row?.status || 0)">
+          {{ getEnumLabel(approvalStatusEnum, row?.status || 0) }}
+        </el-tag>
       </template>
 
+      <!-- <template #payTypeId="{ row }">
+          <el-tag
+            size="small"
+            :type="getOptionsTypeById(paymentTypeOptions, row?.payTypeId || 0)"
+          >
+            {{ getOptionsLabelById(paymentTypeOptions, row?.payTypeId || 0) }}
+          </el-tag>
+        </template> -->
+
       <template #actions="{ row }">
-        <el-button type="primary" link @click="handleEdit(row)">
+        <el-button type="primary" link class="row-link" @click="handleEdit(row)"
+          :disabled="row.status !== 0 || row.createId !== userStore.userInfo.mdUserId">
           编辑
         </el-button>
-        <el-button type="danger" link @click="handleDelete(row)">
+        <el-button type="primary" link class="row-link" @click="handleDetail(row)">
+          详情
+        </el-button>
+        <!-- <el-button type="primary" link class="row-link" @click="handleApprove(row)">
+            审批
+          </el-button> -->
+        <el-button type="danger" link class="row-link" @click="handleDelete(row)"
+          :disabled="row.status !== 0 || row.createId !== userStore.userInfo.mdUserId">
           删除
         </el-button>
-        <el-button type="primary" link> 审批 </el-button>
       </template>
     </base-table>
   </div>
+  <!-- </div>  -->
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { outputDeclarationApi } from "@/api/cost/contract-manage/output-declaration-api";
 import { useRouter } from "vue-router";
+import { approvalStatusEnum } from "@/constants/bidding/enums";
+import { getEnumLabel, getEnumType } from "@/utils/enum";
+import { useUserStore } from "@/stores/user-store";
+import { formatThousandWithPlaces } from "@/utils/big-number";
 
 defineOptions({ name: "output-declaration" });
 
 const props = defineProps<{
   conId: number | null;
+  projId: number | null;
 }>();
 
 const router = useRouter();
+const refreshing = ref(false);
 const tableLoading = ref(false);
+const currentPage = ref<number>(1);
+const pageSize = ref<number>(20);
+const total = ref<number>(0);
 const tableData = ref([]);
+const userStore = useUserStore();
+
+const queryParams = ref({
+  conId: props.conId,
+  bizTitle: "",
+  bizNo: "",
+  status: null,
+});
+
+const handleReset = () => {
+  queryParams.value.bizTitle = "";
+  queryParams.value.bizNo = "";
+  queryParams.value.status = null;
+  resetPagination();
+  getDataList();
+};
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "signAmt", label: "合同签约金额", width: 140 },
-  { prop: "addAmt", label: "补充合同金额", width: 140 },
-  { prop: "sumChangeAmt", label: "累计变更签证", width: 140 },
-  { prop: "preSettleAmt", label: "预结算合同金额", width: 140 },
-  { prop: "sumProdVal", label: "累计产值", width: 140 },
-  { prop: "sumPayAmt", label: "累计应付", width: 140 },
-  { prop: "sumAppyAmt", label: "累计请款", width: 140 },
-  { prop: "sumPaidAmt", label: "累计实付", width: 140 },
-  { prop: "sumOwedAmt", label: "欠款", width: 140 },
-  // { prop: "conId", label: "合同名称", width: 140 },
-  { prop: "conTypeId", label: "合同分类", width: 140 },
-  { prop: "payMethod", label: "付款方式", width: 140 },
-  { prop: "payTypeId", label: "款项类型", width: 140 },
-  { prop: "payRate", label: "应付比例", width: 140 },
-  { prop: "payIntvl", label: "支付周期(月)", width: 140 },
-  { prop: "applyProdVal", label: "本次申报产值金额", width: 140 },
-  { prop: "applyPayAmt", label: "本次申报应付金额", width: 140 },
-  { prop: "applyDesc", label: "申报说明", width: 220 },
-  { prop: "costProdVal", label: "成本复核产值金额", width: 140 },
-  { prop: "costPayAmt", label: "成本复核应付金额", width: 140 },
-  { prop: "totalProdVal", label: "截止总产值", width: 140 },
-  { prop: "totalPayVal", label: "截止总应付", width: 140 },
+  { prop: "bizNo", label: "单据号", width: 200 },
+  { prop: "bizTitle", label: "产值申报说明", width: 250 },
+  { prop: "prodValPeriod", label: "产值月份", width: 100 },
+  { prop: "sumProdVal", label: "期初产值", width: 140, formatter: (row) => formatThousandWithPlaces(row.sumProdVal || 0) },
+  { prop: "sumPayAmt", label: "期初应付", width: 140, formatter: (row) => formatThousandWithPlaces(row.sumPayAmt || 0) },
+  { prop: "applyProdVal", label: "本次申报产值", width: 140, formatter: (row) => formatThousandWithPlaces(row.applyProdVal || 0) },
+  { prop: "applyPayAmt", label: "本次申报应付", width: 140, formatter: (row) => formatThousandWithPlaces(row.applyPayAmt || 0) },
+  { prop: "costProdVal", label: "成本复核产值", width: 140, formatter: (row) => formatThousandWithPlaces(row.costProdVal || 0) },
+  { prop: "costPayAmt", label: "成本复核应付", width: 140, formatter: (row) => formatThousandWithPlaces(row.costPayAmt || 0) },
+  { prop: "totalProdVal", label: "期末总产值", width: 140, formatter: (row) => formatThousandWithPlaces(row.totalProdVal || 0) },
+  { prop: "totalPayVal", label: "期末总应付", width: 140, formatter: (row) => formatThousandWithPlaces(row.totalPayVal || 0) },
+  { slot: "status", label: "审批状态", minWidth: 90 },
+  { prop: "applyDesc", label: "申报说明", width: 250 },
+  { prop: "createName", label: "创建人", minWidth: 90 },
+  { prop: "createDate", label: "创建时间", minWidth: 150 },
   {
     label: "操作",
     width: 150,
@@ -84,16 +149,25 @@ const tableColumns: TableColumnItem[] = [
     fixed: "right",
   },
 ];
+
+// 手动分页
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return tableData.value.slice(start, end)
+});
 // 获取列表数据
 const getDataList = async () => {
   if (!props.conId) return;
   try {
     tableLoading.value = true;
     const res = await outputDeclarationApi.getProdValList({
+      ...queryParams.value,
       conId: props.conId,
     });
     if (res.code === 200) {
       tableData.value = res.data || [];
+      total.value = res.data?.length || 0;
     }
   } catch (error) {
     console.error("获取列表失败:", error);
@@ -101,31 +175,58 @@ const getDataList = async () => {
     tableLoading.value = false;
   }
 };
-
-// 刷新
-const handleRefresh = () => {
-  getDataList();
+const handlePaginationChange = (params: any) => {
+  currentPage.value = params.currentPage;
+  pageSize.value = params.pageSize;
 };
-
+// 刷新（包一层 refreshing 状态驱动图标旋转，原 tableLoading 逻辑不动）
+const handleRefresh = async () => {
+  refreshing.value = true;
+  try {
+    resetPagination();
+    await getDataList();
+  } finally {
+    refreshing.value = false;
+  }
+};
+const resetPagination = () => {
+  currentPage.value = 1;
+  pageSize.value = 20;
+}
 // 发起流程
 const handleAdd = () => {
   router.push({
     path: "/con/output-declaration/add",
     query: {
       conId: props.conId, // 合同ID
+      projId: props.projId,
     },
   });
 };
 // 编辑
-const handleEdit = async ({ id }) => {
+const handleEdit = async (row: any) => {
   router.push({
     path: "/con/output-declaration/edit",
     query: {
       conId: props.conId, // 合同ID
-      outputId: id, // 产值ID
+      projId: props.projId,
+      prodId: row.id, // 产值ID
     },
   });
 };
+
+// 详情
+const handleDetail = (row: any) => {
+  router.push({
+    path: "/con/output-declaration/detail",
+    query: {
+      prodId: row.id, // 补充合同ID
+      conId: props.conId, // 合同台账ID（合同单据ID）
+      projId: props.projId,
+    },
+  });
+};
+
 // 删除
 const handleDelete = ({ id }) => {
   ElMessageBox.confirm("确定删除该数据吗？", "提示", { type: "warning" })
@@ -140,7 +241,7 @@ const handleDelete = ({ id }) => {
         console.error("删除失败:", error);
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 
 // 监听合同ID变化，自动刷新列表
@@ -160,20 +261,152 @@ onMounted(() => {
 });
 </script>
 
+
 <style lang="scss" scoped>
-.output-declaration-wrapper {
+.output-application-wrapper {
+  border-radius: 12px;
   width: 100%;
   height: 100%;
-  padding: 15px;
+  padding: 3px;
   box-sizing: border-box;
-  background-color: #fff;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  .actionBar-buttons {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
+  background: #fff;
+}
+
+/* 卡片容器 */
+.pa-card {
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  // overflow: hidden;
+  transition: box-shadow 0.25s ease;
+
+  &:hover {
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.09);
+  }
+
+  // 表格样式
+  table {
+    width: 100%;
+    min-width: 800px; // 设置最小宽度，确保内容不会挤在一起
+    border-collapse: collapse;
+  }
+}
+
+/* 工具栏：左标题 / 右操作 */
+.pa-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f0f2f5;
+  background: linear-gradient(180deg, #fafcff 0%, #ffffff 100%);
+}
+
+.pa-toolbar__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pa-toolbar__name {
+  position: relative;
+  padding-left: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 16px;
+    border-radius: 2px;
+    background: #409eff;
+  }
+}
+
+.pa-toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 筛选区域 */
+.pa-filter {
+  padding: 12px 14px 0;
+
+  :deep(.el-form-item) {
+    margin-bottom: 12px;
+  }
+}
+
+/* —— 刷新按钮：重点优化 —— */
+.refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+
+  .refresh-icon {
+    transition: transform 0.3s ease;
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.35);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(64, 158, 255, 0.3);
+  }
+
+  &.is-refreshing .refresh-icon {
+    animation: pa-spin 0.8s linear infinite;
+  }
+}
+
+@keyframes pa-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 新增按钮：与刷新按钮一致的悬浮反馈 */
+.add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.25);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}
+
+/* 行内操作链接：悬浮微提示 */
+.row-link {
+  font-weight: 500;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 0.85;
   }
 }
 </style>

@@ -1,153 +1,50 @@
 <!-- 目标成本版本 新增/编辑弹窗 -->
 <template>
-  <base-modal
-    v-model="visible"
-    :title="dialogTitle"
-    width="860px"
-    :confirm-loading="submitLoading"
-    @confirm="handleSubmit"
-    @cancel="handleClose"
-  >
+  <base-modal v-model="visible" :title="dialogTitle" width="700px" :confirm-loading="submitLoading"
+    @confirm="handleSubmit" @cancel="handleClose">
     <div class="form-content">
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="formRules"
-        label-width="160px"
-      >
+      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="130px">
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="所属项目" prop="projId" required>
-              <el-cascader
-                ref="projCascaderRef"
-                v-model="formData.projId"
-                :options="projectOptions"
-                :show-all-levels="false"
-                :props="{
+              <el-cascader ref="projCascaderRef" v-model="formData.projId" :options="projectOptions"
+                :show-all-levels="false" :props="{
                   expandTrigger: 'hover',
                   emitPath: false,
                   checkStrictly: false,
                   value: 'orgId',
                   label: 'orgName',
                   children: 'children',
-                }"
-                placeholder="请选择项目"
-                style="width: 100%"
-                :disabled="isEditMode"
-                @change="changeProject"
-              />
+                }" placeholder="请选择项目" style="width: 100%" :disabled="isEditMode" @change="changeProject" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item prop="segId" label="业务板块" required>
-              <el-select
-                v-model="formData.segId"
-                placeholder="请选择业务板块"
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="item in segOptions"
-                  :key="item.id"
-                  :label="item.segName"
-                  :value="item.id"
-                />
+              <el-select v-model="formData.segId" placeholder="请选择业务板块" style="width: 100%" disabled>
+                <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
               </el-select>
             </el-form-item>
           </el-col>
         </el-row>
 
-        <!-- <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item prop="costAmt" label="目标成本总额(含税)" required>
-              <el-input-number
-                v-model="formData.costAmt"
-                :precision="2"
-                :min="0"
-                placeholder="请输入目标成本总额(含税)"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item
-              prop="costExclAmt"
-              label="目标成本总额(不含税)"
-              required
-            >
-              <el-input-number
-                v-model="formData.costExclAmt"
-                :precision="2"
-                :min="0"
-                placeholder="请输入目标成本总额(不含税)"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item prop="costDynAmt" label="动态成本总额(含税)" required>
-              <el-input-number
-                v-model="formData.costDynAmt"
-                :precision="2"
-                :min="0"
-                placeholder="请输入动态成本总额(含税)"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item
-              prop="costDynExclAmt"
-              label="动态成本总额(不含税)"
-              required
-            >
-              <el-input-number
-                v-model="formData.costDynExclAmt"
-                :precision="2"
-                :min="0"
-                placeholder="请输入动态成本总额(不含税)"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row> -->
-
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item prop="versionType" label="版本类型" required>
-              <el-select
-                v-model="formData.versionType"
-                placeholder="请选择版本类型"
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="item in props.verTypeOptions"
-                  :key="item.dicCode"
-                  :label="item.dicLabel"
-                  :value="item.dicCode"
-                />
+              <el-select v-model="formData.versionType" placeholder="请选择版本类型" style="width: 100%">
+                <el-option v-for="item in props.verTypeOptions" :key="item.dicCode" :label="item.dicLabel"
+                  :value="item.dicCode" />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item prop="areaVerMid" label="面积版本" required>
-              <el-select
-                v-model="formData.areaVerMid"
-                placeholder="请选择面积版本"
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="item in areaVersionOptions"
-                  :key="item.id"
-                  :label="item.verTitle"
-                  :value="item.id"
-                />
+              <el-select v-model="formData.areaVerMid" placeholder="请选择面积版本" style="width: 100%">
+                <el-option v-for="item in areaVersionOptions" :key="item.id" :label="item.verTitle" :value="item.id" />
               </el-select>
             </el-form-item>
           </el-col>
         </el-row>
-        <el-row :gutter="20">
+        <!-- <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item prop="isEnabled" label="是否当前使用版本" required>
               <el-radio-group v-model="formData.isEnabled">
@@ -156,18 +53,12 @@
               </el-radio-group>
             </el-form-item>
           </el-col>
-        </el-row>
+        </el-row> -->
         <el-row :gutter="20">
           <el-col :span="24">
-            <el-form-item prop="remark" label="备注">
-              <el-input
-                v-model="formData.remark"
-                type="textarea"
-                :rows="4"
-                placeholder="请输入备注"
-                maxlength="200"
-                show-word-limit
-              />
+            <el-form-item prop="remark" label="版本说明" required>
+              <el-input v-model="formData.remark" maxlength="50" placeholder="请输入" show-word-limit
+                word-limit-position="outside" type="text" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -215,7 +106,7 @@ const dialogTitle = computed(() =>
 const projCascaderRef = useTemplateRef("projCascaderRef");
 
 const formData = ref<HCstProjectCostMAddEditParams>({
-  segId: null,
+  segId: 2,
   projId: undefined,
   versionNo: "",
   versionType: "",
@@ -237,6 +128,9 @@ const formRules: FormRules = {
   ],
   areaVerMid: [
     { required: true, message: "请选择面积版本", trigger: "change" },
+  ],
+  remark: [
+    { required: true, message: "请输入版本说明", trigger: "change" },
   ],
 };
 
@@ -311,7 +205,7 @@ const initForm = () => {
     areaVersionOptions.value = [];
     formData.value = {
       projId: undefined,
-      segId: null,
+      segId: 2,
       versionNo: "",
       versionType: "",
       costAmt: 0,
@@ -330,11 +224,6 @@ const initForm = () => {
 const changeProject = (value: number) => {
   if (value) {
     getAreaVersion(value);
-    // 通过模板引用获取节点数据
-    const checkedNodes = projCascaderRef.value?.getCheckedNodes();
-    if (checkedNodes && checkedNodes.length > 0) {
-      console.log("选中的项目数据:", checkedNodes);
-    }
   }
 };
 // 获取项目列表
@@ -365,12 +254,13 @@ const getAreaVersion = async (projId?: number) => {
   try {
     const res = await projectAreaApi.getAreaVerMList({
       projId: projId,
+      isOnlyEnable: true,
     });
     if (res.code === 200) {
       const list = res.data || [];
       areaVersionOptions.value = list;
     }
-  } catch (error) {}
+  } catch (error) { }
 };
 
 // 监听弹窗显示状态

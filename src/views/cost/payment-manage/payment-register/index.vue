@@ -1,167 +1,192 @@
 <!-- 实付登记 列表 -->
 <template>
   <div class="payment-register-wrapper">
-    <el-form
-      :model="queryParams"
-      ref="queryRef"
-      :inline="true"
-      label-width="100px"
-    >
-      <el-form-item label="项目" prop="projId">
-        <el-cascader
-          v-model="queryParams.projId"
-          :options="projectOptions"
-          :show-all-levels="false"
-          :props="{
-            expandTrigger: 'hover',
-            emitPath: false,
-            checkStrictly: false,
-            value: 'orgId',
-            label: 'orgName',
-            children: 'children',
-          }"
-          placeholder="请选择项目"
-          style="width: 200px"
-          clearable
-        />
-      </el-form-item>
-      <el-form-item label="业务板块" prop="segId">
-        <el-select
-          v-model="queryParams.segId"
-          placeholder="请选择业务板块"
-          style="width: 200px"
-        >
-          <el-option
-            v-for="item in segOptions"
-            :key="item.id"
-            :label="item.segName"
-            :value="item.id"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="付款状态" prop="status">
-        <el-select
-          v-model="queryParams.status"
-          placeholder="请选择付款状态"
-          style="width: 200px"
-        >
-          <el-option
-            v-for="item in segOptions"
-            :key="item.id"
-            :label="item.segName"
-            :value="item.id"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="合同编号" prop="conCode">
-        <el-input
-          v-model="queryParams.conCode"
-          placeholder="请输入合同编号"
-          clearable
-          style="width: 200px"
-        />
-      </el-form-item>
-      <el-form-item label="合同名称" prop="conName">
-        <el-input
-          v-model="queryParams.conName"
-          placeholder="请输入合同名称"
-          clearable
-          style="width: 200px"
-        />
-      </el-form-item>
-      <el-form-item label="供应商" prop="supName">
-        <el-input
-          v-model="queryParams.supName"
-          placeholder="请输入供应商名称"
-          clearable
-          style="width: 200px"
-        />
-      </el-form-item>
-      <el-form-item label="付款单号" prop="payCode">
-        <el-input
-          v-model="queryParams.payCode"
-          placeholder="请输入付款单号"
-          clearable
-          style="width: 200px"
-        />
-      </el-form-item>
-      <el-form-item label="费用归属期间" prop="feePeriod">
-        <el-date-picker
-          v-model="queryParams.feePeriod"
-          type="month"
-          value-format="YYYY-MM-DD"
-          placeholder="费用归属期间"
-          style="width: 200px"
-        />
-      </el-form-item>
-      <el-form-item label="申请日期" prop="applyDate">
-        <el-date-picker
-          v-model="queryParams.applyDate"
-          type="daterange"
-          range-separator="至"
-          value-format="YYYY-MM-DD"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          style="width: 220px"
-        />
-      </el-form-item>
+    <BaseSearchCard>
+      <template #form>
+        <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px">
+          <el-form-item label="业务板块" prop="segId">
+            <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px" clearable>
+              <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="项目名称" prop="projId">
+            <el-cascader v-model="queryParams.projId" :options="projectOptions" :show-all-levels="false" :props="{
+              expandTrigger: 'hover',
+              emitPath: false,
+              checkStrictly: false,
+              value: 'orgId',
+              label: 'orgName',
+              children: 'children',
+            }" placeholder="请选择项目" style="width: 220px" clearable filterable />
+          </el-form-item>
+          <el-form-item label="费用归属期间" prop="belongMonth">
+            <el-date-picker v-model="queryParams.belongMonth" type="month" value-format="YYYY-MM" placeholder="费用归属期间"
+              style="width: 220px" />
+          </el-form-item>
+          <el-form-item label="入账状态" prop="isLocked">
+            <el-select v-model="queryParams.isLocked" placeholder="请选择" style="width: 220px" clearable>
+              <el-option label="已入账" :value="true" />
+              <el-option label="未入账" :value="false" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="流程状态" prop="wfStatus">
+            <el-select v-model="queryParams.wfStatus" placeholder="请选择" style="width: 220px" multiple collapse-tags
+              @change="changeWfStatus">
+              <el-option v-for="item in processStatus" :key="item.value" :label="item.label" :value="item.value" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="请款类型" prop="reqType">
+            <el-select v-model="queryParams.reqType" placeholder="请选择请款类型" style="width: 220px" clearable>
+              <el-option v-for="item in ReqTypeEnum" :key="item.value" :label="item.label" :value="item.value" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="申请日期" prop="applyDate">
+            <el-date-picker v-model="queryParams.applyDate" type="daterange" range-separator="至"
+              value-format="YYYY-MM-DD" start-placeholder="开始日期" end-placeholder="结束日期" style="width: 220px" />
+          </el-form-item>
+          <el-form-item label="支付日期" prop="payDate">
+            <el-date-picker v-model="queryParams.payDate" type="daterange" range-separator="至" value-format="YYYY-MM-DD"
+              start-placeholder="开始日期" end-placeholder="结束日期" style="width: 220px" />
+          </el-form-item>
 
-      <el-form-item>
+          <!-- <el-form-item label="标题" prop="wfTitle">
+            <el-input v-model="queryParams.wfTitle" placeholder="请输入标题" clearable style="width: 220px" />
+          </el-form-item>
+          <el-form-item label="合同/立项单号" prop="itemNo">
+            <el-input v-model="queryParams.itemNo" placeholder="请输入合同/立项单号" clearable style="width: 220px" />
+          </el-form-item>
+          <el-form-item label="合同/立项名称" prop="itemName">
+            <el-input v-model="queryParams.itemName" placeholder="请输入合同/立项名称" clearable style="width: 220px" />
+          </el-form-item>
+          <el-form-item label="供应商" prop="supName">
+            <el-input v-model="queryParams.supName" placeholder="请输入供应商名称" clearable style="width: 220px" />
+          </el-form-item>
+          <el-form-item label="付款单号" prop="reqNo">
+            <el-input v-model="queryParams.reqNo" placeholder="请输入付款单号" clearable style="width: 220px" />
+          </el-form-item>
+          <el-form-item label="收款方账户名" prop="pmAccountName">
+            <el-input v-model="queryParams.pmAccountName" placeholder="请输入" clearable style="width: 220px" />
+          </el-form-item> -->
+
+        </el-form>
+      </template>
+      <template #actions>
+        <el-input v-model="queryParams.keyWord" placeholder="请输入标题、合同/立项单号、合同/立项名称、供应商名称、付款单号、收款方账户名" clearable
+          style="width:636px" />
         <el-button type="primary" @click="handleSearch"> 搜索 </el-button>
         <el-button @click="handleReset">重置</el-button>
-      </el-form-item>
-    </el-form>
-
-    <base-table
-      :columns="columns"
-      :tableData="tableData"
-      :loading="tableLoading"
-      :rowKey="'id'"
-      :pagination="false"
-    >
-      <template #actions="{ row }">
-        <el-button type="primary" link @click="batchRegister">
-          批量登记
-        </el-button>
-        <el-button type="primary" link @click="singleRegister">
-          单项登记
-        </el-button>
-        <el-button type="primary" link> 查看 </el-button>
-        <el-button type="primary" link> 锁定 </el-button>
+        <el-button type="primary" :loading="exportLoading" @click="handleExport">导出</el-button>
       </template>
-    </base-table>
+    </BaseSearchCard>
+
+    <div class="table-wrapper">
+      <!-- 状态tab切换 -->
+      <div class="tab-wrapper">
+        <el-tabs v-model="queryParams.payStatus" @tab-change="handleTabChange">
+          <el-tab-pane label="未支付" name="未支付" />
+          <el-tab-pane label="已支付(部分)" name="部分支付" />
+          <el-tab-pane label="全部支付" name="全部支付" />
+          <el-tab-pane label="所有请款单" name="" />
+        </el-tabs>
+
+      </div>
+
+      <base-table :columns="columns" :tableData="paginatedData" :loading="tableLoading" :rowKey="'id'" :total="total"
+        :current-page="currentPage" :page-size="pageSize" @pagination-change="handlePaginationChange">
+        <!-- 付款单号 -->
+        <template #reqNo="{ row }">
+          <el-link type="primary" :underline="'hover'" @click="handleViewDetail(row)">
+            {{ row.reqNo || "" }}
+          </el-link>
+        </template>
+        <!-- 审批流程 0=草稿，10=审批中，40=已审批，80=作废，99=其他 -->
+        <template #flowStatus="{ row }">
+          <el-tag size="small" :type="getEnumType(costBillStatusEnum, row?.flowStatus || 0)">
+            {{ getEnumLabel(costBillStatusEnum, row?.flowStatus || 0) }}
+          </el-tag>
+        </template>
+        <!-- 是否入账 -->
+        <template #isLocked="{ row }">
+          <el-tag size="small" :type="row.isLocked ? 'success' : 'info'">
+            {{ row.isLocked ? "已入账" : "未入账" }}
+          </el-tag>
+        </template>
+
+        <!-- 只有已审批并且未锁定才能登记 -->
+        <template #actions="{ row }">
+          <el-button type="primary" link @click="batchRegister(row)" :disabled="disabledRegister(row)">
+            批量登记
+          </el-button>
+          <el-button type="primary" link @click="singleRegister(row)" :disabled="disabledRegister(row)">
+            单项登记
+          </el-button>
+          <el-button type="primary" link @click="handleView(row)" :disabled="row.flowStatus !== 40">
+            明细
+          </el-button>
+          <el-button type="primary" link @click="handleEntry(row)" :disabled="disabledEntry(row)">
+            入账
+          </el-button>
+        </template>
+      </base-table>
+    </div>
+
     <!-- 批量付款登记 弹窗 -->
-    <BatchRegisterDialog v-model="batchDialog" />
+    <BatchRegisterDialog v-model="batchDialog" :currentRow="currentRow" @success="getDataList" />
     <!-- 单项登记 弹窗 -->
-     <SingleRegisterDialog v-model="singleDialog" />
+    <SingleRegisterDialog v-model="singleDialog" :currentRow="currentRow" @success="getDataList" />
+    <!-- 查看弹窗 -->
+    <ViewDialog v-model="viewDialog" :currentRow="currentRow" @success="getDataList" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
-import { largeScreenApi } from "@/api/sales/large-screen-api";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import BatchRegisterDialog from "./batch-register-dialog.vue";
 import SingleRegisterDialog from "./single-register-dialog.vue";
+import ViewDialog from "./view-dialog.vue";
+import { payRegisterApi } from "@/api/cost/payment-manage/payment-register-api.ts";
+import { getEnumLabel, getEnumType } from "@/utils/enum.ts";
+import { costBillStatusEnum } from "@/constants/cost/enums.ts";
+import { useMenuStore } from "@/stores/menu-store";
+import { formatThousandWithPlaces } from "@/utils/big-number.ts";
+import { PERMISSIONS } from "@/constants/permission.ts";
+import { ReqTypeEnum } from "@/constants/contract-manage/enums.ts";
+import { exportExcelWithStyle } from "@/utils/export-excel.ts";
+import BaseSearchCard from "@/components/base/base-search-card.vue";
 
 defineOptions({ name: "payment-register" });
 
 const router = useRouter();
+const menuStore = useMenuStore();
+
+const bizITypeMapping = {
+  NCON_CST: "非合同请款支付",
+  NCON_FEE: "费用报销支付",
+  CON_PAY: "合同支付",
+}
 
 const queryParams = ref({
   projId: undefined,
   segId: undefined,
-  status: undefined,
-  conCode: undefined,
-  conName: undefined,
+  itemNo: undefined,
+  itemName: undefined,
   supName: undefined,
-  payCode: undefined,
-  feePeriod: undefined,
-  applyDate: undefined,
+  reqNo: undefined,
+  belongMonth: undefined,
+  pmAccountName: undefined,
+  applyDate: [],
+  payDate: [],
+  wfStatus: [40], // 0=草稿, 10=审批中, 40=已审批, 80=作废, 99=其他
+  payStatus: "未支付", // 未支付  部分支付  全部支付
+  isLocked: undefined,
+  wfTitle: undefined,
+  reqType: 0,
+  keyWord: undefined,
 });
 const projectOptions = ref([]); // 项目列表
 const segOptions = ref([]); // 业务板块列表
@@ -169,70 +194,321 @@ const tableLoading = ref(false);
 const tableData = ref([{ id: 1 }]);
 const batchDialog = ref(false);
 const singleDialog = ref(false);
+const viewDialog = ref(false);
+const currentRow = ref(null);
+const currentPage = ref<number>(1);
+const pageSize = ref<number>(20);
+const total = ref<number>(0);
+const exportLoading = ref(false);
 
 const columns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
-  { prop: "ww", label: "标题", width: 200 },
-  { prop: "projId", label: "项目名称", width: 150 },
-  { prop: "segId", label: "业务板块", width: 150 },
-  { prop: "ww", label: "费用所属公司", width: 150 },
-  { prop: "ww", label: "合同名称", width: 150 },
-  { prop: "ww", label: "合同编号", width: 150 },
-  { prop: "ww", label: "供应商", width: 120 },
-  { prop: "ww", label: "付款单号", width: 120 },
-  { prop: "ww", label: "付款申请说明", width: 200 },
-  { prop: "ww", label: "费用归属期间", width: 120 },
-  { prop: "ww", label: "费用类型", width: 120 },
-  { prop: "ww", label: "请款金额", width: 120 },
-  { prop: "ww", label: "支付金额", width: 120 },
-  { prop: "ww", label: "付款状态", width: 120 },
-  { prop: "ww", label: "申请人", width: 120 },
-  { prop: "ww", label: "申请日期", width: 120 },
-  { prop: "ww", label: "审批流程", width: 200 },
+  { prop: "flowTitle", label: "标题", width: 200 },
+  { prop: "projName", label: "项目名称", width: 120 },
+  { prop: "segName", label: "业务板块", width: 90 },
+  { prop: "compName", label: "费用所属公司", width: 180 },
+  { prop: "itemName", label: "合同/立项名称", width: 150 },
+  { prop: "itemNo", label: "合同/立项单号", width: 200 },
+  {
+    prop: "bizItemName", label: "单据类型", width: 150, formatter: (row) => {
+      const name = bizITypeMapping[row.bizType] || row.bizItemName
+      return name
+    }
+  },
+  { prop: "supName", label: "供应商", width: 150 },
+  { slot: "reqNo", label: "付款单号", width: 200 },
+  { prop: "reqDesc", label: "付款申请说明", width: 200 },
+  { prop: "belongMonth", label: "费用归属期间", width: 110 },
+  { prop: "finaTypeName", label: "费用类型", width: 120 },
+  { prop: "payableAmt", label: "请款金额", width: 120, formatter: (row) => formatThousandWithPlaces(row.payableAmt || 0) },
+  { prop: "paidAmt", label: "支付金额", width: 120, formatter: (row) => formatThousandWithPlaces(row.paidAmt || 0) },
+  { prop: "payStatus", label: "付款状态", width: 100 },
+  { prop: "applyUserName", label: "申请人", width: 90 },
+  { prop: "maxPayDate", label: "最近支付日期", width: 100 },
+  { prop: "applyDate", label: "申请日期", width: 100 },
+  { slot: "flowStatus", label: "审批流程", width: 100 },
+  { slot: "isLocked", label: "是否入账", width: 90 },
   {
     label: "操作",
     prop: "actions",
-    width: 260,
+    width: 240,
     slot: "actions",
     fixed: "right",
   },
 ];
+const disabledRegister = (row) => {
+  const hasPermission = menuStore.hasExactPermission(PERMISSIONS.PAY_LEDGER_REG)
+  // 无权限 → 禁用
+  if (!hasPermission) return true
+  // 非已审批 → 禁用
+  if (row.flowStatus !== 40) return true
+  // 已入账 → 禁用
+  if (row.isLocked) return true
+  // 已全部支付 → 禁用
+  if (row.payStatus === '全部支付') return true
+  // 启用
+  return false
+}
+const disabledEntry = (row) => {
+  const hasPermission = menuStore.hasExactPermission(PERMISSIONS.PAY_LEDGER_ENTRY)
+  // 无权限 → 禁用
+  if (!hasPermission) return true
+  // 非已审批 → 禁用
+  if (row.flowStatus !== 40) return true
+  // 已入账 → 禁用
+  if (row.isLocked) return true
+  // 没有全部支付 → 禁用
+  if (row.payStatus !== '全部支付') return true
+  // 启用
+  return false
+}
+// 只查询审批中、已审批
+const processStatus = computed(() => {
+  const filterData = costBillStatusEnum.filter((item) => item.value == 10 || item.value == 40);
+  return filterData;
+})
+// 手动分页
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return tableData.value.slice(start, end)
+});
 // 获取列表数据
 const getDataList = async () => {
   try {
-    // tableLoading.value = true;
-    // tableData.value = [];
+    tableLoading.value = true;
+    const { applyDate, payDate, ...rest } = queryParams.value;
+    const params = {
+      ...rest,
+      reqDateStart: queryParams.value.applyDate?.[0],
+      reqDateEnd: queryParams.value.applyDate?.[1],
+      payDateStart: queryParams.value.payDate?.[0],
+      payDateEnd: queryParams.value.payDate?.[1],
+    };
+    tableData.value = [];
+    const mainRes = await payRegisterApi.getPayLedgerMain(params);
+    if (mainRes.code === 200) {
+      tableData.value = mainRes.data || [];
+      total.value = mainRes.data?.length || 0;
+    }
   } catch (error) {
-    console.error("获取非合同建安立项列表失败:", error);
+    console.error("获取实付登记列表失败:", error);
   } finally {
     tableLoading.value = false;
   }
 };
+const handlePaginationChange = (params: any) => {
+  currentPage.value = params.currentPage;
+  pageSize.value = params.pageSize;
+};
+// tab切换处理
+const handleTabChange = (tabName: string) => {
+  queryParams.value.payStatus = tabName;
+  handleSearch();
+};
 
 const handleSearch = () => {
-  console.log(queryParams.value);
+  resetPagination();
   getDataList();
 };
-
+const resetPagination = () => {
+  currentPage.value = 1;
+  pageSize.value = 20;
+}
 const handleReset = () => {
-  // 将所有字段重置为 undefined
+  resetPagination();
   Object.keys(queryParams.value).forEach((key) => {
-    queryParams.value[key] = undefined;
+    if (Array.isArray(queryParams.value[key])) {
+      queryParams.value[key] = [];
+    } else {
+      queryParams.value[key] = undefined;
+    }
   });
+  queryParams.value.wfStatus = [40]; // 0=草稿, 10=审批中, 40=已审批, 80=作废, 99=其他
+  // 默认查询未支付
+  // queryParams.value.payStatus = "未支付";
+  // 请款类型默认请款
+  queryParams.value.reqType = 0
   getDataList();
 };
+const changeWfStatus = (val) => {
+  // if (val.length === 0) {
+  //   queryParams.value.wfStatus = [40];
+  // } else {
+  //   queryParams.value.wfStatus = val;
+  // }
+}
+// 导出当前查询条件下的全部数据
+const handleExport = async () => {
+  try {
+    exportLoading.value = true;
+    const { applyDate, payDate, ...rest } = queryParams.value;
+    const params = {
+      ...rest,
+      reqDateStart: queryParams.value.applyDate?.[0],
+      reqDateEnd: queryParams.value.applyDate?.[1],
+      payDateStart: queryParams.value.payDate?.[0],
+      payDateEnd: queryParams.value.payDate?.[1],
+    };
+    const res = await payRegisterApi.getPayLedgerMain(params);
+    if (res.code === 200) {
+      let list = res.data || [];
+      // 构建导出列配置（单级表头，无 children）
+      const exportColumns = [
+        { label: '标题', prop: 'flowTitle', width: 200 },
+        { label: '项目名称', prop: 'projName', width: 120 },
+        { label: '业务板块', prop: 'segName', width: 90 },
+        { label: '费用所属公司', prop: 'compName', width: 180 },
+        { label: '合同/立项名称', prop: 'itemName', width: 150 },
+        { label: '合同/立项单号', prop: 'itemNo', width: 200 },
+        {
+          label: '单据类型',
+          prop: 'bizItemName',
+          formatter: (row: any) => bizITypeMapping[row.bizType] || row.bizItemName,
+          width: 150,
+        },
+        { label: '供应商', prop: 'supName', width: 150 },
+        { label: '付款单号', prop: 'reqNo', width: 200 },
+        { label: '付款申请说明', prop: 'reqDesc', width: 200 },
+        { label: '费用归属期间', prop: 'belongMonth', width: 110 },
+        { label: '费用类型', prop: 'finaTypeName', width: 120 },
+        {
+          label: '请款金额',
+          prop: 'payableAmt',
+          formatter: (row: any) => formatThousandWithPlaces(row.payableAmt || 0),
+          width: 120,
+        },
+        {
+          label: '支付金额',
+          prop: 'paidAmt',
+          formatter: (row: any) => formatThousandWithPlaces(row.paidAmt || 0),
+          width: 120,
+        },
+        { label: '付款状态', prop: 'payStatus', width: 100 },
+        { label: '申请人', prop: 'applyUserName', width: 90 },
+        { label: '最近支付日期', prop: 'maxPayDate', width: 100 },
+        { label: '申请日期', prop: 'applyDate', width: 100 },
+        {
+          label: '审批流程',
+          prop: 'flowStatus',
+          formatter: (row: any) => getEnumLabel(costBillStatusEnum, row.flowStatus),
+          width: 100,
+        },
+        {
+          label: '是否入账',
+          prop: 'isLocked',
+          formatter: (row: any) => (row.isLocked ? '已入账' : '未入账'),
+          width: 90,
+        },
+      ];
 
-const batchRegister = () => {
-  batchDialog.value = true;
+      await exportExcelWithStyle(
+        list,
+        exportColumns,
+        '实付登记列表',
+        {
+          includeIndex: false,   // 是否添加序号列
+          headerBgColor: 'FFD3D3D3',
+          fontName: '微软雅黑',
+          headerFontSize: 10,
+          bodyFontSize: 10,
+        }
+      );
+
+      ElMessage.success('导出成功');
+    }
+  } catch (error) {
+
+  } finally {
+    exportLoading.value = false;
+  }
+}
+// 批量登记
+const batchRegister = async (row) => {
+  if (row.flowStatus == 40) {
+    currentRow.value = row;
+    batchDialog.value = true;
+  }
 };
-const singleRegister = () => {
-  singleDialog.value = true;
+// 单项登记
+const singleRegister = (row) => {
+  if (row.flowStatus == 40) {
+    currentRow.value = row;
+    singleDialog.value = true;
+  }
 };
+// 查看
+const handleView = async (row) => {
+  currentRow.value = row;
+  viewDialog.value = true;
+};
+// 入账
+const handleEntry = async (row) => {
+  ElMessageBox.confirm(`确认入账吗？`, "提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning",
+  })
+    .then(async () => {
+      try {
+        const params = {
+          bizType: row.bizType,
+          bizBillId: row.bizBillId,
+          status: 1, // 0:未确认 1:确认
+        };
+        const res = await payRegisterApi.savePayConfirm(params);
+        if (res.code === 200) {
+          ElMessage.success("操作成功");
+          getDataList();
+        }
+      } catch (error) {
+        console.error("操作失败", error);
+      }
+    })
+    .catch(() => { });
+};
+// 查看单据详情
+const handleViewDetail = async (row) => {
+  const { bizType, bizId, projId } = row;
+  if (!bizType || !bizId) return;
+  switch (bizType) {
+    case 'CON_PAY':
+      // 合同支付
+      router.push({
+        path: "/con/payment-application/detail",
+        query: {
+          paymentId: bizId, // 付款ID
+          projId: projId,
+        },
+      });
+      break;
+    case 'NCON_FEE':
+      // 费用报销
+      router.push({
+        path: "/ncon/fee-payment/detail",
+        query: {
+          feePaymentId: bizId, // 费用报销ID
+        },
+      });
+      break;
+    case 'NCON_CST':
+      // 非合同请款
+      router.push({
+        path: "/ncon/cst-payment/detail",
+        query: {
+          cstPaymentId: bizId, // 非合同请款ID
+        },
+      });
+      break;
+    default:
+      break;
+  }
+}
+
 // 获取项目列表
 const getProjectOptions = async () => {
   try {
-    // const res = await largeScreenApi.getProjList(); // 扁平结构数据
-    const res = await projectAreaApi.getMguProjList(); // 公司-项目树形结构数据
+    const res = await projectAreaApi.getSegMguProjList(); // 板块-公司-项目树形结构数据
     if (res.code === 200) {
       projectOptions.value = res.data || [];
     }
@@ -240,6 +516,7 @@ const getProjectOptions = async () => {
     console.error("获取项目列表失败:", error);
   }
 };
+
 // 获取业务板块列表
 const getSegOptions = async () => {
   try {
@@ -253,8 +530,8 @@ const getSegOptions = async () => {
 };
 
 onMounted(async () => {
-  await Promise.all([getProjectOptions()]);
-  getDataList();
+  await Promise.all([getProjectOptions(), getSegOptions()]);
+  getDataList(); // 初始化加载数据
 });
 </script>
 
@@ -268,6 +545,28 @@ onMounted(async () => {
   flex: 1;
   padding: 15px;
   box-sizing: border-box;
-  background: #fff;
+  // background: #fff;
+
+  .table-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    padding: 12px 12px;
+    box-sizing: border-box;
+  }
+
+  .tab-wrapper {
+    margin-bottom: 16px;
+
+    :deep(.el-tabs) {
+      .el-tabs__header {
+        margin-bottom: 0;
+      }
+    }
+  }
 }
 </style>

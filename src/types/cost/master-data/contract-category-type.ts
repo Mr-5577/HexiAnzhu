@@ -52,6 +52,14 @@ export interface ContractTypeTreeNode extends ContractType {
   checked?: boolean;
   /** 是否半选 */
   indeterminate?: boolean;
+  id: number;
+  pid: number;
+  conTypeCode: string;
+  conTypeName: string;
+  majorId: number;
+  isNeedOutValue: boolean;
+  remark: string;
+  isEnabled: boolean;
 }
 
 /**
@@ -94,4 +102,37 @@ export interface ContractTypeQueryParams {
   isNeedOutValue?: boolean;
   /** 是否启用 */
   isEnabled?: boolean;
+}
+
+
+// 合同模板设置 - 类型定义
+// 字段命名与后端约定保持一致（部分驼峰 / 部分下划线，按您给出的字段为准）
+
+export interface ContractTemplateVersion {
+  /** 版本ID */
+  id?: number;
+  /** 合同分类ID */
+  conTypeId: number;
+  /** 板块ID */
+  segId: number | string;
+  /** 是否必须使用模板 */
+  isMustUse: boolean;
+  /** 是否生效（同一分类+板块下仅允许 1 个生效） */
+  isEnabled: boolean;
+  /** 版本号 */
+  verNo:string;
+  /** 合同模板名称 */
+  conTemplateName?: string;
+  /** 合同模板附件ID */
+  conTemplateId?: number;
+  /** 审核要点 */
+  reviewChecklist?: string;
+  /** 创建人 */
+  createId?: number | string;
+  /** 创建时间 */
+  createDate?: string;
+  /** 修改人 */
+  operId?: number | string;
+  /** 修改时间 */
+  operDate?: string;
 }

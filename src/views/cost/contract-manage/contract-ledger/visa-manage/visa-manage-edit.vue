@@ -1,13 +1,7 @@
 <!-- 编辑 签证 -->
 <template>
   <div class="visa-manage-edit-page">
-    <VisaManageForm
-      mode="edit"
-      :conId="conId"
-      :visaId="visaId"
-      @success="handleSuccess"
-      @cancel="handleCancel"
-    />
+    <VisaManageForm mode="edit" :conId="conId" :visaId="visaId" :projId="projId" />
   </div>
 </template>
 <script setup lang="ts">
@@ -21,14 +15,8 @@ const router = useRouter();
 
 const conId = Number(route.query.conId); // 合同ID
 const visaId = Number(route.query.visaId); // 签证ID
+const projId = Number(route.query.projId); // 项目ID
 
-const handleSuccess = () => {
-  router.back();
-};
-
-const handleCancel = () => {
-  router.back();
-};
 </script>
 
 <style scoped lang="scss">

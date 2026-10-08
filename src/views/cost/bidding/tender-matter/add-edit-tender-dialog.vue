@@ -6,7 +6,6 @@
     width="1300px"
     :confirm-loading="submitLoading"
     @confirm="handleSubmit"
-    @cancel="handleClose"
     @close="handleClose"
   >
     <div style="padding-right: 8px; box-sizing: border-box">
@@ -171,7 +170,7 @@
               <el-cascader
                 ref="projCascaderRef"
                 v-model="formData.dutyMan"
-                :options="props.empTreeData"
+                :options="empTreeData"
                 :show-all-levels="false"
                 :props="{
                   expandTrigger: 'click',
@@ -285,18 +284,17 @@ import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
 import { largeScreenApi } from "@/api/sales/large-screen-api";
 import { useDict } from "@/composables/use-dict";
 import { dictMapping } from "@/utils/dict-mapping";
+import { roleApi } from "@/api/system/role-api";
 
 interface Props<T = any> {
   modelValue: boolean;
   editData?: BidTender | null;
-  empTreeData?: T[];
   conTypeOptions?: T[];
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
   editData: null,
-  empTreeData: () => [],
   conTypeOptions: () => [],
 });
 
@@ -320,6 +318,8 @@ const purchaseMethodOptions = ref([]);
 const tenderMethodOptions = ref([]);
 // 清单模式
 const billModeOptions = ref([]);
+// 责任人
+const empTreeData = ref([]);
 // 数据字典
 const { getDictList, loadDicts } = useDict([
   dictMapping.purchaseMethod, // 采购方式
@@ -526,6 +526,14 @@ const getProjectOptions = async () => {
     console.error("获取项目列表失败:", error);
   }
 };
+// 获取人员树形数据
+const getEmpTreeData = async () => {
+  const res = await roleApi.getEmpTree({ empName: "", isIncludeLeave: false });
+  // console.log("获取人员列表", res);
+  if (res.code === 200) {
+    empTreeData.value = res.data || [];
+  }
+};
 // 初始化数据字典数据
 const initDictData = async () => {
   await loadDicts();
@@ -559,7 +567,7 @@ const getInfo = async () => {
       tenderRemark: tender.tenderRemark,
       tenderStatus: tender.tenderStatus,
     };
-     projListBySegIdList.value = projectOptions.value.filter((item) => {
+    projListBySegIdList.value = projectOptions.value.filter((item) => {
       return tender.segId === item.segId;
     });
     // 设置明细数据
@@ -601,7 +609,7 @@ const getInfo = async () => {
 
 const initFormData = async () => {
   if (isEditMode.value && props.editData) {
-    getInfo();
+    await getInfo();
   } else {
     formData.value = {
       id: null,
@@ -674,6 +682,18 @@ const handleSave = async (data: any) => {
       tableList.value = newTableList;
     }
   }
+  // 当选择楼栋时需要处理要么只能选择地下室，要么只能选择地上楼栋
+  // if (column === "bldIds") {
+  //   const selectedBlds = newValue; // 当前选择的楼栋数据
+  //   const rowBuildingOptions = row.buildingOptions || [] // 当前行的楼栋数据
+  //   const underGroundList = rowBuildingOptions.filter((item: any) => item.isUnderGround).map(v => v.id);//当前行楼栋中地下室列表
+  //   const newTableList = [...tableList.value];
+  //   newTableList[rowIndex] = {
+  //     ...row,
+  //     bldIds: selectedBlds,
+  //   };
+  //   tableList.value = newTableList;
+  // }
 };
 
 const handleDelete = (row: any) => {
@@ -687,6 +707,11 @@ const handleClose = () => {
 };
 
 const handleSubmit = async () => {
+  if (submitLoading.value) {
+    console.warn("提交中，请勿重复操作");
+    return;
+  }
+
   if (!formRef.value) return;
   try {
     await formRef.value.validate();
@@ -706,14 +731,14 @@ const handleSubmit = async () => {
       ElMessage.error("请选择明细中的楼栋");
       return;
     }
-    if (tableList.value.some((item) => !item.bidBondAmount)) {
-      ElMessage.error("请填写明细中的投标保证金");
-      return;
-    }
-    if (tableList.value.some((item) => !item.perfBondAmount)) {
-      ElMessage.error("请填写明细中的履约保证金");
-      return;
-    }
+    // if (tableList.value.some((item) => !item.bidBondAmount)) {
+    //   ElMessage.error("请填写明细中的投标保证金");
+    //   return;
+    // }
+    // if (tableList.value.some((item) => !item.perfBondAmount)) {
+    //   ElMessage.error("请填写明细中的履约保证金");
+    //   return;
+    // }
 
     submitLoading.value = true;
     const projIds = Array.from(
@@ -770,6 +795,7 @@ watch(
       await getSegOptions();
       await getProjectOptions();
       await initDictData();
+      await getEmpTreeData();
       initFormData();
     }
   },

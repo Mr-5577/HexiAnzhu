@@ -10,7 +10,7 @@
         class="adapt-form"
       >
         <el-row :gutter="24">
-          <el-col :xs="24" :sm="8" :md="8" :lg="8" :xl="8">
+          <el-col :xs="24" :sm="8" :md="8" :lg="16" :xl="16">
             <el-form-item label="供应商名称" prop="supName" required>
               <el-input
                 v-model="formData.supName"
@@ -37,10 +37,11 @@
                 placeholder="请选择供应商类别"
                 style="width: 100%"
                 clearable
+                filterable
               />
             </el-form-item>
           </el-col>
-          <el-col :xs="24" :sm="8" :md="8" :lg="8" :xl="8">
+          <!-- <el-col :xs="24" :sm="8" :md="8" :lg="8" :xl="8">
             <el-form-item label="供应商编码" prop="supCode">
               <el-input
                 v-model="formData.supCode"
@@ -48,7 +49,7 @@
                 :placeholder="isView ? '' : '请输入供应商编码'"
               />
             </el-form-item>
-          </el-col>
+          </el-col> -->
         </el-row>
 
         <el-row :gutter="24">
@@ -651,41 +652,41 @@ onMounted(() => {
   padding: 30px 30px 0 30px;
 }
 
-:deep(.adapt-form) {
-  width: 100%;
+// :deep(.adapt-form) {
+//   width: 100%;
 
-  // 1. 输入框 placeholder
-  .el-input__inner::placeholder,
-  .el-textarea__inner::placeholder {
-    color: #c0c4cc !important;
-    font-size: 13px;
-  }
+//   // 1. 输入框 placeholder
+//   .el-input__inner::placeholder,
+//   .el-textarea__inner::placeholder {
+//     color: #c0c4cc !important;
+//     font-size: 13px;
+//   }
 
-  // 2. 选择器 placeholder
-  .el-select .el-select__placeholder {
-    color: #c0c4cc !important;
-  }
+//   // 2. 选择器 placeholder
+//   .el-select .el-select__placeholder {
+//     color: #c0c4cc !important;
+//   }
 
-  // 3. 级联选择器 placeholder
-  .el-cascader .el-cascader__placeholder {
-    color: #c0c4cc !important;
-  }
+//   // 3. 级联选择器 placeholder
+//   .el-cascader .el-cascader__placeholder {
+//     color: #c0c4cc !important;
+//   }
 
-  // 4. 日期选择器 placeholder
-  .el-date-editor .el-input__inner::placeholder {
-    color: #c0c4cc !important;
-  }
+//   // 4. 日期选择器 placeholder
+//   .el-date-editor .el-input__inner::placeholder {
+//     color: #c0c4cc !important;
+//   }
 
-  // 5. 时间选择器 placeholder
-  .el-time-editor .el-input__inner::placeholder {
-    color: #c0c4cc !important;
-  }
+//   // 5. 时间选择器 placeholder
+//   .el-time-editor .el-input__inner::placeholder {
+//     color: #c0c4cc !important;
+//   }
 
-  // 6. 数字输入框 placeholder
-  .el-input-number .el-input__inner::placeholder {
-    color: #c0c4cc !important;
-  }
-}
+//   // 6. 数字输入框 placeholder
+//   .el-input-number .el-input__inner::placeholder {
+//     color: #c0c4cc !important;
+//   }
+// }
 
 .btn-row {
   width: 100%;

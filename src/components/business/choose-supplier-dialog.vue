@@ -1,69 +1,29 @@
 <!-- 供应商选择弹窗组件 -->
 <template>
-  <base-modal
-    v-model="dialogVisible"
-    title="选择供应商"
-    width="1400px"
-    :confirm-loading="confirmLoading"
-    :confirm-text="'确定'"
-    @confirm="handleConfirm"
-    @close="handleClose"
-  >
+  <base-modal v-model="dialogVisible" title="选择供应商" width="1400px" :confirm-loading="confirmLoading"
+    :confirm-text="'确定'" @confirm="handleConfirm" @close="handleClose">
     <div class="supplier-select-wrapper">
       <!-- 筛选区域 -->
-      <el-form
-        :model="queryParams"
-        ref="queryRef"
-        :inline="true"
-        size="default"
-      >
+      <el-form :model="queryParams" ref="queryRef" :inline="true" size="default">
         <el-form-item label="供应商编码" prop="supCode">
-          <el-input
-            v-model="queryParams.supCode"
-            placeholder="请输入供应商编码"
-            clearable
-            style="width: 200px"
-          />
+          <el-input v-model="queryParams.supCode" placeholder="请输入供应商编码" clearable style="width: 200px" />
         </el-form-item>
         <el-form-item label="供应商名称" prop="supName">
-          <el-input
-            v-model="queryParams.supName"
-            placeholder="请输入供应商名称"
-            clearable
-            style="width: 200px"
-          />
+          <el-input v-model="queryParams.supName" placeholder="请输入供应商名称" clearable style="width: 200px" />
         </el-form-item>
         <el-form-item label="供应商类别" prop="supTypeId">
-          <el-cascader
-            v-model="queryParams.supTypeId"
-            :options="treeData"
-            :props="cascaderProps"
-            placeholder="请选择供应商类别"
-            clearable
-            style="width: 200px"
-          />
+          <el-cascader v-model="queryParams.supTypeId" :options="treeData" :props="cascaderProps" placeholder="请选择供应商类别"
+            clearable filterable style="width: 200px" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleQuery">查询</el-button>
-          <!-- <el-button @click="handleReset">重置</el-button> -->
         </el-form-item>
       </el-form>
 
-      <base-table
-        ref="tableRef"
-        :row-key="'id'"
-        :columns="tableColumns"
-        :table-data="tableData"
-        :loading="tableLoading"
-        :total="total"
-        :current-page="currentPage"
-        :page-size="pageSize"
-        :height="'400px'"
-        :highlight-current-row="true"
-        :selectionMode="props.selectionMode"
-        @selection-change="handleSelectionChange"
-        @pagination-change="handlePaginationChange"
-      >
+      <base-table ref="tableRef" :row-key="'id'" :columns="tableColumns" :table-data="tableData" :loading="tableLoading"
+        :total="total" :current-page="currentPage" :page-size="pageSize" :pagination="false" :height="'440px'"
+        :highlight-current-row="true" :selectionMode="props.selectionMode" @selection-change="handleSelectionChange"
+        @pagination-change="handlePaginationChange">
         <!-- 供应商类别列插槽 -->
         <template #supTypeId="{ row }">
           <span>{{ getSupTypeName(row.supTypeId) }}</span>
@@ -91,11 +51,13 @@ import type {
 // Props
 interface Props {
   modelValue: boolean;
+  supStatus?: number;
   selectionMode?: "single" | "multiple"; // 选择模式，单选或多选
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: false,
+  supStatus: undefined,
   selectionMode: "single",
 });
 
@@ -143,6 +105,7 @@ const queryParams = ref<SupplierQueryParams>({
   supCode: "",
   supName: "",
   supTypeId: null,
+  supStatus: undefined, // 状态 0:草稿 1:已审批 2:黑名单 3:作废
 });
 
 // 表格列配置
@@ -201,8 +164,8 @@ watch(
   (val) => {
     dialogVisible.value = val;
     if (val) {
-      // 打开弹窗时重置状态并加载数据
-      resetState();
+      // 打开弹窗时初始化状态并加载数据
+      initState();
       loadSupplierTree();
       handleQuery();
     }
@@ -214,7 +177,7 @@ watch(dialogVisible, (val) => {
 });
 
 // 重置状态
-const resetState = () => {
+const initState = () => {
   selectedRows.value = [];
   currentPage.value = 1;
   pageSize.value = 20;
@@ -222,6 +185,7 @@ const resetState = () => {
     supCode: "",
     supName: "",
     supTypeId: null,
+    supStatus: props.supStatus, // 状态 0=草稿；1=审批中；2=已审批；3=黑名单
   };
   // 清除表格高亮
   setTimeout(() => {
@@ -254,6 +218,7 @@ const getSupTypeName = (id: number | null) => {
 const getSupplierList = async () => {
   try {
     tableLoading.value = true;
+    tableData.value = []
     const res = await supplierApi.getSupplierList({ ...queryParams.value });
     if (res.code === 200) {
       tableData.value = res.data || [];
@@ -273,16 +238,6 @@ const getSupplierList = async () => {
 const handleQuery = () => {
   currentPage.value = 1;
   getSupplierList();
-};
-
-// 重置
-const handleReset = () => {
-  queryParams.value = {
-    supCode: "",
-    supName: "",
-    supTypeId: null,
-  };
-  handleQuery();
 };
 
 // 分页改变

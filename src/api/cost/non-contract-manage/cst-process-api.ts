@@ -6,11 +6,29 @@ import { CstProcessSaveParam } from "@/types/cost/non-contract-manage/cst-proces
  */
 export const cstProcessApi = {
   /**
+   * const params = {
+      projId: queryParams.value.projId,
+      segId: queryParams.value.segId,
+      processName: queryParams.value.processName,
+      status: 40, // 查询已审批的数据
+      createId: queryParams.value.createId,
+      createDateStart: queryParams.value.time?.[0] || "",
+      createDateEnd: queryParams.value.time?.[1] || "",
+      isAvailable: true, // 可请款的数据
+    };
+   */
+  /**
    * @name 获取非合同建安立项列表
    * @param params.projId 项目id
-   * @returns
+   * @param params.segId 业务板块id
+   * @param params.processName 事项名称
+   * @param params.status 状态
+   * @param params.createDateStart 创建时间开始
+   * @param params.createDateEnd 创建时间结束
+   * @param params.createId 创建人id
+   * @param params.isAvailable 是否可请款
    */
-  getCstProcessList: (params?: { projId?: number }) => {
+  getCstProcessList: (params?: any) => {
     return http.get("/ncon/cstProcess/list", params);
   },
   /**
@@ -18,7 +36,7 @@ export const cstProcessApi = {
    * @param params.id 非合同建安立项id
    * @returns
    */
-  getCstProcessDetail: (params: { id: number; isWithBill?: boolean }) => {
+  getCstProcessDetail: (params: { id: number; isWithFlow?: boolean }) => {
     return http.get("/ncon/cstProcess/get", params);
   },
   /**
@@ -100,5 +118,12 @@ export const cstProcessApi = {
    */
   getCstProcessBillInfo: (params: { billId: number }) => {
     return http.get("/ncon/bill/getInfo", params);
+  },
+  /**
+   * @name 发起/更新非合同建安立项审批流程
+   * @param data.id 非合同建安立项id
+   */
+  saveNconCstProcessFlow: (data: { id: number; allowEdit?: boolean }) => {
+    return http.formPost("/ncon/flow/saveNconCstProcessFlow", data);
   },
 };

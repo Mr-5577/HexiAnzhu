@@ -1,13 +1,10 @@
 <!-- 工程核价 列表 -->
 <template>
   <div class="engineering-price-wrapper">
-    <base-table
-      :columns="tableColumns"
-      :tableData="tableData"
-      :loading="tableLoading"
-      :rowKey="'id'"
-      :pagination="false"
-    >
+    <!-- 使用建设占位组件 -->
+    <BuildingPlaceholder v-if="true" />
+    <base-table v-else :columns="tableColumns" :tableData="tableData" :loading="tableLoading" :rowKey="'id'"
+      :pagination="false">
       <!-- 列表外操作栏 -->
       <template #actionBar>
         <div class="actionBar-buttons">
@@ -31,14 +28,6 @@
         <el-button type="primary" link> 审批 </el-button>
       </template>
     </base-table>
-
-    <!-- 新增/编辑 工程核价弹窗 -->
-    <add-edit-price-dialog
-      v-model="dialogVisible"
-      :conId="props.conId"
-      :editData="editData"
-      @success="handleRefresh"
-    />
   </div>
 </template>
 
@@ -52,7 +41,6 @@ import {
   EngineeringPrice,
 } from "@/types/cost/contract-manage/engineering-price-type.ts";
 import { engineeringPriceApi } from "@/api/cost/contract-manage/engineering-price-api.ts";
-import AddEditPriceDialog from "./add-edit-price-dialog.vue";
 
 defineOptions({ name: "engineering-price" });
 
@@ -95,9 +83,7 @@ const getDataList = async () => {
   try {
     tableLoading.value = true;
     tableData.value = [];
-    const res = await engineeringPriceApi.getAuditPriceList({
-      conId: props.conId,
-    });
+    const res = await engineeringPriceApi.getAuditPriceList(props.conId);
     if (res.code === 200) {
       tableData.value = res.data;
     }
@@ -136,7 +122,7 @@ const handleDelete = (row: EngineeringPrice) => {
         console.error("删除失败:", error);
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 // 刷新按钮
 const handleRefresh = () => {
@@ -191,6 +177,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+
   .actionBar-buttons {
     display: flex;
     align-items: center;

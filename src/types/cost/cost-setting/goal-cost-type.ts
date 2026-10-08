@@ -14,6 +14,8 @@ export interface HCstProjectCostM {
   versionNo: string;
   /** 版本类型：投资版/考核版/执行版 */
   versionType: string;
+  /** 面积版本 */
+  areaVerMId?: number;
   /** 目标成本总额(含税) */
   costAmt: number;
   /** 目标成本总额(不含税) */
@@ -118,6 +120,7 @@ export interface HCstProjectCostD {
   busiSegId: number;
   /** 业务归属名称（前端关联展示用） */
   busiSegName?: string;
+  segName?: string;
   /** 目标成本总额(含税) */
   costAmt: number;
   /** 目标成本总额(不含税) */
@@ -166,6 +169,7 @@ export interface HCstProjectCostDAddEditParams {
   busiSegId?: number;
   /** 业务归属名称 */
   busiSegName?: string;
+  segName?: string;
   /** 目标成本总额(含税) */
   costAmt?: number;
   /** 目标成本总额(不含税) */

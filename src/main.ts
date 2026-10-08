@@ -3,13 +3,33 @@ import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
 import "./assets/styles/variables.scss";  // CSS变量定义（必须最先导入）
 import "./assets/styles/element-override.scss"; // Element Plus样式覆盖
+import "./assets/styles/global.css"; 
 import zhCn from "element-plus/es/locale/lang/zh-cn";
+
+// ===== 引入 vxe-table 和 vxe-pc-ui =====
+import VxeTable from 'vxe-table'
+import VxePcUI from 'vxe-pc-ui'
+import 'vxe-table/lib/style.css'
+import 'vxe-pc-ui/lib/style.css'
+VxeTable.setup({
+  table: {
+    // 表头单元格高度(全局)
+    headerCellConfig: { height: 30 },
+    // 单元格高度(全局)
+    cellConfig: { height: 30 }
+  }
+})
+
 
 import App from "./App.vue";
 // 基础表格组件
 import BaseTable from "@/components/base/base-table.vue";
+import VxeEditableTable from '@/components/base/vxe-editable-table.vue'
 // 项目树组件
 import ProjectTreeSelector from "@/components/business/project-tree-selector.vue";
+import SelectWithAll from "@/components/base/base-select-with-all.vue"; //下拉多选框
+// 建设中占位组件
+import BuildingPlaceholder from '@/components/business/building-placeholder.vue';
 // 路由
 import router from "./router";
 // 引入状态管理
@@ -31,8 +51,14 @@ app.use(router);
 app.use(ElementPlus, {
   locale: zhCn,
 });
+app.use(VxeTable)  // 注册 vxe-table
+app.use(VxePcUI) // 注册 vxe-pc-ui
+
 setupPermission(app);
 // 全局注册 BaseTable 组件
 app.component("BaseTable", BaseTable);
+app.component("VxeEditableTable", VxeEditableTable);
 app.component("ProjectTreeSelector", ProjectTreeSelector);
+app.component("SelectWithAll", SelectWithAll);
+app.component("BuildingPlaceholder", BuildingPlaceholder);
 app.mount("#app");

@@ -1,13 +1,7 @@
 <!-- 编辑产值申报 -->
 <template>
   <div class="output-declaration-edit-page">
-    <OutputValueForm
-      mode="edit"
-      :con-id="conId"
-      :output-id="outputId"
-      @success="handleSuccess"
-      @cancel="handleCancel"
-    />
+    <OutputValueForm mode="edit" :con-id="conId" :prod-id="prodId" />
   </div>
 </template>
 
@@ -21,15 +15,8 @@ const router = useRouter();
 defineOptions({ name: "output-declaration-edit" });
 
 const conId = Number(route.query.conId); // 合同ID
-const outputId = Number(route.query.outputId); // 产值ID
+const prodId = Number(route.query.prodId); // 产值ID
 
-const handleSuccess = () => {
-  router.back();
-};
-
-const handleCancel = () => {
-  router.back();
-};
 </script>
 
 <style scoped lang="scss">

@@ -138,7 +138,7 @@
 
         <!-- 计划列表 -->
         <div class="item-card">
-          <div class="section-title">计划列表</div>
+          <div class="section-title">招标明细</div>
           <template v-if="isDetail">
             <base-table
               :columns="detailColumns"
@@ -532,14 +532,14 @@ const validateForm = () => {
     ElMessage.error("请选择列表中的楼栋");
     return false;
   }
-  if (tableData.value.some((item) => !item.bidBondAmount)) {
-    ElMessage.error("请填写列表中的应交投标保证金");
-    return false;
-  }
-  if (tableData.value.some((item) => !item.perfBondAmount)) {
-    ElMessage.error("请填写列表中的应交履约保证金");
-    return false;
-  }
+  // if (tableData.value.some((item) => !item.bidBondAmount)) {
+  //   ElMessage.error("请填写列表中的应交投标保证金");
+  //   return false;
+  // }
+  // if (tableData.value.some((item) => !item.perfBondAmount)) {
+  //   ElMessage.error("请填写列表中的应交履约保证金");
+  //   return false;
+  // }
   if (biddingFileList.value.length === 0) {
     ElMessage.error("请上传招标文件");
     return false;
@@ -548,6 +548,7 @@ const validateForm = () => {
 };
 // 保存
 const handleSave = async () => {
+  if(submitLoading.value) return
   // 调用验证
   if (!validateForm()) return;
   try {
@@ -592,6 +593,7 @@ const handleSave = async () => {
 };
 // 提交
 const handleSubmit = async () => {
+  if(submitLoading.value) return
   // 调用验证
   if (!validateForm()) return;
   try {
@@ -779,7 +781,10 @@ const initAddTableData = async () => {
 const getInforData = async () => {
   if (!props.billId) return;
   try {
-    const res = await biddingManageApi.getBillInfo({ billId: props.billId });
+    const res = await biddingManageApi.getBillInfo({
+      billId: props.billId,
+      isWithFlow: true,
+    });
     if (res.code === 200 && res.data) {
       console.log("获取单据详情", res.data);
       const {
@@ -798,8 +803,8 @@ const getInforData = async () => {
       flowListData.value = { ...flowListData.value, ...flowList };
 
       formData.value.bizTitle = bill.bizTitle || "";
-      formData.value.deptName = flowBase.deptName || "";
-      formData.value.mguName = flowBase.mguName || "";
+      formData.value.deptName = flowBase?.deptName || "";
+      formData.value.mguName = flowBase?.mguName || "";
       formData.value.userName = bill.createName || "";
       formData.value.createDate = bill.createDate || "";
 
@@ -812,6 +817,7 @@ const getInforData = async () => {
           bldNames: item.bldNames,
           buildingOptions: [],
         }));
+
         // 并行加载所有楼栋数据
         const buildingPromises = initTableList.map(async (item, index) => {
           if (item.projId) {
@@ -850,6 +856,8 @@ const getInforData = async () => {
 const initData = async () => {
   await getProjectOptions();
   formData.value.userName = userStore.userInfo?.empName ?? "";
+  formData.value.deptName = userStore.userInfo?.deptName ?? "";
+  formData.value.mguName = userStore.userInfo?.mguName ?? "";
   formData.value.createDate = dateUtil().format("YYYY-MM-DD");
   if (isAdd.value) {
     // 1.先获取详情信息

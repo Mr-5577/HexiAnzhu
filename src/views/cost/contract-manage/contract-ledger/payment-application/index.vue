@@ -1,42 +1,103 @@
 <!-- 付款申请 列表 -->
 <template>
   <div class="payment-application-wrapper">
-    <base-table
-      :columns="tableColumns"
-      :tableData="tableData"
-      :loading="tableLoading"
-      :rowKey="'id'"
-      :pagination="false"
-    >
-      <!-- 列表外操作栏 -->
-      <template #actionBar>
-        <div class="actionBar-buttons">
-          <el-button type="primary" icon="Refresh" @click="handleRefresh">
-            刷新列表
+    <!-- <div class="pa-card">  -->
+    <!-- 顶部工具栏：标题 + 数量 + 刷新 -->
+    <div class="pa-toolbar">
+      <div class="pa-toolbar__title">
+        <span class="pa-toolbar__name">付款申请</span>
+        <el-tag size="small" type="info" effect="plain" round>
+          {{ tableData.length }} 个
+        </el-tag>
+      </div>
+    </div>
+
+    <!-- 筛选区域 -->
+    <div class="pa-filter">
+      <el-form :model="queryParams" ref="queryRef" :inline="true">
+        <el-form-item label="请款说明" prop="bizTitle">
+          <el-input v-model="queryParams.bizTitle" placeholder="请输入名称" clearable style="width: 200px" />
+        </el-form-item>
+        <el-form-item label="单据号" prop="bizNo">
+          <el-input v-model="queryParams.bizNo" placeholder="请输入单据号" clearable style="width: 200px" />
+        </el-form-item>
+        <el-form-item label="审批状态" prop="status">
+          <el-select v-model="queryParams.status" placeholder="请选择审批状态" style="width: 150px" clearable>
+            <el-option v-for="item in approvalStatusEnum" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" class="refresh-btn" :class="{ 'is-refreshing': refreshing }" :disabled="refreshing"
+            @click="handleRefresh">
+            <el-icon class="refresh-icon">
+              <Refresh />
+            </el-icon>
+            <span>{{ refreshing ? "搜索中" : "搜索" }}</span>
           </el-button>
-          <el-button type="primary" @click="handleAdd"> 新增 </el-button>
-        </div>
+          <el-button @click="handleReset">重置</el-button>
+          <el-button type="primary" class="add-btn" @click="handleAdd" :loading="addLoading">
+            <el-icon>
+              <Plus />
+            </el-icon>
+            <span>新增</span>
+          </el-button>
+        </el-form-item>
+      </el-form>
+    </div>
+
+    <base-table :columns="tableColumns" :tableData="paginatedData" :loading="tableLoading" :rowKey="'id'" :total="total"
+      :current-page="currentPage" :page-size="pageSize" @pagination-change="handlePaginationChange">
+      <template #status="{ row }">
+        <el-tag size="small" :type="getEnumType(approvalStatusEnum, row?.status || 0)">
+          {{ getEnumLabel(approvalStatusEnum, row?.status || 0) }}
+        </el-tag>
+      </template>
+      <template #reqType="{ row }">
+        <el-tag size="small" :type="getEnumType(ReqTypeEnum, row?.reqType || 0)">
+          {{ getEnumLabel(ReqTypeEnum, row?.reqType || 0) }}
+        </el-tag>
+      </template>
+      <template #payTypeId="{ row }">
+        <el-tag size="small" :type="getOptionsTypeById(paymentTypeOptions, row?.payTypeId || 0)">
+          {{ getOptionsLabelById(paymentTypeOptions, row?.payTypeId || 0) }}
+        </el-tag>
       </template>
 
       <template #actions="{ row }">
-        <el-button type="primary" link @click="handleEdit(row)">
+        <el-button type="primary" link class="row-link" @click="handleEdit(row)"
+          :disabled="row.status !== 0 || row.createId !== userStore.userInfo.mdUserId">
           编辑
         </el-button>
-        <el-button type="danger" link @click="handleDelete(row)">
+        <el-button type="primary" link class="row-link" @click="handleDetail(row)">
+          详情
+        </el-button>
+        <!-- <el-button type="primary" link class="row-link" @click="handleApprove(row)">
+            审批
+          </el-button> -->
+        <el-button type="danger" link class="row-link" @click="handleDelete(row)"
+          :disabled="row.status !== 0 || row.createId !== userStore.userInfo.mdUserId">
           删除
         </el-button>
       </template>
     </base-table>
   </div>
+  <!-- </div>  -->
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
-import { ElMessage, ElMessageBox } from "element-plus";
+import { computed, onMounted, ref, watch } from "vue";
+import { dayjs, ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { useRouter } from "vue-router";
 import { paymentRequestApi } from "@/api/cost/contract-manage/payment-application-api";
 import { HConPayment } from "@/types/cost/contract-manage/payment-application-type";
+import { approvalStatusEnum } from "@/constants/bidding/enums";
+import { getEnumLabel, getEnumType, getOptionsTypeById, getOptionsLabelById } from "@/utils/enum";
+import { useUserStore } from "@/stores/user-store";
+import { ReqTypeEnum } from "@/constants/contract-manage/enums";
+import { useDict } from "@/composables/use-dict";
+import { dictMapping } from "@/utils/dict-mapping";
+import { attachmentApi } from "@/api/cost/contract-manage/attachment-api";
 
 defineOptions({ name: "payment-application" });
 
@@ -47,178 +108,84 @@ const props = defineProps<{
 
 const router = useRouter();
 const tableLoading = ref(false);
+const addLoading = ref(false);
+const currentPage = ref<number>(1);
+const pageSize = ref<number>(20);
+const total = ref<number>(0);
+const refreshing = ref(false); // 驱动刷新按钮旋转动画
 const tableData = ref([]);
+const userStore = useUserStore();
+const paymentTypeOptions = ref<any[]>([]);
+
+
+const queryParams = ref({
+  conId: props.conId,
+  bizTitle: "",
+  bizNo: "",
+  status: null,
+});
+
+const handleReset = () => {
+  queryParams.value.bizTitle = "";
+  queryParams.value.bizNo = "";
+  queryParams.value.status = null;
+  resetPagination();
+  getDataList();
+};
 
 const tableColumns: TableColumnItem[] = [
   { type: "index", label: "序号", width: 60 },
   {
-    prop: "reqDesc",
-    label: "付款申请说明",
-    minWidth: 150,
+    prop: "bizNo",
+    label: "单据号",
+    width: 180,
     showOverflowTooltip: true,
   },
   {
-    prop: "reqType",
-    label: "付款类型",
-    width: 120,
-    formatter: (row: HConPayment) => (row.reqType === 0 ? "请款" : "来票冲账"),
+    prop: "bizTitle",
+    label: "付款申请说明",
+    minWidth: 200,
+    showOverflowTooltip: true,
   },
   {
-    prop: "payRule",
-    label: "付款规则",
-    width: 140,
-    formatter: (row: HConPayment) =>
-      row.payRule === 0 ? "正常请款" : "提高支付比例请款",
+    slot: "reqType",
+    label: "请款类型",
+    width: 100,
+  },
+  {
+    prop: "belongMonth",
+    label: "归属月份",
+    width: 90,
+    align: "center",
+    formatter: (row) => row.belongMonth?.substring(0, 7) || '-'
   },
   {
     prop: "reqAmt",
-    label: "请款总金额",
+    label: "申请请款金额",
     width: 140,
-    formatter: (row: HConPayment) => row.reqAmt?.toFixed(2) || "0.00",
+    formatType: "#,##0.00",
+  },
+  {
+    prop: "changeAmt",
+    label: "扣款总金额",
+    width: 140,
+    formatType: "#,##0.00",
   },
   {
     prop: "factReqAmt",
     label: "实际请款金额",
     width: 140,
-    formatter: (row: HConPayment) => row.factReqAmt?.toFixed(2) || "0.00",
+    formatType: "#,##0.00",
   },
   {
-    prop: "signAmt",
-    label: "合同签约金额",
-    width: 140,
-    formatter: (row: HConPayment) => row.signAmt?.toFixed(2) || "0.00",
+    slot: "payTypeId",
+    label: "款项类型",
+    width: 90,
+    align: "center",
   },
-  {
-    prop: "addAmt",
-    label: "补充合同金额",
-    width: 140,
-    formatter: (row: HConPayment) => row.addAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "sumChangeAmt",
-    label: "累计变更签证",
-    width: 140,
-    formatter: (row: HConPayment) => row.sumChangeAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "preSettleAmt",
-    label: "预结算合同金额",
-    width: 150,
-    formatter: (row: HConPayment) => row.preSettleAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "sumProdVal",
-    label: "累计产值",
-    width: 140,
-    formatter: (row: HConPayment) => row.sumProdVal?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "sumPayAmt",
-    label: "累计应付",
-    width: 140,
-    formatter: (row: HConPayment) => row.sumPayAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "sumAppyAmt",
-    label: "累计请款",
-    width: 140,
-    formatter: (row: HConPayment) => row.sumAppyAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "sumPaidAmt",
-    label: "累计实付",
-    width: 140,
-    formatter: (row: HConPayment) => row.sumPaidAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "sumOwedAmt",
-    label: "累计欠款",
-    width: 140,
-    formatter: (row: HConPayment) => row.sumOwedAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "leavePayAmt",
-    label: "剩余应付金额",
-    width: 140,
-    formatter: (row: HConPayment) => row.leavePayAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "payOutRate",
-    label: "应付占产值比(%)",
-    width: 150,
-    formatter: (row: HConPayment) => row.payOutRate?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "paidPayRate",
-    label: "实付占应付比(%)",
-    width: 150,
-    formatter: (row: HConPayment) => row.paidPayRate?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "paidOutRate",
-    label: "实付占产值比(%)",
-    width: 150,
-    formatter: (row: HConPayment) => row.paidOutRate?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "pbAmount",
-    label: "转履约保证金",
-    width: 140,
-    formatter: (row: HConPayment) => row.pbAmount?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "changeAmt",
-    label: "奖罚总金额(扣款)",
-    width: 160,
-    formatter: (row: HConPayment) => row.changeAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "invRecAmt",
-    label: "应收发票金额",
-    width: 140,
-    formatter: (row: HConPayment) => row.invRecAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "invRcvdAmt",
-    label: "已收发票",
-    width: 140,
-    formatter: (row: HConPayment) => row.invRcvdAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "invOweAmt",
-    label: "欠票金额",
-    width: 140,
-    formatter: (row: HConPayment) => row.invOweAmt?.toFixed(2) || "0.00",
-  },
-  {
-    prop: "isModifyAcc",
-    label: "修改收款账号",
-    width: 130,
-    formatter: (row: HConPayment) => (row.isModifyAcc === 1 ? "是" : "否"),
-  },
-  {
-    prop: "bankName",
-    label: "收款开户行",
-    width: 150,
-    showOverflowTooltip: true,
-  },
-  {
-    prop: "accountName",
-    label: "收款账户名",
-    width: 150,
-    showOverflowTooltip: true,
-  },
-  {
-    prop: "bankAccount",
-    label: "收款账号",
-    width: 160,
-    showOverflowTooltip: true,
-  },
-  {
-    prop: "modifyAccAnnex",
-    label: "修改凭证附件",
-    width: 130,
-  },
+  { slot: "status", label: "审批状态", minWidth: 90 },
+  { prop: "createName", label: "创建人", minWidth: 90 },
+  { prop: "createDate", label: "创建时间", minWidth: 150 },
   {
     label: "操作",
     width: 140,
@@ -226,6 +193,26 @@ const tableColumns: TableColumnItem[] = [
     fixed: "right",
   },
 ];
+
+// 初始化数据字典
+const { getDictList, loadDicts } = useDict(
+  [dictMapping.paymentType],
+  {
+    treeDictCodes: [],
+  });
+
+const initDictData = async () => {
+  await loadDicts();
+  paymentTypeOptions.value = getDictList(dictMapping.paymentType);//款项类型
+};
+
+// 手动分页
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return tableData.value.slice(start, end)
+});
+
 // 获取列表数据
 const getDataList = async () => {
   if (!props.conId) {
@@ -233,9 +220,10 @@ const getDataList = async () => {
   }
   try {
     tableLoading.value = true;
-    const res = await paymentRequestApi.getPayList({ conId: props.conId });
+    const res = await paymentRequestApi.getPayList({ conId: props.conId, ...queryParams.value, });
     if (res.code === 200) {
       tableData.value = res.data || [];
+      total.value = res.data?.length || 0;
     }
   } catch (error) {
     console.error("获取列表失败:", error);
@@ -243,33 +231,85 @@ const getDataList = async () => {
     tableLoading.value = false;
   }
 };
-
+const handlePaginationChange = (params: any) => {
+  currentPage.value = params.currentPage;
+  pageSize.value = params.pageSize;
+};
+const resetPagination = () => {
+  currentPage.value = 1;
+  pageSize.value = 20;
+}
 // 刷新
 const handleRefresh = () => {
+  resetPagination();
   getDataList();
 };
 
 // 新增
-const handleAdd = () => {
-  router.push({
-    path: "/con/payment-application/add",
-    query: {
-      projId: props.projId, // 项目ID
-      conId: props.conId, // 合同ID
-    },
-  });
+const handleAdd = async () => {
+  // 校验是否有签署文件，如果没有签署文件，则先上传签署文件
+  if (addLoading.value) return;
+  try {
+    addLoading.value = true;
+    const res = await attachmentApi.getAnnexList({ conId: props.conId });
+    if (res.code === 200) {
+      const list = res.data || [];
+      const hasSignFile = list.some((item: any) => item.annexType == 1);
+      if (!hasSignFile) {
+        ElMessage.warning("签署文件缺失，请联系合同管理员上传!");
+        return;
+      }
+      router.push({
+        path: "/con/payment-application/add",
+        query: {
+          projId: props.projId, // 项目ID
+          conId: props.conId, // 合同ID
+        },
+      });
+    }
+  } catch (error) {
+    console.error("获取附件失败:", error);
+  } finally {
+    addLoading.value = false;
+  }
 };
 // 编辑
 const handleEdit = async ({ id }) => {
+  try {
+    const res = await attachmentApi.getAnnexList({ conId: props.conId });
+    if (res.code === 200) {
+      const list = res.data || [];
+      const hasSignFile = list.some((item: any) => item.annexType == 1);
+      if (!hasSignFile) {
+        ElMessage.warning("签署文件缺失，请联系合同管理员上传!");
+        return;
+      }
+      router.push({
+        path: "/con/payment-application/edit",
+        query: {
+          projId: props.projId, // 项目ID
+          conId: props.conId, // 合同ID
+          paymentId: id, // 付款申请ID
+        },
+      });
+    }
+  } catch (error) {
+    console.error("获取附件失败:", error);
+  }
+};
+
+// 详情
+const handleDetail = ({ id }) => {
   router.push({
-    path: "/con/payment-application/edit",
+    path: "/con/payment-application/detail",
     query: {
-      projId: props.projId, // 项目ID
-      conId: props.conId, // 合同ID
-      paymentId: id, // 付款申请ID
+      paymentId: id, // 付款ID
+      conId: props.conId, // 合同台账ID（合同单据ID）
+      projId: props.projId,
     },
   });
 };
+
 // 删除
 const handleDelete = ({ id }) => {
   ElMessageBox.confirm("确定删除该数据吗？", "提示", { type: "warning" })
@@ -284,7 +324,7 @@ const handleDelete = ({ id }) => {
         console.error("删除失败:", error);
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 
 // 监听合同ID变化，自动刷新列表
@@ -300,24 +340,156 @@ const handleDelete = ({ id }) => {
 //   { immediate: true },
 // );
 onMounted(() => {
+  initDictData();
   getDataList();
 });
 </script>
 
 <style lang="scss" scoped>
 .payment-application-wrapper {
+  border-radius: 12px;
   width: 100%;
   height: 100%;
-  padding: 15px;
+  padding: 3px;
   box-sizing: border-box;
-  background-color: #fff;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  .actionBar-buttons {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
+  background: #fff;
+}
+
+/* 卡片容器 */
+.pa-card {
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  // overflow: hidden;
+  transition: box-shadow 0.25s ease;
+
+  &:hover {
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.09);
+  }
+
+  // 表格样式
+  table {
+    width: 100%;
+    min-width: 800px; // 设置最小宽度，确保内容不会挤在一起
+    border-collapse: collapse;
+  }
+}
+
+/* 工具栏：左标题 / 右操作 */
+.pa-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #f0f2f5;
+  background: linear-gradient(180deg, #fafcff 0%, #ffffff 100%);
+}
+
+.pa-toolbar__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pa-toolbar__name {
+  position: relative;
+  padding-left: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 16px;
+    border-radius: 2px;
+    background: #409eff;
+  }
+}
+
+.pa-toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 筛选区域 */
+.pa-filter {
+  padding: 12px 14px 0;
+
+  :deep(.el-form-item) {
+    margin-bottom: 12px;
+  }
+}
+
+/* —— 刷新按钮：重点优化 —— */
+.refresh-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+
+  .refresh-icon {
+    transition: transform 0.3s ease;
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.35);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(64, 158, 255, 0.3);
+  }
+
+  &.is-refreshing .refresh-icon {
+    animation: pa-spin 0.8s linear infinite;
+  }
+}
+
+@keyframes pa-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 新增按钮：与刷新按钮一致的悬浮反馈 */
+.add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(64, 158, 255, 0.25);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+}
+
+/* 行内操作链接：悬浮微提示 */
+.row-link {
+  font-weight: 500;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 0.85;
   }
 }
 </style>

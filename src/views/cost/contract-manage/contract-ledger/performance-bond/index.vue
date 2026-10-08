@@ -1,6 +1,8 @@
 <template>
   <div class="performance-bond-page">
-    <div class="detail-tab">
+    <!-- 使用建设占位组件 -->
+    <BuildingPlaceholder v-if="true" />
+    <div class="detail-tab" v-else>
       <el-tabs v-model="activeTab">
         <el-tab-pane label="保证金缴纳" name="pay" style="height: 100%">
           <bond-pay :con-id="props.conId" />

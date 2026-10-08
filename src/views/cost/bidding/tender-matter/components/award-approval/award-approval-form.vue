@@ -161,7 +161,7 @@
               v-model="formData.remark"
               type="textarea"
               :rows="3"
-              maxlength="500"
+              maxlength="8000"
               show-word-limit
               :disabled="isDetail || !!billData.status"
               placeholder="其他补充信息"
@@ -196,6 +196,7 @@
     <choose-supplier-dialog
       ref="supplierDialogRef"
       v-model="supplierDialogVisible"
+      :supStatus="2"
       @select="handleSupplierSelect"
     />
   </div>
@@ -534,7 +535,10 @@ const initAddTableData = async () => {
 const getBillDetail = async () => {
   if (!props.billId) return;
   try {
-    const res = await biddingManageApi.getBillInfo({ billId: props.billId });
+    const res = await biddingManageApi.getBillInfo({
+      billId: props.billId,
+      isWithFlow: true,
+    });
     if (res.code === 200 && res.data) {
       console.log("获取单据详情", res.data);
       const { annexList, bill, flowBase, awards, tenderId, flowList } =
@@ -546,8 +550,8 @@ const getBillDetail = async () => {
       flowListData.value = { ...flowListData.value, ...flowList };
 
       formData.value.bizTitle = bill.bizTitle || "";
-      formData.value.deptName = flowBase.deptName || "";
-      formData.value.mguName = flowBase.mguName || "";
+      formData.value.deptName = flowBase?.deptName || "";
+      formData.value.mguName = flowBase?.mguName || "";
       formData.value.userName = bill.createName || "";
       formData.value.createDate = bill.createDate || "";
       formData.value.remark = bill.remark || "";
@@ -621,6 +625,7 @@ const validateForm = () => {
 };
 // 保存
 const handleSave = async () => {
+  if(submitLoading.value) return
   // 调用验证
   if (!validateForm()) return;
   try {
@@ -670,6 +675,7 @@ const handleSave = async () => {
 
 // 提交
 const handleSubmit = async () => {
+  if(submitLoading.value) return
   // 调用验证
   if (!validateForm()) return;
   try {
@@ -792,6 +798,8 @@ const handleViewProcess = async () => {
 const initData = async () => {
   await getProjectOptions();
   formData.value.userName = userStore.userInfo?.empName || "";
+  formData.value.deptName = userStore.userInfo?.deptName ?? "";
+  formData.value.mguName = userStore.userInfo?.mguName ?? "";
   formData.value.createDate = dateUtil().format("YYYY-MM-DD");
 
   if (isAdd.value) {

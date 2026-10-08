@@ -3,19 +3,9 @@
   <div class="project-cost-category-page">
     <el-form :model="queryParams" inline>
       <el-form-item label="项目名称">
-        <el-tree-select
-          v-model="queryParams.projId"
-          :data="projectTreeData"
-          :props="projectTreeProps"
-          node-key="orgId"
-          :render-after-expand="false"
-          placeholder="请选择项目"
-          :clearable="false"
-          :check-strictly="false"
-          :filterable="false"
-          style="width: 240px"
-          @change="handleChange"
-        />
+        <el-tree-select v-model="queryParams.projId" :data="projectTreeData" :props="projectTreeProps" node-key="orgId"
+          :render-after-expand="false" placeholder="请选择项目" :clearable="false" :check-strictly="false"
+          :filterable="false" style="width: 240px" @change="handleChange" />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="handleSearch">查询</el-button>
@@ -24,22 +14,11 @@
       </el-form-item>
     </el-form>
 
-    <base-table
-      ref="tableRef"
-      :columns="tableColumns"
-      :tableData="tableData"
-      rowKey="id"
-      :border="true"
-      :tableLoading="tableLoading"
-      :pagination="false"
-    >
+    <base-table ref="tableRef" :columns="tableColumns" :tableData="tableData" rowKey="id" :border="true"
+      :tableLoading="tableLoading" :pagination="false">
       <!-- 管控方式 -->
       <template #ctrlMode="{ row }">
-        <el-tag
-          :type="getCtrlModeType(row.ctrlMode)"
-          size="small"
-          effect="light"
-        >
+        <el-tag :type="getCtrlModeType(row.ctrlMode)" size="small" effect="light">
           {{ getCtrlModeLabel(row.ctrlMode) }}
         </el-tag>
       </template>
@@ -50,19 +29,15 @@
       </template>
       <!-- 操作列 -->
       <template #actions="{ row }">
-        <el-button link type="danger" @click="handleDelete(row)">
+        <el-button link type="danger" @click="handleDelete(row)" v-if="!(row.children && row.children.length > 0)">
           删除
         </el-button>
       </template>
     </base-table>
 
     <!-- 新增/编辑弹窗 -->
-    <add-edit-project-category-dialog
-      v-model="dialogVisible"
-      :project-tree-data="projectTreeData"
-      :project-id="queryParams.projId"
-      @success="handleDialogSuccess"
-    />
+    <add-edit-project-category-dialog v-model="dialogVisible" :project-tree-data="projectTreeData"
+      :project-id="queryParams.projId" @success="handleDialogSuccess" />
   </div>
 </template>
 
@@ -73,7 +48,7 @@ import { costCategoryApi } from "@/api/cost/master-data/cost-category-api.ts";
 import AddEditProjectCategoryDialog from "./add-edit-project-category-dialog.vue";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api.ts";
 import { ctrlModeEnum } from "@/constants/master-data/enums.ts";
-import { buildTree } from "@/utils/tree.ts";
+import { buildSubjectTree, buildTree, convertToTree } from "@/utils/tree.ts";
 
 defineOptions({ name: "project-cost-category" });
 
@@ -175,15 +150,17 @@ const getProjectProductList = async () => {
     const res = await costCategoryApi.getCostSubjectProjList({
       projId: queryParams.value.projId,
       withDetail: true,
+      buildTree: true,
     });
     if (res.code === 200) {
-      tableData.value = buildTree(res.data || []);
+      // tableData.value = convertToTree(res.data || []);
+      tableData.value = buildSubjectTree(res.data || []);
+      console.log(tableData.value);
     } else {
       ElMessage.error(res.msg || "获取数据失败");
     }
   } catch (error) {
     console.error("获取数据失败:", error);
-    ElMessage.error("获取数据失败");
   } finally {
     tableLoading.value = false;
   }
@@ -226,6 +203,7 @@ const handleAdd = () => {
  * 删除
  */
 const handleDelete = async (row) => {
+  console.log(row);
   await ElMessageBox.confirm(`确定删除"${row.subName}"吗？`, "提示", {
     confirmButtonText: "确认",
     cancelButtonText: "取消",

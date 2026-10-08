@@ -1,12 +1,7 @@
 <!-- 新增产值申报 -->
 <template>
   <div class="output-declaration-add-page">
-    <OutputValueForm
-      mode="add"
-      :con-id="conId"
-      @success="handleSuccess"
-      @cancel="handleCancel"
-    />
+    <OutputValueForm mode="add" :con-id="conId" />
   </div>
 </template>
 
@@ -21,13 +16,6 @@ defineOptions({ name: "output-declaration-add" });
 
 const conId = Number(route.query.conId); // 合同ID
 
-const handleSuccess = () => {
-  router.back();
-};
-
-const handleCancel = () => {
-  router.back();
-};
 </script>
 
 <style scoped lang="scss">

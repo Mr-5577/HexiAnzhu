@@ -44,17 +44,40 @@ function generateRequestKey(config: AxiosRequestConfig): string {
   return [method, url, JSON.stringify(params), JSON.stringify(data)].join("&");
 }
 
-// 从响应头中获取文件名
+// 缓存 user-store 解析结果，避免每个请求都 JSON.parse localStorage（性能优化）
+let userStoreCache: { isQueryFast?: boolean } | null = null;
+function getUserStore(): { isQueryFast?: boolean } | null {
+  if (userStoreCache) return userStoreCache;
+  try {
+    userStoreCache = JSON.parse(localStorage.getItem("user-store") || "{}");
+  } catch {
+    userStoreCache = {};
+  }
+  return userStoreCache;
+}
+
+// 从响应头中获取文件名（兼容 RFC5987 的 filename*=UTF-8''xxx 与 ASCII filename）
 function getFilenameFromHeaders(headers: any): string {
   const contentDisposition =
     headers["content-disposition"] || headers["Content-Disposition"];
   if (contentDisposition) {
+    // 优先解析 RFC5987 编码（支持中文）：filename*=UTF-8''xxx
+    const rfc5987Match = contentDisposition.match(
+      /filename\*=(?:UTF-8'')?([^;]+)/i,
+    );
+    if (rfc5987Match && rfc5987Match[1]) {
+      try {
+        return decodeURIComponent(rfc5987Match[1].trim());
+      } catch {
+        // 解码失败则回退到普通 filename
+      }
+    }
     const filenameMatch = contentDisposition.match(
       /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/,
     );
     if (filenameMatch && filenameMatch[1]) {
-      let filename = filenameMatch[1].replace(/['"]/g, "");
-      // 处理中文文件名编码问题
+      let filename = filenameMatch[1].replace(/['"]/g, "").trim();
+      // 处理中文文件名编码问题（%XX 形式）
       if (filename.includes("%")) {
         try {
           filename = decodeURIComponent(filename);
@@ -69,9 +92,9 @@ function getFilenameFromHeaders(headers: any): string {
   return "";
 }
 
-// 检查是否是 JSON 错误响应
+// 检查是否是 JSON 错误响应（仅当响应类型为 JSON 时解析，避免误判小体积正常文件）
 async function checkBlobError(blob: Blob): Promise<void> {
-  if (blob.type === "application/json" || blob.size < 1024) {
+  if (blob.type === "application/json") {
     const text = await blob.text();
     try {
       const errorData = JSON.parse(text);
@@ -99,44 +122,30 @@ service.interceptors.request.use(
     const shouldAddQueryFast = config.addQueryFast !== false;
 
     if (shouldAddQueryFast) {
-      const isQueryFast = JSON.parse(
-        localStorage.getItem("user-store") || "{}",
-      )?.isQueryFast;
+      // 只解析一次并缓存，避免每次请求都 JSON.parse localStorage（性能）
+      const isQueryFast = getUserStore()?.isQueryFast;
 
-      // 根据请求方法添加到相应位置
+      // isQueryFast 必须走请求体（POST/PUT/PATCH 的 data 或 GET/DELETE 的 params），
+      // 因为后端用 @RequestBody 反序列化（如销售 XsBIParam），query string 收不到该字段。
+      // 仅当 data 为普通对象且业务未自带 isQueryFast 时才注入，避免覆盖业务字段；
+      // FormData、字符串 data 等不注入，避免破坏请求格式。
+      const method = config.method?.toLowerCase();
       if (
-        config.method?.toLowerCase() === "get" ||
-        config.method?.toLowerCase() === "delete"
+        (method === "post" || method === "put" || method === "patch") &&
+        config.data &&
+        typeof config.data === "object" &&
+        !Array.isArray(config.data) &&
+        !(config.data instanceof FormData) &&
+        config.data.isQueryFast === undefined
       ) {
-        // GET/DELETE 请求：添加到 params
-        config.params = {
-          ...config.params,
-          isQueryFast: isQueryFast,
-        };
-      } else {
-        // POST/PUT/PATCH 请求
-        if (config.data instanceof FormData) {
-          // FormData 用 append
-          if (!config.data.has("isQueryFast")) {
-            config.data.append("isQueryFast", isQueryFast);
-          }
-        } else if (
-          typeof config.data === "object" &&
-          config.data !== null &&
-          !Array.isArray(config.data)
-        ) {
-          // 只对普通对象添加参数
-          config.data = {
-            ...config.data,
-            isQueryFast: isQueryFast,
-          };
-        } else if (config.data === undefined || config.data === null) {
-          // 没有数据时创建对象
-          config.data = {
-            isQueryFast: isQueryFast,
-          };
-        }
-        // 字符串、数字等原始类型不添加参数，避免破坏数据结构
+        config.data = { ...config.data, isQueryFast };
+      } else if (
+        (method === "get" || method === "delete") &&
+        config.params &&
+        typeof config.params === "object" &&
+        config.params.isQueryFast === undefined
+      ) {
+        config.params = { ...config.params, isQueryFast };
       }
     }
 
@@ -147,6 +156,7 @@ service.interceptors.request.use(
 
     // 检查并取消重复请求
     const requestKey = generateRequestKey(config);
+    // 若已存在相同 key 的未完成请求，先取消旧的再发起新的，避免内存泄漏与并发覆盖
     // if (pendingRequests.has(requestKey)) {
     //   pendingRequests.get(requestKey)!("取消重复请求");
     //   pendingRequests.delete(requestKey);
@@ -187,6 +197,9 @@ service.interceptors.response.use(
           );
         }
         return data;
+      case 400:
+        ElMessage.error(resMessage || "业务数据异常");
+        return Promise.reject(new Error(resMessage || "业务数据异常"));
       case 401:
         ElMessage.warning("登录已过期，请重新登录");
         localStorage.clear();
@@ -203,7 +216,7 @@ service.interceptors.response.use(
         return Promise.reject(new Error("资源不存在"));
       case 500:
         ElMessage.error(resMessage || "服务器内部错误");
-        return Promise.reject(new Error("服务器错误"));
+        return Promise.reject(new Error(resMessage || "服务器内部错误"));
       case 502:
         ElMessage.error("正在升级中，请稍后再试...");
         return Promise.reject(new Error("正在升级中，请稍后再试..."));
@@ -253,7 +266,7 @@ service.interceptors.response.use(
 
       switch (status) {
         case 400:
-          ElMessage.error(errorMessage || "请求参数错误");
+          ElMessage.error(errorMessage || "业务数据异常");
           break;
         case 401:
           ElMessage.warning("登录已过期，请重新登录");
@@ -306,7 +319,7 @@ export const http = {
     params?: any,
     config?: AxiosRequestConfig,
   ): Promise<T> {
-    return service.get(url, { params, ...config });
+    return service.get(url, { params, ...config }) as Promise<T>;
   },
 
   post<T = any>(
@@ -314,7 +327,7 @@ export const http = {
     data?: any,
     config?: AxiosRequestConfig,
   ): Promise<T> {
-    return service.post(url, data, config);
+    return service.post(url, data, config) as Promise<T>;
   },
 
   formPost<T = any>(
@@ -353,7 +366,7 @@ export const http = {
     data?: any,
     config?: AxiosRequestConfig,
   ): Promise<T> {
-    return service.put(url, data, config);
+    return service.put(url, data, config) as Promise<T>;
   },
 
   patch<T = any>(
@@ -361,7 +374,7 @@ export const http = {
     data?: any,
     config?: AxiosRequestConfig,
   ): Promise<T> {
-    return service.patch(url, data, config);
+    return service.patch(url, data, config) as Promise<T>;
   },
 
   delete<T = any>(
@@ -369,7 +382,7 @@ export const http = {
     params?: any,
     config?: AxiosRequestConfig,
   ): Promise<T> {
-    return service.delete(url, { params, ...config });
+    return service.delete(url, { params, ...config }) as Promise<T>;
   },
 
   // 上传文件
@@ -383,7 +396,7 @@ export const http = {
         "Content-Type": "multipart/form-data",
       },
       ...config,
-    });
+    }) as Promise<T>;
   },
 
   // 下载文件（直接下载）
@@ -402,7 +415,7 @@ export const http = {
     // 检查是否是错误响应
     await checkBlobError(blob);
     const finalFilename =
-      filename || getFilenameFromHeaders(response.headers) || "download";
+      filename || getFilenameFromHeaders(response.headers) || "文件";
     saveAs(blob, finalFilename);
     return await blob;
   },

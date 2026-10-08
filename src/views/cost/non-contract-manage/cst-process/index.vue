@@ -1,182 +1,136 @@
 <!-- 建安立项 列表 -->
 <template>
   <div class="cst-process-wrapper">
-    <el-form
-      :model="queryParams"
-      ref="queryRef"
-      :inline="true"
-      label-width="90px"
-    >
-      <el-form-item label="业务板块" prop="segId">
-        <el-select
-          v-model="queryParams.segId"
-          placeholder="请选择业务板块"
-          style="width: 220px"
-        >
-          <el-option
-            v-for="item in segOptions"
-            :key="item.id"
-            :label="item.segName"
-            :value="item.id"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="项目名称" prop="projId">
-        <el-cascader
-          v-model="queryParams.projId"
-          :options="projectOptions"
-          :show-all-levels="false"
-          :props="{
-            expandTrigger: 'hover',
-            emitPath: false,
-            checkStrictly: false,
-            value: 'orgId',
-            label: 'orgName',
-            children: 'children',
-          }"
-          placeholder="请选择项目"
-          style="width: 220px"
-          clearable
-        />
-      </el-form-item>
+    <BaseSearchCard>
+      <template #form>
+        <el-form :model="queryParams" ref="queryRef" :inline="true" label-width="90px">
+          <el-form-item label="业务板块" prop="segId">
+            <el-select v-model="queryParams.segId" placeholder="请选择业务板块" style="width: 220px">
+              <el-option v-for="item in segOptions" :key="item.id" :label="item.segName" :value="item.id" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="项目名称" prop="projId">
+            <el-cascader v-model="queryParams.projId" :options="projectOptions" :show-all-levels="false" :props="{
+              expandTrigger: 'hover',
+              emitPath: false,
+              checkStrictly: false,
+              value: 'orgId',
+              label: 'orgName',
+              children: 'children',
+            }" placeholder="请选择项目" style="width: 220px" clearable />
+          </el-form-item>
 
-      <el-form-item label="事项名称" prop="processName">
-        <el-input
-          v-model="queryParams.processName"
-          placeholder="请输入事项名称"
-          clearable
-          style="width: 220px"
-        />
-      </el-form-item>
+          <el-form-item label="审批状态" prop="status">
+            <el-select v-model="queryParams.status" placeholder="请选择状态" clearable style="width: 220px">
+              <el-option v-for="item in conBillStatusEnum" :key="item.value" :label="item.label" :value="item.value" />
+            </el-select>
+          </el-form-item>
 
-      <el-form-item label="审批状态" prop="status">
-        <el-select
-          v-model="queryParams.status"
-          placeholder="请选择状态"
-          clearable
-          style="width: 220px"
-        >
-          <el-option
-            v-for="item in conBillStatusEnum"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="创建人" prop="createId">
-        <el-cascader
-          ref="projCascaderRef"
-          v-model="queryParams.createId"
-          :options="empTreeData"
-          :show-all-levels="false"
-          :props="{
-            expandTrigger: 'click',
-            emitPath: false,
-            checkStrictly: false,
-            value: 'orgId',
-            label: 'orgName',
-            children: 'children',
-            // 通过 leaf 属性标识哪些是叶子节点（可选的）
-            leaf: (data) => {
-              // dataType: 0 表示人员，即叶子节点
-              return data.dataType === 0;
-            },
-          }"
-          placeholder="请选择"
-          style="width: 220px"
-          clearable
-          filterable
-        />
-      </el-form-item>
-      <el-form-item label="创建日期" prop="time">
-        <el-date-picker
-          v-model="queryParams.time"
-          type="daterange"
-          range-separator="至"
-          value-format="YYYY-MM-DD"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-          style="width: 220px"
-        />
-      </el-form-item>
+          <el-form-item label="创建日期" prop="time">
+            <el-date-picker v-model="queryParams.time" type="daterange" range-separator="至" value-format="YYYY-MM-DD"
+              start-placeholder="开始日期" end-placeholder="结束日期" style="width: 220px" />
+          </el-form-item>
 
-      <el-form-item>
+          <!-- <el-form-item label="事项名称" prop="processName">
+            <el-input v-model="queryParams.processName" placeholder="请输入事项名称" clearable style="width: 220px" />
+          </el-form-item>
+
+          <el-form-item label="单据编号" prop="bizNo">
+            <el-input v-model="queryParams.bizNo" placeholder="请输入事项名称" clearable style="width: 220px" />
+          </el-form-item>
+
+          <el-form-item label="创建人" prop="createId">
+            <el-cascader ref="projCascaderRef" v-model="queryParams.createId" :options="empTreeData"
+              :show-all-levels="false" :props="{
+                expandTrigger: 'click',
+                emitPath: false,
+                checkStrictly: false,
+                value: 'orgId',
+                label: 'orgName',
+                children: 'children',
+                // 通过 leaf 属性标识哪些是叶子节点（可选的）
+                leaf: (data) => {
+                  // dataType: 0 表示人员，即叶子节点
+                  return data.dataType === 0;
+                },
+              }" placeholder="请选择" style="width: 220px" clearable filterable />
+          </el-form-item> -->
+
+        </el-form>
+      </template>
+      <template #actions>
+        <el-input v-model="queryParams.keyWord" placeholder="请输入事项名称、单据编号、创建人" clearable style="width:636px" />
         <el-button type="primary" @click="handleSearch"> 搜索 </el-button>
         <el-button @click="handleReset">重置</el-button>
         <el-button type="primary" @click="handleAdd">新增</el-button>
-      </el-form-item>
-    </el-form>
-
-    <base-table
-      :columns="columns"
-      :tableData="tableData"
-      :loading="tableLoading"
-      :rowKey="'id'"
-      :pagination="false"
-    >
-      <template #status="{ row }">
-        <el-tag
-          size="small"
-          :type="getEnumType(conBillStatusEnum, row?.status || 0)"
-        >
-          {{ getEnumLabel(conBillStatusEnum, row?.status || 0) }}
-        </el-tag>
       </template>
+    </BaseSearchCard>
 
-      <template #actions="{ row }">
-        <el-button
-          type="primary"
-          link
-          @click="handleEdit(row)"
-          :disabled="row.status != 0"
-        >
-          编辑
-        </el-button>
-        <el-button
-          type="danger"
-          link
-          @click="handleDelete(row)"
-          :disabled="row.status != 0"
-        >
-          删除
-        </el-button>
-        <el-button type="primary" link @click="handleDetail(row)">
-          详情
-        </el-button>
-      </template>
-    </base-table>
+    <div class="table-wrapper">
+      <base-table :columns="columns" :tableData="paginatedData" :loading="tableLoading" :rowKey="'id'" :total="total"
+        :current-page="currentPage" :page-size="pageSize" @pagination-change="handlePaginationChange">
+        <template #status="{ row }">
+          <el-tag size="small" :type="getEnumType(conBillStatusEnum, row?.status || 0)">
+            {{ getEnumLabel(conBillStatusEnum, row?.status || 0) }}
+          </el-tag>
+        </template>
+
+        <template #actions="{ row }">
+          <el-button type="primary" link @click="handleEdit(row)"
+            :disabled="row.status != 0 || row.createId !== userStore.userInfo.mdUserId">
+            编辑
+          </el-button>
+          <el-button type="danger" link @click="handleDelete(row)"
+            :disabled="row.status != 0 || row.createId !== userStore.userInfo.mdUserId">
+            删除
+          </el-button>
+          <el-button type="primary" link @click="handleDetail(row)">
+            详情
+          </el-button>
+        </template>
+      </base-table>
+    </div>
+
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { TableColumnItem } from "@/components/base/base-table.vue";
 import { projectAreaApi } from "@/api/cost/master-data/project-area-api";
 import { largeScreenApi } from "@/api/sales/large-screen-api";
 import { cstProcessApi } from "@/api/cost/non-contract-manage/cst-process-api";
 import { useRouter } from "vue-router";
+import { useUserStore } from "@/stores/user-store";
 import { getEnumLabel, getEnumType } from "@/utils/enum";
 import { conBillStatusEnum } from "@/constants/contract-manage/enums";
 import { roleApi } from "@/api/system/role-api";
 import { dictionaryApi } from "@/api/cost/master-data/dictionary-api";
+import { formatThousandWithPlaces } from "@/utils/big-number";
+import BaseSearchCard from "@/components/base/base-search-card.vue";
 
 defineOptions({ name: "cst-process" });
 
 const router = useRouter();
+const userStore = useUserStore();
 
 const queryParams = ref({
   projId: undefined,
   segId: undefined,
-  processName: "",
+  processName: undefined,
+  bizNo: undefined,
   status: undefined,
   createId: undefined,
   time: [],
+  keyWord: undefined
 });
 // 项目列表
 const projectOptions = ref([]);
 const tableLoading = ref(false);
+const currentPage = ref<number>(1);
+const pageSize = ref<number>(20);
+const total = ref<number>(0);
 const tableData = ref([]);
 // 人员树形结构数据
 const empTreeData = ref([]);
@@ -188,9 +142,9 @@ const columns: TableColumnItem[] = [
   { prop: "bizTitle", label: "标题", width: 200 },
   { prop: "projName", label: "项目名称", width: 140 },
   // { prop: "finaTypeName", label: "费用类型", width: 140 },
-  // { prop: "processNo", label: "事项编号", width: 140 },
+  { prop: "processNo", label: "单据编号", width: 140 },
   { prop: "processName", label: "事项名称", width: 160 },
-  { prop: "processAmt", label: "事项计划金额", width: 140 },
+  { prop: "processAmt", label: "事项计划金额", width: 140, formatter: (row) => formatThousandWithPlaces(row.processAmt || 0) },
   { prop: "createName", label: "创建人", width: 120 },
   { prop: "createDate", label: "创建日期", width: 120 },
   {
@@ -206,6 +160,12 @@ const columns: TableColumnItem[] = [
     fixed: "right",
   },
 ];
+// 手动分页
+const paginatedData = computed(() => {
+  const start = (currentPage.value - 1) * pageSize.value;
+  const end = start + pageSize.value;
+  return tableData.value.slice(start, end)
+});
 // 获取列表数据
 const getDataList = async () => {
   try {
@@ -217,12 +177,15 @@ const getDataList = async () => {
       processName: queryParams.value.processName,
       status: queryParams.value.status,
       createId: queryParams.value.createId,
+      bizNo: queryParams.value.bizNo,
       createDateStart: queryParams.value.time?.[0] || "",
       createDateEnd: queryParams.value.time?.[1] || "",
+      keyWord: queryParams.value.keyWord
     };
     const res = await cstProcessApi.getCstProcessList(params);
     if (res.code === 200) {
       tableData.value = res.data || [];
+      total.value = res.data?.length || 0;
     }
   } catch (error) {
     console.error("获取非合同建安立项列表失败:", error);
@@ -230,19 +193,30 @@ const getDataList = async () => {
     tableLoading.value = false;
   }
 };
-
-const handleSearch = () => {
-  getDataList();
+const handlePaginationChange = (params: any) => {
+  currentPage.value = params.currentPage;
+  pageSize.value = params.pageSize;
 };
 
+const handleSearch = () => {
+  resetPagination();
+  getDataList();
+};
+const resetPagination = () => {
+  currentPage.value = 1;
+  pageSize.value = 20;
+}
 const handleReset = () => {
+  resetPagination();
   queryParams.value = {
     projId: undefined,
     segId: undefined,
-    processName: "",
+    processName: undefined,
+    bizNo: undefined,
     status: undefined,
     createId: undefined,
     time: [],
+    keyWord: undefined
   };
   getDataList();
 };
@@ -285,7 +259,7 @@ const handleDelete = (row) => {
         getDataList();
       }
     })
-    .catch(() => {});
+    .catch(() => { });
 };
 // 获取项目列表
 const getProjectOptions = async () => {
@@ -302,7 +276,7 @@ const getProjectOptions = async () => {
 };
 // 获取人员树形数据
 const getEmpTreeData = async () => {
-  const res = await roleApi.getEmpTree({ empName: "", isIncludeLeave: false });
+  const res = await roleApi.getEmpTree({ empName: "", isIncludeLeave: true });
   // console.log("获取人员列表", res);
   if (res.code === 200) {
     empTreeData.value = res.data || [];
@@ -311,7 +285,7 @@ const getEmpTreeData = async () => {
 // 获取业务板块列表
 const getSegOptions = async () => {
   try {
-     const res = await dictionaryApi.getsegmentList({ isAuth: true });
+    const res = await dictionaryApi.getsegmentList({ isAuth: true });
     if (res.code === 200) {
       segOptions.value = res.data || [];
     }
@@ -335,6 +309,18 @@ onMounted(async () => {
   flex: 1;
   padding: 15px;
   box-sizing: border-box;
-  background: #fff;
+  // background: #fff;
+
+  .table-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    overflow: hidden;
+    padding: 12px 12px;
+    box-sizing: border-box;
+  }
 }
 </style>

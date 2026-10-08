@@ -57,6 +57,9 @@ export interface ProjectBuildingSaveParams {
   bldName: string;
   /** 是否地下室 */
   isUnderGround?: boolean;
+  prodIds: any,
+  prodNames: any,
+  bindUnderGround: number
 }
 
 /**
@@ -152,7 +155,7 @@ export interface ProjectAreaVersionQueryParams {
   /** 版本标题 */
   verTitle?: string;
   /** 是否当前生效版本 */
-  isEnabled?: boolean;
+  isOnlyEnable?: boolean;
 }
 /**
  * 删除项目面积版本请求参数
@@ -231,7 +234,7 @@ export interface ProjectAreaDetailQueryParams {
   /** 版本ID */
   verMid?: number;
   /** 楼栋ID */
-  bldId?: number;
+  bldIds?: number[];
   /** 产品类型ID */
   prodId?: number;
 }

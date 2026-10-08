@@ -6,7 +6,7 @@ import { ContractBankAccountParams } from "@/types/cost/contract-manage/payment-
  */
 export const paymentAccountApi = {
   /** 查询收款账号列表  conId:合同ID */
-  getSupBankList: (data: { conId: number }) => {
+  getSupBankList: (data: { conId: number,isDefault? :boolean }) => {
     return http.formPost("/con/supBank/list", data);
   },
   /** 新增收款账号 */
