@@ -121,6 +121,7 @@ const columns: EditableColumn[] = [
     slots: { default: "payStatus" },
     editable: true,
     editType: "select",
+    multiple: false,
     options: [
       { label: "未支付", value: "未支付" },
       { label: "部分支付", value: "部分支付" },

@@ -3,34 +3,41 @@
     <div class="content">
       <el-tabs v-model="activeTab" @tab-change="changeTab">
         <el-tab-pane label="列表(基础编辑)" name="table1" style="height: 100%">
-          <table1 />
+          <table1 v-if="activeTab === 'table1'" />
         </el-tab-pane>
         <el-tab-pane label="列表（带分页）" name="table2" style="height: 100%">
-          <table2 />
+          <table2 v-if="activeTab === 'table2'" />
         </el-tab-pane>
         <el-tab-pane label="树形列表" name="table3" style="height: 100%">
-          <table3 />
+          <table3 v-if="activeTab === 'table3'" />
         </el-tab-pane>
         <el-tab-pane label="字典映射列表" name="table4" style="height: 100%">
-          <table4 />
+          <table4 v-if="activeTab === 'table4'" />
         </el-tab-pane>
         <el-tab-pane label="多级表头-编辑" name="table5" style="height: 100%">
-          <table5 />
+          <table5 v-if="activeTab === 'table5'" />
         </el-tab-pane>
         <el-tab-pane label="综合列表" name="table6" style="height: 100%">
-          <table6 />
+          <table6 v-if="activeTab === 'table6'" />
         </el-tab-pane>
         <el-tab-pane label="列表-只读" name="table7" style="height: 100%">
-          <table7 />
+          <table7 v-if="activeTab === 'table7'" />
         </el-tab-pane>
         <el-tab-pane label="列表-部分可编辑" name="table8" style="height: 100%">
-          <table8 />
+          <table8 v-if="activeTab === 'table8'" />
         </el-tab-pane>
         <el-tab-pane label="列表-不编辑" name="table9" style="height: 100%">
-          <table9 />
+          <table9 v-if="activeTab === 'table9'" />
         </el-tab-pane>
-        <el-tab-pane label="树形列表-虚拟滚动" name="table10" style="height: 100%">
-          <table10 />
+        <el-tab-pane
+          label="树形列表-虚拟滚动"
+          name="table10"
+          style="height: 100%"
+        >
+          <table10 v-if="activeTab === 'table10'" />
+        </el-tab-pane>
+        <el-tab-pane label="展开列表" name="table11" style="height: 100%">
+          <table11 v-if="activeTab === 'table11'" />
         </el-tab-pane>
       </el-tabs>
     </div>
@@ -49,6 +56,7 @@ import table7 from "./example-vxe-table/table7.vue";
 import table8 from "./example-vxe-table/table8.vue";
 import table9 from "./example-vxe-table/table9.vue";
 import table10 from "./example-vxe-table/table10.vue";
+import table11 from "./example-vxe-table/table11.vue";
 
 defineOptions({ name: "invoice-manage" });
 

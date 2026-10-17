@@ -88,7 +88,7 @@ const tableData = ref([
 // ===== 列配置 =====
 const columns: EditableColumn[] = [
   { type: "checkbox", width: 50 },
-  { type: "seq", title: "序号"},
+  { type: "seq", title: "序号" },
   { field: "id", title: "ID", width: 70 },
   {
     field: "contractNo",
@@ -136,7 +136,7 @@ const columns: EditableColumn[] = [
     width: 100,
     editable: true,
     editType: "number",
-    numberType: 'integer', // 整数类型
+    numberType: "integer", // 整数类型
     placeholder: "请输入税率",
   },
   {

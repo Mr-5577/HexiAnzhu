@@ -1,27 +1,27 @@
 import { createApp } from "vue";
 import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
-import "./assets/styles/variables.scss";  // CSS变量定义（必须最先导入）
+import "./assets/styles/variables.scss"; // CSS变量定义（必须最先导入）
 import "./assets/styles/element-override.scss"; // Element Plus样式覆盖
-import "./assets/styles/global.css"; 
+import "./assets/styles/global.css";
 import zhCn from "element-plus/es/locale/lang/zh-cn";
 
 // ===== 引入 vxe-table 和 vxe-pc-ui =====
-import VxeTable from 'vxe-table'
-import VxePcUI, { VxeUI } from 'vxe-pc-ui'
-import 'vxe-table/lib/style.css'
-import 'vxe-pc-ui/lib/style.css'
-VxeUI.setConfig({
-  zIndex: 3000, // 根据项目实际 z-index 情况调整，建议大于弹窗层级
-})
-VxeTable.setup({
-  table: {
-    // 表头单元格高度(全局)
-    headerCellConfig: { height: 30 },
-    // 单元格高度(全局)
-    cellConfig: { height: 30 }
-  }
-})
+import VxeUIBase, { VxeUI } from "vxe-pc-ui";
+import "vxe-pc-ui/lib/style.css";
+import VxeUITable from "vxe-table";
+// import VxeUITable, { VxeUI } from 'vxe-table'
+import "vxe-table/lib/style.css";
+import VxeUIPluginRenderElement from "@vxe-ui/plugin-render-element";
+import "@vxe-ui/plugin-render-element/dist/style.css";
+import {
+  ElInput,
+  ElInputNumber,
+  ElSelect,
+  ElCascader,
+  ElDatePicker,
+  ElTimeSelect,
+} from "element-plus";
 
 import App from "./App.vue";
 // 基础表格组件
@@ -38,6 +38,14 @@ import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 // 权限指令
 import { setupPermission } from "./directives/permission";
 
+VxeUIPluginRenderElement.component(ElInput);
+VxeUIPluginRenderElement.component(ElInputNumber);
+VxeUIPluginRenderElement.component(ElSelect);
+VxeUIPluginRenderElement.component(ElCascader);
+VxeUIPluginRenderElement.component(ElDatePicker);
+VxeUIPluginRenderElement.component(ElTimeSelect);
+VxeUI.use(VxeUIPluginRenderElement); // 注册 VxeUIPluginRenderElement
+
 const app = createApp(App);
 
 // 全局注册所有图标
@@ -50,8 +58,9 @@ app.use(router);
 app.use(ElementPlus, {
   locale: zhCn,
 });
-app.use(VxeTable)  // 注册 vxe-
-app.use(VxePcUI) // 注册 vxe-pc-ui
+
+app.use(VxeUIBase); // 注册 VxeUIBase
+app.use(VxeUITable); // 注册 VxeUITable
 setupPermission(app);
 // 全局注册 BaseTable 组件
 app.component("BaseTable", BaseTable);

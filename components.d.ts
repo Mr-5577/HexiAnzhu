@@ -95,6 +95,7 @@ declare module 'vue' {
     UploadInvoiceDialog: typeof import('./src/components/business/upload-invoice-dialog.vue')['default']
     UrbanProjectTree: typeof import('./src/components/business/urban-project-tree.vue')['default']
     VxeEditableTable: typeof import('./src/components/base/vxe-editable-table.vue')['default']
+    VxeEditableTable2: typeof import('./src/components/base/vxe-editable-table2.vue')['default']
   }
   export interface GlobalDirectives {
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']
