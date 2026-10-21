@@ -14,14 +14,6 @@ import VxeUITable from "vxe-table";
 import "vxe-table/lib/style.css";
 import VxeUIPluginRenderElement from "@vxe-ui/plugin-render-element";
 import "@vxe-ui/plugin-render-element/dist/style.css";
-import {
-  ElInput,
-  ElInputNumber,
-  ElSelect,
-  ElCascader,
-  ElDatePicker,
-  ElTimeSelect,
-} from "element-plus";
 
 import App from "./App.vue";
 // 基础表格组件
@@ -38,12 +30,6 @@ import * as ElementPlusIconsVue from "@element-plus/icons-vue";
 // 权限指令
 import { setupPermission } from "./directives/permission";
 
-VxeUIPluginRenderElement.component(ElInput);
-VxeUIPluginRenderElement.component(ElInputNumber);
-VxeUIPluginRenderElement.component(ElSelect);
-VxeUIPluginRenderElement.component(ElCascader);
-VxeUIPluginRenderElement.component(ElDatePicker);
-VxeUIPluginRenderElement.component(ElTimeSelect);
 VxeUI.use(VxeUIPluginRenderElement); // 注册 VxeUIPluginRenderElement
 
 const app = createApp(App);

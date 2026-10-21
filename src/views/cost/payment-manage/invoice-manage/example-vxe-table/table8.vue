@@ -6,9 +6,11 @@
       合同编号、合同名称、项目分类（单选）、项目分类（多选）可编辑；供应商、金额、状态只读
     </p>
 
+    <el-button @click="validEvent">校验</el-button>
     <editable-table-vxe
       v-model="tableData"
       :columns="columns"
+      ref="tableRef"
       row-key="id"
       :border="true"
       :stripe="true"
@@ -37,6 +39,8 @@ import { ElMessage } from "element-plus";
 import EditableTableVxe from "@/components/base/vxe-editable-table.vue";
 import type { EditableColumn } from "@/components/base/vxe-editable-table.vue";
 
+const tableRef = ref()
+  
 // ============================================================
 // 项目分类选项（树形），单选列 + 多选列共用同一份数据源
 // ============================================================
@@ -208,6 +212,15 @@ const handleDataChange = (params: any) => {
     }`,
   );
 };
+const validEvent = async () => {
+  const $tableRef = tableRef.value
+  if ($tableRef) {
+    const errMap = await $tableRef.validate()
+    // const errMap = await $tableRef.validateEvent()
+    console.log(errMap)
+  }
+}
+
 </script>
 
 <style scoped>
