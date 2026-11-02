@@ -126,7 +126,7 @@ const columns: EditableColumn[] = [
     placeholder: "请输入金额",
     showSummary: true,
     formatter: (value) => {
-      if (!value) return "-";
+      if (!value) return 0;
       return value.toLocaleString("zh-CN");
     },
   },

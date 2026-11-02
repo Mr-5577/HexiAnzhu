@@ -39,8 +39,8 @@ import { ElMessage } from "element-plus";
 import EditableTableVxe from "@/components/base/vxe-editable-table.vue";
 import type { EditableColumn } from "@/components/base/vxe-editable-table.vue";
 
-const tableRef = ref()
-  
+const tableRef = ref();
+
 // ============================================================
 // 项目分类选项（树形），单选列 + 多选列共用同一份数据源
 // ============================================================
@@ -137,6 +137,22 @@ const columns: EditableColumn[] = [
     editable: true,
     editType: "input",
     placeholder: "请输入合同名称",
+    editRules: [
+      {
+        field: "contractName",
+        required: true,
+        message: "请输入合同名称",
+      },
+      {
+        validator(data) {
+          console.log("🚀 ~ validator", data);
+          const { cellValue } = data;
+          if (cellValue && (cellValue.length < 3 || cellValue.length > 50)) {
+            return new Error("名称长度在 3 到 50 个字符之间");
+          }
+        },
+      },
+    ],
   },
   // ============================================================
   // 项目分类（单选）
@@ -213,14 +229,13 @@ const handleDataChange = (params: any) => {
   );
 };
 const validEvent = async () => {
-  const $tableRef = tableRef.value
+  const $tableRef = tableRef.value;
   if ($tableRef) {
-    const errMap = await $tableRef.validate()
+    const errMap = await $tableRef.validate();
     // const errMap = await $tableRef.validateEvent()
-    console.log(errMap)
+    console.log(errMap);
   }
-}
-
+};
 </script>
 
 <style scoped>
