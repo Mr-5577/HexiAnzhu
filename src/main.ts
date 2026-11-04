@@ -14,6 +14,9 @@ import VxeUITable from "vxe-table";
 import "vxe-table/lib/style.css";
 import VxeUIPluginRenderElement from "@vxe-ui/plugin-render-element";
 import "@vxe-ui/plugin-render-element/dist/style.css";
+VxeUI.setConfig({
+  zIndex: 3000, // 根据项目实际 z-index 情况调整，建议大于弹窗层级
+});
 
 import App from "./App.vue";
 // 基础表格组件
