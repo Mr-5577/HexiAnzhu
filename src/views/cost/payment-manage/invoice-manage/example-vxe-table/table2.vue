@@ -70,7 +70,12 @@ const getPageData = () => {
   const end = start + pageSize.value;
   tableData.value = allData.slice(start, end);
 };
-
+/** 施工期间禁用：只能选择上月及以前（禁用当月及以后） */
+const disabledBuildPeriod = (time: Date): boolean => {
+  const now = new Date();
+  const firstOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  return time.getTime() >= firstOfThisMonth.getTime();
+};
 // ===== 列配置 =====
 const columns: EditableColumn[] = [
   { type: "checkbox", width: 50 },
@@ -135,6 +140,7 @@ const columns: EditableColumn[] = [
     editable: true,
     editType: "month",
     placeholder: "请选择日期",
+    disabledDate: disabledBuildPeriod,
   },
 ];
 
